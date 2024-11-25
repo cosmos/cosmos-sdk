@@ -9,11 +9,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/x/auth/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ types.QueryServer = queryServer{}
@@ -81,12 +80,16 @@ func (s queryServer) Account(ctx context.Context, req *types.QueryAccountRequest
 	}
 	account := s.k.GetAccount(ctx, addr)
 	if account == nil {
-		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+		xAccount, err := s.getFromXAccounts(ctx, addr)
+		if err != nil {
+			return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+		}
+		return &types.QueryAccountResponse{Account: xAccount.Account}, nil
 	}
 
 	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryAccountResponse{Account: any}, nil
@@ -124,7 +127,7 @@ func (s queryServer) ModuleAccounts(ctx context.Context, req *types.QueryModuleA
 		}
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 		modAccounts = append(modAccounts, any)
 	}
@@ -150,7 +153,7 @@ func (s queryServer) ModuleAccountByName(ctx context.Context, req *types.QueryMo
 	}
 	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryModuleAccountByNameResponse{Account: any}, nil
@@ -225,7 +228,13 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 
 	account := s.k.GetAccount(ctx, addr)
 	if account == nil {
-		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+		xAccount, err := s.getFromXAccounts(ctx, addr)
+		// account info is nil it means that the account can be encapsulated into a
+		// legacy account representation but not a base account one.
+		if err != nil || xAccount.Base == nil {
+			return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+		}
+		return &types.QueryAccountInfoResponse{Info: xAccount.Base}, nil
 	}
 
 	// if there is no public key, avoid serializing the nil value
@@ -234,7 +243,7 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 	if pubKey != nil {
 		pkAny, err = codectypes.NewAnyWithValue(account.GetPubKey())
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
 
@@ -246,4 +255,27 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 			Sequence:      account.GetSequence(),
 		},
 	}, nil
+}
+
+var (
+	errNotXAccount              = errors.New("not an x/account")
+	errInvalidLegacyAccountImpl = errors.New("invalid legacy account implementation")
+)
+
+func (s queryServer) getFromXAccounts(ctx context.Context, address []byte) (*types.QueryLegacyAccountResponse, error) {
+	if !s.k.AccountsModKeeper.IsAccountsModuleAccount(ctx, address) {
+		return nil, errNotXAccount
+	}
+
+	// attempt to check if it can be queried for a legacy account representation.
+	resp, err := s.k.AccountsModKeeper.Query(ctx, address, &types.QueryLegacyAccount{})
+	if err != nil {
+		return nil, err
+	}
+
+	typedResp, ok := resp.(*types.QueryLegacyAccountResponse)
+	if !ok {
+		return nil, errInvalidLegacyAccountImpl
+	}
+	return typedResp, nil
 }

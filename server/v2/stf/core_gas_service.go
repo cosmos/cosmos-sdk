@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/store"
+	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
 type (
@@ -25,21 +26,14 @@ type gasService struct{}
 
 // GasConfig implements gas.Service.
 func (g gasService) GasConfig(ctx context.Context) gas.GasConfig {
-	panic("unimplemented")
+	return stfgas.DefaultConfig
 }
 
 func (g gasService) GasMeter(ctx context.Context) gas.Meter {
-	return ctx.(*executionContext).meter
-}
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-func (g gasService) BlockGasMeter(ctx context.Context) gas.Meter {
-	panic("stf has no block gas meter")
-}
-
-func (g gasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.Context {
-	panic("unimplemented")
-}
-
-func (g gasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) context.Context {
-	panic("unimplemented")
+	return exCtx.meter
 }

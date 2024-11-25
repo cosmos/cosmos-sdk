@@ -34,6 +34,25 @@ message MsgKeyValue {
 
 message MsgCreateKeyValueResponse {}
 
+message MsgSend {
+  option (cosmos.msg.v1.signer) = "from";
+
+  string from   = 1;
+  string to     = 2;
+  string amount = 3;
+}
+
+message MsgSendResponse {}
+
+message MsgNestedMessages {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  repeated google.protobuf.Any messages = 1;
+  string                       signer   = 2;
+}
+
+message MsgCreateNestedMessagesResponse {}
+
 service Counter {
   rpc IncrementCounter(MsgCounter) returns (MsgCreateCounterResponse);
 }
@@ -44,4 +63,12 @@ service Counter2 {
 
 service KeyValue {
   rpc Set(MsgKeyValue) returns (MsgCreateKeyValueResponse);
+}
+
+service Send {
+  rpc Send(MsgSend) returns (MsgSendResponse);
+}
+
+service NestedMessages {
+  rpc Check(MsgNestedMessages) returns (MsgCreateNestedMessagesResponse);
 }

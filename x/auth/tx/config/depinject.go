@@ -2,8 +2,6 @@ package tx
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -14,13 +12,8 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/posthandler"
-	"cosmossdk.io/x/auth/tx"
-	authtypes "cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 
@@ -28,9 +21,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
+
+// DepinjectModuleName is the module name used for depinject.
+const DepinjectModuleName = "tx"
 
 func init() {
 	appconfig.RegisterModule(&txconfigv1.Config{},
@@ -42,17 +37,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config                *txconfigv1.Config
-	AddressCodec          address.Codec
-	ValidatorAddressCodec address.ValidatorAddressCodec
-	Codec                 codec.Codec
-	ProtoFileResolver     txsigning.ProtoFileResolver
-	Environment           appmodule.Environment
-	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
-	BankKeeper             authtypes.BankKeeper               `optional:"true"`
-	MetadataBankKeeper     BankKeeper                         `optional:"true"`
-	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
-	FeeGrantKeeper         ante.FeegrantKeeper                `optional:"true"`
+	Config                 *txconfigv1.Config
+	AddressCodec           address.Codec
+	ValidatorAddressCodec  address.ValidatorAddressCodec
+	Codec                  codec.Codec
+	ProtoFileResolver      txsigning.ProtoFileResolver
 	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
 	CustomGetSigners       []txsigning.CustomGetSigner        `optional:"true"`
 }
@@ -60,9 +49,10 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	TxConfig        client.TxConfig
-	TxConfigOptions tx.ConfigOptions
-	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
+	BaseAppOption       runtime.BaseAppOption // This is only useful for chains using baseapp.
+	TxConfig            client.TxConfig
+	TxConfigOptions     tx.ConfigOptions
+	TxSigningHandlerMap *txsigning.HandlerMap
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -90,85 +80,23 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		txConfigOptions.SigningOptions.CustomGetSigners[mode.MsgType] = mode.Fn
 	}
 
-	// enable SIGN_MODE_TEXTUAL only if bank keeper is available
-	if in.MetadataBankKeeper != nil {
-		txConfigOptions.EnabledSignModes = append(txConfigOptions.EnabledSignModes, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
-		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
-	}
-
 	txConfig, err := tx.NewTxConfigWithOptions(in.Codec, txConfigOptions)
 	if err != nil {
 		panic(err)
 	}
 
-	baseAppOption := func(app *baseapp.BaseApp) {
-		// AnteHandlers
-		if !in.Config.SkipAnteHandler {
-			anteHandler, err := newAnteHandler(txConfig, in)
-			if err != nil {
-				panic(err)
-			}
-			app.SetAnteHandler(anteHandler)
-		}
-
-		// PostHandlers
-		if !in.Config.SkipPostHandler {
-			// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
-			// antehandlers, but are run _after_ the `runMsgs` execution. They are also
-			// defined as a chain, and have the same signature as antehandlers.
-			//
-			// In baseapp, postHandlers are run in the same store branch as `runMsgs`,
-			// meaning that both `runMsgs` and `postHandler` state will be committed if
-			// both are successful, and both will be reverted if any of the two fails.
-			//
-			// The SDK exposes a default empty postHandlers chain.
-			//
-			// Please note that changing any of the anteHandler or postHandler chain is
-			// likely to be a state-machine breaking change, which needs a coordinated
-			// upgrade.
-			postHandler, err := posthandler.NewPostHandler(
-				posthandler.HandlerOptions{},
-			)
-			if err != nil {
-				panic(err)
-			}
-			app.SetPostHandler(postHandler)
-		}
-
-		// TxDecoder/TxEncoder
-		app.SetTxDecoder(txConfig.TxDecoder())
-		app.SetTxEncoder(txConfig.TxEncoder())
-	}
-
-	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption}
-}
-
-func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
-	if in.BankKeeper == nil {
-		return nil, errors.New("both AccountKeeper and BankKeeper are required")
-	}
-
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   in.AccountKeeper,
-			BankKeeper:      in.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  in.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			Environment:     in.Environment,
+	return ModuleOutputs{
+		BaseAppOption: func(app *baseapp.BaseApp) {
+			app.SetTxDecoder(txConfig.TxDecoder())
+			app.SetTxEncoder(txConfig.TxEncoder())
 		},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create ante handler: %w", err)
+		TxConfig:            txConfig,
+		TxConfigOptions:     txConfigOptions,
+		TxSigningHandlerMap: txConfig.SignModeHandler(),
 	}
-
-	return anteHandler, nil
 }
 
-// NewBankKeeperCoinMetadataQueryFn creates a new Textual struct using the given
-// BankKeeper to retrieve coin metadata.
-//
-// This function should be used in the server (app.go) and is already injected thanks to app wiring for app_di.
+// NewBankKeeperCoinMetadataQueryFn creates a new Textual struct using the given BankKeeper to retrieve coin metadata.
 func NewBankKeeperCoinMetadataQueryFn(bk BankKeeper) textual.CoinMetadataQueryFn {
 	return func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadataV2(ctx, &bankv1beta1.QueryDenomMetadataRequest{Denom: denom})

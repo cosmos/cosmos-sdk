@@ -2,10 +2,10 @@
 
 WAIT_TIME ?= 45s
 
-all: test
+all: test format
 
 test:
-	go test -mod=readonly -failfast -tags='system_test' ./... --wait-time=$(WAIT_TIME) --verbose
+	go test -mod=readonly -failfast -timeout=15m -tags='system_test' ./... --wait-time=$(WAIT_TIME) --verbose $(if $(findstring v2,$(COSMOS_BUILD_OPTIONS)),--binary=simdv2)
 
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofumpt -w

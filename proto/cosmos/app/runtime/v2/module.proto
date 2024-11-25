@@ -62,9 +62,12 @@ message Module {
 
 // GasConfig is the config object for gas limits.
 message GasConfig {
+  // validate_tx_gas_limit is the gas limit for validating a tx.
   uint64 validate_tx_gas_limit = 1;
-  uint64 query_gas_limit       = 2;
-  uint64 simulation_gas_limit  = 3;
+  // query_gas_limit is the gas limit for querying.
+  uint64 query_gas_limit = 2;
+  // simulation_gas_limit is the gas limit for simulation.
+  uint64 simulation_gas_limit = 3;
 }
 
 // StoreKeyConfig may be supplied to override the default module store key, which

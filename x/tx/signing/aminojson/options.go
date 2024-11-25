@@ -2,11 +2,14 @@ package aminojson
 
 import (
 	cosmos_proto "github.com/cosmos/cosmos-proto"
+	gogo "github.com/cosmos/gogoproto/gogoproto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/runtime/protoimpl"
+	"google.golang.org/protobuf/types/descriptorpb"
 
 	"cosmossdk.io/api/amino"
 )
@@ -25,7 +28,6 @@ func getMessageAminoName(msg protoreflect.Message) (string, bool) {
 
 // getMessageAminoName returns the amino name of a message if it has been set by the `amino.name` option.
 // If the message does not have an amino name, then it returns the msg url.
-// If it cannot get the msg url, then it returns false.
 func getMessageAminoNameAny(msg protoreflect.Message) string {
 	messageOptions := msg.Descriptor().Options()
 	if proto.HasExtension(messageOptions, amino.E_Name) {
@@ -33,6 +35,11 @@ func getMessageAminoNameAny(msg protoreflect.Message) string {
 		return name.(string)
 	}
 
+	return getMessageTypeURL(msg)
+}
+
+// getMessageTypeURL returns the msg url.
+func getMessageTypeURL(msg protoreflect.Message) string {
 	msgURL := "/" + string(msg.Descriptor().FullName())
 	if msgURL != "/" {
 		return msgURL
@@ -96,7 +103,16 @@ func (enc Encoder) getMessageEncoder(message protoreflect.Message) MessageEncode
 	return nil
 }
 
-func (enc Encoder) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEncoder {
+var customTypeExtension = protoimpl.ExtensionInfo{
+	ExtendedType:  (*descriptorpb.FieldOptions)(nil),
+	ExtensionType: gogo.E_Customtype.ExtensionType,
+	Field:         gogo.E_Customtype.Field,
+	Name:          gogo.E_Customtype.Name,
+	Tag:           gogo.E_Customtype.Tag,
+	Filename:      gogo.E_Customtype.Filename,
+}
+
+func (enc Encoder) getFieldEncoder(field protoreflect.FieldDescriptor) FieldEncoder {
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_Encoding) {
 		encoding := proto.GetExtension(opts, amino.E_Encoding).(string)
@@ -106,6 +122,18 @@ func (enc Encoder) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEnc
 	}
 	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
 		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
+		// do not handle encoding of fields tagged only with scalar which are not backed by a
+		// LegacyDec custom type.  This types are handled by the default encoding, as they are
+		// expected to already be encoded as their human readable string representation
+		// containing a radix, i.e. "1.2345".
+		// For example:
+		// https://github.com/cosmos/cosmos-sdk/blob/9076487d035e43d39fe54e8498da1ce31b9c845c/x/gov/proto/cosmos/gov/v1/gov.proto#L274
+		if scalar == cosmosDecType {
+			customType := proto.GetExtension(opts, &customTypeExtension)
+			if customType != "cosmossdk.io/math.LegacyDec" {
+				return nil
+			}
+		}
 		if fn, ok := enc.cosmosProtoScalarEncoders[scalar]; ok {
 			return fn
 		}

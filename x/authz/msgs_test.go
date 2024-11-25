@@ -12,7 +12,6 @@ import (
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/auth/migrations/legacytx"
 	"cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -23,6 +22,7 @@ import (
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 func TestMsgGrantGetAuthorization(t *testing.T) {

@@ -6,12 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	v2flags "cosmossdk.io/client/v2/internal/flags"
+	clitx "cosmossdk.io/client/v2/tx"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,29 +18,34 @@ import (
 
 // Verify verifies a digest after unmarshalling it.
 func Verify(ctx client.Context, digest []byte, fileFormat string) error {
-	tx, err := unmarshal(digest, fileFormat)
+	txConfig, err := clitx.NewTxConfig(clitx.ConfigOptions{
+		AddressCodec:          ctx.AddressCodec,
+		Cdc:                   ctx.Codec,
+		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
+		EnabledSignModes:      enabledSignModes,
+	})
 	if err != nil {
 		return err
 	}
 
-	return verify(ctx, tx)
+	dTx, err := unmarshal(fileFormat, digest, txConfig)
+	if err != nil {
+		return err
+	}
+
+	return verify(ctx, dTx)
 }
 
 // verify verifies given Tx.
-func verify(ctx client.Context, tx *apitx.Tx) error {
-	sigTx := builder{
-		cdc: ctx.Codec,
-		tx:  tx,
-	}
-
+func verify(ctx client.Context, dTx clitx.Tx) error {
 	signModeHandler := ctx.TxConfig.SignModeHandler()
 
-	signers, err := sigTx.GetSigners()
+	signers, err := dTx.GetSigners()
 	if err != nil {
 		return err
 	}
 
-	sigs, err := sigTx.GetSignatures()
+	sigs, err := dTx.GetSignatures()
 	if err != nil {
 		return err
 	}
@@ -79,7 +81,7 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 			},
 		}
 
-		txData, err := sigTx.GetSigningTxData()
+		txData, err := dTx.GetSigningTxData()
 		if err != nil {
 			return err
 		}
@@ -93,18 +95,15 @@ func verify(ctx client.Context, tx *apitx.Tx) error {
 }
 
 // unmarshal unmarshalls a digest to a Tx using protobuf protojson.
-func unmarshal(digest []byte, fileFormat string) (*apitx.Tx, error) {
-	var err error
-	tx := &apitx.Tx{}
-	switch fileFormat {
-	case v2flags.OutputFormatJSON:
-		err = protojson.Unmarshal(digest, tx)
-	case v2flags.OutputFormatText:
-		err = prototext.Unmarshal(digest, tx)
+func unmarshal(format string, bz []byte, config clitx.TxConfig) (clitx.Tx, error) {
+	switch format {
+	case "json":
+		return config.TxJSONDecoder()(bz)
+	case "text":
+		return config.TxTextDecoder()(bz)
 	default:
-		return nil, fmt.Errorf("unsupported file format: %s", fileFormat)
+		return nil, fmt.Errorf("unsupported format: %s", format)
 	}
-	return tx, err
 }
 
 // verifySignature verifies a transaction signature contained in SignatureData abstracting over different signing modes.
@@ -112,18 +111,18 @@ func verifySignature(
 	ctx context.Context,
 	pubKey cryptotypes.PubKey,
 	signerData txsigning.SignerData,
-	signatureData SignatureData,
+	signatureData clitx.SignatureData,
 	handler *txsigning.HandlerMap,
 	txData txsigning.TxData,
 ) error {
 	switch data := signatureData.(type) {
-	case *SingleSignatureData:
+	case *clitx.SingleSignatureData:
 		signBytes, err := handler.GetSignBytes(ctx, data.SignMode, signerData, txData)
 		if err != nil {
 			return err
 		}
 		if !pubKey.VerifySignature(signBytes, data.Signature) {
-			return fmt.Errorf("unable to verify single signer signature")
+			return errors.New("unable to verify single signer signature")
 		}
 		return nil
 	default:

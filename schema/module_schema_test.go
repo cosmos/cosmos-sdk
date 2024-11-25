@@ -9,13 +9,13 @@ import (
 func TestModuleSchema_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
-		objectTypes []ObjectType
+		types       []Type
 		errContains string
 	}{
 		{
 			name: "valid module schema",
-			objectTypes: []ObjectType{
-				{
+			types: []Type{
+				StateObjectType{
 					Name: "object1",
 					KeyFields: []Field{
 						{
@@ -29,8 +29,8 @@ func TestModuleSchema_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid object type",
-			objectTypes: []ObjectType{
-				{
+			types: []Type{
+				StateObjectType{
 					Name: "",
 					KeyFields: []Field{
 						{
@@ -43,120 +43,31 @@ func TestModuleSchema_Validate(t *testing.T) {
 			errContains: "invalid object type name",
 		},
 		{
-			name: "same enum with missing values",
-			objectTypes: []ObjectType{
-				{
-					Name: "object1",
-					KeyFields: []Field{
-						{
-							Name: "k",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "enum1",
-								Values: []string{"a", "b"},
-							},
-						},
-					},
-					ValueFields: []Field{
-						{
-							Name: "v",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "enum1",
-								Values: []string{"a", "b", "c"},
-							},
-						},
-					},
-				},
-			},
-			errContains: "different number of values",
-		},
-		{
-			name: "same enum with different values",
-			objectTypes: []ObjectType{
-				{
-					Name: "object1",
-					KeyFields: []Field{
-						{
-							Name: "k",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "enum1",
-								Values: []string{"a", "b"},
-							},
-						},
-					},
-				},
-				{
-					Name: "object2",
-					KeyFields: []Field{
-						{
-							Name: "k",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "enum1",
-								Values: []string{"a", "c"},
-							},
-						},
-					},
-				},
-			},
-			errContains: "different values",
-		},
-		{
-			name: "same enum",
-			objectTypes: []ObjectType{{
-				Name: "object1",
-				KeyFields: []Field{
-					{
-						Name: "k",
-						Kind: EnumKind,
-						EnumType: EnumType{
-							Name:   "enum1",
-							Values: []string{"a", "b"},
-						},
-					},
-				},
-			},
-				{
-					Name: "object2",
-					KeyFields: []Field{
-						{
-							Name: "k",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "enum1",
-								Values: []string{"a", "b"},
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			objectTypes: []ObjectType{
-				{
+			name: "duplicate type name",
+			types: []Type{
+				StateObjectType{
 					Name: "type1",
 					ValueFields: []Field{
 						{
-							Name: "field1",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "type1",
-								Values: []string{"a", "b"},
-							},
+							Name:           "field1",
+							Kind:           EnumKind,
+							ReferencedType: "type1",
 						},
 					},
 				},
+				EnumType{
+					Name:   "type1",
+					Values: []EnumValueDefinition{{Name: "a", Value: 1}},
+				},
 			},
-			errContains: "enum \"type1\" already exists as a different non-enum type",
+			errContains: `duplicate type "type1"`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// because validate is called when calling NewModuleSchema, we just call NewModuleSchema
-			_, err := NewModuleSchema(tt.objectTypes)
+			// because validate is called when calling CompileModuleSchema, we just call CompileModuleSchema
+			_, err := CompileModuleSchema(tt.types...)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -174,13 +85,13 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 	tests := []struct {
 		name         string
 		moduleSchema ModuleSchema
-		objectUpdate ObjectUpdate
+		objectUpdate StateObjectUpdate
 		errContains  string
 	}{
 		{
 			name: "valid object update",
-			moduleSchema: requireModuleSchema(t, []ObjectType{
-				{
+			moduleSchema: requireModuleSchema(t,
+				StateObjectType{
 					Name: "object1",
 					KeyFields: []Field{
 						{
@@ -189,9 +100,8 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 						},
 					},
 				},
-			},
 			),
-			objectUpdate: ObjectUpdate{
+			objectUpdate: StateObjectUpdate{
 				TypeName: "object1",
 				Key:      "abc",
 			},
@@ -199,8 +109,8 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 		},
 		{
 			name: "object type not found",
-			moduleSchema: requireModuleSchema(t, []ObjectType{
-				{
+			moduleSchema: requireModuleSchema(t,
+				StateObjectType{
 					Name: "object1",
 					KeyFields: []Field{
 						{
@@ -209,9 +119,8 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 						},
 					},
 				},
-			},
 			),
-			objectUpdate: ObjectUpdate{
+			objectUpdate: StateObjectUpdate{
 				TypeName: "object2",
 				Key:      "abc",
 			},
@@ -219,22 +128,22 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 		},
 		{
 			name: "type name refers to an enum",
-			moduleSchema: requireModuleSchema(t, []ObjectType{
-				{
-					Name: "obj1",
-					KeyFields: []Field{
-						{
-							Name: "field1",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "enum1",
-								Values: []string{"a", "b"},
-							},
-						},
+			moduleSchema: requireModuleSchema(t, StateObjectType{
+				Name: "obj1",
+				KeyFields: []Field{
+					{
+						Name:           "field1",
+						Kind:           EnumKind,
+						ReferencedType: "enum1",
 					},
 				},
-			}),
-			objectUpdate: ObjectUpdate{
+			},
+				EnumType{
+					Name:   "enum1",
+					Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
+				},
+			),
+			objectUpdate: StateObjectUpdate{
 				TypeName: "enum1",
 				Key:      "a",
 			},
@@ -258,9 +167,9 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 	}
 }
 
-func requireModuleSchema(t *testing.T, objectTypes []ObjectType) ModuleSchema {
+func requireModuleSchema(t *testing.T, types ...Type) ModuleSchema {
 	t.Helper()
-	moduleSchema, err := NewModuleSchema(objectTypes)
+	moduleSchema, err := CompileModuleSchema(types...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -268,26 +177,19 @@ func requireModuleSchema(t *testing.T, objectTypes []ObjectType) ModuleSchema {
 }
 
 func TestModuleSchema_LookupType(t *testing.T) {
-	moduleSchema := requireModuleSchema(t, []ObjectType{
-		{
-			Name: "object1",
-			KeyFields: []Field{
-				{
-					Name: "field1",
-					Kind: StringKind,
-				},
+	moduleSchema := requireModuleSchema(t, StateObjectType{
+		Name: "object1",
+		KeyFields: []Field{
+			{
+				Name: "field1",
+				Kind: StringKind,
 			},
 		},
 	})
 
-	typ, ok := moduleSchema.LookupType("object1")
+	objectType, ok := moduleSchema.LookupStateObjectType("object1")
 	if !ok {
 		t.Fatalf("expected to find object type \"object1\"")
-	}
-
-	objectType, ok := typ.(ObjectType)
-	if !ok {
-		t.Fatalf("expected object type, got %T", typ)
 	}
 
 	if objectType.Name != "object1" {
@@ -296,41 +198,44 @@ func TestModuleSchema_LookupType(t *testing.T) {
 }
 
 func exampleSchema(t *testing.T) ModuleSchema {
-	return requireModuleSchema(t, []ObjectType{
-		{
+	t.Helper()
+	return requireModuleSchema(t,
+		StateObjectType{
 			Name: "object1",
 			KeyFields: []Field{
 				{
-					Name: "field1",
-					Kind: EnumKind,
-					EnumType: EnumType{
-						Name:   "enum2",
-						Values: []string{"d", "e", "f"},
-					},
+					Name:           "field1",
+					Kind:           EnumKind,
+					ReferencedType: "enum2",
 				},
 			},
 		},
-		{
+		StateObjectType{
 			Name: "object2",
 			KeyFields: []Field{
 				{
-					Name: "field1",
-					Kind: EnumKind,
-					EnumType: EnumType{
-						Name:   "enum1",
-						Values: []string{"a", "b", "c"},
-					},
+					Name:           "field1",
+					Kind:           EnumKind,
+					ReferencedType: "enum1",
 				},
 			},
 		},
-	})
+		EnumType{
+			Name:   "enum1",
+			Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}, {Name: "c", Value: 3}},
+		},
+		EnumType{
+			Name:   "enum2",
+			Values: []EnumValueDefinition{{Name: "d", Value: 4}, {Name: "e", Value: 5}, {Name: "f", Value: 6}},
+		},
+	)
 }
 
 func TestModuleSchema_Types(t *testing.T) {
 	moduleSchema := exampleSchema(t)
 
 	var typeNames []string
-	moduleSchema.Types(func(typ Type) bool {
+	moduleSchema.AllTypes(func(typ Type) bool {
 		typeNames = append(typeNames, typ.TypeName())
 		return true
 	})
@@ -342,7 +247,7 @@ func TestModuleSchema_Types(t *testing.T) {
 
 	typeNames = nil
 	// scan just the first type and return false
-	moduleSchema.Types(func(typ Type) bool {
+	moduleSchema.AllTypes(func(typ Type) bool {
 		typeNames = append(typeNames, typ.TypeName())
 		return false
 	})
@@ -357,7 +262,7 @@ func TestModuleSchema_ObjectTypes(t *testing.T) {
 	moduleSchema := exampleSchema(t)
 
 	var typeNames []string
-	moduleSchema.ObjectTypes(func(typ ObjectType) bool {
+	moduleSchema.StateObjectTypes(func(typ StateObjectType) bool {
 		typeNames = append(typeNames, typ.Name)
 		return true
 	})
@@ -369,7 +274,7 @@ func TestModuleSchema_ObjectTypes(t *testing.T) {
 
 	typeNames = nil
 	// scan just the first type and return false
-	moduleSchema.ObjectTypes(func(typ ObjectType) bool {
+	moduleSchema.StateObjectTypes(func(typ StateObjectType) bool {
 		typeNames = append(typeNames, typ.Name)
 		return false
 	})
@@ -404,5 +309,29 @@ func TestModuleSchema_EnumTypes(t *testing.T) {
 	expected = []string{"enum1"}
 	if !reflect.DeepEqual(typeNames, expected) {
 		t.Fatalf("expected %v, got %v", expected, typeNames)
+	}
+}
+
+func TestModuleSchemaJSON(t *testing.T) {
+	moduleSchema := exampleSchema(t)
+
+	b, err := moduleSchema.MarshalJSON()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	const expectedJson = `{"object_types":[{"name":"object1","key_fields":[{"name":"field1","kind":"enum","referenced_type":"enum2"}]},{"name":"object2","key_fields":[{"name":"field1","kind":"enum","referenced_type":"enum1"}]}],"enum_types":[{"name":"enum1","values":[{"name":"a","value":1},{"name":"b","value":2},{"name":"c","value":3}]},{"name":"enum2","values":[{"name":"d","value":4},{"name":"e","value":5},{"name":"f","value":6}]}]}`
+	if string(b) != expectedJson {
+		t.Fatalf("expected %s\n, got %s", expectedJson, string(b))
+	}
+
+	var moduleSchema2 ModuleSchema
+	err = moduleSchema2.UnmarshalJSON(b)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(moduleSchema, moduleSchema2) {
+		t.Fatalf("expected %v, got %v", moduleSchema, moduleSchema2)
 	}
 }

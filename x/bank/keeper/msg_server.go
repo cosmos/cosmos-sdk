@@ -3,12 +3,9 @@ package keeper
 import (
 	"context"
 
-	"github.com/hashicorp/go-metrics"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -32,11 +29,11 @@ func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 	)
 
 	if base, ok := k.Keeper.(BaseKeeper); ok {
-		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
+		from, err = base.addrCdc.StringToBytes(msg.FromAddress)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 		}
-		to, err = base.ak.AddressCodec().StringToBytes(msg.ToAddress)
+		to, err = base.addrCdc.StringToBytes(msg.ToAddress)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 		}
@@ -64,18 +61,6 @@ func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 	if err != nil {
 		return nil, err
 	}
-
-	defer func() {
-		for _, a := range msg.Amount {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "send"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
 
 	return &types.MsgSendResponse{}, nil
 }
@@ -106,7 +91,7 @@ func (k msgServer) MultiSend(ctx context.Context, msg *types.MsgMultiSend) (*typ
 
 	for _, out := range msg.Outputs {
 		if base, ok := k.Keeper.(BaseKeeper); ok {
-			accAddr, err := base.ak.AddressCodec().StringToBytes(out.Address)
+			accAddr, err := base.addrCdc.StringToBytes(out.Address)
 			if err != nil {
 				return nil, err
 			}
@@ -177,7 +162,7 @@ func (k msgServer) SetSendEnabled(ctx context.Context, msg *types.MsgSetSendEnab
 	return &types.MsgSetSendEnabledResponse{}, nil
 }
 
-func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+func (k msgServer) Burn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
 	var (
 		from []byte
 		err  error
@@ -189,7 +174,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 	}
 
 	if base, ok := k.Keeper.(BaseKeeper); ok {
-		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
+		from, err = base.addrCdc.StringToBytes(msg.FromAddress)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 		}
@@ -205,7 +190,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}
 
-	err = k.BurnCoins(goCtx, from, coins)
+	err = k.BurnCoins(ctx, from, coins)
 	if err != nil {
 		return nil, err
 	}

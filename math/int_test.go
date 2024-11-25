@@ -499,7 +499,6 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 	}
 
 	for _, value := range values {
-		value := value
 		t.Run(fmt.Sprintf("%d", value), func(t *testing.T) {
 			t.Parallel()
 
@@ -548,7 +547,6 @@ func TestFormatIntNonDigits(t *testing.T) {
 	}
 
 	for _, value := range badCases {
-		value := value
 		t.Run(value, func(t *testing.T) {
 			s, err := math.FormatInt(value)
 			if err == nil {
@@ -591,7 +589,6 @@ func TestFormatIntCorrectness(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.in, func(t *testing.T) {
 			got, err := math.FormatInt(tt.in)
 			if err != nil {

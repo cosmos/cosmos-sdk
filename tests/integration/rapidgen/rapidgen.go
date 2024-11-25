@@ -29,8 +29,6 @@ import (
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
-	authtypes "cosmossdk.io/x/auth/types"
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	authztypes "cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
@@ -46,6 +44,8 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 type GeneratedType struct {
@@ -222,7 +222,6 @@ var (
 	NonsignableTypes = []GeneratedType{
 		GenType(&authtypes.Params{}, &authapi.Params{}, GenOpts),
 		GenType(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
-		GenType(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
 		GenType(&authtypes.ModuleCredential{}, &authapi.ModuleCredential{}, GenOpts),
 
 		GenType(&authztypes.GenericAuthorization{}, &authzapi.GenericAuthorization{}, GenOpts),

@@ -24,22 +24,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -65,7 +68,7 @@ type HasGenesisBasics = appmodule.HasGenesisBasics
 // HasAminoCodec is the interface for modules that have amino codec registration.
 // Deprecated: modules should not need to register their own amino codecs.
 type HasAminoCodec interface {
-	RegisterLegacyAminoCodec(legacy.Amino)
+	RegisterLegacyAminoCodec(registry.AminoRegistrar)
 }
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
@@ -90,6 +93,14 @@ type HasInvariants interface {
 type HasServices interface {
 	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
+}
+
+// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// This API is part of core/appmodule but commented out for dependencies.
+type hasServicesV1 interface {
+	appmodulev2.AppModule
+
+	RegisterServices(grpc.ServiceRegistrar) error
 }
 
 // MigrationHandler is the migration function that each module registers.
@@ -282,17 +293,27 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *Manager) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	for _, b := range m.Modules {
+func (m *Manager) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	for name, b := range m.Modules {
+		if _, ok := b.(interface{ RegisterLegacyAminoCodec(*codec.LegacyAmino) }); ok {
+			panic(fmt.Sprintf("%s uses a deprecated amino registration api, implement HasAminoCodec instead if necessary", name))
+		}
+
 		if mod, ok := b.(HasAminoCodec); ok {
-			mod.RegisterLegacyAminoCodec(cdc)
+			mod.RegisterLegacyAminoCodec(registrar)
 		}
 	}
 }
 
 // RegisterInterfaces registers all module interface types
 func (m *Manager) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	for _, b := range m.Modules {
+	for name, b := range m.Modules {
+		if _, ok := b.(interface {
+			RegisterInterfaces(cdctypes.InterfaceRegistry)
+		}); ok {
+			panic(fmt.Sprintf("%s uses a deprecated interface registration api, implement appmodule.HasRegisterInterfaces instead", name))
+		}
+
 		if mod, ok := b.(appmodule.HasRegisterInterfaces); ok {
 			mod.RegisterInterfaces(registrar)
 		}
@@ -383,7 +404,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 			module.RegisterServices(cfg)
 		}
 
-		if module, ok := module.(appmodule.HasServices); ok {
+		if module, ok := module.(hasServicesV1); ok {
 			err := module.RegisterServices(cfg)
 			if err != nil {
 				return err
@@ -573,7 +594,6 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	}
 	var missing []string
 	for m := range m.Modules {
-		m := m
 		if pass != nil && pass(m) {
 			continue
 		}
@@ -704,7 +724,6 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM app
 // It takes the current context as a parameter and returns a boolean value
 // indicating whether the migration was successfully executed or not.
 func (m *Manager) PreBlock(ctx sdk.Context) error {
-	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderPreBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
 			if err := module.PreBlock(ctx); err != nil {
@@ -814,7 +833,6 @@ func (m *Manager) GetVersionMap() appmodule.VersionMap {
 		if v, ok := v.(appmodule.HasConsensusVersion); ok {
 			version = v.ConsensusVersion()
 		}
-		name := name
 		vermap[name] = version
 	}
 
@@ -823,7 +841,7 @@ func (m *Manager) GetVersionMap() appmodule.VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	return maps.Keys(m.Modules)
+	return slices.Collect(maps.Keys(m.Modules))
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

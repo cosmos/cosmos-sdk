@@ -14,10 +14,10 @@ import (
 
 const (
 	ModuleName = "runtime"
-	FlagHome   = "home"
+	flagHome   = "home"
 )
 
-// ValidateProtoAnnotations validates that the proto annotations are correct.
+// validateProtoAnnotations validates that the proto annotations are correct.
 // More specifically, it verifies:
 // - all services named "Msg" have `(cosmos.msg.v1.service) = true`,
 //

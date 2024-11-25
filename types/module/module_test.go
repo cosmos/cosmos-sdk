@@ -8,20 +8,20 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	coretesting "cosmossdk.io/core/testing"
-	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var errFoo = errors.New("dummy")
@@ -171,7 +171,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	// this should error since the validator set is empty even after init genesis
@@ -220,7 +220,7 @@ func TestManager_ExportGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx)).AnyTimes().Return(json.RawMessage(`{"key1": "value1"}`), nil)
 	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx)).AnyTimes().Return(json.RawMessage(`{"key2": "value2"}`), nil)
 
@@ -304,7 +304,7 @@ func TestCoreAPIManager_InitGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 1, len(mm.Modules))
 
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	// this should panic since the validator set is empty even after init genesis
@@ -326,7 +326,7 @@ func TestCoreAPIManager_ExportGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
 
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{
   "someField": "someKey"
@@ -577,5 +577,4 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 var (
 	_ appmodule.AppModule      = MockCoreAppModule{}
 	_ appmodule.HasGenesisAuto = MockCoreAppModule{}
-	_ appmodule.HasServices    = MockCoreAppModule{}
 )

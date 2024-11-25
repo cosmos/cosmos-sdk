@@ -46,7 +46,7 @@ func (a MinimalAbstractedAccount) RotatePubKey(ctx context.Context, msg *rotatio
 	return nil, errors.New("not implemented")
 }
 
-// Authenticate authenticates the account, auth always passess.
+// Authenticate authenticates the account, auth always passes.
 func (a MinimalAbstractedAccount) Authenticate(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error) {
 	_, err := a.Sequence.Next(ctx)
 	if err != nil {
@@ -73,4 +73,8 @@ func (a MinimalAbstractedAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 
 func (a MinimalAbstractedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QueryAuthenticateMethods) // implements account_abstraction
+}
+
+func ProvideAccount() accountstd.DepinjectAccount {
+	return accountstd.DIAccount("aa_minimal", NewMinimalAbstractedAccount)
 }

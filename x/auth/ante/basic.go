@@ -2,13 +2,12 @@ package ante
 
 import (
 	"context"
+	"time"
 
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/migrations/legacytx"
-	authsigning "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -16,6 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
@@ -23,10 +24,10 @@ import (
 // ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
 // is not dependent on application state.
 type ValidateBasicDecorator struct {
-	env appmodule.Environment
+	env appmodulev2.Environment
 }
 
-func NewValidateBasicDecorator(env appmodule.Environment) ValidateBasicDecorator {
+func NewValidateBasicDecorator(env appmodulev2.Environment) ValidateBasicDecorator {
 	return ValidateBasicDecorator{
 		env: env,
 	}
@@ -218,7 +219,7 @@ type (
 	// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 	// tx height timeout.
 	TxTimeoutHeightDecorator struct {
-		env appmodule.Environment
+		env appmodulev2.Environment
 	}
 
 	// TxWithTimeoutHeight defines the interface a tx must implement in order for
@@ -227,12 +228,13 @@ type (
 		sdk.Tx
 
 		GetTimeoutHeight() uint64
+		GetTimeoutTimeStamp() time.Time
 	}
 )
 
 // TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 // tx height timeout.
-func NewTxTimeoutHeightDecorator(env appmodule.Environment) TxTimeoutHeightDecorator {
+func NewTxTimeoutHeightDecorator(env appmodulev2.Environment) TxTimeoutHeightDecorator {
 	return TxTimeoutHeightDecorator{
 		env: env,
 	}
@@ -263,6 +265,13 @@ func (txh TxTimeoutHeightDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) e
 	if timeoutHeight > 0 && uint64(headerInfo.Height) > timeoutHeight {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", headerInfo.Height, timeoutHeight,
+		)
+	}
+
+	timeoutTimestamp := timeoutTx.GetTimeoutTimeStamp()
+	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 && timeoutTimestamp.Before(headerInfo.Time) {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrTxTimeout, "block time: %s, timeout timestamp: %s", headerInfo.Time.String(), timeoutTimestamp.String(),
 		)
 	}
 

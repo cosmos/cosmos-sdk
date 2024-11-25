@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	errorsmod "cosmossdk.io/errors"
-	authclient "cosmossdk.io/x/auth/client"
-	"cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,6 +15,8 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const (
@@ -31,7 +31,7 @@ const (
 // GetSignBatchCommand returns the transaction sign-batch command.
 func GetSignBatchCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign-batch [file] ([file2]...)",
+		Use:   "sign-batch <file> [<file2>...]",
 		Short: "Sign transaction batch files",
 		Long: `Sign batch files of transactions generated with --generate-only.
 The command processes list of transactions from a file (one StdTx each line), or multiple files.
@@ -98,10 +98,14 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if !clientCtx.Offline && multisigKey == "" {
+		if !clientCtx.Offline {
 			from, err := cmd.Flags().GetString(flags.FlagFrom)
 			if err != nil {
 				return err
+			}
+
+			if multisigKey != "" {
+				from = multisigKey
 			}
 
 			fromAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
@@ -267,7 +271,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		multisigAddr,
 		clientCtx.FromName,
 		txBuilder,
-		clientCtx.Offline,
+		true,
 		true,
 	); err != nil {
 		return err
@@ -322,7 +326,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 // GetSignCommand returns the transaction sign command.
 func GetSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign [file]",
+		Use:   "sign <file>",
 		Short: "Sign a transaction generated offline",
 		Long: `Sign a transaction created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.

@@ -10,18 +10,19 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"
-	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 type IntegrationTestOutOfGasSuite struct {
@@ -36,7 +37,7 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	var err error
 	s.T().Log("setting up integration test suite")
 
-	s.cfg, err = network.DefaultConfigWithAppConfigWithQueryGasLimit(configurator.NewAppConfig(
+	s.cfg, err = network.DefaultConfigWithAppConfig(configurator.NewAppConfig(
 		configurator.AccountsModule(),
 		configurator.AuthModule(),
 		configurator.BankModule(),
@@ -44,7 +45,8 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
-	), 10)
+		configurator.ValidateModule(),
+	), baseapp.SetQueryGasLimit(10))
 	s.NoError(err)
 	s.cfg.NumValidators = 1
 

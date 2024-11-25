@@ -9,6 +9,8 @@ import (
 
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	store "cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2/root"
 )
 
 func TestReadConfig(t *testing.T) {
@@ -19,7 +21,8 @@ func TestReadConfig(t *testing.T) {
 	v, err := serverv2.ReadConfig(configPath)
 	require.NoError(t, err)
 
-	require.Equal(t, v.GetString("grpc.address"), grpc.DefaultConfig().Address)
+	require.Equal(t, v.GetString(grpc.FlagAddress), grpc.DefaultConfig().Address)
+	require.Equal(t, v.GetString(store.FlagAppDBBackend), root.DefaultConfig().AppDBBackend)
 }
 
 func TestUnmarshalSubConfig(t *testing.T) {
@@ -29,11 +32,17 @@ func TestUnmarshalSubConfig(t *testing.T) {
 
 	v, err := serverv2.ReadConfig(configPath)
 	require.NoError(t, err)
+	cfg := v.AllSettings()
 
 	grpcConfig := grpc.DefaultConfig()
-	err = serverv2.UnmarshalSubConfig(v, "grpc", &grpcConfig)
+	err = serverv2.UnmarshalSubConfig(cfg, "grpc", &grpcConfig)
 	require.NoError(t, err)
 
 	require.True(t, grpc.DefaultConfig().Enable)
 	require.False(t, grpcConfig.Enable)
+
+	storeConfig := root.Config{}
+	err = serverv2.UnmarshalSubConfig(cfg, "store", &storeConfig)
+	require.NoError(t, err)
+	require.Equal(t, *root.DefaultConfig(), storeConfig)
 }

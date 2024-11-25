@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/header"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -170,7 +169,6 @@ func (s *TestSuite) TestCreateGroup() {
 
 	var seq uint32 = 1
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			blockTime := sdk.UnwrapSDKContext(s.ctx).HeaderInfo().Time
 			res, err := s.groupKeeper.CreateGroup(s.ctx, spec.req)
@@ -521,7 +519,6 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 			_, err := s.groupKeeper.UpdateGroupMembers(sdkCtx, spec.req)
@@ -658,7 +655,6 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			_, err := s.groupKeeper.UpdateGroupAdmin(s.ctx, spec.req)
 			if spec.expErr {
@@ -728,7 +724,6 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 			_, err := s.groupKeeper.UpdateGroupMetadata(sdkCtx, spec.req)
@@ -898,7 +893,6 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 	}
 
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			s.setNextAccount()
 			err := spec.req.SetDecisionPolicy(spec.policy)
@@ -1085,7 +1079,6 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			err := spec.req.SetDecisionPolicy(spec.policy)
 			s.Require().NoError(err)
@@ -1219,7 +1212,7 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
+
 		err := spec.expGroupPolicy.SetDecisionPolicy(policy)
 		s.Require().NoError(err)
 
@@ -1370,7 +1363,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
+
 		policyAddr := groupPolicyAddr
 		err := spec.expGroupPolicy.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
@@ -1471,7 +1464,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
+
 		err := spec.expGroupPolicy.SetDecisionPolicy(policy)
 		s.Require().NoError(err)
 
@@ -1852,7 +1845,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -1878,7 +1871,6 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			err := spec.req.SetMsgs(spec.msgs)
 			s.Require().NoError(err)
@@ -1996,14 +1988,14 @@ func (s *TestSuite) TestWithdrawProposal() {
 				timeDiff := vpe.Sub(s.sdkCtx.HeaderInfo().Time)
 				ctxVPE := sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(timeDiff).Add(time.Second * 1)})
 				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE))
-				events := ctxVPE.EventManager().ABCIEvents()
+				events := ctxVPE.EventManager().Events()
 
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
+
 		s.Run(msg, func() {
 			pID := spec.preRun(s.sdkCtx)
 
@@ -2386,7 +2378,6 @@ func (s *TestSuite) TestVote() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			sdkCtx := s.sdkCtx
 			if !spec.srcCtx.IsZero() {
@@ -2576,7 +2567,7 @@ func (s *TestSuite) TestExecProposal() {
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2594,7 +2585,7 @@ func (s *TestSuite) TestExecProposal() {
 			expFromBalances:   sdk.NewInt64Coin("test", 9800),
 			expToBalances:     sdk.NewInt64Coin("test", 200),
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2607,7 +2598,7 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().False(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2618,7 +2609,7 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().False(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2676,7 +2667,7 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2739,7 +2730,6 @@ func (s *TestSuite) TestExecProposal() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 			proposalID := spec.setupProposal(sdkCtx)
@@ -2783,7 +2773,6 @@ func (s *TestSuite) TestExecProposal() {
 			}
 			spec.postRun(sdkCtx)
 		})
-
 	}
 }
 
@@ -2936,7 +2925,6 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 			proposalID := spec.setupProposal(sdkCtx)
@@ -2962,7 +2950,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				res, err := s.groupKeeper.VotesByProposal(sdkCtx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 
 			} else {
@@ -3344,7 +3332,6 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 
@@ -3366,7 +3353,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			s.setNextAccount()
 
-			s.groupKeeper.GetGroupSequence(s.sdkCtx)
+			s.groupKeeper.GetGroupSequence(s.ctx)
 			policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 			s.Require().NoError(err)
 
@@ -3398,7 +3385,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	}
 }
 
-func eventTypeFound(events []abci.Event, eventType string) bool {
+func eventTypeFound(events []sdk.Event, eventType string) bool {
 	eventTypeFound := false
 	for _, e := range events {
 		if e.Type == eventType {

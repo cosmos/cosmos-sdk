@@ -8,13 +8,19 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/tx/signing"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+)
+
+var DefaultProviders = depinject.Provide(
+	ProvideInterfaceRegistry,
+	ProvideLegacyAmino,
+	ProvideProtoCodec,
+	ProvideAddressCodec,
 )
 
 func ProvideInterfaceRegistry(
@@ -45,7 +51,7 @@ func ProvideInterfaceRegistry(
 	return interfaceRegistry, interfaceRegistry, nil
 }
 
-func ProvideLegacyAmino() legacy.Amino {
+func ProvideLegacyAmino() registry.AminoRegistrar {
 	return NewLegacyAmino()
 }
 

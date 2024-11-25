@@ -3,7 +3,6 @@ package query
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -87,7 +86,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V], T any](
 	reverse := pageReq.Reverse
 
 	if offset > 0 && key != nil {
-		return nil, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return nil, nil, errors.New("invalid request, either offset or key is expected, got both")
 	}
 
 	opt := new(CollectionsPaginateOptions[K])

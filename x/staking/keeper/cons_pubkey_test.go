@@ -3,17 +3,17 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {

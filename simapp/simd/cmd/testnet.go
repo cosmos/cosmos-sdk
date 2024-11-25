@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/simapp"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -34,6 +33,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -336,7 +336,12 @@ func initTestnetFiles(
 			sdk.NewCoin(args.bondTokenDenom, accStakingTokens),
 		}
 
-		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
+		addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
+		if err != nil {
+			return err
+		}
+
+		genBalances = append(genBalances, banktypes.Balance{Address: addrStr, Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valStr, err := clientCtx.ValidatorAddressCodec.BytesToString(addr)
@@ -348,7 +353,7 @@ func initTestnetFiles(
 			valStr,
 			valPubKeys[i],
 			sdk.NewCoin(args.bondTokenDenom, valTokens),
-			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
+			stakingtypes.NewDescription(nodeDirName, "", "", "", "", stakingtypes.Metadata{}),
 			stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec()),
 			math.OneInt(),
 		)
@@ -370,7 +375,7 @@ func initTestnetFiles(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(cmd.Context(), txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err := tx.Sign(clientCtx, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -544,11 +549,7 @@ func writeFile(name, dir string, contents []byte) error {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	if err := os.WriteFile(file, contents, 0o600); err != nil {
-		return err
-	}
-
-	return nil
+	return os.WriteFile(file, contents, 0o600)
 }
 
 // startTestnet starts an in-process testnet

@@ -6,15 +6,11 @@
 #? init-simapp: Initializes a single local node network
 init-simapp:
 	./scripts/init-simapp.sh
+init-simapp-v2:
+	./scripts/init-simapp-v2.sh
 
 #? test: Run `make test-unit`
 test: test-unit
-#? test-e2e: Run `make -C tests test-e2e`
-test-e2e:
-	$(MAKE) -C tests test-e2e
-#? test-e2e-cov: Run `make -C tests test-e2e-cov`
-test-e2e-cov:
-	$(MAKE) -C tests test-e2e-cov
 #? test-integration: Run `make -C tests test-integration`
 test-integration:
 	$(MAKE) -C tests test-integration
@@ -22,12 +18,12 @@ test-integration:
 test-integration-cov:
 	$(MAKE) -C tests test-integration-cov
 #? test-all: Run all test
-test-all: test-unit test-e2e test-integration test-ledger-mock test-race
+test-all: test-unit test-integration test-ledger-mock test-race
 
 .PHONY: test-system
 test-system: build
 	mkdir -p ./tests/systemtests/binaries/
-	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+	cp $(BUILDDIR)/simd$(if $(findstring v2,$(COSMOS_BUILD_OPTIONS)),v2) ./tests/systemtests/binaries/
 	$(MAKE) -C tests/systemtests test
 
 

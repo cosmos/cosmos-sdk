@@ -1,13 +1,13 @@
 package query
 
 import (
-	"fmt"
+	"errors"
 	"math"
 
-	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/types"
 )
 
@@ -62,7 +62,7 @@ func Paginate(
 	pageRequest = initPageRequestDefaults(pageRequest)
 
 	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return nil, errors.New("invalid request, either offset or key is expected, got both")
 	}
 
 	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
@@ -126,7 +126,7 @@ func Paginate(
 	return res, nil
 }
 
-func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Iterator {
+func getIterator(prefixStore types.KVStore, start []byte, reverse bool) corestore.Iterator {
 	if reverse {
 		var end []byte
 		if start != nil {

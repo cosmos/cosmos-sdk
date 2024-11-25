@@ -10,12 +10,15 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
+	_ "cosmossdk.io/api/cosmos/accounts/defaults/base/v1" // import for side-effects
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
+	txdecode "cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,14 +49,17 @@ func NewKeeper(
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	ir InterfaceRegistry,
+	txDecoder *txdecode.Decoder,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		Environment:      env,
-		codec:            cdc,
+		txDecoder:        txDecoder,
 		addressCodec:     addressCodec,
+		codec:            cdc,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
+		accounts:         nil,
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
@@ -77,6 +83,7 @@ func NewKeeper(
 type Keeper struct {
 	appmodule.Environment
 
+	txDecoder        *txdecode.Decoder
 	addressCodec     address.Codec
 	codec            codec.Codec
 	makeSendCoinsMsg coinsTransferMsgFunc
@@ -97,6 +104,8 @@ type Keeper struct {
 	// Account set and get their own state but this helps providing a nice mapping
 	// between: (account number, account state key) => account state value.
 	AccountsState collections.Map[collections.Pair[uint64, []byte], []byte]
+
+	bundlingDisabled bool // if this is set then bundling of txs is disallowed.
 }
 
 // IsAccountsModuleAccount check if an address belong to a smart account.
@@ -137,9 +146,9 @@ func (k Keeper) Init(
 	ctx context.Context,
 	accountType string,
 	creator []byte,
-	initRequest implementation.ProtoMsg,
+	initRequest transaction.Msg,
 	funds sdk.Coins,
-) (implementation.ProtoMsg, []byte, error) {
+) (transaction.Msg, []byte, error) {
 	// get the next account number
 	num, err := k.AccountNumber.Next(ctx)
 	if err != nil {
@@ -158,7 +167,7 @@ func (k Keeper) Init(
 }
 
 // initFromMsg is a helper which inits an account given a v1.MsgInit.
-func (k Keeper) initFromMsg(ctx context.Context, initMsg *v1.MsgInit) (implementation.ProtoMsg, []byte, error) {
+func (k Keeper) initFromMsg(ctx context.Context, initMsg *v1.MsgInit) (transaction.Msg, []byte, error) {
 	creator, err := k.addressCodec.StringToBytes(initMsg.Sender)
 	if err != nil {
 		return nil, nil, err
@@ -182,9 +191,9 @@ func (k Keeper) init(
 	creator []byte,
 	accountNum uint64,
 	accountAddr []byte,
-	initRequest implementation.ProtoMsg,
+	initRequest transaction.Msg,
 	funds sdk.Coins,
-) (implementation.ProtoMsg, error) {
+) (transaction.Msg, error) {
 	impl, ok := k.accounts[accountType]
 	if !ok {
 		return nil, fmt.Errorf("%w: not found %s", errAccountTypeNotFound, accountType)
@@ -223,8 +232,8 @@ func (k Keeper) MigrateLegacyAccount(
 	addr []byte, // The current address of the account
 	accNum uint64, // The current account number
 	accType string, // The account type to migrate to
-	msg implementation.ProtoMsg, // The init msg of the account type we're migrating to
-) (implementation.ProtoMsg, error) {
+	msg transaction.Msg, // The init msg of the account type we're migrating to
+) (transaction.Msg, error) {
 	return k.init(ctx, accType, addr, accNum, addr, msg, nil)
 }
 
@@ -233,9 +242,9 @@ func (k Keeper) Execute(
 	ctx context.Context,
 	accountAddr []byte,
 	sender []byte,
-	execRequest implementation.ProtoMsg,
+	execRequest transaction.Msg,
 	funds sdk.Coins,
-) (implementation.ProtoMsg, error) {
+) (transaction.Msg, error) {
 	// get account implementation
 	impl, err := k.getImplementation(ctx, accountAddr)
 	if err != nil {
@@ -265,8 +274,8 @@ func (k Keeper) Execute(
 func (k Keeper) Query(
 	ctx context.Context,
 	accountAddr []byte,
-	queryRequest implementation.ProtoMsg,
-) (implementation.ProtoMsg, error) {
+	queryRequest transaction.Msg,
+) (transaction.Msg, error) {
 	// get account implementation
 	impl, err := k.getImplementation(ctx, accountAddr)
 	if err != nil {
@@ -315,8 +324,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 			accountAddr,
 			sender,
 			funds,
-			k.sendModuleMessage,
-			k.SendModuleMessageUntyped,
+			k.SendModuleMessage,
 			k.queryModule,
 		)
 	}
@@ -330,10 +338,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 		accountAddr,
 		nil,
 		nil,
-		func(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
-			return errors.New("cannot execute in query context")
-		},
-		func(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+		func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			return nil, errors.New("cannot execute in query context")
 		},
 		k.queryModule,
@@ -342,7 +347,6 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 
 // sendAnyMessages it a helper function that executes untyped codectypes.Any messages
 // The messages must all belong to a module.
-// nolint: unused // TODO: remove nolint when we bring back bundler payments
 func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages []*implementation.Any) ([]*implementation.Any, error) {
 	anyResponses := make([]*implementation.Any, len(anyMessages))
 	for i := range anyMessages {
@@ -350,7 +354,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 		if err != nil {
 			return nil, err
 		}
-		resp, err := k.SendModuleMessageUntyped(ctx, sender, msg)
+		resp, err := k.SendModuleMessage(ctx, sender, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
 		}
@@ -363,9 +367,40 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 	return anyResponses, nil
 }
 
-// SendModuleMessageUntyped can be used to send a message towards a module.
+func (k Keeper) sendManyMessagesReturnAnys(ctx context.Context, sender []byte, msgs []transaction.Msg) ([]*implementation.Any, error) {
+	resp, err := k.sendManyMessages(ctx, sender, msgs)
+	if err != nil {
+		return nil, err
+	}
+	anys := make([]*implementation.Any, len(resp))
+	for i := range resp {
+		anypb, err := implementation.PackAny(resp[i])
+		if err != nil {
+			return nil, err
+		}
+		anys[i] = anypb
+	}
+	return anys, nil
+}
+
+// sendManyMessages is a helper function that sends many untyped messages on behalf of the sender
+// then returns the respective results. Since the function calls into SendModuleMessage
+// it is guaranteed to disallow impersonation attacks from the sender.
+func (k Keeper) sendManyMessages(ctx context.Context, sender []byte, msgs []transaction.Msg) ([]transaction.Msg, error) {
+	resps := make([]transaction.Msg, len(msgs))
+	for i, msg := range msgs {
+		resp, err := k.SendModuleMessage(ctx, sender, msg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
+		}
+		resps[i] = resp
+	}
+	return resps, nil
+}
+
+// SendModuleMessage can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
-func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+func (k Keeper) SendModuleMessage(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 	// do sender assertions.
 	wantSenders, _, err := k.codec.GetMsgSigners(msg)
 	if err != nil {
@@ -377,7 +412,7 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 	if !bytes.Equal(sender, wantSenders[0]) {
 		return nil, fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	resp, err := k.MsgRouterService.InvokeUntyped(ctx, msg)
+	resp, err := k.MsgRouterService.Invoke(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -388,26 +423,27 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // sendModuleMessage can be used to send a message towards a module. It expects the
 // response type to be known by the caller. It will also assert the sender has the right
 // is not trying to impersonate another account.
-func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
+func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 	// do sender assertions.
 	wantSenders, _, err := k.codec.GetMsgSigners(msg)
 	if err != nil {
-		return fmt.Errorf("cannot get signers: %w", err)
+		return nil, fmt.Errorf("cannot get signers: %w", err)
 	}
 	if len(wantSenders) != 1 {
-		return fmt.Errorf("expected only one signer, got %d", len(wantSenders))
+		return nil, fmt.Errorf("expected only one signer, got %d", len(wantSenders))
 	}
 	if !bytes.Equal(sender, wantSenders[0]) {
-		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
+		return nil, fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	return k.MsgRouterService.InvokeTyped(ctx, msg, msgResp)
+
+	return k.MsgRouterService.Invoke(ctx, msg)
 }
 
 // queryModule is the entrypoint for an account to query a module.
 // It will try to find the query handler for the given query and execute it.
 // If multiple query handlers are found, it will return an error.
-func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementation.ProtoMsg) error {
-	return k.QueryRouterService.InvokeTyped(ctx, queryReq, queryResp)
+func (k Keeper) queryModule(ctx context.Context, queryReq transaction.Msg) (transaction.Msg, error) {
+	return k.QueryRouterService.Invoke(ctx, queryReq)
 }
 
 // maybeSendFunds will send the provided coins between the provided addresses, if amt
@@ -417,23 +453,28 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 		return nil
 	}
 
-	msg, msgResp, err := k.makeSendCoinsMsg(from, to, amt)
+	msg, err := k.makeSendCoinsMsg(from, to, amt)
 	if err != nil {
 		return err
 	}
 
 	// send module message ensures that "from" cannot impersonate.
-	err = k.sendModuleMessage(ctx, from, msg, msgResp)
+	_, err = k.sendModuleMessage(ctx, from, msg)
 	if err != nil {
 		return err
 	}
+
 	return nil
+}
+
+func (k *Keeper) DisableTxBundling() {
+	k.bundlingDisabled = true
 }
 
 const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"
 
 // creates a new interface type which is an alias of the proto message interface to avoid conflicts with sdk.Msg
-type msgInterface implementation.ProtoMsg
+type msgInterface transaction.Msg
 
 var msgInterfaceType = (*msgInterface)(nil)
 

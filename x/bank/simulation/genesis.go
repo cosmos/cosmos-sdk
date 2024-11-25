@@ -1,8 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 
 	sdkmath "cosmossdk.io/math"
@@ -52,7 +50,7 @@ func RandomGenesisSendEnabled(r *rand.Rand, bondDenom string) []types.SendEnable
 	//   P(sef)  = 18.0% = SendEnabled entry that does not equal the default   = P(stc') + P(sfc) = .045 + .135 = .180
 	//
 	//   P(t)    = 81.0% = Bond denom is sendable      = P(a'c) + P(st)  = .360 + .450 = .810
-	//   P(f)    = 19.0% = Bond demon is NOT sendable  = P(a'c') + P(sf) = .040 + .150 = .190
+	//   P(f)    = 19.0% = Bond denom is NOT sendable  = P(a'c') + P(sf) = .040 + .150 = .190
 
 	return rv
 }
@@ -99,10 +97,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		SendEnabled: sendEnabled,
 	}
 
-	paramsBytes, err := json.MarshalIndent(&bankGenesis.Params, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", paramsBytes)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&bankGenesis)
 }

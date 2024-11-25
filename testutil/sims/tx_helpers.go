@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/errors"
-	authsign "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GenSignedMockTx generates a signed mock transaction.

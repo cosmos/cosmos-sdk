@@ -1,4 +1,4 @@
-package appmodule
+package appmodulev2
 
 import (
 	"cosmossdk.io/core/branch"
@@ -11,8 +11,8 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
-// Environment is used to get all services to their respective module
-// Contract: All fields of environment are always populated.
+// Environment is used to get all services to their respective module.
+// Contract: All fields of environment are always populated by runtime.
 type Environment struct {
 	Logger log.Logger
 

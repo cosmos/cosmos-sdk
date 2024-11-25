@@ -29,89 +29,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryCometInfoRequest defines the request type for querying x/consensus comet info.
-type QueryGetCometInfoRequest struct {
-}
-
-func (m *QueryGetCometInfoRequest) Reset()         { *m = QueryGetCometInfoRequest{} }
-func (m *QueryGetCometInfoRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetCometInfoRequest) ProtoMessage()    {}
-func (*QueryGetCometInfoRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bf54d1e5df04cee9, []int{0}
-}
-func (m *QueryGetCometInfoRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetCometInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetCometInfoRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetCometInfoRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetCometInfoRequest.Merge(m, src)
-}
-func (m *QueryGetCometInfoRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetCometInfoRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetCometInfoRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetCometInfoRequest proto.InternalMessageInfo
-
-// QueryCometInfoResponse defines the response type for querying x/consensus comet info.
-type QueryGetCometInfoResponse struct {
-	// comet_info is the comet info of the x/consensus module.
-	CometInfo *CometInfo `protobuf:"bytes,1,opt,name=comet_info,json=cometInfo,proto3" json:"comet_info,omitempty"`
-}
-
-func (m *QueryGetCometInfoResponse) Reset()         { *m = QueryGetCometInfoResponse{} }
-func (m *QueryGetCometInfoResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGetCometInfoResponse) ProtoMessage()    {}
-func (*QueryGetCometInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bf54d1e5df04cee9, []int{1}
-}
-func (m *QueryGetCometInfoResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetCometInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetCometInfoResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetCometInfoResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetCometInfoResponse.Merge(m, src)
-}
-func (m *QueryGetCometInfoResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetCometInfoResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetCometInfoResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetCometInfoResponse proto.InternalMessageInfo
-
-func (m *QueryGetCometInfoResponse) GetCometInfo() *CometInfo {
-	if m != nil {
-		return m.CometInfo
-	}
-	return nil
-}
-
 // QueryParamsRequest defines the request type for querying x/consensus parameters.
 type QueryParamsRequest struct {
 }
@@ -120,7 +37,7 @@ func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
 func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsRequest) ProtoMessage()    {}
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bf54d1e5df04cee9, []int{2}
+	return fileDescriptor_bf54d1e5df04cee9, []int{0}
 }
 func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -161,7 +78,7 @@ func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
 func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bf54d1e5df04cee9, []int{3}
+	return fileDescriptor_bf54d1e5df04cee9, []int{1}
 }
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -198,8 +115,6 @@ func (m *QueryParamsResponse) GetParams() *v1.ConsensusParams {
 }
 
 func init() {
-	proto.RegisterType((*QueryGetCometInfoRequest)(nil), "cosmos.consensus.v1.QueryGetCometInfoRequest")
-	proto.RegisterType((*QueryGetCometInfoResponse)(nil), "cosmos.consensus.v1.QueryGetCometInfoResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.consensus.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.consensus.v1.QueryParamsResponse")
 }
@@ -207,29 +122,24 @@ func init() {
 func init() { proto.RegisterFile("cosmos/consensus/v1/query.proto", fileDescriptor_bf54d1e5df04cee9) }
 
 var fileDescriptor_bf54d1e5df04cee9 = []byte{
-	// 342 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0x31, 0x4f, 0xc3, 0x30,
-	0x10, 0x85, 0x6b, 0x24, 0x2a, 0x61, 0x98, 0x5c, 0x86, 0x12, 0xc0, 0xa0, 0x74, 0xa0, 0x0b, 0xb6,
-	0x5a, 0x16, 0x84, 0xc4, 0x02, 0x03, 0x62, 0xa3, 0x8c, 0x5d, 0x50, 0x1a, 0xdc, 0x2a, 0x82, 0xf8,
-	0xd2, 0xda, 0xad, 0xe8, 0x86, 0xf8, 0x05, 0x48, 0xfc, 0x29, 0xc6, 0x4a, 0x2c, 0x8c, 0x28, 0xe1,
-	0x4f, 0xb0, 0xa1, 0xd8, 0x09, 0x2d, 0xc2, 0x08, 0xb6, 0x28, 0xf7, 0xee, 0xbd, 0xef, 0x5d, 0x82,
-	0x77, 0x42, 0x50, 0x31, 0x28, 0x1e, 0x82, 0x54, 0x42, 0xaa, 0xb1, 0xe2, 0x93, 0x16, 0x1f, 0x8e,
-	0xc5, 0x68, 0xca, 0x92, 0x11, 0x68, 0x20, 0x35, 0x2b, 0x60, 0x5f, 0x02, 0x36, 0x69, 0x79, 0x5b,
-	0x03, 0x80, 0xc1, 0xad, 0xe0, 0x41, 0x12, 0xf1, 0x40, 0x4a, 0xd0, 0x81, 0x8e, 0x40, 0x2a, 0xbb,
-	0xe2, 0xd1, 0x10, 0x62, 0xa1, 0x7b, 0x7d, 0xcd, 0xf5, 0x34, 0x11, 0xc6, 0x31, 0x09, 0x46, 0x41,
-	0x5c, 0xce, 0x1b, 0xae, 0xcc, 0xb9, 0xbf, 0x11, 0xf9, 0x1e, 0xae, 0x77, 0x72, 0x8c, 0x33, 0xa1,
-	0x4f, 0x73, 0xbb, 0x73, 0xd9, 0x87, 0x4b, 0x31, 0x1c, 0x0b, 0xa5, 0xfd, 0x2e, 0xde, 0x70, 0xcc,
-	0x54, 0x92, 0x5b, 0x90, 0x63, 0x8c, 0x4d, 0xfe, 0x55, 0x24, 0xfb, 0x50, 0x47, 0xbb, 0xa8, 0xb9,
-	0xda, 0xa6, 0xcc, 0xd1, 0x82, 0xcd, 0x77, 0x57, 0xc2, 0xf2, 0xd1, 0x5f, 0xc7, 0xc4, 0x78, 0x5f,
-	0x18, 0xe2, 0x32, 0xb1, 0x83, 0x6b, 0xdf, 0xde, 0x16, 0x59, 0x47, 0xb8, 0x6a, 0x9b, 0x15, 0x39,
-	0x3e, 0x2b, 0xab, 0x33, 0x53, 0xdd, 0xa6, 0x14, 0x91, 0xc5, 0x6e, 0xb1, 0xd1, 0xfe, 0x40, 0x78,
-	0xd9, 0x78, 0x92, 0x7b, 0x84, 0xab, 0x76, 0x48, 0xf6, 0x9c, 0xa0, 0x3f, 0x81, 0xbc, 0xe6, 0xdf,
-	0x42, 0xcb, 0xe8, 0x37, 0x1e, 0x5e, 0xde, 0x9f, 0x96, 0xb6, 0xc9, 0x26, 0x77, 0x9d, 0xdd, 0xc2,
-	0x90, 0x18, 0xaf, 0x2d, 0x1e, 0x93, 0xec, 0xff, 0x6e, 0xef, 0xf8, 0x20, 0x1e, 0xfb, 0xaf, 0xdc,
-	0x32, 0x9d, 0x1c, 0x3e, 0xa7, 0x14, 0xcd, 0x52, 0x8a, 0xde, 0x52, 0x8a, 0x1e, 0x33, 0x5a, 0x99,
-	0x65, 0xb4, 0xf2, 0x9a, 0xd1, 0x4a, 0x97, 0x5a, 0x23, 0x75, 0x7d, 0xc3, 0x22, 0xe0, 0x77, 0x0b,
-	0xb0, 0xe6, 0xa0, 0xbd, 0xaa, 0xf9, 0x3b, 0x0e, 0x3e, 0x03, 0x00, 0x00, 0xff, 0xff, 0xd0, 0xd8,
-	0xe1, 0x00, 0xb8, 0x02, 0x00, 0x00,
+	// 271 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4f, 0xce, 0x2f, 0xce,
+	0xcd, 0x2f, 0xd6, 0x4f, 0xce, 0xcf, 0x2b, 0x4e, 0xcd, 0x2b, 0x2e, 0x2d, 0xd6, 0x2f, 0x33, 0xd4,
+	0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x86, 0x28, 0xd0,
+	0x83, 0x2b, 0xd0, 0x2b, 0x33, 0x94, 0x92, 0x49, 0xcf, 0xcf, 0x4f, 0xcf, 0x49, 0xd5, 0x4f, 0x2c,
+	0xc8, 0xd4, 0x4f, 0xcc, 0xcb, 0xcb, 0x2f, 0x49, 0x2c, 0xc9, 0xcc, 0xcf, 0x2b, 0x86, 0x68, 0x91,
+	0x92, 0x4b, 0xce, 0xcf, 0x4d, 0x2d, 0x49, 0x4a, 0x2b, 0xd1, 0x2f, 0xa9, 0x2c, 0x48, 0x05, 0x9b,
+	0x58, 0x90, 0x58, 0x94, 0x98, 0x0b, 0x95, 0x57, 0x12, 0xe1, 0x12, 0x0a, 0x04, 0xd9, 0x10, 0x00,
+	0x16, 0x0c, 0x4a, 0x2d, 0x2c, 0x4d, 0x2d, 0x2e, 0x51, 0x0a, 0xe4, 0x12, 0x46, 0x11, 0x2d, 0x2e,
+	0x00, 0xd9, 0x28, 0x64, 0xc5, 0xc5, 0x06, 0xd1, 0x2c, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x6d, 0xa4,
+	0xa4, 0x07, 0x33, 0x5d, 0x0f, 0x6c, 0xba, 0x5e, 0x99, 0xa1, 0x9e, 0x33, 0xcc, 0x6d, 0x50, 0xbd,
+	0x50, 0x1d, 0x46, 0x5d, 0x8c, 0x5c, 0xac, 0x60, 0x33, 0x85, 0x1a, 0x18, 0xb9, 0xd8, 0x20, 0x92,
+	0x42, 0xea, 0x7a, 0x58, 0x7c, 0xa4, 0x87, 0xe9, 0x20, 0x29, 0x0d, 0xc2, 0x0a, 0x21, 0x6e, 0x54,
+	0x52, 0x6e, 0xba, 0xfc, 0x64, 0x32, 0x93, 0xac, 0x90, 0xb4, 0x3e, 0xb6, 0xd0, 0x84, 0x38, 0xc6,
+	0xc9, 0xe2, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0,
+	0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0xe4, 0x20, 0xba, 0x8a,
+	0x53, 0xb2, 0xf5, 0x32, 0xf3, 0xf5, 0x2b, 0x90, 0x74, 0x83, 0x7d, 0x98, 0xc4, 0x06, 0x0e, 0x36,
+	0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x63, 0xcb, 0xf0, 0x2b, 0xac, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -246,8 +156,6 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params queries the parameters of x/consensus module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// CometInfo queries the comet info of x/consensus module.
-	GetCometInfo(ctx context.Context, in *QueryGetCometInfoRequest, opts ...grpc.CallOption) (*QueryGetCometInfoResponse, error)
 }
 
 type queryClient struct {
@@ -267,21 +175,10 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
-func (c *queryClient) GetCometInfo(ctx context.Context, in *QueryGetCometInfoRequest, opts ...grpc.CallOption) (*QueryGetCometInfoResponse, error) {
-	out := new(QueryGetCometInfoResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.consensus.v1.Query/GetCometInfo", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries the parameters of x/consensus module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// CometInfo queries the comet info of x/consensus module.
-	GetCometInfo(context.Context, *QueryGetCometInfoRequest) (*QueryGetCometInfoResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -290,9 +187,6 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
-}
-func (*UnimplementedQueryServer) GetCometInfo(ctx context.Context, req *QueryGetCometInfoRequest) (*QueryGetCometInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCometInfo not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -317,24 +211,7 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetCometInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetCometInfoRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetCometInfo(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.consensus.v1.Query/GetCometInfo",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetCometInfo(ctx, req.(*QueryGetCometInfoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
+var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.consensus.v1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -343,71 +220,9 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
 		},
-		{
-			MethodName: "GetCometInfo",
-			Handler:    _Query_GetCometInfo_Handler,
-		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "cosmos/consensus/v1/query.proto",
-}
-
-func (m *QueryGetCometInfoRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetCometInfoRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetCometInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetCometInfoResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetCometInfoResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetCometInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.CometInfo != nil {
-		{
-			size, err := m.CometInfo.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *QueryParamsRequest) Marshal() (dAtA []byte, err error) {
@@ -479,28 +294,6 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryGetCometInfoRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *QueryGetCometInfoResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.CometInfo != nil {
-		l = m.CometInfo.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *QueryParamsRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -528,142 +321,6 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *QueryGetCometInfoRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetCometInfoRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetCometInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetCometInfoResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetCometInfoResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetCometInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CometInfo", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.CometInfo == nil {
-				m.CometInfo = &CometInfo{}
-			}
-			if err := m.CometInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

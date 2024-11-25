@@ -9,6 +9,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Auth](./auth/README.md) - Authentication of accounts and transactions for Cosmos SDK applications.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Bank](./bank/README.md) - Token transfer functionalities.
+* [Bank v2](./bank/v2/README.md) - Token transfer functionalities, enhanced.
 * [Circuit](./circuit/README.md) - Circuit breaker module for pausing messages.
 * [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
 * [Distribution](./distribution/README.md) - Fee distribution, and staking token provision distribution.
@@ -23,8 +24,9 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Protocolpool](./protocolpool/README.md) - Functionalities handling community pool funds.
 * [Slashing](./slashing/README.md) - Validator punishment mechanisms.
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.
-* [tx](./tx/README.md) - Tx utilities for the Cosmos SDK.
+* [Tx](./tx/README.md) - Tx utilities for the Cosmos SDK.
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.
+* [Validate](./validate/README.md) - Global ante/post handlers and tx validator setup.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 

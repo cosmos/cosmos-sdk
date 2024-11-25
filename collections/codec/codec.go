@@ -125,7 +125,9 @@ type UntypedValueCodec struct {
 }
 
 // KeyToValueCodec converts a KeyCodec into a ValueCodec.
-func KeyToValueCodec[K any](keyCodec KeyCodec[K]) ValueCodec[K] { return keyToValueCodec[K]{keyCodec} }
+func KeyToValueCodec[K any](keyCodec KeyCodec[K]) NameableValueCodec[K] {
+	return keyToValueCodec[K]{kc: keyCodec}
+}
 
 // keyToValueCodec is a ValueCodec that wraps a KeyCodec to make it behave like a ValueCodec.
 type keyToValueCodec[K any] struct {
@@ -166,4 +168,8 @@ func (k keyToValueCodec[K]) Stringify(value K) string {
 
 func (k keyToValueCodec[K]) ValueType() string {
 	return k.kc.KeyType()
+}
+
+func (k keyToValueCodec[K]) WithName(name string) ValueCodec[K] {
+	return NamedValueCodec[K]{ValueCodec: k, Name: name}
 }

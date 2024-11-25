@@ -12,10 +12,10 @@ import (
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	csecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,
@@ -78,7 +78,11 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 
 	// Generate the bech32 addr using existing cmtcrypto/etc.
 	pub := &csecp256k1.PubKey{Key: compressedPublicKey}
-	addr := sdk.AccAddress(pub.Address()).String()
+	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(pub.Address())
+	if err != nil {
+		return nil, "", err
+	}
+
 	return pk, addr, err
 }
 

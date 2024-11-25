@@ -7,14 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante"
-	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -24,6 +23,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Test that simulate transaction accurately estimates gas cost
@@ -392,7 +393,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.desc), func(t *testing.T) {
 			suite := SetupTestSuite(t, false)
-			suite.ctx = suite.ctx.WithBlockHeight(0)
+			suite.ctx = suite.ctx.WithBlockHeight(0).WithHeaderInfo(header.Info{Height: 0, ChainID: suite.ctx.ChainID()})
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 			args := tc.malleate(suite)
@@ -914,6 +915,8 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				require.NoError(t, accs[0].acc.SetSequence(2)) // wrong accSeq
 
+				suite.ctx = suite.ctx.WithExecMode(sdk.ExecModeFinalize)
+
 				return TestCaseArgs{
 					chainID:   suite.ctx.ChainID(),
 					feeAmount: feeAmount,
@@ -1080,6 +1083,8 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				accs := suite.CreateTestAccounts(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
+				suite.ctx = suite.ctx.WithExecMode(sdk.ExecModeFinalize)
+
 				// Make sure public key has not been set from previous test.
 				acc1 := suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())
 				require.Nil(t, acc1.GetPubKey())
@@ -1156,22 +1161,6 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 		signatures[i], _ = privkey.Sign(msg)
 	}
 	return
-}
-
-func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
-	cost := uint64(0)
-	for _, pubkey := range pubkeys {
-		pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
-		switch {
-		case strings.Contains(pubkeyType, "ed25519"):
-			cost += authtypes.DefaultParams().SigVerifyCostED25519
-		case strings.Contains(pubkeyType, "secp256k1"):
-			cost += authtypes.DefaultParams().SigVerifyCostSecp256k1
-		default:
-			panic("unexpected key type")
-		}
-	}
-	return cost
 }
 
 func TestCountSubkeys(t *testing.T) {
@@ -1264,13 +1253,13 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 					ante.HandlerOptions{
 						AccountKeeper:   suite.accountKeeper,
 						BankKeeper:      suite.bankKeeper,
+						ConsensusKeeper: suite.consensusKeeper,
 						FeegrantKeeper:  suite.feeGrantKeeper,
 						SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
-						SigGasConsumer: func(meter storetypes.GasMeter, sig signing.SignatureV2, params authtypes.Params) error {
+						SigGasConsumer: func(meter gas.Meter, sig signing.SignatureV2, params authtypes.Params) error {
 							switch pubkey := sig.PubKey.(type) {
 							case *ed25519.PubKey:
-								meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
-								return nil
+								return meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519")
 							default:
 								return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 							}

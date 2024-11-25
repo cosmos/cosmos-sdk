@@ -17,19 +17,13 @@ const (
 	DescDelete           = "Delete"
 )
 
-type StoreConfig struct {
-	ReadCostFlat, ReadCostPerByte, HasCost          gas.Gas
-	WriteCostFlat, WriteCostPerByte, DeleteCostFlat gas.Gas
-	IterNextCostFlat                                gas.Gas
-}
-
 type Store struct {
 	parent    store.Writer
 	gasMeter  gas.Meter
-	gasConfig StoreConfig
+	gasConfig gas.GasConfig
 }
 
-func NewStore(gc StoreConfig, meter gas.Meter, parent store.Writer) *Store {
+func NewStore(gc gas.GasConfig, meter gas.Meter, parent store.Writer) *Store {
 	return &Store{
 		parent:    parent,
 		gasMeter:  meter,
@@ -76,7 +70,7 @@ func (s *Store) Set(key, value []byte) error {
 }
 
 func (s *Store) Delete(key []byte) error {
-	if err := s.gasMeter.Consume(s.gasConfig.DeleteCostFlat, DescDelete); err != nil {
+	if err := s.gasMeter.Consume(s.gasConfig.DeleteCost, DescDelete); err != nil {
 		return err
 	}
 
@@ -113,11 +107,11 @@ var _ store.Iterator = (*iterator)(nil)
 
 type iterator struct {
 	gasMeter  gas.Meter
-	gasConfig StoreConfig
+	gasConfig gas.GasConfig
 	parent    store.Iterator
 }
 
-func newIterator(parent store.Iterator, gm gas.Meter, gc StoreConfig) store.Iterator {
+func newIterator(parent store.Iterator, gm gas.Meter, gc gas.GasConfig) store.Iterator {
 	return &iterator{
 		parent:    parent,
 		gasConfig: gc,

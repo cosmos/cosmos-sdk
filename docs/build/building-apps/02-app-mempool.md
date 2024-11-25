@@ -22,7 +22,7 @@ Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI+
 
 ## Mempool
 
-+ Before we delve into `PrepareProposal` and `ProcessProposal`, let's first walk through the mempool concepts.
+* Before we delve into `PrepareProposal` and `ProcessProposal`, let's first walk through the mempool concepts.
 
 There are countless designs that an application developer can write for a mempool, the SDK opted to provide only simple mempool implementations.
 Namely, the SDK provides the following mempools:
@@ -31,7 +31,7 @@ Namely, the SDK provides the following mempools:
 * [Sender Nonce Mempool](#sender-nonce-mempool)
 * [Priority Nonce Mempool](#priority-nonce-mempool)
 
-The default SDK is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-v2.md):
+The default SDK is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-di.md):
 
 ```go
 nonceMempool := mempool.NewSenderNonceMempool()

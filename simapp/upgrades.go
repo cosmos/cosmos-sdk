@@ -4,23 +4,23 @@ import (
 	"context"
 
 	"cosmossdk.io/core/appmodule"
-	storetypes "cosmossdk.io/store/types"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts"
-	authkeeper "cosmossdk.io/x/auth/keeper"
+	bankv2types "cosmossdk.io/x/bank/v2/types"
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
-// from v0.50.x to v0.51.x
+// from v0.52.x to v0.54.x
 //
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
-// v0.50.x to v0.51.x.
-const UpgradeName = "v050-to-v051"
+// v0.52.x to v0.54.x.
+const UpgradeName = "v052-to-v054"
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
@@ -42,12 +42,12 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
+		storeUpgrades := corestore.StoreUpgrades{
 			Added: []string{
 				accounts.StoreKey,
 				protocolpooltypes.StoreKey,
 				epochstypes.StoreKey,
-				countertypes.StoreKey, // This module is used for testing purposes only.
+				bankv2types.ModuleName,
 			},
 			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}

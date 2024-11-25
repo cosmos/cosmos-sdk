@@ -8,16 +8,24 @@ sidebar_position: 1
 
 * [Concepts](#concepts)
     * [The Minting Mechanism](#the-minting-mechanism)
+    * [Inflation](#inflation)
+    * [Provisions](#provisions)
+        * [Relation to Inflation](#relation-to-inflation)
+        * [Usage per Block](#usage-per-block-default-function)
+        * [Example](#example)
+    * [Bonding](#bonding)
 * [State](#state)
     * [Minter](#minter)
     * [Params](#params)
-* [Epoch minting](#epoch-minting)
+* [Minting Methods](#minting-methods)
+    * [Epoch-based Minting](#epoch-based-minting)
+    * [Block-based Minting](#block-based-minting)
     * [MintFn](#mintfn)
-* [Block based minting](#block-based-minting)
     * [Default configuration](#default-configuration)
-    * [NextInflationRate](#nextinflationrate)
-    * [NextAnnualProvisions](#nextannualprovisions)
-    * [BlockProvision](#blockprovision)
+    * [Calculations](#calculations)
+        * [NextInflationRate](#inflation-rate-calculation)
+        * [NextAnnualProvisions](#nextannualprovisions)
+        * [BlockProvision](#blockprovision)
 * [Parameters](#parameters)
 * [Events](#events)
     * [BeginBlocker](#beginblocker)
@@ -30,27 +38,73 @@ sidebar_position: 1
 
 ### The Minting Mechanism
 
-The minting mechanism was designed to:
+The minting mechanism in the x/mint module has been redesigned to offer more flexibility. The `InflationCalculationFn` has been deprecated in favor of `MintFn`, that can be customized by the application developer. The `MintFn` function is passed to the `NewAppModule` function and is used to mint tokens on the configured epoch beginning. This change allows users to define their own minting logic and removes any assumptions on how tokens are minted.
 
-* allow for a flexible inflation rate determined by market demand targeting a particular bonded-stake ratio
-* effect a balance between market liquidity and staked supply
+Key features of the new minting mechanism:
 
-In order to best determine the appropriate market rate for inflation rewards, a
-moving change rate is used.  The moving change rate mechanism ensures that if
-the % bonded is either over or under the goal %-bonded, the inflation rate will
-adjust to further incentivize or disincentivize being bonded, respectively. Setting the goal
-%-bonded at less than 100% encourages the network to maintain some non-staked tokens
-which should help provide some liquidity.
+1. **Customizable Minting Function**: The `MintFn` can be defined by the application to implement any desired minting logic.
+2. **Default Implementation**: If no custom function is provided, a default minting function is used.
+3. **Epoch-based or Block-based Minting**: The mechanism supports both epoch-based and block-based minting, depending on how the `MintFn` is implemented.
+4. **Flexible Inflation**: The inflation rate can be adjusted based on various parameters, not just the bonded ratio.
 
-It can be broken down in the following way:
+The default minting function, if no custom one is provided, is implemented in the `DefaultMintFn`. 
+This function is called during the `BeginBlocker` and is responsible for minting new tokens, implementation details can be found [here](#default-configuration).
 
-* If the actual percentage of bonded tokens is below the goal %-bonded the inflation rate will
-   increase until a maximum value is reached
-* If the goal % bonded (67% in Cosmos-Hub) is maintained, then the inflation
-   rate will stay constant
-* If the actual percentage of bonded tokens is above the goal %-bonded the inflation rate will
-   decrease until a minimum value is reached
+### Inflation
 
+Inflation is a key concept in the x/mint module, responsible for the creation of new tokens over time. The inflation rate determines how quickly the total supply of tokens increases.
+
+Key aspects of inflation in the x/mint module:
+
+1. **Dynamic Inflation**: The inflation rate can change over time based on various factors, primarily the bonded ratio.
+2. **Bounded Inflation**: The inflation rate is typically constrained between a minimum and maximum value to prevent extreme fluctuations.
+3. **Inflation Calculation**: The specific method of calculating inflation can be customized using the `MintFn`, allowing for flexible monetary policies.
+
+In the default implementation, inflation is calculated as follows:
+
+```plaintext
+Inflation = CurrentInflation + (1 - BondedRatio / GoalBonded) * (InflationRateChange / BlocksPerYear)
+```
+
+### Provisions
+
+Provisions are the number of tokens generated and distributed in each block. They are directly related to the inflation rate and the current total supply of tokens. The amount of provisions generated per block is calculated based on the annual provisions, which are determined by the inflation rate and the total supply of tokens.
+
+#### Relation to Inflation
+
+The inflation rate determines the percentage of the total supply of tokens that will be added as provisions over a year. These annual provisions are divided by the number of blocks in a year to obtain the provisions per block.
+
+#### Usage per Block (default function)
+
+Each block uses a fraction of the annual provisions, calculated as: 
+
+```plaintext
+Provisions per block = Annual provisions / Number of blocks per year
+```
+
+These provisions are distributed to validators and delegators as rewards for their participation in the network. 
+
+
+##### Example
+
+For example, if the total supply of tokens is 1,000,000 and the inflation rate is 10%, the annual provisions would be:
+
+Annual provisions = 1,000,000 * 0.10 = 100,000 tokens
+
+If there are 3,153,600 blocks per year (one block every 10 seconds), the provisions per block would be:
+Provisions per block = 100,000 / 3,153,600 ≈ 0.0317 tokens per block.
+
+These provisions are then passed to the fee collector.
+
+### Bonding
+
+Bonding refers to the process of staking tokens in the network, which plays a crucial role in the Proof of Stake consensus mechanism and affects the minting process.
+
+Key aspects of bonding in relation to the x/mint module:
+
+1. **Bonded Ratio**: This is the proportion of the total token supply that is currently staked (bonded) in the network.
+2. **Goal Bonded Ratio**: A target percentage of tokens that should ideally be bonded, defined in the module parameters.
+3. **Inflation Adjustment**: The bonded ratio is used to adjust the inflation rate, encouraging or discouraging bonding as needed to maintain network security and token liquidity.
 
 ## State
 
@@ -62,7 +116,7 @@ related to minting (in the `data` field)
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/ace7bca105a8d5363782cfd19c6f169b286cd3b2/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L11-L29
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L11-L29
 ```
 
 ### Params
@@ -75,23 +129,19 @@ A value of `0` indicates an unlimited supply.
 * Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/7068d0da52d954430054768b2c56aff44666933b/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L26-L68
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L31-L73
 ```
 
-## Epoch minting
+## Minting Methods
 
-In the latest release of x/mint, the minting logic has been refactored to allow for more flexibility in the minting process. The `InflationCalculationFn` has been deprecated in favor of `MintFn`. The `MintFn` function is passed to the `NewAppModule` function and is used to mint tokens on the configured epoch beginning. This change allows users to define their own minting logic and removes any assumptions on how tokens are minted.
+### Epoch-based Minting
 
-```mermaid
-flowchart LR
-    A[BeforeEpochStart] --> B[MintFn]
+Epoch-based minting allows for tokens to be minted at specific intervals or epochs, rather than on every block.
+To implement epoch-based minting, the `MintFn` should be designed to mint tokens only when a specific epoch ID is received. The epoch ID and number are passed as parameters to the `MintFn`.
 
-    subgraph B["MintFn (user defined)"]
-        direction LR
-        C[Get x/staking info] --> D[Calculate Inflation]
-        D --> E[Mint Tokens]
-    end
-```
+### Block-based Minting
+
+In addition to minting based on epoch, minting based on block is also possible. This is achieved through calling the `MintFn` in `BeginBlock` with an epochID and epochNumber of `"block"` and `-1`, respectively.
 
 ### MintFn
 
@@ -107,16 +157,49 @@ How this function mints tokens is defined by the app developers, meaning they ca
 Note that BeginBlock will keep calling the MintFn for every block, so it is important to ensure that MintFn returns early if the epoch ID does not match the expected one.
 :::
 
-
-## Block based minting
-
-In addition to minting based on epoch, minting based on block is also possible. This is achieved through calling the `MintFn` in `BeginBlock` with an epochID and epochNumber of `"block"` and `-1`, respectively.
-
 ### Default configuration
 
 If no `MintFn` is passed to the `NewAppModule` function, the minting logic defaults to block-based minting, corresponding to `mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn)`. 
 
-### Inflation rate calculation
+The next diagram shows how the `DefaultMintFn` works:
+
+```mermaid
+flowchart TD
+    A[BeforeEpochStart] --> B[MintFn]
+    B --> C{epochId == 'block'?}
+    C -->|No| D[Return without minting]
+    C -->|Yes| E[Get StakingTokenSupply]
+    E --> F[Get BondedRatio]
+    F --> G[Get Parameters]
+    G --> H[Calculate Inflation]
+    H --> I[Calculate Annual Provisions]
+    I --> J[Calculate Block Provision]
+    J --> K{MaxSupply > 0?}
+    K -->|No| M[Mint coins]
+    K -->|Yes| L{TotalSupply + MintedCoins > MaxSupply?}
+    L -->|No| M
+    L -->|Yes| N[Adjust minting amount]
+    N --> O{Difference > 0?}
+    O -->|No| P[Do not mint]
+    O -->|Yes| M
+    M --> Q[Send minted coins to FeeCollector]
+    Q --> R[Emit events]
+    R --> S[End]
+
+    subgraph Calculations
+    H --> |Uses InflationCalculationFn| H
+    I --> |AnnualProvisions = TotalSupply * Inflation| I
+    J --> |BlockProvision = AnnualProvisions / BlocksPerYear| J
+    end
+
+    subgraph MaxSupply Adjustment
+    N --> |MintedCoins = MaxSupply - TotalSupply| N
+    end
+```
+
+### Calculations
+
+#### Inflation rate calculation
 
 Inflation rate is calculated using an "inflation calculation function" that's
 passed to the `NewAppModule` function. If no function is passed, then the SDK's
@@ -153,7 +236,7 @@ NextInflationRate(params Params, bondedRatio math.LegacyDec) (inflation math.Leg
 }
 ```
 
-### NextAnnualProvisions
+#### NextAnnualProvisions
 
 Calculate the annual provisions based on current total supply and inflation
 rate. This parameter is calculated once per block.
@@ -161,9 +244,10 @@ rate. This parameter is calculated once per block.
 ```go
 NextAnnualProvisions(params Params, totalSupply math.LegacyDec) (provisions math.LegacyDec) {
 	return Inflation * totalSupply
+}
 ```
 
-### BlockProvision
+#### BlockProvision
 
 Calculate the provisions generated for each block based on current annual provisions. The provisions are then minted by the `mint` module's `ModuleMinterAccount` and then transferred to the `auth`'s `FeeCollector` `ModuleAccount`.
 
@@ -268,6 +352,12 @@ simd query mint params [flags]
 
 Example:
 
+```shell
+simd query mint params
+```
+
+Example Output:
+
 ```yml
 blocks_per_year: "4360000"
 goal_bonded: "0.670000000000000000"
@@ -276,6 +366,28 @@ inflation_min: "0.070000000000000000"
 inflation_rate_change: "0.130000000000000000"
 mint_denom: stake
 max_supply: "0"
+```
+
+#### Transactions
+
+The `tx` commands allow users to interact with the `mint` module.
+
+```shell
+simd tx mint --help
+```
+
+##### update-params-proposal
+
+The `update-params-proposal` command allows users to submit a proposal to update the mint module parameters (Note: the entire params must be provided).
+
+```shell
+simd tx mint update-params-proposal [flags]
+```
+
+Example:
+
+```shell
+simd tx mint update-params-proposal '{ "mint_denom": "stake" }'
 ```
 
 ### gRPC

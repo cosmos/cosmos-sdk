@@ -3,9 +3,9 @@ package mock
 import (
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -90,7 +90,7 @@ func (ms multiStore) GetCommitStore(key storetypes.StoreKey) storetypes.CommitSt
 	panic("not implemented")
 }
 
-func (ms multiStore) MountStoreWithDB(key storetypes.StoreKey, typ storetypes.StoreType, db dbm.DB) {
+func (ms multiStore) MountStoreWithDB(key storetypes.StoreKey, typ storetypes.StoreType, db corestore.KVStoreWithBatch) {
 	ms.kv[key] = kvStore{store: make(map[string][]byte)}
 }
 

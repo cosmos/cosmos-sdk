@@ -5,8 +5,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/auth/keeper"
-	"cosmossdk.io/x/auth/vesting/types"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

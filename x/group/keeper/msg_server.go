@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
-	authtypes "cosmossdk.io/x/auth/types"
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
@@ -18,6 +17,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ group.MsgServer = Keeper{}
@@ -820,12 +820,11 @@ func (k Keeper) doTallyAndUpdate(ctx context.Context, p *group.Proposal, groupIn
 }
 
 // Exec executes the messages from a proposal.
-func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecResponse, error) {
+func (k Keeper) Exec(ctx context.Context, msg *group.MsgExec) (*group.MsgExecResponse, error) {
 	if msg.ProposalId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	proposal, err := k.getProposal(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err

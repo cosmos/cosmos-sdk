@@ -23,11 +23,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 	}
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.DelegatorAddress)
+		delegatorAddress, err := k.addrCdc.StringToBytes(dwi.DelegatorAddress)
 		if err != nil {
 			return err
 		}
-		withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.WithdrawAddress)
+		withdrawAddress, err := k.addrCdc.StringToBytes(dwi.WithdrawAddress)
 		if err != nil {
 			return err
 		}
@@ -83,7 +83,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 		if err != nil {
 			return err
 		}
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
+		delegatorAddress, err := k.addrCdc.StringToBytes(del.DelegatorAddress)
 		if err != nil {
 			return err
 		}
@@ -123,9 +123,6 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 	}
 
 	balances := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
-	if balances.IsZero() {
-		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
-	}
 	if !balances.Equal(moduleHoldingsInt) {
 		return fmt.Errorf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt)
 	}
@@ -146,11 +143,11 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	var dwi []types.DelegatorWithdrawInfo
 	err = k.DelegatorsWithdrawAddress.Walk(ctx, nil, func(key, value sdk.AccAddress) (stop bool, err error) {
-		keyAddr, err := k.authKeeper.AddressCodec().BytesToString(key)
+		keyAddr, err := k.addrCdc.BytesToString(key)
 		if err != nil {
 			return true, err
 		}
-		valueAddr, err := k.authKeeper.AddressCodec().BytesToString(value)
+		valueAddr, err := k.addrCdc.BytesToString(value)
 		if err != nil {
 			return true, err
 		}
@@ -241,7 +238,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
 	err = k.DelegatorStartingInfo.Walk(ctx, nil, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], value types.DelegatorStartingInfo) (stop bool, err error) {
-		delAddr, err := k.authKeeper.AddressCodec().BytesToString(key.K2())
+		delAddr, err := k.addrCdc.BytesToString(key.K2())
 		if err != nil {
 			return true, err
 		}

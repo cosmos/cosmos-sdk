@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
@@ -33,7 +33,7 @@ func TestPruningManagerTestSuite(t *testing.T) {
 }
 
 func (s *PruningManagerTestSuite) SetupTest() {
-	nopLog := log.NewNopLogger()
+	nopLog := coretesting.NewNopLogger()
 	var err error
 
 	mdb := dbm.NewMemDB()
@@ -42,7 +42,7 @@ func (s *PruningManagerTestSuite) SetupTest() {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
-	s.sc, err = commitment.NewCommitStore(multiTrees, mdb, nopLog)
+	s.sc, err = commitment.NewCommitStore(multiTrees, nil, mdb, nopLog)
 	s.Require().NoError(err)
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
@@ -58,7 +58,7 @@ func (s *PruningManagerTestSuite) TestPrune() {
 	toVersion := uint64(100)
 	keyCount := 10
 	for version := uint64(1); version <= toVersion; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
@@ -68,7 +68,7 @@ func (s *PruningManagerTestSuite) TestPrune() {
 		_, err := s.sc.Commit(version)
 		s.Require().NoError(err)
 
-		s.Require().NoError(s.ss.ApplyChangeset(version, cs))
+		s.Require().NoError(s.ss.ApplyChangeset(cs))
 
 		s.Require().NoError(s.manager.Prune(version))
 	}
@@ -151,4 +151,109 @@ func TestPruningOption(t *testing.T) {
 			require.Equal(t, tc.pruneVersion, pruneVersion)
 		})
 	}
+}
+
+func (s *PruningManagerTestSuite) TestSignalCommit() {
+	// commit version 1
+	cs := corestore.NewChangeset(1)
+	for _, storeKey := range storeKeys {
+		cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", 1, 0)), []byte(fmt.Sprintf("value-%d-%d", 1, 0)), false)
+	}
+
+	s.Require().NoError(s.sc.WriteChangeset(cs))
+	_, err := s.sc.Commit(1)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.ss.ApplyChangeset(cs))
+
+	// commit version 2
+	for _, storeKey := range storeKeys {
+		cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", 2, 0)), []byte(fmt.Sprintf("value-%d-%d", 2, 0)), false)
+	}
+	cs.Version = 2
+
+	// signaling commit has started
+	s.manager.PausePruning()
+
+	s.Require().NoError(s.sc.WriteChangeset(cs))
+	_, err = s.sc.Commit(2)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.ss.ApplyChangeset(cs))
+
+	// try prune before signaling commit has finished
+	s.Require().NoError(s.manager.Prune(2))
+
+	// proof is removed no matter SignalCommit has not yet inform that commit process has finish
+	// since commitInfo is remove async with tree data
+	checkSCPrune := func() bool {
+		count := 0
+		for _, storeKey := range storeKeys {
+			_, err := s.sc.GetProof([]byte(storeKey), 1, []byte(fmt.Sprintf("key-%d-%d", 1, 0)))
+			if err != nil {
+				count++
+			}
+		}
+
+		return count == len(storeKeys)
+	}
+	s.Require().Eventually(checkSCPrune, 10*time.Second, 1*time.Second)
+
+	// data from state commitment should not be pruned since we haven't signal the commit process has finished
+	val, err := s.sc.Get([]byte(storeKeys[0]), 1, []byte(fmt.Sprintf("key-%d-%d", 1, 0)))
+	s.Require().NoError(err)
+	s.Require().Equal(val, []byte(fmt.Sprintf("value-%d-%d", 1, 0)))
+
+	// signaling commit has finished, version 1 should be pruned
+	err = s.manager.ResumePruning(2)
+	s.Require().NoError(err)
+
+	checkSCPrune = func() bool {
+		count := 0
+		for _, storeKey := range storeKeys {
+			_, err := s.sc.GetProof([]byte(storeKey), 1, []byte(fmt.Sprintf("key-%d-%d", 1, 0)))
+			if err != nil {
+				count++
+			}
+		}
+
+		return count == len(storeKeys)
+	}
+	s.Require().Eventually(checkSCPrune, 10*time.Second, 1*time.Second)
+
+	// try with signal commit start and finish accordingly
+	// commit changesets with pruning
+	toVersion := uint64(100)
+	keyCount := 10
+	for version := uint64(3); version <= toVersion; version++ {
+		cs := corestore.NewChangeset(version)
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
+			}
+		}
+		s.manager.PausePruning()
+
+		s.Require().NoError(s.sc.WriteChangeset(cs))
+		_, err := s.sc.Commit(version)
+		s.Require().NoError(err)
+
+		s.Require().NoError(s.ss.ApplyChangeset(cs))
+		err = s.manager.ResumePruning(version)
+		s.Require().NoError(err)
+	}
+
+	// wait for the pruning to finish in the commitment store
+	checkSCPrune = func() bool {
+		count := 0
+		for _, storeKey := range storeKeys {
+			_, err := s.sc.GetProof([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", toVersion-1, 0)))
+			if err != nil {
+				count++
+			}
+		}
+
+		return count == len(storeKeys)
+	}
+	s.Require().Eventually(checkSCPrune, 10*time.Second, 1*time.Second)
 }

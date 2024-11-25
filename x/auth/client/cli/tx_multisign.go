@@ -11,8 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
-	authclient "cosmossdk.io/x/auth/client"
-	"cosmossdk.io/x/auth/signing"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,12 +22,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GetMultiSignCommand returns the multi-sign command
 func GetMultiSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "multi-sign [file] [name] [[signature]...]",
+		Use:     "multi-sign <file> <name> [<signature>...]",
 		Aliases: []string{"multisign"},
 		Short:   "Generate multisig signatures for transactions generated offline",
 		Long: strings.TrimSpace(
@@ -211,7 +211,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 func GetMultiSignBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "multisign-batch [file] [name] [[signature-file]...]",
+		Use:     "multisign-batch <file> <name> <[signature-file>...]",
 		Aliases: []string{"multi-sign-batch"},
 		Short:   "Assemble multisig transactions in batch from batch signatures",
 		Long: strings.TrimSpace(

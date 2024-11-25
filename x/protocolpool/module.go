@@ -26,9 +26,9 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.HasBeginBlocker       = AppModule{}
 )
 
 // AppModule implements an application module for the pool module
@@ -110,6 +110,11 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 		return nil, err
 	}
 	return am.cdc.MarshalJSON(gs)
+}
+
+// BeginBlock implements appmodule.HasBeginBlocker.
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // ConsensusVersion implements HasConsensusVersion

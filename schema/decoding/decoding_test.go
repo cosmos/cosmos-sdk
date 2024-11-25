@@ -1,6 +1,7 @@
 package decoding
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -28,7 +29,7 @@ func TestMiddleware(t *testing.T) {
 
 	tl.oneMod.SetValue("abc")
 
-	expectedBank := []schema.ObjectUpdate{
+	expectedBank := []schema.StateObjectUpdate{
 		{
 			TypeName: "supply",
 			Key:      []interface{}{"foo"},
@@ -55,7 +56,7 @@ func TestMiddleware(t *testing.T) {
 		t.Fatalf("expected %v, got %v", expectedBank, tl.bankUpdates)
 	}
 
-	expectedOne := []schema.ObjectUpdate{
+	expectedOne := []schema.StateObjectUpdate{
 		{TypeName: "item", Value: "abc"},
 	}
 
@@ -83,7 +84,7 @@ func TestMiddleware_filtered(t *testing.T) {
 		t.Fatalf("expected no bank updates")
 	}
 
-	expectedOne := []schema.ObjectUpdate{
+	expectedOne := []schema.StateObjectUpdate{
 		{TypeName: "item", Value: "abc"},
 	}
 
@@ -107,7 +108,7 @@ func TestSync(t *testing.T) {
 		t.Fatal("unexpected error", err)
 	}
 
-	expected := []schema.ObjectUpdate{
+	expected := []schema.StateObjectUpdate{
 		{
 			TypeName: "balances",
 			Key:      []interface{}{"alice", "foo"},
@@ -129,7 +130,7 @@ func TestSync(t *testing.T) {
 		t.Fatalf("expected %v, got %v", expected, tl.bankUpdates)
 	}
 
-	expectedOne := []schema.ObjectUpdate{
+	expectedOne := []schema.StateObjectUpdate{
 		{TypeName: "item", Value: "def"},
 	}
 
@@ -156,7 +157,7 @@ func TestSync_filtered(t *testing.T) {
 		t.Fatalf("expected no bank updates")
 	}
 
-	expectedOne := []schema.ObjectUpdate{
+	expectedOne := []schema.StateObjectUpdate{
 		{TypeName: "item", Value: "def"},
 	}
 
@@ -167,8 +168,8 @@ func TestSync_filtered(t *testing.T) {
 
 type testFixture struct {
 	appdata.Listener
-	bankUpdates     []schema.ObjectUpdate
-	oneValueUpdates []schema.ObjectUpdate
+	bankUpdates     []schema.StateObjectUpdate
+	oneValueUpdates []schema.StateObjectUpdate
 	resolver        DecoderResolver
 	multiStore      *testMultiStore
 	bankMod         *exampleBankModule
@@ -296,12 +297,14 @@ func (t testStore) GetUInt64(key []byte) uint64 {
 
 func (t testStore) Set(key, value []byte) {
 	if t.listener.OnKVPair != nil {
-		err := t.listener.OnKVPair(appdata.KVPairData{Updates: []appdata.ModuleKVPairUpdate{
+		err := t.listener.OnKVPair(appdata.KVPairData{Updates: []appdata.ActorKVPairUpdate{
 			{
-				ModuleName: t.modName,
-				Update: schema.KVPairUpdate{
-					Key:   key,
-					Value: value,
+				Actor: []byte(t.modName),
+				StateChanges: []schema.KVPairUpdate{
+					{
+						Key:   key,
+						Value: value,
+					},
 				},
 			},
 		}})
@@ -360,7 +363,7 @@ func (e exampleBankModule) subBalance(acct, denom string, amount uint64) error {
 	key := balanceKey(acct, denom)
 	cur := e.store.GetUInt64(key)
 	if cur < amount {
-		return fmt.Errorf("insufficient balance")
+		return errors.New("insufficient balance")
 	}
 	e.store.SetUInt64(key, cur-amount)
 	return nil
@@ -368,24 +371,22 @@ func (e exampleBankModule) subBalance(acct, denom string, amount uint64) error {
 
 func init() {
 	var err error
-	exampleBankSchema, err = schema.NewModuleSchema([]schema.ObjectType{
-		{
-			Name: "balances",
-			KeyFields: []schema.Field{
-				{
-					Name: "account",
-					Kind: schema.StringKind,
-				},
-				{
-					Name: "denom",
-					Kind: schema.StringKind,
-				},
+	exampleBankSchema, err = schema.CompileModuleSchema(schema.StateObjectType{
+		Name: "balances",
+		KeyFields: []schema.Field{
+			{
+				Name: "account",
+				Kind: schema.StringKind,
 			},
-			ValueFields: []schema.Field{
-				{
-					Name: "amount",
-					Kind: schema.Uint64Kind,
-				},
+			{
+				Name: "denom",
+				Kind: schema.StringKind,
+			},
+		},
+		ValueFields: []schema.Field{
+			{
+				Name: "amount",
+				Kind: schema.Uint64Kind,
 			},
 		},
 	})
@@ -399,7 +400,7 @@ var exampleBankSchema schema.ModuleSchema
 func (e exampleBankModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return schema.ModuleCodec{
 		Schema: exampleBankSchema,
-		KVDecoder: func(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
+		KVDecoder: func(update schema.KVPairUpdate) ([]schema.StateObjectUpdate, error) {
 			key := string(update.Key)
 			value, err := strconv.ParseUint(string(update.Value), 10, 64)
 			if err != nil {
@@ -407,14 +408,14 @@ func (e exampleBankModule) ModuleCodec() (schema.ModuleCodec, error) {
 			}
 			if strings.HasPrefix(key, "balance/") {
 				parts := strings.Split(key, "/")
-				return []schema.ObjectUpdate{{
+				return []schema.StateObjectUpdate{{
 					TypeName: "balances",
 					Key:      []interface{}{parts[1], parts[2]},
 					Value:    value,
 				}}, nil
 			} else if strings.HasPrefix(key, "supply/") {
 				parts := strings.Split(key, "/")
-				return []schema.ObjectUpdate{{
+				return []schema.StateObjectUpdate{{
 					TypeName: "supply",
 					Key:      []interface{}{parts[1]},
 					Value:    value,
@@ -434,16 +435,12 @@ type oneValueModule struct {
 
 func init() {
 	var err error
-	oneValueModSchema, err = schema.NewModuleSchema(
-		[]schema.ObjectType{
-			{
-				Name: "item",
-				ValueFields: []schema.Field{
-					{Name: "value", Kind: schema.StringKind},
-				},
-			},
+	oneValueModSchema, err = schema.CompileModuleSchema(schema.StateObjectType{
+		Name: "item",
+		ValueFields: []schema.Field{
+			{Name: "value", Kind: schema.StringKind},
 		},
-	)
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -454,11 +451,11 @@ var oneValueModSchema schema.ModuleSchema
 func (i oneValueModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return schema.ModuleCodec{
 		Schema: oneValueModSchema,
-		KVDecoder: func(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
+		KVDecoder: func(update schema.KVPairUpdate) ([]schema.StateObjectUpdate, error) {
 			if string(update.Key) != "key" {
 				return nil, fmt.Errorf("unexpected key: %v", update.Key)
 			}
-			return []schema.ObjectUpdate{
+			return []schema.StateObjectUpdate{
 				{TypeName: "item", Value: string(update.Value)},
 			}, nil
 		},

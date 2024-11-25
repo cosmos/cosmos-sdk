@@ -12,7 +12,6 @@ import (
 	cfg "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/core/address"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -120,11 +119,12 @@ func CollectTxs(txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 		// genesis transactions must be single-message
 		msgs := genTx.GetMsgs()
 
-		// TODO abstract out staking message validation back to staking
-		msg := msgs[0].(*stakingtypes.MsgCreateValidator)
-
+		msg, ok := msgs[0].(msgWithMoniker)
+		if !ok {
+			return appGenTxs, persistentPeers, fmt.Errorf("expected msgWithMoniker, got %T", msgs[0])
+		}
 		// exclude itself from persistent peers
-		if msg.Description.Moniker != moniker {
+		if msg.GetMoniker() != moniker {
 			addressesIPs = append(addressesIPs, nodeAddrIP)
 		}
 	}
@@ -133,4 +133,9 @@ func CollectTxs(txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	persistentPeers = strings.Join(addressesIPs, ",")
 
 	return appGenTxs, persistentPeers, nil
+}
+
+// MsgWithMoniker must have GetMoniker() method to use CollectTx
+type msgWithMoniker interface {
+	GetMoniker() string
 }

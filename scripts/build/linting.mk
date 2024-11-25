@@ -1,4 +1,5 @@
-golangci_version=v1.59.0
+golangci_version=v1.61.0
+golangci_installed_version=$(shell golangci-lint version --format short 2>/dev/null)
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:
@@ -9,8 +10,10 @@ setup-pre-commit:
 
 #? lint-install: Install golangci-lint
 lint-install:
+ifneq ($(golangci_installed_version),$(golangci_version))
 	@echo "--> Installing golangci-lint $(golangci_version)"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+endif
 
 #? lint: Run golangci-lint
 lint:

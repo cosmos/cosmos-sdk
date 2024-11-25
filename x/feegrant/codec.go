@@ -1,7 +1,6 @@
 package feegrant
 
 import (
-	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -11,14 +10,14 @@ import (
 
 // RegisterLegacyAminoCodec registers the necessary x/feegrant interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
-	legacy.RegisterAminoMsg(cdc, &MsgGrantAllowance{}, "cosmos-sdk/MsgGrantAllowance")
-	legacy.RegisterAminoMsg(cdc, &MsgRevokeAllowance{}, "cosmos-sdk/MsgRevokeAllowance")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	legacy.RegisterAminoMsg(registrar, &MsgGrantAllowance{}, "cosmos-sdk/MsgGrantAllowance")
+	legacy.RegisterAminoMsg(registrar, &MsgRevokeAllowance{}, "cosmos-sdk/MsgRevokeAllowance")
 
-	cdc.RegisterInterface((*FeeAllowanceI)(nil), nil)
-	cdc.RegisterConcrete(&BasicAllowance{}, "cosmos-sdk/BasicAllowance")
-	cdc.RegisterConcrete(&PeriodicAllowance{}, "cosmos-sdk/PeriodicAllowance")
-	cdc.RegisterConcrete(&AllowedMsgAllowance{}, "cosmos-sdk/AllowedMsgAllowance")
+	registrar.RegisterInterface((*FeeAllowanceI)(nil), nil)
+	registrar.RegisterConcrete(&BasicAllowance{}, "cosmos-sdk/BasicAllowance")
+	registrar.RegisterConcrete(&PeriodicAllowance{}, "cosmos-sdk/PeriodicAllowance")
+	registrar.RegisterConcrete(&AllowedMsgAllowance{}, "cosmos-sdk/AllowedMsgAllowance")
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry

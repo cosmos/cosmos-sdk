@@ -20,12 +20,12 @@ func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrant
 		return nil, authz.ErrGranteeIsGranter
 	}
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
+	grantee, err := k.addrCdc.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	granter, err := k.addrCdc.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
@@ -64,12 +64,12 @@ func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRev
 		return nil, authz.ErrGranteeIsGranter
 	}
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
+	grantee, err := k.addrCdc.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	granter, err := k.addrCdc.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
@@ -87,7 +87,7 @@ func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRev
 
 // RevokeAll implements the MsgServer.RevokeAll method.
 func (k Keeper) RevokeAll(ctx context.Context, msg *authz.MsgRevokeAll) (*authz.MsgRevokeAllResponse, error) {
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	granter, err := k.addrCdc.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
@@ -105,7 +105,7 @@ func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecRes
 		return nil, errors.New("empty address string is not allowed")
 	}
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
+	grantee, err := k.addrCdc.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}

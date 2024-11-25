@@ -3,7 +3,6 @@ package store
 import (
 	"io"
 
-	coreheader "cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
@@ -12,6 +11,9 @@ import (
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 type RootStore interface {
+	Pruner
+	Backend
+
 	// StateLatest returns a read-only version of the RootStore at the latest
 	// height, alongside the associated version.
 	StateLatest() (uint64, corestore.ReaderMap, error)
@@ -20,12 +22,6 @@ type RootStore interface {
 	// of the RootStore at the provided version. If such a version cannot be found,
 	// an error must be returned.
 	StateAt(version uint64) (corestore.ReaderMap, error)
-
-	// GetStateStorage returns the SS backend.
-	GetStateStorage() VersionedDatabase
-
-	// GetStateCommitment returns the SC backend.
-	GetStateCommitment() Committer
 
 	// Query performs a query on the RootStore for a given store key, version (height),
 	// and key tuple. Queries should be routed to the underlying SS engine.
@@ -44,17 +40,6 @@ type RootStore interface {
 	// SetInitialVersion sets the initial version on the RootStore.
 	SetInitialVersion(v uint64) error
 
-	// SetCommitHeader sets the commit header for the next commit. This call and
-	// implementation is optional. However, it must be supported in cases where
-	// queries based on block time need to be supported.
-	SetCommitHeader(h *coreheader.Info)
-
-	// WorkingHash returns the current WIP commitment hash by applying the Changeset
-	// to the SC backend. It is only used to get the hash of the intermediate state
-	// before committing, the typical use case is for the genesis block.
-	// NOTE: It also writes the changeset to the SS backend.
-	WorkingHash(cs *corestore.Changeset) ([]byte, error)
-
 	// Commit should be responsible for taking the provided changeset and flushing
 	// it to disk. Note, it will overwrite the changeset if WorkingHash() was called.
 	// Commit() should ensure the changeset is committed to all SC and SS backends
@@ -67,21 +52,25 @@ type RootStore interface {
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
 
-	Prune(version uint64) error
-
 	io.Closer
 }
 
-// UpgradeableRootStore extends the RootStore interface to support loading versions
-// with upgrades.
-type UpgradeableRootStore interface {
-	RootStore
+// Backend defines the interface for the RootStore backends.
+type Backend interface {
+	// GetStateStorage returns the SS backend.
+	GetStateStorage() VersionedWriter
 
+	// GetStateCommitment returns the SC backend.
+	GetStateCommitment() Committer
+}
+
+// UpgradeableStore defines the interface for upgrading store keys.
+type UpgradeableStore interface {
 	// LoadVersionAndUpgrade behaves identically to LoadVersion except it also
 	// accepts a StoreUpgrades object that defines a series of transformations to
 	// apply to store keys (if any).
 	//
-	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
+	// Note, handling StoreUpgrades is optional depending on the underlying store
 	// implementation.
 	LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/core/genesis"
 	bankexported "cosmossdk.io/x/bank/exported"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -89,9 +88,10 @@ func ValidateAccountInGenesis(
 // DeliverGenTxs iterates over all genesis txs, decodes each into a Tx and
 // invokes the provided deliverTxfn with the decoded Tx. It returns the result
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
+// NOTE: This isn't used in server/v2 applications.
 func DeliverGenTxs(
 	ctx context.Context, genTxs []json.RawMessage,
-	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
+	stakingKeeper types.StakingKeeper, deliverTx TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]module.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {

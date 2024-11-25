@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
       - run: make build
 
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
       - name: test-sim-import-export
         run: |
@@ -47,7 +47,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
       - name: test-sim-after-import
         run: |
@@ -61,7 +61,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
       - name: test-sim-nondeterminism-streaming
         run: |
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
       - name: test-sim-multi-seed-short
         run: |
@@ -83,7 +83,12 @@ jobs:
 
   sims-notify-success:
     needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
     runs-on: large-sdk-runner
     if: ${{ success() }}
     steps:
@@ -97,7 +102,7 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.3.0
+        uses: rtCamp/action-slack-notify@v2.3.2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims
@@ -111,12 +116,17 @@ jobs:
     permissions:
       contents: none
     needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
     runs-on: large-sdk-runner
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.3.0
+        uses: rtCamp/action-slack-notify@v2.3.2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims

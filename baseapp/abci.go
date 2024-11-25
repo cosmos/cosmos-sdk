@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -38,6 +39,8 @@ const (
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 )
 
+// InitChain implements the ABCI interface. It initializes the application's state
+// and sets up the initial validator set.
 func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 	if req.ChainId != app.chainID {
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
@@ -135,11 +138,12 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 	}, nil
 }
 
+// Info implements the ABCI interface. It returns information about the application.
 func (app *BaseApp) Info(_ *abci.InfoRequest) (*abci.InfoResponse, error) {
 	lastCommitID := app.cms.LastCommitID()
 	appVersion := InitialAppVersion
 	if lastCommitID.Version > 0 {
-		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
+		ctx, err := app.CreateQueryContextWithCheckHeader(lastCommitID.Version, false, false)
 		if err != nil {
 			return nil, fmt.Errorf("failed creating query context: %w", err)
 		}
@@ -177,7 +181,8 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
-	defer telemetry.MeasureSince(telemetry.Now(), req.Path)
+	start := telemetry.Now()
+	defer telemetry.MeasureSince(start, req.Path)
 
 	if req.Path == QueryPathBroadcastTx {
 		return queryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil
@@ -363,18 +368,27 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
-	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
-	if err != nil {
-		return responseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+	if app.checkTxHandler == nil {
+		gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
+		if err != nil {
+			return responseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+		}
+
+		return &abci.CheckTxResponse{
+			GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+			GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+			Log:       result.Log,
+			Data:      result.Data,
+			Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		}, nil
 	}
 
-	return &abci.CheckTxResponse{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}, nil
+	// Create wrapper to avoid users overriding the execution mode
+	runTx := func(txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+		return app.runTx(mode, txBytes, tx)
+	}
+
+	return app.checkTxHandler(runTx, req)
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
@@ -394,6 +408,14 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 	if app.prepareProposal == nil {
 		return nil, errors.New("PrepareProposal handler not set")
 	}
+
+	// Abort any running OE so it cannot overlap with `PrepareProposal`. This could happen if optimistic
+	// `internalFinalizeBlock` from previous round takes a long time, but consensus has moved on to next round.
+	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProoposal` could share access to
+	// in-memory structs depending on application implementation.
+	// No-op if OE is not enabled.
+	// Similar call to Abort() is done in `ProcessProposal`.
+	app.optimisticExec.Abort()
 
 	// Always reset state given that PrepareProposal can timeout and be called
 	// again in a subsequent round.
@@ -786,9 +808,11 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 			WithHeaderHash(req.Hash))
 	}
 
-	if err := app.preBlock(req); err != nil {
+	preblockEvents, err := app.preBlock(req)
+	if err != nil {
 		return nil, err
 	}
+	events = append(events, preblockEvents...)
 
 	beginBlock, err := app.beginBlock(req)
 	if err != nil {
@@ -816,7 +840,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
-	for _, rawTx := range req.Txs {
+	for txIndex, rawTx := range req.Txs {
 
 		response := app.deliverTx(rawTx)
 
@@ -826,6 +850,12 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 			return nil, ctx.Err()
 		default:
 			// continue
+		}
+
+		// append the tx index to the response.Events
+		for i, event := range response.Events {
+			response.Events[i].Attributes = append(event.Attributes,
+				abci.EventAttribute{Key: "tx_index", Value: strconv.Itoa(txIndex)})
 		}
 
 		txResults = append(txResults, response)
@@ -912,10 +942,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.FinalizeBlockRequest) (res *abci.Fin
 func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case app.haltHeight > 0 && uint64(height) > app.haltHeight:
+	case app.haltHeight > 0 && uint64(height) >= app.haltHeight:
 		halt = true
 
-	case app.haltTime > 0 && time.Unix() > int64(app.haltTime):
+	case app.haltTime > 0 && time.Unix() >= int64(app.haltTime):
 		halt = true
 	}
 
@@ -1200,6 +1230,12 @@ func checkNegativeHeight(height int64) error {
 // CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
 func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
+	return app.CreateQueryContextWithCheckHeader(height, prove, true)
+}
+
+// CreateQueryContextWithCheckHeader creates a new sdk.Context for a query, taking as args
+// the block height, whether the query needs a proof or not, and whether to check the header or not.
+func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
@@ -1223,17 +1259,44 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	// when a client did not provide a query height, manually inject the latest
-	if height == 0 {
-		height = lastBlockHeight
-	}
-
-	if height <= 1 && prove {
+	if height > 0 && height <= 1 && prove {
 		return sdk.Context{},
 			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			)
+	}
+
+	var header *cmtproto.Header
+	isLatest := height == 0
+	for _, state := range []*state{
+		app.checkState,
+		app.finalizeBlockState,
+	} {
+		if state != nil {
+			// branch the commit multi-store for safety
+			h := state.Context().BlockHeader()
+			if isLatest {
+				lastBlockHeight = qms.LatestVersion()
+			}
+			if !checkHeader || !isLatest || isLatest && h.Height == lastBlockHeight {
+				header = &h
+				break
+			}
+		}
+	}
+
+	if header == nil {
+		return sdk.Context{},
+			errorsmod.Wrapf(
+				sdkerrors.ErrInvalidHeight,
+				"header height in all state context is not latest height (%d)", lastBlockHeight,
+			)
+	}
+
+	// when a client did not provide a query height, manually inject the latest
+	if isLatest {
+		height = lastBlockHeight
 	}
 
 	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
@@ -1253,10 +1316,10 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			ChainID: app.chainID,
 			Height:  height,
 		}).
-		WithBlockHeader(app.checkState.Context().BlockHeader()).
+		WithBlockHeader(*header).
 		WithBlockHeight(height)
 
-	if height != lastBlockHeight {
+	if !isLatest {
 		rms, ok := app.cms.(*rootmulti.Store)
 		if ok {
 			cInfo, err := rms.GetCommitInfo(height)
@@ -1265,7 +1328,6 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			}
 		}
 	}
-
 	return ctx, nil
 }
 

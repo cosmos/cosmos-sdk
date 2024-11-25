@@ -11,7 +11,6 @@ import (
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/staking"
 
@@ -19,9 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	genutiltest "github.com/cosmos/cosmos-sdk/testutil/x/genutil"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -34,6 +34,7 @@ func Test_TestnetCmd(t *testing.T) {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
+		configurator.ValidateModule(),
 		configurator.MintModule(),
 	)
 	var moduleManager *module.Manager
@@ -45,7 +46,7 @@ func Test_TestnetCmd(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.NotNil(t, moduleManager)
-	require.Len(t, moduleManager.Modules, 8)
+	require.Len(t, moduleManager.Modules, 9) // the registered above + runtime
 
 	home := t.TempDir()
 	cdcOpts := codectestutil.CodecOptions{}
@@ -72,7 +73,9 @@ func Test_TestnetCmd(t *testing.T) {
 	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	cmd := testnetInitFilesCmd(moduleManager)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=test", flags.FlagKeyringBackend), fmt.Sprintf("--output-dir=%s", home)})
+	cmd.SetArgs(
+		[]string{fmt.Sprintf("--%s=test", flags.FlagKeyringBackend), fmt.Sprintf("--output-dir=%s", home)},
+	)
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 

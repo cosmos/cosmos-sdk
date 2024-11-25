@@ -21,7 +21,7 @@ const (
 	OpWeightMsgUpdateParams = "op_weight_msg_update_params"
 )
 
-// ProposalMsgs defines the module weighted proposals' contents
+// ProposalMsgs defines the module's weighted proposals contents
 func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
 		simulation.NewWeightedProposalMsgX(

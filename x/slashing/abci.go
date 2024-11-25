@@ -13,11 +13,12 @@ import (
 // BeginBlocker check for infraction evidence or downtime of validators
 // on every begin block
 func BeginBlocker(ctx context.Context, k keeper.Keeper, cometService comet.Service) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+	start := telemetry.Now()
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 
-	// Iterate over all the validators which *should* have signed this block
-	// store whether or not they have actually signed it and slash/unbond any
-	// which have missed too many blocks in a row (downtime slashing)
+	// Retrieve CometBFT info, then iterate through all validator votes
+	// from the last commit. For each vote, handle the validator's signature, potentially
+	// slashing or unbonding validators who have missed too many blocks.
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err

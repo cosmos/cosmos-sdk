@@ -25,18 +25,20 @@ v                     without deliberation
     * [ ] Audit x/auth 
     * [ ] Audit x/authz
     * [ ] Audit x/bank
+    * [ ] Audit x/bank/v2
     * [ ] Audit x/circuit
     * [ ] Audit x/consensus 
     * [ ] Audit x/crisis 
     * [ ] Audit x/distribution 
     * [ ] Audit x/evidence 
+    * [ ] Audit x/epochs
     * [ ] Audit x/feegrant
     * [ ] Audit x/genutil 
     * [ ] Audit x/gov 
     * [ ] Audit x/group 
     * [ ] Audit x/mint 
     * [ ] Audit x/nft 
-    * [ ] Audit x/simulation 
+    * [ ] Audit x/protocolpool
     * [ ] Audit x/slashing 
     * [ ] Audit x/staking
     * [ ] Audit x/tx 

@@ -52,7 +52,7 @@ func TxCmd(name string) *cobra.Command {
 // This command is being handled better here, not converting to autocli
 func MsgCreateGroupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-group [admin] [metadata] [members-json-file]",
+		Use:   "create-group <admin> <metadata> <members-json-file>",
 		Short: "Create a group which is an aggregation of member accounts with associated weights and an administrator account.",
 		Long: `Create a group which is an aggregation of member accounts with associated weights and an administrator account.
 Note, the '--from' flag is ignored as it is implied from [admin]. Members accounts can be given through a members JSON file that contains an array of members.`,
@@ -123,7 +123,7 @@ Where members.json contains:
 // This command is being handled better here, not converting to autocli
 func MsgUpdateGroupMembersCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-members [admin] [group-id] [members-json-file]",
+		Use:   "update-group-members <admin> <group-id> <members-json-file>",
 		Short: "Update a group's members. Set a member's weight to \"0\" to delete it.",
 		Example: fmt.Sprintf(`
 %s tx group update-group-members [admin] [group-id] [members-json-file]
@@ -204,7 +204,7 @@ Set a member's weight to "0" to delete it.
 // This command is being handled better here, not converting to autocli
 func MsgCreateGroupWithPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy-json-file]",
+		Use:   "create-group-with-policy <admin> <group-metadata> <group-policy-metadata> <members-json-file> <decision-policy-json-file>",
 		Short: "Create a group with policy which is an aggregation of member accounts with associated weights, an administrator account and decision policy.",
 		Long: `Create a group with policy which is an aggregation of member accounts with associated weights,
 an administrator account and decision policy. Note, the '--from' flag is ignored as it is implied from [admin].
@@ -309,7 +309,7 @@ and policy.json contains:
 // This command is being handled better here, not converting to autocli
 func MsgCreateGroupPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-group-policy [admin] [group-id] [metadata] [decision-policy-json-file]",
+		Use:   "create-group-policy <admin> <group-id> <metadata> <decision-policy-json-file>",
 		Short: `Create a group policy which is an account associated with a group and a decision policy. Note, the '--from' flag is ignored as it is implied from [admin].`,
 		Example: fmt.Sprintf(`
 %s tx group create-group-policy [admin] [group-id] [metadata] policy.json
@@ -394,7 +394,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 // This command is being handled better here, not converting to autocli
 func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy-json-file]",
+		Use:   "update-group-policy-decision-policy <admin> <group-policy-account> <decision-policy-json-file>",
 		Short: "Update a group policy's decision policy",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -450,7 +450,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 // This command is being handled better here, not converting to autocli
 func MsgSubmitProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal [proposal_json_file]",
+		Use:   "submit-proposal <proposal_json_file>",
 		Short: "Submit a new proposal",
 		Long: `Submit a new proposal.
 Parameters:
@@ -498,7 +498,7 @@ metadata example:
 
 			// Since the --from flag is not required on this CLI command, we
 			// ignore it, and just use the 1st proposer in the JSON file.
-			if prop.Proposers == nil || len(prop.Proposers) == 0 {
+			if len(prop.Proposers) == 0 {
 				return errors.New("no proposers specified in proposal")
 			}
 			err = cmd.Flags().Set(flags.FlagFrom, prop.Proposers[0])
@@ -534,7 +534,7 @@ metadata example:
 		},
 	}
 
-	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)")
+	cmd.Flags().String(FlagExec, "", "Set to 1 or 'try' to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

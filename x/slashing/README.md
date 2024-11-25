@@ -143,18 +143,18 @@ bonded validator. The `SignedBlocksWindow` parameter defines the size
 The information stored for tracking validator liveness is as follows:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/slashing/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35
 ```
 
 ### Params
 
-The slashing module stores it's params in state with the prefix of `0x00`,
+The slashing module stores its params in state with the prefix of `0x00`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x00 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L59
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/slashing/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L62
 ```
 
 ## Messages
@@ -312,6 +312,7 @@ The following hooks impact the slashing state:
 * `AfterValidatorBonded` creates a `ValidatorSigningInfo` instance as described in the following section.
 * `AfterValidatorCreated` stores a validator's consensus key.
 * `AfterValidatorRemoved` removes a validator's consensus key.
+* `AfterConsensusPubKeyUpdate` handles the rotation of signing info and updates the address-pubkey relation after a consensus key update.
 
 ### Validator Bonded
 
@@ -631,6 +632,20 @@ Example:
 
 ```bash
 simd tx slashing unjail --from mykey
+```
+
+#### update-params-proposal
+
+The `update-params-proposal` command allows users to submit a governance proposal to update the slashing module parameters:
+
+```bash
+simd tx slashing update-params-proposal <params> [flags]
+```
+
+Example:
+
+```bash
+simd tx slashing update-params-proposal '{ "signed_blocks_window": "100" }'
 ```
 
 ### gRPC

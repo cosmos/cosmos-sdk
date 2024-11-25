@@ -4,25 +4,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestBankStateCompatibility(t *testing.T) {
@@ -32,13 +31,13 @@ func TestBankStateCompatibility(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
-	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	authKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addr, err := ac.BytesToString(accAddrs[4])
 	require.NoError(t, err)
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress(banktypes.GovModuleName))

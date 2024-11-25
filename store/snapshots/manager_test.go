@@ -4,11 +4,11 @@ import (
 	"errors"
 	"testing"
 
-	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
 	"cosmossdk.io/store/snapshots/types"
 )
@@ -19,7 +19,7 @@ func TestManager_List(t *testing.T) {
 	store := setupStore(t)
 	snapshotter := &mockSnapshotter{}
 	snapshotter.SetSnapshotInterval(opts.Interval)
-	manager := snapshots.NewManager(store, opts, snapshotter, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 	require.Equal(t, opts.Interval, snapshotter.GetSnapshotInterval())
 
 	mgrList, err := manager.List()
@@ -41,7 +41,7 @@ func TestManager_List(t *testing.T) {
 
 func TestManager_LoadChunk(t *testing.T) {
 	store := setupStore(t)
-	manager := snapshots.NewManager(store, opts, &mockSnapshotter{}, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, &mockSnapshotter{}, nil, log.NewNopLogger())
 
 	// Existing chunk should return body
 	chunk, err := manager.LoadChunk(2, 1, 1)
@@ -74,7 +74,7 @@ func TestManager_Take(t *testing.T) {
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, snapshotter, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -119,7 +119,7 @@ func TestManager_Prune(t *testing.T) {
 	store := setupStore(t)
 	snapshotter := &mockSnapshotter{}
 	snapshotter.SetSnapshotInterval(opts.Interval)
-	manager := snapshots.NewManager(store, opts, snapshotter, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 
 	pruned, err := manager.Prune(2)
 	require.NoError(t, err)
@@ -141,7 +141,7 @@ func TestManager_Restore(t *testing.T) {
 		prunedHeights: make(map[int64]struct{}),
 	}
 	extSnapshotter := newExtSnapshotter(0)
-	manager := snapshots.NewManager(store, opts, target, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, target, nil, log.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -249,9 +249,9 @@ func TestManager_Restore(t *testing.T) {
 
 func TestManager_TakeError(t *testing.T) {
 	snapshotter := &mockErrorSnapshotter{}
-	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+	store, err := snapshots.NewStore(coretesting.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
-	manager := snapshots.NewManager(store, opts, snapshotter, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 
 	_, err = manager.Create(1)
 	require.Error(t, err)

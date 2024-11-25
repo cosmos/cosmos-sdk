@@ -1,6 +1,19 @@
 // Package serverv2 defines constants for server configuration flags and output formats.
 package serverv2
 
+import "fmt"
+
+// start flags are prefixed with the server name
+// this allows viper to properly bind the flags
+func prefix(f string) string {
+	return fmt.Sprintf("%s.%s", serverName, f)
+}
+
+var (
+	FlagMinGasPrices = prefix("minimum-gas-prices")
+	FlagCPUProfiling = prefix("cpu-profile")
+)
+
 const (
 	// FlagHome specifies the home directory flag.
 	FlagHome = "home"

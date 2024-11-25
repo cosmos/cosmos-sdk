@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -36,35 +38,35 @@ func TestField_Validate(t *testing.T) {
 			errContains: "invalid field kind",
 		},
 		{
-			name: "invalid enum definition",
+			name: "missing enum type",
 			field: Field{
 				Name: "field1",
 				Kind: EnumKind,
 			},
-			errContains: "invalid enum definition",
+			errContains: `enum field "field1" must have a referenced type`,
 		},
 		{
 			name: "enum definition with non-EnumKind",
 			field: Field{
-				Name:     "field1",
-				Kind:     StringKind,
-				EnumType: EnumType{Name: "enum"},
+				Name:           "field1",
+				Kind:           StringKind,
+				ReferencedType: "enum",
 			},
-			errContains: "enum definition is only valid for field \"field1\" with type EnumKind",
+			errContains: `field "field1" with kind "string" cannot have a referenced type`,
 		},
 		{
 			name: "valid enum",
 			field: Field{
-				Name:     "field1",
-				Kind:     EnumKind,
-				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
+				Name:           "field1",
+				Kind:           EnumKind,
+				ReferencedType: "enum",
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.field.Validate()
+			err := tt.field.Validate(testEnumSchema)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Errorf("expected no error, got: %v", err)
@@ -128,9 +130,9 @@ func TestField_ValidateValue(t *testing.T) {
 		{
 			name: "valid enum",
 			field: Field{
-				Name:     "field1",
-				Kind:     EnumKind,
-				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
+				Name:           "field1",
+				Kind:           EnumKind,
+				ReferencedType: "enum",
 			},
 			value:       "a",
 			errContains: "",
@@ -138,9 +140,9 @@ func TestField_ValidateValue(t *testing.T) {
 		{
 			name: "invalid enum",
 			field: Field{
-				Name:     "field1",
-				Kind:     EnumKind,
-				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
+				Name:           "field1",
+				Kind:           EnumKind,
+				ReferencedType: "enum",
 			},
 			value:       "c",
 			errContains: "not a valid enum value",
@@ -149,7 +151,7 @@ func TestField_ValidateValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.field.ValidateValue(tt.value)
+			err := tt.field.ValidateValue(tt.value, testEnumSchema)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Errorf("expected no error, got: %v", err)
@@ -164,3 +166,66 @@ func TestField_ValidateValue(t *testing.T) {
 		})
 	}
 }
+
+func TestFieldJSON(t *testing.T) {
+	tt := []struct {
+		field     Field
+		json      string
+		expectErr bool
+	}{
+		{
+			field: Field{
+				Name: "field1",
+				Kind: StringKind,
+			},
+			json: `{"name":"field1","kind":"string"}`,
+		},
+		{
+			field: Field{
+				Name:     "field1",
+				Kind:     Int32Kind,
+				Nullable: true,
+			},
+			json: `{"name":"field1","kind":"int32","nullable":true}`,
+		},
+		{
+			field: Field{
+				Name:           "field1",
+				Kind:           EnumKind,
+				ReferencedType: "enum",
+			},
+			json: `{"name":"field1","kind":"enum","referenced_type":"enum"}`,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.json, func(t *testing.T) {
+			b, err := json.Marshal(tc.field)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if string(b) != tc.json {
+					t.Fatalf("expected %s, got %s", tc.json, string(b))
+				}
+				var field Field
+				err = json.Unmarshal(b, &field)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if !reflect.DeepEqual(field, tc.field) {
+					t.Fatalf("expected %v, got %v", tc.field, field)
+				}
+			}
+		})
+	}
+}
+
+var testEnumSchema = MustCompileModuleSchema(EnumType{
+	Name:   "enum",
+	Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
+})

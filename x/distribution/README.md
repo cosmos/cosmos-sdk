@@ -74,7 +74,7 @@ which is considered computationally expensive.
 
 In conclusion, we can only have Atom commission and unbonded atoms
 provisions or bonded atom provisions with no Atom commission, and we elect to
-implement the former. Stakeholders wishing to rebond their provisions may elect
+implement the former. Stakeholders wishing to rebond their provisions, may elect
 to set up a script to periodically withdraw and rebond rewards.
 
 ## Contents
@@ -99,7 +99,7 @@ In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are pa
 
 Rewards are calculated per period. The period is updated each time a validator's delegation changes, for example, when the validator receives a new delegation.
 The rewards for a single validator can then be calculated by taking the total rewards for the period before the delegation started, minus the current total rewards.
-To learn more, see the [F1 Fee Distribution paper](https://github.com/cosmos/cosmos-sdk/tree/main/docs/spec/fee_distribution/f1_fee_distr.pdf).
+To learn more, see the [F1 Fee Distribution paper](https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/docs/spec/fee_distribution/f1_fee_distr.pdf).
 
 The commission to the validator is paid when the validator is removed or when the validator requests a withdrawal.
 The commission is calculated and incremented at every `BeginBlock` operation to update accumulated fee amounts.
@@ -186,7 +186,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x09 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L12-L42
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/distribution/proto/cosmos/distribution/v1beta1/distribution.proto#L12-L44
 ```
 
 ## Begin Block
@@ -272,7 +272,7 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 Response:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L49-L60
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/distribution/proto/cosmos/distribution/v1beta1/tx.proto#L62-L73
 ```
 
 ```go
@@ -324,7 +324,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 Response:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L66-L77
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/distribution/proto/cosmos/distribution/v1beta1/tx.proto#L79-L90
 ```
 
 ### WithdrawValidatorCommission
@@ -368,7 +368,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L133-L147
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/distribution/proto/cosmos/distribution/v1beta1/tx.proto#L159:L172
 ```
 
 The message handling can fail if:
@@ -438,8 +438,6 @@ The distribution module emits the following events:
 
 | Type            | Attribute Key | Attribute Value    |
 |-----------------|---------------|--------------------|
-| proposer_reward | validator     | {validatorAddress} |
-| proposer_reward | reward        | {proposerReward}   |
 | commission      | amount        | {commissionAmount} |
 | commission      | validator     | {validatorAddress} |
 | rewards         | amount        | {rewardAmount}     |

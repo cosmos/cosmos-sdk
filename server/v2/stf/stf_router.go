@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
+	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/transaction"
 )
 
 var ErrNoHandler = errors.New("no handler")
@@ -17,21 +18,21 @@ var ErrNoHandler = errors.New("no handler")
 // NewMsgRouterBuilder is a router that routes messages to their respective handlers.
 func NewMsgRouterBuilder() *MsgRouterBuilder {
 	return &MsgRouterBuilder{
-		handlers:     make(map[string]appmodulev2.Handler),
+		handlers:     make(map[string]appmodulev2.HandlerFunc),
 		preHandlers:  make(map[string][]appmodulev2.PreMsgHandler),
 		postHandlers: make(map[string][]appmodulev2.PostMsgHandler),
 	}
 }
 
 type MsgRouterBuilder struct {
-	handlers           map[string]appmodulev2.Handler
+	handlers           map[string]appmodulev2.HandlerFunc
 	globalPreHandlers  []appmodulev2.PreMsgHandler
 	preHandlers        map[string][]appmodulev2.PreMsgHandler
 	postHandlers       map[string][]appmodulev2.PostMsgHandler
 	globalPostHandlers []appmodulev2.PostMsgHandler
 }
 
-func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.Handler) error {
+func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.HandlerFunc) error {
 	// panic on override
 	if _, ok := b.handlers[msgType]; ok {
 		return fmt.Errorf("handler already registered: %s", msgType)
@@ -40,19 +41,19 @@ func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.H
 	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterGlobalPreHandler(handler appmodulev2.PreMsgHandler) {
+func (b *MsgRouterBuilder) RegisterGlobalPreMsgHandler(handler appmodulev2.PreMsgHandler) {
 	b.globalPreHandlers = append(b.globalPreHandlers, handler)
 }
 
-func (b *MsgRouterBuilder) RegisterPreHandler(msgType string, handler appmodulev2.PreMsgHandler) {
+func (b *MsgRouterBuilder) RegisterPreMsgHandler(msgType string, handler appmodulev2.PreMsgHandler) {
 	b.preHandlers[msgType] = append(b.preHandlers[msgType], handler)
 }
 
-func (b *MsgRouterBuilder) RegisterPostHandler(msgType string, handler appmodulev2.PostMsgHandler) {
+func (b *MsgRouterBuilder) RegisterPostMsgHandler(msgType string, handler appmodulev2.PostMsgHandler) {
 	b.postHandlers[msgType] = append(b.postHandlers[msgType], handler)
 }
 
-func (b *MsgRouterBuilder) RegisterGlobalPostHandler(handler appmodulev2.PostMsgHandler) {
+func (b *MsgRouterBuilder) RegisterGlobalPostMsgHandler(handler appmodulev2.PostMsgHandler) {
 	b.globalPostHandlers = append(b.globalPostHandlers, handler)
 }
 
@@ -61,10 +62,10 @@ func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {
 	return ok
 }
 
-func (b *MsgRouterBuilder) Build() (Router, error) {
-	handlers := make(map[string]appmodulev2.Handler)
+func (b *MsgRouterBuilder) build() (coreRouterImpl, error) {
+	handlers := make(map[string]appmodulev2.HandlerFunc)
 
-	globalPreHandler := func(ctx context.Context, msg appmodulev2.Message) error {
+	globalPreHandler := func(ctx context.Context, msg transaction.Msg) error {
 		for _, h := range b.globalPreHandlers {
 			err := h(ctx, msg)
 			if err != nil {
@@ -74,7 +75,7 @@ func (b *MsgRouterBuilder) Build() (Router, error) {
 		return nil
 	}
 
-	globalPostHandler := func(ctx context.Context, msg, msgResp appmodulev2.Message) error {
+	globalPostHandler := func(ctx context.Context, msg, msgResp transaction.Msg) error {
 		for _, h := range b.globalPostHandlers {
 			err := h(ctx, msg, msgResp)
 			if err != nil {
@@ -93,19 +94,19 @@ func (b *MsgRouterBuilder) Build() (Router, error) {
 		handlers[msgType] = buildHandler(handler, preHandlers, globalPreHandler, postHandlers, globalPostHandler)
 	}
 
-	return Router{
+	return coreRouterImpl{
 		handlers: handlers,
 	}, nil
 }
 
 func buildHandler(
-	handler appmodulev2.Handler,
+	handler appmodulev2.HandlerFunc,
 	preHandlers []appmodulev2.PreMsgHandler,
 	globalPreHandler appmodulev2.PreMsgHandler,
 	postHandlers []appmodulev2.PostMsgHandler,
 	globalPostHandler appmodulev2.PostMsgHandler,
-) appmodulev2.Handler {
-	return func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+) appmodulev2.HandlerFunc {
+	return func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 		if len(preHandlers) != 0 {
 			for _, preHandler := range preHandlers {
 				if err := preHandler(ctx, msg); err != nil {
@@ -139,14 +140,18 @@ func msgTypeURL(msg gogoproto.Message) string {
 	return gogoproto.MessageName(msg)
 }
 
-var _ router.Service = (*Router)(nil)
+var _ router.Service = (*coreRouterImpl)(nil)
 
-// Router implements the STF router for msg and query handlers.
-type Router struct {
-	handlers map[string]appmodulev2.Handler
+// coreRouterImpl implements the STF router for msg and query handlers.
+type coreRouterImpl struct {
+	handlers map[string]appmodulev2.HandlerFunc
 }
 
-func (r Router) CanInvoke(_ context.Context, typeURL string) error {
+func (r coreRouterImpl) CanInvoke(_ context.Context, typeURL string) error {
+	// trimming prefixes is a backwards compatibility strategy that we use
+	// for baseapp components that did routing through type URL rather
+	// than protobuf message names.
+	typeURL = strings.TrimPrefix(typeURL, "/")
 	_, exists := r.handlers[typeURL]
 	if !exists {
 		return fmt.Errorf("%w: %s", ErrNoHandler, typeURL)
@@ -154,24 +159,12 @@ func (r Router) CanInvoke(_ context.Context, typeURL string) error {
 	return nil
 }
 
-func (r Router) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
-	handlerResp, err := r.InvokeUntyped(ctx, req)
-	if err != nil {
-		return err
-	}
-	merge(handlerResp, resp)
-	return nil
-}
-
-func merge(src, dst gogoproto.Message) {
-	reflect.Indirect(reflect.ValueOf(dst)).Set(reflect.Indirect(reflect.ValueOf(src)))
-}
-
-func (r Router) InvokeUntyped(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
+func (r coreRouterImpl) Invoke(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error) {
 	typeName := msgTypeURL(req)
 	handler, exists := r.handlers[typeName]
 	if !exists {
 		return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
 	}
+
 	return handler(ctx, req)
 }

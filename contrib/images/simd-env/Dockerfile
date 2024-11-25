@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS build
+FROM golang:1.23-alpine AS build
 
 RUN apk add build-base git linux-headers
 
@@ -17,7 +17,6 @@ COPY x/gov/go.mod x/gov/go.sum /work/x/gov/
 COPY x/distribution/go.mod x/distribution/go.sum /work/x/distribution/
 COPY x/slashing/go.mod x/slashing/go.sum /work/x/slashing/
 COPY x/staking/go.mod x/staking/go.sum /work/x/staking/
-COPY x/auth/go.mod x/auth/go.sum /work/x/auth/
 COPY x/authz/go.mod x/authz/go.sum /work/x/authz/
 COPY x/bank/go.mod x/bank/go.sum /work/x/bank/
 COPY x/mint/go.mod x/mint/go.sum /work/x/mint/

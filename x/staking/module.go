@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/staking/client/cli"
@@ -36,7 +35,6 @@ var (
 	_ module.HasABCIEndBlock     = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 
@@ -45,24 +43,15 @@ var (
 
 // AppModule implements an application module for the staking module.
 type AppModule struct {
-	cdc           codec.Codec
-	keeper        *keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	cdc    codec.Codec
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(
-	cdc codec.Codec,
-	keeper *keeper.Keeper,
-	ak types.AccountKeeper,
-	bk types.BankKeeper,
-) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper) AppModule {
 	return AppModule{
-		cdc:           cdc,
-		keeper:        keeper,
-		accountKeeper: ak,
-		bankKeeper:    bk,
+		cdc:    cdc,
+		keeper: keeper,
 	}
 }
 
@@ -76,8 +65,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the staking module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the module's interface types

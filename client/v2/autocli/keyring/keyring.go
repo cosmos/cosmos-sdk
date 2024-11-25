@@ -10,7 +10,9 @@ import (
 
 // KeyringContextKey is the key used to store the keyring in the context.
 // The keyring must be wrapped using the KeyringImpl.
-var KeyringContextKey struct{}
+var KeyringContextKey keyringContextKey
+
+type keyringContextKey struct{}
 
 var _ Keyring = &KeyringImpl{}
 
@@ -45,4 +47,14 @@ func (k *KeyringImpl) LookupAddressByKeyName(name string) ([]byte, error) {
 // Sign implements Keyring.
 func (k *KeyringImpl) Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error) {
 	return k.k.Sign(name, msg, signMode)
+}
+
+// KeyType returns the type of the key.
+func (k *KeyringImpl) KeyType(name string) (uint, error) {
+	return k.k.KeyType(name)
+}
+
+// KeyInfo given a key name or address returns key name, key address and key type.
+func (k *KeyringImpl) KeyInfo(nameOrAddr string) (string, string, uint, error) {
+	return k.k.KeyInfo(nameOrAddr)
 }

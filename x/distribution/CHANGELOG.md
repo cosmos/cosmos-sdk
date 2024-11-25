@@ -29,9 +29,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 *
 
+### Improvements
+
+* [#20790](https://github.com/cosmos/cosmos-sdk/pull/20790) `x/distribution` does not depend on `x/protocolpool` anymore, now `x/distribution` only does token transfers and `x/protocolpool` does the rest.
+
 ### API Breaking Changes
 
-
+* [#20790](https://github.com/cosmos/cosmos-sdk/pull/20790) `x/distribution` does not depend on `x/protocolpool` anymore, meaning NewAppModule and NewKeeper do not take it as an argument.
 * [#20588](https://github.com/cosmos/cosmos-sdk/pull/20588) `x/distribution` now takes cometService in order to get consensus related information.
 * [#19868](https://github.com/cosmos/cosmos-sdk/pull/19868) Removes Accounts String method
     * `NewMsgSetWithdrawAddress` now takes strings as argument instead of `sdk.AccAddress`.
@@ -52,7 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove `Keeper`: `SetDelegatorWithdrawAddr`, `DeleteDelegatorWithdrawAddr`, `IterateDelegatorWithdrawAddrs`.
 * [#16459](https://github.com/cosmos/cosmos-sdk/pull/16459) use collections for `ValidatorCurrentRewards` state management:
     * remove `Keeper`: `IterateValidatorCurrentRewards`, `GetValidatorCurrentRewards`, `SetValidatorCurrentRewards`, `DeleteValidatorCurrentRewards`
-* [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) The distribution module keeper now takes a new argument `PoolKeeper` in addition.
+* [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) ~The distribution module keeper now takes a new argument `PoolKeeper` in addition.~ Reverted on #20790
 * [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) `AllocateTokens` takes `comet.VoteInfos` instead of `[]abci.VoteInfo`
 * [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 

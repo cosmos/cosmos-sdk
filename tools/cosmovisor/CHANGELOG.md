@@ -36,13 +36,28 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## Features
+## v1.7.0 - 2024-11-18
 
-* [#19764](https://github.com/cosmos/cosmos-sdk/issues/19764) Use config file for cosmovisor configuration.
+### Features
+
+* [#21790](https://github.com/cosmos/cosmos-sdk/pull/21790) Add `add-batch-upgrade` command.
+* [#21972](https://github.com/cosmos/cosmos-sdk/pull/21972) Add `prepare-upgrade` command
+* [#21932](https://github.com/cosmos/cosmos-sdk/pull/21932) Add `cosmovisor show-upgrade-info` command to display the upgrade-info.json into stdout.
+
+### Improvements
+
+* [#21891](https://github.com/cosmos/cosmos-sdk/pull/21891) create `current` symlink as relative
+* [#21462](https://github.com/cosmos/cosmos-sdk/pull/21462) Pass `stdin` to binary.
+  
+### Bug Fixes
+
+* [#22528](https://github.com/cosmos/cosmos-sdk/pull/22528) Fix premature upgrades on restarting cosmovisor.
+
+## v1.6.0 - 2024-08-12
 
 ## Improvements
 
-* [#20573](https://github.com/cosmos/cosmos-sdk/pull/20573) Bump `cosmossdk.io/x/upgrade` to v0.1.3 (including go-getter vulnerability fix)
+* Bump `cosmossdk.io/x/upgrade` to v0.1.4 (including go-getter vulnerability fix)
 * [#19995](https://github.com/cosmos/cosmos-sdk/pull/19995):
     * `init command` writes the configuration to the config file only at the default path `DAEMON_HOME/cosmovisor/config.toml`.
     * Provide `--cosmovisor-config` flag with value as args to provide the path to the configuration file in the `run` command. `run --cosmovisor-config <path> (other cmds with flags) ...`.
@@ -52,6 +67,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Bug Fixes
 
 * [#20062](https://github.com/cosmos/cosmos-sdk/pull/20062) Fixed cosmovisor add-upgrade permissions
+* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Always parse stdout and stderr
+* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Pass right home to command `status`
+* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Fix upgrades applied automatically (check two casing of sync_info)
 
 ## v1.5.0 - 2023-07-17
 
@@ -74,7 +92,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* [#13603](https://github.com/cosmos-sdk/pull/13603) Rename cosmovisor package to `cosmossdk.io/tools/cosmovisor`.
+* [#13603](https://github.com/cosmos/cosmos-sdk/pull/13603) Rename cosmovisor package to `cosmossdk.io/tools/cosmovisor`.
 
 ## v1.3.0 - 2022-09-11
 

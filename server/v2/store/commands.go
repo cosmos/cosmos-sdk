@@ -2,9 +2,6 @@ package store
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -12,12 +9,11 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	storev2 "cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/root"
 )
 
-// QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *StoreComponent[T]) PrunesCmd() *cobra.Command {
+// PrunesCmd implements the default command for pruning app history states.
+func (s *Server[T]) PrunesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
@@ -44,12 +40,8 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			}
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			home, err := cmd.Flags().GetString(serverv2.FlagHome)
-			if err != nil {
-				return err
-			}
 
-			rootStore, keepRecent, err := createRootStore(cmd, home, vp, logger)
+			rootStore, opts, err := createRootStore(vp, logger)
 			if err != nil {
 				return fmt.Errorf("can not create root store %w", err)
 			}
@@ -64,8 +56,8 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			upTo := latestHeight - keepRecent
-			cmd.Printf("pruning heights up to %v\n", upTo)
+			diff := latestHeight - opts.SCPruningOption.KeepRecent
+			cmd.Printf("pruning heights up to %v\n", diff)
 
 			err = rootStore.Prune(latestHeight)
 			if err != nil {
@@ -78,86 +70,19 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	}
 
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
-	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 
 	return cmd
 }
 
-func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
-	tempViper := v
-
-	// handle FlagAppDBBackend
-	var dbType db.DBType
-	if cmd.Flags().Changed(FlagAppDBBackend) {
-		dbStr, err := cmd.Flags().GetString(FlagAppDBBackend)
-		if err != nil {
-			return nil, 0, err
-		}
-		dbType = db.DBType(dbStr)
-	} else {
-		dbType = db.DBType(v.GetString("store.app-db-backend"))
-	}
-	scRawDb, err := db.NewDB(dbType, "application", filepath.Join(rootDir, "data"), nil)
+func createRootStore(v *viper.Viper, logger log.Logger) (storev2.RootStore, root.Options, error) {
+	storeConfig, err := UnmarshalConfig(v.AllSettings())
 	if err != nil {
-		panic(err)
+		return nil, root.Options{}, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-
-	// handle KeepRecent & Interval flags
-	if cmd.Flags().Changed(FlagPruningKeepRecent) {
-		keepRecent, err := cmd.Flags().GetUint64(FlagPruningKeepRecent)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		// viper has an issue that we could not override subitem then Unmarshal key
-		// so we can not do viper.Set() as comment below
-		// https://github.com/spf13/viper/issues/1106
-		// Do it by a hacky: overwrite app.toml file then read config again.
-
-		// v.Set("store.options.sc-pruning-option.keep-recent", keepRecent) // entry that read from app.toml
-		// v.Set("store.options.ss-pruning-option.keep-recent", keepRecent)
-
-		err = overrideKeepRecent(filepath.Join(rootDir, "config"), keepRecent)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		tempViper, err = serverv2.ReadConfig(filepath.Join(rootDir, "config"))
-		if err != nil {
-			return nil, 0, err
-		}
-	}
-
-	storeOpts := root.DefaultStoreOptions()
-	if v != nil {
-		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
-			return nil, 0, fmt.Errorf("failed to store options: %w", err)
-		}
-	}
-
-	store, err := root.CreateRootStore(&root.FactoryOptions{
-		Logger:  logger,
-		RootDir: rootDir,
-		Options: storeOpts,
-		SCRawDB: scRawDb,
-	})
-
-	return store, tempViper.GetUint64("store.options.sc-pruning-option.keep-recent"), err
-}
-
-func overrideKeepRecent(configPath string, keepRecent uint64) error {
-	bz, err := os.ReadFile(filepath.Join(configPath, "app.toml"))
+	store, err := root.NewBuilder().Build(logger, storeConfig)
 	if err != nil {
-		return err
+		return nil, root.Options{}, fmt.Errorf("failed to create store backend: %w", err)
 	}
-	lines := strings.Split(string(bz), "\n")
-
-	for i, line := range lines {
-		if strings.Contains(line, "keep-recent") {
-			lines[i] = fmt.Sprintf("keep-recent = %d", keepRecent)
-		}
-	}
-	output := strings.Join(lines, "\n")
-
-	return os.WriteFile(filepath.Join(configPath, "app.toml"), []byte(output), 0o600)
+	return store, storeConfig.Options, nil
 }

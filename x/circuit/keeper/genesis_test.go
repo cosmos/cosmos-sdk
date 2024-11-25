@@ -8,7 +8,6 @@ import (
 
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type GenesisTestSuite struct {
@@ -44,7 +44,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	ac := addresscodec.NewBech32Codec("cosmos")
 
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress("gov"))
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	s.Require().NoError(err)
 
 	bz, err := ac.StringToBytes(authority)

@@ -6,7 +6,6 @@ import (
 	"io"
 	"testing"
 
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
@@ -44,7 +43,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockCometRPC{}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
@@ -149,7 +148,6 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

@@ -1,36 +1,35 @@
 package tx
 
 import (
-	"google.golang.org/protobuf/encoding/protojson"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler.
-func DefaultJSONTxDecoder(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *decode.Decoder) sdk.TxDecoder {
-	jsonUnmarshaller := protojson.UnmarshalOptions{
-		AllowPartial:   false,
-		DiscardUnknown: false,
-	}
+func DefaultJSONTxDecoder(addrCodec address.Codec, cdc codec.Codec, decoder *decode.Decoder) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
-		jsonTx := new(txv1beta1.Tx)
-		err := jsonUnmarshaller.Unmarshal(txBytes, jsonTx)
+		var jsonTx tx.Tx
+		err := cdc.UnmarshalJSON(txBytes, &jsonTx)
 		if err != nil {
-			return nil, err
+			return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		// need to convert jsonTx into raw tx.
-		bodyBytes, err := marshalOption.Marshal(jsonTx.Body)
+		bodyBytes, err := gogoproto.Marshal(jsonTx.Body)
 		if err != nil {
 			return nil, err
 		}
 
-		authInfoBytes, err := marshalOption.Marshal(jsonTx.AuthInfo)
+		authInfoBytes, err := gogoproto.Marshal(jsonTx.AuthInfo)
 		if err != nil {
 			return nil, err
 		}

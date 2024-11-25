@@ -2,7 +2,7 @@ package client
 
 import (
 	gocontext "context"
-	"fmt"
+	"errors"
 	"reflect"
 	"strconv"
 
@@ -123,7 +123,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 
 // NewStream implements the grpc ClientConn.NewStream method
 func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("streaming rpc not supported")
+	return nil, errors.New("streaming rpc not supported")
 }
 
 // gRPCCodec checks if Context's Codec is codec.GRPCCodecProvider

@@ -6,9 +6,9 @@ import (
 	"io"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/prefix"
@@ -21,7 +21,7 @@ func bz(s string) []byte { return []byte(s) }
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
-var kvPairs = []kv.Pair{
+var kvPairs = []kv.Pair{ //nolint:staticcheck // We are in store v1.
 	{Key: keyFmt(1), Value: valFmt(1)},
 	{Key: keyFmt(2), Value: valFmt(2)},
 	{Key: keyFmt(3), Value: valFmt(3)},
@@ -38,7 +38,7 @@ func newTraceKVStore(w io.Writer) *tracekv.Store {
 }
 
 func newEmptyTraceKVStore(w io.Writer) *tracekv.Store {
-	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
+	memDB := dbadapter.Store{DB: coretesting.NewMemDB()}
 	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
 
 	return tracekv.NewStore(memDB, w, tc)
@@ -276,7 +276,7 @@ func TestTraceKVStorePrefix(t *testing.T) {
 }
 
 func TestTraceKVStoreGetStoreType(t *testing.T) {
-	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
+	memDB := dbadapter.Store{DB: coretesting.NewMemDB()}
 	store := newEmptyTraceKVStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }

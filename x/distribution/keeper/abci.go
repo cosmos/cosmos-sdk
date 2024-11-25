@@ -10,9 +10,9 @@ import (
 
 // BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block.
-// TODO: use context.Context after including the comet service
 func (k Keeper) BeginBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+	start := telemetry.Now()
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 
 	// determine the total power signing the block
 	var previousTotalPower int64

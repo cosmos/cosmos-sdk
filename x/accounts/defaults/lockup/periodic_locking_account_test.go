@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -231,12 +231,16 @@ func TestPeriodicAccountWithdrawUnlockedCoins(t *testing.T) {
 		Time: startTime.Add(time.Minute * 1),
 	})
 
-	_, err = acc.WithdrawUnlockedCoins(sdkCtx, &lockuptypes.MsgWithdraw{
+	// withdraw unlocked token
+	resp, err := acc.WithdrawUnlockedCoins(sdkCtx, &lockuptypes.MsgWithdraw{
 		Withdrawer: "owner",
 		ToAddress:  "receiver",
-		Denoms:     []string{"test"},
+		Denoms:     []string{"test", "test"}, // duplicate tokens should be ignored
 	})
 	require.NoError(t, err)
+	require.Equal(t, resp.AmountReceived.Len(), 1)
+	require.Equal(t, resp.AmountReceived, sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))))
+	require.Equal(t, resp.Receiver, "receiver")
 }
 
 func TestPeriodicAccountGetLockCoinInfo(t *testing.T) {

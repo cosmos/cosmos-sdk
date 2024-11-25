@@ -3,9 +3,8 @@ package simapp
 import (
 	"errors"
 
-	authtypes "cosmossdk.io/x/auth/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ authtypes.GenesisAccount = (*SimGenesisAccount)(nil)
@@ -31,7 +30,7 @@ type SimGenesisAccount struct {
 func (sga SimGenesisAccount) Validate() error {
 	if !sga.OriginalVesting.IsZero() {
 		if sga.StartTime >= sga.EndTime {
-			return errors.New("vesting start-time cannot be before end-time")
+			return errors.New("vesting start-time cannot be after end-time")
 		}
 	}
 

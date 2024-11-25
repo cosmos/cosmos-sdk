@@ -6,6 +6,7 @@ import (
 	"compress/zlib"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -120,19 +120,33 @@ func (m *mockCommitSnapshotter) Restore(
 
 	var item snapshotstypes.SnapshotItem
 	m.items = [][]byte{}
+	keyCount := 0
 	for {
 		item.Reset()
 		err := protoReader.ReadMsg(&item)
 		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
-			return snapshotstypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
+			return snapshotstypes.SnapshotItem{}, fmt.Errorf("invalid protobuf message: %w", err)
 		}
 		payload := item.GetExtensionPayload()
 		if payload == nil {
 			break
 		}
 		m.items = append(m.items, payload.Payload)
+		// mock feeding chStorage to check if the loop closed properly
+		//
+		// ref: https://github.com/cosmos/cosmos-sdk/pull/21106
+		chStorage <- &corestore.StateChanges{
+			Actor: []byte("actor"),
+			StateChanges: []corestore.KVPair{
+				{
+					Key:   []byte(fmt.Sprintf("key-%d", keyCount)),
+					Value: payload.Payload,
+				},
+			},
+		}
+		keyCount++
 	}
 
 	return item, nil
@@ -155,9 +169,19 @@ func (m *mockCommitSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{snapshotstypes.CurrentFormat}
 }
 
-type mockStorageSnapshotter struct{}
+type mockStorageSnapshotter struct {
+	items map[string][]byte
+}
 
 func (m *mockStorageSnapshotter) Restore(version uint64, chStorage <-chan *corestore.StateChanges) error {
+	// mock consuming chStorage to check if the loop closed properly
+	//
+	// ref: https://github.com/cosmos/cosmos-sdk/pull/21106
+	for change := range chStorage {
+		for _, kv := range change.StateChanges {
+			m.items[string(kv.Key)] = kv.Value
+		}
+	}
 	return nil
 }
 

@@ -26,7 +26,7 @@ import "cosmos/app/v1alpha1/module.proto";
 
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/x/auth"
+    go_import: "github.com/cosmos/cosmos-sdk/x/auth"
   };
   string bech32_prefix = 1;
   repeated ModuleAccountPermission module_account_permissions = 2;

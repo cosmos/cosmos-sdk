@@ -35,8 +35,8 @@ var (
 )
 
 func init() {
-	for i := 0; i < 1000; i++ {
-		cs := corestore.NewChangeset()
+	for i := uint64(0); i < 1000; i++ {
+		cs := corestore.NewChangeset(i)
 		for _, storeKey := range storeKeys {
 			for j := 0; j < 100; j++ {
 				key := make([]byte, 16)
@@ -66,7 +66,7 @@ func getCommitStore(b *testing.B, db corestore.KVStoreWithBatch) *commitment.Com
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, db, coretesting.NewNopLogger())
+	sc, err := commitment.NewCommitStore(multiTrees, nil, db, coretesting.NewNopLogger())
 	require.NoError(b, err)
 
 	return sc

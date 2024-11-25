@@ -7,77 +7,13 @@ import (
 	"os"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-db"
-
-	"cosmossdk.io/log"
+	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
-
-// SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.
-// If `skip` is false it skips the current test. `skip` should be set using the `FlagEnabledValue` flag.
-// Returns error on an invalid db instantiation or temp dir creation.
-func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (dbm.DB, string, log.Logger, bool, error) {
-	if !skip {
-		return nil, "", nil, true, nil
-	}
-
-	var logger log.Logger
-	if verbose {
-		logger = log.NewLogger(os.Stdout)
-	} else {
-		logger = log.NewNopLogger()
-	}
-
-	dir, err := os.MkdirTemp("", dirPrefix)
-	if err != nil {
-		return nil, "", nil, false, err
-	}
-
-	db, err := dbm.NewDB(dbName, dbm.BackendType(config.DBBackend), dir)
-	if err != nil {
-		return nil, "", nil, false, err
-	}
-
-	return db, dir, logger, false, nil
-}
-
-// SimulationOperations retrieves the simulation params from the provided file path
-// and returns all the modules weighted operations
-func SimulationOperations(app runtime.AppSimI, cdc codec.Codec, config simtypes.Config, txConfig client.TxConfig) []simtypes.WeightedOperation {
-	signingCtx := cdc.InterfaceRegistry().SigningContext()
-	simState := module.SimulationState{
-		AppParams:      make(simtypes.AppParams),
-		Cdc:            cdc,
-		AddressCodec:   signingCtx.AddressCodec(),
-		ValidatorCodec: signingCtx.ValidatorAddressCodec(),
-		TxConfig:       txConfig,
-		BondDenom:      sdk.DefaultBondDenom,
-	}
-
-	if config.ParamsFile != "" {
-		bz, err := os.ReadFile(config.ParamsFile)
-		if err != nil {
-			panic(err)
-		}
-
-		err = json.Unmarshal(bz, &simState.AppParams)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck // we're testing the old way here
-	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
-	return app.SimulationManager().WeightedOperations(simState)
-}
 
 // CheckExportSimulation exports the app state and simulation parameters to JSON
 // if the export paths are defined.
@@ -108,11 +44,16 @@ func CheckExportSimulation(app runtime.AppSimI, config simtypes.Config, params s
 	return nil
 }
 
+// DBStatsInterface defines the interface for the app DB statistics.
+type DBStatsInterface interface {
+	Stats() map[string]string
+}
+
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db dbm.DB) {
-	fmt.Println("\nLevelDB Stats")
-	fmt.Println(db.Stats()["leveldb.stats"])
-	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+func PrintStats(db DBStatsInterface, logLine func(args ...any)) {
+	logLine("\nLevelDB Stats")
+	logLine(db.Stats()["leveldb.stats"])
+	logLine("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 }
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
@@ -215,7 +156,7 @@ func getDiffFromKVPair(kvAs, kvBs []kv.Pair) (diffA, diffB []kv.Pair) {
 	return diffA, diffB
 }
 
-func getKVPairs(iter dbm.Iterator, prefixesToSkip [][]byte) (kvs []kv.Pair) {
+func getKVPairs(iter corestore.Iterator, prefixesToSkip [][]byte) (kvs []kv.Pair) {
 	for iter.Valid() {
 		key, value := iter.Key(), iter.Value()
 

@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -25,10 +26,10 @@ type Keeper struct {
 	cometService comet.Service
 
 	cdc           codec.BinaryCodec
+	addrCdc       address.Codec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	poolKeeper    types.PoolKeeper
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -47,7 +48,7 @@ type Keeper struct {
 	DelegatorStartingInfo collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 	// ValidatorsAccumulatedCommission key: valAddr | value: ValidatorAccumulatedCommission
 	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
-	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOustandingRewards
+	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOutstandingRewards
 	ValidatorOutstandingRewards collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
 	// ValidatorHistoricalRewards key: valAddr+period | value: ValidatorHistoricalRewards
 	ValidatorHistoricalRewards collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
@@ -64,7 +65,6 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
-	pk types.PoolKeeper,
 	cometService comet.Service,
 	feeCollectorName, authority string,
 ) Keeper {
@@ -78,10 +78,10 @@ func NewKeeper(
 		Environment:      env,
 		cometService:     cometService,
 		cdc:              cdc,
+		addrCdc:          ak.AddressCodec(),
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
-		poolKeeper:       pk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -166,7 +166,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
-	addr, err := k.authKeeper.AddressCodec().BytesToString(withdrawAddr)
+	addr, err := k.addrCdc.BytesToString(withdrawAddr)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 	return k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddr, withdrawAddr)
 }
 
-// withdraw rewards from a delegation
+// WithdrawDelegationRewards withdraw rewards from a delegation
 func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
@@ -215,7 +215,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 	return rewards, nil
 }
 
-// withdraw validator commission
+// WithdrawValidatorCommission withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	// fetch validator accumulated commission
 	accumCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAddr)

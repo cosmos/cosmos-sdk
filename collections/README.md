@@ -163,7 +163,7 @@ You might need to implement them only if you're migrating to collections and the
 
 Let's explore an example:
 
-````go
+```go
 package collections
 
 import (
@@ -186,7 +186,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		IDs: collections.NewMap(sb, IDsPrefix, "ids", collections.StringKey, collections.Uint64Value),
 	}
 }
-````
+```
 
 We're now instantiating a map where the key is string and the value is `uint64`.
 We already know the first three arguments of the ``NewMap`` function.
@@ -208,7 +208,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -257,7 +257,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -508,7 +508,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -677,7 +677,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
 			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+			sdk.IntValue,
 		),
 	}
 }
@@ -687,9 +687,9 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 
 First of all we can see that in order to define a composite key of two elements we use the `collections.Pair` type:
 
-````go
+```go
 collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
-````
+```
 
 `collections.Pair` defines a key composed of two other keys, in our case the first part is `sdk.AccAddress`, the second
 part is `string`.
@@ -706,7 +706,7 @@ encode the second part of the key.
 
 Let's expand on the example we used before:
 
-````go
+```go
 var BalancesPrefix = collections.NewPrefix(1)
 
 type Keeper struct {
@@ -720,7 +720,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
 			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+			sdk.IntValue,
 		),
 	}
 }
@@ -766,7 +766,7 @@ func (k Keeper) GetAllAddressBalancesBetween(ctx sdk.Context, address sdk.AccAdd
 	}
     ...
 }
-````
+```
 
 #### SetBalance
 
@@ -930,7 +930,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsNumberIndexPrefix = collections.NewPrefix(1)
@@ -989,7 +989,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsNumberIndexPrefix = collections.NewPrefix(1)
@@ -1097,7 +1097,7 @@ import (
     storetypes "cosmossdk.io/store/types"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)

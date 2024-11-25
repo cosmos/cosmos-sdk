@@ -6,14 +6,13 @@ import (
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -23,8 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-type ProtoMsg = protoiface.MessageV1
 
 var TestFunds = sdk.NewCoins(sdk.NewCoin("test", math.NewInt(10)))
 
@@ -52,9 +49,9 @@ func (c mockStateCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
 }
 
 type (
-	ModuleExecUntypedFunc = func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error)
-	ModuleExecFunc        = func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error
-	ModuleQueryFunc       = func(ctx context.Context, queryReq, queryResp ProtoMsg) error
+	ModuleExecUntypedFunc = func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error)
+	ModuleExecFunc        = func(ctx context.Context, sender []byte, msg, msgResp transaction.Msg) error
+	ModuleQueryFunc       = func(ctx context.Context, queryReq, queryResp transaction.Msg) error
 )
 
 // mock address codec
@@ -73,9 +70,8 @@ func (h headerService) HeaderInfo(ctx context.Context) header.Info {
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("lockup_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
-			return nil
-		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		0, []byte("lockup_account"), []byte("sender"), TestFunds,
+		func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			typeUrl := sdk.MsgTypeURL(msg)
 			switch typeUrl {
 			case "/cosmos.staking.v1beta1.MsgDelegate":
@@ -89,28 +85,24 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			default:
 				return nil, errors.New("unrecognized request type")
 			}
-		}, func(ctx context.Context, req, resp ProtoMsg) error {
+		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 			_, ok := req.(*banktypes.QueryBalanceRequest)
 			if !ok {
 				_, ok = req.(*stakingtypes.QueryParamsRequest)
 				require.True(t, ok)
-				gogoproto.Merge(resp.(gogoproto.Message), &stakingtypes.QueryParamsResponse{
+				return &stakingtypes.QueryParamsResponse{
 					Params: stakingtypes.Params{
 						BondDenom: "test",
 					},
-				})
-			} else {
-				// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
-				// using proto.Merge with gogo messages seems to work fine.
-				proto.Merge(resp.(gogoproto.Message), &banktypes.QueryBalanceResponse{
-					Balance: &(sdk.Coin{
-						Denom:  "test",
-						Amount: TestFunds.AmountOf("test"),
-					}),
-				})
+				}, nil
 			}
 
-			return nil
+			return &banktypes.QueryBalanceResponse{
+				Balance: &(sdk.Coin{
+					Denom:  "test",
+					Amount: TestFunds.AmountOf("test"),
+				}),
+			}, nil
 		},
 	)
 }
@@ -122,7 +114,7 @@ func makeMockDependencies(storeservice store.KVStoreService) accountstd.Dependen
 		SchemaBuilder:    sb,
 		AddressCodec:     addressCodec{},
 		LegacyStateCodec: mockStateCodec{},
-		Environment: appmodule.Environment{
+		Environment: appmodulev2.Environment{
 			HeaderService: headerService{},
 		},
 	}

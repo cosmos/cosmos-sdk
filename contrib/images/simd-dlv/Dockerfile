@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS build
+FROM golang:1.23-alpine AS build
 
 RUN apk add build-base git linux-headers libc-dev
 RUN go install github.com/go-delve/delve/cmd/dlv@latest

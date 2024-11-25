@@ -2,6 +2,7 @@ package module
 
 import (
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -29,16 +31,16 @@ func init() {
 type FeegrantInputs struct {
 	depinject.In
 
-	Environment   appmodule.Environment
-	Cdc           codec.Codec
-	AccountKeeper feegrant.AccountKeeper
-	BankKeeper    feegrant.BankKeeper
-	Registry      cdctypes.InterfaceRegistry
+	Environment  appmodule.Environment
+	Cdc          codec.Codec
+	AddressCodec address.Codec
+	BankKeeper   feegrant.BankKeeper
+	Registry     cdctypes.InterfaceRegistry
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper)
-	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
+	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AddressCodec)
+	m := NewAppModule(in.Cdc, k, in.Registry)
 	return k, m
 }
 
@@ -54,10 +56,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns all the feegrant module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.accountKeeper.AddressCodec(),
-	)
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_grant_fee_allowance", 100), simulation.MsgGrantAllowanceFactory(am.keeper))
+	reg.Add(weights.Get("msg_grant_revoke_allowance", 100), simulation.MsgRevokeAllowanceFactory(am.keeper))
 }

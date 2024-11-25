@@ -3,14 +3,10 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/golang/mock/gomock"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/feegrant"
 
-	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -20,8 +16,6 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 	yesterday := ctx.HeaderInfo().Time.AddDate(0, 0, -1)
 
-	addressCodec := codecaddress.NewBech32Codec("cosmos")
-
 	testCases := []struct {
 		name      string
 		req       func() *feegrant.MsgGrantAllowance
@@ -29,8 +23,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 		errMsg    string
 	}{
 		{
-			"invalid granter address",
-			func() *feegrant.MsgGrantAllowance {
+			name: "invalid granter address",
+			req: func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{})
 				suite.Require().NoError(err)
 				invalid := "invalid-granter"
@@ -40,12 +34,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			true,
-			"decoding bech32 failed",
+			expectErr: true,
+			errMsg:    "decoding bech32 failed",
 		},
 		{
-			"invalid grantee address",
-			func() *feegrant.MsgGrantAllowance {
+			name: "invalid grantee address",
+			req: func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{})
 				suite.Require().NoError(err)
 				invalid := "invalid-grantee"
@@ -55,28 +49,18 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			true,
-			"decoding bech32 failed",
+			expectErr: true,
+			errMsg:    "decoding bech32 failed",
 		},
 		{
-			"valid: grantee account doesn't exist",
-			func() *feegrant.MsgGrantAllowance {
+			name: "valid: grantee account doesn't exist",
+			req: func() *feegrant.MsgGrantAllowance {
 				grantee := "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"
-				granteeAccAddr, err := addressCodec.StringToBytes(grantee)
-				suite.Require().NoError(err)
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
-
-				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAccAddr).Return(nil).AnyTimes()
-
-				acc := authtypes.NewBaseAccountWithAddress(granteeAccAddr)
-				add, err := addressCodec.StringToBytes(grantee)
-				suite.Require().NoError(err)
-
-				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), add).Return(acc).AnyTimes()
 
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
@@ -85,12 +69,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			false,
-			"",
+			expectErr: false,
+			errMsg:    "",
 		},
 		{
-			"invalid: past expiry",
-			func() *feegrant.MsgGrantAllowance {
+			name: "invalid: past expiry",
+			req: func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &yesterday,
@@ -102,12 +86,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			true,
-			"expiration is before current block time",
+			expectErr: true,
+			errMsg:    "expiration is before current block time",
 		},
 		{
-			"valid: basic fee allowance",
-			func() *feegrant.MsgGrantAllowance {
+			name: "valid: basic fee allowance",
+			req: func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
@@ -119,12 +103,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			false,
-			"",
+			expectErr: false,
+			errMsg:    "",
 		},
 		{
-			"fail: fee allowance exists",
-			func() *feegrant.MsgGrantAllowance {
+			name: "fail: fee allowance exists",
+			req: func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
@@ -136,12 +120,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			true,
-			"fee allowance already exists",
+			expectErr: true,
+			errMsg:    "fee allowance already exists",
 		},
 		{
-			"valid: periodic fee allowance",
-			func() *feegrant.MsgGrantAllowance {
+			name: "valid: periodic fee allowance",
+			req: func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
@@ -156,12 +140,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			false,
-			"",
+			expectErr: false,
+			errMsg:    "",
 		},
 		{
-			"valid: with period reset",
-			func() *feegrant.MsgGrantAllowance {
+			name: "valid: with period reset",
+			req: func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
@@ -178,12 +162,12 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			false,
-			"",
+			expectErr: false,
+			errMsg:    "",
 		},
 		{
-			"error: fee allowance exists",
-			func() *feegrant.MsgGrantAllowance {
+			name: "error: fee allowance exists",
+			req: func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
@@ -198,8 +182,8 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 					Allowance: any,
 				}
 			},
-			true,
-			"fee allowance already exists",
+			expectErr: true,
+			errMsg:    "fee allowance already exists",
 		},
 	}
 	for _, tc := range testCases {
@@ -225,42 +209,42 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 		errMsg    string
 	}{
 		{
-			"error: invalid granter",
-			&feegrant.MsgRevokeAllowance{
+			name: "error: invalid granter",
+			request: &feegrant.MsgRevokeAllowance{
 				Granter: invalidGranter,
 				Grantee: suite.encodedAddrs[1],
 			},
-			func() {},
-			true,
-			"decoding bech32 failed",
+			preRun:    func() {},
+			expectErr: true,
+			errMsg:    "decoding bech32 failed",
 		},
 		{
-			"error: invalid grantee",
-			&feegrant.MsgRevokeAllowance{
+			name: "error: invalid grantee",
+			request: &feegrant.MsgRevokeAllowance{
 				Granter: suite.encodedAddrs[0],
 				Grantee: invalidGrantee,
 			},
-			func() {},
-			true,
-			"decoding bech32 failed",
+			preRun:    func() {},
+			expectErr: true,
+			errMsg:    "decoding bech32 failed",
 		},
 		{
-			"error: fee allowance not found",
-			&feegrant.MsgRevokeAllowance{
+			name: "error: fee allowance not found",
+			request: &feegrant.MsgRevokeAllowance{
 				Granter: suite.encodedAddrs[0],
 				Grantee: suite.encodedAddrs[1],
 			},
-			func() {},
-			true,
-			"not found",
+			preRun:    func() {},
+			expectErr: true,
+			errMsg:    "not found",
 		},
 		{
-			"success: revoke fee allowance",
-			&feegrant.MsgRevokeAllowance{
+			name: "success: revoke fee allowance",
+			request: &feegrant.MsgRevokeAllowance{
 				Granter: suite.encodedAddrs[0],
 				Grantee: suite.encodedAddrs[1],
 			},
-			func() {
+			preRun: func() {
 				// removing fee allowance from previous tests if exists
 				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
 					Granter: suite.encodedAddrs[0],
@@ -283,18 +267,18 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 				_, err = suite.msgSrvr.GrantAllowance(suite.ctx, req)
 				suite.Require().NoError(err)
 			},
-			false,
-			"",
+			expectErr: false,
+			errMsg:    "",
 		},
 		{
-			"error: check fee allowance revoked",
-			&feegrant.MsgRevokeAllowance{
+			name: "error: check fee allowance revoked",
+			request: &feegrant.MsgRevokeAllowance{
 				Granter: suite.encodedAddrs[0],
 				Grantee: suite.encodedAddrs[1],
 			},
-			func() {},
-			true,
-			"not found",
+			preRun:    func() {},
+			expectErr: true,
+			errMsg:    "not found",
 		},
 	}
 

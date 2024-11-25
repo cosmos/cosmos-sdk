@@ -68,22 +68,6 @@ The `epochs` module emits the following events:
 
 Epochs keeper module provides utility functions to manage epochs.
 
-``` go
-// Keeper is the interface for epochs module keeper
-type Keeper interface {
-  // GetEpochInfo returns epoch info by identifier
-  GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
-  // SetEpochInfo set epoch info
-  SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo)
-  // DeleteEpochInfo delete epoch info
-  DeleteEpochInfo(ctx sdk.Context, identifier string)
-  // IterateEpochInfo iterate through epochs
-  IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo types.EpochInfo) (stop bool))
-  // Get all epoch infos
-  AllEpochInfos(ctx sdk.Context) []types.EpochInfo
-}
-```
-
 ## Hooks
 
 ```go
@@ -144,7 +128,7 @@ Query the currently running epochInfos
 <appd> query epochs epoch-infos
 ```
 
-::: details Example
+:::details Example
 
 An example output:
 
@@ -176,7 +160,7 @@ Query the current epoch by the specified identifier
 <appd> query epochs current-epoch [identifier]
 ```
 
-::: details Example
+:::details Example
 
 Query the current `day` epoch:
 
@@ -189,3 +173,5 @@ Which in this example outputs:
 ```sh
 current_epoch: "183"
 ```
+
+:::

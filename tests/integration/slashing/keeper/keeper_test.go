@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
@@ -14,13 +14,11 @@ import (
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/consensus"
+	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/slashing"
@@ -41,6 +39,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type fixture struct {
@@ -117,21 +119,25 @@ func initFixture(tb testing.TB) *fixture {
 
 	cometInfoService := runtime.NewContextAwareCometInfoService()
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometInfoService)
+	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensustypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
+
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometInfoService)
 
 	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), cdc, &codec.LegacyAmino{}, stakingKeeper, authority.String())
 
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
 	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry(), cometInfoService)
+	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
-			banktypes.ModuleName:     bankModule,
-			stakingtypes.ModuleName:  stakingModule,
-			slashingtypes.ModuleName: slashingModule,
+			banktypes.ModuleName:      bankModule,
+			stakingtypes.ModuleName:   stakingModule,
+			slashingtypes.ModuleName:  slashingModule,
+			consensustypes.ModuleName: consensusModule,
 		},
 		msgRouter,
 		queryRouter,

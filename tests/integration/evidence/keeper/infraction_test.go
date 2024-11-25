@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/collections"
@@ -17,14 +17,11 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/consensus"
+	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	consensusparamtypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
@@ -52,6 +49,11 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -144,32 +146,36 @@ func initFixture(tb testing.TB) *fixture {
 
 	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
+
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
 
 	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger()), cdc, codec.NewLegacyAmino(), stakingKeeper, authority.String())
 
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(slashingKeeper.Hooks()))
 
-	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
+	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), stakingKeeper, slashingKeeper, consensusParamsKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr), stakingKeeper.ConsensusAddressCodec())
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
 	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry(), cometInfoService)
 	evidenceModule := evidence.NewAppModule(cdc, *evidenceKeeper, cometInfoService)
+	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
-			authtypes.ModuleName:     authModule,
-			banktypes.ModuleName:     bankModule,
-			stakingtypes.ModuleName:  stakingModule,
-			slashingtypes.ModuleName: slashingModule,
-			evidencetypes.ModuleName: evidenceModule,
+			authtypes.ModuleName:           authModule,
+			banktypes.ModuleName:           bankModule,
+			stakingtypes.ModuleName:        stakingModule,
+			slashingtypes.ModuleName:       slashingModule,
+			evidencetypes.ModuleName:       evidenceModule,
+			consensusparamtypes.ModuleName: consensusModule,
 		},
 		msgRouter,
 		grpcQueryRouter,

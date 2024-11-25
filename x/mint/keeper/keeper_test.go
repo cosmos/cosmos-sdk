@@ -4,14 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/mint/keeper"
 	minttestutil "cosmossdk.io/x/mint/testutil"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
@@ -29,7 +29,7 @@ const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 type KeeperTestSuite struct {
 	suite.Suite
 
-	mintKeeper    keeper.Keeper
+	mintKeeper    *keeper.Keeper
 	ctx           sdk.Context
 	msgServer     types.MsgServer
 	stakingKeeper *minttestutil.MockStakingKeeper
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx
 
@@ -59,7 +59,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
@@ -75,64 +74,45 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 }
 
-func (s *KeeperTestSuite) TestAliasFunctions() {
-	stakingTokenSupply := math.NewIntFromUint64(100000000000)
-	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply, nil)
-	tokenSupply, err := s.mintKeeper.StakingTokenSupply(s.ctx)
-	s.NoError(err)
-	s.Equal(tokenSupply, stakingTokenSupply)
-
-	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
-	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil)
-	ratio, err := s.mintKeeper.BondedRatio(s.ctx)
-	s.NoError(err)
-	s.Equal(ratio, bondedRatio)
-
-	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)))
-	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, coins).Return(nil)
-	s.Equal(s.mintKeeper.MintCoins(s.ctx, sdk.NewCoins()), nil)
-	s.Nil(s.mintKeeper.MintCoins(s.ctx, coins))
-
-	fees := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, fees).Return(nil)
-	s.Nil(s.mintKeeper.AddCollectedFees(s.ctx, fees))
-}
-
 func (s *KeeperTestSuite) TestDefaultMintFn() {
 	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(math.NewIntFromUint64(100000000000), nil).AnyTimes()
 	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil).AnyTimes()
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(792)))).Return(nil)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, gomock.Any()).Return(nil)
+	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, s.stakingKeeper, s.mintKeeper))
+	s.NoError(err)
 
 	minter, err := s.mintKeeper.Minter.Get(s.ctx)
 	s.NoError(err)
 
-	err = s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn)(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
+	err = s.mintKeeper.MintFn(s.ctx, &minter, "block", 0)
 	s.NoError(err)
 
-	// set a maxsupply and call again
+	// set a maxSupply and call again. totalSupply will be bigger than maxSupply.
 	params, err := s.mintKeeper.Params.Get(s.ctx)
 	s.NoError(err)
 	params.MaxSupply = math.NewInt(10000000000)
 	err = s.mintKeeper.Params.Set(s.ctx, params)
 	s.NoError(err)
 
-	err = s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn)(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
+	err = s.mintKeeper.MintFn(s.ctx, &minter, "block", 0)
 	s.NoError(err)
 
 	// modify max supply to be almost reached
-	// we tried to mint 2059stake but we only get to mint 2000stake
+	// modify blocksPerYear to mint 2053 coins per block
+	// we tried to mint 2053stake, but we only get to mint 2000stake
 	params, err = s.mintKeeper.Params.Get(s.ctx)
 	s.NoError(err)
 	params.MaxSupply = math.NewInt(100000000000 + 2000)
+	params.BlocksPerYear = 2434275
 	err = s.mintKeeper.Params.Set(s.ctx, params)
 	s.NoError(err)
 
-	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(792)))).Return(nil)
+	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(2000)))).Return(nil)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, gomock.Any()).Return(nil)
 
-	err = s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn)(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
+	err = s.mintKeeper.MintFn(s.ctx, &minter, "block", 0)
 	s.NoError(err)
 }
 
@@ -142,12 +122,13 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil).AnyTimes()
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(792)))).Return(nil)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, gomock.Any()).Return(nil)
-
-	// get minter (it should get modified aftwerwards)
+	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, s.stakingKeeper, s.mintKeeper))
+	s.NoError(err)
+	// get minter (it should get modified afterwards)
 	minter, err := s.mintKeeper.Minter.Get(s.ctx)
 	s.NoError(err)
 
-	err = s.mintKeeper.BeginBlocker(s.ctx, s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn))
+	err = s.mintKeeper.BeginBlocker(s.ctx)
 	s.NoError(err)
 
 	// get minter again and compare
@@ -156,9 +137,11 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 	s.NotEqual(minter, newMinter)
 
 	// now use a mintfn that doesn't do anything
-	err = s.mintKeeper.BeginBlocker(s.ctx, func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
+	err = s.mintKeeper.SetMintFn(func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
 		return nil
 	})
+	s.NoError(err)
+	err = s.mintKeeper.BeginBlocker(s.ctx)
 	s.NoError(err)
 
 	// get minter again and compare

@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -57,8 +58,9 @@ func (b BalancesIndexes) IndexesList() []collections.Index[collections.Pair[sdk.
 type BaseViewKeeper struct {
 	appmodule.Environment
 
-	cdc codec.BinaryCodec
-	ak  types.AccountKeeper
+	cdc     codec.BinaryCodec
+	ak      types.AccountKeeper
+	addrCdc address.Codec
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -75,10 +77,11 @@ func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak type
 		Environment:   env,
 		cdc:           cdc,
 		ak:            ak,
-		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
-		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
-		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
-		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
+		addrCdc:       ak.AddressCodec(),
+		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey.WithName("supply"), sdk.IntValue),
+		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey.WithName("denom_metadata"), codec.CollValue[types.Metadata](cdc)),
+		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey.WithName("send_enabled"), codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
+		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.NamedPairKeyCodec("address", sdk.AccAddressKey, "balances", collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
@@ -112,7 +115,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx context.Context) []types.Balance
 	mapAddressToBalancesIdx := make(map[string]int)
 
 	k.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
-		addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+		addrStr, err := k.addrCdc.BytesToString(addr)
 		if err != nil {
 			panic(err)
 		}
@@ -190,7 +193,23 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 // by address. If the account has no spendable coins, an empty Coins slice is
 // returned.
 func (k BaseViewKeeper) SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
-	spendable, _ := k.spendableCoins(ctx, addr)
+	total := k.GetAllBalances(ctx, addr)
+	allLocked := k.LockedCoins(ctx, addr)
+	if allLocked.IsZero() {
+		return total
+	}
+
+	unlocked, hasNeg := total.SafeSub(allLocked...)
+	if !hasNeg {
+		return unlocked
+	}
+
+	spendable := sdk.Coins{}
+	for _, coin := range unlocked {
+		if coin.IsPositive() {
+			spendable = append(spendable, coin)
+		}
+	}
 	return spendable
 }
 
@@ -199,23 +218,14 @@ func (k BaseViewKeeper) SpendableCoins(ctx context.Context, addr sdk.AccAddress)
 // is returned.
 func (k BaseViewKeeper) SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	balance := k.GetBalance(ctx, addr, denom)
-	locked := k.LockedCoins(ctx, addr)
-	return balance.SubAmount(locked.AmountOf(denom))
-}
-
-// spendableCoins returns the coins the given address can spend alongside the total amount of coins it holds.
-// It exists for gas efficiency, in order to avoid to have to get balance multiple times.
-func (k BaseViewKeeper) spendableCoins(ctx context.Context, addr sdk.AccAddress) (spendable, total sdk.Coins) {
-	total = k.GetAllBalances(ctx, addr)
-	locked := k.LockedCoins(ctx, addr)
-
-	spendable, hasNeg := total.SafeSub(locked...)
-	if hasNeg {
-		spendable = sdk.NewCoins()
-		return
+	lockedAmt := k.LockedCoins(ctx, addr).AmountOf(denom)
+	if !lockedAmt.IsPositive() {
+		return balance
 	}
-
-	return
+	if lockedAmt.LT(balance.Amount) {
+		return balance.SubAmount(lockedAmt)
+	}
+	return sdk.NewCoin(denom, math.ZeroInt())
 }
 
 // ValidateBalance validates all balances for a given account address returning

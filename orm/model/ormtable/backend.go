@@ -2,6 +2,7 @@ package ormtable
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/store"
@@ -182,7 +183,7 @@ var defaultContextKey = contextKeyType("backend")
 func getBackendDefault(ctx context.Context) (ReadBackend, error) {
 	value := ctx.Value(defaultContextKey)
 	if value == nil {
-		return nil, fmt.Errorf("can't resolve backend")
+		return nil, errors.New("can't resolve backend")
 	}
 
 	backend, ok := value.(ReadBackend)

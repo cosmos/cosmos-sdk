@@ -2,7 +2,6 @@ package tests
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/indexer/postgres"
 	"cosmossdk.io/indexer/postgres/internal/testdata"
 	"cosmossdk.io/schema/appdata"
+	"cosmossdk.io/schema/indexer"
 )
 
 func TestInitSchema(t *testing.T) {
@@ -33,23 +33,23 @@ func testInitSchema(t *testing.T, disableRetainDeletions bool, goldenFileName st
 	connectionUrl := createTestDB(t)
 
 	buf := &strings.Builder{}
-	logger := func(msg, sql string, params ...interface{}) {
-		_, err := fmt.Fprintln(buf, msg)
-		require.NoError(t, err)
-		_, err = fmt.Fprintln(buf, sql)
-		require.NoError(t, err)
-		if len(params) != 0 {
-			_, err = fmt.Fprintln(buf, "Params:", params)
-			require.NoError(t, err)
-		}
-		_, err = fmt.Fprintln(buf)
-		require.NoError(t, err)
-	}
-	listener, err := postgres.StartIndexer(context.Background(), logger, postgres.Config{
-		DatabaseURL:            connectionUrl,
-		DisableRetainDeletions: disableRetainDeletions,
+	res, err := indexer.StartIndexing(indexer.IndexingOptions{
+		Config: indexer.IndexingConfig{
+			Target: map[string]indexer.Config{
+				"postgres": {
+					Type: "postgres",
+					Config: postgres.Config{
+						DatabaseURL:            connectionUrl,
+						DisableRetainDeletions: disableRetainDeletions,
+					},
+				},
+			},
+		},
+		Context: context.Background(),
+		Logger:  prettyLogger{buf},
 	})
 	require.NoError(t, err)
+	listener := res.Listener
 
 	require.NotNil(t, listener.InitializeModuleData)
 	require.NoError(t, listener.InitializeModuleData(appdata.ModuleInitializationData{
@@ -58,7 +58,11 @@ func testInitSchema(t *testing.T, disableRetainDeletions bool, goldenFileName st
 	}))
 
 	require.NotNil(t, listener.Commit)
-	require.NoError(t, listener.Commit(appdata.CommitData{}))
+	cb, err := listener.Commit(appdata.CommitData{})
+	require.NoError(t, err)
+	if cb != nil {
+		require.NoError(t, cb())
+	}
 
 	golden.Assert(t, buf.String(), goldenFileName)
 }

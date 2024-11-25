@@ -7,19 +7,14 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authcodec "cosmossdk.io/x/auth/codec"
-	"cosmossdk.io/x/auth/keeper"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -29,6 +24,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type DeterministicTestSuite struct {

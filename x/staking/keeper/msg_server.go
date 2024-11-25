@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hashicorp/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -17,12 +16,10 @@ import (
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	consensusv1 "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -39,7 +36,8 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// CreateValidator defines a method for creating a new validator
+// CreateValidator defines a method for creating a new validator.
+// The validator's params should not be nil for this function to execute successfully.
 func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
 	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
@@ -64,30 +62,35 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, types.ErrValidatorOwnerExists
 	}
 
-	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", msg.Pubkey.GetCachedValue())
+	cv := msg.Pubkey.GetCachedValue()
+	if cv == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "Pubkey cached value is nil")
 	}
 
-	res := consensusv1.QueryParamsResponse{}
-	if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	pk, ok := cv.(cryptotypes.PubKey)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", cv)
+	}
+
+	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
+	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
 	}
-	if res.Params.Validator != nil {
-		pkType := pk.Type()
-		if !slices.Contains(res.Params.Validator.PubKeyTypes, pkType) {
-			return nil, errorsmod.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), res.Params.Validator.PubKeyTypes,
-			)
-		}
 
-		if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
-			return nil, errorsmod.Wrapf(
-				types.ErrConsensusPubKeyLenInvalid,
-				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
-			)
-		}
+	pkType := pk.Type()
+	if !slices.Contains(pubkeyTypes, pkType) {
+		return nil, errorsmod.Wrapf(
+			types.ErrValidatorPubKeyTypeNotSupported,
+			"got: %s, expected: %s", pk.Type(), pubkeyTypes,
+		)
+	}
+
+	if pubkeyTypes == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
+	}
+
+	if err = validatePubKey(pk, pubkeyTypes); err != nil {
+		return nil, err
 	}
 
 	err = k.checkConsKeyAlreadyUsed(ctx, pk)
@@ -106,7 +109,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		)
 	}
 
-	if _, err := msg.Description.EnsureLength(); err != nil {
+	if _, err := msg.Description.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -173,7 +176,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	if msg.Description == (types.Description{}) {
+	if msg.Description.IsEmpty() {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
@@ -296,17 +299,6 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 		return nil, err
 	}
 
-	if msg.Amount.Amount.IsInt64() {
-		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "delegate")
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-			)
-		}()
-	}
-
 	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeDelegate,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
@@ -369,17 +361,6 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 		return nil, err
 	}
 
-	if msg.Amount.Amount.IsInt64() {
-		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-			)
-		}()
-	}
-
 	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeRedelegate,
 		event.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
@@ -438,17 +419,6 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 	}
 
 	undelegatedCoin := sdk.NewCoin(msg.Amount.Denom, undelegatedAmt)
-
-	if msg.Amount.Amount.IsInt64() {
-		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-			)
-		}()
-	}
 
 	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeUnbond,
@@ -644,33 +614,31 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
+// RotateConsPubKey handles the rotation of a validator's consensus public key.
+// It validates the new key, checks for conflicts, and updates the necessary state.
+// The function requires that the validator params are not nil for successful execution.
 func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
 	cv := msg.NewPubkey.GetCachedValue()
+	if cv == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "new public key is nil")
+	}
+
 	pk, ok := cv.(cryptotypes.PubKey)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
 	}
 
-	// check if the new public key type is valid
-	paramsRes := consensusv1.QueryParamsResponse{}
-	if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &paramsRes); err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
+	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
+	if err != nil {
+		return nil, err
 	}
-	if paramsRes.Params.Validator != nil {
-		pkType := pk.Type()
-		if !slices.Contains(paramsRes.Params.Validator.PubKeyTypes, pkType) {
-			return nil, errorsmod.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), paramsRes.Params.Validator.PubKeyTypes,
-			)
-		}
 
-		if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
-			return nil, errorsmod.Wrapf(
-				types.ErrConsensusPubKeyLenInvalid,
-				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
-			)
-		}
+	if pubkeyTypes == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
+	}
+
+	if err = validatePubKey(pk, pubkeyTypes); err != nil {
+		return nil, err
 	}
 
 	err = k.checkConsKeyAlreadyUsed(ctx, pk)
@@ -764,6 +732,27 @@ func (k msgServer) checkConsKeyAlreadyUsed(ctx context.Context, newConsPubKey cr
 	_, err = k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
 	if err == nil {
 		return types.ErrValidatorPubKeyExists
+	}
+
+	return nil
+}
+
+func validatePubKey(pk cryptotypes.PubKey, knownPubKeyTypes []string) error {
+	pkType := pk.Type()
+	if !slices.Contains(knownPubKeyTypes, pkType) {
+		return errorsmod.Wrapf(
+			types.ErrValidatorPubKeyTypeNotSupported,
+			"got: %s, expected: %s", pk.Type(), knownPubKeyTypes,
+		)
+	}
+
+	if pkType == sdk.PubKeyEd25519Type {
+		if len(pk.Bytes()) != ed25519.PubKeySize {
+			return errorsmod.Wrapf(
+				types.ErrConsensusPubKeyLenInvalid,
+				"invalid Ed25519 pubkey size: got %d, expected %d", len(pk.Bytes()), ed25519.PubKeySize,
+			)
+		}
 	}
 
 	return nil

@@ -10,7 +10,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/tendermint/go-amino"
 
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -25,7 +25,7 @@ func (cdc *LegacyAmino) Seal() {
 	cdc.Amino.Seal()
 }
 
-var _ legacy.Amino = &LegacyAmino{}
+var _ registry.AminoRegistrar = &LegacyAmino{}
 
 func NewLegacyAmino() *LegacyAmino {
 	return &LegacyAmino{amino.NewCodec()}
@@ -33,9 +33,9 @@ func NewLegacyAmino() *LegacyAmino {
 
 // RegisterEvidences registers CometBFT evidence types with the provided Amino
 // codec.
-func RegisterEvidences(cdc legacy.Amino) {
-	cdc.RegisterInterface((*cmttypes.Evidence)(nil), nil)
-	cdc.RegisterConcrete(&cmttypes.DuplicateVoteEvidence{}, "tendermint/DuplicateVoteEvidence")
+func RegisterEvidences(registrar registry.AminoRegistrar) {
+	registrar.RegisterInterface((*cmttypes.Evidence)(nil), nil)
+	registrar.RegisterConcrete(&cmttypes.DuplicateVoteEvidence{}, "tendermint/DuplicateVoteEvidence")
 }
 
 // MarshalJSONIndent provides a utility for indented JSON encoding of an object
@@ -179,7 +179,7 @@ func (*LegacyAmino) UnpackAny(*types.Any, interface{}) error {
 	return errors.New("AminoCodec can't handle unpack protobuf Any's")
 }
 
-func (cdc *LegacyAmino) RegisterInterface(ptr interface{}, iopts *legacy.InterfaceOptions) {
+func (cdc *LegacyAmino) RegisterInterface(ptr interface{}, iopts *registry.AminoInterfaceOptions) {
 	if iopts == nil {
 		cdc.Amino.RegisterInterface(ptr, nil)
 	} else {

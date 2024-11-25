@@ -24,7 +24,7 @@ func NewMigrator(keeper Keeper, valCodec address.ValidatorAddressCodec) Migrator
 }
 
 // Migrate1to2 migrates from version 1 to 2.
-func (m Migrator) Migrate1to2(ctx context.Context) error {
+func (m Migrator) Migrate1to2(_ context.Context) error {
 	return nil
 }
 
@@ -32,7 +32,7 @@ func (m Migrator) Migrate1to2(ctx context.Context) error {
 // version 2 to version 3. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params modules and stores them directly into the x/slashing
 // module state.
-func (m Migrator) Migrate2to3(ctx context.Context) error {
+func (m Migrator) Migrate2to3(_ context.Context) error {
 	return nil
 }
 

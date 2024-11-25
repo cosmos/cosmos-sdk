@@ -1,7 +1,7 @@
 package store
 
 // KVStore describes the basic interface for interacting with key-value stores.
-type KVStore interface {
+type KVStore = interface {
 	// Get returns nil iff key doesn't exist. Errors on nil key.
 	Get(key []byte) ([]byte, error)
 
@@ -35,7 +35,7 @@ type KVStore interface {
 //
 // As with KVStore, given keys and values should be considered read-only, and must not be modified after
 // passing them to the batch.
-type Batch interface {
+type Batch = interface {
 	// Set sets a key/value pair.
 	// CONTRACT: key, value readonly []byte
 	Set(key, value []byte) error
@@ -87,7 +87,7 @@ type KVStoreWithBatch interface {
 //
 // Callers must make sure the iterator is valid before calling any methods on it,
 // otherwise these methods will panic.
-type Iterator interface {
+type Iterator = interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	Domain() (start, end []byte)
 

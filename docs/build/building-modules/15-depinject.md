@@ -52,7 +52,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/api/cosmos/group/modul
 ```
 
 :::note
-Pulsar is optional. The official [`protoc-gen-go`](https://developers.google.com/protocol-buffers/docs/reference/go-generated) can be used as well.
+Pulsar is optional. The official [`protoc-gen-go`](https://protobuf.dev/reference/go/go-generated/) can be used as well.
 :::
 
 ## Dependency Definition
@@ -127,4 +127,4 @@ The module is now ready to be used with `depinject` by a chain developer.
 
 ## Integrate in an application
 
-The App Wiring is done in `app_config.go` / `app.yaml` and `app_di.go` and is explained in detail in the [overview of `app_di.go`](https://docs.cosmos.network/main/build/building-apps/app-go-v2).
+The App Wiring is done in `app_config.go` / `app.yaml` and `app_di.go` and is explained in detail in the [overview of `app_di.go`](https://docs.cosmos.network/main/build/building-apps/app-go-di).

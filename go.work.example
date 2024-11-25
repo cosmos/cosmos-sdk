@@ -1,10 +1,11 @@
-go 1.22.2
+go 1.23
 
 use (
 	.
 	./api
 	./client/v2
 	./collections
+	./collections/protocodec
 	./core
 	./core/testing
 	./depinject
@@ -26,7 +27,9 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/accounts/defaults/base
 	./x/accounts/defaults/lockup
+	./x/accounts/defaults/multisig
 	./x/auth
 	./x/authz
 	./x/bank

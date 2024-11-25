@@ -2,13 +2,14 @@ package snapshots_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2/snapshots"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -130,8 +131,9 @@ func TestManager_Prune(t *testing.T) {
 func TestManager_Restore(t *testing.T) {
 	store := setupStore(t)
 	target := &mockCommitSnapshotter{}
+	storageSnapshotter := &mockStorageSnapshotter{items: map[string][]byte{}}
 	extSnapshotter := newExtSnapshotter(0)
-	manager := snapshots.NewManager(store, opts, target, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, target, storageSnapshotter, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -204,6 +206,14 @@ func TestManager_Restore(t *testing.T) {
 	assert.Equal(t, expectItems, target.items)
 	assert.Equal(t, 10, len(extSnapshotter.state))
 
+	// make sure storageSnapshotter items are properly stored
+	for i, item := range target.items {
+		key := fmt.Sprintf("key-%d", i)
+		chunk := storageSnapshotter.items[key]
+		require.NotNil(t, chunk)
+		require.Equal(t, item, chunk)
+	}
+
 	// The snapshot is saved in local snapshot store
 	snapshots, err := store.List()
 	require.NoError(t, err)
@@ -266,10 +276,12 @@ func TestSnapshot_Take_Restore(t *testing.T) {
 	commitSnapshotter := &mockCommitSnapshotter{
 		items: items,
 	}
+	storageSnapshotter := &mockStorageSnapshotter{items: map[string][]byte{}}
+
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, storageSnapshotter, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -355,7 +367,7 @@ func TestSnapshot_Take_Prune(t *testing.T) {
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -418,4 +430,108 @@ func TestSnapshot_Take_Prune(t *testing.T) {
 	manager = setupBusyManager(t)
 	_, err = manager.Prune(2)
 	require.Error(t, err)
+}
+
+func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
+	store := setupStore(t)
+
+	items := [][]byte{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+	commitSnapshotter := &mockCommitSnapshotter{
+		items: items,
+	}
+	extSnapshotter := newExtSnapshotter(10)
+
+	expectChunks := snapshotItems(items, extSnapshotter)
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
+	err := manager.RegisterExtensions(extSnapshotter)
+	require.NoError(t, err)
+
+	var prunedCount uint64
+	// try take snapshot and pruning parallel while prune operation begins first
+	go func() {
+		checkError := func() bool {
+			_, err := manager.Create(4)
+			return err != nil
+		}
+
+		require.Eventually(t, checkError, time.Millisecond*200, time.Millisecond)
+	}()
+
+	prunedCount, err = manager.Prune(1)
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, prunedCount)
+
+	// creating a snapshot at a same height 4, should be true since we prune has finished
+	snapshot, err := manager.Create(4)
+	require.NoError(t, err)
+
+	assert.Equal(t, &types.Snapshot{
+		Height: 4,
+		Format: commitSnapshotter.SnapshotFormat(),
+		Chunks: 1,
+		Hash:   []uint8{0xc5, 0xf7, 0xfe, 0xea, 0xd3, 0x4d, 0x3e, 0x87, 0xff, 0x41, 0xa2, 0x27, 0xfa, 0xcb, 0x38, 0x17, 0xa, 0x5, 0xeb, 0x27, 0x4e, 0x16, 0x5e, 0xf3, 0xb2, 0x8b, 0x47, 0xd1, 0xe6, 0x94, 0x7e, 0x8b},
+		Metadata: types.Metadata{
+			ChunkHashes: checksums(expectChunks),
+		},
+	}, snapshot)
+
+	// try take snapshot and pruning parallel while snapshot operation begins first
+	go func() {
+		checkError := func() bool {
+			_, err = manager.Prune(1)
+			return err != nil
+		}
+
+		require.Eventually(t, checkError, time.Millisecond*200, time.Millisecond)
+	}()
+
+	snapshot, err = manager.Create(5)
+	require.NoError(t, err)
+
+	assert.Equal(t, &types.Snapshot{
+		Height: 5,
+		Format: commitSnapshotter.SnapshotFormat(),
+		Chunks: 1,
+		Hash:   []uint8{0xc5, 0xf7, 0xfe, 0xea, 0xd3, 0x4d, 0x3e, 0x87, 0xff, 0x41, 0xa2, 0x27, 0xfa, 0xcb, 0x38, 0x17, 0xa, 0x5, 0xeb, 0x27, 0x4e, 0x16, 0x5e, 0xf3, 0xb2, 0x8b, 0x47, 0xd1, 0xe6, 0x94, 0x7e, 0x8b},
+		Metadata: types.Metadata{
+			ChunkHashes: checksums(expectChunks),
+		},
+	}, snapshot)
+}
+
+func TestSnapshot_SnapshotIfApplicable(t *testing.T) {
+	store := setupStore(t)
+
+	items := [][]byte{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+	commitSnapshotter := &mockCommitSnapshotter{
+		items: items,
+	}
+	extSnapshotter := newExtSnapshotter(10)
+
+	snapshotOpts := snapshots.NewSnapshotOptions(1, 1)
+
+	manager := snapshots.NewManager(store, snapshotOpts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
+	err := manager.RegisterExtensions(extSnapshotter)
+	require.NoError(t, err)
+
+	manager.SnapshotIfApplicable(4)
+
+	checkLatestHeight := func() bool {
+		latestSnapshot, _ := store.GetLatest()
+		return latestSnapshot.Height == 4
+	}
+
+	require.Eventually(t, checkLatestHeight, time.Second*10, time.Second)
+
+	pruned, err := manager.Prune(1)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), pruned)
 }

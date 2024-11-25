@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -32,7 +32,7 @@ type SubspaceTestSuite struct {
 }
 
 func (suite *SubspaceTestSuite) SetupTest() {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	ms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
@@ -236,7 +236,6 @@ func (suite *SubspaceTestSuite) TestSetParamSet() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			suite.Require().Panics(func() {
 				suite.ss.SetParamSet(suite.ctx, tc.ps)

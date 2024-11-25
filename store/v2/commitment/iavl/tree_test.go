@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/commitment"
@@ -16,14 +16,22 @@ import (
 
 func TestCommitterSuite(t *testing.T) {
 	s := &commitment.CommitStoreTestSuite{
-		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*commitment.CommitStore, error) {
+		NewStore: func(db corestore.KVStoreWithBatch, storeKeys, oldStoreKeys []string, logger corelog.Logger) (*commitment.CommitStore, error) {
 			multiTrees := make(map[string]commitment.Tree)
 			cfg := DefaultConfig()
-			for _, storeKey := range storeKeys {
+			mountTreeFn := func(storeKey string) (commitment.Tree, error) {
 				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
-				multiTrees[storeKey] = NewIavlTree(prefixDB, logger, cfg)
+				return NewIavlTree(prefixDB, logger, cfg), nil
 			}
-			return commitment.NewCommitStore(multiTrees, db, logger)
+			for _, storeKey := range storeKeys {
+				multiTrees[storeKey], _ = mountTreeFn(storeKey)
+			}
+			oldTrees := make(map[string]commitment.Tree)
+			for _, storeKey := range oldStoreKeys {
+				oldTrees[storeKey], _ = mountTreeFn(storeKey)
+			}
+
+			return commitment.NewCommitStore(multiTrees, oldTrees, db, logger)
 		},
 	}
 
@@ -41,7 +49,8 @@ func TestIavlTree(t *testing.T) {
 	tree := generateTree()
 	require.NotNil(t, tree)
 
-	initVersion := tree.GetLatestVersion()
+	initVersion, err := tree.GetLatestVersion()
+	require.NoError(t, err)
 	require.Equal(t, uint64(0), initVersion)
 
 	// write a batch of version 1
@@ -51,14 +60,18 @@ func TestIavlTree(t *testing.T) {
 
 	workingHash := tree.WorkingHash()
 	require.NotNil(t, workingHash)
-	require.Equal(t, uint64(0), tree.GetLatestVersion())
+	v, err := tree.GetLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), v)
 
 	// commit the batch
 	commitHash, version, err := tree.Commit()
 	require.NoError(t, err)
 	require.Equal(t, version, uint64(1))
 	require.Equal(t, workingHash, commitHash)
-	require.Equal(t, uint64(1), tree.GetLatestVersion())
+	v, err = tree.GetLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), v)
 
 	// ensure we can get expected values
 	bz, err := tree.Get(1, []byte("key1"))
@@ -100,7 +113,9 @@ func TestIavlTree(t *testing.T) {
 	// prune version 1
 	err = tree.Prune(1)
 	require.NoError(t, err)
-	require.Equal(t, uint64(3), tree.GetLatestVersion())
+	v, err = tree.GetLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, uint64(3), v)
 	// async pruning check
 	checkErr := func() bool {
 		if _, err := tree.tree.LoadVersion(1); err != nil {
@@ -117,4 +132,83 @@ func TestIavlTree(t *testing.T) {
 
 	// close the db
 	require.NoError(t, tree.Close())
+}
+
+func TestIavlTreeIterator(t *testing.T) {
+	// generate a new tree
+	tree := generateTree()
+	require.NotNil(t, tree)
+
+	// write a batch of version 1
+	require.NoError(t, tree.Set([]byte("key1"), []byte("value1")))
+	require.NoError(t, tree.Set([]byte("key2"), []byte("value2")))
+	require.NoError(t, tree.Set([]byte("key3"), []byte("value3")))
+
+	// commit the batch
+	_, _, err := tree.Commit()
+	require.NoError(t, err)
+
+	// write a batch of version 2
+	require.NoError(t, tree.Set([]byte("key4"), []byte("value4")))
+	require.NoError(t, tree.Set([]byte("key5"), []byte("value5")))
+	require.NoError(t, tree.Set([]byte("key6"), []byte("value6")))
+	require.NoError(t, tree.Remove([]byte("key1"))) // delete key1
+	_, _, err = tree.Commit()
+	require.NoError(t, err)
+
+	// write a batch of version 3
+	require.NoError(t, tree.Set([]byte("key7"), []byte("value7")))
+	require.NoError(t, tree.Set([]byte("key8"), []byte("value8")))
+	_, _, err = tree.Commit()
+	require.NoError(t, err)
+
+	// iterate over all keys
+	iter, err := tree.Iterator(3, nil, nil, true)
+	require.NoError(t, err)
+	// expect all keys to be iterated over
+	expectedKeys := []string{"key2", "key3", "key4", "key5", "key6", "key7", "key8"}
+	count := 0
+	for i := 0; iter.Valid(); i++ {
+		require.Equal(t, expectedKeys[i], string(iter.Key()))
+		iter.Next()
+		count++
+	}
+	require.Equal(t, len(expectedKeys), count)
+	require.NoError(t, iter.Close())
+
+	// iterate over all keys in reverse
+	iter, err = tree.Iterator(3, nil, nil, false)
+	require.NoError(t, err)
+	expectedKeys = []string{"key8", "key7", "key6", "key5", "key4", "key3", "key2"}
+	for i := 0; iter.Valid(); i++ {
+		require.Equal(t, expectedKeys[i], string(iter.Key()))
+		iter.Next()
+	}
+	require.NoError(t, iter.Close())
+
+	// iterate over keys with version 1
+	iter, err = tree.Iterator(1, nil, nil, true)
+	require.NoError(t, err)
+	expectedKeys = []string{"key1", "key2", "key3"}
+	count = 0
+	for i := 0; iter.Valid(); i++ {
+		require.Equal(t, expectedKeys[i], string(iter.Key()))
+		iter.Next()
+		count++
+	}
+	require.Equal(t, len(expectedKeys), count)
+	require.NoError(t, iter.Close())
+
+	// iterate over keys with version 2
+	iter, err = tree.Iterator(2, nil, nil, false)
+	require.NoError(t, err)
+	expectedKeys = []string{"key6", "key5", "key4", "key3", "key2"}
+	count = 0
+	for i := 0; iter.Valid(); i++ {
+		require.Equal(t, expectedKeys[i], string(iter.Key()))
+		iter.Next()
+		count++
+	}
+	require.Equal(t, len(expectedKeys), count)
+	require.NoError(t, iter.Close())
 }

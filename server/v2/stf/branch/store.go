@@ -8,9 +8,9 @@ import (
 
 var _ store.Writer = (*Store[store.Reader])(nil)
 
-// Store wraps an in-memory cache around an underlying types.KVStore.
+// Store wraps an in-memory child around an underlying types.KVStore.
 type Store[T store.Reader] struct {
-	changeSet changeSet // always ascending sorted
+	changeSet changeSet // ordered changeset.
 	parent    T
 }
 
@@ -24,11 +24,17 @@ func NewStore[T store.Reader](parent T) Store[T] {
 
 // Get implements types.KVStore.
 func (s Store[T]) Get(key []byte) (value []byte, err error) {
+	// if found in memory cache, immediately return.
 	value, found := s.changeSet.get(key)
 	if found {
 		return
 	}
-	return s.parent.Get(key)
+	// if not found in the changeset, then check the parent.
+	value, err = s.parent.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
 }
 
 // Set implements types.KVStore.
@@ -36,7 +42,6 @@ func (s Store[T]) Set(key, value []byte) error {
 	if value == nil {
 		return errors.New("cannot set a nil value")
 	}
-
 	s.changeSet.set(key, value)
 	return nil
 }

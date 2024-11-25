@@ -14,7 +14,12 @@ var _ branch.Service = (*BranchService)(nil)
 type BranchService struct{}
 
 func (bs BranchService) Execute(ctx context.Context, f func(ctx context.Context) error) error {
-	return bs.execute(ctx.(*executionContext), f)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return bs.execute(exCtx, f)
 }
 
 func (bs BranchService) ExecuteWithGasLimit(
@@ -22,18 +27,21 @@ func (bs BranchService) ExecuteWithGasLimit(
 	gasLimit uint64,
 	f func(ctx context.Context) error,
 ) (gasUsed uint64, err error) {
-	stfCtx := ctx.(*executionContext)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return 0, err
+	}
 
-	originalGasMeter := stfCtx.meter
+	originalGasMeter := exCtx.meter
 
-	stfCtx.setGasLimit(gasLimit)
+	exCtx.setGasLimit(gasLimit)
 
 	// execute branched, with predefined gas limit.
-	err = bs.execute(stfCtx, f)
+	err = bs.execute(exCtx, f)
 	// restore original context
-	gasUsed = stfCtx.meter.Limit() - stfCtx.meter.Remaining()
+	gasUsed = exCtx.meter.Limit() - exCtx.meter.Remaining()
 	_ = originalGasMeter.Consume(gasUsed, "execute-with-gas-limit")
-	stfCtx.setGasLimit(originalGasMeter.Limit() - originalGasMeter.Remaining())
+	exCtx.setGasLimit(originalGasMeter.Remaining())
 
 	return gasUsed, err
 }
@@ -54,6 +62,8 @@ func (bs BranchService) execute(ctx *executionContext, f func(ctx context.Contex
 		branchFn:            ctx.branchFn,
 		makeGasMeter:        ctx.makeGasMeter,
 		makeGasMeteredStore: ctx.makeGasMeteredStore,
+		msgRouter:           ctx.msgRouter,
+		queryRouter:         ctx.queryRouter,
 	}
 
 	err := f(branchedCtx)

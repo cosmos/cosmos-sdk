@@ -8,11 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -37,7 +36,7 @@ var (
 	pk2   = priv2.PubKey()
 	addr1 = sdk.AccAddress(pk1.Address())
 	addr2 = sdk.AccAddress(pk2.Address())
-	desc  = stakingtypes.NewDescription("testname", "", "", "", "")
+	desc  = stakingtypes.NewDescription("testname", "", "", "", "", stakingtypes.Metadata{})
 	comm  = stakingtypes.CommissionRates{}
 )
 
@@ -264,7 +263,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	testCases := []struct {
 		msg         string
 		malleate    func()
-		deliverTxFn genesis.TxHandler
+		deliverTxFn genutil.TxHandler
 		expPass     bool
 	}{
 		{

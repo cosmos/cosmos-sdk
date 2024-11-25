@@ -1,4 +1,4 @@
-//nolint:unused,nolintlint // ignore unused code linting and directive `//nolint:unused // ignore unused code linting` is unused for linter "unused"
+//nolint:unused,nolintlint // ignore unused code linting
 package simapp
 
 import (
@@ -15,6 +15,7 @@ import (
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
@@ -27,24 +28,25 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"           // import for side-effects
-	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
-	authtypes "cosmossdk.io/x/auth/types"
-	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/bank/v2" // import for side-effects
+	bankv2types "cosmossdk.io/x/bank/v2/types"
+	bankmodulev2 "cosmossdk.io/x/bank/v2/types/module"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects
 	consensustypes "cosmossdk.io/x/consensus/types"
 	_ "cosmossdk.io/x/distribution" // import for side-effects
 	distrtypes "cosmossdk.io/x/distribution/types"
+	_ "cosmossdk.io/x/epochs" // import for side-effects
+	epochstypes "cosmossdk.io/x/epochs/types"
 	_ "cosmossdk.io/x/evidence" // import for side-effects
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
@@ -67,7 +69,13 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	_ "github.com/cosmos/cosmos-sdk/x/auth" // import for side-effects
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/validate"
 )
 
 var (
@@ -77,6 +85,7 @@ var (
 		{Account: distrtypes.ModuleName},
 		{Account: pooltypes.ModuleName},
 		{Account: pooltypes.StreamAccount},
+		{Account: pooltypes.ProtocolPoolDistrAccount},
 		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
@@ -97,8 +106,8 @@ var (
 		// pooltypes.ModuleName
 	}
 
-	// application configuration (used by depinject)
-	appConfig = appconfig.Compose(&appv1alpha1.Config{
+	// ModuleConfig is the application module configuration used by depinject
+	ModuleConfig = appconfig.Compose(&appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
 				Name: runtime.ModuleName,
@@ -115,10 +124,12 @@ var (
 					BeginBlockers: []string{
 						minttypes.ModuleName,
 						distrtypes.ModuleName,
+						pooltypes.ModuleName,
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
 						authz.ModuleName,
+						epochstypes.ModuleName,
 					},
 					EndBlockers: []string{
 						govtypes.ModuleName,
@@ -132,14 +143,20 @@ var (
 							ModuleName: authtypes.ModuleName,
 							KvStoreKey: "acc",
 						},
+						{
+							ModuleName: accounts.ModuleName,
+							KvStoreKey: accounts.StoreKey,
+						},
 					},
 					// NOTE: The genutils module must occur after staking so that pools are
 					// properly initialized with tokens from genesis accounts.
 					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 					InitGenesis: []string{
+						consensustypes.ModuleName,
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
+						bankv2types.ModuleName,
 						distrtypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
@@ -155,6 +172,7 @@ var (
 						vestingtypes.ModuleName,
 						circuittypes.ModuleName,
 						pooltypes.ModuleName,
+						epochstypes.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
@@ -167,7 +185,21 @@ var (
 						QueryGasLimit:      100_000,
 						SimulationGasLimit: 100_000,
 					},
+					// SkipStoreKeys is an optional list of store keys to skip when constructing the
+					// module's keeper. This is useful when a module does not have a store key.
+					SkipStoreKeys: []string{
+						authtxconfig.DepinjectModuleName,
+						validate.ModuleName,
+					},
 				}),
+			},
+			{
+				Name:   authtxconfig.DepinjectModuleName, // x/auth/tx/config depinject module (not app module), use to provide tx configuration
+				Config: appconfig.WrapAny(&txconfigv1.Config{}),
+			},
+			{
+				Name:   validate.ModuleName,
+				Config: appconfig.WrapAny(&validatemodulev1.Module{}),
 			},
 			{
 				Name: authtypes.ModuleName,
@@ -201,10 +233,6 @@ var (
 			{
 				Name:   slashingtypes.ModuleName,
 				Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
-			},
-			{
-				Name:   "tx",
-				Config: appconfig.WrapAny(&txconfigv1.Config{}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,
@@ -250,10 +278,8 @@ var (
 				Config: appconfig.WrapAny(&govmodulev1.Module{}),
 			},
 			{
-				Name: consensustypes.ModuleName,
-				Config: appconfig.WrapAny(&consensusmodulev1.Module{
-					Authority: "consensus",
-				}),
+				Name:   consensustypes.ModuleName,
+				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 			},
 			{
 				Name:   accounts.ModuleName,
@@ -266,6 +292,14 @@ var (
 			{
 				Name:   pooltypes.ModuleName,
 				Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+			},
+			{
+				Name:   epochstypes.ModuleName,
+				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			{
+				Name:   bankv2types.ModuleName,
+				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
 		},
 	})

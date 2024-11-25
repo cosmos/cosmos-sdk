@@ -183,8 +183,10 @@ func (m *Manager) writeChangeset() error {
 		batch := m.db.NewBatch()
 		// Invoking this code in a closure so that defer is called immediately on return
 		// yet not in the for-loop which can leave resource lingering.
-		err = func() error {
-			defer batch.Close()
+		err = func() (err error) {
+			defer func() {
+				err = errors.Join(err, batch.Close())
+			}()
 
 			if err := batch.Set(csKey, csBytes); err != nil {
 				return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
@@ -215,7 +217,7 @@ func (m *Manager) GetMigratedVersion() uint64 {
 func (m *Manager) Sync() error {
 	version := m.GetMigratedVersion()
 	if version == 0 {
-		return fmt.Errorf("migration is not done yet")
+		return errors.New("migration is not done yet")
 	}
 	version += 1
 
@@ -237,7 +239,7 @@ func (m *Manager) Sync() error {
 				continue
 			}
 
-			cs := corestore.NewChangeset()
+			cs := corestore.NewChangeset(version)
 			if err := encoding.UnmarshalChangeset(cs, csBytes); err != nil {
 				return fmt.Errorf("failed to unmarshal changeset: %w", err)
 			}
@@ -249,7 +251,7 @@ func (m *Manager) Sync() error {
 					return fmt.Errorf("failed to commit changeset to commitment: %w", err)
 				}
 			}
-			if err := m.stateStorage.ApplyChangeset(version, cs); err != nil {
+			if err := m.stateStorage.ApplyChangeset(cs); err != nil {
 				return fmt.Errorf("failed to write changeset to storage: %w", err)
 			}
 

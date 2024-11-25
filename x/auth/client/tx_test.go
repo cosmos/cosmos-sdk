@@ -7,15 +7,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/auth"
-	authclient "cosmossdk.io/x/auth/client"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 func TestParseQueryResponse(t *testing.T) {
@@ -173,7 +172,6 @@ func TestBatchScanner_Scan(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			scanner, i := authclient.NewBatchScanner(clientCtx.TxConfig, strings.NewReader(tt.batch)), 0
 			for scanner.Scan() {

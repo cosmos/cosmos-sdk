@@ -19,7 +19,7 @@ https://github.com/cosmos/cosmos-sdk/blob/x/circuit/v0.1.0/x/circuit/ante/circui
 * With a [message router check](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router):
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/baseapp/msg_service_router.go#L104-L115
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/baseapp/msg_service_router.go#L123-L133
 ``` 
 
 :::note
@@ -79,7 +79,7 @@ Authorize, is called by the module authority (default governance module account)
 
 ### Trip
 
-Trip, is called by an authorized account to disable message execution for a specific msgURL. If empty, all the msgs will be disabled.
+Trip, is called by an authorized account to disable message execution for a specific msgURL. If empty, depending on the permission level of the sender, the corresponding messages will be disabled. For example: if the sender permission level is `LEVEL_SOME_MSGS` then all messages that sender has permission will be disabled. If the sender is `LEVEL_SUPER_ADMIN` or `LEVEL_ALL_MSGS` then all msgs will be disabled.
 
 ```protobuf
   // TripCircuitBreaker pauses processing of Msg's in the state machine.
@@ -88,7 +88,7 @@ Trip, is called by an authorized account to disable message execution for a spec
 
 ### Reset
 
-Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, all the disabled messages will be enabled.
+Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, depending on the permission level of the sender, the corresponding disabled messages will be re-enabled. For example: if the sender permission level is `LEVEL_SOME_MSGS` all messages that sender has permission will be re-enabled. If the sender is `LEVEL_SUPER_ADMIN` or `LEVEL_ALL_MSGS` then all messages will be re-enabled.
 
 ```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that
@@ -101,7 +101,7 @@ Reset is called by an authorized account to enable execution for a specific msgU
 ### MsgAuthorizeCircuitBreaker
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/main/x/circuit/proto/cosmos/circuit/v1/tx.proto#L25-L40
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/circuit/proto/cosmos/circuit/v1/tx.proto#L25-L40
 ```
 
 This message is expected to fail if:
@@ -111,7 +111,7 @@ This message is expected to fail if:
 ### MsgTripCircuitBreaker
 
 ```protobuf reference 
-https://github.com/cosmos/cosmos-sdk/blob/main/x/circuit/proto/cosmos/circuit/v1/tx.proto#L47-L60
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/circuit/proto/cosmos/circuit/v1/tx.proto#L47-L60
 ```
 
 This message is expected to fail if:
@@ -121,7 +121,7 @@ This message is expected to fail if:
 ### MsgResetCircuitBreaker
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/main/x/circuit/proto/cosmos/circuit/v1/tx.proto#L67-L78
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/circuit/proto/cosmos/circuit/v1/tx.proto#L67-L78
 ```
 
 This message is expected to fail if:

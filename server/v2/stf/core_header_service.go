@@ -12,15 +12,18 @@ var _ header.Service = (*HeaderService)(nil)
 type HeaderService struct{}
 
 func (h HeaderService) HeaderInfo(ctx context.Context) header.Info {
-	return ctx.(*executionContext).headerInfo
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return exCtx.headerInfo
 }
 
 const headerInfoPrefix = 0x37
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.
 func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) error {
-	// TODO storing header info is too low level here, stf should be stateless.
-	// We should have a keeper that does this.
 	runtimeStore, err := state.GetWriter(Identity)
 	if err != nil {
 		return err

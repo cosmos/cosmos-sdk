@@ -18,7 +18,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Balance",
-					Use:       "balance [owner] [class-id]",
+					Use:       "balance <owner> <class-id>",
 					Short:     "Query the number of NFTs of a given class owned by the owner.",
 					Example:   fmt.Sprintf(`%s query %s balance <owner> <class-id>`, version.AppName, nft.ModuleName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -28,7 +28,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "Owner",
-					Use:       "owner [class-id] [nft-id]",
+					Use:       "owner <class-id> <nft-id>",
 					Short:     "Query the owner of the NFT based on its class and id.",
 					Example:   fmt.Sprintf(`%s query %s owner <class-id> <nft-id>`, version.AppName, nft.ModuleName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -38,7 +38,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "Supply",
-					Use:       "supply [class-id]",
+					Use:       "supply <class-id>",
 					Short:     "Query the number of nft based on the class.",
 					Example:   fmt.Sprintf(`%s query %s supply <class-id>`, version.AppName, nft.ModuleName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -47,7 +47,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "NFTs",
-					Use:       "nfts [class-id]",
+					Use:       "nfts <class-id>",
 					Short:     "Query all NFTs of a given class or owner address.",
 					Example:   fmt.Sprintf(`%s query %s nfts <class-id> --owner=<owner>`, version.AppName, nft.ModuleName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -56,7 +56,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "NFT",
-					Use:       "nft [class-id] [nft-id]",
+					Use:       "nft <class-id> <nft-id>",
 					Short:     "Query an NFT based on its class and id.",
 					Example:   fmt.Sprintf(`%s query %s nft <class-id> <nft-id>`, version.AppName, nft.ModuleName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -66,7 +66,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "Class",
-					Use:       "class [class-id]",
+					Use:       "class <class-id>",
 					Short:     "Query an NFT class based on its id",
 					Example:   fmt.Sprintf(`%s query %s class <class-id>`, version.AppName, nft.ModuleName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -86,7 +86,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Send",
-					Use:       "send [class-id] [nft-id] [receiver] --from [sender]",
+					Use:       "send <class-id> <nft-id> <receiver> --from <sender>",
 					Short:     "Transfer ownership of NFT",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "class_id"},

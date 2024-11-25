@@ -30,6 +30,7 @@ var (
 	FlagPeriodValue      uint
 	FlagGenesisTimeValue int64
 	FlagSigverifyTxValue bool
+	FlagFauxMerkle       bool
 )
 
 // GetSimulatorFlags gets the values of all the available simulation flags
@@ -46,7 +47,7 @@ func GetSimulatorFlags() {
 	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
 	flag.BoolVar(&FlagCommitValue, "Commit", true, "have the simulation commit")
-	flag.StringVar(&FlagDBBackendValue, "DBBackend", "goleveldb", "custom db backend type")
+	flag.StringVar(&FlagDBBackendValue, "DBBackend", "goleveldb", "custom db backend type: goleveldb, memdb")
 
 	// simulation flags
 	flag.BoolVar(&FlagEnabledValue, "Enabled", false, "enable the simulation")
@@ -54,6 +55,7 @@ func GetSimulatorFlags() {
 	flag.UintVar(&FlagPeriodValue, "Period", 0, "run slow invariants only once every period assertions")
 	flag.Int64Var(&FlagGenesisTimeValue, "GenesisTime", time.Now().Unix(), "use current time as genesis UNIX time for default")
 	flag.BoolVar(&FlagSigverifyTxValue, "SigverifyTx", true, "whether to sigverify check for transaction ")
+	flag.BoolVar(&FlagFauxMerkle, "FauxMerkle", false, "use faux merkle instead of iavl")
 }
 
 // NewConfigFromFlags creates a simulation from the retrieved values of the flags.
@@ -73,5 +75,6 @@ func NewConfigFromFlags() simulation.Config {
 		Lean:               FlagLeanValue,
 		Commit:             FlagCommitValue,
 		DBBackend:          FlagDBBackendValue,
+		FauxMerkle:         FlagFauxMerkle,
 	}
 }

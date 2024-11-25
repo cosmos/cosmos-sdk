@@ -6,12 +6,9 @@ import (
 	"io"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/gov"
 	"cosmossdk.io/x/gov/client/cli"
 	govclitestutil "cosmossdk.io/x/gov/client/testutil"
@@ -28,6 +25,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type CLITestSuite struct {
@@ -50,7 +48,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockCometRPC{}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain").
@@ -60,9 +58,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
-			Value: bz,
-		})
+		c := clitestutil.NewMockCometRPCWithResponseQueryValue(bz)
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen()
@@ -164,8 +160,6 @@ func (s *CLITestSuite) TestNewCmdSubmitProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitProposal()
 
@@ -260,8 +254,6 @@ func (s *CLITestSuite) TestNewCmdSubmitLegacyProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitLegacyProposal()
 
@@ -364,7 +356,6 @@ func (s *CLITestSuite) TestNewCmdWeightedVote() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdWeightedVote()
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)

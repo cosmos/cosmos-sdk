@@ -138,6 +138,12 @@ message BaseAccount {
 
 ### Vesting Account
 
+:::warning
+Vesting accounts are deprecated in favor of `x/accounts`.
+The creation of vesting account, using `x/auth/vesting`, is not possible since v0.52.
+For existing chains, importing the `x/auth/vesting module` is still required for backward compatibility purposes.
+:::
+
 See [Vesting](https://docs.cosmos.network/main/modules/auth/vesting/).
 
 ## AnteHandlers

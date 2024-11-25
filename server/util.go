@@ -25,7 +25,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	corectx "cosmossdk.io/core/context"
-	corelog "cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
@@ -46,12 +46,13 @@ import (
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")
 
-// Context server context
-// Deprecated: Do not use since we use viper to track all config
+// Context is the server context.
+// Prefer using we use viper a it tracks track all config.
+// See core/context/server_context.go.
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
-	Logger corelog.Logger
+	Logger log.Logger
 }
 
 func NewDefaultContext() *Context {
@@ -169,7 +170,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
-// CreateSDKLogger creates a the default SDK logger.
+// CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
@@ -354,6 +355,7 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		cometCmd,
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator),
+		ModuleHashByHeightQuery(appCreator),
 	)
 }
 
@@ -472,7 +474,7 @@ func addrToIP(addr net.Addr) net.IP {
 }
 
 // OpenDB opens the application database using the appropriate driver.
-func OpenDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func OpenDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }
@@ -505,7 +507,12 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json"))
+		genesisPathCfg := appOpts.GetString("genesis_file")
+		if genesisPathCfg == "" {
+			genesisPathCfg = filepath.Join("config", "genesis.json")
+		}
+
+		reader, err := os.Open(filepath.Join(homeDir, genesisPathCfg))
 		if err != nil {
 			panic(err)
 		}

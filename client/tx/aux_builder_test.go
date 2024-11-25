@@ -26,8 +26,9 @@ const (
 
 var (
 	_, pub1, addr1 = testdata.KeyTestPubAddr()
+	addr1Str, _    = testutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
 	rawSig         = []byte("dummy")
-	msg1           = &countertypes.MsgIncreaseCounter{Signer: addr1.String(), Count: 1}
+	msg1           = &countertypes.MsgIncreaseCounter{Signer: addr1Str, Count: 1}
 
 	chainID = "test-chain"
 )
@@ -131,7 +132,7 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetAddress(addr1.String())
+				b.SetAddress(addr1Str)
 				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
@@ -152,7 +153,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetChainID(chainID)
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetAddress(addr1.String())
+				b.SetAddress(addr1Str)
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
 				require.NoError(t, err)
 
@@ -174,7 +175,7 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetAddress(addr1.String())
+				b.SetAddress(addr1Str)
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
 
@@ -193,7 +194,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetChainID(chainID)
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				b.SetAddress(addr1.String())
+				b.SetAddress(addr1Str)
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
 
@@ -213,7 +214,6 @@ func TestAuxTxBuilder(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			b = tx.NewAuxTxBuilder()
 			err := tc.malleate()

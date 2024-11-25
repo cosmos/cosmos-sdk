@@ -64,7 +64,7 @@ func EnvWithMemStoreService(memStoreService store.MemoryStoreService) EnvOption 
 }
 
 // failingMsgRouter is a message router that panics when accessed
-// this is to ensure all fields are set by in environment
+// this is to ensure all fields are set in environment
 type failingMsgRouter struct {
 	baseapp.MessageRouter
 }
@@ -86,7 +86,7 @@ func (failingMsgRouter) HybridHandlerByMsgName(msgName string) func(ctx context.
 }
 
 // failingQueryRouter is a query router that panics when accessed
-// this is to ensure all fields are set by in environment
+// this is to ensure all fields are set in environment
 type failingQueryRouter struct {
 	baseapp.QueryRouter
 }
@@ -112,7 +112,7 @@ func (failingQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.Inte
 }
 
 // failingMemStore is a memstore that panics when accessed
-// this is to ensure all fields are set by in environment
+// this is to ensure all fields are set in environment
 type failingMemStore struct {
 	store.MemoryStoreService
 }

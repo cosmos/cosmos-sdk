@@ -1,0 +1,52 @@
+name: PR Review Reminder
+
+on:
+  schedule:
+    - cron: '0 9 * * 1-5'  # Every weekday at 9:00 AM UTC
+
+permissions:
+  pull-requests: read
+
+jobs:
+  pr-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: List open pull requests using GitHub Script
+        uses: actions/github-script@v7
+        id: pr-list
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+
+            let table = '';
+            pullRequests.forEach(pr => {
+              const assignees = pr.assignees.length > 0 ? `Assignees: ${pr.assignees.map(assignee => assignee.login).join(', ')}` : 'No assignees';
+              table += pr.draft ? '' : `
+                      Title: ${pr.title}
+                      Link: <${pr.html_url}>
+                      Assigness: ${assignees}
+                      `;
+            });
+            return table;
+
+      - name: Send Slack Reminder
+        if: steps.pr-list.outputs.result != ''
+        uses: rtCamp/action-slack-notify@v2.3.2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: pr-github
+          SLACK_USERNAME: PR-Reminder
+          MSG_MINIMAL: true
+          SLACK_ICON_EMOJI: ":think:"
+          SLACK_COLOR: good
+          SLACKIFY_MARKDOWN: true
+          SLACK_TITLE: Daily Pull Request Review Reminder
+          SLACK_MESSAGE: |
+            ${{ steps.pr-list.outputs.result }}  

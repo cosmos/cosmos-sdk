@@ -3,22 +3,31 @@
 Test framework for system tests. 
 Starts and interacts with a (multi node) blockchain in Go.
 Supports
+
 * CLI
 * Servers
 * Events
 * RPC
 
 Uses:
+
 * testify
 * gjson
 * sjson
-Server and client side are executed on the host machine
+
+Server and client side are executed on the host machine.
 
 ## Developer
+
 ### Test strategy
+
 System tests cover the full stack via cli and a running (multi node) network. They are more expensive (in terms of time/ cpu) 
 to run compared to unit or integration tests. 
 Therefore, we focus on the **critical path** and do not cover every condition.
+
+## How to use
+
+Read the [getting_started.md](getting_started.md) guide to get started.
 
 ### Execute a single test
 
@@ -33,7 +42,9 @@ Test cli parameters
 * `-nodes-count` int - number of nodes in the cluster (default 4)
 
 # Port ranges
+
 With *n* nodes:
+
 * `26657` - `26657+n` - RPC
 * `1317` - `1317+n` - API
 * `9090` - `9090+n` - GRPC

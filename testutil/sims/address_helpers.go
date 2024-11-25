@@ -3,7 +3,7 @@ package sims
 import (
 	"bytes"
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
@@ -108,7 +108,7 @@ func TestAddr(addr, bech string) (sdk.AccAddress, error) {
 	}
 	bechexpected := res.String()
 	if bech != bechexpected {
-		return nil, fmt.Errorf("bech encoding doesn't match reference")
+		return nil, errors.New("bech encoding doesn't match reference")
 	}
 
 	bechres, err := sdk.AccAddressFromBech32(bech)

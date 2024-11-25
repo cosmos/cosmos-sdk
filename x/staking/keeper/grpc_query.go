@@ -9,13 +9,14 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -63,7 +64,12 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 		vals.Validators = append(vals.Validators, *val)
 		valInfo := types.ValidatorInfo{}
 
-		cpk, ok := val.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+		cv := val.ConsensusPubkey.GetCachedValue()
+		if cv == nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "public key cached value is nil")
+		}
+
+		cpk, ok := cv.(cryptotypes.PubKey)
 		if ok {
 			consAddr, err := k.consensusAddressCodec.BytesToString(cpk.Address())
 			if err == nil {
@@ -404,12 +410,12 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 }
 
 // HistoricalInfo queries the historical info for given height
-func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) { // nolint:staticcheck // SA1019: deprecated endpoint
+func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) { //nolint:staticcheck // SA1019: deprecated endpoint
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	return nil, status.Error(codes.Internal, "this endpoint has been deprecated and removed in 0.52")
+	return nil, status.Error(codes.Internal, "this endpoint has been deprecated and removed since v0.52")
 }
 
 // Redelegations queries redelegations of given address
@@ -422,14 +428,13 @@ func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegation
 	var pageRes *query.PageResponse
 	var err error
 
-	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
 	switch {
 	case req.DelegatorAddr != "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr != "":
 		redels, err = queryRedelegation(ctx, k, req)
 	case req.DelegatorAddr == "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr == "":
 		redels, pageRes, err = queryRedelegationsFromSrcValidator(ctx, k, req)
 	default:
-		redels, pageRes, err = queryAllRedelegations(ctx, store, k, req)
+		redels, pageRes, err = queryAllRedelegations(ctx, k, req)
 	}
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -550,7 +555,7 @@ func queryRedelegationsFromSrcValidator(ctx context.Context, k Querier, req *typ
 	}, query.WithCollectionPaginationTriplePrefix[[]byte, []byte, []byte](valAddr))
 }
 
-func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryAllRedelegations(ctx context.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, nil, err

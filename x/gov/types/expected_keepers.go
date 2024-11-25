@@ -51,7 +51,7 @@ type BankKeeper interface {
 
 // PoolKeeper defines the expected interface needed to fund & distribute pool balances.
 type PoolKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender []byte) error
 }
 
 // Event Hooks

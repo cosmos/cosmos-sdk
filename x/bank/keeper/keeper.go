@@ -4,18 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -61,6 +61,7 @@ type BaseKeeper struct {
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
 	mintCoinsRestrictionFn types.MintingRestrictionFn
+	addrCdc                address.Codec
 }
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
@@ -88,12 +89,10 @@ func NewBaseKeeper(
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseKeeper {
-	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
+	addrCdc := ak.AddressCodec()
+	if _, err := addrCdc.StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
-
-	// add the module name to the logger
-	env.Logger = env.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
 		Environment:            env,
@@ -101,6 +100,7 @@ func NewBaseKeeper(
 		ak:                     ak,
 		cdc:                    cdc,
 		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
+		addrCdc:                addrCdc,
 	}
 }
 
@@ -150,11 +150,11 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return errorsmod.Wrap(err, "failed to track delegation")
 	}
 	// emit coin spent event
-	delAddrStr, err := k.ak.AddressCodec().BytesToString(delegatorAddr)
+	delAddrStr, err := k.addrCdc.BytesToString(delegatorAddr)
 	if err != nil {
 		return err
 	}
-	if err := k.EventService.EventManager(ctx).EmitKV(
+	if err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinSpent,
 		event.NewAttribute(types.AttributeKeySpender, delAddrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
@@ -162,12 +162,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return err
 	}
 
-	err = k.addCoins(ctx, moduleAccAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.addCoins(ctx, moduleAccAddr, amt)
 }
 
 // UndelegateCoins performs undelegation by crediting amt coins to an account with
@@ -185,8 +180,7 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	err := k.subUnlockedCoins(ctx, moduleAccAddr, amt)
-	if err != nil {
+	if err := k.subUnlockedCoins(ctx, moduleAccAddr, amt); err != nil {
 		return err
 	}
 
@@ -194,12 +188,7 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 		return errorsmod.Wrap(err, "failed to track undelegation")
 	}
 
-	err = k.addCoins(ctx, delegatorAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.addCoins(ctx, delegatorAddr, amt)
 }
 
 // GetSupply retrieves the Supply from store
@@ -377,7 +366,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 	k.Logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
-	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
+	addrStr, err := k.addrCdc.BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
@@ -418,12 +407,13 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
-
-	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
+	addrStr, err := k.addrCdc.BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
+
+	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", addrStr)
+
 	// emit burn event
 	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinBurn,

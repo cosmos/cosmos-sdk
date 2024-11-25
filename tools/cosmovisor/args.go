@@ -33,6 +33,7 @@ const (
 	EnvDataBackupPath           = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval                 = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries     = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvGRPCAddress              = "DAEMON_GRPC_ADDRESS"
 	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
@@ -63,6 +64,7 @@ type Config struct {
 	UnsafeSkipBackup         bool          `toml:"unsafe_skip_backup" mapstructure:"unsafe_skip_backup" default:"false"`
 	DataBackupPath           string        `toml:"daemon_data_backup_dir" mapstructure:"daemon_data_backup_dir"`
 	PreUpgradeMaxRetries     int           `toml:"daemon_preupgrade_max_retries" mapstructure:"daemon_preupgrade_max_retries" default:"0"`
+	GRPCAddress              string        `toml:"daemon_grpc_address" mapstructure:"daemon_grpc_address"`
 	DisableLogs              bool          `toml:"cosmovisor_disable_logs" mapstructure:"cosmovisor_disable_logs" default:"false"`
 	ColorLogs                bool          `toml:"cosmovisor_color_logs" mapstructure:"cosmovisor_color_logs" default:"true"`
 	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
@@ -109,16 +111,26 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
+// UpgradeInfoBatchFilePath is the same as UpgradeInfoFilePath but with a batch suffix.
+func (cfg *Config) UpgradeInfoBatchFilePath() string {
+	return cfg.UpgradeInfoFilePath() + ".batch"
+}
+
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
 func (cfg *Config) SymLinkToGenesis() (string, error) {
-	genesis := filepath.Join(cfg.Root(), genesisDir)
-	link := filepath.Join(cfg.Root(), currentLink)
-
-	if err := os.Symlink(genesis, link); err != nil {
+	// workdir is set to cosmovisor directory so relative
+	// symlinks are getting resolved correctly
+	if err := os.Symlink(genesisDir, currentLink); err != nil {
 		return "", err
 	}
+
+	res, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	if err != nil {
+		return "", err
+	}
+
 	// and return the genesis binary
-	return cfg.GenesisBin(), nil
+	return res, nil
 }
 
 // WaitRestartDelay will block and wait until the RestartDelay has elapsed.
@@ -132,36 +144,33 @@ func (cfg *Config) WaitRestartDelay() {
 // This will resolve the symlink to the underlying directory to make it easier to debug
 func (cfg *Config) CurrentBin() (string, error) {
 	cur := filepath.Join(cfg.Root(), currentLink)
+
 	// if nothing here, fallback to genesis
-	info, err := os.Lstat(cur)
-	if err != nil {
-		// Create symlink to the genesis
-		return cfg.SymLinkToGenesis()
-	}
 	// if it is there, ensure it is a symlink
-	if info.Mode()&os.ModeSymlink == 0 {
+	info, err := os.Lstat(cur)
+	if err != nil || (info.Mode()&os.ModeSymlink == 0) {
 		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 
-	// resolve it
-	dest, err := os.Readlink(cur)
+	res, err := filepath.EvalSymlinks(cur)
 	if err != nil {
 		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 
 	// and return the binary
-	binpath := filepath.Join(dest, "bin", cfg.Name)
+	binpath := filepath.Join(res, "bin", cfg.Name)
+
 	return binpath, nil
 }
 
-// GetConfigFromFile will read the configuration from the file at the given path.
-// If the file path is not provided, it will try to read the configuration from the ENV variables.
+// GetConfigFromFile will read the configuration from the config file at the given path.
+// If the file path is not provided, it will read the configuration from the ENV variables.
 // If a file path is provided and ENV variables are set, they will override the values in the file.
 func GetConfigFromFile(filePath string) (*Config, error) {
 	if filePath == "" {
-		return GetConfigFromEnv()
+		return GetConfigFromEnv(false)
 	}
 
 	// ensure the file exist
@@ -169,18 +178,19 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 		return nil, fmt.Errorf("config not found: at %s : %w", filePath, err)
 	}
 
+	v := viper.New()
 	// read the configuration from the file
-	viper.SetConfigFile(filePath)
+	v.SetConfigFile(filePath)
 	// load the env variables
 	// if the env variable is set, it will override the value provided by the config
-	viper.AutomaticEnv()
+	v.AutomaticEnv()
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
 	cfg := &Config{}
-	if err := viper.Unmarshal(cfg); err != nil {
+	if err := v.Unmarshal(cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal configuration: %w", err)
 	}
 
@@ -203,7 +213,7 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 
 // GetConfigFromEnv will read the environmental variables into a config
 // and then validate it is reasonable
-func GetConfigFromEnv() (*Config, error) {
+func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 	var errs []error
 	cfg := &Config{
 		Home:             os.Getenv(EnvHome),
@@ -281,9 +291,16 @@ func GetConfigFromEnv() (*Config, error) {
 		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
 	}
 
-	errs = append(errs, cfg.validate()...)
-	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
+	cfg.GRPCAddress = os.Getenv(EnvGRPCAddress)
+	if cfg.GRPCAddress == "" {
+		cfg.GRPCAddress = "localhost:9090"
+	}
+
+	if !skipValidate {
+		errs = append(errs, cfg.validate()...)
+		if len(errs) > 0 {
+			return nil, errors.Join(errs...)
+		}
 	}
 
 	return cfg, nil
@@ -310,7 +327,7 @@ func parseEnvDuration(input string) (time.Duration, error) {
 	}
 
 	if duration <= 0 {
-		return 0, fmt.Errorf("must be greater than 0")
+		return 0, errors.New("must be greater than 0")
 	}
 
 	return duration, nil
@@ -375,24 +392,23 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	}
 
 	// set a symbolic link
-	link := filepath.Join(cfg.Root(), currentLink)
 	safeName := url.PathEscape(u.Name)
-	upgrade := filepath.Join(cfg.Root(), upgradesDir, safeName)
+	upgrade := filepath.Join(upgradesDir, safeName)
 
 	// remove link if it exists
-	if _, err := os.Stat(link); err == nil {
-		if err := os.Remove(link); err != nil {
+	if _, err := os.Stat(currentLink); err == nil {
+		if err := os.Remove(currentLink); err != nil {
 			return fmt.Errorf("failed to remove existing link: %w", err)
 		}
 	}
 
 	// point to the new directory
-	if err := os.Symlink(upgrade, link); err != nil {
+	if err := os.Symlink(upgrade, currentLink); err != nil {
 		return fmt.Errorf("creating current symlink: %w", err)
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradetypes.UpgradeInfoFilename))
+	f, err := os.Create(filepath.Join(cfg.Root(), upgrade, upgradetypes.UpgradeInfoFilename))
 	if err != nil {
 		return err
 	}
@@ -574,7 +590,7 @@ func (cfg Config) DetailString() string {
 	return sb.String()
 }
 
-// Export exports the configuration to a file at the given path.
+// Export exports the configuration to a file at the cosmovisor root directory.
 func (cfg Config) Export() (string, error) {
 	// always use the default path
 	path := filepath.Clean(cfg.DefaultCfgPath())

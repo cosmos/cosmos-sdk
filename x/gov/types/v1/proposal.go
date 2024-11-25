@@ -68,7 +68,7 @@ func (p Proposal) GetMsgs() ([]sdk.Msg, error) {
 // the proposal is expedited. Otherwise, returns the regular min deposit from
 // gov params.
 func (p Proposal) GetMinDepositFromParams(params Params) sdk.Coins {
-	if p.Expedited {
+	if p.ProposalType == ProposalType_PROPOSAL_TYPE_EXPEDITED {
 		return params.ExpeditedMinDeposit
 	}
 	return params.MinDeposit

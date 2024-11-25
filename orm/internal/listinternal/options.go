@@ -1,7 +1,7 @@
 package listinternal
 
 import (
-	"fmt"
+	"errors"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -17,7 +17,7 @@ type Options struct {
 func (o Options) Validate() error {
 	if len(o.Cursor) != 0 {
 		if o.Offset > 0 {
-			return fmt.Errorf("can only specify one of cursor or offset")
+			return errors.New("can only specify one of cursor or offset")
 		}
 	}
 	return nil

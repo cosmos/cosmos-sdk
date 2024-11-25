@@ -2,27 +2,26 @@ package cometbft
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
 	"time"
 
-	abciv1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/anypb"
 
-	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors"
-	consensus "cosmossdk.io/x/consensus/types"
+	errorsmod "cosmossdk.io/errors/v2"
+	"cosmossdk.io/x/consensus/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func queryResponse(res transaction.Msg, height int64) (*abci.QueryResponse, error) {
@@ -67,16 +66,27 @@ func splitABCIQueryPath(requestPath string) (path []string) {
 }
 
 func finalizeBlockResponse(
-	in *appmanager.BlockResponse,
+	in *server.BlockResponse,
 	cp *cmtproto.ConsensusParams,
 	appHash []byte,
 	indexSet map[string]struct{},
+	debug bool,
 ) (*abci.FinalizeBlockResponse, error) {
 	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
 
+	events, err := intoABCIEvents(allEvents, indexSet)
+	if err != nil {
+		return nil, err
+	}
+
+	txResults, err := intoABCITxResults(in.TxResults, indexSet, debug)
+	if err != nil {
+		return nil, err
+	}
+
 	resp := &abci.FinalizeBlockResponse{
-		Events:                intoABCIEvents(allEvents, indexSet),
-		TxResults:             intoABCITxResults(in.TxResults, indexSet),
+		Events:                events,
+		TxResults:             txResults,
 		ValidatorUpdates:      intoABCIValidatorUpdates(in.ValidatorUpdates),
 		AppHash:               appHash,
 		ConsensusParamUpdates: cp,
@@ -98,36 +108,40 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 	return valsetUpdates
 }
 
-func intoABCITxResults(results []appmanager.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
+func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}, debug bool) ([]*abci.ExecTxResult, error) {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
-		if results[i].Error == nil {
-			res[i] = responseExecTxResultWithEvents(
-				results[i].Error,
-				results[i].GasWanted,
-				results[i].GasUsed,
-				intoABCIEvents(results[i].Events, indexSet),
-				false,
-			)
-			continue
+		events, err := intoABCIEvents(results[i].Events, indexSet)
+		if err != nil {
+			return nil, err
 		}
 
-		// TODO: handle properly once the we decide on the type of TxResult.Resp
+		res[i] = responseExecTxResultWithEvents(
+			results[i].Error,
+			results[i].GasWanted,
+			results[i].GasUsed,
+			events,
+			debug,
+		)
 	}
 
-	return res
+	return res, nil
 }
 
-func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.Event {
+func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) ([]abci.Event, error) {
 	indexAll := len(indexSet) == 0
 	abciEvents := make([]abci.Event, len(events))
 	for i, e := range events {
+		attributes, err := e.Attributes()
+		if err != nil {
+			return nil, err
+		}
 		abciEvents[i] = abci.Event{
 			Type:       e.Type,
-			Attributes: make([]abci.EventAttribute, len(e.Attributes)),
+			Attributes: make([]abci.EventAttribute, len(attributes)),
 		}
 
-		for j, attr := range e.Attributes {
+		for j, attr := range attributes {
 			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
 			abciEvents[i].Attributes[j] = abci.EventAttribute{
 				Key:   attr.Key,
@@ -136,21 +150,25 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.E
 			}
 		}
 	}
-	return abciEvents
+	return abciEvents, nil
 }
 
-func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]struct{}) ([]byte, error) {
+func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struct{}) ([]byte, error) {
 	indexAll := len(indexSet) == 0
-	abciEvents := make([]*abciv1.Event, len(txRes.Events))
+	abciEvents := make([]abci.Event, len(txRes.Events))
 	for i, e := range txRes.Events {
-		abciEvents[i] = &abciv1.Event{
+		attributes, err := e.Attributes()
+		if err != nil {
+			return nil, err
+		}
+		abciEvents[i] = abci.Event{
 			Type:       e.Type,
-			Attributes: make([]*abciv1.EventAttribute, len(e.Attributes)),
+			Attributes: make([]abci.EventAttribute, len(attributes)),
 		}
 
-		for j, attr := range e.Attributes {
+		for j, attr := range attributes {
 			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
-			abciEvents[i].Attributes[j] = &abciv1.EventAttribute{
+			abciEvents[i].Attributes[j] = abci.EventAttribute{
 				Key:   attr.Key,
 				Value: attr.Value,
 				Index: index || indexAll,
@@ -158,22 +176,22 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 		}
 	}
 
-	msgResponses := make([]*anypb.Any, len(txRes.Resp))
+	msgResponses := make([]*gogoany.Any, len(txRes.Resp))
 	for i, resp := range txRes.Resp {
 		// use this hack to maintain the protov2 API here for now
 		anyMsg, err := gogoany.NewAnyWithCacheWithValue(resp)
 		if err != nil {
 			return nil, err
 		}
-		msgResponses[i] = &anypb.Any{TypeUrl: anyMsg.TypeUrl, Value: anyMsg.Value}
+		msgResponses[i] = anyMsg
 	}
 
-	res := &v1beta1.SimulationResponse{
-		GasInfo: &v1beta1.GasInfo{
+	res := &sdk.SimulationResponse{
+		GasInfo: sdk.GasInfo{
 			GasWanted: txRes.GasWanted,
 			GasUsed:   txRes.GasUsed,
 		},
-		Result: &v1beta1.Result{
+		Result: &sdk.Result{
 			Data:         []byte{},
 			Log:          txRes.Error.Error(),
 			Events:       abciEvents,
@@ -181,7 +199,7 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 		},
 	}
 
-	return protojson.Marshal(res)
+	return gogoproto.Marshal(res)
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence
@@ -250,7 +268,7 @@ func QueryResult(err error, debug bool) *abci.QueryResponse {
 	}
 }
 
-func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockRequest) error {
+func (c *consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockRequest) error {
 	if req.Height < 1 {
 		return fmt.Errorf("invalid height: %d", req.Height)
 	}
@@ -284,48 +302,26 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockReques
 
 // GetConsensusParams makes a query to the consensus module in order to get the latest consensus
 // parameters from committed state
-func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
+func (c *consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	latestVersion, err := c.store.GetLatestVersion()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := c.app.Query(ctx, latestVersion, &consensus.QueryParamsRequest{})
+	res, err := c.app.Query(ctx, latestVersion, &types.QueryParamsRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	if r, ok := res.(*consensus.QueryParamsResponse); !ok {
-		return nil, fmt.Errorf("failed to query consensus params")
+	if r, ok := res.(*types.QueryParamsResponse); !ok {
+		return nil, errors.New("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
-		evidenceMaxDuration := r.Params.Evidence.MaxAgeDuration
-		cs := &cmtproto.ConsensusParams{
-			Block: &cmtproto.BlockParams{
-				MaxBytes: r.Params.Block.MaxBytes,
-				MaxGas:   r.Params.Block.MaxGas,
-			},
-			Evidence: &cmtproto.EvidenceParams{
-				MaxAgeNumBlocks: r.Params.Evidence.MaxAgeNumBlocks,
-				MaxAgeDuration:  evidenceMaxDuration,
-			},
-			Validator: &cmtproto.ValidatorParams{
-				PubKeyTypes: r.Params.Validator.PubKeyTypes,
-			},
-			Version: &cmtproto.VersionParams{
-				App: r.Params.Version.App,
-			},
-		}
-		if r.Params.Abci != nil {
-			cs.Abci = &cmtproto.ABCIParams{ // nolint:staticcheck // deprecated type still supported for now
-				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
-			}
-		}
-		return cs, nil
+		return r.Params, nil
 	}
 }
 
-func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, commitHeight int64) int64 {
+func (c *consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, commitHeight int64) int64 {
 	// pruning is disabled if minRetainBlocks is zero
 	if c.cfg.AppTomlConfig.MinRetainBlocks == 0 {
 		return 0
@@ -380,13 +376,13 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, com
 }
 
 // checkHalt checks if height or time exceeds halt-height or halt-time respectively.
-func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
+func (c *consensus[T]) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) > c.cfg.AppTomlConfig.HaltHeight:
+	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) >= c.cfg.AppTomlConfig.HaltHeight:
 		halt = true
 
-	case c.cfg.AppTomlConfig.HaltTime > 0 && time.Unix() > int64(c.cfg.AppTomlConfig.HaltTime):
+	case c.cfg.AppTomlConfig.HaltTime > 0 && time.Unix() >= int64(c.cfg.AppTomlConfig.HaltTime):
 		halt = true
 	}
 
@@ -403,15 +399,4 @@ func uint64ToInt64(u uint64) int64 {
 		return math.MaxInt64
 	}
 	return int64(u)
-}
-
-// queryResult returns a ResponseQuery from an error. It will try to parse ABCI
-// info from the error.
-func queryResult(err error) *abci.QueryResponse {
-	space, code, log := errorsmod.ABCIInfo(err, false)
-	return &abci.QueryResponse{
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-	}
 }

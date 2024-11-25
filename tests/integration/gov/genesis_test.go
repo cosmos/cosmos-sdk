@@ -5,18 +5,16 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -34,6 +32,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type suite struct {
@@ -122,7 +123,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 
 	s2 := suite{}
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	conf2 := simtestutil.DefaultStartUpConfig()
 	conf2.DB = db
 	s2.app, err = simtestutil.SetupWithConfiguration(
@@ -188,7 +189,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal2.Status == v1.StatusRejected)
 }
 
-func clearDB(t *testing.T, db *dbm.MemDB) {
+func clearDB(t *testing.T, db corestore.KVStoreWithBatch) {
 	t.Helper()
 	iter, err := db.Iterator(nil, nil)
 	assert.NilError(t, err)

@@ -2,17 +2,13 @@ package runtime
 
 import (
 	"encoding/json"
-	"errors"
-
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
+	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
@@ -27,28 +23,24 @@ import (
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app_v2.go for an example of this setup.
 type App[T transaction.Tx] struct {
-	*appmanager.AppManager[T]
+	appmanager.AppManager[T]
 
-	// app manager dependencies
+	// app configuration
+	logger log.Logger
+	config *runtimev2.Module
+
+	// state
 	stf                *stf.STF[T]
 	msgRouterBuilder   *stf.MsgRouterBuilder
 	queryRouterBuilder *stf.MsgRouterBuilder
 	db                 Store
+	storeLoader        StoreLoader
 
-	// app configuration
-	logger    log.Logger
-	config    *runtimev2.Module
-	appConfig *appv1alpha1.Config
-
-	// modules configuration
-	storeKeys          []string
+	// modules
 	interfaceRegistrar registry.InterfaceRegistrar
-	amino              legacy.Amino
+	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
-
-	// GRPCQueryDecoders maps gRPC method name to a function that decodes the request
-	// bytes into a gogoproto.Message, which then can be passed to appmanager.
-	GRPCQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
+	queryHandlers      map[string]appmodulev2.Handler // queryHandlers defines the query handlers
 }
 
 // Name returns the app name.
@@ -71,9 +63,14 @@ func (a *App[T]) DefaultGenesis() map[string]json.RawMessage {
 	return a.moduleManager.DefaultGenesis()
 }
 
+// SetStoreLoader sets the store loader.
+func (a *App[T]) SetStoreLoader(loader StoreLoader) {
+	a.storeLoader = loader
+}
+
 // LoadLatest loads the latest version.
 func (a *App[T]) LoadLatest() error {
-	return a.db.LoadLatestVersion()
+	return a.storeLoader(a.db)
 }
 
 // LoadHeight loads a particular height
@@ -81,45 +78,26 @@ func (a *App[T]) LoadHeight(height uint64) error {
 	return a.db.LoadVersion(height)
 }
 
+// LoadLatestHeight loads the latest height.
+func (a *App[T]) LoadLatestHeight() (uint64, error) {
+	return a.db.GetLatestVersion()
+}
+
+// QueryHandlers returns the query handlers.
+func (a *App[T]) QueryHandlers() map[string]appmodulev2.Handler {
+	return a.queryHandlers
+}
+
+// SchemaDecoderResolver returns the module schema resolver.
+func (a *App[T]) SchemaDecoderResolver() decoding.DecoderResolver {
+	moduleSet := map[string]any{}
+	for moduleName, module := range a.moduleManager.Modules() {
+		moduleSet[moduleName] = module
+	}
+	return decoding.ModuleSetDecoderResolver(moduleSet)
+}
+
 // Close is called in start cmd to gracefully cleanup resources.
 func (a *App[T]) Close() error {
 	return nil
-}
-
-// GetStoreKeys returns all the app store keys.
-func (a *App[T]) GetStoreKeys() []string {
-	return a.storeKeys
-}
-
-// UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
-// NOTE: This should only be used in testing.
-func (a *App[T]) UnsafeFindStoreKey(storeKey string) (string, error) {
-	i := slices.IndexFunc(a.storeKeys, func(s string) bool { return s == storeKey })
-	if i == -1 {
-		return "", errors.New("store key not found")
-	}
-
-	return a.storeKeys[i], nil
-}
-
-// GetStore returns the app store.
-func (a *App[T]) GetStore() Store {
-	return a.db
-}
-
-// GetLogger returns the app logger.
-func (a *App[T]) GetLogger() log.Logger {
-	return a.logger
-}
-
-func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
-	panic("App.ExecuteGenesisTx not supported in runtime/v2")
-}
-
-func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
-	return a.AppManager
-}
-
-func (a *App[T]) GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error) {
-	return a.GRPCQueryDecoders
 }

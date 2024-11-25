@@ -3,39 +3,46 @@ syntax = "proto3";
 package cosmos.accounts.defaults.multisig.v1;
 
 import "google/protobuf/any.proto";
-import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/x/accounts/defaults/multisig/v1";
 
 // MsgInit is used to initialize a multisig account.
 message MsgInit {
+  // members are the members of the multisig account.
   repeated Member members = 1;
-  Config          Config  = 2;
+  // config is the configuration of the multisig account.
+  Config config = 2;
 }
 
 // MsgInitResponse is the response returned after account initialization.
 message MsgInitResponse {}
 
+// MsgCreateProposal creates a new proposal.
 message MsgCreateProposal {
   Proposal proposal = 1;
 }
 
+// MsgCreateProposalResponse is the response returned after creating a proposal.
 message MsgCreateProposalResponse {
   uint64 proposal_id = 1;
 }
 
+// MsgVote is used to vote on a proposal.
 message MsgVote {
   uint64     proposal_id = 1;
   VoteOption vote        = 2;
 }
 
+// MsgVoteResponse is the response returned after voting on a proposal.
 message MsgVoteResponse {}
 
+// MsgExecuteProposal is used to execute a proposal.
 message MsgExecuteProposal {
   uint64 proposal_id = 1;
 }
 
+// MsgExecuteProposalResponse is the response returned after executing a proposal.
 message MsgExecuteProposalResponse {
   repeated google.protobuf.Any responses = 1;
 }
@@ -46,11 +53,13 @@ message MsgUpdateConfig {
   repeated Member update_members = 1;
 
   // not all fields from Config can be changed
-  Config Config = 2;
+  Config config = 2;
 }
 
+// MsgUpdateConfigResponse is the response returned after updating the config.
 message MsgUpdateConfigResponse {}
 
+// Member defines the member of the multisig account.
 message Member {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   uint64 weight  = 2;
@@ -59,9 +68,12 @@ message Member {
 // when aggregating on-chain I can only use the address
 // off-chain would send a tx directly, won't create a proposal.
 
+// Config defines the configuration of the multisig account.
 message Config {
+  // threshold is the minimum weight required for a proposal to pass.
   int64 threshold = 1;
 
+  // quorum is the minimum number of members that need to vote for a proposal to pass.
   int64 quorum = 2;
 
   // voting_period is the duration in seconds for the voting period.
@@ -74,14 +86,21 @@ message Config {
   bool early_execution = 5;
 }
 
+// Proposal defines the structure of a proposal.
 message Proposal {
-  string   title                        = 1;
-  string   summary                      = 2;
+  // title is the title of the proposal.
+  string title = 1;
+
+  // summary is the summary of the proposal.
+  string summary = 2;
+
+  // messages are the messages that will be executed
   repeated google.protobuf.Any messages = 3;
 
   // voting_period_end will be set by the account when the proposal is created.
   int64 voting_period_end = 4;
 
+  // status is the current status of the proposal.
   ProposalStatus status = 5;
 }
 
@@ -94,19 +113,24 @@ message QuerySequenceResponse {
   uint64 sequence = 1;
 }
 
+// QueryConfig is the request for the account config.
 message QueryConfig {}
 
 // QueryConfigResponse returns the config of the account.
 message QueryConfigResponse {
+  // members are the current members of the account.
   repeated Member members = 1;
 
-  Config Config = 2;
+  // config is the current config of the account.
+  Config config = 2;
 }
 
+// QueryProposal is the request for a proposal.
 message QueryProposal {
   uint64 proposal_id = 1;
 }
 
+// QueryProposalResponse returns the proposal.
 message QueryProposalResponse {
   Proposal proposal = 1;
 }

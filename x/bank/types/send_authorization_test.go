@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
 	coregas "cosmossdk.io/core/gas"
 	coreheader "cosmossdk.io/core/header"
@@ -54,7 +54,7 @@ func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
 func TestSendAuthorization(t *testing.T) {
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	sdkCtx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithHeaderInfo(coreheader.Info{})
-	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodule.Environment{
+	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodulev2.Environment{
 		HeaderService: headerService{},
 		GasService:    mockGasService{},
 	})

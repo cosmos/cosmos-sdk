@@ -1,7 +1,6 @@
 package types
 
 import (
-	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -11,21 +10,21 @@ import (
 
 // RegisterLegacyAminoCodec registers the necessary x/staking interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
-	legacy.RegisterAminoMsg(cdc, &MsgCreateValidator{}, "cosmos-sdk/MsgCreateValidator")
-	legacy.RegisterAminoMsg(cdc, &MsgEditValidator{}, "cosmos-sdk/MsgEditValidator")
-	legacy.RegisterAminoMsg(cdc, &MsgDelegate{}, "cosmos-sdk/MsgDelegate")
-	legacy.RegisterAminoMsg(cdc, &MsgUndelegate{}, "cosmos-sdk/MsgUndelegate")
-	legacy.RegisterAminoMsg(cdc, &MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate")
-	legacy.RegisterAminoMsg(cdc, &MsgCancelUnbondingDelegation{}, "cosmos-sdk/MsgCancelUnbondingDelegation")
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/staking/MsgUpdateParams")
-	legacy.RegisterAminoMsg(cdc, &MsgRotateConsPubKey{}, "cosmos-sdk/MsgRotateConsPubKey")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	legacy.RegisterAminoMsg(registrar, &MsgCreateValidator{}, "cosmos-sdk/MsgCreateValidator")
+	legacy.RegisterAminoMsg(registrar, &MsgEditValidator{}, "cosmos-sdk/MsgEditValidator")
+	legacy.RegisterAminoMsg(registrar, &MsgDelegate{}, "cosmos-sdk/MsgDelegate")
+	legacy.RegisterAminoMsg(registrar, &MsgUndelegate{}, "cosmos-sdk/MsgUndelegate")
+	legacy.RegisterAminoMsg(registrar, &MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate")
+	legacy.RegisterAminoMsg(registrar, &MsgCancelUnbondingDelegation{}, "cosmos-sdk/MsgCancelUnbondingDelegation")
+	legacy.RegisterAminoMsg(registrar, &MsgUpdateParams{}, "cosmos-sdk/x/staking/MsgUpdateParams")
+	legacy.RegisterAminoMsg(registrar, &MsgRotateConsPubKey{}, "cosmos-sdk/MsgRotateConsPubKey")
 
-	cdc.RegisterInterface((*isStakeAuthorization_Validators)(nil), nil)
-	cdc.RegisterConcrete(&StakeAuthorization_AllowList{}, "cosmos-sdk/StakeAuthorization/AllowList")
-	cdc.RegisterConcrete(&StakeAuthorization_DenyList{}, "cosmos-sdk/StakeAuthorization/DenyList")
-	cdc.RegisterConcrete(&StakeAuthorization{}, "cosmos-sdk/StakeAuthorization")
-	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/staking/Params")
+	registrar.RegisterInterface((*isStakeAuthorization_Validators)(nil), nil)
+	registrar.RegisterConcrete(&StakeAuthorization_AllowList{}, "cosmos-sdk/StakeAuthorization/AllowList")
+	registrar.RegisterConcrete(&StakeAuthorization_DenyList{}, "cosmos-sdk/StakeAuthorization/DenyList")
+	registrar.RegisterConcrete(&StakeAuthorization{}, "cosmos-sdk/StakeAuthorization")
+	registrar.RegisterConcrete(Params{}, "cosmos-sdk/x/staking/Params")
 }
 
 // RegisterInterfaces registers the x/staking interfaces types with the interface registry

@@ -6,11 +6,12 @@ import (
 
 // Changeset is a list of changes to be written to disk
 type Changeset struct {
+	Version uint64
 	Changes []StateChanges
 }
 
 // StateChanges represents a set of changes to the state of an actor in storage.
-type StateChanges struct {
+type StateChanges = struct {
 	Actor        []byte  // actor represents the space in storage where state is stored, previously this was called a "storekey"
 	StateChanges KVPairs // StateChanges is a list of key-value pairs representing the changes to the state.
 }
@@ -20,7 +21,7 @@ type KVPairs = []KVPair
 
 // KVPair represents a change in a key and value of state.
 // Remove being true signals the key must be removed from state.
-type KVPair struct {
+type KVPair = struct {
 	// Key defines the key being updated.
 	Key []byte
 	// Value defines the value associated with the updated key.
@@ -29,11 +30,11 @@ type KVPair struct {
 	Remove bool
 }
 
-func NewChangeset() *Changeset {
-	return &Changeset{}
+func NewChangeset(version uint64) *Changeset {
+	return &Changeset{Version: version}
 }
 
-func NewChangesetWithPairs(pairs map[string]KVPairs) *Changeset {
+func NewChangesetWithPairs(version uint64, pairs map[string]KVPairs) *Changeset {
 	changes := make([]StateChanges, len(pairs))
 	i := 0
 	for storeKey, kvPairs := range pairs {
@@ -44,6 +45,7 @@ func NewChangesetWithPairs(pairs map[string]KVPairs) *Changeset {
 		i++
 	}
 	return &Changeset{
+		Version: version,
 		Changes: changes,
 	}
 }

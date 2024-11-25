@@ -41,7 +41,7 @@ var bankAutoCLI = &autocliv1.ServiceCommandDescriptor{
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 		{
 			RpcMethod:      "Send",
-			Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
+			Use:            "send <from_key_or_address> <to_address> <amount> [flags]",
 			Short:          "Send coins from one account to another",
 			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
 		},
@@ -64,7 +64,7 @@ func TestMsg(t *testing.T) {
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
-				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
+				Use:            "send <from_key_or_address> <to_address> <amount> [flags]",
 				Short:          "Send coins from one account to another",
 				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
 			},
@@ -83,7 +83,7 @@ func TestMsg(t *testing.T) {
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
-				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
+				Use:            "send <from_key_or_address> <to_address> <amount> [flags]",
 				Short:          "Send coins from one account to another",
 				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
 				// from_address should be automatically added
@@ -104,7 +104,7 @@ func TestMsg(t *testing.T) {
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
-				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
+				Use:            "send <from_key_or_address> <to_address> <amount> [flags]",
 				Short:          "Send coins from one account to another",
 				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
 				FlagOptions: map[string]*autocliv1.FlagOptions{

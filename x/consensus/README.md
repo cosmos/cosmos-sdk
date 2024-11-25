@@ -10,33 +10,53 @@ Functionality to modify CometBFT's ABCI consensus params.
 
 ## Contents
 
+* [Abstract](#abstract)
+* [Contents](#contents)
 * [State](#state)
 * [Params](#params)
-* [Keepers](#keepers)
+* [Keeper](#keeper)
 * [Messages](#messages)
-* [Consensus Messages](#consensus-messages)
+    * [UpdateParams](#updateparams)
 * [Events](#events)
-    * [Message Events](#message-events)
-
 
 ## State
 
-The `x/consensus` module keeps state of the consensus params from cometbft.:
+The `x/consensus` module keeps state of the consensus params from CometBFT.
 
 ## Params
 
-The consensus module stores it's params in state with the prefix of `0x05`,
+The consensus module stores its params in state with the prefix of `0x05`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x05 | ProtocolBuffer(cometbft.ConsensusParams)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/consensus/v1/consensus.proto#L11-L18
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/consensus/proto/cosmos/consensus/v1/query.proto#L21-L27
 ```
 
-## Keepers
+```protobuf reference
+https://github.com/cometbft/cometbft/blob/v0.34.35/proto/tendermint/types/params.proto#L11-L18
+```
 
-The consensus module provides methods to Set and Get consensus params. It is recommended to use the `x/consensus` module keeper to get consensus params instead of accessing them through the context.
+## Keeper
+
+The Keeper of the `x/consensus` module provides the following functions:
+
+* `Params`: Retrieves the current consensus parameters.
+
+* `UpdateParams`: Updates the consensus parameters. Only the authority can perform this operation.
+
+* `BlockParams`: Returns the maximum gas and bytes allowed in a block.
+
+* `ValidatorPubKeyTypes`: Provides the list of public key types allowed for validators.
+
+* `EvidenceParams`: Returns the evidence parameters, including maximum age and bytes.
+
+* `AppVersion`: Returns the current application version.
+
+
+Note: It is recommended to use the `x/consensus` module keeper to get consensus params instead of accessing them through the context.
+
 
 ## Messages
 
@@ -45,21 +65,13 @@ The consensus module provides methods to Set and Get consensus params. It is rec
 Update consensus params.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/consensus/v1/tx.proto#L12-L47
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/consensus/proto/cosmos/consensus/v1/tx.proto#L24-L44
 ```
 
 The message will fail under the following conditions:
 
 * The signer is not the set authority 
 * Not all values are set
-
-## Consensus Messages
-
-The consensus module has a consensus message that is used to set the consensus params when the chain initializes. It is similar to the `UpdateParams` message but it is only used once at the start of the chain.
-
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/consensus/v1/consensus.proto#L9-L24
-```
 
 ## Events
 

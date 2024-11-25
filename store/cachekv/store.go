@@ -6,10 +6,9 @@ import (
 	"sort"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/cachekv/internal"
+	dbm "cosmossdk.io/store/db"
 	"cosmossdk.io/store/internal/conv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/tracekv"
@@ -301,7 +300,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 	}
 
 	n := len(store.unsortedCache)
-	unsorted := make([]*kv.Pair, 0)
+	unsorted := make([]*kv.Pair, 0) //nolint:staticcheck // We are in store v1.
 	// If the unsortedCache is too big, its costs too much to determine
 	// what's in the subset we are concerned about.
 	// If you are interleaving iterator calls with writes, this can easily become an
@@ -313,7 +312,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 			// dbm.IsKeyInDomain is nil safe and returns true iff key is greater than start
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
-				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
+				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value}) //nolint:staticcheck // We are in store v1.
 			}
 		}
 		store.clearUnsortedCacheSubset(unsorted, stateUnsorted)
@@ -356,18 +355,18 @@ func (store *Store) dirtyItems(start, end []byte) {
 		}
 	}
 
-	kvL := make([]*kv.Pair, 0, 1+endIndex-startIndex)
+	kvL := make([]*kv.Pair, 0, 1+endIndex-startIndex) //nolint:staticcheck // We are in store v1.
 	for i := startIndex; i <= endIndex; i++ {
 		key := strL[i]
 		cacheValue := store.cache[key]
-		kvL = append(kvL, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
+		kvL = append(kvL, &kv.Pair{Key: []byte(key), Value: cacheValue.value}) //nolint:staticcheck // We are in store v1.
 	}
 
 	// kvL was already sorted so pass it in as is.
 	store.clearUnsortedCacheSubset(kvL, stateAlreadySorted)
 }
 
-func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) {
+func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) { //nolint:staticcheck // We are in store v1.
 	n := len(store.unsortedCache)
 	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
 		for key := range store.unsortedCache {

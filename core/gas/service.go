@@ -29,11 +29,6 @@ type Service interface {
 	// will be returned.
 	GasMeter(context.Context) Meter
 
-	// BlockGasMeter returns the current block-level gas meter. A non-nil meter
-	// is always returned. When one is unavailable in the context an infinite gas meter
-	// will be returned.
-	BlockGasMeter(context.Context) Meter
-
 	// GasConfig returns the gas costs.
 	GasConfig(ctx context.Context) GasConfig
 }
@@ -43,9 +38,11 @@ type Meter interface {
 	Consume(amount Gas, descriptor string) error
 	Refund(amount Gas, descriptor string) error
 	Remaining() Gas
+	Consumed() Gas
 	Limit() Gas
 }
 
+// GasConfig defines the gas costs for the application.
 type GasConfig struct {
 	HasCost          Gas
 	DeleteCost       Gas

@@ -7,19 +7,19 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
-	"cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/vesting"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	bankv2 "cosmossdk.io/x/bank/v2"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/epochs"
 	"cosmossdk.io/x/evidence"
@@ -38,11 +38,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	logger := log.NewTestLogger(t)
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  logger.With("instance", "first"),
@@ -50,10 +52,12 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
-	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app v2.
-	for acc := range BlockedAddresses() {
+	// BlockedAddresses returns a map of addresses in app v1 and a map of modules names in app di.
+	blockedAddrs, err := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec())
+	require.NoError(t, err)
+	for acc := range blockedAddrs {
 		var addr sdk.AccAddress
-		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
+		if modAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(acc); err == nil {
 			addr = modAddr
 		} else {
 			addr = app.AuthKeeper.GetModuleAddress(acc)
@@ -67,7 +71,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	// finalize block so we have CheckTx state set
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	require.NoError(t, err)
@@ -82,7 +86,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 }
 
 func TestRunMigrations(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	logger := log.NewTestLogger(t)
 	app := NewSimApp(logger.With("instance", "simapp"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
@@ -107,7 +111,9 @@ func TestRunMigrations(t *testing.T) {
 			mod.RegisterServices(configurator)
 		}
 
-		if mod, ok := mod.(appmodule.HasServices); ok {
+		if mod, ok := mod.(interface {
+			RegisterServices(grpc.ServiceRegistrar) error
+		}); ok {
 			err := mod.RegisterServices(configurator)
 			require.NoError(t, err)
 		}
@@ -196,6 +202,7 @@ func TestRunMigrations(t *testing.T) {
 				appmodule.VersionMap{
 					"accounts":     accounts.AppModule{}.ConsensusVersion(),
 					"bank":         1,
+					"bankv2":       bankv2.AppModule{}.ConsensusVersion(),
 					"auth":         auth.AppModule{}.ConsensusVersion(),
 					"authz":        authzmodule.AppModule{}.ConsensusVersion(),
 					"staking":      staking.AppModule{}.ConsensusVersion(),
@@ -225,7 +232,7 @@ func TestRunMigrations(t *testing.T) {
 }
 
 func TestInitGenesisOnMigration(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := NewSimApp(log.NewTestLogger(t), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
@@ -264,7 +271,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  log.NewTestLogger(t),
 		DB:      db,

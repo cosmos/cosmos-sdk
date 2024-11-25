@@ -36,8 +36,44 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v1.0.0-alpha.6](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.6)
+
+### API Breaking Changes
+
+* [#22435](https://github.com/cosmos/cosmos-sdk/pull/22435) Add `Version uint64` field to `store.Changeset` and update `Changeset` constructors to accept a `version uint64` as their first argument.
+
+## [v1.0.0-alpha.5](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.5)
+
 ### Features
 
+* [#22326](https://github.com/cosmos/cosmos-sdk/pull/22326) Introduce codec package in order to facilitate removal of Cosmos SDK dependency in modules. 
+* [*22267](https://github.com/cosmos/cosmos-sdk/pull/22267) Add `server.ConfigMap` and `server.ModuleConfigMap` to replace `server.DynamicConfig` in module configuration.
+
+## [v1.0.0-alpha.4](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.4)
+
+### Improvements
+
+* [#22007](https://github.com/cosmos/cosmos-sdk/pull/22007) Improve handlers registration `DevX`.
+
+## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.3)
+
+### Features
+
+* [#21719](https://github.com/cosmos/cosmos-sdk/pull/21719) Make `core/event` as a type alias of `schema/appdata`.
+
+## [v1.0.0-alpha.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.2)
+
+### Features
+
+* [#21635](https://github.com/cosmos/cosmos-sdk/pull/21635) Add `server.DynamicConfig` to abstract config providers (f.e Viper)
+
+## [v1.0.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.1)
+
+### Features
+
+* [#21531](https://github.com/cosmos/cosmos-sdk/pull/21531) Add `registry.AminoRegistrar` to register types on the amino codec from modules.
+* [#21222](https://github.com/cosmos/cosmos-sdk/pull/21222) Make `Iterator` a type alias so that `KVStore` is structurally typed.
+* [#21166](https://github.com/cosmos/cosmos-sdk/pull/21166) Comment out `appmodule.HasServices` to simplify dependencies. This interface is however still supported.
 * [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Add transaction service.
 * [#18379](https://github.com/cosmos/cosmos-sdk/pull/18379) Add branch service.
 * [#18457](https://github.com/cosmos/cosmos-sdk/pull/18457) Add branch.ExecuteWithGasLimit.
@@ -54,6 +90,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Add `PreMsghandler`and `PostMsgHandler` for pre and post message hooks
     * Add `MsgHandler` as an alternative to grpc handlers
     * Provide separate `MigrationRegistrar` instead of grouping with `RegisterServices`
+* [#19758](https://github.com/cosmos/cosmos-sdk/pull/19758) Add `registry.InterfaceRegistrar` to interact with the interface registry in modules.
 
 ### API Breaking Changes
 

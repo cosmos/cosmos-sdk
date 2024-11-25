@@ -37,7 +37,7 @@ const (
 // ShowKeysCmd shows key information for a given key name.
 func ShowKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show [name_or_address [name_or_address...]]",
+		Use:   "show <name_or_address> [name_or_address...]",
 		Short: "Retrieve key information by name or address",
 		Long: `Display keys details. If multiple names or addresses are provided,
 then an ephemeral multisig key will be created under the name "multi"

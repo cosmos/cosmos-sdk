@@ -5,16 +5,15 @@ import (
 	"time"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -30,6 +29,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.baseApp = baseapp.NewBaseApp(
 		"staking",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)
@@ -80,14 +80,11 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// create consensus keeper
 	ck := stakingtestutil.NewMockConsensusKeeper(ctrl)
-	ck.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
-		Params: simtestutil.DefaultConsensusParams,
-	}, nil).AnyTimes()
+	ck.EXPECT().ValidatorPubKeyTypes(gomock.Any()).Return(simtestutil.DefaultConsensusParams.Validator.PubKeyTypes, nil).AnyTimes()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	consensustypes.RegisterQueryServer(queryHelper, ck)
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(queryHelper.GRPCQueryRouter), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
 	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(stakingtypes.GovModuleName))
 	s.Require().NoError(err)
 	keeper := stakingkeeper.NewKeeper(
@@ -95,6 +92,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		env,
 		accountKeeper,
 		bankKeeper,
+		ck,
 		authority,
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
@@ -483,7 +481,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 			// legacy Set method
 			s.ctx.KVStore(s.key).Set(getValidatorKey(valAddrs[i]), valBz)
 		},
-		"d8acdcf8b7c8e17f3e83f0a4c293f89ad619a5dcb14d232911ccc5da15653177",
+		"55565aebbb67e1de08d0f17634ad168c68eae74f5cc9074e3a1ec4d1fbff16e5",
 	)
 	s.Require().NoError(err)
 
@@ -509,7 +507,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 			err := s.stakingKeeper.SetValidator(s.ctx, val)
 			s.Require().NoError(err)
 		},
-		"d8acdcf8b7c8e17f3e83f0a4c293f89ad619a5dcb14d232911ccc5da15653177",
+		"55565aebbb67e1de08d0f17634ad168c68eae74f5cc9074e3a1ec4d1fbff16e5",
 	)
 	s.Require().NoError(err)
 }

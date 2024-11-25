@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -12,12 +12,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	_ "cosmossdk.io/x/auth/tx/config"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
@@ -34,6 +28,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -116,7 +116,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 
 	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
@@ -200,7 +200,9 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 
 		for i := 0; i < numCoins; i++ {
 			coin := getCoin(rt)
-
+			if exists, _ := coins.Find(coin.Denom); exists {
+				t.Skip("duplicate denom")
+			}
 			// NewCoins sorts the denoms
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
@@ -266,7 +268,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	assert.NilError(t, err)
 
 	req := banktypes.NewQuerySpendableBalancesRequest(addr1Str, nil)
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 1777, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 1420, false)
 }
 
 func TestGRPCQueryTotalSupply(t *testing.T) {

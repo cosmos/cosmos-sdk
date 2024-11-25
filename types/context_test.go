@@ -7,9 +7,10 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
+	"cosmossdk.io/core/comet"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -17,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
 )
+
+type dummyCtxKey struct{}
 
 type contextTestSuite struct {
 	suite.Suite
@@ -137,7 +140,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), struct{}{}, "value")
+	newContext := context.WithValue(ctx.Context(), dummyCtxKey{}, "value")
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
@@ -200,7 +203,6 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 	}
 
 	for name, tc := range cases {
-		tc := tc
 		s.T().Run(name, func(t *testing.T) {
 			ctx := types.NewContext(nil, false, nil).WithBlockHeader(tc.h)
 			s.Require().Equal(tc.h.Height, ctx.BlockHeight())
@@ -225,7 +227,124 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
 
 	// test unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, struct{}{}, "bar")
+	ctx = context.WithValue(sdkCtx, dummyCtxKey{}, "bar")
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
+}
+
+func (s *contextTestSuite) TestTryUnwrapSDKContext() {
+	sdkCtx := types.NewContext(nil, false, nil)
+	ctx := types.WrapSDKContext(sdkCtx)
+	unwrappedCtx, ok := types.TryUnwrapSDKContext(ctx)
+	s.Require().True(ok)
+	s.Require().Equal(sdkCtx, unwrappedCtx)
+
+	// test case where context doesn't have sdk.Context
+	ctxWithoutSDK := context.Background()
+	unwrappedCtx, ok = types.TryUnwrapSDKContext(ctxWithoutSDK)
+	s.Require().False(ok)
+	s.Require().Equal(types.Context{}, unwrappedCtx)
+
+	// test try unwrapping when we've used context.WithValue
+	ctx = context.WithValue(sdkCtx, dummyCtxKey{}, "bar")
+	unwrappedCtx, ok = types.TryUnwrapSDKContext(ctx)
+	s.Require().True(ok)
+	s.Require().Equal(sdkCtx, unwrappedCtx)
+}
+
+func (s *contextTestSuite) TestToSDKEvidence() {
+	misbehaviors := []abci.Misbehavior{
+		{
+			Type:             abci.MisbehaviorType(1),
+			Height:           100,
+			Time:             time.Now(),
+			TotalVotingPower: 10,
+			Validator: abci.Validator{
+				Address: []byte("address1"),
+				Power:   5,
+			},
+		},
+	}
+
+	expEvidences := []comet.Evidence{
+		{
+			Type:             comet.MisbehaviorType(1),
+			Height:           100,
+			Time:             misbehaviors[0].Time,
+			TotalVotingPower: 10,
+			Validator: comet.Validator{
+				Address: []byte("address1"),
+				Power:   5,
+			},
+		},
+	}
+
+	// test ToSDKEvidence method
+	evidence := types.ToSDKEvidence(misbehaviors)
+	s.Require().Len(evidence, len(misbehaviors))
+	s.Require().Equal(expEvidences, evidence)
+}
+
+func (s *contextTestSuite) TestToSDKCommitInfo() {
+	commitInfo := abci.CommitInfo{
+		Round: 1,
+		Votes: []abci.VoteInfo{
+			{
+				Validator: abci.Validator{
+					Address: []byte("address1"),
+					Power:   5,
+				},
+				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			},
+		},
+	}
+
+	expCommit := comet.CommitInfo{
+		Round: 1,
+		Votes: []comet.VoteInfo{
+			{
+				Validator: comet.Validator{
+					Address: []byte("address1"),
+					Power:   5,
+				},
+				BlockIDFlag: comet.BlockIDFlagCommit,
+			},
+		},
+	}
+
+	// test ToSDKCommitInfo method
+	commit := types.ToSDKCommitInfo(commitInfo)
+	s.Require().Equal(expCommit, commit)
+}
+
+func (s *contextTestSuite) TestToSDKExtendedCommitInfo() {
+	extendedCommitInfo := abci.ExtendedCommitInfo{
+		Round: 1,
+		Votes: []abci.ExtendedVoteInfo{
+			{
+				Validator: abci.Validator{
+					Address: []byte("address1"),
+					Power:   5,
+				},
+				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			},
+		},
+	}
+
+	expCommitInfo := comet.CommitInfo{
+		Round: 1,
+		Votes: []comet.VoteInfo{
+			{
+				Validator: comet.Validator{
+					Address: []byte("address1"),
+					Power:   5,
+				},
+				BlockIDFlag: comet.BlockIDFlagCommit,
+			},
+		},
+	}
+
+	// test ToSDKExtendedCommitInfo
+	commitInfo := types.ToSDKExtendedCommitInfo(extendedCommitInfo)
+	s.Require().Equal(expCommitInfo, commitInfo)
 }

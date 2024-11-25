@@ -1,27 +1,39 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Field represents a field in an object type.
 type Field struct {
 	// Name is the name of the field. It must conform to the NameFormat regular expression.
-	Name string
+	Name string `json:"name"`
 
 	// Kind is the basic type of the field.
-	Kind Kind
+	Kind Kind `json:"kind"`
 
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
-	Nullable bool
+	Nullable bool `json:"nullable,omitempty"`
 
-	// EnumType is the definition of the enum type and is only valid when Kind is EnumKind.
-	// The same enum types can be reused in the same module schema, but they always must contain
-	// the same values for the same enum name. This possibly introduces some duplication of
-	// definitions but makes it easier to reason about correctness and validation in isolation.
-	EnumType EnumType
+	// ReferencedType is the referenced type name when Kind is EnumKind, StructKind or OneOfKind.
+	ReferencedType string `json:"referenced_type,omitempty"`
+
+	// ElementKind is the element type when Kind is ListKind.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
+	ElementKind Kind `json:"element_kind,omitempty"`
+
+	// Size specifies the size or max-size of a field.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
+	// Its specific meaning may vary depending on the field kind.
+	// For IntNKind and UintNKind fields, it specifies the bit width of the field.
+	// For StringKind, BytesKind, AddressKind, and JSONKind, fields it specifies the maximum length rather than a fixed length.
+	// If it is 0, such fields have no maximum length.
+	// It is invalid to have a non-zero Size for other kinds.
+	Size uint32 `json:"size,omitempty"`
 }
 
 // Validate validates the field.
-func (c Field) Validate() error {
+func (c Field) Validate(typeSet TypeSet) error {
 	// valid name
 	if !ValidateName(c.Name) {
 		return fmt.Errorf("invalid field name %q", c.Name)
@@ -33,12 +45,21 @@ func (c Field) Validate() error {
 	}
 
 	// enum definition only valid with EnumKind
-	if c.Kind == EnumKind {
-		if err := c.EnumType.Validate(); err != nil {
-			return fmt.Errorf("invalid enum definition for field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
+	switch c.Kind {
+	case EnumKind:
+		if c.ReferencedType == "" {
+			return fmt.Errorf("enum field %q must have a referenced type", c.Name)
 		}
-	} else if c.Kind != EnumKind && (c.EnumType.Name != "" || c.EnumType.Values != nil) {
-		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
+
+		_, ok := typeSet.LookupEnumType(c.ReferencedType)
+		if !ok {
+			return fmt.Errorf("can't find enum type %q referenced by field %q", c.ReferencedType, c.Name)
+		}
+
+	default:
+		if c.ReferencedType != "" {
+			return fmt.Errorf("field %q with kind %q cannot have a referenced type", c.Name, c.Kind)
+		}
 	}
 
 	return nil
@@ -47,7 +68,7 @@ func (c Field) Validate() error {
 // ValidateValue validates that the value conforms to the field's kind and nullability.
 // Unlike Kind.ValidateValue, it also checks that the value conforms to the EnumType
 // if the field is an EnumKind.
-func (c Field) ValidateValue(value interface{}) error {
+func (c Field) ValidateValue(value interface{}, typeSet TypeSet) error {
 	if value == nil {
 		if !c.Nullable {
 			return fmt.Errorf("field %q cannot be null", c.Name)
@@ -59,8 +80,17 @@ func (c Field) ValidateValue(value interface{}) error {
 		return fmt.Errorf("invalid value for field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
 	}
 
-	if c.Kind == EnumKind {
-		return c.EnumType.ValidateValue(value.(string))
+	switch c.Kind {
+	case EnumKind:
+		enumType, ok := typeSet.LookupEnumType(c.ReferencedType)
+		if !ok {
+			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
+		}
+		err := enumType.ValidateValue(value.(string))
+		if err != nil {
+			return fmt.Errorf("invalid value for enum field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
+		}
+	default:
 	}
 
 	return nil

@@ -42,7 +42,7 @@ func (m Migrator) Migrate3to4(ctx context.Context) error {
 
 func (m Migrator) migrateFunds(ctx context.Context) error {
 	macc := m.keeper.GetDistributionAccount(ctx)
-	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolModuleName)
+	poolMacc := m.keeper.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount)
 
 	feePool, err := m.keeper.FeePool.Get(ctx)
 	if err != nil {

@@ -8,11 +8,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/auth/types"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestBaseAddressPubKey(t *testing.T) {
@@ -85,8 +84,6 @@ func TestGenesisAccountValidate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})
@@ -152,7 +149,6 @@ func TestValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.acc.Validate()
 			require.Equal(t, tt.expErr, err)

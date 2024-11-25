@@ -37,7 +37,7 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	address, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	address, err := k.addrCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -53,7 +53,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	addr, err := k.addrCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -86,28 +86,31 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	addr, err := k.addrCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	zeroAmt := math.ZeroInt()
+	allLocked := k.LockedCoins(ctx, addr)
 
-	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (coin sdk.Coin, err error) {
-		return sdk.NewCoin(key.K2(), zeroAmt), nil
+	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], balanceAmt math.Int) (sdk.Coin, error) {
+		denom := key.K2()
+		coin := sdk.NewCoin(denom, zeroAmt)
+		lockedAmt := allLocked.AmountOf(denom)
+		switch {
+		case !lockedAmt.IsPositive():
+			coin.Amount = balanceAmt
+		case lockedAmt.LT(balanceAmt):
+			coin.Amount = balanceAmt.Sub(lockedAmt)
+		}
+		return coin, nil
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
 
-	result := sdk.NewCoins()
-	spendable := k.SpendableCoins(ctx, addr)
-
-	for _, c := range balances {
-		result = append(result, sdk.NewCoin(c.Denom, spendable.AmountOf(c.Denom)))
-	}
-
-	return &types.QuerySpendableBalancesResponse{Balances: result, Pagination: pageRes}, nil
+	return &types.QuerySpendableBalancesResponse{Balances: balances, Pagination: pageRes}, nil
 }
 
 // SpendableBalanceByDenom implements a gRPC query handler for retrieving an account's
@@ -117,7 +120,7 @@ func (k BaseKeeper) SpendableBalanceByDenom(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	addr, err := k.addrCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -292,7 +295,7 @@ func (k BaseKeeper) DenomOwners(
 			if err != nil {
 				return nil, err
 			}
-			addr, err := k.ak.AddressCodec().BytesToString(key.K2())
+			addr, err := k.addrCdc.BytesToString(key.K2())
 			if err != nil {
 				return nil, err
 			}

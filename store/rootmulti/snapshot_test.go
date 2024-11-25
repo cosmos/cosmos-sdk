@@ -10,11 +10,12 @@ import (
 	"math/rand"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
@@ -23,8 +24,8 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *rootmulti.Store {
-	multiStore := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+func newMultiStoreWithGeneratedData(db corestore.KVStoreWithBatch, stores uint8, storeKeys uint64) *rootmulti.Store {
+	multiStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	r := rand.New(rand.NewSource(49872768940)) // Fixed seed for deterministic tests
 
 	keys := []*types.KVStoreKey{}
@@ -61,8 +62,8 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	return multiStore
 }
 
-func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
-	store := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+func newMultiStoreWithMixedMounts(db corestore.KVStoreWithBatch) *rootmulti.Store {
+	store := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl3"), types.StoreTypeIAVL, nil)
@@ -73,7 +74,7 @@ func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
 	return store
 }
 
-func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *rootmulti.Store {
+func newMultiStoreWithMixedMountsAndBasicData(db corestore.KVStoreWithBatch) *rootmulti.Store {
 	store := newMultiStoreWithMixedMounts(db)
 	store1 := store.GetStoreByName("iavl1").(types.CommitKVStore)
 	store2 := store.GetStoreByName("iavl2").(types.CommitKVStore)
@@ -124,7 +125,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 	// This checksum test makes sure that the byte stream remains identical. If the test fails
 	// without having changed the data (e.g. because the Protobuf or zlib encoding changes),
 	// snapshottypes.CurrentFormat must be bumped.
-	store := newMultiStoreWithGeneratedData(dbm.NewMemDB(), 5, 10000)
+	store := newMultiStoreWithGeneratedData(coretesting.NewMemDB(), 5, 10000)
 	version := uint64(store.LastCommitID().Version)
 
 	testcases := []struct {
@@ -141,7 +142,6 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 		}},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(fmt.Sprintf("Format %v", tc.format), func(t *testing.T) {
 			ch := make(chan io.ReadCloser)
 			go func() {
@@ -166,7 +166,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 }
 
 func TestMultistoreSnapshot_Errors(t *testing.T) {
-	store := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
+	store := newMultiStoreWithMixedMountsAndBasicData(coretesting.NewMemDB())
 
 	testcases := map[string]struct {
 		height     uint64
@@ -176,7 +176,6 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 		"unknown height": {9, nil},
 	}
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := store.Snapshot(tc.height, nil)
 			require.Error(t, err)
@@ -188,8 +187,8 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 }
 
 func TestMultistoreSnapshotRestore(t *testing.T) {
-	source := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
-	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())
+	source := newMultiStoreWithMixedMountsAndBasicData(coretesting.NewMemDB())
+	target := newMultiStoreWithMixedMounts(coretesting.NewMemDB())
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(t, 3, version)
 	dummyExtensionItem := snapshottypes.SnapshotItem{
@@ -239,13 +238,13 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 
 	b.ReportAllocs()
 	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
+	source := newMultiStoreWithGeneratedData(coretesting.NewMemDB(), stores, storeKeys)
 	version := source.LastCommitID().Version
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		target := rootmulti.NewStore(dbm.NewMemDB(), coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+		target := rootmulti.NewStore(coretesting.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
 		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}
@@ -275,13 +274,13 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 
 	b.ReportAllocs()
 	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
+	source := newMultiStoreWithGeneratedData(coretesting.NewMemDB(), stores, storeKeys)
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		target := rootmulti.NewStore(dbm.NewMemDB(), coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+		target := rootmulti.NewStore(coretesting.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
 		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}

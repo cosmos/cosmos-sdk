@@ -6,6 +6,7 @@ option go_package = "cosmossdk.io/x/protocolpool/types";
 import "cosmos/protocolpool/v1/types.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
 
 // GenesisState defines the protocolpool module's genesis state.
 message GenesisState {
@@ -14,9 +15,26 @@ message GenesisState {
   // Budget defines the budget proposals at genesis.
   repeated Budget budget = 2;
 
-  string to_distribute = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ];
+  // last_balance contains the amount of tokens yet to be distributed, will be zero if
+  // there are no funds to distribute.
+  DistributionAmount last_balance = 3 [(gogoproto.nullable) = false];
+
+  // distributions contains the list of distributions to be made to continuous
+  // funds and budgets. It contains time in order to distribute to non-expired
+  // funds only.
+  repeated Distribution distributions = 4;
+
+  // params defines the parameters of this module, currently only contains the
+  // denoms that will be used for continuous fund distributions.
+  Params params = 5;
+}
+
+message Distribution {
+  // time at which this distribution was made, in order to distribute to non-expired funds only
+  // and funds that existed at that time. Because we don't distribute right away, we keep track
+  // of the time of distribution.
+  google.protobuf.Timestamp time = 1 [(gogoproto.stdtime) = true];
+
+  // amount is the list of coins to be distributed.
+  DistributionAmount amount = 2 [(gogoproto.nullable) = false];
 }

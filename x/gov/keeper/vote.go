@@ -57,9 +57,9 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 			}
 
 			// verify votes only on existing votes
-			if proposalOptionsStr.OptionOne == "" && option.Option == v1.OptionOne { // should never trigger option one is always mandatory
+			if proposalOptionsStr.OptionOne == "" && option.Option == v1.OptionOne {
 				return errors.Wrap(types.ErrInvalidVote, "invalid vote option")
-			} else if proposalOptionsStr.OptionTwo == "" && option.Option == v1.OptionTwo { // should never trigger option two is always mandatory
+			} else if proposalOptionsStr.OptionTwo == "" && option.Option == v1.OptionTwo {
 				return errors.Wrap(types.ErrInvalidVote, "invalid vote option")
 			} else if proposalOptionsStr.OptionThree == "" && option.Option == v1.OptionThree {
 				return errors.Wrap(types.ErrInvalidVote, "invalid vote option")

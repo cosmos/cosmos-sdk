@@ -26,3 +26,6 @@ $mockgen_cmd -source=x/gov/testutil/expected_keepers.go -package testutil -desti
 $mockgen_cmd -source=x/staking/types/expected_keepers.go -package testutil -destination x/staking/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/auth/vesting/types/expected_keepers.go -package testutil -destination x/auth/vesting/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/protocolpool/types/expected_keepers.go -package testutil -destination x/protocolpool/testutil/expected_keepers_mocks.go
+$mockgen_cmd -source=x/upgrade/types/expected_keepers.go -package testutil -destination x/upgrade/testutil/expected_keepers_mocks.go
+$mockgen_cmd -source=core/gas/service.go -package gas -destination core/testing/gas/service_mocks.go
+$mockgen_cmd -source=client/v2/broadcast/comet/comet.go -package testutil -destination client/v2/broadcast/comet/testutil/comet_mock.go

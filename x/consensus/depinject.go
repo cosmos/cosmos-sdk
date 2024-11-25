@@ -1,9 +1,12 @@
 package consensus
 
 import (
+	"context"
+
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/consensus/keeper"
@@ -23,6 +26,7 @@ func init() {
 	appconfig.RegisterModule(
 		&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
+		appconfig.Provide(ProvideAppVersionModifier),
 	)
 }
 
@@ -64,6 +68,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.ParamsStore)
+		app.SetVersionModifier(versionModifier{Keeper: k})
 	}
 
 	return ModuleOutputs{
@@ -71,4 +76,38 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		Module:        m,
 		BaseAppOption: baseappOpt,
 	}
+}
+
+type versionModifier struct {
+	Keeper keeper.Keeper
+}
+
+func (v versionModifier) SetAppVersion(ctx context.Context, version uint64) error {
+	params, err := v.Keeper.Params(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	updatedParams := params.Params
+	updatedParams.Version.App = version
+
+	err = v.Keeper.ParamsStore.Set(ctx, *updatedParams)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v versionModifier) AppVersion(ctx context.Context) (uint64, error) {
+	params, err := v.Keeper.Params(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	return params.Params.Version.GetApp(), nil
+}
+
+func ProvideAppVersionModifier(k keeper.Keeper) server.VersionModifier {
+	return versionModifier{Keeper: k}
 }

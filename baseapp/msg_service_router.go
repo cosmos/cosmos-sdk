@@ -47,7 +47,6 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 		routes:            map[string]MsgServiceHandler{},
 		hybridHandlers:    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
 		responseByMsgName: map[string]string{},
-		circuitBreaker:    nil,
 	}
 }
 

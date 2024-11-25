@@ -76,7 +76,7 @@ func createLogFile(seed int64) *os.File {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Logs to writing to %s\n", filePath)
+	fmt.Printf("Logs to writing to %q\n", filePath)
 
 	return f
 }

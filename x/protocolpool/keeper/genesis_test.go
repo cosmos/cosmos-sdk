@@ -31,7 +31,17 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		},
 	)
 
+	gs.Distributions = append(gs.Distributions, &types.Distribution{
+		Amount: types.DistributionAmount{Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))},
+		Time:   &time.Time{},
+	})
+
 	err := suite.poolKeeper.InitGenesis(suite.ctx, gs)
+	suite.Require().ErrorContains(err, "total to be distributed is greater than the last balance")
+
+	// Set last balance
+	gs.LastBalance = types.DistributionAmount{Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(101)))}
+	err = suite.poolKeeper.InitGenesis(suite.ctx, gs)
 	suite.Require().NoError(err)
 
 	// Export
@@ -39,4 +49,5 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(gs.ContinuousFund, exportedGenState.ContinuousFund)
 	suite.Require().Equal(gs.Budget, exportedGenState.Budget)
+	suite.Require().Equal(math.NewInt(101), exportedGenState.LastBalance.Amount.AmountOf("stake"))
 }

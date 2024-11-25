@@ -26,7 +26,8 @@ const (
 )
 
 var (
-	_ storage.Database = (*Database)(nil)
+	_ storage.Database         = (*Database)(nil)
+	_ store.UpgradableDatabase = (*Database)(nil)
 
 	defaultWriteOpts = grocksdb.NewDefaultWriteOptions()
 	defaultReadOpts  = grocksdb.NewDefaultReadOptions()
@@ -130,6 +131,15 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), nil
 }
 
+func (db *Database) VersionExists(version uint64) (bool, error) {
+	latestVersion, err := db.GetLatestVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return latestVersion >= version && version >= db.tsLow, nil
+}
+
 func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {
@@ -196,6 +206,12 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 	return newRocksDBIterator(itr, prefix, start, end, true), nil
 }
 
+// PruneStoreKeys will do nothing for RocksDB, it will be pruned by compaction
+// when the version is pruned
+func (db *Database) PruneStoreKeys(_ []string, _ uint64) error {
+	return nil
+}
+
 // newTSReadOptions returns ReadOptions used in the RocksDB column family read.
 func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 	var ts [TimestampSize]byte
@@ -208,11 +224,11 @@ func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 }
 
 func storePrefix(storeKey []byte) []byte {
-	return append([]byte(StorePrefixTpl), storeKey...)
+	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
 }
 
 func prependStoreKey(storeKey, key []byte) []byte {
-	return append(storePrefix(storeKey), key...)
+	return []byte(fmt.Sprintf("%s%s", storePrefix(storeKey), key))
 }
 
 // copyAndFreeSlice will copy a given RocksDB slice and free it. If the slice does

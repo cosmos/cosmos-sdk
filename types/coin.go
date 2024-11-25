@@ -285,7 +285,7 @@ func (coins Coins) Validate() error {
 	}
 }
 
-// IsSorted returns true when coins are order ASC sorted with denoms.
+// IsSorted returns true when coins are sorted in ASC order by denoms.
 func (coins Coins) IsSorted() bool {
 	for i := 1; i < len(coins); i++ {
 		if coins[i-1].Denom > coins[i].Denom {
@@ -432,7 +432,6 @@ func (coins Coins) SafeMulInt(x math.Int) (Coins, bool) {
 
 	res := make(Coins, len(coins))
 	for i, coin := range coins {
-		coin := coin
 		res[i] = NewCoin(coin.Denom, coin.Amount.Mul(x))
 	}
 
@@ -466,7 +465,6 @@ func (coins Coins) SafeQuoInt(x math.Int) (Coins, bool) {
 
 	var res Coins
 	for _, coin := range coins {
-		coin := coin
 		res = append(res, NewCoin(coin.Denom, coin.Amount.Quo(x)))
 	}
 

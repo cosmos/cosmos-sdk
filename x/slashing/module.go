@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -33,7 +33,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -42,12 +41,9 @@ var (
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
 	cdc          codec.Codec
-	registry     cdctypes.InterfaceRegistry
 	cometService comet.Service
 
 	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 }
 
@@ -63,10 +59,7 @@ func NewAppModule(
 ) AppModule {
 	return AppModule{
 		cdc:           cdc,
-		registry:      registry,
 		keeper:        keeper,
-		accountKeeper: ak,
-		bankKeeper:    bk,
 		stakingKeeper: sk,
 		cometService:  cs,
 	}
@@ -82,23 +75,23 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the slashing module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the slashing module's interface types
 func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	types.RegisterInterfaces(registrar)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashing module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// RegisterServices registers module services.
+// RegisterServices registers slashing module's services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
@@ -106,7 +99,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// RegisterMigrations registers module migrations.
+// RegisterMigrations registers slashing module's migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper, am.stakingKeeper.ValidatorAddressCodec())
 
@@ -173,9 +166,9 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
 }
 
 // RegisterStoreDecoder registers a decoder for slashing module's types
@@ -183,10 +176,8 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the slashing module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
-	)
+// WeightedOperationsX returns the all the slashing module operations with their respective weights.
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	// note: using old keys for backwards compatibility
+	reg.Add(weights.Get("msg_unjail", 20), simulation.MsgUnjailFactory(am.keeper, am.stakingKeeper))
 }

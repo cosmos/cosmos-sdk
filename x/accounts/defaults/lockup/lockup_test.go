@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
-	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -53,7 +53,6 @@ func TestInitLockupAccount(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		test := test
 		_, err := baseLockup.Init(ctx, &test.msg)
 		if test.expErr != nil {
 			require.Equal(t, test.expErr, err)

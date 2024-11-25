@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var govAcc = authtypes.NewEmptyModuleAccount(banktypes.GovModuleName, authtypes.Minter)
@@ -52,7 +52,6 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			_, err := suite.msgServer.UpdateParams(suite.ctx, tc.input)
 
@@ -72,9 +71,9 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 	atom0 := sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 	atom123eth0 := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 0)}
 
-	acc4Addr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[4])
+	acc4Addr, err := suite.addrCdc.BytesToString(accAddrs[4])
 	suite.Require().NoError(err)
-	minterAccAddr, err := suite.authKeeper.AddressCodec().BytesToString(minterAcc.GetAddress())
+	minterAccAddr, err := suite.addrCdc.BytesToString(minterAcc.GetAddress())
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -145,7 +144,6 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(minterAcc)
 			err := suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
@@ -170,13 +168,13 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(origDenom, 50))
 	suite.bankKeeper.SetSendEnabled(suite.ctx, origDenom, true)
 
-	acc0Addr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
+	acc0Addr, err := suite.addrCdc.BytesToString(accAddrs[0])
 	suite.Require().NoError(err)
-	acc1Addr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
+	acc1Addr, err := suite.addrCdc.BytesToString(accAddrs[1])
 	suite.Require().NoError(err)
-	acc4Addr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[4])
+	acc4Addr, err := suite.addrCdc.BytesToString(accAddrs[4])
 	suite.Require().NoError(err)
-	minterAccAddr, err := suite.authKeeper.AddressCodec().BytesToString(minterAcc.GetAddress())
+	minterAccAddr, err := suite.addrCdc.BytesToString(minterAcc.GetAddress())
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -252,7 +250,6 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(minterAcc)
 			err := suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
@@ -272,7 +269,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 }
 
 func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
-	govAccAddr, err := suite.authKeeper.AddressCodec().BytesToString(govAcc.GetAddress())
+	govAccAddr, err := suite.addrCdc.BytesToString(govAcc.GetAddress())
 	suite.Require().NoError(err)
 	testCases := []struct {
 		name     string
@@ -383,7 +380,7 @@ func (suite *KeeperTestSuite) TestMsgBurn() {
 	origCoins := sdk.NewInt64Coin("eth", 100)
 	atom0 := sdk.NewInt64Coin("atom", 0)
 
-	multiPermAccAddr, err := suite.authKeeper.AddressCodec().BytesToString(multiPermAcc.GetAddress())
+	multiPermAccAddr, err := suite.addrCdc.BytesToString(multiPermAcc.GetAddress())
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -422,7 +419,6 @@ func (suite *KeeperTestSuite) TestMsgBurn() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(multiPermAcc)
 			err := suite.bankKeeper.MintCoins(suite.ctx, multiPermAcc.Name, sdk.Coins{}.Add(origCoins))

@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/simapp"
-	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestSimGenesisAccountValidate(t *testing.T) {
@@ -81,7 +81,6 @@ func TestSimGenesisAccountValidate(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			require.Equal(t, tc.wantErr, tc.sga.Validate() != nil)
 		})

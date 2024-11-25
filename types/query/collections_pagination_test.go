@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 )
 
 func TestCollectionPagination(t *testing.T) {
@@ -140,7 +140,6 @@ func TestCollectionPagination(t *testing.T) {
 	}
 
 	for name, tc := range tcs {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			gotResults, gotResponse, err := CollectionFilteredPaginate(
 				ctx,
@@ -163,7 +162,7 @@ func TestCollectionPagination(t *testing.T) {
 }
 
 type testStore struct {
-	db db.DB
+	db store.KVStoreWithBatch
 }
 
 func (t testStore) OpenKVStore(ctx context.Context) store.KVStore {
@@ -197,6 +196,6 @@ func (t testStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
 var _ store.KVStore = testStore{}
 
 func deps() (store.KVStoreService, context.Context) {
-	kv := db.NewMemDB()
+	kv := coretesting.NewMemDB()
 	return &testStore{kv}, context.Background()
 }

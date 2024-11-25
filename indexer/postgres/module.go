@@ -7,55 +7,48 @@ import (
 	"cosmossdk.io/schema"
 )
 
-// ModuleIndexer manages the tables for a module.
-type ModuleIndexer struct {
+// moduleIndexer manages the tables for a module.
+type moduleIndexer struct {
 	moduleName   string
 	schema       schema.ModuleSchema
-	tables       map[string]*ObjectIndexer
-	definedEnums map[string]schema.EnumDefinition
-	options      Options
+	tables       map[string]*objectIndexer
+	definedEnums map[string]schema.EnumType
+	options      options
 }
 
-// NewModuleIndexer creates a new ModuleIndexer for the given module schema.
-func NewModuleIndexer(moduleName string, modSchema schema.ModuleSchema, options Options) *ModuleIndexer {
-	return &ModuleIndexer{
+// newModuleIndexer creates a new moduleIndexer for the given module schema.
+func newModuleIndexer(moduleName string, modSchema schema.ModuleSchema, options options) *moduleIndexer {
+	return &moduleIndexer{
 		moduleName:   moduleName,
 		schema:       modSchema,
-		tables:       map[string]*ObjectIndexer{},
-		definedEnums: map[string]schema.EnumDefinition{},
+		tables:       map[string]*objectIndexer{},
+		definedEnums: map[string]schema.EnumType{},
 		options:      options,
 	}
 }
 
-// InitializeSchema creates tables for all object types in the module schema and creates enum types.
-func (m *ModuleIndexer) InitializeSchema(ctx context.Context, conn DBConn) error {
+// initializeSchema creates tables for all object types in the module schema and creates enum types.
+func (m *moduleIndexer) initializeSchema(ctx context.Context, conn dbConn) error {
 	// create enum types
-	for _, typ := range m.schema.ObjectTypes {
-		err := m.createEnumTypesForFields(ctx, conn, typ.KeyFields)
-		if err != nil {
-			return err
-		}
-
-		err = m.createEnumTypesForFields(ctx, conn, typ.ValueFields)
-		if err != nil {
-			return err
-		}
+	var err error
+	m.schema.EnumTypes(func(enumType schema.EnumType) bool {
+		err = m.createEnumType(ctx, conn, enumType)
+		return err == nil
+	})
+	if err != nil {
+		return err
 	}
 
 	// create tables for all object types
-	for _, typ := range m.schema.ObjectTypes {
-		tm := NewObjectIndexer(m.moduleName, typ, m.options)
+	m.schema.StateObjectTypes(func(typ schema.StateObjectType) bool {
+		tm := newObjectIndexer(m.moduleName, typ, m.options)
 		m.tables[typ.Name] = tm
-		err := tm.CreateTable(ctx, conn)
+		err = tm.createTable(ctx, conn)
 		if err != nil {
-			return fmt.Errorf("failed to create table for %s in module %s: %v", typ.Name, m.moduleName, err) //nolint:errorlint // using %v for go 1.12 compat
+			err = fmt.Errorf("failed to create table for %s in module %s: %v", typ.Name, m.moduleName, err) //nolint:errorlint // using %v for go 1.12 compat
 		}
-	}
+		return err == nil
+	})
 
-	return nil
-}
-
-// ObjectIndexers returns the object indexers for the module.
-func (m *ModuleIndexer) ObjectIndexers() map[string]*ObjectIndexer {
-	return m.tables
+	return err
 }

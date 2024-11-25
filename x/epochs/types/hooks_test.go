@@ -37,11 +37,6 @@ type dummyEpochHook struct {
 	shouldError    bool
 }
 
-// GetModuleName implements types.EpochHooks.
-func (*dummyEpochHook) GetModuleName() string {
-	return "dummy"
-}
-
 func (hook *dummyEpochHook) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
 	if hook.shouldError {
 		return dummyErr

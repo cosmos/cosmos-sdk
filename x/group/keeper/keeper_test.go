@@ -6,13 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
@@ -29,6 +28,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const minExecutionPeriod = 5 * time.Second
@@ -115,7 +115,7 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.setNextAccount()
 
-	groupSeq := s.groupKeeper.GetGroupSequence(s.sdkCtx)
+	groupSeq := s.groupKeeper.GetGroupSequence(s.ctx)
 	s.Require().Equal(groupSeq, uint64(1))
 
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
@@ -273,7 +273,6 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 	}
 
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			pID := spec.preRun(s.sdkCtx)
 

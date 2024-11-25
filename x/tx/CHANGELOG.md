@@ -33,6 +33,28 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+## [v1.0.0-alpha.2](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.2) - 2024-11-01
+
+* [#22311](https://github.com/cosmos/cosmos-sdk/pull/22311) Fix add feePayer as signer.
+
+## [v1.0.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.1) - 2024-10-17
+
+* [#21782](https://github.com/cosmos/cosmos-sdk/pull/21782) Fix JSON attribute sort order on messages with oneof fields.
+* [#21825](https://github.com/cosmos/cosmos-sdk/pull/21825) Fix decimal encoding and field ordering in Amino JSON encoder.
+* [#21850](https://github.com/cosmos/cosmos-sdk/pull/21850) Support bytes field as signer.
+
+## [v0.13.5](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.5) - 2024-09-18
+
+### Improvements
+
+* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Add `AminoNameAsTypeURL` option to Amino JSON encoder.
+
+## [v0.13.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.4) - 2024-08-02
+
+### Improvements
+
+* [#21073](https://github.com/cosmos/cosmos-sdk/pull/21073) In Context use sync.Map `getSignersFuncs` map from concurrent writes, we also call Validate when creating the Context.
+
 ## [v0.13.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.3) - 2024-04-22
 
 ### Improvements

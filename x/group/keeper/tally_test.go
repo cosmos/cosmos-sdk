@@ -66,7 +66,6 @@ func (s *TestSuite) TestTally() {
 	}
 
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 			pID := spec.setupProposal(sdkCtx)

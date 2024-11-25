@@ -31,4 +31,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (x/consensus) [#19483](https://github.com/cosmos/cosmos-sdk/pull/19483) Add consensus messages registration to consensus module.
 * [#20615](https://github.com/cosmos/cosmos-sdk/pull/20615) Add consensus messages to add cometinfo to consensus modules
+
+### API Breaking Changes
+
+* (x/consensus) [#19488](https://github.com/cosmos/cosmos-sdk/pull/19488) Consensus module creation takes `appmodule.Environment` instead of individual services.
+* (x/consensus) [#18041](https://github.com/cosmos/cosmos-sdk/pull/18041) `ToProtoConsensusParams()` returns an error
+

@@ -231,7 +231,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 }
 
 // GetGroupSequence returns the current value of the group table sequence
-func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
+func (k Keeper) GetGroupSequence(ctx context.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(k.KVStoreService.OpenKVStore(ctx))
 }
 
@@ -379,8 +379,6 @@ func (k Keeper) PruneProposals(ctx context.Context) error {
 		return nil
 	}
 	for _, proposal := range proposals {
-		proposal := proposal
-
 		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
 			return err
@@ -455,7 +453,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context) error {
 // is greater than defined MaxMetadataLen in the module configuration
 func (k Keeper) assertMetadataLength(metadata, description string) error {
 	if uint64(len(metadata)) > k.config.MaxMetadataLen {
-		return errors.ErrMetadataTooLong.Wrapf(description)
+		return errors.ErrMetadataTooLong.Wrap(description)
 	}
 	return nil
 }

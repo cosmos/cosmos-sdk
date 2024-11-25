@@ -11,8 +11,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authtypes "cosmossdk.io/x/auth/types"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/mint/types"
 	protocolpoolkeeper "cosmossdk.io/x/protocolpool/keeper"
@@ -21,6 +19,8 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // TestWithdrawAnytime tests if withdrawing funds many times vs withdrawing funds once
@@ -87,7 +87,6 @@ func TestWithdrawAnytime(t *testing.T) {
 // TestExpireInTheMiddle tests if a continuous fund that expires without anyone
 // calling the withdraw function, the funds are still distributed correctly.
 func TestExpireInTheMiddle(t *testing.T) {
-	t.Skip("This is a bug @facu found, will fix in another PR")
 	var accountKeeper authkeeper.AccountKeeper
 	var protocolpoolKeeper protocolpoolkeeper.Keeper
 	var bankKeeper bankkeeper.Keeper
@@ -131,8 +130,8 @@ func TestExpireInTheMiddle(t *testing.T) {
 	_, err = msgServer.WithdrawContinuousFund(ctx, &protocolpooltypes.MsgWithdrawContinuousFund{
 		RecipientAddress: testAddr0Str,
 	})
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	endBalance := bankKeeper.GetBalance(ctx, testAddrs[0], sdk.DefaultBondDenom)
-	require.Equal(t, "158441stake", endBalance.String())
+	require.Equal(t, "237661stake", endBalance.String())
 }

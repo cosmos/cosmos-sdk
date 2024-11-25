@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -39,7 +38,7 @@ func getDuration(d time.Duration) *time.Duration {
 }
 
 func (s *KeeperTestSuite) SetupTest(enabledFeatures bool) {
-	key := storetypes.NewKVStoreKey(consensusparamkeeper.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 5})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
@@ -153,8 +152,6 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.msg, func() {
 			s.SetupTest(false) // reset
 
@@ -190,8 +187,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "invalid  params",
@@ -259,8 +254,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 300},
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Feature update - pbts",
@@ -273,8 +266,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					PbtsEnableHeight: &gogotypes.Int64Value{Value: 150},
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Feature update - vote extensions + pbts",
@@ -288,8 +279,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					PbtsEnableHeight:           &gogotypes.Int64Value{Value: 110},
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name:            "valid noop Feature update - vote extensions + pbts (enabled feature)",
@@ -304,8 +293,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					PbtsEnableHeight:           &gogotypes.Int64Value{Value: 5},
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid (deprecated) ABCI update",
@@ -318,8 +305,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					VoteExtensionsEnableHeight: 90,
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "invalid Feature + (deprecated) ABCI vote extensions update",
@@ -463,8 +448,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					Precision: getDuration(3 * time.Second),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Synchrony update - delay",
@@ -477,8 +460,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					MessageDelay: getDuration(10 * time.Second),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Synchrony update - precision + delay",
@@ -492,8 +473,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					MessageDelay: getDuration(11 * time.Second),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Synchrony update - 0 precision",
@@ -506,8 +485,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					Precision: getDuration(0),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Synchrony update - 0 delay",
@@ -520,8 +497,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					MessageDelay: getDuration(0),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "invalid Synchrony update - 0 precision with PBTS set",
@@ -560,7 +535,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest(tc.enabledFeatures)
 			_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, tc.input)
@@ -600,56 +574,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 							res.Params.Synchrony.Precision)
 					}
 				}
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestSetCometInfo() {
-	consensusIdentiy := "consensus"
-	testCases := []struct {
-		name            string
-		enabledFeatures bool
-		input           *types.MsgSetCometInfo
-		expErr          bool
-		expErrMsg       string
-	}{
-		{
-			name: "valid comet info",
-			input: &types.MsgSetCometInfo{
-				Authority:       consensusIdentiy,
-				Evidence:        []*v1.Misbehavior{},
-				ValidatorsHash:  []byte("validatorhash"),
-				ProposerAddress: []byte("proposeraddress"),
-				LastCommit:      &v1.CommitInfo{},
-			},
-			expErr:    false,
-			expErrMsg: "",
-		},
-		{
-			name: "invalid authority",
-			input: &types.MsgSetCometInfo{
-				Authority:       "invalid",
-				Evidence:        []*v1.Misbehavior{},
-				ValidatorsHash:  []byte("validatorhash"),
-				ProposerAddress: []byte("proposeraddress"),
-				LastCommit:      &v1.CommitInfo{},
-			},
-			expErr:    true,
-			expErrMsg: "invalid authority",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			s.SetupTest(tc.enabledFeatures)
-			_, err := s.consensusParamsKeeper.SetCometInfo(s.ctx, tc.input)
-			if tc.expErr {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				s.Require().NoError(err)
 			}
 		})
 	}

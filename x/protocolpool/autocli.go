@@ -35,14 +35,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "FundCommunityPool",
-					Use:            "fund-community-pool [amount]",
+					Use:            "fund-community-pool <amount>",
 					Short:          "Funds the community pool with the specified amount",
 					Example:        fmt.Sprintf(`$ %s tx protocolpool fund-community-pool 100uatom --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}},
 				},
 				{
 					RpcMethod: "SubmitBudgetProposal",
-					Use:       "submit-budget-proposal [recipient] [budget-per-tranche] [start-time] [tranches] [period]",
+					Use:       "submit-budget-proposal <recipient> <budget-per-tranche> <start-time> <tranches> <period>",
 					Short:     "Submit a budget proposal",
 					Example:   fmt.Sprintf(`$ %s tx protocolpool submit-budget-proposal cosmos1... 1000000uatom 2023-10-31T12:34:56.789Z 10 1000 --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -55,14 +55,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "ClaimBudget",
-					Use:            "claim-budget [recipient]",
+					Use:            "claim-budget <recipient>",
 					Short:          "Claim the distributed budget",
 					Example:        fmt.Sprintf(`$ %s tx protocolpool claim-budget cosmos1... --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "recipient_address"}},
 				},
 				{
 					RpcMethod: "CreateContinuousFund",
-					Use:       "create-continuous-fund [recipient] [percentage] <expiry>",
+					Use:       "create-continuous-fund <recipient> <percentage> <expiry>",
 					Short:     "Create continuous fund for a recipient with optional expiry",
 					Example:   fmt.Sprintf(`$ %s tx protocolpool create-continuous-fund cosmos1... 0.2 2023-11-31T12:34:56.789Z --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -74,20 +74,28 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "WithdrawContinuousFund",
-					Use:            "withdraw-continuous-fund [recipient]",
+					Use:            "withdraw-continuous-fund <recipient>",
 					Short:          "Withdraw continuous fund allocated to the recipient",
 					Example:        fmt.Sprintf(`$ %s tx protocolpool withdraw-continuous-fund cosmos1... --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "recipient_address"}},
 				},
 				{
 					RpcMethod: "CancelContinuousFund",
-					Use:       "cancel-continuous-fund [recipient_address]",
+					Use:       "cancel-continuous-fund <recipient_address>",
 					Short:     "Cancel continuous fund for a specific recipient",
 					Example:   fmt.Sprintf(`$ %s tx protocolpool cancel-continuous-fund cosmos1... --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "recipient_address"},
 					},
 					GovProposal: true,
+				},
+				{
+					RpcMethod:      "UpdateParams",
+					Use:            "update-params-proposal <params>",
+					Short:          "Submit a proposal to update protocolpool module params. Note: the entire params must be provided.",
+					Example:        fmt.Sprintf(`%s tx protocolpool update-params-proposal '{ "enabled_distribution_denoms": ["stake", "foo"] }'`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
+					GovProposal:    true,
 				},
 			},
 		},

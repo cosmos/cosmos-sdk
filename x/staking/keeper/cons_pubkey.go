@@ -94,14 +94,22 @@ func (k Keeper) updateToNewPubkey(ctx context.Context, val types.Validator, oldP
 		return err
 	}
 
-	oldPk, ok := oldPubKey.GetCachedValue().(cryptotypes.PubKey)
+	oldPkCached := oldPubKey.GetCachedValue()
+	if oldPkCached == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidType, "OldPubKey cached value is nil")
+	}
+	oldPk, ok := oldPkCached.(cryptotypes.PubKey)
 	if !ok {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPkCached)
 	}
 
-	newPk, ok := newPubKey.GetCachedValue().(cryptotypes.PubKey)
+	newPkCached := newPubKey.GetCachedValue()
+	if newPkCached == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidType, "NewPubKey cached value is nil")
+	}
+	newPk, ok := newPkCached.(cryptotypes.PubKey)
 	if !ok {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPk)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPkCached)
 	}
 
 	// sets a map: oldConsKey -> newConsKey
@@ -250,8 +258,7 @@ func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.
 	if err != nil {
 		return nil, err
 	}
-	defer iterator.Close()
-
+	// iterator would be closed in the CollectValues
 	return indexes.CollectValues(ctx, k.RotationHistory, iterator)
 }
 

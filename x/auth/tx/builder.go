@@ -3,16 +3,17 @@ package tx
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	multisigv1beta1 "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
-	authsign "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
@@ -79,16 +81,17 @@ type builder struct {
 	decoder      *decode.Decoder
 	codec        codec.BinaryCodec
 
-	msgs          []sdk.Msg
-	timeoutHeight uint64
-	granter       []byte
-	payer         []byte
-	unordered     bool
-	memo          string
-	gasLimit      uint64
-	fees          sdk.Coins
-	signerInfos   []*tx.SignerInfo
-	signatures    [][]byte
+	msgs             []sdk.Msg
+	timeoutHeight    uint64
+	timeoutTimestamp time.Time
+	granter          []byte
+	payer            []byte
+	unordered        bool
+	memo             string
+	gasLimit         uint64
+	fees             sdk.Coins
+	signerInfos      []*tx.SignerInfo
+	signatures       [][]byte
 
 	extensionOptions            []*codectypes.Any
 	nonCriticalExtensionOptions []*codectypes.Any
@@ -109,12 +112,13 @@ var marshalOption = proto.MarshalOptions{
 func (w *builder) getTx() (*gogoTxWrapper, error) {
 	anyMsgs, err := msgsV1toAnyV2(w.msgs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to convert messages: %w", err)
 	}
 	body := &txv1beta1.TxBody{
 		Messages:                    anyMsgs,
 		Memo:                        w.memo,
 		TimeoutHeight:               w.timeoutHeight,
+		TimeoutTimestamp:            timestamppb.New(w.timeoutTimestamp),
 		Unordered:                   w.unordered,
 		ExtensionOptions:            intoAnyV2(w.extensionOptions),
 		NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
@@ -132,12 +136,12 @@ func (w *builder) getTx() (*gogoTxWrapper, error) {
 
 	bodyBytes, err := marshalOption.Marshal(body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to marshal body: %w", err)
 	}
 
 	authInfoBytes, err := marshalOption.Marshal(authInfo)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to marshal auth info: %w", err)
 	}
 
 	txRawBytes, err := marshalOption.Marshal(&txv1beta1.TxRaw{
@@ -146,12 +150,12 @@ func (w *builder) getTx() (*gogoTxWrapper, error) {
 		Signatures:    w.signatures,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to marshal tx raw: %w", err)
 	}
 
 	decodedTx, err := w.decoder.Decode(txRawBytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to decode tx: %w", err)
 	}
 
 	return newWrapperFromDecodedTx(w.addressCodec, w.codec, decodedTx)
@@ -188,6 +192,8 @@ func (w *builder) SetMsgs(msgs ...sdk.Msg) error {
 
 // SetTimeoutHeight sets the transaction's height timeout.
 func (w *builder) SetTimeoutHeight(height uint64) { w.timeoutHeight = height }
+
+func (w *builder) SetTimeoutTimestamp(timestamp time.Time) { w.timeoutTimestamp = timestamp }
 
 func (w *builder) SetUnordered(v bool) { w.unordered = v }
 

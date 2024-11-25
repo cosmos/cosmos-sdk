@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
@@ -20,7 +20,7 @@ func TestAccessors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockDB := mock.NewMockDB(mockCtrl)
+	mockDB := mock.NewMockKVStoreWithBatch(mockCtrl)
 	store := dbadapter.Store{mockDB}
 	key := []byte("test")
 	value := []byte("testvalue")
@@ -75,7 +75,7 @@ func TestAccessors(t *testing.T) {
 
 func TestCacheWraps(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockDB := mock.NewMockDB(mockCtrl)
+	mockDB := mock.NewMockKVStoreWithBatch(mockCtrl)
 	store := dbadapter.Store{mockDB}
 
 	cacheWrapper := store.CacheWrap()

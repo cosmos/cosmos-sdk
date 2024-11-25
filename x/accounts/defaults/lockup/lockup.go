@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -15,7 +17,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/v1"
 	banktypes "cosmossdk.io/x/bank/types"
 	distrtypes "cosmossdk.io/x/distribution/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -253,6 +255,10 @@ func (bva *BaseLockup) SendCoins(
 
 	hs := bva.headerService.HeaderInfo(ctx)
 
+	if err := msg.Amount.Validate(); err != nil {
+		return nil, err
+	}
+
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Amount.Denoms()...)
 	if err != nil {
 		return nil, err
@@ -293,15 +299,21 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, err
 	}
 
+	// deduplicate the denoms
+	denoms := make(map[string]struct{})
+	for _, denom := range msg.Denoms {
+		denoms[denom] = struct{}{}
+	}
+	uniqueDenoms := slices.Collect(maps.Keys(denoms))
+
 	hs := bva.headerService.HeaderInfo(ctx)
-	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Denoms...)
+	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, uniqueDenoms...)
 	if err != nil {
 		return nil, err
 	}
 
 	amount := sdk.Coins{}
-
-	for _, denom := range msg.Denoms {
+	for _, denom := range uniqueDenoms {
 		balance, err := bva.getBalance(ctx, fromAddress, denom)
 		if err != nil {
 			return nil, err
@@ -386,23 +398,17 @@ func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
 }
 
 func sendMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, error) {
-	response, err := accountstd.ExecModuleUntyped(ctx, msg)
+	asAny, err := accountstd.PackAny(msg)
 	if err != nil {
 		return nil, err
 	}
 
-	respAny, err := accountstd.PackAny(response)
-	if err != nil {
-		return nil, err
-	}
-
-	return []*codectypes.Any{respAny}, nil
+	return accountstd.ExecModuleAnys(ctx, []*codectypes.Any{asAny})
 }
 
 func getStakingDenom(ctx context.Context) (string, error) {
 	// Query account balance for the sent denom
-	paramsQueryReq := &stakingtypes.QueryParamsRequest{}
-	resp, err := accountstd.QueryModule[stakingtypes.QueryParamsResponse](ctx, paramsQueryReq)
+	resp, err := accountstd.QueryModule[*stakingtypes.QueryParamsResponse](ctx, &stakingtypes.QueryParamsRequest{})
 	if err != nil {
 		return "", err
 	}
@@ -532,8 +538,7 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 
 func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {
 	// Query account balance for the sent denom
-	balanceQueryReq := &banktypes.QueryBalanceRequest{Address: sender, Denom: denom}
-	resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
+	resp, err := accountstd.QueryModule[*banktypes.QueryBalanceResponse](ctx, &banktypes.QueryBalanceRequest{Address: sender, Denom: denom})
 	if err != nil {
 		return nil, err
 	}

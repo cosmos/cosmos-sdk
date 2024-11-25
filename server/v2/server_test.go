@@ -11,12 +11,22 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	coreapp "cosmossdk.io/core/app"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/store"
+	storev2 "cosmossdk.io/store/v2"
 )
+
+type mockStore struct {
+	storev2.RootStore
+}
+
+func (*mockStore) Close() error {
+	return nil
+}
 
 type mockInterfaceRegistry struct{}
 
@@ -29,14 +39,6 @@ func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string 
 }
 func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
 
-type mockApp[T transaction.Tx] struct {
-	serverv2.AppI[T]
-}
-
-func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
-	return &mockInterfaceRegistry{}
-}
-
 func TestServer(t *testing.T) {
 	currentDir, err := os.Getwd()
 	require.NoError(t, err)
@@ -46,17 +48,23 @@ func TestServer(t *testing.T) {
 	if err != nil {
 		v = viper.New()
 	}
+	cfg := v.AllSettings()
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer := grpc.New[transaction.Tx]()
-	err = grpcServer.Init(&mockApp[transaction.Tx]{}, v, logger)
+	ctx := serverv2.SetServerContext(context.Background(), v, logger)
+
+	grpcServer, err := grpc.New[transaction.Tx](logger, &mockInterfaceRegistry{}, map[string]appmodulev2.Handler{}, nil, cfg)
+	require.NoError(t, err)
+
+	storeServer, err := store.New[transaction.Tx](&mockStore{}, cfg)
 	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
-	server := serverv2.NewServer(
-		logger,
+	server := serverv2.NewServer[transaction.Tx](
+		serverv2.DefaultServerConfig(),
 		grpcServer,
+		storeServer,
 		mockServer,
 	)
 
@@ -74,7 +82,7 @@ func TestServer(t *testing.T) {
 	require.Equal(t, v.GetString(grpcServer.Name()+".address"), grpc.DefaultConfig().Address)
 
 	// start empty
-	ctx, cancelFn := context.WithCancel(context.TODO())
+	ctx, cancelFn := context.WithCancel(ctx)
 	go func() {
 		// wait 5sec and cancel context
 		<-time.After(5 * time.Second)

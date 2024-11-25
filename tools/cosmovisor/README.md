@@ -10,18 +10,19 @@ It polls the `upgrade-info.json` file that is created by the x/upgrade module at
 * [Design](#design)
 * [Contributing](#contributing)
 * [Setup](#setup)
-  * [Installation](#installation)
-  * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-  * [Folder Layout](#folder-layout)
+    * [Installation](#installation)
+    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    * [Folder Layout](#folder-layout)
 * [Usage](#usage)
-  * [Initialization](#initialization)
-  * [Detecting Upgrades](#detecting-upgrades)
-  * [Adding Upgrade Binary](#adding-upgrade-binary)
-  * [Auto-Download](#auto-download)
+    * [Initialization](#initialization)
+    * [Detecting Upgrades](#detecting-upgrades)
+    * [Adding Upgrade Binary](#adding-upgrade-binary)
+    * [Auto-Download](#auto-download)
+    * [Preparing for an Upgrade](#preparing-for-an-upgrade)
 * [Example: SimApp Upgrade](#example-simapp-upgrade)
-  * [Chain Setup](#chain-setup)
-    * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-  * [Update App](#update-app)
+    * [Chain Setup](#chain-setup)
+        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+    * [Update App](#update-app)
 
 ## Design
 
@@ -87,11 +88,7 @@ The first argument passed to `cosmovisor` is the action for `cosmovisor` to take
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
 
-:::warning
-Use of `cosmovisor` without one of the action arguments is deprecated. For backwards compatibility, if the first argument is not an action argument, `run` is assumed. However, this fallback might be removed in future versions, so it is recommended that you always provide `run`.
-:::
-
-`cosmovisor` reads its configuration from environment variables:
+`cosmovisor` reads its configuration from environment variables, or its configuration file (use `--cosmovisor-config <path>`):
 
 * `DAEMON_HOME` is the location where the `cosmovisor/` directory is kept that contains the genesis binary, the upgrade binaries, and any additional auxiliary files associated with each binary (e.g. `$HOME/.gaiad`, `$HOME/.regend`, `$HOME/.simd`, etc.).
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
@@ -265,6 +262,38 @@ sha256sum ./testdata/repo/zip_directory/autod.zip
 The result will look something like the following: `29139e1381b8177aec909fab9a75d11381cab5adf7d3af0c05ff1c9c117743a7`.
 
 You can also use `sha512sum` if you would prefer to use longer hashes, or `md5sum` if you would prefer to use broken hashes. Whichever you choose, make sure to set the hash algorithm properly in the checksum argument to the URL.
+
+### Preparing for an Upgrade
+
+To prepare for an upgrade, use the `prepare-upgrade` command:
+
+```shell
+cosmovisor prepare-upgrade
+```
+
+This command performs the following actions:
+
+1. Retrieves upgrade information directly from the blockchain about the next scheduled upgrade.
+2. Downloads the new binary specified in the upgrade plan.
+3. Verifies the binary's checksum (if required by configuration).
+4. Places the new binary in the appropriate directory for Cosmovisor to use during the upgrade.
+
+The `prepare-upgrade` command provides detailed logging throughout the process, including:
+
+* The name and height of the upcoming upgrade
+* The URL from which the new binary is being downloaded
+* Confirmation of successful download and verification
+* The path where the new binary has been placed
+
+Example output:
+
+```bash
+INFO Preparing for upgrade name=v1.0.0 height=1000000
+INFO Downloading upgrade binary url=https://example.com/binary/v1.0.0?checksum=sha256:339911508de5e20b573ce902c500ee670589073485216bee8b045e853f24bce8
+INFO Upgrade preparation complete name=v1.0.0 height=1000000
+```
+
+*Note: The current way of downloading manually and placing the binary at the right place would still work.*
 
 ## Example: SimApp Upgrade
 

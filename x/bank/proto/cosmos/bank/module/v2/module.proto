@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package cosmos.bank.module.v2;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+option go_package = "cosmossdk.io/x/bank/v2/types/module";
+
+// Module is the config object of the bank module.
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "cosmossdk.io/x/bank/v2"
+  };
+
+  // authority defines the custom module authority. If not set, defaults to the governance module.
+  string authority = 1;
+
+  // restrictions_order specifies the order of send restrictions and should be
+  // a list of module names which provide a send restriction instance. If no
+  // order is provided, then restrictions will be applied in alphabetical order
+  // of module names.
+  repeated string restrictions_order = 2;
+}

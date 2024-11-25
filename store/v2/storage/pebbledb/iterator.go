@@ -82,6 +82,12 @@ func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte
 			// so there exists at least one version of currKey SeekLT may move to.
 			itr.valid = itr.source.SeekLT(MVCCEncode(currKey, itr.version+1))
 		}
+
+		// The cursor might now be pointing at a key/value pair that is tombstoned.
+		// If so, we must move the cursor.
+		if itr.valid && itr.cursorTombstoned() {
+			itr.Next()
+		}
 	}
 	return itr
 }
@@ -210,15 +216,20 @@ func (itr *iterator) DebugRawIterate() {
 		valid = itr.source.SeekLT(MVCCEncode(firstKey, itr.version+1))
 	}
 
+	var err error
 	for valid {
 		key, vBz, ok := SplitMVCCKey(itr.source.Key())
 		if !ok {
 			panic(fmt.Sprintf("invalid PebbleDB MVCC key: %s", itr.source.Key()))
 		}
 
-		version, err := decodeUint64Ascending(vBz)
-		if err != nil {
-			panic(fmt.Errorf("failed to decode key version: %w", err))
+		var version uint64
+		// handle version 0 (no version prefix)
+		if len(vBz) > 0 {
+			version, err = decodeUint64Ascending(vBz)
+			if err != nil {
+				panic(fmt.Errorf("failed to decode key version: %w", err))
+			}
 		}
 
 		val, tombBz, ok := SplitMVCCKey(itr.source.Value())

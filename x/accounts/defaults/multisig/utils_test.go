@@ -9,13 +9,13 @@ import (
 	types "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -25,8 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-type ProtoMsg = protoiface.MessageV1
 
 var TestFunds = sdk.NewCoins(sdk.NewCoin("test", math.NewInt(10)))
 
@@ -149,9 +147,9 @@ func (c mockStateCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
 }
 
 type (
-	ModuleExecUntypedFunc = func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error)
-	ModuleExecFunc        = func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error
-	ModuleQueryFunc       = func(ctx context.Context, queryReq, queryResp ProtoMsg) error
+	ModuleExecUntypedFunc = func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error)
+	ModuleExecFunc        = func(ctx context.Context, sender []byte, msg, msgResp transaction.Msg) error
+	ModuleQueryFunc       = func(ctx context.Context, queryReq, queryResp transaction.Msg) error
 )
 
 // mock address codec
@@ -163,20 +161,19 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("mock_multisig_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
-			return nil
-		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		0, []byte("mock_multisig_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			return nil, nil
-		}, func(ctx context.Context, req, resp ProtoMsg) error {
+		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
+			var resp transaction.Msg
 			_, ok := req.(*banktypes.QueryBalanceRequest)
 			require.True(t, ok)
-			gogoproto.Merge(resp.(gogoproto.Message), &banktypes.QueryBalanceResponse{
+			gogoproto.Merge(resp, &banktypes.QueryBalanceResponse{
 				Balance: &sdk.Coin{
 					Denom:  "test",
 					Amount: math.NewInt(5),
 				},
 			})
-			return nil
+			return resp, nil
 		},
 	)
 }
@@ -188,7 +185,7 @@ func makeMockDependencies(storeservice store.KVStoreService, timefn func() time.
 		SchemaBuilder:    sb,
 		AddressCodec:     addressCodec{},
 		LegacyStateCodec: mockStateCodec{},
-		Environment: appmodule.Environment{
+		Environment: appmodulev2.Environment{
 			HeaderService: headerService{timefn},
 			EventService:  eventService{},
 		},

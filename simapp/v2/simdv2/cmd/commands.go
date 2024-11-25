@@ -2,112 +2,175 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
-	"cosmossdk.io/core/log"
+	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api/grpc"
+	grpcserver "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/rest"
+	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
-	"cosmossdk.io/server/v2/store"
+	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
-	authcmd "cosmossdk.io/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
-func newApp[T transaction.Tx](
-	logger log.Logger, viper *viper.Viper,
-) serverv2.AppI[T] {
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
+// CommandDependencies is a struct that contains all the dependencies needed to initialize the root command.
+// an alternative design could fetch these even later from the command context
+type CommandDependencies[T transaction.Tx] struct {
+	GlobalConfig  coreserver.ConfigMap
+	TxConfig      client.TxConfig
+	ModuleManager *runtimev2.MM[T]
+	SimApp        *simapp.SimApp[T]
+	// could generally be more generic with serverv2.ServerComponent[T]
+	// however, we want to register extra grpc handlers
+	ConsensusServer *cometbft.CometBFTServer[T]
+	ClientContext   client.Context
 }
 
-func initRootCmd[T transaction.Tx](
+func InitRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
-	txConfig client.TxConfig,
-	moduleManager *runtimev2.MM[T],
-) {
+	logger log.Logger,
+	deps CommandDependencies[T],
+) (serverv2.ConfigWriter, error) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(moduleManager),
+		genutilcli.InitCmd(deps.ModuleManager),
+		genesisCommand(deps.ModuleManager, deps.SimApp),
+		NewTestnetCmd(deps.ModuleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		NewTestnetCmd(moduleManager),
-		// pruning.Cmd(newApp), // TODO add to comet server
-		// snapshot.Cmd(newApp), // TODO add to comet server
-	)
-
-	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
-	if err != nil {
-		panic(fmt.Sprintf("failed to create logger: %v", err))
-	}
-
-	// add keybase, auxiliary RPC, query, genesis, and tx child commands
-	rootCmd.AddCommand(
-		genesisCommand(moduleManager, appExport[T]),
+		// add keybase, auxiliary RPC, query, genesis, and tx child commands
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
 		offchain.OffChain(),
 	)
 
-	// wire server commands
-	if err = serverv2.AddCommands(
-		rootCmd,
-		newApp,
-		logger,
-		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
-		grpc.New[T](),
-		store.New[T](),
-	); err != nil {
-		panic(err)
+	// build CLI skeleton for initial config parsing or a client application invocation
+	if deps.SimApp == nil {
+		if deps.ConsensusServer == nil {
+			deps.ConsensusServer = cometbft.NewWithConfigOptions[T](initCometConfig())
+		}
+		return serverv2.AddCommands[T](
+			rootCmd,
+			logger,
+			io.NopCloser(nil),
+			deps.GlobalConfig,
+			initServerConfig(),
+			deps.ConsensusServer,
+			&grpcserver.Server[T]{},
+			&serverstore.Server[T]{},
+			&telemetry.Server[T]{},
+			&rest.Server[T]{},
+		)
 	}
+
+	// build full app!
+	simApp := deps.SimApp
+
+	// store component (not a server)
+	storeComponent, err := serverstore.New[T](simApp.Store(), deps.GlobalConfig)
+	if err != nil {
+		return nil, err
+	}
+	restServer, err := rest.New[T](logger, simApp.App.AppManager, deps.GlobalConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// consensus component
+	if deps.ConsensusServer == nil {
+		deps.ConsensusServer, err = cometbft.New(
+			logger,
+			simApp.Name(),
+			simApp.Store(),
+			simApp.App.AppManager,
+			simApp.AppCodec(),
+			&genericTxDecoder[T]{deps.TxConfig},
+			simApp.App.QueryHandlers(),
+			simApp.App.SchemaDecoderResolver(),
+			initCometOptions[T](),
+			deps.GlobalConfig,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger, sdktelemetry.EnableTelemetry)
+	if err != nil {
+		return nil, err
+	}
+
+	grpcServer, err := grpcserver.New[T](
+		logger,
+		simApp.InterfaceRegistry(),
+		simApp.QueryHandlers(),
+		simApp.Query,
+		deps.GlobalConfig,
+		grpcserver.WithExtraGRPCHandlers[T](
+			deps.ConsensusServer.GRPCServiceRegistrar(
+				deps.ClientContext,
+				deps.GlobalConfig,
+			),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// wire server commands
+	return serverv2.AddCommands[T](
+		rootCmd,
+		logger,
+		simApp,
+		deps.GlobalConfig,
+		initServerConfig(),
+		deps.ConsensusServer,
+		grpcServer,
+		storeComponent,
+		telemetryServer,
+		restServer,
+	)
 }
 
-// genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
+// genesisCommand builds genesis-related `simd genesis` command.
 func genesisCommand[T transaction.Tx](
 	moduleManager *runtimev2.MM[T],
-	appExport func(logger log.Logger,
-		height int64,
-		forZeroHeight bool,
-		jailAllowedAddrs []string,
-		viper *viper.Viper,
-		modulesToExport []string,
-	) (servertypes.ExportedApp, error),
-	cmds ...*cobra.Command,
+	app *simapp.SimApp[T],
 ) *cobra.Command {
-	compatAppExporter := func(logger log.Logger, db dbm.DB, traceWriter io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions, modulesToExport []string) (servertypes.ExportedApp, error) {
-		viperAppOpts, ok := appOpts.(*viper.Viper)
-		if !ok {
-			return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
-		}
-
-		return appExport(logger, height, forZeroHeight, jailAllowedAddrs, viperAppOpts, modulesToExport)
+	var genTxValidator func([]transaction.Msg) error
+	if moduleManager != nil {
+		genTxValidator = moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule).GenTxValidator()
 	}
+	cmd := v2.Commands(
+		genTxValidator,
+		moduleManager,
+		app,
+	)
 
-	cmd := genutilcli.Commands(moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, compatAppExporter)
-	for _, subCmd := range cmds {
-		cmd.AddCommand(subCmd)
-	}
 	return cmd
 }
 
@@ -123,11 +186,8 @@ func queryCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		rpc.QueryEventForTxCmd(),
-		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
-		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
-		server.QueryBlockResultsCmd(),
 	)
 
 	return cmd
@@ -157,30 +217,31 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-// appExport creates a new simapp (optionally at a given height) and exports state.
-func appExport[T transaction.Tx](
-	logger log.Logger,
-	height int64,
-	forZeroHeight bool,
-	jailAllowedAddrs []string,
-	viper *viper.Viper,
-	modulesToExport []string,
-) (servertypes.ExportedApp, error) {
-	// overwrite the FlagInvCheckPeriod
-	viper.Set(server.FlagInvCheckPeriod, 1)
+func RootCommandPersistentPreRun(clientCtx client.Context) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		// set the default command outputs
+		cmd.SetOut(cmd.OutOrStdout())
+		cmd.SetErr(cmd.ErrOrStderr())
 
-	var simApp *simapp.SimApp[T]
-	if height != -1 {
-		simApp = simapp.NewSimApp[T](logger, viper)
-
-		if err := simApp.LoadHeight(uint64(height)); err != nil {
-			return servertypes.ExportedApp{}, err
+		clientCtx = clientCtx.WithCmdContext(cmd.Context())
+		clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
 		}
-	} else {
-		simApp = simapp.NewSimApp[T](logger, viper)
-	}
 
-	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+		customClientTemplate, customClientConfig := initClientConfig()
+		clientCtx, err = config.CreateClientConfig(
+			clientCtx, customClientTemplate, customClientConfig)
+		if err != nil {
+			return err
+		}
+
+		if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}

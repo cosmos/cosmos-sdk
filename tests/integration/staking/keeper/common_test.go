@@ -5,21 +5,18 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/consensus"
+	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
@@ -37,6 +34,11 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var PKs = simtestutil.CreateTestPubKeys(500)
@@ -162,19 +164,23 @@ func initFixture(tb testing.TB) *fixture {
 
 	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensustypes.StoreKey]), log.NewNopLogger()), authtypes.NewModuleAddress("gov").String())
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
+	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
-			authtypes.ModuleName: authModule,
-			banktypes.ModuleName: bankModule,
-			types.ModuleName:     stakingModule,
+			authtypes.ModuleName:      authModule,
+			banktypes.ModuleName:      bankModule,
+			types.ModuleName:          stakingModule,
+			consensustypes.ModuleName: consensusModule,
 		},
 		msgRouter,
 		queryRouter,

@@ -6,7 +6,6 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -14,6 +13,7 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var TestProposal = getTestProposal()

@@ -3,7 +3,6 @@ package genutil
 import (
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
@@ -29,9 +28,9 @@ type ModuleInputs struct {
 
 	AccountKeeper  types.AccountKeeper
 	StakingKeeper  types.StakingKeeper
-	DeliverTx      genesis.TxHandler
 	Config         client.TxConfig
 	Cdc            codec.Codec
+	DeliverTx      TxHandler              `optional:"true"` // Only used in server v0 applications
 	GenTxValidator types.MessageValidator `optional:"true"`
 }
 
@@ -40,6 +39,5 @@ func ProvideModule(in ModuleInputs) appmodule.AppModule {
 		in.GenTxValidator = types.DefaultMessageValidator
 	}
 
-	m := NewAppModule(in.Cdc, in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config, in.GenTxValidator)
-	return m
+	return NewAppModule(in.Cdc, in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config, in.GenTxValidator)
 }

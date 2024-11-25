@@ -1764,6 +1764,7 @@ func _Query_Classes_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.nft.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,6 +35,8 @@ var (
 
 	// ExecBinaryUnversionedRegExp regular expression to extract the unversioned binary name
 	ExecBinaryUnversionedRegExp = regexp.MustCompile(`^(\w+)-?.*$`)
+
+	MaxGas = 10_000_000
 )
 
 type TestnetInitializer interface {
@@ -52,6 +55,7 @@ type SystemUnderTest struct {
 	// since Tendermint consensus does not allow specifying it directly.
 	blockTime         time.Duration
 	rpcAddr           string
+	apiAddr           string
 	initialNodesCount int
 	nodesCount        int
 	minGasPrice       string
@@ -85,6 +89,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		outputDir:         "./testnet",
 		blockTime:         blockTime,
 		rpcAddr:           "tcp://localhost:26657",
+		apiAddr:           fmt.Sprintf("http://localhost:%d", apiPortStart),
 		initialNodesCount: nodesCount,
 		outBuff:           ring.New(100),
 		errBuff:           ring.New(100),
@@ -127,9 +132,9 @@ func (s *SystemUnderTest) SetupChain() {
 		panic(fmt.Sprintf("failed to load genesis: %s", err))
 	}
 
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, 10_000_000)))
+	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, MaxGas)))
 	if err != nil {
-		panic(fmt.Sprintf("failed set block max gas: %s", err))
+		panic(fmt.Sprintf("failed to set block max gas: %s", err))
 	}
 	s.withEachNodeHome(func(i int, home string) {
 		if err := saveGenesis(home, genesisBz); err != nil {
@@ -139,22 +144,18 @@ func (s *SystemUnderTest) SetupChain() {
 
 	// backup genesis
 	dest := filepath.Join(WorkDir, s.nodePath(0), "config", "genesis.json.orig")
-	if _, err := copyFile(src, dest); err != nil {
-		panic(fmt.Sprintf("copy failed :%#+v", err))
-	}
+	MustCopyFile(src, dest)
 	// backup keyring
 	src = filepath.Join(WorkDir, s.nodePath(0), "keyring-test")
 	dest = filepath.Join(WorkDir, s.outputDir, "keyring-test")
-	if err := copyFilesInDir(src, dest); err != nil {
-		panic(fmt.Sprintf("copy files from dir :%#+v", err))
-	}
+	MustCopyFilesInDir(src, dest)
 }
 
 func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.Log("Start chain\n")
 	s.ChainStarted = true
-	s.startNodesAsync(t, append([]string{"start", "--trace", "--log_level=info"}, xargs...)...)
+	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color"}, xargs...)...)
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 
@@ -246,7 +247,7 @@ func (s *SystemUnderTest) AwaitUpgradeInfo(t *testing.T) {
 			case err == nil:
 				found = true
 			case !os.IsNotExist(err):
-				t.Fatalf(err.Error())
+				t.Fatal(err.Error())
 			}
 		})
 		time.Sleep(s.blockTime / 2)
@@ -332,7 +333,7 @@ func (s *SystemUnderTest) StopChain() {
 
 func (s *SystemUnderTest) withEachPid(cb func(p *os.Process)) {
 	s.pidsLock.RLock()
-	pids := s.pids
+	pids := maps.Keys(s.pids)
 	s.pidsLock.RUnlock()
 
 	for pid := range pids {
@@ -359,7 +360,13 @@ func (s *SystemUnderTest) PrintBuffer() {
 	})
 }
 
-// AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early
+// AwaitNBlocks blocks until the current height + n block is reached. An optional timeout parameter can be passed to abort early
+func (s *SystemUnderTest) AwaitNBlocks(t *testing.T, n int64, timeout ...time.Duration) {
+	t.Helper()
+	s.AwaitBlockHeight(t, s.CurrentHeight()+n, timeout...)
+}
+
+// AwaitBlockHeight blocks until the target height is reached. An optional timeout parameter can be passed to abort early
 func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, timeout ...time.Duration) {
 	t.Helper()
 	require.Greater(t, targetHeight, s.currentHeight.Load())
@@ -471,7 +478,7 @@ func (s *SystemUnderTest) modifyGenesisJSON(t *testing.T, mutators ...GenesisMut
 	for _, m := range mutators {
 		current = m(current)
 	}
-	out := storeTempFile(t, current)
+	out := StoreTempFile(t, current)
 	defer os.Remove(out.Name())
 	s.setGenesis(t, out.Name())
 	s.MarkDirty()
@@ -528,7 +535,7 @@ func (s *SystemUnderTest) ForEachNodeExecAndWait(t *testing.T, cmds ...[]string)
 		for j, xargs := range cmds {
 			xargs = append(xargs, "--home", home)
 			s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(xargs, " "))
-			out := runShellCmd(t, s.execBinary, xargs...)
+			out := MustRunShellCmd(t, s.execBinary, xargs...)
 			s.Logf("Result: %s\n", out)
 			result[i][j] = out
 		}
@@ -536,20 +543,20 @@ func (s *SystemUnderTest) ForEachNodeExecAndWait(t *testing.T, cmds ...[]string)
 	return result
 }
 
-func runShellCmd(t *testing.T, cmd string, args ...string) string {
+func MustRunShellCmd(t *testing.T, cmd string, args ...string) string {
 	t.Helper()
-	out, err := runShellCmdX(cmd, args...)
+	out, err := RunShellCmd(cmd, args...)
 	require.NoError(t, err)
 	return out
 }
 
-func runShellCmdX(cmd string, args ...string) (string, error) {
+func RunShellCmd(cmd string, args ...string) (string, error) {
 	c := exec.Command( //nolint:gosec // used by tests only
 		locateExecutable(cmd),
 		args...,
 	)
 	c.Dir = WorkDir
-	out, err := c.CombinedOutput()
+	out, err := c.Output()
 	if err != nil {
 		return string(out), fmt.Errorf("run `%s %s`: out: %s: %w", cmd, strings.Join(args, " "), string(out), err)
 	}
@@ -560,7 +567,7 @@ func runShellCmdX(cmd string, args ...string) (string, error) {
 func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.withEachNodeHome(func(i int, home string) {
-		args := append(xargs, "--home", home)
+		args := append(xargs, "--home="+home)
 		s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 		cmd := exec.Command( //nolint:gosec // used by tests only
 			locateExecutable(s.execBinary),
@@ -569,28 +576,37 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 		cmd.Dir = WorkDir
 		s.watchLogs(i, cmd)
 		require.NoError(t, cmd.Start(), "node %d", i)
-
-		pid := cmd.Process.Pid
-		s.pidsLock.Lock()
-		s.pids[pid] = struct{}{}
-		s.pidsLock.Unlock()
-		s.Logf("Node started: %d\n", pid)
+		s.Logf("Node started: %d\n", cmd.Process.Pid)
 
 		// cleanup when stopped
-		go func(pid int) {
-			_ = cmd.Wait() // blocks until shutdown
-			s.pidsLock.Lock()
-			delete(s.pids, pid)
-			s.pidsLock.Unlock()
-			s.Logf("Node stopped: %d\n", pid)
-		}(pid)
+		s.awaitProcessCleanup(cmd)
 	})
+}
+
+// tracks the PID in state with a go routine waiting for the shutdown completion to unregister
+func (s *SystemUnderTest) awaitProcessCleanup(cmd *exec.Cmd) {
+	pid := cmd.Process.Pid
+	s.pidsLock.Lock()
+	s.pids[pid] = struct{}{}
+	s.pidsLock.Unlock()
+	go func() {
+		_ = cmd.Wait() // blocks until shutdown
+		s.Logf("Node stopped: %d\n", pid)
+		s.pidsLock.Lock()
+		delete(s.pids, pid)
+		s.pidsLock.Unlock()
+	}()
 }
 
 func (s *SystemUnderTest) withEachNodeHome(cb func(i int, home string)) {
 	for i := 0; i < s.nodesCount; i++ {
 		cb(i, s.nodePath(i))
 	}
+}
+
+// NodeDir returns the workdir and path to the node home folder.
+func (s *SystemUnderTest) NodeDir(i int) string {
+	return filepath.Join(WorkDir, s.nodePath(i))
 }
 
 // nodePath returns the path of the node within the work dir. not absolute
@@ -617,6 +633,10 @@ func (s *SystemUnderTest) RPCClient(t *testing.T) RPCClient {
 	return NewRPCClient(t, s.rpcAddr)
 }
 
+func (s *SystemUnderTest) APIAddress() string {
+	return s.apiAddr
+}
+
 func (s *SystemUnderTest) AllPeers(t *testing.T) []string {
 	t.Helper()
 	result := make([]string, s.nodesCount)
@@ -635,9 +655,12 @@ func AllNodes(t *testing.T, s *SystemUnderTest) []Node {
 	t.Helper()
 	result := make([]Node, s.nodesCount)
 	outs := s.ForEachNodeExecAndWait(t, []string{"comet", "show-node-id"})
-	ip, err := server.ExternalIP()
-	require.NoError(t, err)
-
+	ip := "127.0.0.1"
+	if false { // is there still a use case for external ip?
+		var err error
+		ip, err = server.ExternalIP()
+		require.NoError(t, err)
+	}
 	for i, out := range outs {
 		result[i] = Node{
 			ID:      strings.TrimSpace(out[0]),
@@ -665,7 +688,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 
 	// prepare new node
 	moniker := fmt.Sprintf("node%d", nodeNumber)
-	args := []string{"init", moniker, "--home", nodePath, "--overwrite"}
+	args := []string{"init", moniker, "--home=" + nodePath, "--overwrite"}
 	s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 	cmd := exec.Command( //nolint:gosec // used by tests only
 		locateExecutable(s.execBinary),
@@ -676,12 +699,14 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 	require.NoError(t, cmd.Run(), "failed to start node with id %d", nodeNumber)
 	require.NoError(t, saveGenesis(nodePath, []byte(s.ReadGenesisJSON(t))))
 
-	// quick hack: copy config and overwrite by start params
-	configFile := filepath.Join(WorkDir, nodePath, "config", "config.toml")
-	_ = os.Remove(configFile)
-	_, err := copyFile(filepath.Join(WorkDir, s.nodePath(0), "config", "config.toml"), configFile)
-	require.NoError(t, err)
+	configPath := filepath.Join(WorkDir, nodePath, "config")
 
+	// quick hack: copy config and overwrite by start params
+	for _, tomlFile := range []string{"config.toml", "app.toml"} {
+		configFile := filepath.Join(configPath, tomlFile)
+		_ = os.Remove(configFile)
+		_ = MustCopyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
+	}
 	// start node
 	allNodes := s.AllNodes(t)
 	node := allNodes[len(allNodes)-1]
@@ -698,9 +723,10 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		fmt.Sprintf("--p2p.laddr=tcp://localhost:%d", node.P2PPort),
 		fmt.Sprintf("--rpc.laddr=tcp://localhost:%d", node.RPCPort),
 		fmt.Sprintf("--grpc.address=localhost:%d", 9090+nodeNumber),
-		fmt.Sprintf("--grpc-web.address=localhost:%d", 8090+nodeNumber),
+		"--p2p.pex=false",
 		"--moniker=" + moniker,
 		"--log_level=info",
+		"--log_no_color",
 		"--home", nodePath,
 	}
 	s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
@@ -711,6 +737,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 	cmd.Dir = WorkDir
 	s.watchLogs(nodeNumber, cmd)
 	require.NoError(t, cmd.Start(), "node %d", nodeNumber)
+	s.awaitProcessCleanup(cmd)
 	return node
 }
 
@@ -729,6 +756,11 @@ func (s *SystemUnderTest) anyNodeRunning() bool {
 
 func (s *SystemUnderTest) CurrentHeight() int64 {
 	return s.currentHeight.Load()
+}
+
+// NodesCount returns the number of node instances used
+func (s *SystemUnderTest) NodesCount() int {
+	return s.nodesCount
 }
 
 type Node struct {
@@ -914,54 +946,6 @@ func restoreOriginalKeyring(t *testing.T, s *SystemUnderTest) {
 	require.NoError(t, os.RemoveAll(dest))
 	for i := 0; i < s.initialNodesCount; i++ {
 		src := filepath.Join(WorkDir, s.nodePath(i), "keyring-test")
-		require.NoError(t, copyFilesInDir(src, dest))
+		MustCopyFilesInDir(src, dest)
 	}
-}
-
-// copyFile copy source file to dest file path
-func copyFile(src, dest string) (*os.File, error) {
-	in, err := os.Open(src)
-	if err != nil {
-		return nil, err
-	}
-	defer in.Close()
-	out, err := os.Create(dest)
-	if err != nil {
-		return nil, err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, in)
-	return out, err
-}
-
-// copyFilesInDir copy files in src dir to dest path
-func copyFilesInDir(src, dest string) error {
-	err := os.MkdirAll(dest, 0o750)
-	if err != nil {
-		return fmt.Errorf("mkdirs: %w", err)
-	}
-	fs, err := os.ReadDir(src)
-	if err != nil {
-		return fmt.Errorf("read dir: %w", err)
-	}
-	for _, f := range fs {
-		if f.IsDir() {
-			continue
-		}
-		if _, err := copyFile(filepath.Join(src, f.Name()), filepath.Join(dest, f.Name())); err != nil {
-			return fmt.Errorf("copy file: %q: %w", f.Name(), err)
-		}
-	}
-	return nil
-}
-
-func storeTempFile(t *testing.T, content []byte) *os.File {
-	t.Helper()
-	out, err := os.CreateTemp(t.TempDir(), "genesis")
-	require.NoError(t, err)
-	_, err = io.Copy(out, bytes.NewReader(content))
-	require.NoError(t, err)
-	require.NoError(t, out.Close())
-	return out
 }

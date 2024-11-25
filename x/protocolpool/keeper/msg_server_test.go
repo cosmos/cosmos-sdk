@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	"go.uber.org/mock/gomock"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
@@ -393,7 +395,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 		recipientAddress []sdk.AccAddress
 		expErr           bool
 		expErrMsg        string
-		withdrawnAmount  sdk.Coin
+		withdrawnAmount  sdk.Coins
 	}{
 		"empty recipient": {
 			recipientAddress: []sdk.AccAddress{sdk.AccAddress([]byte(""))},
@@ -403,7 +405,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 		"recipient with no continuous fund": {
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           true,
-			expErrMsg:        "no continuous fund found for recipient",
+			expErrMsg:        "error while withdrawing recipient funds for recipient: no recipient found",
 		},
 		"funds percentage > 100": {
 			preRun: func() {
@@ -421,7 +423,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
 
 				// Set fund 2
@@ -437,18 +439,18 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
 				suite.Require().NoError(err)
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
 
 				// Set ToDistribute
-				err = suite.poolKeeper.ToDistribute.Set(suite.ctx, math.NewInt(100000))
+				err = suite.poolKeeper.Distributions.Set(suite.ctx, suite.ctx.HeaderInfo().Time, types.DistributionAmount{Amount: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))})
 				suite.Require().NoError(err)
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           true,
 			expErrMsg:        "error while iterating all the continuous funds: total funds percentage cannot exceed 100",
 		},
-		"expired case": {
+		"expired case with no funds left to withdraw": {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
@@ -464,7 +466,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           true,
-			expErrMsg:        "cannot withdraw continuous funds: continuous fund expired for recipient",
+			expErrMsg:        "error while withdrawing recipient funds for recipient: no recipient found",
 		},
 		"valid case with ToDistribute amount zero": {
 			preRun: func() {
@@ -481,14 +483,15 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
-				err = suite.poolKeeper.ToDistribute.Set(suite.ctx, math.ZeroInt())
+				err = suite.poolKeeper.Distributions.Set(suite.ctx, suite.ctx.HeaderInfo().Time, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
+				suite.mockStreamFunds(math.NewInt(0))
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           false,
-			withdrawnAmount:  sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
+			withdrawnAmount:  nil,
 		},
 		"valid case with empty expiry": {
 			preRun: func() {
@@ -502,16 +505,15 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
-				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				suite.mockStreamFunds()
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+				suite.mockStreamFunds(math.NewInt(100000))
+				err = suite.poolKeeper.SetToDistribute(suite.ctx)
 				suite.Require().NoError(err)
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           false,
-			withdrawnAmount:  sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000)),
+			withdrawnAmount:  sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000))),
 		},
 		"valid case": {
 			preRun: func() {
@@ -528,16 +530,15 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
-				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				suite.mockStreamFunds()
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+				suite.mockStreamFunds(math.NewInt(100000))
+				err = suite.poolKeeper.SetToDistribute(suite.ctx)
 				suite.Require().NoError(err)
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           false,
-			withdrawnAmount:  sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000)),
+			withdrawnAmount:  sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000))),
 		},
 		"valid case with multiple funds": {
 			preRun: func() {
@@ -555,7 +556,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
 
 				// Set continuous fund 2
@@ -570,7 +571,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient2, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
 
 				// Set continuous fund 3
@@ -585,17 +586,16 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient3, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient3, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient3, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
 
-				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				suite.mockStreamFunds()
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+				suite.mockStreamFunds(math.NewInt(100000))
+				err = suite.poolKeeper.SetToDistribute(suite.ctx)
 				suite.Require().NoError(err)
 			},
 			recipientAddress: []sdk.AccAddress{recipient, recipient2, recipient3},
 			expErr:           false,
-			withdrawnAmount:  sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(30000)),
+			withdrawnAmount:  sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(30000))),
 		},
 	}
 
@@ -625,10 +625,10 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				if len(tc.recipientAddress) > 1 {
 					toClaim, err := suite.poolKeeper.RecipientFundDistribution.Get(suite.ctx, tc.recipientAddress[1])
 					suite.Require().NoError(err)
-					suite.Require().Equal(toClaim, math.NewInt(20000))
+					suite.Require().Equal(toClaim.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(20000))))
 					toClaim, err = suite.poolKeeper.RecipientFundDistribution.Get(suite.ctx, tc.recipientAddress[2])
 					suite.Require().NoError(err)
-					suite.Require().Equal(toClaim, math.NewInt(30000))
+					suite.Require().Equal(toClaim.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(30000))))
 				}
 			}
 		})
@@ -794,7 +794,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 		expErr         bool
 		expErrMsg      string
 		postRun        func()
-		withdrawnFunds sdk.Coin
+		withdrawnFunds sdk.Coins
 	}{
 		"empty recipient": {
 			preRun: func() {
@@ -813,11 +813,6 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			expErr:    true,
 			expErrMsg: "empty address string is not allowed",
 		},
-		"no recipient found": {
-			recipientAddr: recipientAddr,
-			expErr:        true,
-			expErrMsg:     "no recipient found to cancel continuous fund",
-		},
 		"all good with unclaimed funds for recipient": {
 			preRun: func() {
 				// Set fund 1
@@ -834,7 +829,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipientAddr, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipientAddr, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
 
 				// Set fund 2
@@ -849,13 +844,12 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient2, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
 
 				// Set ToDistribute
-				toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-				suite.mockStreamFunds()
-				err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+				suite.mockStreamFunds(math.NewInt(100000))
+				err = suite.poolKeeper.SetToDistribute(suite.ctx)
 				suite.Require().NoError(err)
 
 				// withdraw funds for fund request 2
@@ -871,7 +865,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.Require().Error(err)
 				suite.Require().ErrorIs(err, collections.ErrNotFound)
 			},
-			withdrawnFunds: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000)),
+			withdrawnFunds: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000))),
 		},
 		"all good": {
 			preRun: func() {
@@ -887,7 +881,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.mockWithdrawContinuousFund()
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient3, cf)
 				suite.Require().NoError(err)
-				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient3, math.ZeroInt())
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient3, types.DistributionAmount{Amount: sdk.NewCoins()})
 				suite.Require().NoError(err)
 			},
 			recipientAddr: recipient3,
@@ -897,7 +891,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.Require().Error(err)
 				suite.Require().ErrorIs(err, collections.ErrNotFound)
 			},
-			withdrawnFunds: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
+			withdrawnFunds: nil,
 		},
 	}
 
@@ -960,9 +954,8 @@ func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 	})
 	suite.Require().NoError(err)
 
-	toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-	suite.mockStreamFunds()
-	err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+	suite.mockStreamFunds(math.NewInt(100000))
+	err = suite.poolKeeper.SetToDistribute(suite.ctx)
 	suite.Require().NoError(err)
 
 	suite.mockWithdrawContinuousFund()
@@ -973,11 +966,17 @@ func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 	header.Time = expiration.Add(1 * time.Second)
 	suite.ctx = suite.ctx.WithHeaderInfo(header)
 
-	_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
-	suite.Require().ErrorContains(err, "continuous fund expired for recipient")
+	// If we keep calling WithdrawContinuousFund, it should not error and return always an amount of 0
+	withdrawRes, err := suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
+	suite.Require().True(withdrawRes.Amount.IsZero())
+	suite.Require().NoError(err)
 
-	suite.mockStreamFunds()
-	err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+	withdrawRes, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
+	suite.Require().True(withdrawRes.Amount.IsZero())
+	suite.Require().NoError(err)
+
+	suite.mockStreamFunds(math.NewInt(100000))
+	err = suite.poolKeeper.SetToDistribute(suite.ctx)
 	suite.Require().NoError(err)
 
 	suite.mockWithdrawContinuousFund()
@@ -986,8 +985,69 @@ func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 
 	res, err := suite.msgServer.CancelContinuousFund(suite.ctx, &types.MsgCancelContinuousFund{
 		Authority:        suite.poolKeeper.GetAuthority(),
+		RecipientAddress: recipient2StrAddr,
+	})
+	suite.Require().NoError(err)
+	suite.Require().Nil(res.WithdrawnAllocatedFund)
+
+	// canceling an expired continuous fund, won't error
+	res, err = suite.msgServer.CancelContinuousFund(suite.ctx, &types.MsgCancelContinuousFund{
+		Authority:        suite.poolKeeper.GetAuthority(),
 		RecipientAddress: recipientStrAddr,
 	})
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)), res.WithdrawnAllocatedFund)
+	suite.Require().Nil(res.WithdrawnAllocatedFund)
+
+	// if we try to cancel again the same continuout fund, it won't error, it will still distribute funds if needed.
+	res, err = suite.msgServer.CancelContinuousFund(suite.ctx, &types.MsgCancelContinuousFund{
+		Authority:        suite.poolKeeper.GetAuthority(),
+		RecipientAddress: recipientStrAddr,
+	})
+	suite.Require().NoError(err)
+	suite.Require().True(res.WithdrawnAllocatedFund.IsZero())
+}
+
+func (suite *KeeperTestSuite) TestFundCommunityPool() {
+	sender := []byte("fundingAddr1____________________")
+	addrCodec := codectestutil.CodecOptions{}.GetAddressCodec()
+	senderAddr, err := addrCodec.BytesToString(sender)
+	suite.Require().NoError(err)
+
+	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sender, types.ModuleName, amount).Return(nil).Times(1)
+
+	_, err = suite.msgServer.FundCommunityPool(suite.ctx, &types.MsgFundCommunityPool{
+		Amount:    amount,
+		Depositor: senderAddr,
+	})
+	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
+	recipient := []byte("fundingAddr1____________________")
+	addrCodec := codectestutil.CodecOptions{}.GetAddressCodec()
+	recipientAddr, err := addrCodec.BytesToString(recipient)
+	suite.Require().NoError(err)
+
+	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, recipient, amount).Return(nil).Times(1)
+
+	_, err = suite.msgServer.CommunityPoolSpend(suite.ctx, &types.MsgCommunityPoolSpend{
+		Authority: suite.poolKeeper.GetAuthority(),
+		Recipient: recipientAddr,
+		Amount:    amount,
+	})
+	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) TestUpdateParams() {
+	_, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
+		Authority: suite.poolKeeper.GetAuthority(),
+		Params:    types.Params{EnabledDistributionDenoms: []string{"stake"}},
+	})
+	suite.Require().NoError(err)
+
+	params, err := suite.poolKeeper.Params.Get(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(params.EnabledDistributionDenoms, 1)
 }

@@ -2,21 +2,20 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // Keeper manages state of all fee grants, as well as calculating approval.
@@ -24,9 +23,9 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	cdc        codec.BinaryCodec
-	authKeeper feegrant.AccountKeeper
-	Schema     collections.Schema
+	cdc     codec.BinaryCodec
+	addrCdc address.Codec
+	Schema  collections.Schema
 	// FeeAllowance key: grantee+granter | value: Grant
 	FeeAllowance collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
 	// FeeAllowanceQueue key: expiration time+grantee+granter | value: bool
@@ -36,13 +35,13 @@ type Keeper struct {
 var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a feegrant Keeper
-func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak feegrant.AccountKeeper) Keeper {
+func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, addrCdc address.Codec) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	return Keeper{
 		Environment: env,
 		cdc:         cdc,
-		authKeeper:  ak,
+		addrCdc:     addrCdc,
 		FeeAllowance: collections.NewMap(
 			sb,
 			feegrant.FeeAllowanceKeyPrefix,
@@ -58,11 +57,6 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak feegrant.Acc
 			collections.BoolValue,
 		),
 	}
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", feegrant.ModuleName))
 }
 
 // GrantAllowance creates a new grant
@@ -92,11 +86,11 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		}
 	}
 
-	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	granterStr, err := k.addrCdc.BytesToString(granter)
 	if err != nil {
 		return err
 	}
-	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	granteeStr, err := k.addrCdc.BytesToString(grantee)
 	if err != nil {
 		return err
 	}
@@ -133,11 +127,11 @@ func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 		return err
 	}
 
-	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	granterStr, err := k.addrCdc.BytesToString(granter)
 	if err != nil {
 		return err
 	}
-	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	granteeStr, err := k.addrCdc.BytesToString(grantee)
 	if err != nil {
 		return err
 	}
@@ -180,11 +174,11 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 		}
 	}
 
-	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	granterStr, err := k.addrCdc.BytesToString(granter)
 	if err != nil {
 		return err
 	}
-	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	granteeStr, err := k.addrCdc.BytesToString(grantee)
 	if err != nil {
 		return err
 	}
@@ -197,7 +191,7 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 }
 
 // GetAllowance returns the allowance between the granter and grantee.
-// If there is none, it returns nil, nil.
+// If there is none, it returns nil, collections.ErrNotFound.
 // Returns an error on parsing issues
 func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
 	grant, err := k.FeeAllowance.Get(ctx, collections.Join(grantee, granter))
@@ -224,11 +218,11 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 		return err
 	}
 
-	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	granterStr, err := k.addrCdc.BytesToString(granter)
 	if err != nil {
 		return err
 	}
-	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+	granteeStr, err := k.addrCdc.BytesToString(grantee)
 	if err != nil {
 		return err
 	}
@@ -262,11 +256,11 @@ func (k *Keeper) emitUseGrantEvent(ctx context.Context, granter, grantee string)
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) error {
 	for _, f := range data.Allowances {
-		granter, err := k.authKeeper.AddressCodec().StringToBytes(f.Granter)
+		granter, err := k.addrCdc.StringToBytes(f.Granter)
 		if err != nil {
 			return err
 		}
-		grantee, err := k.authKeeper.AddressCodec().StringToBytes(f.Grantee)
+		grantee, err := k.addrCdc.StringToBytes(f.Grantee)
 		if err != nil {
 			return err
 		}

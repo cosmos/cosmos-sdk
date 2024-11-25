@@ -19,7 +19,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+var consAddr = sdk.ConsAddress("addr1_______________")
 
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, slashing.AppModule{}).Codec

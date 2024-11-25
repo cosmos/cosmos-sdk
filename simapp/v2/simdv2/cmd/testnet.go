@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
@@ -22,8 +21,9 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
-	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/server/v2/store"
 	banktypes "cosmossdk.io/x/bank/types"
+	bankv2types "cosmossdk.io/x/bank/v2/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,12 +35,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 var (
-	flagMinGasPrices      = "min-gas-prices"
 	flagNodeDirPrefix     = "node-dir-prefix"
 	flagNumValidators     = "validator-count"
 	flagOutputDir         = "output-dir"
@@ -71,7 +71,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().IntP(flagNumValidators, "n", 4, "Number of validators to initialize the testnet with")
 	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(flagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().String(serverv2.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	// support old flags name for backwards compatibility
@@ -128,7 +128,7 @@ Example:
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
 			args.keyringBackend, _ = cmd.Flags().GetString(flags.FlagKeyringBackend)
 			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
-			args.minGasPrices, _ = cmd.Flags().GetString(flagMinGasPrices)
+			args.minGasPrices, _ = cmd.Flags().GetString(serverv2.FlagMinGasPrices)
 			args.nodeDirPrefix, _ = cmd.Flags().GetString(flagNodeDirPrefix)
 			args.nodeDaemonHome, _ = cmd.Flags().GetString(flagNodeDaemonHome)
 			args.startingIPAddress, _ = cmd.Flags().GetString(flagStartingIPAddress)
@@ -174,14 +174,6 @@ func initTestnetFiles[T transaction.Tx](
 	}
 	nodeIDs := make([]string, args.numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, args.numValidators)
-
-	// appConfig := srvconfig.DefaultConfig()
-	// appConfig.MinGasPrices = args.minGasPrices
-	// appConfig.API.Enable = true
-	// appConfig.Telemetry.Enabled = true
-	// appConfig.Telemetry.PrometheusRetentionTime = 60
-	// appConfig.Telemetry.EnableHostnameLabel = false
-	// appConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", args.chainID}}
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -287,7 +279,11 @@ func initTestnetFiles[T transaction.Tx](
 			sdk.NewCoin(args.bondTokenDenom, accStakingTokens),
 		}
 
-		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
+		addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
+		if err != nil {
+			return err
+		}
+		genBalances = append(genBalances, banktypes.Balance{Address: addrStr, Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valStr, err := clientCtx.ValidatorAddressCodec.BytesToString(addr)
@@ -299,7 +295,7 @@ func initTestnetFiles[T transaction.Tx](
 			valStr,
 			valPubKeys[i],
 			sdk.NewCoin(args.bondTokenDenom, valTokens),
-			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
+			stakingtypes.NewDescription(nodeDirName, "", "", "", "", stakingtypes.Metadata{}),
 			stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec()),
 			math.OneInt(),
 		)
@@ -323,7 +319,7 @@ func initTestnetFiles[T transaction.Tx](
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(cmd.Context(), txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err := tx.Sign(clientCtx, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -336,14 +332,13 @@ func initTestnetFiles[T transaction.Tx](
 			return err
 		}
 
-		// Write server config
-		cometServer := cometbft.New[T](
-			&genericTxDecoder[T]{clientCtx.TxConfig},
-			cometbft.ServerOptions[T]{},
-			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
-		)
-		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer(coretesting.NewNopLogger(), cometServer, grpcServer)
+		serverCfg := serverv2.DefaultServerConfig()
+		serverCfg.MinGasPrices = args.minGasPrices
+
+		cometServer := cometbft.NewWithConfigOptions[T](cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig))
+		storeServer := &store.Server[T]{}
+		grpcServer := grpc.NewWithConfigOptions[T](grpc.OverwriteDefaultConfig(grpcConfig))
+		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err
@@ -363,8 +358,7 @@ func initTestnetFiles[T transaction.Tx](
 		return err
 	}
 
-	// Update viper root since root dir become rootdir/node/simd
-	client.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
+	serverv2.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
 	return nil
@@ -401,6 +395,13 @@ func initGenFiles[T transaction.Tx](
 		bankGenState.Supply = bankGenState.Supply.Add(bal.Coins...)
 	}
 	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
+
+	var bankV2GenState bankv2types.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[bankv2types.ModuleName], &bankV2GenState)
+	if len(bankV2GenState.Balances) == 0 {
+		bankV2GenState = getBankV2GenesisFromV1(bankGenState)
+	}
+	appGenState[bankv2types.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankV2GenState)
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
 	if err != nil {
@@ -502,9 +503,18 @@ func writeFile(name, dir string, contents []byte) error {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	if err := os.WriteFile(file, contents, 0o600); err != nil {
-		return err
-	}
+	return os.WriteFile(file, contents, 0o600)
+}
 
-	return nil
+// getBankV2GenesisFromV1 clones bank/v1 state to bank/v2
+// since we not migrate yet
+// TODO: Remove
+func getBankV2GenesisFromV1(v1GenesisState banktypes.GenesisState) bankv2types.GenesisState {
+	var v2GenesisState bankv2types.GenesisState
+	for _, balance := range v1GenesisState.Balances {
+		v2Balance := bankv2types.Balance(balance)
+		v2GenesisState.Balances = append(v2GenesisState.Balances, v2Balance)
+		v2GenesisState.Supply = v2GenesisState.Supply.Add(balance.Coins...)
+	}
+	return v2GenesisState
 }

@@ -1,0 +1,27 @@
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+###############################################################################
+###                           Client Configuration                          ###
+###############################################################################
+
+# The network chain ID
+chain-id = ""
+# The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
+keyring-backend = "test"
+# Default key name, if set, defines the default key to use for signing transaction when the --from flag is not specified
+keyring-default-keyname = ""
+# CLI output format (text|json)
+output = "text"
+# <host>:<port> to CometBFT RPC interface for this chain
+node = "tcp://localhost:26657"
+# Transaction broadcasting mode (sync|async)
+broadcast-mode = "sync"
+
+# gRPC server endpoint to which the client will connect.
+# It can be overwritten by the --grpc-addr flag in each command.
+grpc-address = ""
+
+# Allow the gRPC client to connect over insecure channels.
+# It can be overwritten by the --grpc-insecure flag in each command.
+grpc-insecure = false

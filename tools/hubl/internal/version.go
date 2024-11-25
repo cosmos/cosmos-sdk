@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"fmt"
+	"errors"
 	"runtime/debug"
 	"strings"
 
@@ -19,7 +19,7 @@ func VersionCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			version, ok := debug.ReadBuildInfo()
 			if !ok {
-				return fmt.Errorf("failed to get hubl version")
+				return errors.New("failed to get hubl version")
 			}
 
 			cmd.Printf("hubl version: %s\n", strings.TrimSpace(version.Main.Version))

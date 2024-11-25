@@ -5,18 +5,21 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/accounts"
+	bankv2types "cosmossdk.io/x/bank/v2/types"
+	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
-// from v0.50.x to v0.51.x
+// from v0.52.x to v2
 //
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
-// v0.50.x to v0.51.x.
-const UpgradeName = "v050-to-v051"
+// v0.52.x to v2.
+const UpgradeName = "v052-to-v2"
 
 func (app *SimApp[T]) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
@@ -34,14 +37,14 @@ func (app *SimApp[T]) RegisterUpgradeHandlers() {
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := store.StoreUpgrades{
 			Added: []string{
-				accounts.ModuleName,
-				protocolpooltypes.ModuleName,
+				accounts.StoreKey,
+				protocolpooltypes.StoreKey,
+				epochstypes.StoreKey,
+				bankv2types.ModuleName,
 			},
 			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}
 
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		_ = storeUpgrades
-		// app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+		app.SetStoreLoader(runtime.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }

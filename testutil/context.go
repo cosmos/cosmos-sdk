@@ -4,11 +4,12 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 
 	"cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
@@ -18,15 +19,15 @@ import (
 
 // DefaultContext creates a sdk.Context with a fresh MemDB that can be used in tests.
 func DefaultContext(key, tkey storetypes.StoreKey) sdk.Context {
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+	db := coretesting.NewMemDB()
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	err := cms.LoadLatestVersion()
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger())
 
 	return ctx
 }
@@ -38,8 +39,8 @@ func DefaultContextWithKeys(
 	transKeys map[string]*storetypes.TransientStoreKey,
 	memKeys map[string]*storetypes.MemoryStoreKey,
 ) sdk.Context {
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+	db := coretesting.NewMemDB()
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 
 	for _, key := range keys {
 		cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
@@ -58,25 +59,25 @@ func DefaultContextWithKeys(
 		panic(err)
 	}
 
-	return sdk.NewContext(cms, false, coretesting.NewNopLogger())
+	return sdk.NewContext(cms, false, log.NewNopLogger())
 }
 
 type TestContext struct {
 	Ctx sdk.Context
-	DB  *dbm.MemDB
+	DB  corestore.KVStoreWithBatch
 	CMS store.CommitMultiStore
 }
 
 func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestContext {
 	tb.Helper()
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+	db := coretesting.NewMemDB()
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, false, coretesting.NewNopLogger()).WithHeaderInfo(header.Info{Time: time.Now()})
+	ctx := sdk.NewContext(cms, false, log.NewNopLogger()).WithHeaderInfo(header.Info{Time: time.Now()})
 
 	return TestContext{ctx, db, cms}
 }

@@ -45,7 +45,7 @@ func (k Keeper) doExecuteMsgs(ctx context.Context, proposal group.Proposal, grou
 	}
 
 	for i, msg := range msgs {
-		if _, err := k.MsgRouterService.InvokeUntyped(ctx, msg); err != nil {
+		if _, err := k.MsgRouterService.Invoke(ctx, msg); err != nil {
 			return errorsmod.Wrapf(err, "message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
 	}
@@ -70,7 +70,13 @@ func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Cod
 				if err != nil {
 					return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; error retrieving group policy address")
 				}
-				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAddr, acct)
+
+				acctStr, _ := addressCodec.BytesToString(acct)
+				if acctStr == "" {
+					acctStr = "unmarshalable address"
+				}
+
+				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAddr, acctStr)
 			}
 		}
 	}

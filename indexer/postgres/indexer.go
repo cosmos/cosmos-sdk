@@ -3,9 +3,11 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
-	"cosmossdk.io/schema/appdata"
+	"cosmossdk.io/schema/indexer"
+	"cosmossdk.io/schema/logutil"
 )
 
 type Config struct {
@@ -19,11 +21,35 @@ type Config struct {
 	DisableRetainDeletions bool `json:"disable_retain_deletions"`
 }
 
-type SqlLogger = func(msg, sql string, params ...interface{})
+type indexerImpl struct {
+	ctx     context.Context
+	db      *sql.DB
+	tx      *sql.Tx
+	opts    options
+	modules map[string]*moduleIndexer
+	logger  logutil.Logger
+}
 
-func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata.Listener, error) {
+func init() {
+	indexer.Register("postgres", indexer.Initializer{
+		InitFunc:   startIndexer,
+		ConfigType: Config{},
+	})
+}
+
+func startIndexer(params indexer.InitParams) (indexer.InitResult, error) {
+	config, ok := params.Config.Config.(Config)
+	if !ok {
+		return indexer.InitResult{}, fmt.Errorf("invalid config type, expected %T got %T", Config{}, params.Config.Config)
+	}
+
+	ctx := params.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	if config.DatabaseURL == "" {
-		return appdata.Listener{}, fmt.Errorf("missing database URL")
+		return indexer.InitResult{}, errors.New("missing database URL")
 	}
 
 	driver := config.DatabaseDriver
@@ -33,48 +59,38 @@ func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata
 
 	db, err := sql.Open(driver, config.DatabaseURL)
 	if err != nil {
-		return appdata.Listener{}, err
+		return indexer.InitResult{}, err
 	}
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return appdata.Listener{}, err
+		return indexer.InitResult{}, err
 	}
 
 	// commit base schema
-	_, err = tx.Exec(BaseSQL)
+	_, err = tx.Exec(baseSQL)
 	if err != nil {
-		return appdata.Listener{}, err
+		return indexer.InitResult{}, err
 	}
 
-	moduleIndexers := map[string]*ModuleIndexer{}
-	opts := Options{
-		DisableRetainDeletions: config.DisableRetainDeletions,
-		Logger:                 logger,
+	moduleIndexers := map[string]*moduleIndexer{}
+	opts := options{
+		disableRetainDeletions: config.DisableRetainDeletions,
+		logger:                 params.Logger,
+		addressCodec:           params.AddressCodec,
 	}
 
-	return appdata.Listener{
-		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
-			moduleName := data.ModuleName
-			modSchema := data.Schema
-			_, ok := moduleIndexers[moduleName]
-			if ok {
-				return fmt.Errorf("module %s already initialized", moduleName)
-			}
+	idx := &indexerImpl{
+		ctx:     ctx,
+		db:      db,
+		tx:      tx,
+		opts:    opts,
+		modules: moduleIndexers,
+		logger:  params.Logger,
+	}
 
-			mm := NewModuleIndexer(moduleName, modSchema, opts)
-			moduleIndexers[moduleName] = mm
-
-			return mm.InitializeSchema(ctx, tx)
-		},
-		Commit: func(data appdata.CommitData) error {
-			err = tx.Commit()
-			if err != nil {
-				return err
-			}
-
-			tx, err = db.BeginTx(ctx, nil)
-			return err
-		},
+	return indexer.InitResult{
+		Listener: idx.listener(),
+		View:     idx,
 	}, nil
 }

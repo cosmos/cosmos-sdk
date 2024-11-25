@@ -5,72 +5,88 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
+	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/root"
 )
 
-// StoreComponent manages store config
-// and contains prune & snapshot commands
-type StoreComponent[T transaction.Tx] struct {
-	config *Config
+var (
+	_ serverv2.ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
+	_ serverv2.HasConfig                       = (*Server[transaction.Tx])(nil)
+	_ serverv2.HasCLICommands                  = (*Server[transaction.Tx])(nil)
+)
+
+const ServerName = "store"
+
+// Server manages store config and contains prune & snapshot commands
+type Server[T transaction.Tx] struct {
+	config *root.Config
+	store  storev2.Backend
 }
 
-func New[T transaction.Tx]() *StoreComponent[T] {
-	return &StoreComponent[T]{}
-}
-
-func (s *StoreComponent[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
-	cfg := DefaultConfig()
-	if v != nil {
-		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
+func New[T transaction.Tx](store storev2.Backend, cfg server.ConfigMap) (*Server[T], error) {
+	config, err := UnmarshalConfig(cfg)
+	if err != nil {
+		return nil, err
 	}
-	s.config = cfg
+	return &Server[T]{
+		store:  store,
+		config: config,
+	}, nil
+}
+
+func (s *Server[T]) Name() string {
+	return ServerName
+}
+
+func (s *Server[T]) Start(context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent[T]) Name() string {
-	return "store"
-}
-
-func (s *StoreComponent[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Stop(context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent[T]) Stop(ctx context.Context) error {
-	return nil
-}
-
-func (s *StoreComponent[T]) GetCommands() []*cobra.Command {
-	return []*cobra.Command{
-		s.PrunesCmd(),
-	}
-}
-
-func (s *StoreComponent[T]) GetTxs() []*cobra.Command {
-	return nil
-}
-
-func (s *StoreComponent[T]) GetQueries() []*cobra.Command {
-	return nil
-}
-
-func (s *StoreComponent[T]) CLICommands() serverv2.CLIConfig {
+func (s *Server[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.PrunesCmd(),
+			s.ExportSnapshotCmd(),
+			s.DeleteSnapshotCmd(),
+			s.ListSnapshotsCmd(),
+			s.DumpArchiveCmd(),
+			s.LoadArchiveCmd(),
+			s.RestoreSnapshotCmd(),
 		},
 	}
 }
 
-func (g *StoreComponent[T]) Config() any {
-	if g.config == nil || g.config == (&Config{}) {
-		return DefaultConfig()
+func (s *Server[T]) Config() any {
+	if s.config == nil || s.config.AppDBBackend == "" {
+		return root.DefaultConfig()
 	}
 
-	return g.config
+	return s.config
+}
+
+// UnmarshalConfig unmarshals the store config from the given map.
+// If the config is not found in the map, the default config is returned.
+// If the home directory is found in the map, it sets the home directory in the config.
+// An empty home directory *is* permitted at this stage, but attempting to build
+// the store with an empty home directory will fail.
+func UnmarshalConfig(cfg map[string]any) (*root.Config, error) {
+	config := &root.Config{
+		Options: root.DefaultStoreOptions(),
+	}
+	if err := serverv2.UnmarshalSubConfig(cfg, ServerName, config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal store config: %w", err)
+	}
+	home := cfg[serverv2.FlagHome]
+	if home != nil {
+		config.Home = home.(string)
+	}
+	return config, nil
 }

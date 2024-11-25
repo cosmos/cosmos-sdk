@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -18,17 +20,17 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -66,10 +68,17 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	cmtApp := server.NewCometABCIWrapper(app)
+	pv, err := pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile(), func() (cmtcrypto.PrivKey, error) {
+		return ed25519.GenPrivKey(), nil
+	})
+	if err != nil {
+		return err
+	}
+
 	tmNode, err := node.NewNode( //resleak:notresource
 		context.TODO(),
 		cmtCfg,
-		pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile()),
+		pv,
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
 		appGenesisProvider,
@@ -171,7 +180,11 @@ func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config,
 		}
 
 		v := vals[i].GetViper()
-		err = genutiltest.TrackCometConfig(v, nodeDir)
+		v.Set(flags.FlagHome, nodeDir)
+		v.SetConfigType("toml")
+		v.SetConfigName("config")
+		v.AddConfigPath(filepath.Join(nodeDir, "config"))
+		err = v.ReadInConfig()
 		if err != nil {
 			return err
 		}

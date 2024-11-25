@@ -22,16 +22,16 @@ var (
 	defaultReadOpts = grocksdb.NewDefaultReadOptions()
 )
 
-// RocksDB implements `corestore.KVStoreWithBatch` using RocksDB as the underlying storage engine.
-// It is used for only store v2 migration, since some clients use RocksDB as
+// RocksDB implements `corestore.KVStoreWithBatch`, using RocksDB as the underlying storage engine.
+// It is only used for store v2 migration, since some clients use RocksDB as
 // the IAVL v0/v1 backend.
 type RocksDB struct {
 	storage *grocksdb.DB
 }
 
-// defaultRocksdbOptions, good enough for most cases, including heavy workloads.
+// defaultRocksdbOptions is good enough for most cases, including heavy workloads.
 // 1GB table cache, 512MB write buffer(may use 50% more on heavy workloads).
-// compression: snappy as default, need to -lsnappy to enable.
+// compression: snappy as default, use `-lsnappy` flag to enable.
 func defaultRocksdbOptions() *grocksdb.Options {
 	bbto := grocksdb.NewDefaultBlockBasedTableOptions()
 	bbto.SetBlockCache(grocksdb.NewLRUCache(1 << 30))

@@ -2,19 +2,20 @@ package bank
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
-	"golang.org/x/exp/maps"
-
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -33,9 +34,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *modulev1.Module
-	Cdc         codec.Codec
-	Environment appmodule.Environment
+	Config       *modulev1.Module
+	Cdc          codec.Codec
+	Environment  appmodule.Environment
+	AddressCodec address.Codec
 
 	AccountKeeper types.AccountKeeper
 }
@@ -55,7 +57,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	blockedAddresses := make(map[string]bool)
 	if len(in.Config.BlockedModuleAccountsOverride) > 0 {
 		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
-			addrStr, err := in.AccountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(moduleName))
+			addrStr, err := in.AddressCodec.BytesToString(authtypes.NewModuleAddress(moduleName))
 			if err != nil {
 				panic(err)
 			}
@@ -63,7 +65,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		}
 	} else {
 		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			addrStr, err := in.AccountKeeper.AddressCodec().BytesToString(permission.GetAddress())
+			addrStr, err := in.AddressCodec.BytesToString(permission.GetAddress())
 			if err != nil {
 				panic(err)
 			}
@@ -77,7 +79,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	authStr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	authStr, err := in.AddressCodec.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
@@ -103,7 +105,7 @@ func InvokeSetSendRestrictions(
 		return nil
 	}
 
-	modules := maps.Keys(restrictions)
+	modules := slices.Collect(maps.Keys(restrictions))
 	order := config.RestrictionsOrder
 	if len(order) == 0 {
 		order = modules

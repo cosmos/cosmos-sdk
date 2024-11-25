@@ -3,21 +3,19 @@ package runtime
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"path/filepath"
-
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
-	"cosmossdk.io/store/v2/db"
-	rootstore "cosmossdk.io/store/v2/root"
+	"cosmossdk.io/store/v2/root"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime/v2 module
@@ -25,18 +23,13 @@ import (
 // the existing app.go initialization conventions.
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
-	storeOptions *rootstore.FactoryOptions
-	viper        *viper.Viper
+	storeBuilder root.Builder
+	storeConfig  *root.Config
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
 	txValidator func(ctx context.Context, tx T) error
 	postTxExec  func(ctx context.Context, tx T, success bool) error
-}
-
-// DefaultGenesis returns a default genesis from the registered AppModule's.
-func (a *AppBuilder[T]) DefaultGenesis() map[string]json.RawMessage {
-	return a.app.moduleManager.DefaultGenesis()
 }
 
 // RegisterModules registers the provided modules with the module manager.
@@ -67,17 +60,6 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 	return nil
 }
 
-// RegisterStores registers the provided store keys.
-// This method should only be used for registering extra stores
-// wiich is necessary for modules that not registered using the app config.
-// To be used in combination of RegisterModules.
-func (a *AppBuilder[T]) RegisterStores(keys ...string) {
-	a.app.storeKeys = append(a.app.storeKeys, keys...)
-	if a.storeOptions != nil {
-		a.storeOptions.StoreKeys = append(a.storeOptions.StoreKeys, keys...)
-	}
-}
-
 // Build builds an *App instance.
 func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	for _, opt := range opts {
@@ -101,13 +83,19 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		}
 	}
 
-	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
+	var err error
+	a.app.db, err = a.storeBuilder.Build(a.app.logger, a.storeConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = a.app.moduleManager.RegisterServices(a.app); err != nil {
 		return nil, err
 	}
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	stf, err := stf.NewSTF[T](
+	stf, err := stf.New[T](
 		a.app.logger.With("module", "stf"),
 		a.app.msgRouterBuilder,
 		a.app.queryRouterBuilder,
@@ -124,64 +112,75 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-	v := a.viper
-	home := v.GetString(FlagHome)
-
-	storeOpts := rootstore.DefaultStoreOptions()
-	if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
-		return nil, fmt.Errorf("failed to store options: %w", err)
-	}
-
-	scRawDb, err := db.NewDB(db.DBType(v.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)
-	if err != nil {
-		panic(err)
-	}
-
-	storeOptions := &rootstore.FactoryOptions{
-		Logger:    a.app.logger,
-		RootDir:   home,
-		Options:   storeOpts,
-		StoreKeys: append(a.app.storeKeys, "stf"),
-		SCRawDB:   scRawDb,
-	}
-	a.storeOptions = storeOptions
-
-	rs, err := rootstore.CreateRootStore(a.storeOptions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create root store: %w", err)
-	}
-	a.app.db = rs
-
-	appManagerBuilder := appmanager.Builder[T]{
-		STF:                a.app.stf,
-		DB:                 a.app.db,
-		ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
-		QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
-		SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
-		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error {
-			// this implementation assumes that the state is a JSON object
-			bz, err := io.ReadAll(src)
-			if err != nil {
-				return fmt.Errorf("failed to read import state: %w", err)
-			}
-			var genesisState map[string]json.RawMessage
-			if err = json.Unmarshal(bz, &genesisState); err != nil {
-				return err
-			}
-			if err = a.app.moduleManager.InitGenesisJSON(ctx, genesisState, txHandler); err != nil {
-				return fmt.Errorf("failed to init genesis: %w", err)
-			}
-			return nil
+	a.app.AppManager = appmanager.New[T](
+		appmanager.Config{
+			ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
+			QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
+			SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
 		},
-	}
-
-	appManager, err := appManagerBuilder.Build()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build app manager: %w", err)
-	}
-	a.app.AppManager = appManager
+		a.app.db,
+		a.app.stf,
+		a.initGenesis,
+		a.exportGenesis,
+	)
 
 	return a.app, nil
+}
+
+// initGenesis returns the app initialization genesis for modules
+func (a *AppBuilder[T]) initGenesis(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+	// this implementation assumes that the state is a JSON object
+	bz, err := io.ReadAll(src)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read import state: %w", err)
+	}
+	var genesisJSON map[string]json.RawMessage
+	if err = json.Unmarshal(bz, &genesisJSON); err != nil {
+		return nil, err
+	}
+
+	v, zeroState, err := a.app.db.StateLatest()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get latest state: %w", err)
+	}
+	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
+		return nil, errors.New("cannot init genesis on non-zero state")
+	}
+	genesisCtx := services.NewGenesisContext(a.branch(zeroState))
+	genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
+		err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
+		if err != nil {
+			return fmt.Errorf("failed to init genesis: %w", err)
+		}
+		return nil
+	})
+
+	return genesisState, err
+}
+
+// exportGenesis returns the app export genesis logic for modules
+func (a *AppBuilder[T]) exportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+	state, err := a.app.db.StateAt(version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get state at given version: %w", err)
+	}
+
+	genesisJson, err := a.app.moduleManager.ExportGenesisForModules(
+		ctx,
+		func() store.WriterMap {
+			return a.branch(state)
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to export genesis: %w", err)
+	}
+
+	bz, err := json.Marshal(genesisJson)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal genesis: %w", err)
+	}
+
+	return bz, nil
 }
 
 // AppBuilderOption is a function that can be passed to AppBuilder.Build to customize the resulting app.
@@ -196,7 +195,11 @@ func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) s
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.Context, tx T) error) AppBuilderOption[T] {
+func AppBuilderWithTxValidator[T transaction.Tx](
+	txValidators func(
+		ctx context.Context, tx T,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.txValidator = txValidators
 	}
@@ -206,9 +209,7 @@ func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.C
 // When not provided, a no-op function will be used.
 func AppBuilderWithPostTxExec[T transaction.Tx](
 	postTxExec func(
-		ctx context.Context,
-		tx T,
-		success bool,
+		ctx context.Context, tx T, success bool,
 	) error,
 ) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {

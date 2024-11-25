@@ -8,19 +8,18 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"sync"
 	"time"
-
-	"golang.org/x/exp/maps"
 )
 
 const (
-	// DefaultMaxUnOrderedTTL defines the default maximum TTL an un-ordered transaction
+	// DefaultmaxTimeoutDuration defines the default maximum duration an un-ordered transaction
 	// can set.
-	DefaultMaxUnOrderedTTL = 1024
+	DefaultMaxTimeoutDuration = time.Minute * 40
 
 	dirName  = "unordered_txs"
 	fileName = "data"
@@ -32,8 +31,8 @@ type TxHash [32]byte
 // Manager contains the tx hash dictionary for duplicates checking, and expire
 // them when block production progresses.
 type Manager struct {
-	// blockCh defines a channel to receive newly committed block heights
-	blockCh chan uint64
+	// blockCh defines a channel to receive newly committed block time
+	blockCh chan time.Time
 	// doneCh allows us to ensure the purgeLoop has gracefully terminated prior to closing
 	doneCh chan struct{}
 
@@ -48,23 +47,26 @@ type Manager struct {
 	dataDir string
 
 	mu sync.RWMutex
-	// txHashes defines a map from tx hash -> TTL value, which is used for duplicate
+
+	// txHashes defines a map from tx hash -> TTL value defined as block time, which is used for duplicate
 	// checking and replay protection, as well as purging the map when the TTL is
 	// expired.
-	txHashes map[TxHash]uint64
+	txHashes map[TxHash]time.Time
 }
 
 func NewManager(dataDir string) *Manager {
 	path := filepath.Join(dataDir, dirName)
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		_ = os.Mkdir(path, os.ModePerm)
+		if err = os.MkdirAll(path, os.ModePerm); err != nil {
+			panic(fmt.Errorf("failed to create unordered txs directory: %w", err))
+		}
 	}
 
 	m := &Manager{
 		dataDir:  dataDir,
-		blockCh:  make(chan uint64, 16),
+		blockCh:  make(chan time.Time, 16),
 		doneCh:   make(chan struct{}),
-		txHashes: make(map[TxHash]uint64),
+		txHashes: make(map[TxHash]time.Time),
 	}
 
 	return m
@@ -91,7 +93,6 @@ func (m *Manager) Close() error {
 func (m *Manager) Contains(hash TxHash) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-
 	_, ok := m.txHashes[hash]
 	return ok
 }
@@ -103,11 +104,11 @@ func (m *Manager) Size() int {
 	return len(m.txHashes)
 }
 
-func (m *Manager) Add(txHash TxHash, ttl uint64) {
+func (m *Manager) Add(txHash TxHash, timestamp time.Time) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.txHashes[txHash] = ttl
+	m.txHashes[txHash] = timestamp
 }
 
 // OnInit must be called when a node starts up. Typically, this should be called
@@ -145,33 +146,30 @@ func (m *Manager) OnInit() error {
 		var txHash TxHash
 		copy(txHash[:], buf[:txHashSize])
 
-		m.Add(txHash, binary.BigEndian.Uint64(buf[txHashSize:]))
+		timeStamp := binary.BigEndian.Uint64(buf[txHashSize:])
+		m.Add(txHash, time.Unix(int64(timeStamp), 0))
 	}
 
 	return nil
 }
 
-// OnNewBlock sends the latest block number to the background purge loop, which
+// OnNewBlock sends the latest block time to the background purge loop, which
 // should be called in ABCI Commit event.
-func (m *Manager) OnNewBlock(blockHeight uint64) {
-	m.blockCh <- blockHeight
+func (m *Manager) OnNewBlock(blockTime time.Time) {
+	m.blockCh <- blockTime
 }
 
-func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) error) error {
+func (m *Manager) exportSnapshot(_ uint64, snapshotWriter func([]byte) error) error {
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 
-	keys := maps.Keys(m.txHashes)
-	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
-
+	keys := slices.SortedFunc(maps.Keys(m.txHashes), func(i, j TxHash) int { return bytes.Compare(i[:], j[:]) })
 	for _, txHash := range keys {
-		ttl := m.txHashes[txHash]
-		if height > ttl {
-			// skip expired txs that have yet to be purged
-			continue
-		}
+		timeoutTime := m.txHashes[txHash]
 
-		chunk := unorderedTxToBytes(txHash, ttl)
+		// right now we dont have access block time at this flow, so we would just include the expired txs
+		// and let it be purge during purge loop
+		chunk := unorderedTxToBytes(txHash, uint64(timeoutTime.Unix()))
 
 		if _, err := w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
@@ -185,8 +183,8 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	return snapshotWriter(buf.Bytes())
 }
 
-// flushToFile writes all unexpired unordered transactions along with their TTL
-// to file, overwriting the existing file if it exists.
+// flushToFile writes all unordered transactions (including expired if not pruned yet)
+// along with their TTL to file, overwriting the existing file if it exists.
 func (m *Manager) flushToFile() error {
 	f, err := os.Create(filepath.Join(m.dataDir, dirName, fileName))
 	if err != nil {
@@ -195,8 +193,8 @@ func (m *Manager) flushToFile() error {
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
-	for txHash, ttl := range m.txHashes {
-		chunk := unorderedTxToBytes(txHash, ttl)
+	for txHash, timestamp := range m.txHashes {
+		chunk := unorderedTxToBytes(txHash, uint64(timestamp.Unix()))
 
 		if _, err = w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
@@ -210,14 +208,14 @@ func (m *Manager) flushToFile() error {
 	return nil
 }
 
-// expiredTxs returns expired tx hashes based on the provided block height.
-func (m *Manager) expiredTxs(blockHeight uint64) []TxHash {
+// expiredTxs returns expired tx hashes based on the provided block time.
+func (m *Manager) expiredTxs(blockTime time.Time) []TxHash {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	var result []TxHash
-	for txHash, ttl := range m.txHashes {
-		if blockHeight > ttl {
+	for txHash, timestamp := range m.txHashes {
+		if blockTime.After(timestamp) {
 			result = append(result, txHash)
 		}
 	}
@@ -237,37 +235,40 @@ func (m *Manager) purge(txHashes []TxHash) {
 // purgeLoop removes expired tx hashes in the background
 func (m *Manager) purgeLoop() {
 	for {
-		latestHeight, ok := m.batchReceive()
+		latestTime, ok := m.batchReceive()
 		if !ok {
 			// channel closed
 			m.doneCh <- struct{}{}
 			return
 		}
 
-		hashes := m.expiredTxs(latestHeight)
+		hashes := m.expiredTxs(latestTime)
 		if len(hashes) > 0 {
 			m.purge(hashes)
 		}
 	}
 }
 
-func (m *Manager) batchReceive() (uint64, bool) {
+// batchReceive receives block time from the channel until the context is done
+// or the channel is closed.
+func (m *Manager) batchReceive() (time.Time, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var latestHeight uint64
+	var latestTime time.Time
 	for {
 		select {
 		case <-ctx.Done():
-			return latestHeight, true
+			return latestTime, true
 
-		case blockHeight, ok := <-m.blockCh:
+		case blockTime, ok := <-m.blockCh:
 			if !ok {
 				// channel is closed
-				return 0, false
+				return time.Time{}, false
 			}
-			if blockHeight > latestHeight {
-				latestHeight = blockHeight
+
+			if blockTime.After(latestTime) {
+				latestTime = blockTime
 			}
 		}
 	}
@@ -277,7 +278,7 @@ func unorderedTxToBytes(txHash TxHash, ttl uint64) []byte {
 	chunk := make([]byte, chunkSize)
 	copy(chunk[:txHashSize], txHash[:])
 
-	ttlBz := make([]byte, ttlSize)
+	ttlBz := make([]byte, timeoutSize)
 	binary.BigEndian.PutUint64(ttlBz, ttl)
 	copy(chunk[txHashSize:], ttlBz)
 

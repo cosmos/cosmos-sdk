@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/keeper"
@@ -14,6 +14,7 @@ import (
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestQueryParams(t *testing.T) {
@@ -37,7 +38,6 @@ func TestQueryParams(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.Params(ctx, tc.req)
 			if tc.errMsg == "" {
@@ -93,7 +93,6 @@ func TestQueryValidatorDistributionInfo(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.ValidatorDistributionInfo(ctx, tc.req)
 			if tc.errMsg == "" {
@@ -147,9 +146,13 @@ func TestQueryCommunityPool(t *testing.T) {
 	ctx, _, distrKeeper, dep := initFixture(t)
 	queryServer := keeper.NewQuerier(distrKeeper)
 
+	poolAcc := authtypes.NewEmptyModuleAccount(types.ProtocolPoolModuleName)
+	dep.accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ProtocolPoolModuleName).Return(poolAcc).AnyTimes()
+
+	dep.bankKeeper.EXPECT().GetAllBalances(gomock.Any(), poolAcc.GetAddress()).Return(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))))
+
 	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
 	decCoins := sdk.NewDecCoinsFromCoins(coins...)
-	dep.poolKeeper.EXPECT().GetCommunityPool(gomock.Any()).Return(coins, nil).AnyTimes()
 
 	cases := []struct {
 		name   string
@@ -168,7 +171,6 @@ func TestQueryCommunityPool(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.CommunityPool(ctx, tc.req)
 			if tc.errMsg == "" {

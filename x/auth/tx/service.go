@@ -10,8 +10,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/x/auth/migrations/legacytx"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,6 +17,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
@@ -150,7 +149,12 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			"or greater than the current height %d", req.Height, currentHeight)
 	}
 
-	blockID, block, err := cmtservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
+	node, err := s.clientCtx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	blockID, block, err := cmtservice.GetProtoBlock(ctx, node, &req.Height)
 	if err != nil {
 		return nil, err
 	}

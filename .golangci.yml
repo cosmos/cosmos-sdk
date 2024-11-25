@@ -3,10 +3,9 @@ run:
   timeout: 15m
   allow-parallel-runners: true
   build-tags:
-  - e2e
-  - ledger
-  - test_ledger_mock
-
+    - e2e
+    - ledger
+    - test_ledger_mock
 
 linters:
   disable-all: true
@@ -14,7 +13,7 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - exportloopref
+    - copyloopvar
     - gci
     - goconst
     - gocritic
@@ -35,7 +34,7 @@ linters:
     - unused
 
 issues:
-  exclude-dirs: 
+  exclude-dirs:
     - testutil/testdata
   exclude-files:
     - server/grpc/gogoreflection/fix_registration.go
@@ -46,18 +45,15 @@ issues:
     - crypto/keys/secp256k1/internal/*
     - types/coin_regex.go
   exclude-rules:
-    - text: "Use of weak random number generator"
-      linters:
-        - gosec
-    - text: "ST1003:"
+    - text: "ST1003:" # We are fine with our current naming
       linters:
         - stylecheck
     # FIXME: Disabled until golangci-lint updates stylecheck with this fix:
     # https://github.com/dominikh/go-tools/issues/389
-    - text: "ST1016:"
+    - text: "ST1016:" # Ok with inconsistent receiver names
       linters:
         - stylecheck
-    - path: "migrations"
+    - path: "migrations" # migraitions always use deprecated code
       text: "SA1019:"
       linters:
         - staticcheck
@@ -76,6 +72,9 @@ issues:
     - text: "SA1019: params.SendEnabled is deprecated" # TODO remove once ready to remove from the sdk
       linters:
         - staticcheck
+    - text: "G115: integer overflow conversion" # We are doing this everywhere.
+      linters:
+        - gosec
     - text: "leading space"
       linters:
         - nolintlint
@@ -96,44 +95,13 @@ linters-settings:
         disabled: true
 
   gosec:
-    # To select a subset of rules to run.
     # Available rules: https://github.com/securego/gosec#available-rules
-    # Default: [] - means include all rules
-    includes:
-      #  - G101 # Look for hard coded credentials
-      - G102 # Bind to all interfaces
-      - G103 # Audit the use of unsafe block
-      - G104 # Audit errors not checked
-      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
-      - G107 # Url provided to HTTP request as taint input
-      - G108 # Profiling endpoint automatically exposed on /debug/pprof
-      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
-      - G110 # Potential DoS vulnerability via decompression bomb
-      - G111 # Potential directory traversal
-      - G112 # Potential slowloris attack
-      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
-      - G114 # Use of net/http serve function that has no support for setting timeouts
-      - G201 # SQL query construction using format string
-      - G202 # SQL query construction using string concatenation
-      - G203 # Use of unescaped data in HTML templates
-      - G204 # Audit use of command execution
-      - G301 # Poor file permissions used when creating a directory
-      - G302 # Poor file permissions used with chmod
-      - G303 # Creating tempfile using a predictable path
-      - G304 # File path provided as taint input
-      - G305 # File traversal when extracting zip/tar archive
-      - G306 # Poor file permissions used when writing to a new file
-      - G307 # Deferring a method which returns an error
-      - G401 # Detect the usage of DES, RC4, MD5 or SHA1
-      - G402 # Look for bad TLS connection settings
-      - G403 # Ensure minimum RSA key length of 2048 bits
-      - G404 # Insecure random number source (rand)
-      - G501 # Import blocklist: crypto/md5
-      - G502 # Import blocklist: crypto/des
-      - G503 # Import blocklist: crypto/rc4
-      - G504 # Import blocklist: net/http/cgi
-      - G505 # Import blocklist: crypto/sha1
-      - G601 # Implicit memory aliasing of items from a range statement
+    excludes:
+      - G101 # Potential hardcoded credentials
+      - G107 # Potential HTTP request made with variable url
+      - G404 # Use of weak random number generator (math/rand instead of crypto/rand)
+    exclude-generated: true
+    confidence: medium
   misspell:
     locale: US
   gofumpt:
@@ -151,3 +119,5 @@ linters-settings:
       - regexpMust
       - appendAssign
       - ifElseChain
+  unused:
+    local-variables-are-used: false

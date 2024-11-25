@@ -4,12 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-
-	"github.com/spf13/viper"
-
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
 )
 
 type mockServerConfig struct {
@@ -31,10 +25,6 @@ type mockServer struct {
 
 func (s *mockServer) Name() string {
 	return s.name
-}
-
-func (s *mockServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
-	return nil
 }
 
 func (s *mockServer) Start(ctx context.Context) error {

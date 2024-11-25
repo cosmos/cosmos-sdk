@@ -7,17 +7,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authclient "cosmossdk.io/x/auth/client"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // GetBroadcastCommand returns the tx broadcast command.
 func GetBroadcastCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "broadcast [file_path]",
+		Use:   "broadcast <file_path>",
 		Short: "Broadcast transactions generated offline",
 		Long: strings.TrimSpace(`Broadcast transactions created with the --generate-only
 flag and signed with the sign command. Read a transaction from [file_path] and

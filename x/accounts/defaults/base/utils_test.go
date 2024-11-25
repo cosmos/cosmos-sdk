@@ -5,15 +5,14 @@ import (
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/accountstd"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/tx/signing"
@@ -23,8 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
-
-type ProtoMsg = protoiface.MessageV1
 
 // mock statecodec
 type mockStateCodec struct {
@@ -58,19 +55,21 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("mock_base_account"), []byte("sender"), nil, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
-			return nil
-		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		0, []byte("mock_base_account"), []byte("sender"), nil,
+		func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			return nil, nil
-		}, func(ctx context.Context, req, resp ProtoMsg) error {
-			_, ok := req.(*accountsv1.AccountNumberRequest)
-			require.True(t, ok)
-			gogoproto.Merge(resp.(gogoproto.Message), &accountsv1.AccountNumberResponse{
+		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
+			return &accountsv1.AccountNumberResponse{
 				Number: 1,
-			})
-			return nil
+			}, nil
 		},
 	)
+}
+
+type transactionService struct{}
+
+func (t transactionService) ExecMode(ctx context.Context) transaction.ExecMode {
+	return transaction.ExecModeFinalize
 }
 
 func makeMockDependencies(storeservice store.KVStoreService) accountstd.Dependencies {
@@ -80,9 +79,10 @@ func makeMockDependencies(storeservice store.KVStoreService) accountstd.Dependen
 		SchemaBuilder:    sb,
 		AddressCodec:     addressCodec{},
 		LegacyStateCodec: mockStateCodec{},
-		Environment: appmodule.Environment{
-			EventService:  eventService{},
-			HeaderService: headerService{},
+		Environment: appmodulev2.Environment{
+			EventService:       eventService{},
+			HeaderService:      headerService{},
+			TransactionService: transactionService{},
 		},
 	}
 }

@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	v11 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
-	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetChainHeight returns the current blockchain height.
@@ -39,7 +39,7 @@ func GetChainHeight(ctx context.Context, rpcClient CometRPC) (int64, error) {
 //		  tx.height = 5                       # all txs of the fifth block
 //
 // For more information, see the /subscribe CometBFT RPC endpoint documentation
-func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query, orderBy string) (*abciv1beta1.SearchBlocksResult, error) {
+func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query, orderBy string) (*sdk.SearchBlocksResult, error) {
 	resBlocks, err := rpcClient.BlockSearch(ctx, query, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
@@ -50,13 +50,19 @@ func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query
 		return nil, err
 	}
 
-	result := NewSearchBlocksResult(int64(resBlocks.TotalCount), int64(len(blocks)), int64(page), int64(limit), blocks)
-
-	return result, nil
+	totalPages := calcTotalPages(int64(resBlocks.TotalCount), int64(limit))
+	return &sdk.SearchBlocksResult{
+		TotalCount: int64(resBlocks.TotalCount),
+		Count:      int64(len(blocks)),
+		PageNumber: int64(page),
+		PageTotal:  totalPages,
+		Limit:      int64(limit),
+		Blocks:     blocks,
+	}, nil
 }
 
 // GetBlockByHeight gets block by height
-func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*v11.Block, error) {
+func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*cmttypes.Block, error) {
 	// header -> BlockchainInfo
 	// header, tx -> Block
 	// results -> BlockResults
@@ -65,7 +71,7 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 		return nil, err
 	}
 
-	out, err := NewResponseResultBlock(resBlock)
+	out, err := responseResultBlock(resBlock)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +83,7 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 }
 
 // GetBlockByHash gets block by hash
-func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString string) (*v11.Block, error) {
+func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString string) (*cmttypes.Block, error) {
 	hash, err := hex.DecodeString(hashHexString)
 	if err != nil {
 		return nil, err
@@ -90,7 +96,7 @@ func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString strin
 	} else if resBlock.Block == nil {
 		return nil, fmt.Errorf("block not found with hash: %s", hashHexString)
 	}
-	out, err := NewResponseResultBlock(resBlock)
+	out, err := responseResultBlock(resBlock)
 	if err != nil {
 		return nil, err
 	}

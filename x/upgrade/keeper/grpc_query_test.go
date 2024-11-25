@@ -6,14 +6,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
+	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -23,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type UpgradeTestSuite struct {
@@ -47,7 +49,9 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	suite.Require().NoError(err)
 	suite.encodedAuthority = authority
-	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority)
+	ctrl := gomock.NewController(suite.T())
+	ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
+	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, ck)
 	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, appmodule.VersionMap{
 		"bank": 0,
 	})
@@ -200,8 +204,6 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 	suite.Require().NoError(err)
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 

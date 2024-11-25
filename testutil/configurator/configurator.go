@@ -3,6 +3,7 @@ package configurator
 import (
 	accountsmodulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
@@ -24,11 +25,16 @@ import (
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
+	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/validate"       // import as blank for app wiring
 )
 
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
@@ -50,6 +56,7 @@ func defaultConfig() *Config {
 		BeginBlockersOrder: []string{
 			testutil.MintModuleName,
 			testutil.DistributionModuleName,
+			testutil.ProtocolPoolModuleName,
 			testutil.SlashingModuleName,
 			testutil.EvidenceModuleName,
 			testutil.StakingModuleName,
@@ -164,6 +171,7 @@ func AuthModule() ModuleOption {
 					{Account: testutil.NFTModuleName},
 					{Account: testutil.ProtocolPoolModuleName},
 					{Account: "stream_acc"},
+					{Account: "protocolpool_distr"},
 				},
 			}),
 		}
@@ -181,9 +189,18 @@ func ParamsModule() ModuleOption {
 
 func TxModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.TxModuleName] = &appv1alpha1.ModuleConfig{
-			Name:   testutil.TxModuleName,
+		config.ModuleConfigs[testutil.AuthTxConfigDepinjectModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.AuthTxConfigDepinjectModuleName,
 			Config: appconfig.WrapAny(&txconfigv1.Config{}),
+		}
+	}
+}
+
+func ValidateModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.ValidateModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.ValidateModuleName,
+			Config: appconfig.WrapAny(&validatemodulev1.Module{}),
 		}
 	}
 }
@@ -408,6 +425,74 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 		BeginBlockers:     beginBlockers,
 		EndBlockers:       endBlockers,
 		OverrideStoreKeys: overrides,
+	}
+	if cfg.setInitGenesis {
+		runtimeConfig.InitGenesis = initGenesis
+	}
+
+	modules := []*appv1alpha1.ModuleConfig{{
+		Name:   "runtime",
+		Config: appconfig.WrapAny(runtimeConfig),
+	}}
+
+	for _, m := range cfg.ModuleConfigs {
+		modules = append(modules, m)
+	}
+
+	return appconfig.Compose(&appv1alpha1.Config{Modules: modules})
+}
+
+func NewAppV2Config(opts ...ModuleOption) depinject.Config {
+	cfg := defaultConfig()
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	preBlockers := make([]string, 0)
+	beginBlockers := make([]string, 0)
+	endBlockers := make([]string, 0)
+	initGenesis := make([]string, 0)
+	overrides := make([]*runtimev2.StoreKeyConfig, 0)
+
+	for _, s := range cfg.PreBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			preBlockers = append(preBlockers, s)
+		}
+	}
+
+	for _, s := range cfg.BeginBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			beginBlockers = append(beginBlockers, s)
+		}
+	}
+
+	for _, s := range cfg.EndBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			endBlockers = append(endBlockers, s)
+		}
+	}
+
+	for _, s := range cfg.InitGenesisOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			initGenesis = append(initGenesis, s)
+		}
+	}
+
+	if _, ok := cfg.ModuleConfigs[testutil.AuthModuleName]; ok {
+		overrides = append(overrides, &runtimev2.StoreKeyConfig{ModuleName: testutil.AuthModuleName, KvStoreKey: "acc"})
+	}
+
+	runtimeConfig := &runtimev2.Module{
+		AppName:           "TestApp",
+		PreBlockers:       preBlockers,
+		BeginBlockers:     beginBlockers,
+		EndBlockers:       endBlockers,
+		OverrideStoreKeys: overrides,
+		GasConfig: &runtimev2.GasConfig{
+			ValidateTxGasLimit: 100_000,
+			QueryGasLimit:      100_000,
+			SimulationGasLimit: 100_000,
+		},
 	}
 	if cfg.setInitGenesis {
 		runtimeConfig.InitGenesis = initGenesis

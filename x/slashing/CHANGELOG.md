@@ -29,7 +29,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#19458](https://github.com/cosmos/cosmos-sdk/pull/19458) Avoid writing SignInfo's for validator's who did not miss a block. (Every BeginBlock)
+* [#19458](https://github.com/cosmos/cosmos-sdk/pull/19458) Avoid writing SignInfo's for validators who did not miss a block. (Every BeginBlock)
 * [#18959](https://github.com/cosmos/cosmos-sdk/pull/18959) Avoid deserialization of parameters with every validator lookup
 * [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `JailUntil` and `Tombstone` methods no longer panics if the signing info does not exist for the validator but instead returns error.
 
@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20026](https://github.com/cosmos/cosmos-sdk/pull/20026) Removal of the Address.String() method and related changes:
     * `Migrate` now takes a `ValidatorAddressCodec` as argument.
     * `Migrator` has a new field of `ValidatorAddressCodec` type.
+* [#18115](https://github.com/cosmos/cosmos-sdk/pull/18115) `NewValidatorSigningInfo` takes strings instead of `sdk.AccAddress`.
 * [#16441](https://github.com/cosmos/cosmos-sdk/pull/16441) Params state is migrated to collections. `GetParams` has been removed.
 * [#17023](https://github.com/cosmos/cosmos-sdk/pull/17023) Use collections for `ValidatorSigningInfo`:
     * remove `Keeper`: `SetValidatorSigningInfo`, `GetValidatorSigningInfo`, `IterateValidatorSigningInfos`

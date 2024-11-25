@@ -48,7 +48,7 @@ contributors, the general procedure for contributing has been established:
       to begin work.
 5. To submit your work as a contribution to the repository follow standard GitHub best practices. See [pull request guideline](#pull-requests) below.
 
-**Note:** For very small or blatantly obvious problems, you are
+**Note 1:** For very small or blatantly obvious problems, you are
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
@@ -128,9 +128,7 @@ NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 
 ### Pull Request Templates
 
-There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
-
-* `template=docs.md`
+There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is used for PR types such as `fix`, `feat`,`docs`, and `refactor`, among others. These are just a few examples. For more details, please refer to the default template.
 
 ### Pull Request Accountability
 
@@ -202,7 +200,7 @@ that you would like early feedback and tagging whoever you would like to receive
 Codeowners are marked automatically as the reviewers.
 
 All PRs require at least two review approvals before they can be merged (one review might be acceptable in
-the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
+the case of minor changes to docs changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
 for all checked items unless they have indicated otherwise by leaving their handle next to specific
 items. In addition, use the following review explanations:
 
@@ -238,7 +236,7 @@ Within the Cosmos SDK we have two forms of documenting decisions, Request For Co
 
 ## Dependencies
 
-We use [Go Modules](https://github.com/golang/go/wiki/Modules) to manage
+We use [Go Modules](https://go.dev/wiki/Modules) to manage
 dependency versions.
 
 The main branch of every Cosmos repository should just build with `go get`,
@@ -272,9 +270,9 @@ When extracting a package to its own go modules, some extra steps are required, 
 
 ## Protobuf
 
-We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/cosmos/gogoproto) to generate code for use in Cosmos SDK.
+We use [Protocol Buffers](https://protobuf.dev) along with [gogoproto](https://github.com/cosmos/gogoproto) to generate code for use in Cosmos SDK.
 
-For deterministic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
+For deterministic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-started/get-docker/) to install it.
 
 For formatting code in `.proto` files, you can run `make proto-format` command.
 
@@ -302,7 +300,7 @@ For example, in vscode your `.vscode/settings.json` should look like:
 
 User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com. User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
 
-The Cosmos SDK repository is a [multi Go module](https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
+The Cosmos SDK repository is a [multi Go module](https://go.dev/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
 
 The Cosmos SDK utilizes [semantic versioning](https://semver.org/).
 

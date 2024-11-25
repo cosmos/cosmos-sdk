@@ -5,23 +5,23 @@ import (
 	"fmt"
 	"time"
 
+	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/header"
-	authtypes "cosmossdk.io/x/auth/types"
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryBalance() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
 
-	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
 	origCoins := sdk.NewCoins(newBarCoin(30))
@@ -83,8 +83,6 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(tc.name, func() {
 			res, err := queryClient.Balance(gocontext.Background(), tc.req)
 			if tc.expectErrMsg == "" {
@@ -107,7 +105,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	_, err := queryClient.AllBalances(gocontext.Background(), &types.QueryAllBalancesRequest{})
 	suite.Require().Error(err)
 
-	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
 	pageReq := &query.PageRequest{
@@ -180,7 +178,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 
 func (suite *KeeperTestSuite) TestSpendableBalances() {
 	_, _, addr := testdata.KeyTestPubAddr()
-	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
@@ -243,7 +241,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	_, err := queryClient.SpendableBalanceByDenom(ctx, &types.QuerySpendableBalanceByDenomRequest{})
 	suite.Require().Error(err)
 
-	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
 	req := types.NewQuerySpendableBalanceByDenomRequest(addrStr, fooDenom)
@@ -586,6 +584,100 @@ func (suite *KeeperTestSuite) TestQueryDenomMetadataByQueryStringRequest() {
 			ctx := suite.ctx
 
 			res, err := suite.queryClient.DenomMetadataByQueryString(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expMetadata, res.Metadata)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCDenomMetadataV2() {
+	var (
+		req      *v1beta1.QueryDenomMetadataRequest
+		metadata = types.Metadata{
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{
+					Denom:    "uatom",
+					Exponent: 0,
+					Aliases:  []string{"microatom"},
+				},
+				{
+					Denom:    "atom",
+					Exponent: 6,
+					Aliases:  []string{"ATOM"},
+				},
+			},
+			Base:    "uatom",
+			Display: "atom",
+		}
+		expMetadata = &v1beta1.Metadata{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty denom",
+			func() {
+				req = &v1beta1.QueryDenomMetadataRequest{}
+			},
+			false,
+		},
+		{
+			"not found denom",
+			func() {
+				req = &v1beta1.QueryDenomMetadataRequest{
+					Denom: "foo",
+				}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				expMetadata = &v1beta1.Metadata{
+					Description: metadata.Description,
+					DenomUnits: []*v1beta1.DenomUnit{
+						{
+							Denom:    metadata.DenomUnits[0].Denom,
+							Exponent: metadata.DenomUnits[0].Exponent,
+							Aliases:  metadata.DenomUnits[0].Aliases,
+						},
+						{
+							Denom:    metadata.DenomUnits[1].Denom,
+							Exponent: metadata.DenomUnits[1].Exponent,
+							Aliases:  metadata.DenomUnits[1].Aliases,
+						},
+					},
+					Base:    metadata.Base,
+					Display: metadata.Display,
+				}
+
+				suite.bankKeeper.SetDenomMetaData(suite.ctx, metadata)
+				req = &v1beta1.QueryDenomMetadataRequest{
+					Denom: expMetadata.Base,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := suite.ctx
+
+			res, err := suite.bankKeeper.DenomMetadataV2(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

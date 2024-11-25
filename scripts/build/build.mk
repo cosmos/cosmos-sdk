@@ -12,6 +12,8 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
+rocksdb_version=v9.6.1
+
 ifeq ($(findstring .,$(VERSION)),)
 	VERSION := 0.0.0
 endif
@@ -70,10 +72,10 @@ ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += boltdb
 endif
 
-# handle blst
-ifeq (blst,$(findstring blst,$(COSMOS_BUILD_OPTIONS)))
+# handle bls12381
+ifeq (bls12381,$(findstring bls12381,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
-  build_tags += blst
+  build_tags += bls12381
 endif
 
 whitespace :=
@@ -148,7 +150,7 @@ hubl:
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install github.com/golang/mock/mockgen@v1.6.0
+	@go install go.uber.org/mock/mockgen@v0.5.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 

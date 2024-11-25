@@ -3,16 +3,16 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestMsgSetWithdrawAddress(t *testing.T) {
@@ -56,7 +56,6 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.SetWithdrawAddress(ctx, tc.msg)
 			if tc.errMsg == "" {
@@ -112,7 +111,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.preRun != nil {
 				tc.preRun()
@@ -158,7 +156,6 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.preRun != nil {
 				tc.preRun()
@@ -176,11 +173,12 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 
 func TestMsgFundCommunityPool(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
+
+	dep.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addrs[0], types.ProtocolPoolModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))).Return(nil)
 
 	cases := []struct {
 		name   string
@@ -205,7 +203,6 @@ func TestMsgFundCommunityPool(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.FundCommunityPool(ctx, tc.msg) //nolint:staticcheck // Testing deprecated method
 			if tc.errMsg == "" {
@@ -266,7 +263,6 @@ func TestMsgUpdateParams(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.UpdateParams(ctx, tc.msg)
 			if tc.errMsg == "" {
@@ -281,13 +277,14 @@ func TestMsgUpdateParams(t *testing.T) {
 
 func TestMsgCommunityPoolSpend(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().DistributeFromCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	authorityAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
+
+	dep.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ProtocolPoolModuleName, addrs[0], sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))).Return(nil)
 
 	cases := []struct {
 		name   string
@@ -338,7 +335,6 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.CommunityPoolSpend(ctx, tc.msg) //nolint:staticcheck // Testing deprecated method
 			if tc.errMsg == "" {
@@ -371,7 +367,6 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.DepositValidatorRewardsPool(ctx, tc.msg)
 			if tc.errMsg == "" {

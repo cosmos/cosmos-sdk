@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -15,25 +14,24 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/core/app"
-	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
+	"cosmossdk.io/store/v2/root"
 )
 
 var (
 	_ appmodulev2.AppModule = appModule[transaction.Tx]{}
-	_ appmodule.HasServices = appModule[transaction.Tx]{}
+	_ hasServicesV1         = appModule[transaction.Tx]{}
 )
 
 type appModule[T transaction.Tx] struct {
@@ -43,19 +41,19 @@ type appModule[T transaction.Tx] struct {
 func (m appModule[T]) IsOnePerModuleType() {}
 func (m appModule[T]) IsAppModule()        {}
 
-func (m appModule[T]) RegisterServices(registar grpc.ServiceRegistrar) error {
+func (m appModule[T]) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
 	if err != nil {
 		return err
 	}
 
-	autocliv1.RegisterQueryServer(registar, autoCliQueryService)
+	autocliv1.RegisterQueryServer(registrar, autoCliQueryService)
 
 	reflectionSvc, err := services.NewReflectionService()
 	if err != nil {
 		return err
 	}
-	reflectionv1.RegisterReflectionServiceServer(registar, reflectionSvc)
+	reflectionv1.RegisterReflectionServiceServer(registrar, reflectionSvc)
 
 	return nil
 }
@@ -98,11 +96,11 @@ func init() {
 	appconfig.Register(&runtimev2.Module{},
 		appconfig.Provide(
 			ProvideAppBuilder[transaction.Tx],
-			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
-			ProvideGenesisTxHandler[transaction.Tx],
-			ProvideCometService,
-			ProvideAppVersionModifier[transaction.Tx],
+			ProvideEnvironment,
+			ProvideKVService,
+			ProvideModuleConfigMaps,
+			ProvideModuleScopedConfigMap,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -110,7 +108,9 @@ func init() {
 
 func ProvideAppBuilder[T transaction.Tx](
 	interfaceRegistrar registry.InterfaceRegistrar,
-	amino legacy.Amino,
+	amino registry.AminoRegistrar,
+	storeBuilder root.Builder,
+	storeConfig *root.Config,
 ) (
 	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
@@ -130,13 +130,14 @@ func ProvideAppBuilder[T transaction.Tx](
 
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App[T]{
-		storeKeys:          nil,
 		interfaceRegistrar: interfaceRegistrar,
 		amino:              amino,
 		msgRouterBuilder:   msgRouterBuilder,
 		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
+		queryHandlers:      map[string]appmodulev2.Handler{},
+		storeLoader:        DefaultStoreLoader,
 	}
-	appBuilder := &AppBuilder[T]{app: app}
+	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder, storeConfig: storeConfig}
 
 	return appBuilder, msgRouterBuilder, appModule[T]{app}, protoFiles, protoTypes
 }
@@ -144,28 +145,25 @@ func ProvideAppBuilder[T transaction.Tx](
 type AppInputs struct {
 	depinject.In
 
-	AppConfig          *appv1alpha1.Config
+	StoreConfig        *root.Config
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]
 	InterfaceRegistrar registry.InterfaceRegistrar
-	LegacyAmino        legacy.Amino
+	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
-	Viper              *viper.Viper `optional:"true"`
+	StoreBuilder       root.Builder
 }
 
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.config = inputs.Config
-	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-
-	if inputs.Viper != nil {
-		inputs.AppBuilder.viper = inputs.Viper
-	}
+	// STF requires some state to run
+	inputs.StoreBuilder.RegisterKey("stf")
 }
 
 func ProvideModuleManager[T transaction.Tx](
@@ -176,53 +174,26 @@ func ProvideModuleManager[T transaction.Tx](
 	return NewModuleManager[T](logger, config, modules)
 }
 
-// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment[T transaction.Tx](logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, appBuilder *AppBuilder[T]) (
-	appmodulev2.Environment,
-	store.KVStoreService,
-	store.MemoryStoreService,
-) {
-	var (
-		kvService    store.KVStoreService     = failingStoreService{}
-		memKvService store.MemoryStoreService = failingStoreService{}
-	)
-
+func ProvideKVService(
+	config *runtimev2.Module,
+	key depinject.ModuleKey,
+	kvFactory store.KVStoreServiceFactory,
+	storeBuilder root.Builder,
+) (store.KVStoreService, store.MemoryStoreService) {
 	// skips modules that have no store
-	if !slices.Contains(config.SkipStoreKeys, key.Name()) {
-		var kvStoreKey string
-		storeKeyOverride := storeKeyOverride(config, key.Name())
-		if storeKeyOverride != nil {
-			kvStoreKey = storeKeyOverride.KvStoreKey
-		} else {
-			kvStoreKey = key.Name()
-		}
-
-		registerStoreKey(appBuilder, kvStoreKey)
-		kvService = stf.NewKVStoreService([]byte(kvStoreKey))
-
-		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
-		registerStoreKey(appBuilder, memStoreKey)
-		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return &failingStoreService{}, &failingStoreService{}
+	}
+	var kvStoreKey string
+	override := storeKeyOverride(config, key.Name())
+	if override != nil {
+		kvStoreKey = override.KvStoreKey
+	} else {
+		kvStoreKey = key.Name()
 	}
 
-	env := appmodulev2.Environment{
-		Logger:             logger,
-		BranchService:      stf.BranchService{},
-		EventService:       stf.NewEventService(),
-		GasService:         stf.NewGasMeterService(),
-		HeaderService:      stf.HeaderService{},
-		QueryRouterService: stf.NewQueryRouterService(),
-		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
-		TransactionService: services.NewContextAwareTransactionService(),
-		KVStoreService:     kvService,
-		MemStoreService:    memKvService,
-	}
-
-	return env, kvService, memKvService
-}
-
-func registerStoreKey[T transaction.Tx](wrapper *AppBuilder[T], key string) {
-	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
+	storeBuilder.RegisterKey(kvStoreKey)
+	return kvFactory([]byte(kvStoreKey)), stf.NewMemoryStoreService([]byte(fmt.Sprintf("memory:%s", kvStoreKey)))
 }
 
 func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
@@ -231,20 +202,60 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 			return cfg
 		}
 	}
-
 	return nil
 }
 
-func ProvideGenesisTxHandler[T transaction.Tx](appBuilder *AppBuilder[T]) genesis.TxHandler {
-	return appBuilder.app
+// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
+func ProvideEnvironment(
+	logger log.Logger,
+	key depinject.ModuleKey,
+	kvService store.KVStoreService,
+	memKvService store.MemoryStoreService,
+	headerService header.Service,
+	eventService event.Service,
+) appmodulev2.Environment {
+	return appmodulev2.Environment{
+		Logger:             logger,
+		BranchService:      stf.BranchService{},
+		EventService:       eventService,
+		GasService:         stf.NewGasMeterService(),
+		HeaderService:      headerService,
+		QueryRouterService: stf.NewQueryRouterService(),
+		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
+		TransactionService: services.NewContextAwareTransactionService(),
+		KVStoreService:     kvService,
+		MemStoreService:    memKvService,
+	}
 }
 
-func ProvideCometService() comet.Service {
-	return &services.ContextAwareCometInfoService{}
-}
-
-// ProvideAppVersionModifier returns nil, `app.VersionModifier` is a feature of BaseApp and neither used nor required for runtim/v2.
-// nil is acceptable, see: https://github.com/cosmos/cosmos-sdk/blob/0a6ee406a02477ae8ccbfcbe1b51fc3930087f4c/x/upgrade/keeper/keeper.go#L438
-func ProvideAppVersionModifier[T transaction.Tx](app *AppBuilder[T]) app.VersionModifier {
-	return nil
+// DefaultServiceBindings provides default services for the following service interfaces:
+// - store.KVStoreServiceFactory
+// - header.Service
+// - comet.Service
+// - event.Service
+// - store/v2/root.Builder
+//
+// They are all required.  For most use cases these default services bindings should be sufficient.
+// Power users (or tests) may wish to provide their own services bindings, in which case they must
+// supply implementations for each of the above interfaces.
+func DefaultServiceBindings() depinject.Config {
+	var (
+		kvServiceFactory store.KVStoreServiceFactory = func(actor []byte) store.KVStoreService {
+			return services.NewGenesisKVService(
+				actor,
+				stf.NewKVStoreService(actor),
+			)
+		}
+		cometService  comet.Service = &services.ContextAwareCometInfoService{}
+		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
+		eventService                = services.NewGenesisEventService(stf.NewEventService())
+		storeBuilder                = root.NewBuilder()
+	)
+	return depinject.Supply(
+		kvServiceFactory,
+		headerService,
+		cometService,
+		eventService,
+		storeBuilder,
+	)
 }

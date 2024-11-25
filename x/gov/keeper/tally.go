@@ -98,7 +98,7 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 	}
 
 	// If no one votes (everyone abstains), proposal fails
-	if totalVoterPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
+	if totalVoterPower.Equal(results[v1.OptionAbstain]) {
 		return false, false, tallyResults, nil
 	}
 
@@ -142,7 +142,7 @@ func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.
 	}
 
 	// If no one votes (everyone abstains), proposal fails
-	if totalVoterPower.Sub(results[v1.OptionAbstain]).Equal(math.LegacyZeroDec()) {
+	if totalVoterPower.Equal(results[v1.OptionAbstain]) {
 		return false, false, tallyResults, nil
 	}
 
@@ -160,7 +160,6 @@ func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.
 
 	// If more than 2/3 of non-abstaining voters vote Yes, proposal passes
 	threshold, _ := math.LegacyNewDecFromStr(params.GetExpeditedThreshold())
-
 	if results[v1.OptionYes].Quo(totalVoterPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults, nil
 	}
@@ -206,7 +205,6 @@ func (k Keeper) tallyMultipleChoice(totalVoterPower math.LegacyDec, totalBonded 
 	}
 
 	// a multiple choice proposal always passes unless it was spam or quorum was not reached.
-
 	return true, false, tallyResults, nil
 }
 

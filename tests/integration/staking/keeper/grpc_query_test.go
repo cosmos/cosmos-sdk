@@ -715,16 +715,6 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	assert.DeepEqual(t, params, resp.Params)
 }
 
-func TestGRPCQueryHistoricalInfo(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
-
-	_, err := queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{}) // nolint:staticcheck // SA1019: deprecated endpoint
-	assert.ErrorContains(t, err, "this endpoint has been deprecated and removed in 0.52")
-}
-
 func TestGRPCQueryRedelegations(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)

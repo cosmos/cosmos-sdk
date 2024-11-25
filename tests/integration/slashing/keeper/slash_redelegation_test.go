@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	distributionkeeper "cosmossdk.io/x/distribution/keeper"
@@ -23,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests/integration/slashing"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 func TestSlashRedelegation(t *testing.T) {

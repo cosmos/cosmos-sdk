@@ -3,11 +3,8 @@ package simulation
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"time"
-
-	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
 
@@ -20,6 +17,17 @@ type AppEntrypoint interface {
 	SimDeliver(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
 }
 
+var _ AppEntrypoint = SimDeliverFn(nil)
+
+type (
+	AppEntrypointFn = SimDeliverFn
+	SimDeliverFn    func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+)
+
+func (m SimDeliverFn) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+	return m(txEncoder, tx)
+}
+
 // Deprecated: Use WeightedProposalMsg instead.
 type WeightedProposalContent interface {
 	AppParamsKey() string                   // key used to retrieve the value of the weight from the simulation application params
@@ -28,7 +36,7 @@ type WeightedProposalContent interface {
 }
 
 // Deprecated: Use MsgSimulatorFn instead.
-type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) Content
+type ContentSimulatorFn func(r *rand.Rand, ctx context.Context, accs []Account) Content
 
 // Deprecated: Use MsgSimulatorFn instead.
 type Content interface {
@@ -85,17 +93,15 @@ type OperationMsg struct {
 	Name    string `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
 	Comment string `json:"comment" yaml:"comment"` // additional comment
 	OK      bool   `json:"ok" yaml:"ok"`           // success
-	Msg     []byte `json:"msg" yaml:"msg"`         // protobuf encoded msg
 }
 
 // NewOperationMsgBasic creates a new operation message from raw input.
-func NewOperationMsgBasic(moduleName, msgType, comment string, ok bool, msg []byte) OperationMsg {
+func NewOperationMsgBasic(moduleName, msgType, comment string, ok bool) OperationMsg {
 	return OperationMsg{
 		Route:   moduleName,
 		Name:    msgType,
 		Comment: comment,
 		OK:      ok,
-		Msg:     msg,
 	}
 }
 
@@ -106,17 +112,12 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
 	if moduleName == "" {
 		moduleName = msgType
 	}
-	protoBz, err := proto.Marshal(msg)
-	if err != nil {
-		panic(fmt.Errorf("failed to marshal proto message: %w", err))
-	}
-
-	return NewOperationMsgBasic(moduleName, msgType, comment, ok, protoBz)
+	return NewOperationMsgBasic(moduleName, msgType, comment, ok)
 }
 
 // NoOpMsg - create a no-operation message
 func NoOpMsg(moduleName, msgType, comment string) OperationMsg {
-	return NewOperationMsgBasic(moduleName, msgType, comment, false, nil)
+	return NewOperationMsgBasic(moduleName, msgType, comment, false)
 }
 
 // log entry text for this operation msg

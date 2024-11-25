@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	db "github.com/cosmos/cosmos-db"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/mock"
 	"cosmossdk.io/store/pruning"
 	"cosmossdk.io/store/pruning/types"
@@ -18,7 +18,7 @@ import (
 const dbErr = "db error"
 
 func TestNewManager(t *testing.T) {
-	manager := pruning.NewManager(db.NewMemDB(), coretesting.NewNopLogger())
+	manager := pruning.NewManager(coretesting.NewMemDB(), log.NewNopLogger())
 	require.NotNil(t, manager)
 	require.Equal(t, types.PruningNothing, manager.GetOptions().GetPruningStrategy())
 }
@@ -75,11 +75,11 @@ func TestStrategies(t *testing.T) {
 	}
 
 	for name, tc := range testcases {
-		tc := tc // Local copy to avoid shadowing.
+		// Local copy to avoid shadowing.
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			manager := pruning.NewManager(db.NewMemDB(), coretesting.NewNopLogger())
+			manager := pruning.NewManager(coretesting.NewMemDB(), log.NewNopLogger())
 			require.NotNil(t, manager)
 
 			curStrategy := tc.strategy
@@ -186,7 +186,7 @@ func TestPruningHeight_Inputs(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			manager := pruning.NewManager(db.NewMemDB(), coretesting.NewNopLogger())
+			manager := pruning.NewManager(coretesting.NewMemDB(), log.NewNopLogger())
 			require.NotNil(t, manager)
 			manager.SetOptions(types.NewPruningOptions(tc.strategy))
 
@@ -200,11 +200,11 @@ func TestHandleSnapshotHeight_DbErr_Panic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	// Setup
-	dbMock := mock.NewMockDB(ctrl)
+	dbMock := mock.NewMockKVStoreWithBatch(ctrl)
 
-	dbMock.EXPECT().SetSync(gomock.Any(), gomock.Any()).Return(errors.New(dbErr)).Times(1)
+	dbMock.EXPECT().Set(gomock.Any(), gomock.Any()).Return(errors.New(dbErr)).Times(1)
 
-	manager := pruning.NewManager(dbMock, coretesting.NewNopLogger())
+	manager := pruning.NewManager(dbMock, log.NewNopLogger())
 	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
 	require.NotNil(t, manager)
 
@@ -221,8 +221,8 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 	snapshotInterval := uint64(10)
 
 	// Setup
-	db := db.NewMemDB()
-	manager := pruning.NewManager(db, coretesting.NewNopLogger())
+	db := coretesting.NewMemDB()
+	manager := pruning.NewManager(db, log.NewNopLogger())
 	require.NotNil(t, manager)
 
 	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
@@ -253,7 +253,7 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 
 func TestLoadPruningSnapshotHeights(t *testing.T) {
 	var (
-		manager = pruning.NewManager(db.NewMemDB(), coretesting.NewNopLogger())
+		manager = pruning.NewManager(coretesting.NewMemDB(), log.NewNopLogger())
 		err     error
 	)
 	require.NotNil(t, manager)
@@ -280,7 +280,7 @@ func TestLoadPruningSnapshotHeights(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			db := db.NewMemDB()
+			db := coretesting.NewMemDB()
 
 			if tc.getFlushedPruningSnapshotHeights != nil {
 				err = db.Set(pruning.PruneSnapshotHeightsKey, pruning.Int64SliceToBytes(tc.getFlushedPruningSnapshotHeights()))
@@ -294,10 +294,10 @@ func TestLoadPruningSnapshotHeights(t *testing.T) {
 }
 
 func TestLoadSnapshotHeights_PruneNothing(t *testing.T) {
-	manager := pruning.NewManager(db.NewMemDB(), coretesting.NewNopLogger())
+	manager := pruning.NewManager(coretesting.NewMemDB(), log.NewNopLogger())
 	require.NotNil(t, manager)
 
 	manager.SetOptions(types.NewPruningOptions(types.PruningNothing))
 
-	require.Nil(t, manager.LoadSnapshotHeights(db.NewMemDB()))
+	require.Nil(t, manager.LoadSnapshotHeights(coretesting.NewMemDB()))
 }

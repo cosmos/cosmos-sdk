@@ -8,12 +8,12 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/x/auth/ante"
-	authcodec "cosmossdk.io/x/auth/codec"
-	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type mockAccount struct {

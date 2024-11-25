@@ -3,18 +3,18 @@ package ante_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth/ante"
-	authtypes "cosmossdk.io/x/auth/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
@@ -40,6 +40,11 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
+
+	// Set current block height in headerInfo
+	headerInfo := s.ctx.HeaderInfo()
+	headerInfo.Height = s.ctx.BlockHeight()
+	s.ctx = s.ctx.WithHeaderInfo(headerInfo)
 
 	_, err = antehandler(s.ctx, tx, false)
 	require.Error(t, err)

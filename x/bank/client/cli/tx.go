@@ -39,7 +39,7 @@ func NewTxCmd() *cobra.Command {
 // For a better UX this command is limited to send funds from one account to two or more accounts.
 func NewMultiSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi-send [from_key_or_address] [to_address_1 to_address_2 ...] [amount]",
+		Use:   "multi-send <from_key_or_address> <to_address_1> <to_address_2>... <amount>",
 		Short: "Send funds from one account to two or more accounts.",
 		Long: `Send funds from one account to two or more accounts.
 By default, sends the [amount] to each address of the list.

@@ -4,17 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
 	authzmodule "cosmossdk.io/x/authz/module"
-	authztestutil "cosmossdk.io/x/authz/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -36,7 +34,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)
@@ -56,22 +54,13 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil, codectestutil.CodecOptions{}.GetAddressCodec())
 
-	ctrl := gomock.NewController(t)
-	accountKeeper := authztestutil.NewMockAccountKeeper(ctrl)
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter).Return(authtypes.NewBaseAccountWithAddress(granter)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee1).Return(authtypes.NewBaseAccountWithAddress(grantee1)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee2).Return(authtypes.NewBaseAccountWithAddress(grantee2)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee3).Return(authtypes.NewBaseAccountWithAddress(grantee3)).AnyTimes()
-	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee4).Return(authtypes.NewBaseAccountWithAddress(grantee4)).AnyTimes()
-
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
-
+	addrCdc := address.NewBech32Codec("cosmos")
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
-	authzKeeper := keeper.NewKeeper(env, encCfg.Codec, accountKeeper)
+	authzKeeper := keeper.NewKeeper(env, encCfg.Codec, addrCdc)
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {
 		err := authzKeeper.SaveGrant(ctx, grantee, granter, sendAuthz, exp)
-		addr, _ := accountKeeper.AddressCodec().BytesToString(grantee)
+		addr, _ := addrCdc.BytesToString(grantee)
 		require.NoError(t, err, "Grant from %s", addr)
 	}
 	save(grantee1, &expiration)
@@ -87,7 +76,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 		err := authzmodule.BeginBlocker(ctx, authzKeeper)
 		require.NoError(t, err)
 
-		addr, err := accountKeeper.AddressCodec().BytesToString(granter)
+		addr, err := addrCdc.BytesToString(granter)
 		require.NoError(t, err)
 		res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
 			Granter: addr,

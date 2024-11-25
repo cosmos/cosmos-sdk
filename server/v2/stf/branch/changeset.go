@@ -5,8 +5,6 @@ import (
 	"errors"
 
 	"github.com/tidwall/btree"
-
-	"cosmossdk.io/core/store"
 )
 
 const (
@@ -17,7 +15,7 @@ const (
 
 var errKeyEmpty = errors.New("key cannot be empty")
 
-// changeSet implements the sorted cache for cachekv store,
+// changeSet implements the sorted tree for cachekv store,
 // we don't use MemDB here because cachekv is used extensively in sdk core path,
 // we need it to be as fast as possible, while `MemDB` is mainly used as a mocking db in unit tests.
 //
@@ -55,7 +53,7 @@ func (bt changeSet) delete(key []byte) {
 
 // iterator returns a new iterator over the key-value pairs in the changeSet
 // that have keys greater than or equal to the start key and less than the end key.
-func (bt changeSet) iterator(start, end []byte) (store.Iterator, error) {
+func (bt changeSet) iterator(start, end []byte) (*memIterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
@@ -65,7 +63,7 @@ func (bt changeSet) iterator(start, end []byte) (store.Iterator, error) {
 // reverseIterator returns a new iterator that iterates over the key-value pairs in reverse order
 // within the specified range [start, end) in the changeSet's tree.
 // If start or end is an empty byte slice, it returns an error indicating that the key is empty.
-func (bt changeSet) reverseIterator(start, end []byte) (store.Iterator, error) {
+func (bt changeSet) reverseIterator(start, end []byte) (*memIterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
@@ -101,7 +99,7 @@ type memIterator struct {
 }
 
 // newMemIterator creates a new memory iterator for a given range of keys in a B-tree.
-// The iterator starts at the specified start key and ends at the specified end key.
+// The iterator creates a copy then starts at the specified start key and ends at the specified end key.
 // The `tree` parameter is the B-tree to iterate over.
 // The `ascending` parameter determines the direction of iteration.
 // If `ascending` is true, the iterator will iterate in ascending order.
@@ -113,7 +111,7 @@ type memIterator struct {
 // The `valid` field of the iterator indicates whether the iterator is positioned at a valid key.
 // The `start` and `end` fields of the iterator store the start and end keys respectively.
 func newMemIterator(start, end []byte, tree *btree.BTreeG[item], ascending bool) *memIterator {
-	iter := tree.Iter()
+	iter := tree.Copy().Iter()
 	var valid bool
 	if ascending {
 		if start != nil {
@@ -158,6 +156,7 @@ func (mi *memIterator) Domain() (start, end []byte) {
 // Close releases any resources held by the iterator.
 func (mi *memIterator) Close() error {
 	mi.iter.Release()
+	mi.valid = false
 	return nil
 }
 
@@ -206,6 +205,9 @@ func (mi *memIterator) keyInRange(key []byte) bool {
 		return false
 	}
 	if !mi.ascending && mi.start != nil && bytes.Compare(key, mi.start) < 0 {
+		return false
+	}
+	if !mi.ascending && mi.end != nil && bytes.Compare(key, mi.end) >= 0 {
 		return false
 	}
 	return true

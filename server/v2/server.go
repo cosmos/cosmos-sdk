@@ -2,6 +2,7 @@ package serverv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,8 +11,6 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -23,7 +22,6 @@ type ServerComponent[T transaction.Tx] interface {
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], *viper.Viper, log.Logger) error
 }
 
 // HasStartFlags is a server module that has start flags.
@@ -37,6 +35,11 @@ type HasStartFlags interface {
 // HasConfig is a server module that has a config.
 type HasConfig interface {
 	Config() any
+}
+
+// ConfigWriter is a server module that can write its config to a file.
+type ConfigWriter interface {
+	WriteConfig(path string) error
 }
 
 // HasCLICommands is a server module that has CLI commands.
@@ -56,40 +59,45 @@ type CLIConfig struct {
 	Txs []*cobra.Command
 }
 
+const (
+	serverName = "server"
+)
+
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 
+// Server is the top-level server component which contains all other server components.
 type Server[T transaction.Tx] struct {
-	logger     log.Logger
 	components []ServerComponent[T]
+	config     ServerConfig
 }
 
 func NewServer[T transaction.Tx](
-	logger log.Logger,
+	config ServerConfig,
 	components ...ServerComponent[T],
 ) *Server[T] {
 	return &Server[T]{
-		logger:     logger,
+		config:     config,
 		components: components,
 	}
 }
 
 func (s *Server[T]) Name() string {
-	return "server"
+	return serverName
 }
 
 // Start starts all components concurrently.
 func (s *Server[T]) Start(ctx context.Context) error {
-	s.logger.Info("starting servers...")
+	logger := GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+	logger.Info("starting servers...")
 
-	g, ctx := errgroup.WithContext(ctx)
+	resCh := make(chan error, len(s.components))
 	for _, mod := range s.components {
-		mod := mod
-		g.Go(func() error {
-			return mod.Start(ctx)
-		})
+		go func() {
+			resCh <- mod.Start(ctx)
+		}()
 	}
 
-	if err := g.Wait(); err != nil {
+	if err := <-resCh; err != nil {
 		return fmt.Errorf("failed to start servers: %w", err)
 	}
 
@@ -98,19 +106,17 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop stops all components concurrently.
+// Stop stops all server components synchronously.
 func (s *Server[T]) Stop(ctx context.Context) error {
-	s.logger.Info("stopping servers...")
+	logger := GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+	logger.Info("stopping servers...")
 
-	g, ctx := errgroup.WithContext(ctx)
+	var err error
 	for _, mod := range s.components {
-		mod := mod
-		g.Go(func() error {
-			return mod.Stop(ctx)
-		})
+		err = errors.Join(err, mod.Stop(ctx))
 	}
 
-	return g.Wait()
+	return err
 }
 
 // CLICommands returns all CLI commands of all components.
@@ -151,9 +157,19 @@ func (s *Server[T]) CLICommands() CLIConfig {
 	return commands
 }
 
+// Config returns config of the server component
+func (s *Server[T]) Config() ServerConfig {
+	return s.config
+}
+
 // Configs returns all configs of all server components.
 func (s *Server[T]) Configs() map[string]any {
 	cfgs := make(map[string]any)
+
+	// add server component config
+	cfgs[s.Name()] = s.config
+
+	// add other components' config
 	for _, mod := range s.components {
 		if configmod, ok := mod.(HasConfig); ok {
 			cfg := configmod.Config()
@@ -164,21 +180,12 @@ func (s *Server[T]) Configs() map[string]any {
 	return cfgs
 }
 
-// Init initializes all server components with the provided application, configuration, and logger.
-// It returns an error if any component fails to initialize.
-func (s *Server[T]) Init(appI AppI[T], v *viper.Viper, logger log.Logger) error {
-	var components []ServerComponent[T]
-	for _, mod := range s.components {
-		mod := mod
-		if err := mod.Init(appI, v, logger); err != nil {
-			return err
-		}
+func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
+	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
+	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	flags.String(FlagCPUProfiling, "", "Enable CPU profiling and write to the specified file")
 
-		components = append(components, mod)
-	}
-
-	s.components = components
-	return nil
+	return flags
 }
 
 // WriteConfig writes the config to the given path.
@@ -217,6 +224,11 @@ func (s *Server[T]) WriteConfig(configPath string) error {
 // StartFlags returns all flags of all server components.
 func (s *Server[T]) StartFlags() []*pflag.FlagSet {
 	flags := []*pflag.FlagSet{}
+
+	// add server component flags
+	flags = append(flags, s.StartCmdFlags())
+
+	// add other components' start cmd flags
 	for _, mod := range s.components {
 		if startmod, ok := mod.(HasStartFlags); ok {
 			flags = append(flags, startmod.StartCmdFlags())

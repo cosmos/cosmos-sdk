@@ -35,7 +35,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
 	sigs.k8s.io/yaml v1.4.0

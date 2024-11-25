@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
@@ -33,6 +34,8 @@ var (
 
 type Option func(a *Account)
 
+func (Option) IsManyPerContainerType() {}
+
 func NewAccount(name string, handlerMap *signing.HandlerMap, options ...Option) accountstd.AccountCreatorFunc {
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
 		acc := Account{
@@ -41,6 +44,7 @@ func NewAccount(name string, handlerMap *signing.HandlerMap, options ...Option) 
 			Sequence:         collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
 			addrCodec:        deps.AddressCodec,
 			hs:               deps.Environment.HeaderService,
+			ts:               deps.Environment.TransactionService,
 			supportedPubKeys: map[string]pubKeyImpl{},
 			signingHandlers:  handlerMap,
 		}
@@ -63,6 +67,7 @@ type Account struct {
 
 	addrCodec address.Codec
 	hs        header.Service
+	ts        transaction.Service
 
 	supportedPubKeys map[string]pubKeyImpl
 
@@ -104,7 +109,13 @@ func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthe
 	}
 
 	gotSeq := msg.Tx.AuthInfo.SignerInfos[msg.SignerIndex].Sequence
-	if gotSeq != signerData.Sequence {
+
+	execMode := a.ts.ExecMode(ctx)
+	if execMode == transaction.ExecModeCheck {
+		if gotSeq < signerData.Sequence {
+			return nil, fmt.Errorf("sequence number must be higher than: %d, got: %d", signerData.Sequence, gotSeq)
+		}
+	} else if gotSeq != signerData.Sequence {
 		return nil, fmt.Errorf("unexpected sequence number, wanted: %d, got: %d", signerData.Sequence, gotSeq)
 	}
 

@@ -21,6 +21,7 @@ import (
 type MockStateCommitter struct {
 	ctrl     *gomock.Controller
 	recorder *MockStateCommitterMockRecorder
+	isgomock struct{}
 }
 
 // MockStateCommitterMockRecorder is the mock recorder for MockStateCommitter.
@@ -197,20 +198,6 @@ func (mr *MockStateCommitterMockRecorder) SetInitialVersion(version any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInitialVersion", reflect.TypeOf((*MockStateCommitter)(nil).SetInitialVersion), version)
 }
 
-// WorkingCommitInfo mocks base method.
-func (m *MockStateCommitter) WorkingCommitInfo(version uint64) *proof.CommitInfo {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WorkingCommitInfo", version)
-	ret0, _ := ret[0].(*proof.CommitInfo)
-	return ret0
-}
-
-// WorkingCommitInfo indicates an expected call of WorkingCommitInfo.
-func (mr *MockStateCommitterMockRecorder) WorkingCommitInfo(version any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WorkingCommitInfo", reflect.TypeOf((*MockStateCommitter)(nil).WorkingCommitInfo), version)
-}
-
 // WriteChangeset mocks base method.
 func (m *MockStateCommitter) WriteChangeset(cs *store.Changeset) error {
 	m.ctrl.T.Helper()
@@ -229,6 +216,7 @@ func (mr *MockStateCommitterMockRecorder) WriteChangeset(cs any) *gomock.Call {
 type MockStateStorage struct {
 	ctrl     *gomock.Controller
 	recorder *MockStateStorageMockRecorder
+	isgomock struct{}
 }
 
 // MockStateStorageMockRecorder is the mock recorder for MockStateStorage.
@@ -249,17 +237,17 @@ func (m *MockStateStorage) EXPECT() *MockStateStorageMockRecorder {
 }
 
 // ApplyChangeset mocks base method.
-func (m *MockStateStorage) ApplyChangeset(version uint64, cs *store.Changeset) error {
+func (m *MockStateStorage) ApplyChangeset(cs *store.Changeset) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ApplyChangeset", version, cs)
+	ret := m.ctrl.Call(m, "ApplyChangeset", cs)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ApplyChangeset indicates an expected call of ApplyChangeset.
-func (mr *MockStateStorageMockRecorder) ApplyChangeset(version, cs any) *gomock.Call {
+func (mr *MockStateStorageMockRecorder) ApplyChangeset(cs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyChangeset", reflect.TypeOf((*MockStateStorage)(nil).ApplyChangeset), version, cs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyChangeset", reflect.TypeOf((*MockStateStorage)(nil).ApplyChangeset), cs)
 }
 
 // Close mocks base method.
@@ -403,4 +391,19 @@ func (m *MockStateStorage) SetLatestVersion(version uint64) error {
 func (mr *MockStateStorageMockRecorder) SetLatestVersion(version any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLatestVersion", reflect.TypeOf((*MockStateStorage)(nil).SetLatestVersion), version)
+}
+
+// VersionExists mocks base method.
+func (m *MockStateStorage) VersionExists(v uint64) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VersionExists", v)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VersionExists indicates an expected call of VersionExists.
+func (mr *MockStateStorageMockRecorder) VersionExists(v any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VersionExists", reflect.TypeOf((*MockStateStorage)(nil).VersionExists), v)
 }

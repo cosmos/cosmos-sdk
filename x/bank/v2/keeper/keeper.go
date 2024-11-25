@@ -28,18 +28,21 @@ type Keeper struct {
 	params       collections.Item[types.Params]
 	balances     *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
 	supply       collections.Map[string, math.Int]
+
+	sendRestriction *sendRestriction
 }
 
 func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{
-		Environment:  env,
-		authority:    authority,
-		addressCodec: addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
-		params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		balances:     collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(collections.BytesKey, collections.StringKey), sdk.IntValue, newBalancesIndexes(sb)),
-		supply:       collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		Environment:     env,
+		authority:       authority,
+		addressCodec:    addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
+		params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		balances:        collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(collections.BytesKey, collections.StringKey), sdk.IntValue, newBalancesIndexes(sb)),
+		supply:          collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		sendRestriction: newSendRestriction(),
 	}
 
 	schema, err := sb.Build()
@@ -85,7 +88,7 @@ func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coins) e
 }
 
 // SendCoins transfers amt coins from a sending account to a receiving account.
-// Function take sender & receipient as []byte.
+// Function take sender & recipient as []byte.
 // They can be sdk address or module name.
 // An error is returned upon failure.
 func (k Keeper) SendCoins(ctx context.Context, from, to []byte, amt sdk.Coins) error {
@@ -94,7 +97,10 @@ func (k Keeper) SendCoins(ctx context.Context, from, to []byte, amt sdk.Coins) e
 	}
 
 	var err error
-	// TODO: Send restriction
+	to, err = k.sendRestriction.apply(ctx, from, to, amt)
+	if err != nil {
+		return err
+	}
 
 	err = k.subUnlockedCoins(ctx, from, amt)
 	if err != nil {

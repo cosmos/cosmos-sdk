@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/gas"
@@ -231,7 +231,7 @@ func TestSigVerification(t *testing.T) {
 				if tc.recheck {
 					ctx = ctx.WithExecMode(sdk.ExecModeReCheck)
 				} else {
-					ctx = ctx.WithExecMode(sdk.ExecModeCheck)
+					ctx = ctx.WithExecMode(sdk.ExecModeFinalize)
 				}
 
 				suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test

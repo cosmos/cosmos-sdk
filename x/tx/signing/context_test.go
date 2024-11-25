@@ -10,7 +10,6 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	groupv1 "cosmossdk.io/api/cosmos/group/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/tx/internal/testpb"
 )
 
@@ -280,8 +279,6 @@ func (d dummyAddressCodec) BytesToString(bz []byte) (string, error) {
 	return hex.EncodeToString(bz), nil
 }
 
-var _ address.Codec = dummyAddressCodec{}
-
 type dummyValidatorAddressCodec struct{}
 
 func (d dummyValidatorAddressCodec) StringToBytes(text string) ([]byte, error) {
@@ -291,5 +288,3 @@ func (d dummyValidatorAddressCodec) StringToBytes(text string) ([]byte, error) {
 func (d dummyValidatorAddressCodec) BytesToString(bz []byte) (string, error) {
 	return "val" + hex.EncodeToString(bz), nil
 }
-
-var _ address.Codec = dummyValidatorAddressCodec{}

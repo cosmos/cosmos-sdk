@@ -7,11 +7,12 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors/v2"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/streaming"
 )
 
 // streamDeliverBlockChanges will stream all the changes happened during deliver block.
-func (c *Consensus[T]) streamDeliverBlockChanges(
+func (c *consensus[T]) streamDeliverBlockChanges(
 	ctx context.Context,
 	height int64,
 	txs [][]byte,
@@ -39,7 +40,7 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 		}
 	}
 
-	for _, streamingListener := range c.streaming.Listeners {
+	for _, streamingListener := range c.streamingManager.Listeners {
 		events, err := streaming.IntoStreamingEvents(events)
 		if err != nil {
 			return err
@@ -57,6 +58,55 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 			c.logger.Error("ListenStateChanges listening hook failed", "height", height, "err", err)
 		}
 	}
+
+	if c.listener == nil {
+		return nil
+	}
+	// stream the StartBlockData to the listener.
+	if c.listener.StartBlock != nil {
+		if err := c.listener.StartBlock(appdata.StartBlockData{
+			Height:      uint64(height),
+			HeaderBytes: nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+			HeaderJSON:  nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+		}); err != nil {
+			return err
+		}
+	}
+	// stream the TxData to the listener.
+	if c.listener.OnTx != nil {
+		for i, tx := range txs {
+			if err := c.listener.OnTx(appdata.TxData{
+				TxIndex: int32(i),
+				Bytes:   func() ([]byte, error) { return tx, nil },
+				JSON:    nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	// stream the EventData to the listener.
+	if c.listener.OnEvent != nil {
+		if err := c.listener.OnEvent(appdata.EventData{Events: events}); err != nil {
+			return err
+		}
+	}
+	// stream the KVPairData to the listener.
+	if c.listener.OnKVPair != nil {
+		if err := c.listener.OnKVPair(appdata.KVPairData{Updates: stateChanges}); err != nil {
+			return err
+		}
+	}
+	// stream the CommitData to the listener.
+	if c.listener.Commit != nil {
+		if completionCallback, err := c.listener.Commit(appdata.CommitData{}); err != nil {
+			return err
+		} else if completionCallback != nil {
+			if err := completionCallback(); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

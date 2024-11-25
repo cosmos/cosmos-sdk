@@ -11,7 +11,7 @@ Accepted
 
 ## Context
 
-Protocol Buffers provide a basic [style guide](https://developers.google.com/protocol-buffers/docs/style)
+Protocol Buffers provide a basic [style guide](https://protobuf.dev/programming-guides/style/)
 and [Buf](https://buf.build/docs/style-guide) builds upon that. To the
 extent possible, we want to follow industry accepted guidelines and wisdom for
 the effective usage of protobuf, deviating from those only when there is clear

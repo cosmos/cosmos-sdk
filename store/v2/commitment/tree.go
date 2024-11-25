@@ -6,6 +6,7 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
+	corestore "cosmossdk.io/core/store"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
@@ -18,28 +19,28 @@ type Tree interface {
 	Remove(key []byte) error
 	GetLatestVersion() (uint64, error)
 
-	// Hash returns the hash of the latest saved version of the tree.
+	// Hash returns the hash of the current version of the tree
 	Hash() []byte
-
-	// WorkingHash returns the working hash of the tree.
-	WorkingHash() []byte
+	// Version returns the current version of the tree
+	Version() uint64
 
 	LoadVersion(version uint64) error
 	Commit() ([]byte, uint64, error)
 	SetInitialVersion(version uint64) error
 	GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error)
 
-	// Get attempts to retrieve a value from the tree for a given version.
-	//
-	// NOTE: This method only exists to support migration from IAVL v0/v1 to v2.
-	// Once migration is complete, this method should be removed and/or not used.
-	Get(version uint64, key []byte) ([]byte, error)
-
 	Prune(version uint64) error
 	Export(version uint64) (Exporter, error)
 	Import(version uint64) (Importer, error)
 
 	io.Closer
+}
+
+// Reader is the optional interface that is only used to read data from the tree
+// during the migration process.
+type Reader interface {
+	Get(version uint64, key []byte) ([]byte, error)
+	Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error)
 }
 
 // Exporter is the interface that wraps the basic Export methods.

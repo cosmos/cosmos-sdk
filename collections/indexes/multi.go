@@ -51,13 +51,26 @@ func NewMulti[ReferenceKey, PrimaryKey, Value any](
 	if o.uncheckedValue {
 		return &Multi[ReferenceKey, PrimaryKey, Value]{
 			getRefKey: getRefKeyFunc,
-			refKeys:   collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec), collections.WithKeySetUncheckedValue()),
+			refKeys: collections.NewKeySet(
+				schema,
+				prefix,
+				name,
+				collections.PairKeyCodec(refCodec, pkCodec),
+				collections.WithKeySetUncheckedValue(),
+				collections.WithKeySetSecondaryIndex(),
+			),
 		}
 	}
 
 	return &Multi[ReferenceKey, PrimaryKey, Value]{
 		getRefKey: getRefKeyFunc,
-		refKeys:   collections.NewKeySet(schema, prefix, name, collections.PairKeyCodec(refCodec, pkCodec)),
+		refKeys: collections.NewKeySet(
+			schema,
+			prefix,
+			name,
+			collections.PairKeyCodec(refCodec, pkCodec),
+			collections.WithKeySetSecondaryIndex(),
+		),
 	}
 }
 

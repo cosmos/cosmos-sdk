@@ -2,6 +2,7 @@ package serverv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -22,7 +22,6 @@ type ServerComponent[T transaction.Tx] interface {
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], map[string]any, log.Logger) error
 }
 
 // HasStartFlags is a server module that has start flags.
@@ -36,6 +35,11 @@ type HasStartFlags interface {
 // HasConfig is a server module that has a config.
 type HasConfig interface {
 	Config() any
+}
+
+// ConfigWriter is a server module that can write its config to a file.
+type ConfigWriter interface {
+	WriteConfig(path string) error
 }
 
 // HasCLICommands is a server module that has CLI commands.
@@ -61,19 +65,17 @@ const (
 
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 
+// Server is the top-level server component which contains all other server components.
 type Server[T transaction.Tx] struct {
-	logger     log.Logger
 	components []ServerComponent[T]
 	config     ServerConfig
 }
 
 func NewServer[T transaction.Tx](
-	logger log.Logger,
 	config ServerConfig,
 	components ...ServerComponent[T],
 ) *Server[T] {
 	return &Server[T]{
-		logger:     logger,
 		config:     config,
 		components: components,
 	}
@@ -85,16 +87,17 @@ func (s *Server[T]) Name() string {
 
 // Start starts all components concurrently.
 func (s *Server[T]) Start(ctx context.Context) error {
-	s.logger.Info("starting servers...")
+	logger := GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+	logger.Info("starting servers...")
 
-	g, ctx := errgroup.WithContext(ctx)
+	resCh := make(chan error, len(s.components))
 	for _, mod := range s.components {
-		g.Go(func() error {
-			return mod.Start(ctx)
-		})
+		go func() {
+			resCh <- mod.Start(ctx)
+		}()
 	}
 
-	if err := g.Wait(); err != nil {
+	if err := <-resCh; err != nil {
 		return fmt.Errorf("failed to start servers: %w", err)
 	}
 
@@ -103,18 +106,17 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop stops all components concurrently.
+// Stop stops all server components synchronously.
 func (s *Server[T]) Stop(ctx context.Context) error {
-	s.logger.Info("stopping servers...")
+	logger := GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+	logger.Info("stopping servers...")
 
-	g, ctx := errgroup.WithContext(ctx)
+	var err error
 	for _, mod := range s.components {
-		g.Go(func() error {
-			return mod.Stop(ctx)
-		})
+		err = errors.Join(err, mod.Stop(ctx))
 	}
 
-	return g.Wait()
+	return err
 }
 
 // CLICommands returns all CLI commands of all components.
@@ -181,31 +183,9 @@ func (s *Server[T]) Configs() map[string]any {
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
 	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	flags.String(FlagCPUProfiling, "", "Enable CPU profiling and write to the specified file")
+
 	return flags
-}
-
-// Init initializes all server components with the provided application, configuration, and logger.
-// It returns an error if any component fails to initialize.
-func (s *Server[T]) Init(appI AppI[T], cfg map[string]any, logger log.Logger) error {
-	serverCfg := s.config
-	if len(cfg) > 0 {
-		if err := UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-
-	var components []ServerComponent[T]
-	for _, mod := range s.components {
-		if err := mod.Init(appI, cfg, logger); err != nil {
-			return err
-		}
-
-		components = append(components, mod)
-	}
-
-	s.config = serverCfg
-	s.components = components
-	return nil
 }
 
 // WriteConfig writes the config to the given path.

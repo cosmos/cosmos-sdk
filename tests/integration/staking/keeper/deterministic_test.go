@@ -2,10 +2,12 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -214,6 +216,26 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 	})
 }
 
+func metadataGenerator() *rapid.Generator[stakingtypes.Metadata] {
+	return rapid.Custom(func(t *rapid.T) stakingtypes.Metadata {
+		return stakingtypes.Metadata{
+			ProfilePicUri:    generateUri(t),
+			SocialHandleUris: []string{generateUri(t), generateUri(t)},
+		}
+	})
+}
+
+func generateUri(t *rapid.T) string {
+	host := fmt.Sprintf("%s.com", rapid.StringN(5, 250, 255).Draw(t, "host"))
+	path := rapid.StringN(5, 250, 255).Draw(t, "path")
+	uri := url.URL{
+		Scheme: "https",
+		Host:   host,
+		Path:   path,
+	}
+	return uri.String()
+}
+
 // createValidator creates a validator with random values.
 func createValidator(t *testing.T, rt *rapid.T, _ *deterministicFixture) stakingtypes.Validator {
 	t.Helper()
@@ -233,6 +255,7 @@ func createValidator(t *testing.T, rt *rapid.T, _ *deterministicFixture) staking
 			rapid.StringN(5, 250, 255).Draw(rt, "website"),
 			rapid.StringN(5, 250, 255).Draw(rt, "securityContact"),
 			rapid.StringN(5, 250, 255).Draw(rt, "details"),
+			metadataGenerator().Draw(rt, "metadata"),
 		),
 		UnbondingHeight: rapid.Int64Min(1).Draw(rt, "unbonding-height"),
 		UnbondingTime:   time.Now().Add(durationGenerator().Draw(rt, "duration")),
@@ -308,6 +331,7 @@ func getStaticValidator(t *testing.T, f *deterministicFixture) stakingtypes.Vali
 			"website",
 			"securityContact",
 			"details",
+			stakingtypes.Metadata{},
 		),
 		UnbondingHeight: 10,
 		UnbondingTime:   time.Date(2022, 10, 1, 0, 0, 0, 0, time.UTC),
@@ -343,6 +367,7 @@ func getStaticValidator2(t *testing.T, f *deterministicFixture) stakingtypes.Val
 			"website",
 			"securityContact",
 			"details",
+			stakingtypes.Metadata{},
 		),
 		UnbondingHeight: 100132,
 		UnbondingTime:   time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),
@@ -408,7 +433,7 @@ func TestGRPCValidator(t *testing.T) {
 		ValidatorAddr: val.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Validator, 1915, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Validator, 1921, false)
 }
 
 func TestGRPCValidators(t *testing.T) {
@@ -434,7 +459,7 @@ func TestGRPCValidators(t *testing.T) {
 	getStaticValidator(t, f)
 	getStaticValidator2(t, f)
 
-	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 2862, false)
+	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 2880, false)
 }
 
 func TestGRPCValidatorDelegations(t *testing.T) {
@@ -479,7 +504,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorDelegations, 14610, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorDelegations, 14628, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -569,7 +594,7 @@ func TestGRPCDelegation(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Delegation, 4680, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Delegation, 4686, false)
 }
 
 func TestGRPCUnbondingDelegation(t *testing.T) {
@@ -652,7 +677,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorDelegations, 4283, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorDelegations, 4289, false)
 }
 
 func TestGRPCDelegatorValidator(t *testing.T) {
@@ -690,7 +715,7 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorValidator, 3563, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorValidator, 3569, false)
 }
 
 func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
@@ -772,7 +797,7 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorValidatorsRequest{DelegatorAddr: delegator1}
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorValidators, 3166, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorValidators, 3172, false)
 }
 
 func TestGRPCPool(t *testing.T) {
@@ -856,7 +881,7 @@ func TestGRPCRedelegations(t *testing.T) {
 		DstValidatorAddr: validator2,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Redelegations, 3920, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Redelegations, 3926, false)
 }
 
 func TestGRPCParams(t *testing.T) {

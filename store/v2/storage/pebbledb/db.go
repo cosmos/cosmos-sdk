@@ -137,6 +137,15 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), closer.Close()
 }
 
+func (db *Database) VersionExists(version uint64) (bool, error) {
+	latestVersion, err := db.GetLatestVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return latestVersion >= version && version >= db.earliestVersion, nil
+}
+
 func (db *Database) setPruneHeight(pruneVersion uint64) error {
 	db.earliestVersion = pruneVersion + 1
 
@@ -212,10 +221,7 @@ func (db *Database) Prune(version uint64) (err error) {
 
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	var (
@@ -232,11 +238,14 @@ func (db *Database) Prune(version uint64) (err error) {
 			return fmt.Errorf("invalid PebbleDB MVCC key: %s", prefixedKey)
 		}
 
-		keyVersion, err := decodeUint64Ascending(verBz)
-		if err != nil {
-			return fmt.Errorf("failed to decode key version: %w", err)
+		var keyVersion uint64
+		// handle version 0 (no version prefix)
+		if len(verBz) > 0 {
+			keyVersion, err = decodeUint64Ascending(verBz)
+			if err != nil {
+				return fmt.Errorf("failed to decode key version: %w", err)
+			}
 		}
-
 		// seek to next key if we are at a version which is higher than prune height
 		if keyVersion > version {
 			itr.NextPrefix()
@@ -339,10 +348,7 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err error) {
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	for _, storeKey := range storeKeys {
@@ -429,9 +435,13 @@ func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, 
 		return nil, fmt.Errorf("invalid PebbleDB MVCC key: %s", itr.Key())
 	}
 
-	keyVersion, err := decodeUint64Ascending(vBz)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode key version: %w", err)
+	var keyVersion uint64
+	// handle version 0 (no version prefix)
+	if len(vBz) > 0 {
+		keyVersion, err = decodeUint64Ascending(vBz)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode key version: %w", err)
+		}
 	}
 	if keyVersion > version {
 		return nil, fmt.Errorf("key version too large: %d", keyVersion)
@@ -444,10 +454,7 @@ func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, 
 func (db *Database) deleteRemovedStoreKeys(version uint64) (err error) {
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	end := encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version+1)

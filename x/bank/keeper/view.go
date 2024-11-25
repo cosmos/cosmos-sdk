@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -57,8 +58,9 @@ func (b BalancesIndexes) IndexesList() []collections.Index[collections.Pair[sdk.
 type BaseViewKeeper struct {
 	appmodule.Environment
 
-	cdc codec.BinaryCodec
-	ak  types.AccountKeeper
+	cdc     codec.BinaryCodec
+	ak      types.AccountKeeper
+	addrCdc address.Codec
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -75,10 +77,11 @@ func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak type
 		Environment:   env,
 		cdc:           cdc,
 		ak:            ak,
-		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
-		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
-		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
-		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
+		addrCdc:       ak.AddressCodec(),
+		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey.WithName("supply"), sdk.IntValue),
+		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey.WithName("denom_metadata"), codec.CollValue[types.Metadata](cdc)),
+		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey.WithName("send_enabled"), codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
+		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.NamedPairKeyCodec("address", sdk.AccAddressKey, "balances", collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
@@ -112,7 +115,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx context.Context) []types.Balance
 	mapAddressToBalancesIdx := make(map[string]int)
 
 	k.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
-		addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+		addrStr, err := k.addrCdc.BytesToString(addr)
 		if err != nil {
 			panic(err)
 		}

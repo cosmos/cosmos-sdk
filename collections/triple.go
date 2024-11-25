@@ -85,6 +85,7 @@ type tripleKeyCodec[K1, K2, K3 any] struct {
 
 type jsonTripleKey [3]json.RawMessage
 
+// EncodeJSON convert triple keys to json
 func (t tripleKeyCodec[K1, K2, K3]) EncodeJSON(value Triple[K1, K2, K3]) ([]byte, error) {
 	json1, err := t.keyCodec1.EncodeJSON(*value.k1)
 	if err != nil {
@@ -104,6 +105,7 @@ func (t tripleKeyCodec[K1, K2, K3]) EncodeJSON(value Triple[K1, K2, K3]) ([]byte
 	return json.Marshal(jsonTripleKey{json1, json2, json3})
 }
 
+// DecodeJSON convert json to triple keys
 func (t tripleKeyCodec[K1, K2, K3]) DecodeJSON(b []byte) (Triple[K1, K2, K3], error) {
 	var jsonKey jsonTripleKey
 	err := json.Unmarshal(b, &jsonKey)
@@ -129,6 +131,7 @@ func (t tripleKeyCodec[K1, K2, K3]) DecodeJSON(b []byte) (Triple[K1, K2, K3], er
 	return Join3(key1, key2, key3), nil
 }
 
+// Stringify convert triple keys to string
 func (t tripleKeyCodec[K1, K2, K3]) Stringify(key Triple[K1, K2, K3]) string {
 	b := new(strings.Builder)
 	b.WriteByte('(')
@@ -308,6 +311,16 @@ func (t tripleKeyCodec[K1, K2, K3]) SchemaCodec() (codec.SchemaCodec[Triple[K1, 
 
 	return codec.SchemaCodec[Triple[K1, K2, K3]]{
 		Fields: []schema.Field{field1, field2, field3},
+		ToSchemaType: func(t Triple[K1, K2, K3]) (any, error) {
+			return []interface{}{t.K1(), t.K2(), t.K3()}, nil
+		},
+		FromSchemaType: func(a any) (Triple[K1, K2, K3], error) {
+			aSlice, ok := a.([]interface{})
+			if !ok || len(aSlice) != 3 {
+				return Triple[K1, K2, K3]{}, fmt.Errorf("expected slice of length 3, got %T", a)
+			}
+			return Join3(aSlice[0].(K1), aSlice[1].(K2), aSlice[2].(K3)), nil
+		},
 	}, nil
 }
 

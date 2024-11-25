@@ -4,12 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/go-metrics"
-
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -27,12 +24,12 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 func (k msgServer) SetWithdrawAddress(ctx context.Context, msg *types.MsgSetWithdrawAddress) (*types.MsgSetWithdrawAddressResponse, error) {
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
+	delegatorAddress, err := k.addrCdc.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}
 
-	withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.WithdrawAddress)
+	withdrawAddress, err := k.addrCdc.StringToBytes(msg.WithdrawAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid withdraw address: %s", err)
 	}
@@ -51,7 +48,7 @@ func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWi
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
+	delegatorAddress, err := k.addrCdc.StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}
@@ -60,18 +57,6 @@ func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWi
 	if err != nil {
 		return nil, err
 	}
-
-	defer func() {
-		for _, a := range amount {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "withdraw_reward"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
 
 	return &types.MsgWithdrawDelegatorRewardResponse{Amount: amount}, nil
 }
@@ -87,25 +72,13 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 		return nil, err
 	}
 
-	defer func() {
-		for _, a := range amount {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "withdraw_commission"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
-
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
 // Deprecated: DO NOT USE
 // This method uses deprecated message request. Use FundCommunityPool from x/protocolpool module instead.
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
+	depositor, err := k.addrCdc.StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
@@ -153,7 +126,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, err
 	}
 
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
+	recipient, err := k.addrCdc.StringToBytes(msg.Recipient)
 	if err != nil {
 		return nil, fmt.Errorf("invalid recipient address: %w", err)
 	}
@@ -168,7 +141,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 }
 
 func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
-	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
+	depositor, err := k.addrCdc.StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, fmt.Errorf("invalid depositor address: %w", err)
 	}
@@ -210,7 +183,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 }
 
 func (k *Keeper) validateAuthority(authority string) error {
-	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
+	if _, err := k.addrCdc.StringToBytes(authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 	}
 

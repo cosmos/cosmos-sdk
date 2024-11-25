@@ -106,6 +106,7 @@ type quadKeyCodec[K1, K2, K3, K4 any] struct {
 
 type jsonQuadKey [4]json.RawMessage
 
+// EncodeJSON encodes Quads to json
 func (t quadKeyCodec[K1, K2, K3, K4]) EncodeJSON(value Quad[K1, K2, K3, K4]) ([]byte, error) {
 	json1, err := t.keyCodec1.EncodeJSON(*value.k1)
 	if err != nil {
@@ -130,6 +131,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) EncodeJSON(value Quad[K1, K2, K3, K4]) ([]
 	return json.Marshal(jsonQuadKey{json1, json2, json3, json4})
 }
 
+// DecodeJSON decodes json to Quads
 func (t quadKeyCodec[K1, K2, K3, K4]) DecodeJSON(b []byte) (Quad[K1, K2, K3, K4], error) {
 	var jsonKey jsonQuadKey
 	err := json.Unmarshal(b, &jsonKey)
@@ -160,6 +162,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) DecodeJSON(b []byte) (Quad[K1, K2, K3, K4]
 	return Join4(key1, key2, key3, key4), nil
 }
 
+// Stringify converts Quads to string
 func (t quadKeyCodec[K1, K2, K3, K4]) Stringify(key Quad[K1, K2, K3, K4]) string {
 	b := new(strings.Builder)
 	b.WriteByte('(')
@@ -379,6 +382,16 @@ func (t quadKeyCodec[K1, K2, K3, K4]) SchemaCodec() (codec.SchemaCodec[Quad[K1, 
 
 	return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{
 		Fields: []schema.Field{field1, field2, field3, field4},
+		ToSchemaType: func(q Quad[K1, K2, K3, K4]) (any, error) {
+			return []interface{}{q.K1(), q.K2(), q.K3(), q.K4()}, nil
+		},
+		FromSchemaType: func(a any) (Quad[K1, K2, K3, K4], error) {
+			aSlice, ok := a.([]interface{})
+			if !ok || len(aSlice) != 4 {
+				return Quad[K1, K2, K3, K4]{}, fmt.Errorf("expected slice of length 4, got %T", a)
+			}
+			return Join4(aSlice[0].(K1), aSlice[1].(K2), aSlice[2].(K3), aSlice[3].(K4)), nil
+		},
 	}, nil
 }
 

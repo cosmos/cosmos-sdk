@@ -5,7 +5,7 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
-### BaseApp
+<!-- ### BaseApp
 
 #### Nested Messages Simulation
 
@@ -42,7 +42,7 @@ app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 To be able to simulate nested messages within a transaction, message types containing nested messages must implement the
 `HasNestedMsgs` interface. This interface requires a single method: `GetMsgs() ([]sdk.Msg, error)`, which should return
 the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
-transaction simulation. 
+transaction simulation. -->
 
 ## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-beta.1)
 
@@ -464,6 +464,23 @@ if err != nil {
 }
 ```
 
+##### TX Decoder
+
+In order to support x/accounts properly we need to init a `TxDecoder`, modify your `app.go`:
+
+```diff
+import (
++ 	txdecode "cosmossdk.io/x/tx/decode"
+)
++	txDecoder, err := txdecode.NewDecoder(txdecode.Options{
++		SigningContext: signingCtx,
++		ProtoCodec:     appCodec,
++	})
++	if err != nil {
++		panic(err)
++	}
+```
+
 #### `x/crisis`
 
 The `x/crisis` module was removed due to it not being supported or functional any longer. 
@@ -638,7 +655,7 @@ simd config migrate v0.50
 
 If you were using `<appd> config [key]` or `<appd> config [key] [value]` to set and get values from the `client.toml`, replace it with `<appd> config get client [key]` and `<appd> config set client [key] [value]`. The extra verbosity is due to the extra functionalities added in config.
 
-More information about [confix](https://docs.cosmos.network/main/tooling/confix) and how to add it in your application binary in the [documentation](https://docs.cosmos.network/main/tooling/confix).
+More information about [confix](https://docs.cosmos.network/main/build/tooling/confix) and how to add it in your application binary in the [documentation](https://docs.cosmos.network/main/build/tooling/confix).
 
 #### gRPC-Web
 
@@ -960,8 +977,8 @@ To migrate to the `BaseAccount` in `x/accounts`, follow these steps:
 
 1. Send a `basev1.MsgInit` message.
 2. This process allows you to:
-    - Switch to a new public key
-    - Reset your sequence number
+    * Switch to a new public key
+    * Reset your sequence number
 
 > **Important**: If you intend to keep the same public key, ensure you use your current sequence number.
 
@@ -986,12 +1003,12 @@ Here's an example of the `x/auth.MsgMigrateAccount` message structure:
 
 **Field Descriptions**
 
-- `signer`: The address of the account you want to migrate from.
-- `account_type`: The new account type you want to migrate to (depends on what's installed on the chain).
-- `account_init_msg`: The custom initialization message for the new account.
-    - `@type`: Specifies the type of account (in this case, x/accounts base account).
-    - `pub_key`: The public key for the account. You can migrate to a different public key if desired.
-    - `init_sequence`: The new sequence number for the account.
+* `signer`: The address of the account you want to migrate from.
+* `account_type`: The new account type you want to migrate to (depends on what's installed on the chain).
+* `account_init_msg`: The custom initialization message for the new account.
+    * `@type`: Specifies the type of account (in this case, x/accounts base account).
+    * `pub_key`: The public key for the account. You can migrate to a different public key if desired.
+    * `init_sequence`: The new sequence number for the account.
 
 > **Warning**: If you're keeping the same public key, make sure to use your current sequence number to prevent potential replay attacks.
 

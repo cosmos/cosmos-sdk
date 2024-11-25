@@ -4,13 +4,13 @@ package systemtests
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSnapshots(t *testing.T) {
-
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 	sut.StartChain(t)
@@ -89,7 +89,7 @@ func TestPrune(t *testing.T) {
 	// prune
 	var command []string
 	if isV2() {
-		command = []string{"store", "prune", "--keep-recent=1"}
+		command = []string{"store", "prune", "--store.keep-recent=1"}
 	} else {
 		command = []string{"prune", "everything"}
 	}

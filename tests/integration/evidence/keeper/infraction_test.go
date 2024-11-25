@@ -99,10 +99,6 @@ func initFixture(tb testing.TB) *fixture {
 	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
 
 	logger := log.NewTestLogger(tb)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
-
 	authority := authtypes.NewModuleAddress("gov")
 
 	// gomock initializations
@@ -144,8 +140,6 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
-
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
@@ -166,7 +160,7 @@ func initFixture(tb testing.TB) *fixture {
 	evidenceModule := evidence.NewAppModule(cdc, *evidenceKeeper, cometInfoService)
 	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{

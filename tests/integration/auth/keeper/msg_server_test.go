@@ -40,7 +40,7 @@ func TestAsyncExec(t *testing.T) {
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
 
-	assert.NilError(t, testutil.FundAccount(f.ctx, f.bankKeeper, addrs[0], sdk.NewCoins(sdk.NewInt64Coin("stake", 500))))
+	assert.NilError(t, testutil.FundAccount(f.app.Context(), f.bankKeeper, addrs[0], sdk.NewCoins(sdk.NewInt64Coin("stake", 500))))
 
 	msg := &banktypes.MsgSend{
 		FromAddress: addrs[0].String(),

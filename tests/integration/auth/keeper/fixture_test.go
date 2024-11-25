@@ -36,7 +36,6 @@ type fixture struct {
 	app *integration.App
 
 	cdc codec.Codec
-	ctx sdk.Context
 
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
@@ -57,9 +56,6 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
 
 	router := baseapp.NewMsgServiceRouter()
 	queryRouter := baseapp.NewGRPCQueryRouter()
@@ -109,14 +105,11 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 		authority.String(),
 	)
 
-	params := banktypes.DefaultParams()
-	assert.NilError(t, bankKeeper.SetParams(newCtx, params))
-
 	accountsModule := accounts.NewAppModule(cdc, accountsKeeper)
 	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, authKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
@@ -136,7 +129,6 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 	return &fixture{
 		app:            integrationApp,
 		cdc:            cdc,
-		ctx:            newCtx,
 		accountsKeeper: accountsKeeper,
 		authKeeper:     authKeeper,
 		bankKeeper:     bankKeeper,

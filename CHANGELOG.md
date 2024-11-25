@@ -40,17 +40,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features 
 
-* (client) [#21074](https://github.com/cosmos/cosmos-sdk/pull/21074) Add auto cli for node service
+* (client) [#21074](https://github.com/cosmos/cosmos-sdk/pull/21074) Add auto cli for node service.
 
 ### Bug Fixes
 
+* (x/bank) [#22543](https://github.com/cosmos/cosmos-sdk/pull/22543) Fix `DenomMetadata` rpc allow value with slashes.
 * (query) [87d3a43](https://github.com/cosmos/cosmos-sdk/commit/87d3a432af95f4cf96aa02351ed5fcc51cca6e7b) Fix collection filtered pagination.
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20
 
 ### Bug Fixes
 
-* [GHSA-x5vx-95h7-rv4p](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-x5vx-95h7-rv4p) Fix Group module can halt chain when handling a malicious proposal
+* [GHSA-x5vx-95h7-rv4p](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-x5vx-95h7-rv4p) Fix Group module can halt chain when handling a malicious proposal.
 
 ## [v0.50.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.11) - 2024-12-16
 

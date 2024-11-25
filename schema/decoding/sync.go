@@ -1,8 +1,6 @@
 package decoding
 
 import (
-	"fmt"
-
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 )
@@ -30,7 +28,6 @@ func Sync(listener appdata.Listener, source SyncSource, resolver DecoderResolver
 	}
 
 	return resolver.AllDecoders(func(moduleName string, cdc schema.ModuleCodec) error {
-		fmt.Println("Syncing module", moduleName)
 		if opts.ModuleFilter != nil && !opts.ModuleFilter(moduleName) {
 			// ignore this module
 			return nil

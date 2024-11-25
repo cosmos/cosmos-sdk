@@ -3,7 +3,6 @@ package math
 import (
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -152,11 +151,11 @@ func TestNewDecFromInt64(t *testing.T) {
 		},
 		"max value": {
 			src: math.MaxInt64,
-			exp: strconv.Itoa(math.MaxInt64),
+			exp: "9223372036854.775807E+6",
 		},
 		"min value": {
 			src: math.MinInt64,
-			exp: strconv.Itoa(math.MinInt64),
+			exp: "9223372036854.775808E+6",
 		},
 	}
 	for name, spec := range specs {
@@ -1247,15 +1246,17 @@ func TestToBigInt(t *testing.T) {
 		{"12345.6", "", ErrNonIntegral},
 	}
 	for idx, tc := range tcs {
-		a, err := NewDecFromString(tc.intStr)
-		require.NoError(t, err)
-		b, err := a.BigInt()
-		if tc.isError == nil {
-			require.NoError(t, err, "test_%d", idx)
-			require.Equal(t, tc.out, b.String(), "test_%d", idx)
-		} else {
-			require.ErrorIs(t, err, tc.isError, "test_%d", idx)
-		}
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			a, err := NewDecFromString(tc.intStr)
+			require.NoError(t, err)
+			b, err := a.BigInt()
+			if tc.isError == nil {
+				require.NoError(t, err, "test_%d", idx)
+				require.Equal(t, tc.out, b.String(), "test_%d", idx)
+			} else {
+				require.ErrorIs(t, err, tc.isError, "test_%d", idx)
+			}
+		})
 	}
 }
 
@@ -1447,7 +1448,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 			// and backwards
 			unmarshalledDec := new(Dec)
 			require.NoError(t, unmarshalledDec.Unmarshal(marshaled))
-			assert.Equal(t, spec.x.String(), unmarshalledDec.String())
+			assert.Equal(t, spec.exp, unmarshalledDec.String())
 			assert.True(t, spec.x.Equal(*unmarshalledDec))
 		})
 	}

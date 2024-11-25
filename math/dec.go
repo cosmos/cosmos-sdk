@@ -300,7 +300,7 @@ func (x Dec) Int64() (int64, error) {
 // fit precisely into an *big.Int.
 func (x Dec) BigInt() (*big.Int, error) {
 	y, _ := x.Reduce()
-	z, ok := new(big.Int).SetString(y.String(), 10)
+	z, ok := new(big.Int).SetString(y.Text('f'), 10)
 	if !ok {
 		return nil, ErrNonIntegral
 	}
@@ -335,7 +335,7 @@ func (x Dec) SdkIntTrim() (Int, error) {
 
 // String formatted in decimal notation: '-ddddd.dddd', no exponent
 func (x Dec) String() string {
-	return x.dec.Text('f')
+	return string(fmtE(x.dec, 'E'))
 }
 
 // Text converts the floating-point number x to a string according
@@ -431,7 +431,8 @@ func (x Dec) Marshal() ([]byte, error) {
 	return fmtE(d, 'E'), nil
 }
 
-// custom formatter
+// fmtE formats a decimal number into a byte slice in scientific notation or fixed-point notation depending on the exponent.
+// If the adjusted exponent is between -6 and 6 inclusive, it uses fixed-point notation, otherwise it uses scientific notation.
 func fmtE(d apd.Decimal, fmt byte) []byte {
 	var scratch, dest [16]byte
 	buf := dest[:0]
@@ -468,14 +469,6 @@ func fmtE(d apd.Decimal, fmt byte) []byte {
 	return strconv.AppendInt(buf, adj, 10)
 }
 
-// isEmptyExp checks if the adjusted exponent of the given decimal is zero.
-func isEmptyExp(d apd.Decimal) bool {
-	var scratch [16]byte
-	digits := d.Coeff.Append(scratch[:0], 10)
-	adj := int64(d.Exponent) + int64(len(digits)) - 1
-	return adj == 0
-}
-
 // Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
 // It returns an error if the byte slice does not represent a valid decimal.
 func (x *Dec) Unmarshal(data []byte) error {
@@ -510,7 +503,7 @@ func (x Dec) Size() int {
 
 // MarshalJSON serializes the Dec struct into a JSON-encoded byte slice using scientific notation.
 func (x Dec) MarshalJSON() ([]byte, error) {
-	return json.Marshal(x.dec.Text('E'))
+	return json.Marshal(fmtE(x.dec, 'E'))
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface for the Dec type, converting JSON strings to Dec objects.

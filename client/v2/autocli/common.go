@@ -289,7 +289,7 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		EnabledSignmodes:      signModesToApiSignModes(b.EnabledSignModes),
 	}
 
-	return context.WithValue(cmd.Context(), clientcontext.ContextKey, clientCtx), nil
+	return clientcontext.SetInContext(cmd.Context(), clientCtx), nil
 }
 
 // preRunE returns a function that sets flags from the configuration before running a command.

@@ -3,6 +3,7 @@ package context
 import (
 	gocontext "context"
 	"errors"
+
 	"github.com/spf13/pflag"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -32,6 +33,12 @@ type Context struct {
 	Keyring keyring.Keyring
 
 	EnabledSignmodes []apisigning.SignMode
+}
+
+// SetInContext stores the provided autocli.Context in the given Go context.Context.
+// It returns a new context.Context containing the autocli.Context value.
+func SetInContext(goCtx gocontext.Context, cliCtx Context) gocontext.Context {
+	return gocontext.WithValue(goCtx, ContextKey, cliCtx)
 }
 
 // ClientContextFromGoContext returns the autocli.Context from a given Go context.

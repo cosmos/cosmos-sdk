@@ -2,10 +2,8 @@ package tx
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/cosmos/gogoproto/grpc"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	clientcontext "cosmossdk.io/client/v2/autocli/context"
@@ -14,6 +12,9 @@ import (
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/core/transaction"
+	"github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -50,7 +51,12 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(
 		return dryRun(txf, msgs...)
 	}
 
-	return BroadcastTx(ctx, txf, broadcaster, msgs...)
+	err = GenerateTx(txf, msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	return BroadcastTx(ctx, txf, broadcaster)
 }
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
@@ -157,20 +163,32 @@ func SimulateTx(ctx clientcontext.Context, conn grpc.ClientConn, msgs ...transac
 	return simulation, err
 }
 
-// BroadcastTx attempts to generate, sign and broadcast a transaction with the
-// given set of messages. It will also simulate gas requirements if necessary.
-// It will return an error upon failure.
-func BroadcastTx(ctx context.Context, txf Factory, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) ([]byte, error) {
+// GenerateTx generates an unsigned transaction using the provided transaction factory and messages.
+// If simulation and execution are enabled, it first calculates the gas requirements.
+// It then builds the unsigned transaction with the provided messages.
+func GenerateTx(txf Factory, msgs ...transaction.Msg) error {
 	if txf.simulateAndExecute() {
 		err := txf.calculateGas(msgs...)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	err := txf.BuildUnsignedTx(msgs...)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	return nil
+}
+
+// BroadcastTx attempts to sign and broadcast a transaction using the provided factory and broadcaster.
+// GenerateTx must be called first to prepare the transaction for signing.
+// This function then signs the transaction using the factory's signing capabilities, encodes it,
+// and finally broadcasts it using the provided broadcaster.
+func BroadcastTx(ctx context.Context, txf Factory, broadcaster broadcast.Broadcaster) ([]byte, error) {
+	if len(txf.tx.msgs) == 0 {
+		return nil, errors.New("no messages to broadcast")
 	}
 
 	signedTx, err := txf.sign(ctx, true)

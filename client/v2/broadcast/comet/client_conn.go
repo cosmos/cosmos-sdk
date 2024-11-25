@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 const grpcBlockHeightHeader = "x-cosmos-block-height"
@@ -52,7 +51,7 @@ func (c *CometBFTBroadcaster) Invoke(ctx context.Context, method string, req, re
 		if height < 0 {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
-				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
+				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpcBlockHeightHeader)
 		}
 	}
 
@@ -77,7 +76,7 @@ func (c *CometBFTBroadcaster) Invoke(ctx context.Context, method string, req, re
 	// We then parse all the call options, if the call option is a
 	// HeaderCallOption, then we manually set the value of that header to the
 	// metadata.
-	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
+	md = metadata.Pairs(grpcBlockHeightHeader, strconv.FormatInt(res.Height, 10))
 	for _, callOpt := range opts {
 		header, ok := callOpt.(grpc.HeaderCallOption)
 		if !ok {

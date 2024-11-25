@@ -44,7 +44,7 @@ type Factory struct {
 	txConfig         TxConfig
 	txParams         TxParameters
 
-	tx txState
+	tx *txState
 }
 
 func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
@@ -81,7 +81,7 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever acc
 		txConfig:         txConfig,
 		txParams:         parameters,
 
-		tx: txState{},
+		tx: &txState{},
 	}, nil
 }
 

@@ -13,6 +13,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/flags"
+	"cosmossdk.io/client/v2/internal/print"
 	"cosmossdk.io/client/v2/internal/util"
 	v2tx "cosmossdk.io/client/v2/tx"
 	addresscodec "cosmossdk.io/core/address"
@@ -233,11 +234,27 @@ func (b *Builder) handleGovProposal(
 // generateOrBroadcastTxWithV2 generates or broadcasts a transaction with the provided messages using v2 transaction handling.
 //
 //nolint:unused // It'll be used once BuildMsgMethodCommand is updated to use factory v2.
-func (b *Builder) generateOrBroadcastTxWithV2(ctx context.Context, cmd *cobra.Command, msgs ...transaction.Msg) ([]byte, error) {
-	cConn, err := b.GetClientConn(cmd)
+func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transaction.Msg) error {
+	ctx, err := b.getContext(cmd)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return v2tx.GenerateOrBroadcastTxCLI(ctx, cConn, msgs...)
+	cConn, err := b.GetClientConn(cmd)
+	if err != nil {
+		return err
+	}
+
+	bz, err := v2tx.GenerateOrBroadcastTxCLI(ctx, cConn, msgs...)
+	if err != nil {
+		return err
+	}
+
+	output, _ := cmd.Flags().GetString(flags.FlagOutput)
+	p := print.Printer{
+		Output:       cmd.OutOrStdout(),
+		OutputFormat: output,
+	}
+
+	return p.PrintBytes(bz)
 }

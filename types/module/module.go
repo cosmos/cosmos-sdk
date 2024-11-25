@@ -727,7 +727,7 @@ func (m *Manager) PreBlock(ctx sdk.Context) error {
 	for _, moduleName := range m.OrderPreBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
 			if err := module.PreBlock(ctx); err != nil {
-				return fmt.Errorf("module %s PreBlock failed: %w", moduleName, err)
+				return err
 			}
 		}
 	}
@@ -742,7 +742,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	for _, moduleName := range m.OrderBeginBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			if err := module.BeginBlock(ctx); err != nil {
-				return sdk.BeginBlock{}, fmt.Errorf("module %s BeginBlock failed: %w", moduleName, err)
+				return sdk.BeginBlock{}, err
 			}
 		}
 	}
@@ -763,12 +763,12 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
 			err := module.EndBlock(ctx)
 			if err != nil {
-				return sdk.EndBlock{}, fmt.Errorf("module %s EndBlock failed: %w", moduleName, err)
+				return sdk.EndBlock{}, err
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
-				return sdk.EndBlock{}, fmt.Errorf("module %s EndBlock failed: %w", moduleName, err)
+				return sdk.EndBlock{}, err
 			}
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set

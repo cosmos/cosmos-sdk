@@ -4,12 +4,7 @@ import (
 	"context"
 	"testing"
 
-<<<<<<< HEAD
 	"github.com/golang/mock/gomock"
-	"gotest.tools/v3/assert"
-=======
-	"go.uber.org/mock/gomock"
->>>>>>> 2d04a1af2 (fix(testutil/integration): use only one context in integration test framework (#22616))
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"

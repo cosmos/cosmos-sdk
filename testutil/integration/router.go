@@ -156,7 +156,7 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 
 	if cfg.AutomaticFinalizeBlock {
 		height := app.LastBlockHeight() + 1
-		if _, err := app.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}}); err != nil {
+		if _, err := app.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{}}}); err != nil {
 			return nil, fmt.Errorf("failed to run finalize block: %w", err)
 		}
 	}
@@ -184,6 +184,21 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	}
 
 	return response, nil
+}
+
+// NextBlock advances the chain height and returns the new height.
+func (app *App) NextBlock(txsblob ...[]byte) (int64, error) {
+	height := app.LastBlockHeight() + 1
+	if _, err := app.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{
+		Txs:               txsblob, // txsBlob are raw txs to be executed in the block
+		Height:            height,
+		DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{}},
+	}); err != nil {
+		return 0, fmt.Errorf("failed to run finalize block: %w", err)
+	}
+
+	_, err := app.Commit()
+	return height, err
 }
 
 // Context returns the application context. It can be unwrapped to a sdk.Context,

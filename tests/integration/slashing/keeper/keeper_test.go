@@ -67,7 +67,6 @@ func initFixture(tb testing.TB) *fixture {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	cdc := encodingCfg.Codec
 
-	logger := log.NewTestLogger(tb)
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
@@ -124,7 +123,7 @@ func initFixture(tb testing.TB) *fixture {
 	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry(), cometInfoService)
 	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
-	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(log.NewNopLogger(), keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
@@ -144,10 +143,8 @@ func initFixture(tb testing.TB) *fixture {
 	slashingtypes.RegisterQueryServer(integrationApp.QueryHelper(), slashingkeeper.NewQuerier(slashingKeeper))
 
 	// set default staking params
-	err := stakingKeeper.Params.Set(sdkCtx, stakingtypes.DefaultParams())
-	assert.NilError(tb, err)
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	err = slashingKeeper.Params.Set(sdkCtx, testutil.TestParams())
+	err := slashingKeeper.Params.Set(sdkCtx, testutil.TestParams())
 	assert.NilError(tb, err)
 	addrDels := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, sdkCtx, 6, stakingKeeper.TokensFromConsensusPower(sdkCtx, 200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)

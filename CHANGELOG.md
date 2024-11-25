@@ -44,7 +44,17 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+<<<<<<< HEAD
 ### Bug Fixes 
+=======
+* (testutil/integration) [#22616](https://github.com/cosmos/cosmos-sdk/pull/22616) Remove double context in integration tests v1.
+    * Use integrationApp.Context() instead of creating a context prior.
+
+### Bug Fixes
+
+* (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
+* (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+>>>>>>> 2d04a1af2 (fix(testutil/integration): use only one context in integration test framework (#22616))
 
 ### API Breaking Changes
 

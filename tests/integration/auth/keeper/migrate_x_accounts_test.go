@@ -29,20 +29,20 @@ func TestMigrateToAccounts(t *testing.T) {
 		Name:        "cookies",
 		Permissions: nil,
 	}
-	updatedMod := f.authKeeper.NewAccount(f.ctx, modAcc)
-	f.authKeeper.SetAccount(f.ctx, updatedMod)
+	updatedMod := f.authKeeper.NewAccount(f.app.Context(), modAcc)
+	f.authKeeper.SetAccount(f.app.Context(), updatedMod)
 
 	// create account
 	msgSrv := authkeeper.NewMsgServerImpl(f.authKeeper)
 	privKey := secp256k1.GenPrivKey()
 	addr := sdk.AccAddress(privKey.PubKey().Address())
 
-	acc := f.authKeeper.NewAccountWithAddress(f.ctx, addr)
+	acc := f.authKeeper.NewAccountWithAddress(f.app.Context(), addr)
 	require.NoError(t, acc.SetPubKey(privKey.PubKey()))
-	f.authKeeper.SetAccount(f.ctx, acc)
+	f.authKeeper.SetAccount(f.app.Context(), acc)
 
 	t.Run("account does not exist", func(t *testing.T) {
-		resp, err := msgSrv.MigrateAccount(f.ctx, &authtypes.MsgMigrateAccount{
+		resp, err := msgSrv.MigrateAccount(f.app.Context(), &authtypes.MsgMigrateAccount{
 			Signer:         f.mustAddr([]byte("notexist")),
 			AccountType:    "base",
 			AccountInitMsg: nil,
@@ -52,7 +52,7 @@ func TestMigrateToAccounts(t *testing.T) {
 	})
 
 	t.Run("invalid account type", func(t *testing.T) {
-		resp, err := msgSrv.MigrateAccount(f.ctx, &authtypes.MsgMigrateAccount{
+		resp, err := msgSrv.MigrateAccount(f.app.Context(), &authtypes.MsgMigrateAccount{
 			Signer:         f.mustAddr(updatedMod.GetAddress()),
 			AccountType:    "base",
 			AccountInitMsg: nil,
@@ -73,7 +73,7 @@ func TestMigrateToAccounts(t *testing.T) {
 		initMsgAny, err := codectypes.NewAnyWithValue(migrateMsg)
 		require.NoError(t, err)
 
-		resp, err := msgSrv.MigrateAccount(f.ctx, &authtypes.MsgMigrateAccount{
+		resp, err := msgSrv.MigrateAccount(f.app.Context(), &authtypes.MsgMigrateAccount{
 			Signer:         f.mustAddr(addr),
 			AccountType:    "base",
 			AccountInitMsg: initMsgAny,
@@ -85,15 +85,15 @@ func TestMigrateToAccounts(t *testing.T) {
 		require.NotNil(t, resp.InitResponse.Value)
 
 		// check the account was removed from x/auth and added to x/accounts
-		require.Nil(t, f.authKeeper.GetAccount(f.ctx, addr))
-		require.True(t, f.accountsKeeper.IsAccountsModuleAccount(f.ctx, addr))
+		require.Nil(t, f.authKeeper.GetAccount(f.app.Context(), addr))
+		require.True(t, f.accountsKeeper.IsAccountsModuleAccount(f.app.Context(), addr))
 
 		// check the init information is correctly propagated.
-		seq, err := f.accountsKeeper.Query(f.ctx, addr, &basev1.QuerySequence{})
+		seq, err := f.accountsKeeper.Query(f.app.Context(), addr, &basev1.QuerySequence{})
 		require.NoError(t, err)
 		require.Equal(t, migrateMsg.InitSequence, seq.(*basev1.QuerySequenceResponse).Sequence)
 
-		pkResp, err := f.accountsKeeper.Query(f.ctx, addr, &basev1.QueryPubKey{})
+		pkResp, err := f.accountsKeeper.Query(f.app.Context(), addr, &basev1.QueryPubKey{})
 		require.NoError(t, err)
 		require.Equal(t, migrateMsg.PubKey, pkResp.(*basev1.QueryPubKeyResponse).PubKey)
 	})

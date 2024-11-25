@@ -301,3 +301,36 @@ func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1,
 		end:   RangeKeyPrefixEnd(key),
 	}
 }
+
+// NewPrefixUntilTripleRangeReversed defines a collection query which ranges until the provided Pair prefix
+// in reverse order.
+// Unstable: this API might change in the future.
+func NewPrefixUntilTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+	key := TriplePrefix[K1, K2, K3](k1)
+	return &Range[Triple[K1, K2, K3]]{
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
+	}
+}
+
+// NewPrefixedTripleRangeReversed provides a Range for all keys prefixed with the given
+// first part of the Triple key in reverse order.
+func NewPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+	key := TriplePrefix[K1, K2, K3](k1)
+	return &Range[Triple[K1, K2, K3]]{
+		start: RangeKeyExact(key),
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
+	}
+}
+
+// NewSuperPrefixedTripleRangeReversed provides a Range for all keys prefixed with the given
+// first and second parts of the Triple key in reverse order.
+func NewSuperPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1, K2, K3]] {
+	key := TripleSuperPrefix[K1, K2, K3](k1, k2)
+	return &Range[Triple[K1, K2, K3]]{
+		start: RangeKeyExact(key),
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
+	}
+}

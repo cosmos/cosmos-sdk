@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/schema v0.3.0
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
 	google.golang.org/protobuf v1.35.2
 	pgregory.net/rapid v1.1.0

@@ -3,12 +3,14 @@ package accounts
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	counterv1 "cosmossdk.io/x/accounts/testing/counter/v1"
 	"cosmossdk.io/x/bank/testutil"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 // TestDependencies aims to test wiring between different account components,

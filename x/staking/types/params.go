@@ -216,6 +216,10 @@ func validateMinCommissionRate(i interface{}) error {
 }
 
 func validateKeyRotationFee(bondDenom string, coin sdk.Coin) error {
+	if strings.TrimSpace(bondDenom) == "" {
+		return errors.New("bond denom cannot be blank")
+	}
+
 	if coin.IsNil() {
 		return fmt.Errorf("cons pubkey rotation fee cannot be nil: %s", coin)
 	}

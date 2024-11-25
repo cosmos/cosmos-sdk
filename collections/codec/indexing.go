@@ -77,9 +77,7 @@ func FallbackSchemaCodec[T any]() SchemaCodec[T] {
 				Kind: kind,
 			}},
 			// these can be nil because T maps directly to a schema value for this kind
-			ToSchemaType: func(t T) (any, error) {
-				return t, nil
-			},
+			ToSchemaType:   nil,
 			FromSchemaType: nil,
 		}
 	} else {

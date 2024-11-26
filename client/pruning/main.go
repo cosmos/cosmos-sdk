@@ -50,6 +50,9 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
+			// must disable async pruning
+			vp.Set(server.FlagIAVLSyncPruning, true)
+
 			// use the first argument if present to set the pruning method
 			if len(args) > 0 {
 				vp.Set(server.FlagPruning, args[0])

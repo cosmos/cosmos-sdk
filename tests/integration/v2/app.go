@@ -91,6 +91,11 @@ type StartupConfig struct {
 	GenesisAccounts []GenesisAccount
 	// HomeDir defines the home directory of the app where config and data will be stored.
 	HomeDir string
+	// BranchService defines the custom branch service to be used in the app.
+	BranchService corebranch.Service
+	// RouterServiceBuilder defines the custom builder
+	// for msg router and query router service to be used in the app.
+	RouterServiceBuilder runtime.RouterServiceBuilder
 }
 
 func DefaultStartUpConfig(t *testing.T) StartupConfig {
@@ -116,6 +121,10 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 		GenesisBehavior: Genesis_COMMIT,
 		GenesisAccounts: []GenesisAccount{ga},
 		HomeDir:         homedir,
+		BranchService:   stf.BranchService{},
+		RouterServiceBuilder: runtime.NewRouterBuilder(
+			stf.NewMsgRouterService, stf.NewQueryRouterService(),
+		),
 	}
 }
 
@@ -141,8 +150,6 @@ func WithAutomaticCommit() Option {
 func NewApp(
 	appConfig depinject.Config,
 	startupConfig StartupConfig,
-	branchService corebranch.Service,
-	routerServiceBuilder runtime.RouterServiceBuilder,
 	extraOutputs ...interface{},
 ) (*App, error) {
 	// create the app with depinject
@@ -159,18 +166,6 @@ func NewApp(
 		cdc codec.Codec
 		err error
 	)
-
-	// set default router service builder if not provided
-	if routerServiceBuilder == nil {
-		routerServiceBuilder = runtime.NewRouterBuilder(
-			stf.NewMsgRouterService, stf.NewQueryRouterService(),
-		)
-	}
-
-	// set default branch service if not provided
-	if branchService == nil {
-		branchService = stf.BranchService{}
-	}
 
 	if err := depinject.Inject(
 		depinject.Configs(
@@ -192,8 +187,8 @@ func NewApp(
 				kvFactory,
 				&eventService{},
 				storeBuilder,
-				branchService,
-				routerServiceBuilder,
+				startupConfig.BranchService,
+				startupConfig.RouterServiceBuilder,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -432,6 +427,9 @@ func (a *App) SignCheckDeliver(
 	return txResult
 }
 
+// RunMsg runs the handler for a transaction message.
+// It required the context to have the integration context.
+// a new state is committed if the option WithAutomaticCommit is set in options.
 func (app *App) RunMsg(t *testing.T, ctx context.Context, handler handler, option ...Option) (resp transaction.Msg, err error) {
 	// set options
 	cfg := &RunMsgConfig{}

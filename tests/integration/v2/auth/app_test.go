@@ -76,6 +76,9 @@ func createTestSuite(t *testing.T) *suite {
 
 	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
 
+	startupCfg.BranchService = &integration.BranchService{}
+	startupCfg.RouterServiceBuilder = serviceBuilder
+
 	res.app, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Provide(
 			// inject desired account types:
@@ -89,7 +92,7 @@ func createTestSuite(t *testing.T) *suite {
 			ProvideMockRetroCompatAccountNoInfo,
 			ProvideMockRetroCompatAccountNoImplement,
 		), depinject.Supply(log.NewNopLogger())),
-		startupCfg, &integration.BranchService{}, serviceBuilder,
+		startupCfg,
 		&res.bankKeeper, &res.accountsKeeper, &res.authKeeper)
 	require.NoError(t, err)
 

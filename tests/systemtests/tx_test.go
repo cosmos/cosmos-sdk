@@ -6,23 +6,23 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"os"
-
 	"fmt"
-
+	"os"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -34,9 +34,9 @@ var (
 )
 
 func TestQueryBySig(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -44,21 +44,21 @@ func TestQueryBySig(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", fmt.Sprintf("--chain-id=%s", sut.chainID), "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--chain-id=" + cli.ChainID(), "--sign-mode=direct", "--generate-only"}
 	unsignedTx := cli.RunCommandWithArgs(bankSendCmdArgs...)
-	txFile := StoreTempFile(t, []byte(unsignedTx))
+	txFile := systest.StoreTempFile(t, []byte(unsignedTx))
 
-	signedTx := cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
+	signedTx := cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
 	sig := gjson.Get(signedTx, "signatures.0").String()
-	signedTxFile := StoreTempFile(t, []byte(signedTx))
+	signedTxFile := systest.StoreTempFile(t, []byte(signedTx))
 
 	res := cli.Run("tx", "broadcast", signedTxFile.Name())
-	RequireTxSuccess(t, res)
+	systest.RequireTxSuccess(t, res)
 
 	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
 	resp, err := qc.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{
@@ -73,9 +73,9 @@ func TestQueryBySig(t *testing.T) {
 }
 
 func TestSimulateTx_GRPC(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -83,17 +83,17 @@ func TestSimulateTx_GRPC(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
-	txFile := StoreTempFile(t, []byte(res))
+	txFile := systest.StoreTempFile(t, []byte(res))
 
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
-	signedTxFile := StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
+	signedTxFile := systest.StoreTempFile(t, []byte(res))
 
 	res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
 	txBz, err := base64.StdEncoding.DecodeString(res)
@@ -135,9 +135,9 @@ func TestSimulateTx_GRPC(t *testing.T) {
 }
 
 func TestSimulateTx_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -145,18 +145,18 @@ func TestSimulateTx_GRPCGateway(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// qc := tx.NewServiceClient(sut.RPCClient(t))
-	baseURL := sut.APIAddress()
+	baseURL := systest.Sut.APIAddress()
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
-	txFile := StoreTempFile(t, []byte(res))
+	txFile := systest.StoreTempFile(t, []byte(res))
 
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
-	signedTxFile := StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
+	signedTxFile := systest.StoreTempFile(t, []byte(res))
 
 	res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
 	txBz, err := base64.StdEncoding.DecodeString(res)
@@ -197,9 +197,9 @@ func TestSimulateTx_GRPCGateway(t *testing.T) {
 }
 
 func TestGetTxEvents_GRPC(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -207,18 +207,18 @@ func TestGetTxEvents_GRPC(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--note=foobar", "--fees=1stake")
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 
 	rsp = cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake")
 	txResult, found = cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 
 	testCases := []struct {
 		name      string
@@ -311,9 +311,9 @@ func TestGetTxEvents_GRPC(t *testing.T) {
 }
 
 func TestGetTxEvents_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -321,19 +321,19 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// qc := tx.NewServiceClient(sut.RPCClient(t))
-	baseURL := sut.APIAddress()
+	baseURL := systest.Sut.APIAddress()
 	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--note=foobar", "--fees=1stake")
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 
 	rsp = cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake")
 	txResult, found = cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 
 	testCases := []struct {
 		name      string
@@ -407,9 +407,9 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 }
 
 func TestGetTx_GRPC(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -417,14 +417,14 @@ func TestGetTx_GRPC(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 
 	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake", "--note=foobar")
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 	txHash := gjson.Get(txResult, "txhash").String()
 
 	testCases := []struct {
@@ -454,9 +454,9 @@ func TestGetTx_GRPC(t *testing.T) {
 }
 
 func TestGetTx_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -464,14 +464,14 @@ func TestGetTx_GRPCGateway(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	baseURL := sut.APIAddress()
+	baseURL := systest.Sut.APIAddress()
 
 	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake", "--note=foobar")
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 	txHash := gjson.Get(txResult, "txhash").String()
 
 	testCases := []struct {
@@ -517,9 +517,9 @@ func TestGetTx_GRPCGateway(t *testing.T) {
 }
 
 func TestGetBlockWithTxs_GRPC(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -527,14 +527,14 @@ func TestGetBlockWithTxs_GRPC(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 
 	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake", "--note=foobar")
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 	height := gjson.Get(txResult, "height").Int()
 
 	testCases := []struct {
@@ -575,9 +575,9 @@ func TestGetBlockWithTxs_GRPC(t *testing.T) {
 }
 
 func TestGetBlockWithTxs_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -585,14 +585,14 @@ func TestGetBlockWithTxs_GRPCGateway(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	baseUrl := sut.APIAddress()
+	baseUrl := systest.Sut.APIAddress()
 
 	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake", "--note=foobar")
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 	height := gjson.Get(txResult, "height").Int()
 
 	testCases := []struct {
@@ -635,16 +635,16 @@ func TestGetBlockWithTxs_GRPCGateway(t *testing.T) {
 }
 
 func TestTxEncode_GRPC(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 
 	protoTx := &tx.Tx{
 		Body: &tx.TxBody{
@@ -680,16 +680,16 @@ func TestTxEncode_GRPC(t *testing.T) {
 }
 
 func TestTxEncode_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	baseUrl := sut.APIAddress()
+	baseUrl := systest.Sut.APIAddress()
 
 	protoTx := &tx.Tx{
 		Body: &tx.TxBody{
@@ -724,9 +724,9 @@ func TestTxEncode_GRPCGateway(t *testing.T) {
 }
 
 func TestTxDecode_GRPC(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -734,17 +734,17 @@ func TestTxDecode_GRPC(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
-	txFile := StoreTempFile(t, []byte(res))
+	txFile := systest.StoreTempFile(t, []byte(res))
 
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
-	signedTxFile := StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
+	signedTxFile := systest.StoreTempFile(t, []byte(res))
 
 	res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
 	txBz, err := base64.StdEncoding.DecodeString(res)
@@ -779,9 +779,9 @@ func TestTxDecode_GRPC(t *testing.T) {
 }
 
 func TestTxDecode_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
+	systest.Sut.ResetChain(t)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -789,17 +789,17 @@ func TestTxDecode_GRPCGateway(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	basrUrl := sut.APIAddress()
+	basrUrl := systest.Sut.APIAddress()
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
-	txFile := StoreTempFile(t, []byte(res))
+	txFile := systest.StoreTempFile(t, []byte(res))
 
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
-	signedTxFile := StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
+	signedTxFile := systest.StoreTempFile(t, []byte(res))
 
 	res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
 	txBz, err := base64.StdEncoding.DecodeString(res)
@@ -835,15 +835,15 @@ func TestTxDecode_GRPCGateway(t *testing.T) {
 }
 
 func TestTxEncodeAmino_GRPC(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
 	legacyAmino := codec.NewLegacyAmino()
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	legacytx.RegisterLegacyAminoCodec(legacyAmino)
 	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 	txJSONBytes, stdTx := readTestAminoTxJSON(t, legacyAmino)
 
 	testCases := []struct {
@@ -879,15 +879,15 @@ func TestTxEncodeAmino_GRPC(t *testing.T) {
 }
 
 func TestTxEncodeAmino_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
 	legacyAmino := codec.NewLegacyAmino()
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	legacytx.RegisterLegacyAminoCodec(legacyAmino)
 	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
 
-	baseUrl := sut.APIAddress()
+	baseUrl := systest.Sut.APIAddress()
 	txJSONBytes, stdTx := readTestAminoTxJSON(t, legacyAmino)
 
 	testCases := []struct {
@@ -925,15 +925,15 @@ func TestTxEncodeAmino_GRPCGateway(t *testing.T) {
 }
 
 func TestTxDecodeAmino_GRPC(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
 	legacyAmino := codec.NewLegacyAmino()
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	legacytx.RegisterLegacyAminoCodec(legacyAmino)
 	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
 
-	qc := tx.NewServiceClient(sut.RPCClient(t))
+	qc := tx.NewServiceClient(systest.Sut.RPCClient(t))
 	encodedTx, stdTx := readTestAminoTxBinary(t, legacyAmino)
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -971,15 +971,15 @@ func TestTxDecodeAmino_GRPC(t *testing.T) {
 }
 
 func TestTxDecodeAmino_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
 	legacyAmino := codec.NewLegacyAmino()
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	legacytx.RegisterLegacyAminoCodec(legacyAmino)
 	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
 
-	baseUrl := sut.APIAddress()
+	baseUrl := systest.Sut.APIAddress()
 	encodedTx, stdTx := readTestAminoTxBinary(t, legacyAmino)
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -1019,9 +1019,15 @@ func TestTxDecodeAmino_GRPCGateway(t *testing.T) {
 }
 
 func TestSimMultiSigTx(t *testing.T) {
+<<<<<<< HEAD
 	sut.ResetChain(t)
+=======
+	t.Skip() // waiting for @hieuvubk fix
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+>>>>>>> 14d98d277 (refactor(systemtests): Extract system test framework (#22578))
+
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
@@ -1030,7 +1036,7 @@ func TestSimMultiSigTx(t *testing.T) {
 	_ = cli.AddKey("account1")
 	_ = cli.AddKey("account2")
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	multiSigName := "multisig"
 	cli.RunCommandWithArgs("keys", "add", multiSigName, "--multisig=account1,account2", "--multisig-threshold=2", "--keyring-backend=test", "--home=./testnet")
@@ -1040,7 +1046,7 @@ func TestSimMultiSigTx(t *testing.T) {
 	rsp := cli.Run("tx", "bank", "send", valAddr, multiSigAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake")
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 
 	multiSigBalance := cli.QueryBalance(multiSigAddr, denom)
 	require.Equal(t, multiSigBalance, transferAmount)
@@ -1048,20 +1054,20 @@ func TestSimMultiSigTx(t *testing.T) {
 	// Send from multisig to validator
 	// create unsign tx
 	var newTransferAmount int64 = 100
-	bankSendCmdArgs := []string{"tx", "bank", "send", multiSigAddr, valAddr, fmt.Sprintf("%d%s", newTransferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", multiSigAddr, valAddr, fmt.Sprintf("%d%s", newTransferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
-	txFile := StoreTempFile(t, []byte(res))
+	txFile := systest.StoreTempFile(t, []byte(res))
 
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", "account1"), fmt.Sprintf("--multisig=%s", multiSigAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet")
-	account1Signed := StoreTempFile(t, []byte(res))
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", "account2"), fmt.Sprintf("--multisig=%s", multiSigAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet")
-	account2Signed := StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", "account1"), fmt.Sprintf("--multisig=%s", multiSigAddr), "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home=./testnet")
+	account1Signed := systest.StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", "account2"), fmt.Sprintf("--multisig=%s", multiSigAddr), "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home=./testnet")
+	account2Signed := systest.StoreTempFile(t, []byte(res))
 
-	res = cli.RunCommandWithArgs("tx", "multisign-batch", txFile.Name(), multiSigName, account1Signed.Name(), account2Signed.Name(), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet")
-	txSignedFile := StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "multisign-batch", txFile.Name(), multiSigName, account1Signed.Name(), account2Signed.Name(), "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home=./testnet")
+	txSignedFile := systest.StoreTempFile(t, []byte(res))
 
 	res = cli.Run("tx", "broadcast", txSignedFile.Name())
-	RequireTxSuccess(t, res)
+	systest.RequireTxSuccess(t, res)
 
 	multiSigBalance = cli.QueryBalance(multiSigAddr, denom)
 	require.Equal(t, multiSigBalance, transferAmount-newTransferAmount-10)

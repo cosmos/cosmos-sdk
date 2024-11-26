@@ -27,19 +27,11 @@ func TestChainUpgrade(t *testing.T) {
 
 	legacyBinary := FetchExecutable(t, "v0.50")
 	t.Logf("+++ legacy binary: %s\n", legacyBinary)
-<<<<<<< HEAD
-	currentBranchBinary := sut.execBinary
-	currentInitializer := sut.testnetInitializer
-	sut.SetExecBinary(legacyBinary)
-	sut.SetTestnetInitializer(NewModifyConfigYamlInitializer(legacyBinary, sut))
-	sut.SetupChain()
-=======
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
 	systest.Sut.SetExecBinary(legacyBinary)
 	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
->>>>>>> 14d98d277 (refactor(systemtests): Extract system test framework (#22578))
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
 

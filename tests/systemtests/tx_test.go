@@ -1019,13 +1019,9 @@ func TestTxDecodeAmino_GRPCGateway(t *testing.T) {
 }
 
 func TestSimMultiSigTx(t *testing.T) {
-<<<<<<< HEAD
-	sut.ResetChain(t)
-=======
 	t.Skip() // waiting for @hieuvubk fix
 
 	systest.Sut.ResetChain(t)
->>>>>>> 14d98d277 (refactor(systemtests): Extract system test framework (#22578))
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address

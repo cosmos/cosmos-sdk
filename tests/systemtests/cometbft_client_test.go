@@ -85,18 +85,12 @@ func TestQueryBlockByHeight(t *testing.T) {
 }
 
 func TestQueryLatestValidatorSet(t *testing.T) {
-<<<<<<< HEAD
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
-	sut.ResetChain(t)
-	sut.StartChain(t)
-=======
 	if systest.Sut.NodesCount() < 2 {
 		t.Skip("not enough nodes")
 		return
 	}
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
->>>>>>> 14d98d277 (refactor(systemtests): Extract system test framework (#22578))
 
 	vals := systest.Sut.RPCClient(t).Validators()
 
@@ -219,26 +213,14 @@ func TestValidatorSetByHeight(t *testing.T) {
 	}
 }
 
-<<<<<<< HEAD
-func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
-=======
 func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
->>>>>>> 14d98d277 (refactor(systemtests): Extract system test framework (#22578))
 
 	vals := systest.Sut.RPCClient(t).Validators()
 
-<<<<<<< HEAD
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
-
-	block := sut.AwaitNextBlock(t, time.Second*3)
-=======
 	baseurl := systest.Sut.APIAddress()
 	block := systest.Sut.AwaitNextBlock(t, time.Second*3)
->>>>>>> 14d98d277 (refactor(systemtests): Extract system test framework (#22578))
 	testCases := []struct {
 		name        string
 		url         string
@@ -265,13 +247,7 @@ func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
 }
 
 func TestABCIQuery(t *testing.T) {
-<<<<<<< HEAD
-	sut.ResetChain(t)
-	sut.StartChain(t)
-	sut.AwaitNBlocks(t, 3)
-=======
 	systest.Sut.StartChain(t)
->>>>>>> 14d98d277 (refactor(systemtests): Extract system test framework (#22578))
 
 	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())

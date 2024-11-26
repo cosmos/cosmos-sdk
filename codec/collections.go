@@ -214,7 +214,7 @@ func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 							// we might want to change this to include the entire object as separate fields
 							bz, err := c.cdc.MarshalJSON(msg)
 							if err != nil {
-								return nil, fmt.Errorf("error marshalling message: %w", err)
+								return nil, fmt.Errorf("error marshaling message: %w", err)
 							}
 
 							values = append(values, json.RawMessage(bz))
@@ -328,9 +328,7 @@ func (c collInterfaceValue[T]) ValueType() string {
 // SchemaCodec returns a schema codec, which will always have a single JSON field
 // as there is no way to know in advance the necessary fields for an interface.
 func (c collInterfaceValue[T]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
-	var (
-		pt T
-	)
+	var pt T
 
 	kind := schema.KindForGoValue(pt)
 	if err := kind.Validate(); err == nil {
@@ -363,7 +361,6 @@ func (c collInterfaceValue[T]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 			},
 		}, nil
 	}
-
 }
 
 func protoCols(desc protoreflect.MessageDescriptor) []schema.Field {

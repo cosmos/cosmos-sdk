@@ -172,10 +172,10 @@ func NewKeeper(
 			"delegations_by_validator",
 			collections.NamedPairKeyCodec(
 				"validator_address",
-				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey),
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 				"delegator",
 				sdk.AccAddressKey,
-			), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			),
 			collections.BytesValue,
 		),
 		UnbondingID: collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),

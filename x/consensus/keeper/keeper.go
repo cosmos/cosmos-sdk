@@ -42,7 +42,6 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 
 	var err error
 	k.Schema, err = sb.Build()
-
 	if err != nil {
 		panic(fmt.Sprintf("failed to build schema: %v", err))
 	}

@@ -73,11 +73,12 @@ type (
 
 var _ transaction.Codec[transaction.Tx] = &DefaultTxDecoder[transaction.Tx]{}
 
+// DefaultTxDecoder is a generic transaction decoder that implements the transaction.Codec interface.
 type DefaultTxDecoder[T transaction.Tx] struct {
 	TxConfig TxConfig
 }
 
-// Decode implements transaction.Codec.
+// Decode decodes a binary transaction into type T using the TxConfig's TxDecoder.
 func (t *DefaultTxDecoder[T]) Decode(bz []byte) (T, error) {
 	var out T
 	tx, err := t.TxConfig.TxDecoder()(bz)
@@ -94,7 +95,7 @@ func (t *DefaultTxDecoder[T]) Decode(bz []byte) (T, error) {
 	return out, nil
 }
 
-// DecodeJSON implements transaction.Codec.
+// DecodeJSON decodes a JSON transaction into type T using the TxConfig's TxJSONDecoder.
 func (t *DefaultTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
 	var out T
 	tx, err := t.TxConfig.TxJSONDecoder()(bz)

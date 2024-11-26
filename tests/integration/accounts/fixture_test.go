@@ -60,9 +60,7 @@ type fixture struct {
 	t *testing.T
 
 	app *integration.App
-
 	cdc codec.Codec
-	ctx sdk.Context
 
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
@@ -82,7 +80,7 @@ func (f fixture) runBundle(txBytes ...[]byte) *accountsv1.MsgExecuteBundleRespon
 
 	msgSrv := accounts.NewMsgServer(f.accountsKeeper)
 
-	resp, err := msgSrv.ExecuteBundle(f.ctx, &accountsv1.MsgExecuteBundle{
+	resp, err := msgSrv.ExecuteBundle(f.app.Context(), &accountsv1.MsgExecuteBundle{
 		Bundler: f.bundler,
 		Txs:     txBytes,
 	})
@@ -93,16 +91,16 @@ func (f fixture) runBundle(txBytes ...[]byte) *accountsv1.MsgExecuteBundleRespon
 func (f fixture) mint(address []byte, coins ...sdk.Coin) {
 	f.t.Helper()
 	for _, coin := range coins {
-		err := f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin))
+		err := f.bankKeeper.MintCoins(f.app.Context(), minttypes.ModuleName, sdk.NewCoins(coin))
 		require.NoError(f.t, err)
-		err = f.bankKeeper.SendCoinsFromModuleToAccount(f.ctx, minttypes.ModuleName, address, sdk.NewCoins(coin))
+		err = f.bankKeeper.SendCoinsFromModuleToAccount(f.app.Context(), minttypes.ModuleName, address, sdk.NewCoins(coin))
 		require.NoError(f.t, err)
 	}
 }
 
 func (f fixture) balance(recipient, denom string) sdk.Coin {
 	f.t.Helper()
-	balances, err := f.bankKeeper.Balance(f.ctx, &banktypes.QueryBalanceRequest{
+	balances, err := f.bankKeeper.Balance(f.app.Context(), &banktypes.QueryBalanceRequest{
 		Address: recipient,
 		Denom:   denom,
 	})
@@ -119,10 +117,6 @@ func initFixture(t *testing.T, f func(ctx context.Context, msg *account_abstract
 	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
-
 	router := baseapp.NewMsgServiceRouter()
 	queryRouter := baseapp.NewGRPCQueryRouter()
 
@@ -169,14 +163,11 @@ func initFixture(t *testing.T, f func(ctx context.Context, msg *account_abstract
 		authority.String(),
 	)
 
-	params := banktypes.DefaultParams()
-	require.NoError(t, bankKeeper.SetParams(newCtx, params))
-
 	accountsModule := accounts.NewAppModule(cdc, accountsKeeper)
 	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, authKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
@@ -194,14 +185,13 @@ func initFixture(t *testing.T, f func(ctx context.Context, msg *account_abstract
 	banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
 
 	// init account
-	_, addr, err := accountsKeeper.Init(newCtx, "mock", []byte("system"), &gogotypes.Empty{}, nil)
+	_, addr, err := accountsKeeper.Init(integrationApp.Context(), "mock", []byte("system"), &gogotypes.Empty{}, nil)
 	require.NoError(t, err)
 
 	fixture := &fixture{
 		t:                  t,
 		app:                integrationApp,
 		cdc:                cdc,
-		ctx:                newCtx,
 		authKeeper:         authKeeper,
 		accountsKeeper:     accountsKeeper,
 		bankKeeper:         bankKeeper,

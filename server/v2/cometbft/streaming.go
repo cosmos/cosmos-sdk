@@ -12,7 +12,7 @@ import (
 )
 
 // streamDeliverBlockChanges will stream all the changes happened during deliver block.
-func (c *Consensus[T]) streamDeliverBlockChanges(
+func (c *consensus[T]) streamDeliverBlockChanges(
 	ctx context.Context,
 	height int64,
 	txs [][]byte,
@@ -40,7 +40,7 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 		}
 	}
 
-	for _, streamingListener := range c.streaming.Listeners {
+	for _, streamingListener := range c.streamingManager.Listeners {
 		events, err := streaming.IntoStreamingEvents(events)
 		if err != nil {
 			return err

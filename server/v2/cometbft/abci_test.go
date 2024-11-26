@@ -2,7 +2,6 @@ package cometbft
 
 import (
 	"context"
-	"cosmossdk.io/server/v2/cometbft/oe"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -12,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/server/v2/cometbft/oe"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cosmos/gogoproto/proto"
@@ -729,6 +729,7 @@ func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 
 func TestOptimisticExecution(t *testing.T) {
 	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+
 	// Set up handlers
 	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
 
@@ -738,8 +739,7 @@ func TestOptimisticExecution(t *testing.T) {
 		calledTimes++
 		return nil, errors.New("test error")
 	}
-
-	c.SetOptimisticExecution(oe.NewOptimisticExecution(log.NewNopLogger(), optimisticMockFunc))
+	c.optimisticExec = oe.NewOptimisticExecution(log.NewNopLogger(), optimisticMockFunc)
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),

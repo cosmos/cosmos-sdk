@@ -150,7 +150,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20240701160653-fedbb9acfd2f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	cosmossdk.io/log v1.5.0
 	github.com/dgraph-io/badger/v4 v4.3.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

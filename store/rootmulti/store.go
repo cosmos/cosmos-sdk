@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	protoio "github.com/cosmos/gogoproto/io"
@@ -475,6 +476,7 @@ func (rs *Store) PausePruning(pause bool) {
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
+	rs.metrics.MeasureSince(time.Now(), "root", "store", "commit")
 	var previousHeight, version int64
 	if rs.lastCommitInfo.GetVersion() == 0 && rs.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
@@ -495,11 +497,13 @@ func (rs *Store) Commit() types.CommitID {
 	}
 
 	func() { // ensure unpause
+		st := time.Now()
 		// set the committing flag on all stores to block the pruning
 		rs.PausePruning(true)
 		// unset the committing flag on all stores to continue the pruning
 		defer rs.PausePruning(false)
 		rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
+		fmt.Printf("commit took %v\n", time.Since(st))
 	}()
 
 	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time

@@ -1,10 +1,11 @@
 package root
 
 import (
-	"cosmossdk.io/core/telemetry"
 	"errors"
 	"fmt"
 	"os"
+
+	"cosmossdk.io/core/telemetry"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -147,7 +148,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		} else {
 			switch storeOpts.SCType {
 			case SCTypeIavl:
-				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
+				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, nil, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
 				return nil, errors.New("iavl v2 not supported")
 			default:

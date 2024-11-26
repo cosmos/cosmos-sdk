@@ -21,7 +21,7 @@ func TestCommitterSuite(t *testing.T) {
 			cfg := DefaultConfig()
 			mountTreeFn := func(storeKey string) (commitment.Tree, error) {
 				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
-				return NewIavlTree(prefixDB, logger, cfg), nil
+				return NewIavlTree(prefixDB, logger, nil, cfg), nil
 			}
 			for _, storeKey := range storeKeys {
 				multiTrees[storeKey], _ = mountTreeFn(storeKey)
@@ -41,7 +41,7 @@ func TestCommitterSuite(t *testing.T) {
 func generateTree() *IavlTree {
 	cfg := DefaultConfig()
 	db := dbm.NewMemDB()
-	return NewIavlTree(db, coretesting.NewNopLogger(), cfg)
+	return NewIavlTree(db, coretesting.NewNopLogger(), nil, cfg)
 }
 
 func TestIavlTree(t *testing.T) {

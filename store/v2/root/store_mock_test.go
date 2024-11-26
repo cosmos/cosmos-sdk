@@ -8,9 +8,9 @@ import (
 	"go.uber.org/mock/gomock"
 
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/core/telemetry"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/mock"
 	"cosmossdk.io/store/v2/pruning"
 )
@@ -20,7 +20,7 @@ func newTestRootStore(ss store.VersionedWriter, sc store.Committer) *Store {
 	pm := pruning.NewManager(sc.(store.Pruner), ss.(store.Pruner), nil, nil)
 	return &Store{
 		logger:          noopLog,
-		telemetry:       metrics.Metrics{},
+		telemetry:       &telemetry.NopService{},
 		stateStorage:    ss,
 		stateCommitment: sc,
 		pruningManager:  pm,

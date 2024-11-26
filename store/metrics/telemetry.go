@@ -8,7 +8,7 @@ import (
 
 // StoreMetrics defines the set of metrics for the store package
 type StoreMetrics interface {
-	MeasureSince(keys ...string)
+	MeasureSince(since time.Time, keys ...string)
 }
 
 var (
@@ -39,9 +39,8 @@ func NewMetrics(labels [][]string) Metrics {
 
 // MeasureSince provides a wrapper functionality for emitting a time measure
 // metric with global labels (if any).
-func (m Metrics) MeasureSince(keys ...string) {
-	start := time.Now()
-	metrics.MeasureSinceWithLabels(keys, start.UTC(), m.Labels)
+func (m Metrics) MeasureSince(since time.Time, keys ...string) {
+	metrics.MeasureSinceWithLabels(keys, since.UTC(), m.Labels)
 }
 
 // NoOpMetrics is a no-op implementation of the StoreMetrics interface
@@ -53,4 +52,4 @@ func NewNoOpMetrics() NoOpMetrics {
 }
 
 // MeasureSince is a no-op implementation of the StoreMetrics interface to avoid time.Now() calls
-func (m NoOpMetrics) MeasureSince(keys ...string) {}
+func (m NoOpMetrics) MeasureSince(since time.Time, keys ...string) {}

@@ -26,7 +26,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), nil, iavl.DefaultConfig())
 	}
 
 	commitStore, err := commitment.NewCommitStore(multiTrees, nil, db, coretesting.NewNopLogger())
@@ -45,7 +45,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(db1, []byte(storeKey))
-		multiTrees1[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
+		multiTrees1[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), nil, iavl.DefaultConfig())
 	}
 
 	newCommitStore, err := commitment.NewCommitStore(multiTrees1, nil, db1, coretesting.NewNopLogger()) // for store/v2

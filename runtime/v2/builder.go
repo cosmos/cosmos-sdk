@@ -97,7 +97,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 
 	stf, err := stf.New[T](
 		a.app.logger.With("module", "stf"),
-		services.NewPrometheusTelemetryService(nil),
+		services.NewPrometheusTelemetryService(),
 		a.app.msgRouterBuilder,
 		a.app.queryRouterBuilder,
 		a.app.moduleManager.PreBlocker(),

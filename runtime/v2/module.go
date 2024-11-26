@@ -255,20 +255,23 @@ func DefaultServiceBindings() depinject.Config {
 			)
 		}
 		telemetryFactory telemetry.ServiceFactory = func(cfg server.ConfigMap) telemetry.Service {
-			cfgLabels := cfg.GetSliceOfStringSlices("telemetry.global-labels")
-			var globalLabels []telemetry.Label
-			for _, label := range cfgLabels {
-				if len(label) != 2 {
-					continue
-				}
-				globalLabels = append(globalLabels, telemetry.Label{Name: label[0], Value: label[1]})
-			}
-			return services.NewPrometheusTelemetryService(globalLabels)
+			// Global labels are an anti pattern and we should not support them, but open
+			// to discussion.  If needed they can be parsed and supplied here.
+			//
+			// cfgLabels := cfg.GetSliceOfStringSlices("telemetry.global-labels")
+			// var globalLabels []telemetry.Label
+			// for _, label := range cfgLabels {
+			// 	if len(label) != 2 {
+			// 		continue
+			// 	}
+			// 	globalLabels = append(globalLabels, telemetry.Label{Name: label[0], Value: label[1]})
+			// }
+			return services.NewPrometheusTelemetryService()
 		}
 		cometService  comet.Service = &services.ContextAwareCometInfoService{}
 		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
 		eventService                = services.NewGenesisEventService(stf.NewEventService())
-		storeBuilder                = root.NewBuilderWithTelemetry(services.NewPrometheusTelemetryService(nil))
+		storeBuilder                = root.NewBuilderWithTelemetry(services.NewPrometheusTelemetryService())
 	)
 	return depinject.Supply(
 		kvServiceFactory,

@@ -38,7 +38,7 @@ func NewKeeper(kvMap KVServiceMap, telemetryService telemetry.Service) *Keeper {
 		metricMissKey:    []string{"benchmark", "miss"},
 	}
 	once.Do(func() {
-		telemetryService.RegisterMeasure(k.metricOpKey, "op")
+		telemetryService.RegisterHistogram(k.metricOpKey, telemetry.Buckets.StoreOpsOrder, "op")
 		telemetryService.RegisterCounter(k.metricMissKey, "op")
 		telemetryService.RegisterCounter(k.metricTotalKey)
 	})

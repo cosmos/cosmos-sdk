@@ -2,37 +2,60 @@ package iavl
 
 import (
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 )
 
 var (
-	_ commitment.Tree      = (*IavlTree)(nil)
-	_ commitment.Reader    = (*IavlTree)(nil)
-	_ store.PausablePruner = (*IavlTree)(nil)
+	_             commitment.Tree      = (*IavlTree)(nil)
+	_             commitment.Reader    = (*IavlTree)(nil)
+	_             store.PausablePruner = (*IavlTree)(nil)
+	once                               = sync.Once{}
+	metricOpKey                        = []string{"store", "iavl", "op"}
+	metricSaveKey                      = []string{"store", "iavl", "save"}
+	removeLabel                        = telemetry.Label{Name: "method", Value: "remove"}
+	getLabel                           = telemetry.Label{Name: "method", Value: "get"}
+	setLabel                           = telemetry.Label{Name: "method", Value: "set"}
 )
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
-	tree *iavl.MutableTree
+	tree     *iavl.MutableTree
+	telemtry telemetry.Service
 }
 
 // NewIavlTree creates a new IavlTree instance.
-func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) *IavlTree {
+func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, ts telemetry.Service, cfg *Config) *IavlTree {
 	tree := iavl.NewMutableTree(db, cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
+	if ts == nil {
+		ts = &telemetry.NopService{}
+	}
+	once.Do(func() {
+		if ts == nil {
+			return
+		}
+		ts.RegisterHistogram(metricOpKey, telemetry.Buckets.StoreOpsOrder, "method")
+		ts.RegisterSummary(metricSaveKey)
+	})
+
 	return &IavlTree{
-		tree: tree,
+		tree:     tree,
+		telemtry: ts,
 	}
 }
 
 // Remove removes the given key from the tree.
 func (t *IavlTree) Remove(key []byte) error {
+	defer t.telemtry.MeasureSince(time.Now(), metricOpKey, removeLabel)
 	_, _, err := t.tree.Remove(key)
 	if err != nil {
 		return err
@@ -42,6 +65,7 @@ func (t *IavlTree) Remove(key []byte) error {
 
 // Set sets the given key-value pair in the tree.
 func (t *IavlTree) Set(key, value []byte) error {
+	defer t.telemtry.MeasureSince(time.Now(), metricOpKey, setLabel)
 	_, err := t.tree.Set(key, value)
 	return err
 }
@@ -70,6 +94,7 @@ func (t *IavlTree) LoadVersion(version uint64) error {
 
 // Commit commits the current state to the tree.
 func (t *IavlTree) Commit() ([]byte, uint64, error) {
+	defer t.telemtry.MeasureSince(time.Now(), metricSaveKey)
 	hash, v, err := t.tree.SaveVersion()
 	return hash, uint64(v), err
 }
@@ -86,6 +111,7 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 
 // Get implements the Reader interface.
 func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
+	defer t.telemtry.MeasureSince(time.Now(), metricOpKey, getLabel)
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)

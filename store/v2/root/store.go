@@ -1,13 +1,14 @@
 package root
 
 import (
-	"cosmossdk.io/core/telemetry"
 	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
 	"sync"
 	"time"
+
+	"cosmossdk.io/core/telemetry"
 
 	"golang.org/x/sync/errgroup"
 
@@ -76,11 +77,11 @@ func New(
 ) (store.RootStore, error) {
 	once.Do(func() {
 		if m != nil {
-			m.RegisterMeasure([]string{"root", "store", "query"})
-			m.RegisterMeasure([]string{"root_store", "load_latest_version"})
-			m.RegisterMeasure([]string{"root_store", "load_version"})
-			m.RegisterMeasure([]string{"root_store", "load_version_and_upgrade"})
-			m.RegisterMeasure([]string{"root_store", "commit"})
+			m.RegisterSummary([]string{"root", "store", "query"})
+			m.RegisterSummary([]string{"root_store", "load_latest_version"})
+			m.RegisterSummary([]string{"root_store", "load_version"})
+			m.RegisterSummary([]string{"root_store", "load_version_and_upgrade"})
+			m.RegisterSummary([]string{"root_store", "commit"})
 		}
 	})
 	return &Store{
@@ -340,7 +341,10 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		defer s.telemetry.MeasureSince(now, []string{"root_store", "commit"})
+		defer func() {
+			s.telemetry.MeasureSince(now, []string{"root_store", "commit"})
+			s.logger.Warn(fmt.Sprintf("commit version %d took %s", cs.Version, time.Since(now)))
+		}()
 	}
 
 	if err := s.handleMigration(cs); err != nil {
@@ -358,9 +362,11 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	// otherwise commit to SS async here
 	if !s.isMigrating {
 		eg.Go(func() error {
+			st := time.Now()
 			if err := s.stateStorage.ApplyChangeset(cs); err != nil {
 				return fmt.Errorf("failed to commit SS: %w", err)
 			}
+			s.logger.Warn(fmt.Sprintf("ss commit version %d took %s", cs.Version, time.Since(st)))
 
 			return nil
 		})
@@ -369,6 +375,7 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	// commit SC async
 	var cInfo *proof.CommitInfo
 	eg.Go(func() error {
+		st := time.Now()
 		if err := s.stateCommitment.WriteChangeset(cs); err != nil {
 			return fmt.Errorf("failed to write batch to SC store: %w", err)
 		}
@@ -377,6 +384,7 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 		if scErr != nil {
 			return fmt.Errorf("failed to commit SC store: %w", scErr)
 		}
+		s.logger.Warn(fmt.Sprintf("sc commit version %d took %s", cs.Version, time.Since(st)))
 		return nil
 	})
 

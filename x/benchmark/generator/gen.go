@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"encoding"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -27,19 +28,36 @@ type Options struct {
 }
 
 type State struct {
+	Src interface {
+		rand.Source
+		encoding.BinaryMarshaler
+		encoding.BinaryUnmarshaler
+	}
 	Keys [][]Payload
 }
 
 func (s *State) Marshal(w io.Writer) error {
-	if err := binary.Write(w, binary.LittleEndian, uint64(len(s.Keys))); err != nil {
+	srcBz, err := s.Src.MarshalBinary()
+	if err != nil {
+		return err
+	}
+	var n int
+	n, err = w.Write(srcBz)
+	if err != nil {
+		return err
+	}
+	if n != 20 {
+		return fmt.Errorf("expected 20 bytes, got %d", n)
+	}
+	if err = binary.Write(w, binary.LittleEndian, uint64(len(s.Keys))); err != nil {
 		return err
 	}
 	for _, bucket := range s.Keys {
-		if err := binary.Write(w, binary.LittleEndian, uint64(len(bucket))); err != nil {
+		if err = binary.Write(w, binary.LittleEndian, uint64(len(bucket))); err != nil {
 			return err
 		}
 		for _, key := range bucket {
-			if err := binary.Write(w, binary.LittleEndian, key); err != nil {
+			if err = binary.Write(w, binary.LittleEndian, key); err != nil {
 				return err
 			}
 		}
@@ -48,6 +66,15 @@ func (s *State) Marshal(w io.Writer) error {
 }
 
 func (s *State) Unmarshal(r io.Reader) error {
+	srcBz := make([]byte, 20)
+	if _, err := r.Read(srcBz); err != nil {
+		return err
+	}
+	s.Src = rand.NewPCG(0, 0)
+	if err := s.Src.UnmarshalBinary(srcBz); err != nil {
+		return err
+	}
+
 	var n uint64
 	if err := binary.Read(r, binary.LittleEndian, &n); err != nil {
 		return err
@@ -71,7 +98,6 @@ func (s *State) Unmarshal(r io.Reader) error {
 type Generator struct {
 	Options
 
-	src   rand.Source
 	rand  *rand.Rand
 	state *State
 }
@@ -81,13 +107,34 @@ type opt func(*Generator)
 func NewGenerator(opts Options, f ...opt) *Generator {
 	g := &Generator{
 		Options: opts,
-		src:     rand.NewPCG(opts.Seed, opts.Seed>>32),
+		state: &State{
+			Src: rand.NewPCG(opts.Seed, opts.Seed>>32),
+		},
 	}
-	g.rand = rand.New(g.src)
+	g.rand = rand.New(g.state.Src)
 	for _, fn := range f {
 		fn(g)
 	}
 	return g
+}
+
+func WithGenesis() func(*Generator) {
+	return func(g *Generator) {
+		// sync state to genesis seed
+		g.state.Keys = make([][]Payload, g.BucketCount)
+		if g.GeneratorParams != nil {
+			for kv := range g.GenesisSet() {
+				g.state.Keys[kv.StoreKey] = append(g.state.Keys[kv.StoreKey], kv.Key)
+			}
+		}
+	}
+}
+
+func WithSeed(seed uint64) func(*Generator) {
+	return func(g *Generator) {
+		g.state.Src = rand.NewPCG(seed, seed>>32)
+		g.rand = rand.New(g.state.Src)
+	}
 }
 
 func (g *Generator) Load() error {
@@ -100,25 +147,6 @@ func (g *Generator) Load() error {
 		return err
 	}
 	return g.state.Unmarshal(r)
-}
-
-func WithGenesis() func(*Generator) {
-	return func(g *Generator) {
-		// sync state to genesis seed
-		g.state = &State{Keys: make([][]Payload, g.BucketCount)}
-		if g.GeneratorParams != nil {
-			for kv := range g.GenesisSet() {
-				g.state.Keys[kv.StoreKey] = append(g.state.Keys[kv.StoreKey], kv.Key)
-			}
-		}
-	}
-}
-
-func WithSeed(seed uint64) func(*Generator) {
-	return func(g *Generator) {
-		g.src = rand.NewPCG(seed, seed>>32)
-		g.rand = rand.New(g.src)
-	}
 }
 
 type Payload [2]uint64

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -64,6 +65,7 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 				successCount uint64
 				errCount     uint64
 				since        = time.Now()
+				last         int
 			)
 			defer func() {
 				cmd.Printf("done! success_tx=%d err_tx=%d\n", successCount, errCount)
@@ -98,14 +100,14 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 				gen.WithGenesis(),
 				gen.WithSeed(seed),
 			)
-			//if err = g.Load(); err != nil {
-			//	return err
-			//}
-			//defer func() {
-			//	if err = g.Close(); err != nil {
-			//		runErr = errors.Join(runErr, err)
-			//	}
-			//}()
+			if err = g.Load(); err != nil {
+				return err
+			}
+			defer func() {
+				if err = g.Close(); err != nil {
+					runErr = errors.Join(runErr, err)
+				}
+			}()
 
 			i := 0
 			ops := make([]*benchmark.Op, numOps)
@@ -116,8 +118,11 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 				default:
 				}
 				if time.Since(since) > 5*time.Second {
-					cmd.Printf("success_tx=%d err_tx=%d seq=%d\n", successCount, errCount, accSeq)
+					cmd.Printf(
+						"success_tx=%d err_tx=%d seq=%d rate=%.2f/s\n",
+						successCount, errCount, accSeq, float64(i-last)/time.Since(since).Seconds())
 					since = time.Now()
+					last = i
 				}
 
 				for j := range numOps {

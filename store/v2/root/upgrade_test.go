@@ -37,7 +37,7 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 	multiTrees := make(map[string]commitment.Tree)
 	newTreeFn := func(storeKey string) (commitment.Tree, error) {
 		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(storeKey))
-		return iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig()), nil
+		return iavl.NewIavlTree(prefixDB, nopLog, nil, iavl.DefaultConfig()), nil
 	}
 	for _, storeKey := range storeKeys {
 		multiTrees[storeKey], _ = newTreeFn(storeKey)
@@ -77,7 +77,7 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 	oldTrees := make(map[string]commitment.Tree)
 	newTreeFn := func(storeKey string) (commitment.Tree, error) {
 		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(storeKey))
-		return iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig()), nil
+		return iavl.NewIavlTree(prefixDB, nopLog, nil, iavl.DefaultConfig()), nil
 	}
 	for _, storeKey := range storeKeys {
 		multiTrees[storeKey], _ = newTreeFn(storeKey)

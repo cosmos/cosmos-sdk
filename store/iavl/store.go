@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/cosmos/iavl"
@@ -124,7 +125,7 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 // Commit commits the current store state and returns a CommitID with the new
 // version and hash.
 func (st *Store) Commit() types.CommitID {
-	defer st.metrics.MeasureSince("store", "iavl", "commit")
+	defer st.metrics.MeasureSince(time.Now(), "store", "iavl", "commit")
 
 	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
@@ -213,7 +214,7 @@ func (st *Store) Set(key, value []byte) {
 
 // Get implements types.KVStore.
 func (st *Store) Get(key []byte) []byte {
-	defer st.metrics.MeasureSince("store", "iavl", "get")
+	defer st.metrics.MeasureSince(time.Now(), "store", "iavl", "get")
 	value, err := st.tree.Get(key)
 	if err != nil {
 		panic(err)
@@ -223,7 +224,7 @@ func (st *Store) Get(key []byte) []byte {
 
 // Has implements types.KVStore.
 func (st *Store) Has(key []byte) (exists bool) {
-	defer st.metrics.MeasureSince("store", "iavl", "has")
+	defer st.metrics.MeasureSince(time.Now(), "store", "iavl", "has")
 	has, err := st.tree.Has(key)
 	if err != nil {
 		panic(err)
@@ -233,7 +234,7 @@ func (st *Store) Has(key []byte) (exists bool) {
 
 // Delete implements types.KVStore.
 func (st *Store) Delete(key []byte) {
-	defer st.metrics.MeasureSince("store", "iavl", "delete")
+	defer st.metrics.MeasureSince(time.Now(), "store", "iavl", "delete")
 	_, _, err := st.tree.Remove(key)
 	if err != nil {
 		panic(err)
@@ -321,7 +322,7 @@ func getHeight(tree Tree, req *types.RequestQuery) int64 {
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
 func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err error) {
-	defer st.metrics.MeasureSince("store", "iavl", "query")
+	defer st.metrics.MeasureSince(time.Now(), "store", "iavl", "query")
 
 	if len(req.Data) == 0 {
 		return &types.ResponseQuery{}, errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length")

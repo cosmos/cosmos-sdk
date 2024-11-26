@@ -51,9 +51,9 @@ func (s *RootStoreTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
-	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, nil, iavl.DefaultConfig())
+	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, nil, iavl.DefaultConfig())
+	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, nil, iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, nil, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
@@ -75,7 +75,7 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range testStoreKeys {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, nil, iavl.DefaultConfig())
 	}
 
 	sc, err := commitment.NewCommitStore(multiTrees, nil, dbm.NewMemDB(), noopLog)
@@ -539,7 +539,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().NoError(err)
 	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
-	tree := iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
+	tree := iavl.NewIavlTree(mdb1, noopLog, nil, iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
@@ -570,7 +570,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().NoError(err)
 	ss = storage.NewStorageStore(sqliteDB, noopLog)
 
-	tree = iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
+	tree = iavl.NewIavlTree(mdb1, noopLog, nil, iavl.DefaultConfig())
 	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
@@ -626,7 +626,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range testStoreKeys {
 		prefixDB := dbm.NewPrefixDB(mdb1, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, nil, iavl.DefaultConfig())
 	}
 
 	sc, err := commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
@@ -713,7 +713,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	multiTrees = make(map[string]commitment.Tree)
 	for _, storeKey := range testStoreKeys {
 		prefixDB := dbm.NewPrefixDB(mdb1, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, nil, iavl.DefaultConfig())
 	}
 
 	sc, err = commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)

@@ -13,37 +13,40 @@ import (
 
 var (
 	_ telemetry.Service = &GlobalTelemetryService{}
+	_ telemetry.Service = &PrometheusTelemetryService{}
 )
 
-type GlobalTelemetryService struct {
-	globalLabels []metrics.Label
+type GlobalTelemetryService struct{}
+
+// RegisterHistogram implements telemetry.Service.
+func (g *GlobalTelemetryService) RegisterHistogram(key []string, buckets []float64, labels ...string) {
+	panic("unimplemented")
 }
 
-func NewGlobalTelemetryService(globalLabels []telemetry.Label) *GlobalTelemetryService {
-	labels := make([]metrics.Label, len(globalLabels))
-	for i, label := range globalLabels {
-		labels[i] = metrics.Label{Name: label.Name, Value: label.Value}
-	}
-	return &GlobalTelemetryService{
-		globalLabels: labels,
-	}
+// RegisterSummary implements telemetry.Service.
+func (g *GlobalTelemetryService) RegisterSummary(key []string, labels ...string) {
+	panic("unimplemented")
+}
+
+func NewGlobalTelemetryService() *GlobalTelemetryService {
+	return &GlobalTelemetryService{}
 }
 
 // MeasureSince implements telemetry.Service.
 func (g *GlobalTelemetryService) MeasureSince(start time.Time, key []string, labels ...telemetry.Label) {
-	l := make([]metrics.Label, len(labels))
+	ls := make([]metrics.Label, len(labels))
 	for i, label := range labels {
-		l[i] = metrics.Label{Name: label.Name, Value: label.Value}
+		ls[i] = metrics.Label{Name: label.Name, Value: label.Value}
 	}
-	metrics.MeasureSinceWithLabels(key, start.UTC(), append(g.globalLabels, l...))
+	metrics.MeasureSinceWithLabels(key, start.UTC(), ls)
 }
 
 func (g *GlobalTelemetryService) IncrCounter(key []string, val float32, labels ...telemetry.Label) {
-	l := make([]metrics.Label, len(labels))
+	ls := make([]metrics.Label, len(labels))
 	for i, label := range labels {
-		l[i] = metrics.Label{Name: label.Name, Value: label.Value}
+		ls[i] = metrics.Label{Name: label.Name, Value: label.Value}
 	}
-	metrics.IncrCounterWithLabels(key, val, append(g.globalLabels, l...))
+	metrics.IncrCounterWithLabels(key, val, ls)
 }
 
 func (g *GlobalTelemetryService) RegisterMeasure([]string, ...string) {}
@@ -51,21 +54,19 @@ func (g *GlobalTelemetryService) RegisterMeasure([]string, ...string) {}
 func (g *GlobalTelemetryService) RegisterCounter([]string, ...string) {}
 
 type PrometheusTelemetryService struct {
-	globalLabels []metrics.Label
-	metrics      map[string]prometheus.Collector
+	metrics map[string]prometheus.Collector
 }
 
 var prometheusInst = &PrometheusTelemetryService{
 	metrics: make(map[string]prometheus.Collector),
 }
 
-func NewPrometheusTelemetryService(globalLabels []telemetry.Label) *PrometheusTelemetryService {
-	labels := make([]metrics.Label, len(globalLabels))
-	for i, label := range globalLabels {
-		labels[i] = metrics.Label{Name: label.Name, Value: label.Value}
-	}
-	prometheusInst.globalLabels = labels
+func NewPrometheusTelemetryService() *PrometheusTelemetryService {
 	return prometheusInst
+}
+
+type labeledOberserver interface {
+	With(labels prometheus.Labels) prometheus.Observer
 }
 
 func (p *PrometheusTelemetryService) MeasureSince(start time.Time, key []string, labels ...telemetry.Label) {
@@ -75,7 +76,8 @@ func (p *PrometheusTelemetryService) MeasureSince(start time.Time, key []string,
 	if !ok {
 		return
 	}
-	h, ok := m.(*prometheus.HistogramVec)
+
+	h, ok := m.(labeledOberserver)
 	if !ok {
 		return
 	}
@@ -83,7 +85,7 @@ func (p *PrometheusTelemetryService) MeasureSince(start time.Time, key []string,
 	for _, label := range labels {
 		ls[label.Name] = label.Value
 	}
-	//fmt.Printf("MeasureSince: %s, %v, %v\n", name, ls, dur.Seconds())
+	// fmt.Printf("MeasureSince: %s, %v, %v\n", name, ls, dur.Seconds())
 	h.With(ls).Observe(dur.Seconds())
 }
 
@@ -104,19 +106,25 @@ func (p *PrometheusTelemetryService) IncrCounter(key []string, val float32, labe
 	c.With(ls).Add(float64(val))
 }
 
-func (p *PrometheusTelemetryService) RegisterMeasure(key []string, labels ...string) {
-	name := strings.Join(key, "_")
-	p.metrics[name] = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    name,
-		Help:    "Histogram for " + name,
-		Buckets: []float64{0.5e-6, 1e-6, 1e-5, .0005, .025, .1, .5, 1, 5, 10, 30, 120},
-	}, labels)
-}
-
 func (p *PrometheusTelemetryService) RegisterCounter(key []string, labels ...string) {
 	name := strings.Join(key, "_")
 	p.metrics[name] = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: name,
-		Help: "Counter for " + name,
+	}, labels)
+}
+
+func (p *PrometheusTelemetryService) RegisterHistogram(key []string, buckets []float64, labels ...string) {
+	name := strings.Join(key, "_")
+	p.metrics[name] = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    name,
+		Buckets: buckets,
+	}, labels)
+}
+
+func (p *PrometheusTelemetryService) RegisterSummary(key []string, labels ...string) {
+	name := strings.Join(key, "_")
+	p.metrics[name] = promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Name:       name,
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 	}, labels)
 }

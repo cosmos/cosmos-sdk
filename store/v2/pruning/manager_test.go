@@ -40,7 +40,7 @@ func (s *PruningManagerTestSuite) SetupTest() {
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, nil, iavl.DefaultConfig())
 	}
 	s.sc, err = commitment.NewCommitStore(multiTrees, nil, mdb, nopLog)
 	s.Require().NoError(err)

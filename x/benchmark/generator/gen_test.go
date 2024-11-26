@@ -64,7 +64,7 @@ func Test_Genesis(t *testing.T) {
 	var buf bytes.Buffer
 	require.NoError(t, g.state.Marshal(&buf))
 	s := &State{}
-	require.NoError(t, s.Unmarshal(&buf))
+	require.NoError(t, s.Unmarshal(bytes.NewReader(buf.Bytes())))
 	require.Equal(t, len(g.state.Keys), len(s.Keys))
 	for i := range g.state.Keys {
 		require.Equal(t, len(g.state.Keys[i]), len(s.Keys[i]))

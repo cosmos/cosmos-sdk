@@ -17,6 +17,14 @@ type GlobalTelemetryService struct {
 	globalLabels []metrics.Label
 }
 
+func (g *GlobalTelemetryService) RegisterCounter(key []string, labels ...string) {
+}
+
+func (g *GlobalTelemetryService) RegisterHistogram(key []string, buckets []float64, labels ...string) {
+}
+
+func (g *GlobalTelemetryService) RegisterSummary(key []string, labels ...string) {}
+
 func NewGlobalTelemetryService(globalLabels []telemetry.Label) *GlobalTelemetryService {
 	labels := make([]metrics.Label, len(globalLabels))
 	for i, label := range globalLabels {
@@ -43,10 +51,6 @@ func (g *GlobalTelemetryService) IncrCounter(key []string, val float32, labels .
 	}
 	metrics.IncrCounterWithLabels(key, val, append(g.globalLabels, l...))
 }
-
-func (g *GlobalTelemetryService) RegisterMeasure([]string, ...string) {}
-
-func (g *GlobalTelemetryService) RegisterCounter([]string, ...string) {}
 
 type PrometheusTelemetryService struct {
 	globalLabels []metrics.Label
@@ -102,12 +106,20 @@ func (p *PrometheusTelemetryService) IncrCounter(key []string, val float32, labe
 	c.With(ls).Add(float64(val))
 }
 
-func (p *PrometheusTelemetryService) RegisterMeasure(key []string, labels ...string) {
+func (p *PrometheusTelemetryService) RegisterHistogram(key []string, buckets []float64, labels ...string) {
 	name := strings.Join(key, "_")
 	p.metrics[name] = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    name,
 		Help:    "Histogram for " + name,
-		Buckets: []float64{0.5e-6, 1e-6, 1e-5, .0005, .025, .1, .5, 1, 5, 10, 30, 120},
+		Buckets: buckets,
+	}, labels)
+}
+
+func (p *PrometheusTelemetryService) RegisterSummary(key []string, labels ...string) {
+	name := strings.Join(key, "_")
+	p.metrics[name] = promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Name: name,
+		Help: "Histogram for " + name,
 	}, labels)
 }
 

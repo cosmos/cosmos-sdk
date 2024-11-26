@@ -1,8 +1,10 @@
 package client
 
 import (
+	"errors"
 	"time"
 
+	"cosmossdk.io/core/transaction"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -68,3 +70,43 @@ type (
 		SetExtensionOptions(extOpts ...*codectypes.Any)
 	}
 )
+
+var _ transaction.Codec[transaction.Tx] = &DefaultTxDecoder[transaction.Tx]{}
+
+type DefaultTxDecoder[T transaction.Tx] struct {
+	TxConfig TxConfig
+}
+
+// Decode implements transaction.Codec.
+func (t *DefaultTxDecoder[T]) Decode(bz []byte) (T, error) {
+	var out T
+	tx, err := t.TxConfig.TxDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
+}
+
+// DecodeJSON implements transaction.Codec.
+func (t *DefaultTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
+	var out T
+	tx, err := t.TxConfig.TxJSONDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
+}

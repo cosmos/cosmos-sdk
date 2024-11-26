@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strconv"
 
-	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
-
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -322,7 +320,7 @@ func (b *Builder) setFlagsFromConfig(cmd *cobra.Command) error {
 		flags.FlagNode:           conf.Node,
 		flags.FlagBroadcastMode:  conf.BroadcastMode,
 		flags.FlagGrpcAddress:    conf.GRPC.Address,
-		flags2.FlagGRPCInsecure:  strconv.FormatBool(conf.GRPC.Insecure),
+		flags.FlagGrpcInsecure:   strconv.FormatBool(conf.GRPC.Insecure),
 	}
 
 	for flagName, value := range flagsToSet {

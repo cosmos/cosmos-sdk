@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	sut            *SystemUnderTest
-	verbose        bool
+	Sut            *SystemUnderTest
+	Verbose        bool
 	execBinaryName string
 )
 
@@ -25,7 +25,7 @@ func RunTests(m *testing.M) {
 	blockTime := flag.Duration("block-time", 1000*time.Millisecond, "block creation time")
 	execBinary := flag.String("binary", "simd", "executable binary for server/ client side")
 	bech32Prefix := flag.String("bech32", "cosmos", "bech32 prefix to be used with addresses")
-	flag.BoolVar(&verbose, "verbose", false, "verbose output")
+	flag.BoolVar(&Verbose, "verbose", false, "verbose output")
 	flag.Parse()
 
 	// fail fast on most common setup issue
@@ -36,7 +36,7 @@ func RunTests(m *testing.M) {
 		panic(err)
 	}
 	WorkDir = dir
-	if verbose {
+	if Verbose {
 		println("Work dir: ", WorkDir)
 	}
 	initSDKConfig(*bech32Prefix)
@@ -47,16 +47,16 @@ func RunTests(m *testing.M) {
 	}
 	execBinaryName = *execBinary
 
-	sut = NewSystemUnderTest(*execBinary, verbose, *nodesCount, *blockTime)
-	sut.SetupChain() // setup chain and keyring
+	Sut = NewSystemUnderTest(*execBinary, Verbose, *nodesCount, *blockTime)
+	Sut.SetupChain() // setup chain and keyring
 
 	// run tests
 	exitCode := m.Run()
 
 	// postprocess
-	sut.StopChain()
-	if verbose || exitCode != 0 {
-		sut.PrintBuffer()
+	Sut.StopChain()
+	if Verbose || exitCode != 0 {
+		Sut.PrintBuffer()
 		printResultFlag(exitCode == 0)
 	}
 
@@ -64,11 +64,11 @@ func RunTests(m *testing.M) {
 }
 
 func GetSystemUnderTest() *SystemUnderTest {
-	return sut
+	return Sut
 }
 
 func IsVerbose() bool {
-	return verbose
+	return Verbose
 }
 
 func GetExecutableName() string {

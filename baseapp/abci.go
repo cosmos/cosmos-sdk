@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -904,10 +903,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.FinalizeBlockRequest) (res *abci.Fin
 	defer func() {
 		// call the streaming service hooks with the FinalizeBlock messages
 		for _, streamingListener := range app.streamingManager.ABCIListeners {
-			if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {
+			if streamErr := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); streamErr != nil {
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
 				if app.streamingManager.StopNodeOnErr {
-					os.Exit(1)
+					// if StopNodeOnErr is set, we should return the streamErr in order to stop the node
+					err = streamErr
 				}
 			}
 		}
@@ -994,7 +994,7 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
 				if app.streamingManager.StopNodeOnErr {
-					os.Exit(1)
+					return nil, err
 				}
 			}
 		}

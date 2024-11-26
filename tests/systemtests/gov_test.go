@@ -13,6 +13,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"cosmossdk.io/math"
+	systest "cosmossdk.io/systemtests"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,14 +22,14 @@ import (
 func TestSubmitProposal(t *testing.T) {
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	valAddr := gjson.Get(cli.Keys("keys", "list"), "0.address").String()
 	require.NotEmpty(t, valAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// get gov module address
 	resp := cli.CustomQuery("q", "auth", "module-account", "gov")
@@ -41,7 +42,7 @@ func TestSubmitProposal(t *testing.T) {
 	"deposit": "-324foocoin"
 }`
 
-	invalidPropFile := StoreTempFile(t, []byte(invalidProp))
+	invalidPropFile := systest.StoreTempFile(t, []byte(invalidProp))
 	defer invalidPropFile.Close()
 
 	// Create a valid new proposal JSON.
@@ -64,7 +65,7 @@ func TestSubmitProposal(t *testing.T) {
 	"metadata": "%s",
 	"deposit": "%s"
 }`, govAddress, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("stake", math.NewInt(100000)))
-	validPropFile := StoreTempFile(t, []byte(validProp))
+	validPropFile := systest.StoreTempFile(t, []byte(validProp))
 	defer validPropFile.Close()
 
 	testCases := []struct {
@@ -114,7 +115,7 @@ func TestSubmitProposal(t *testing.T) {
 				rsp := cli.Run(tc.args...)
 				txResult, found := cli.AwaitTxCommitted(rsp)
 				require.True(t, found)
-				RequireTxSuccess(t, txResult)
+				systest.RequireTxSuccess(t, txResult)
 			}
 		})
 	}
@@ -123,14 +124,14 @@ func TestSubmitProposal(t *testing.T) {
 func TestSubmitLegacyProposal(t *testing.T) {
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	valAddr := gjson.Get(cli.Keys("keys", "list"), "0.address").String()
 	require.NotEmpty(t, valAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	invalidProp := `{
 	"title": "",
@@ -138,7 +139,7 @@ func TestSubmitLegacyProposal(t *testing.T) {
 		"type": "Text",
 	"deposit": "-324foocoin"
 	}`
-	invalidPropFile := StoreTempFile(t, []byte(invalidProp))
+	invalidPropFile := systest.StoreTempFile(t, []byte(invalidProp))
 	defer invalidPropFile.Close()
 
 	validProp := fmt.Sprintf(`{
@@ -147,7 +148,7 @@ func TestSubmitLegacyProposal(t *testing.T) {
 		  "type": "Text",
 		"deposit": "%s"
 	  }`, sdk.NewCoin("stake", math.NewInt(154310)))
-	validPropFile := StoreTempFile(t, []byte(validProp))
+	validPropFile := systest.StoreTempFile(t, []byte(validProp))
 	defer validPropFile.Close()
 
 	testCases := []struct {
@@ -227,7 +228,7 @@ func TestSubmitLegacyProposal(t *testing.T) {
 				rsp := cli.Run(tc.args...)
 				txResult, found := cli.AwaitTxCommitted(rsp)
 				require.True(t, found)
-				RequireTxSuccess(t, txResult)
+				systest.RequireTxSuccess(t, txResult)
 			}
 		})
 	}
@@ -236,14 +237,14 @@ func TestSubmitLegacyProposal(t *testing.T) {
 func TestNewCmdWeightedVote(t *testing.T) {
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	valAddr := gjson.Get(cli.Keys("keys", "list"), "0.address").String()
 	require.NotEmpty(t, valAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// Submit a new proposal for voting
 	proposalArgs := []string{
@@ -260,7 +261,7 @@ func TestNewCmdWeightedVote(t *testing.T) {
 	rsp := cli.Run(proposalArgs...)
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 
 	proposalsResp := cli.CustomQuery("q", "gov", "proposals")
 	proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
@@ -361,7 +362,7 @@ func TestNewCmdWeightedVote(t *testing.T) {
 			} else {
 				rsp := cli.Run(tc.args...)
 				if tc.expectErr {
-					RequireTxFailure(t, rsp)
+					systest.RequireTxFailure(t, rsp)
 				} else {
 					cli.AwaitTxCommitted(rsp)
 				}
@@ -372,22 +373,20 @@ func TestNewCmdWeightedVote(t *testing.T) {
 
 func TestQueryDeposit(t *testing.T) {
 	// given a running chain
-
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
 	// short voting period
 	// update expedited voting period to avoid validation error
-	sut.ModifyGenesisJSON(
+	votingPeriod := 3 * time.Second
+	systest.Sut.ModifyGenesisJSON(
 		t,
-		SetGovVotingPeriod(t, time.Second*8),
-		SetGovExpeditedVotingPeriod(t, time.Second*7),
+		systest.SetGovVotingPeriod(t, votingPeriod),
+		systest.SetGovExpeditedVotingPeriod(t, votingPeriod-time.Second),
 	)
+	systest.Sut.StartChain(t)
 
 	// get validator address
-	valAddr := gjson.Get(cli.Keys("keys", "list"), "0.address").String()
-	require.NotEmpty(t, valAddr)
-
-	sut.StartChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	valAddr := cli.GetKeyAddr("node0")
 
 	// Submit a new proposal for voting
 	proposalArgs := []string{
@@ -404,7 +403,7 @@ func TestQueryDeposit(t *testing.T) {
 	rsp := cli.Run(proposalArgs...)
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 
 	// Query initial deposit
 	resp := cli.CustomQuery("q", "gov", "deposit", "1", valAddr)
@@ -415,8 +414,9 @@ func TestQueryDeposit(t *testing.T) {
 	deposits := gjson.Get(resp, "deposits").Array()
 	require.Equal(t, len(deposits), 1)
 
-	time.Sleep(time.Second * 8)
-	resp = cli.CustomQuery("q", "gov", "deposits", "1")
-	deposits = gjson.Get(resp, "deposits").Array()
-	require.Equal(t, len(deposits), 0)
+	assert.Eventually(t, func() bool {
+		resp = cli.CustomQuery("q", "gov", "deposits", "1")
+		deposits = gjson.Get(resp, "deposits").Array()
+		return len(deposits) == 0
+	}, votingPeriod, 100*time.Millisecond)
 }

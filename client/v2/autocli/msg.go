@@ -1,8 +1,10 @@
 package autocli
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"os"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
@@ -18,6 +20,7 @@ import (
 	v2tx "cosmossdk.io/client/v2/tx"
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
+
 	// the following will be extracted to a separate module
 	// https://github.com/cosmos/cosmos-sdk/issues/14403
 	govcli "cosmossdk.io/x/gov/client/cli"
@@ -25,6 +28,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 )
 
@@ -168,7 +172,9 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		msg := dynamicpb.NewMessage(input.Descriptor())
 		proto.Merge(msg, input.Interface())
 
-		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		return b.generateOrBroadcastTxWithV2(cmd, msg)
+
+		// return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, execFunc)
@@ -245,7 +251,21 @@ func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transa
 		return err
 	}
 
-	bz, err := v2tx.GenerateOrBroadcastTxCLI(ctx, cConn, msgs...)
+	var bz []byte
+	genOnly, _ := cmd.Flags().GetBool(v2tx.FlagGenerateOnly)
+	isDryRun, _ := cmd.Flags().GetBool(v2tx.FlagDryRun)
+	if genOnly {
+		bz, err = v2tx.GenerateOnly(ctx, cConn, msgs...)
+	} else if isDryRun {
+		bz, err = v2tx.DryRun(ctx, cConn, msgs...)
+	} else {
+		skipConfirm, _ := cmd.Flags().GetBool("yes")
+		if skipConfirm {
+			bz, err = v2tx.GenerateAndBroadcastTxCLI(ctx, cConn, msgs...)
+		} else {
+			bz, err = v2tx.GenerateAndBroadcastTxCLIWithPrompt(ctx, cConn, b.userConfirmation(cmd), msgs...)
+		}
+	}
 	if err != nil {
 		return err
 	}
@@ -257,4 +277,33 @@ func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transa
 	}
 
 	return p.PrintBytes(bz)
+}
+
+// userConfirmation returns a function that prompts the user for confirmation
+// before signing and broadcasting a transaction.
+func (b *Builder) userConfirmation(cmd *cobra.Command) func([]byte) (bool, error) {
+	format, _ := cmd.Flags().GetString(flags.FlagOutput)
+	printer := print.Printer{
+		Output:       cmd.OutOrStdout(),
+		OutputFormat: format,
+	}
+
+	return func(bz []byte) (bool, error) {
+		err := printer.PrintBytes(bz)
+		if err != nil {
+			return false, err
+		}
+		buf := bufio.NewReader(os.Stdin)
+		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncanceled transaction\n", err)
+			return false, err
+		}
+		if !ok {
+			_, _ = fmt.Fprintln(os.Stderr, "canceled transaction")
+			return false, nil
+		}
+
+		return true, nil
+	}
 }

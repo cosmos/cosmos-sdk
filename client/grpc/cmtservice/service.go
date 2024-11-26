@@ -38,12 +38,12 @@ type (
 
 // NewQueryServer creates a new CometBFT query server.
 func NewQueryServer(
-	clientCtx CometRPC,
+	cometRPC CometRPC,
 	queryFn abciQueryFn,
 	consensusAddressCodec address.Codec,
 ) ServiceServer {
 	return queryServer{
-		rpc:            clientCtx,
+		rpc:            cometRPC,
 		queryFn:        queryFn,
 		consensusCodec: consensusAddressCodec,
 	}
@@ -284,7 +284,7 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 func RegisterTendermintService(
 	clientCtx client.Context,
 	server gogogrpc.Server,
-	iRegistry codectypes.InterfaceRegistry,
+	_ codectypes.InterfaceRegistry,
 	queryFn abciQueryFn,
 ) {
 	node, err := clientCtx.GetNode()

@@ -1,61 +1,48 @@
-# Testing
+# System tests
 
-Test framework for system tests. 
-Starts and interacts with a (multi node) blockchain in Go.
-Supports
+Go black box tests that setup and interact with a local blockchain. The system test [framework](../../systemtests) 
+works with the compiled binary of the chain artifact only.
+To get up to speed, checkout the [getting started guide](../../systemtests/getting_started.md).
 
-* CLI
-* Servers
-* Events
-* RPC
+Beside the Go tests and testdata files, this directory can contain the following directories:  
 
-Uses:
+* `binaries` - cache for binary
+* `testnet` - node files
 
-* testify
-* gjson
-* sjson
+Please make sure to not add or push them to git. 
 
-Server and client side are executed on the host machine.
+## Execution
 
-## Developer
+Build a new binary from current branch and copy it to the `tests/systemtests/binaries` folder by running system tests.
+In project root:
 
-### Test strategy
-
-System tests cover the full stack via cli and a running (multi node) network. They are more expensive (in terms of time/ cpu) 
-to run compared to unit or integration tests. 
-Therefore, we focus on the **critical path** and do not cover every condition.
-
-## How to use
-
-Read the [getting_started.md](getting_started.md) guide to get started.
-
-### Execute a single test
-
-```sh
-go test -tags system_test -count=1 -v . --run TestStakeUnstake  -verbose
+```shell
+make test-system
 ```
 
-Test cli parameters
+Or via manual steps
 
-* `-verbose` verbose output
-* `-wait-time` duration - time to wait for chain events (default 30s)
-* `-nodes-count` int - number of nodes in the cluster (default 4)
+```shell
+make build
+mkdir -p ./tests/systemtests/binaries
+cp ./build/simd ./tests/systemtests/binaries/
+```
 
-# Port ranges
+### Manual test run
 
-With *n* nodes:
+```shell
+go test -v -mod=readonly -failfast -tags='system_test' --run TestStakeUnstake    ./... --verbose
+```
 
-* `26657` - `26657+n` - RPC
-* `1317` - `1317+n` - API
-* `9090` - `9090+n` - GRPC
-* `16656` - `16656+n` - P2P
+### Working with macOS
 
-For example Node *3* listens on `26660` for RPC calls
+Most tests should function seamlessly. However, the file [upgrade_test.go](upgrade_test.go) includes a **build annotation** for Linux only.
 
-## Resources
+For the system upgrade test, an older version of the binary is utilized to perform a chain upgrade. This artifact is retrieved from a Docker container built for Linux.
 
-* [gjson query syntax](https://github.com/tidwall/gjson#path-syntax)
+To circumvent this limitation locally:
+1. Checkout and build the older version of the artifact from a specific tag for your OS.
+2. Place the built artifact into the `binaries` folder.
+3. Ensure that the filename, including the version, is correct.
 
-## Disclaimer
-
-This is based on the system test framework in [wasmd](https://github.com/CosmWasm/wasmd) built by Confio.
+With the cached artifact in place, the test will use this file instead of attempting to pull it from Docker.

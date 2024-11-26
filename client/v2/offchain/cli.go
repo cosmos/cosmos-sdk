@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli/config"
-	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/broadcast/comet"
+	clientcontext "cosmossdk.io/client/v2/context"
 	v2flags "cosmossdk.io/client/v2/internal/flags"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"

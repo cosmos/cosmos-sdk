@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	clientcontext "cosmossdk.io/client/v2/autocli/context"
+	clientcontext "cosmossdk.io/client/v2/context"
 	clitx "cosmossdk.io/client/v2/tx"
 	"cosmossdk.io/core/address"
 	txsigning "cosmossdk.io/x/tx/signing"

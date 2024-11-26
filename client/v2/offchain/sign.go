@@ -7,7 +7,7 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	clientcontext "cosmossdk.io/client/v2/autocli/context"
+	clientcontext "cosmossdk.io/client/v2/context"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/client/v2/internal/offchain"
 	clitx "cosmossdk.io/client/v2/tx"

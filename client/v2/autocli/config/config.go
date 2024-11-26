@@ -11,6 +11,8 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"cosmossdk.io/client/v2/internal/flags"
 )
 
 type Config struct {
@@ -76,11 +78,11 @@ func CreateClientConfig(homeDir, chainID string, v *viper.Viper) (*Config, error
 
 // CreateClientConfigFromFlags creates a client configuration from command-line flags.
 func CreateClientConfigFromFlags(set *pflag.FlagSet) (*Config, error) {
-	homeDir, _ := set.GetString("home")
+	homeDir, _ := set.GetString(flags.FlagHome)
 	if homeDir == "" {
 		return DefaultConfig(), nil
 	}
-	chainID, _ := set.GetString("chain-id")
+	chainID, _ := set.GetString(flags.FlagChainID)
 
 	v := viper.New()
 	executableName, err := os.Executable()

@@ -2,6 +2,9 @@ package flags
 
 // This defines flag names that can be used in autocli.
 const (
+	// FlagHome is the flag to specify the home dir of the app.
+	FlagHome = "home"
+
 	// FlagChainID is the flag to specify the chain ID of the network.
 	FlagChainID = "chain-id"
 

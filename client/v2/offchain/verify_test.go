@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	clientcontext "cosmossdk.io/client/v2/autocli/context"
+	clientcontext "cosmossdk.io/client/v2/context"
 	clitx "cosmossdk.io/client/v2/tx"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"

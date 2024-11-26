@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	"cosmossdk.io/client/v2/autocli/keyring"
+	clientcontext "cosmossdk.io/client/v2/context"
 	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/codec"

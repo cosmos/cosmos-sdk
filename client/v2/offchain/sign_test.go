@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	clientcontext "cosmossdk.io/client/v2/autocli/context"
+	clientcontext "cosmossdk.io/client/v2/context"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

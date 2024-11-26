@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	"cosmossdk.io/client/v2/broadcast"
 	"cosmossdk.io/client/v2/broadcast/comet"
+	clientcontext "cosmossdk.io/client/v2/context"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/core/transaction"

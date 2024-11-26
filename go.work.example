@@ -6,17 +6,6 @@ use (
 	./simapp
 	./tests
 	./tests/systemtests
-<<<<<<< HEAD
-=======
-	./schema
-	./server/v2/stf
-	./server/v2/appmanager
-	./store
-	./store/v2
-	./systemtests
-	./runtime/v2
-	./tools/cosmovisor
->>>>>>> 14d98d277 (refactor(systemtests): Extract system test framework (#22578))
 	./tools/confix
 	./x/accounts
 	./x/accounts/defaults/base

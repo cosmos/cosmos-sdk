@@ -223,8 +223,10 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.Details = d.Details
 	}
 
-	if d2.Metadata.ProfilePicUri == DoNotModifyDesc {
-		d2.Metadata.ProfilePicUri = d.Metadata.ProfilePicUri
+	if d2.Metadata != nil {
+		if d2.Metadata.ProfilePicUri == DoNotModifyDesc {
+			d2.Metadata.ProfilePicUri = d.Metadata.ProfilePicUri
+		}
 	}
 
 	return NewDescription(
@@ -264,7 +266,7 @@ func (d Description) EnsureLength() (Description, error) {
 
 func (d Description) IsEmpty() bool {
 	return d.Moniker == "" && d.Details == "" && d.Identity == "" && d.Website == "" && d.SecurityContact == "" &&
-		d.Metadata == nil
+		(d.Metadata == nil || d.Metadata.ProfilePicUri == "" && len(d.Metadata.SocialHandleUris) == 0)
 }
 
 // Validate calls metadata.Validate() description.EnsureLength()

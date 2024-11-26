@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/runtime/v2/services"
+	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/x/accounts"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
@@ -88,7 +90,7 @@ func createTestSuite(t *testing.T) *suite {
 			ProvideMockRetroCompatAccountValid,
 			ProvideMockRetroCompatAccountNoInfo,
 			ProvideMockRetroCompatAccountNoImplement,
-		), depinject.Supply(log.NewNopLogger())),
+		), depinject.Supply(log.NewNopLogger(), services.NewGenesisHeaderService(stf.HeaderService{}))),
 		startupCfg, &integration.BranchService{}, serviceBuilder,
 		&res.bankKeeper, &res.accountsKeeper, &res.authKeeper)
 	require.NoError(t, err)

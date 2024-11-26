@@ -172,9 +172,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		msg := dynamicpb.NewMessage(input.Descriptor())
 		proto.Merge(msg, input.Interface())
 
-		return b.generateOrBroadcastTxWithV2(cmd, msg)
-
-		// return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, execFunc)

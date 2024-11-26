@@ -1,20 +1,14 @@
 queue_rules:
   - name: default
-    conditions:
-      - base~=^Agoric
-
-
-pull_request_rules:
-  - name: automerge to Agoric* with label automerge and branch protection passing
-    conditions:
+    queue_conditions:
       - "#approved-reviews-by>0"
       - base~=^Agoric
       - label=automerge
-    actions:
-      queue:
-        name: default
-        method: merge
-      # commit_message: title+body
+    merge_conditions:
+      - base~=^Agoric
+    merge_method: merge
+
+pull_request_rules:
   - name: backport patches to Agoric branch
     conditions:
       - base=Agoric-ag0
@@ -31,3 +25,7 @@ pull_request_rules:
       backport:
         branches:
           - Agoric-ag0
+  - name: automerge to Agoric* with label automerge and branch protection passing
+    conditions: []
+    actions:
+      queue:

@@ -269,8 +269,10 @@ func (d Description) IsEmpty() bool {
 
 // Validate calls metadata.Validate() description.EnsureLength()
 func (d Description) Validate() (Description, error) {
-	if err := d.Metadata.Validate(); err != nil {
-		return d, err
+	if d.Metadata != nil {
+		if err := d.Metadata.Validate(); err != nil {
+			return d, err
+		}
 	}
 
 	return d.EnsureLength()

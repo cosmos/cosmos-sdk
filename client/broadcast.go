@@ -75,8 +75,10 @@ func CheckCometError(err error, tx cmttypes.Tx) *sdk.TxResponse {
 
 	default:
 		return &sdk.TxResponse{
-			Code:   999, // unknown code
-			RawLog: err.Error(),
+			Code:      999, // unknown code
+			Codespace: sdkerrors.RootCodespace,
+			RawLog:    errStr,
+			TxHash:    txHash,
 		}
 	}
 }

@@ -167,7 +167,12 @@ func checkCometError(err error, tx cmttypes.Tx) *apiacbci.TxResponse {
 		}
 
 	default:
-		return nil
+		return &apiacbci.TxResponse{
+			Code:      999, // unknown code
+			Codespace: sdkerrors.RootCodespace,
+			RawLog:    errStr,
+			Txhash:    txHash,
+		}
 	}
 }
 

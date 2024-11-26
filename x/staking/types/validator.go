@@ -264,7 +264,7 @@ func (d Description) EnsureLength() (Description, error) {
 
 func (d Description) IsEmpty() bool {
 	return d.Moniker == "" && d.Details == "" && d.Identity == "" && d.Website == "" && d.SecurityContact == "" &&
-		d.Metadata.ProfilePicUri == "" && len(d.Metadata.SocialHandleUris) == 0
+		d.Metadata == nil
 }
 
 // Validate calls metadata.Validate() description.EnsureLength()

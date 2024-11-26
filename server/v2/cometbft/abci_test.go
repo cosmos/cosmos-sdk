@@ -58,10 +58,10 @@ func getQueryRouterBuilder[T any, PT interface {
 	*T
 	proto.Message
 },
-U any, UT interface {
-	*U
-	proto.Message
-}](
+	U any, UT interface {
+		*U
+		proto.Message
+	}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -88,10 +88,10 @@ func getMsgRouterBuilder[T any, PT interface {
 	*T
 	transaction.Msg
 },
-U any, UT interface {
-	*U
-	transaction.Msg
-}](
+	U any, UT interface {
+		*U
+		transaction.Msg
+	}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {

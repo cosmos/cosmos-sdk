@@ -81,7 +81,7 @@ type consensus[T transaction.Tx] struct {
 	// optimisticExec contains the context required for Optimistic Execution,
 	// including the goroutine handling.This is experimental and must be enabled
 	// by developers.
-	optimisticExec *oe.OptimisticExecution
+	optimisticExec *oe.OptimisticExecution[T]
 
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
@@ -483,6 +483,13 @@ func (c *consensus[T]) FinalizeBlock(
 	ctx context.Context,
 	req *abciproto.FinalizeBlockRequest,
 ) (*abciproto.FinalizeBlockResponse, error) {
+	var (
+		resp       *server.BlockResponse
+		newState   store.WriterMap
+		decodedTxs []T
+		err        error
+	)
+
 	if c.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := c.optimisticExec.AbortIfNeeded(req.Hash)
@@ -490,62 +497,19 @@ func (c *consensus[T]) FinalizeBlock(
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err := c.optimisticExec.WaitResult()
 
-		// only return if we are not aborting
-		if !aborted {
-			return res, err
+		if aborted {
+			resp, newState, decodedTxs, err = c.internalFinalizeBlock(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			resp = res.Resp
+			newState = res.StateChanges
+			decodedTxs = res.DecodedTxs
 		}
 
 		// if it was aborted, we need to reset the state
 		c.optimisticExec.Reset()
-	}
-
-	return c.internalFinalizeBlock(ctx, req)
-}
-
-func (c *consensus[T]) internalFinalizeBlock(
-	ctx context.Context,
-	req *abciproto.FinalizeBlockRequest,
-) (*abciproto.FinalizeBlockResponse, error) {
-	if err := c.validateFinalizeBlockHeight(req); err != nil {
-		return nil, err
-	}
-
-	if err := c.checkHalt(req.Height, req.Time); err != nil {
-		return nil, err
-	}
-
-	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
-	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
-	// have a tx that fails decoding.
-	decodedTxs, err := decodeTxs(req.Txs, c.txCodec)
-	if err != nil {
-		return nil, err
-	}
-
-	cid, err := c.store.LastCommitID()
-	if err != nil {
-		return nil, err
-	}
-
-	blockReq := &server.BlockRequest[T]{
-		Height:  uint64(req.Height),
-		Time:    req.Time,
-		Hash:    req.Hash,
-		AppHash: cid.Hash,
-		ChainId: c.chainID,
-		Txs:     decodedTxs,
-	}
-
-	ciCtx := contextWithCometInfo(ctx, comet.Info{
-		Evidence:        toCoreEvidence(req.Misbehavior),
-		ValidatorsHash:  req.NextValidatorsHash,
-		ProposerAddress: req.ProposerAddress,
-		LastCommit:      toCoreCommitInfo(req.DecidedLastCommit),
-	})
-
-	resp, newState, err := c.app.DeliverBlock(ciCtx, blockReq)
-	if err != nil {
-		return nil, err
 	}
 
 	// after we get the changeset we can produce the commit hash,
@@ -588,6 +552,52 @@ func (c *consensus[T]) internalFinalizeBlock(
 	}
 
 	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents, c.cfg.AppTomlConfig.Trace)
+}
+
+func (c *consensus[T]) internalFinalizeBlock(
+	ctx context.Context,
+	req *abciproto.FinalizeBlockRequest,
+) (*server.BlockResponse, store.WriterMap, []T, error) {
+	if err := c.validateFinalizeBlockHeight(req); err != nil {
+		return nil, nil, nil, err
+	}
+
+	if err := c.checkHalt(req.Height, req.Time); err != nil {
+		return nil, nil, nil, err
+	}
+
+	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
+	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
+	// have a tx that fails decoding.
+	decodedTxs, err := decodeTxs(req.Txs, c.txCodec)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	cid, err := c.store.LastCommitID()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	blockReq := &server.BlockRequest[T]{
+		Height:  uint64(req.Height),
+		Time:    req.Time,
+		Hash:    req.Hash,
+		AppHash: cid.Hash,
+		ChainId: c.chainID,
+		Txs:     decodedTxs,
+	}
+
+	ciCtx := contextWithCometInfo(ctx, comet.Info{
+		Evidence:        toCoreEvidence(req.Misbehavior),
+		ValidatorsHash:  req.NextValidatorsHash,
+		ProposerAddress: req.ProposerAddress,
+		LastCommit:      toCoreCommitInfo(req.DecidedLastCommit),
+	})
+
+	resp, stateChanges, err := c.app.DeliverBlock(ciCtx, blockReq)
+
+	return resp, stateChanges, decodedTxs, err
 }
 
 // Commit implements types.Application.

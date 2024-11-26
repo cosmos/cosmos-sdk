@@ -2,8 +2,6 @@ module cosmossdk.io/x/accounts
 
 go 1.23.2
 
-toolchain go1.23.3
-
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/collections v0.4.0

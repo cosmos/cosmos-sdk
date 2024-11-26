@@ -2,8 +2,6 @@ module github.com/cosmos/cosmos-sdk/tests
 
 go 1.23.2
 
-toolchain go1.23.3
-
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/collections v0.4.1-0.20241104084251-838f1557af0a

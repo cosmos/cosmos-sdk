@@ -2,7 +2,6 @@ module cosmossdk.io/x/protocolpool
 
 go 1.23.2
 
-toolchain go1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6

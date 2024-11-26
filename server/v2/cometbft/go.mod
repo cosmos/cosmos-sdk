@@ -2,8 +2,6 @@ module cosmossdk.io/server/v2/cometbft
 
 go 1.23.2
 
-toolchain go1.23.3
-
 replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/core/testing => ../../../core/testing

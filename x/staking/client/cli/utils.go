@@ -24,7 +24,7 @@ type validator struct {
 	Website           string
 	Security          string
 	Details           string
-	Metadata          types.Metadata
+	Metadata          *types.Metadata
 	CommissionRates   types.CommissionRates
 	MinSelfDelegation math.Int
 }
@@ -134,11 +134,15 @@ func buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr string) (commiss
 	return commission, nil
 }
 
-func buildMetadata(profilePicUri string, socialHandlesUris []string) (metadata types.Metadata, err error) {
-	metadata.ProfilePicUri = profilePicUri
-	metadata.SocialHandleUris = socialHandlesUris
-	if err := metadata.Validate(); err != nil {
-		return metadata, err
+func buildMetadata(profilePicUri string, socialHandlesUris []string) (*types.Metadata, error) {
+	metadata := types.Metadata{
+		ProfilePicUri:    profilePicUri,
+		SocialHandleUris: socialHandlesUris,
 	}
-	return metadata, nil
+
+	if err := metadata.Validate(); err != nil {
+		return nil, err
+	}
+
+	return &metadata, nil
 }

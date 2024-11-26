@@ -47,8 +47,8 @@ func (ss *StorageStore) Get(storeKey []byte, version uint64, key []byte) ([]byte
 }
 
 // ApplyChangeset applies the given changeset to the storage.
-func (ss *StorageStore) ApplyChangeset(version uint64, cs *corestore.Changeset) error {
-	b, err := ss.db.NewBatch(version)
+func (ss *StorageStore) ApplyChangeset(cs *corestore.Changeset) error {
+	b, err := ss.db.NewBatch(cs.Version)
 	if err != nil {
 		return err
 	}

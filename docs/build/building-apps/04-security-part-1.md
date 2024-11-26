@@ -1,6 +1,6 @@
 # The Cosmos Security Handbook: Part 1 - Core Chain
 <!-- markdown-link-check-disable-next-line -->
-> Thank you to **[Roman Akhtariev](https://twitter.com/akhtariev) and [Alpin Yukseloglu](https://twitter.com/0xalpo)** for authoring this post. The original post can be found [here](https://www.faulttolerant.xyz/2024-01-16-cosmos-security-1/).
+> Thank you to **[Roman Akhtariev](https://x.com/akhtariev) and [Alpin Yukseloglu](https://x.com/0xalpo)** for authoring this post. The original post can be found [here](https://www.faulttolerant.xyz/2024-01-16-cosmos-security-1/).
 
 > [Trail of bits](https://www.trailofbits.com/) hosts another set of guidelines [here](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cosmos)
 
@@ -115,7 +115,7 @@ This is a consideration that seems trivial but comes up much more frequently tha
 
 A few months ago, a security researcher [reported a vulnerability](https://blog.trailofbits.com/2023/10/23/numbers-turned-weapons-dos-in-osmosis-math-library/) in the Osmosis codebase stemming from [PowApprox function](https://github.com/osmosis-labs/osmosis/blob/44a6a100a92f2984a760b41b7486fb9000ac670e/osmomath/math.go#L86). The crux of the issue was centered around long-lasting convergence for certain input values. A determined attacker could in theory use such edge cases to temporarily halt the chain. **The solution in these cases is simple - [introduce a constant loop bound](https://github.com/osmosis-labs/osmosis/pull/6627).**
 
-As a side note, from our experience, rational approximation is a more accurate and performant substitute to Taylor expansion which is used in `PowApprox` of the above example. See [this article](https://xn--2-umb.com/22/approximation/) for details.
+As a side note, from our experience, rational approximation is a more accurate and performant substitute to Taylor expansion which is used in `PowApprox` of the above example. See [this article](https://web.archive.org/web/20240628100055/https://xn--2-umb.com/22/approximation/) for details.
 
 ## Key Malleability and Prefix Iteration
 

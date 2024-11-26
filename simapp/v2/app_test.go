@@ -16,8 +16,10 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	serverv2store "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/db"
@@ -39,7 +41,11 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	vp.Set(serverv2store.FlagAppDBBackend, string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
 
-	app := NewSimApp[transaction.Tx](logger, vp)
+	app, err := NewSimApp[transaction.Tx](depinject.Configs(
+		depinject.Supply(logger, runtime.GlobalConfig(vp.AllSettings()))),
+	)
+	require.NoError(t, err)
+
 	genesis := app.ModuleManager().DefaultGenesis()
 
 	privVal := mock.NewPV()
@@ -88,6 +94,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 			ChainId:   "theChain",
 			AppHash:   ci.Hash,
 			IsGenesis: true,
+			Height:    1,
 		},
 		genesisBytes,
 		nil,
@@ -97,7 +104,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	changes, err := newState.GetStateChanges()
 	require.NoError(t, err)
 
-	_, err = st.Commit(&store.Changeset{Changes: changes})
+	_, err = st.Commit(&store.Changeset{Version: 1, Changes: changes})
 	require.NoError(t, err)
 
 	return app, ctx
@@ -113,6 +120,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	require.NoError(t, err)
 
 	height, err := app.LoadLatestHeight()
+	height++
 	require.NoError(t, err)
 
 	// TODO: this is a hack to set the comet info in the context for distribution module dependency.
@@ -126,7 +134,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	_, newState, err := app.DeliverBlock(
 		ctx,
 		&server.BlockRequest[transaction.Tx]{
-			Height:  height + 1,
+			Height:  height,
 			Time:    time.Now(),
 			Hash:    bz[:],
 			AppHash: ci.Hash,
@@ -136,7 +144,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	changes, err := newState.GetStateChanges()
 	require.NoError(t, err)
 
-	_, err = st.Commit(&store.Changeset{Changes: changes})
+	_, err = st.Commit(&store.Changeset{Version: height, Changes: changes})
 	require.NoError(t, err)
 }
 

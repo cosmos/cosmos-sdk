@@ -3,6 +3,8 @@ package validate
 import (
 	"fmt"
 
+	"github.com/spf13/cast"
+
 	modulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
@@ -25,17 +27,28 @@ const flagMinGasPricesV2 = "server.minimum-gas-prices"
 
 func init() {
 	appconfig.RegisterModule(&modulev1.Module{},
-		appconfig.Provide(ProvideModule),
+		appconfig.Provide(ProvideModule, ProvideConfig),
 	)
+}
+
+// ProvideConfig specifies the configuration key for the minimum gas prices.
+// During dependency injection, a configuration map is provided with the key set.
+func ProvideConfig(key depinject.OwnModuleKey) server.ModuleConfigMap {
+	return server.ModuleConfigMap{
+		Module: depinject.ModuleKey(key).Name(),
+		Config: server.ConfigMap{
+			flagMinGasPricesV2: "",
+		},
+	}
 }
 
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleConfig  *modulev1.Module
-	Environment   appmodulev2.Environment
-	TxConfig      client.TxConfig
-	DynamicConfig server.DynamicConfig `optional:"true"`
+	ModuleConfig *modulev1.Module
+	Environment  appmodulev2.Environment
+	TxConfig     client.TxConfig
+	ConfigMap    server.ConfigMap
 
 	AccountKeeper            ante.AccountKeeper
 	BankKeeper               authtypes.BankKeeper
@@ -69,16 +82,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		unorderedTxValidator *ante.UnorderedTxDecorator
 	)
 
-	if in.DynamicConfig != nil {
-		minGasPricesStr := in.DynamicConfig.GetString(flagMinGasPricesV2)
-		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
-		if err != nil {
-			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
-		}
-
-		feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, in.TxFeeChecker)
-		feeTxValidator.SetMinGasPrices(minGasPrices) // set min gas price in deduct fee decorator
+	minGasPricesStr := cast.ToString(in.ConfigMap[flagMinGasPricesV2])
+	minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
+	if err != nil {
+		panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
 	}
+
+	feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, in.TxFeeChecker)
+	feeTxValidator.SetMinGasPrices(minGasPrices) // set min gas price in deduct fee decorator
 
 	if in.UnorderedTxManager != nil {
 		unorderedTxValidator = ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, in.UnorderedTxManager, in.Environment, ante.DefaultSha256Cost)
@@ -127,14 +138,15 @@ func newBaseAppOption(in ModuleInputs) func(app *baseapp.BaseApp) {
 func newAnteHandler(in ModuleInputs) (sdk.AnteHandler, error) {
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			Environment:        in.Environment,
-			AccountKeeper:      in.AccountKeeper,
-			ConsensusKeeper:    in.ConsensusKeeper,
-			BankKeeper:         in.BankKeeper,
-			SignModeHandler:    in.TxConfig.SignModeHandler(),
-			FeegrantKeeper:     in.FeeGrantKeeper,
-			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
-			UnorderedTxManager: in.UnorderedTxManager,
+			Environment:              in.Environment,
+			AccountKeeper:            in.AccountKeeper,
+			ConsensusKeeper:          in.ConsensusKeeper,
+			BankKeeper:               in.BankKeeper,
+			SignModeHandler:          in.TxConfig.SignModeHandler(),
+			FeegrantKeeper:           in.FeeGrantKeeper,
+			SigGasConsumer:           ante.DefaultSigVerificationGasConsumer,
+			UnorderedTxManager:       in.UnorderedTxManager,
+			AccountAbstractionKeeper: in.AccountAbstractionKeeper,
 		},
 	)
 	if err != nil {

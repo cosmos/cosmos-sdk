@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 const (
@@ -16,39 +18,49 @@ const (
 )
 
 type Server[T transaction.Tx] struct {
-	logger log.Logger
-	router *http.ServeMux
-
+	logger     log.Logger
+	router     *http.ServeMux
 	httpServer *http.Server
 	config     *Config
 	cfgOptions []CfgOption
 }
 
-func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
-	return &Server[T]{
+func New[T transaction.Tx](
+	logger log.Logger,
+	appManager appmanager.AppManager[T],
+	cfg server.ConfigMap,
+	cfgOptions ...CfgOption,
+) (*Server[T], error) {
+	srv := &Server[T]{
+		logger:     logger.With(log.ModuleKey, ServerName),
 		cfgOptions: cfgOptions,
+		router:     http.NewServeMux(),
+	}
+
+	srv.router.Handle("/", NewDefaultHandler(appManager))
+
+	serverCfg := srv.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+	srv.config = serverCfg
+
+	return srv, nil
+}
+
+// NewWithConfigOptions creates a new REST server with the provided config options.
+// It is *not* a fully functional server (since it has been created without dependencies)
+// The returned server should only be used to get and set configuration.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+	return &Server[T]{
+		cfgOptions: opts,
 	}
 }
 
 func (s *Server[T]) Name() string {
 	return ServerName
-}
-
-func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-	s.logger = logger.With(log.ModuleKey, s.Name())
-
-	serverCfg := s.Config().(*Config)
-	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-
-	s.router = http.NewServeMux()
-	s.router.Handle("/", NewDefaultHandler(appI))
-	s.config = serverCfg
-
-	return nil
 }
 
 func (s *Server[T]) Start(ctx context.Context) error {
@@ -77,7 +89,6 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping HTTP server")
-
 	return s.httpServer.Shutdown(ctx)
 }
 

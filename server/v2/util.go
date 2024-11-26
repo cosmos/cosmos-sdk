@@ -15,26 +15,22 @@ import (
 
 // SetServerContext sets the logger and viper in the context.
 // The server manager expects the logger and viper to be set in the context.
-func SetServerContext(ctx context.Context, viper *viper.Viper, logger log.Logger) (context.Context, error) {
+func SetServerContext(ctx context.Context, viper *viper.Viper, logger log.Logger) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
-	return ctx, nil
+	return ctx
 }
 
 // SetCmdServerContext sets a command's Context value to the provided argument.
 // The server manager expects the logger and viper to be set in the context.
 // If the context has not been set, set the given context as the default.
-func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logger) error {
-	ctx, err := SetServerContext(cmd.Context(), viper, logger)
-	if err != nil {
-		return err
-	}
+func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logger) {
+	ctx := SetServerContext(cmd.Context(), viper, logger)
 	cmd.SetContext(ctx)
-	return nil
 }
 
 // GetViperFromContext returns the viper instance from the context.

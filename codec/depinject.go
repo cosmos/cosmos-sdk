@@ -16,6 +16,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
+var DefaultProviders = depinject.Provide(
+	ProvideInterfaceRegistry,
+	ProvideLegacyAmino,
+	ProvideProtoCodec,
+	ProvideAddressCodec,
+)
+
 func ProvideInterfaceRegistry(
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,

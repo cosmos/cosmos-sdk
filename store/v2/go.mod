@@ -17,7 +17,7 @@ require (
 	github.com/linxGnu/grocksdb v1.9.3
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/spf13/cast v1.7.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
 	go.uber.org/mock v0.5.0
 	golang.org/x/sync v0.9.0

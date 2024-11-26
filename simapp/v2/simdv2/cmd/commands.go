@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -25,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -40,7 +40,7 @@ type CommandDependencies[T transaction.Tx] struct {
 	TxConfig      client.TxConfig
 	ModuleManager *runtimev2.MM[T]
 	SimApp        *simapp.SimApp[T]
-	// could be more generic with serverv2.ServerComponent[T]
+	// could generally be more generic with serverv2.ServerComponent[T]
 	// however, we want to register extra grpc handlers
 	ConsensusServer *cometbft.CometBFTServer[T]
 	ClientContext   client.Context
@@ -106,18 +106,19 @@ func InitRootCmd[T transaction.Tx](
 			simApp.Name(),
 			simApp.Store(),
 			simApp.App.AppManager,
+			simApp.AppCodec(),
+			&client.DefaultTxDecoder[T]{TxConfig: deps.TxConfig},
 			simApp.App.QueryHandlers(),
 			simApp.App.SchemaDecoderResolver(),
-			&genericTxDecoder[T]{deps.TxConfig},
-			deps.GlobalConfig,
 			initCometOptions[T](),
+			deps.GlobalConfig,
 		)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger)
+	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger, sdktelemetry.EnableTelemetry)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +130,7 @@ func InitRootCmd[T transaction.Tx](
 		simApp.Query,
 		deps.GlobalConfig,
 		grpcserver.WithExtraGRPCHandlers[T](
-			deps.ConsensusServer.Consensus.GRPCServiceRegistrar(
+			deps.ConsensusServer.GRPCServiceRegistrar(
 				deps.ClientContext,
 				deps.GlobalConfig,
 			),
@@ -240,44 +241,4 @@ func RootCommandPersistentPreRun(clientCtx client.Context) func(*cobra.Command, 
 
 		return nil
 	}
-}
-
-var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}
-
-type genericTxDecoder[T transaction.Tx] struct {
-	txConfig client.TxConfig
-}
-
-// Decode implements transaction.Codec.
-func (t *genericTxDecoder[T]) Decode(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
-// DecodeJSON implements transaction.Codec.
-func (t *genericTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxJSONDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
 }

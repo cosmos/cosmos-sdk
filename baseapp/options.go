@@ -196,6 +196,14 @@ func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
 	app.beginBlocker = beginBlocker
 }
 
+func (app *BaseApp) SetBlockDelayGetter(blockDelayGetter sdk.BlockDelayGetter) {
+	if app.sealed {
+		panic("SetBlockDelayGetter() on sealed BaseApp")
+	}
+
+	app.blockDelayGetter = blockDelayGetter
+}
+
 func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	if app.sealed {
 		panic("SetEndBlocker() on sealed BaseApp")

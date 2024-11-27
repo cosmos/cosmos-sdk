@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 )
 
@@ -22,6 +24,10 @@ type ProcessProposalHandler func(Context, *abci.RequestProcessProposal) (*abci.R
 
 // PrepareProposalHandler defines a function type alias for preparing a proposal
 type PrepareProposalHandler func(Context, *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error)
+
+// BlockDelayGetter defines a function type for getting the `next_block_delay` (previously `timeout_commit`)
+// from the application. Returns `0` if the application has no opinion.
+type BlockDelayGetter func(Context) time.Duration
 
 // ExtendVoteHandler defines a function type alias for extending a pre-commit vote.
 type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)

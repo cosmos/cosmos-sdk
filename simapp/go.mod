@@ -219,6 +219,6 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
-replace github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.3-0.20240220185844-e704122c8540
+replace github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20241126215519-69cdde955fd0
 
 replace cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326190927-d35618165018

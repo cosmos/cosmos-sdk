@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -203,6 +204,8 @@ type BaseApp struct {
 	// Used to synchronize CacheMultistoreWithVersion since the multistore mutates version
 	// information internally during first time loads leading to data races.
 	cacheMsWithVersionMtx sync.Mutex
+
+	blockDelayGetter sdk.BlockDelayGetter
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -553,6 +556,15 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 	}
 
 	return cp
+}
+
+// GetNextBlockDelay returns the next_block_delay from the application.
+func (app *BaseApp) GetNextBlockDelay(ctx sdk.Context) time.Duration {
+	if app.blockDelayGetter == nil {
+		// If `NextBlockDelay` is 0, cometbft uses the legacy config `TimeoutCommit` instead.
+		return 0
+	}
+	return app.blockDelayGetter(ctx)
 }
 
 // StoreConsensusParams sets the consensus parameters to the BaseApp's param

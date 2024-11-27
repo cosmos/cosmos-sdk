@@ -11,6 +11,7 @@ import "tendermint/types/params.proto";
 import "tendermint/types/validator.proto";
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 
 // NOTE: When using custom types, mind the warnings.
 // https://github.com/cosmos/gogoproto/blob/master/custom_types.md#warnings-and-issues
@@ -359,6 +360,9 @@ message ResponseFinalizeBlock {
   // app_hash is the hash of the applications' state which is used to confirm that execution of the transactions was
   // deterministic. It is up to the application to decide which algorithm to use.
   bytes app_hash = 5;
+  // delay between the time when this block is committed and the next height is started.
+  // previously `timeout_commit` in config.toml
+  google.protobuf.Duration next_block_delay = 6 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 }
 
 //----------------------------------------

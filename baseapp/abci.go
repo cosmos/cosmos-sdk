@@ -971,6 +971,8 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 	header := app.finalizeBlockState.Context().BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
+	fmt.Println("Commit", header.Height)
+
 	if app.precommiter != nil {
 		app.precommiter(app.finalizeBlockState.Context())
 	}
@@ -984,6 +986,8 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 		RetainHeight: retainHeight,
 	}
 
+	app.cms.Commit()
+
 	abciListeners := app.streamingManager.ABCIListeners
 	if len(abciListeners) > 0 {
 		ctx := app.finalizeBlockState.Context()
@@ -994,15 +998,15 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
 				if app.streamingManager.StopNodeOnErr {
+					rollbackErr := app.cms.RollbackToVersion(blockHeight - 1)
+					if rollbackErr != nil {
+						return nil, rollbackErr
+					}
 					return nil, err
 				}
 			}
 		}
 	}
-
-	// Commit after all listeners have been called, in case they error and we
-	// need to stop before committing.
-	app.cms.Commit()
 
 	// Reset the CheckTx state to the latest committed.
 	//

@@ -5,14 +5,45 @@ package systemtests
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	systest "cosmossdk.io/systemtests"
 )
+
+func TestChainExportImport(t *testing.T) {
+	// Scenario:
+	//   given: a state dump from a running chain
+	//   when: new chain is initialized with exported state
+	//   then: the chain should start and produce blocks
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	systest.Sut.StartChain(t)
+
+	grantee := cli.GetKeyAddr("node1")
+	rsp3 := cli.RunAndWait("tx", "authz", "grant", grantee, "send", "--spend-limit=1000stake", "--from=node0", "--fees=1stake")
+	systest.RequireTxSuccess(t, rsp3)
+	systest.Sut.StopChain()
+
+	outFile := filepath.Join(t.TempDir(), "exported_genesis.json")
+	cli.RunCommandWithArgs("genesis", "export", "--home="+systest.Sut.NodeDir(0), "--output-document="+outFile)
+	exportedContent, err := os.ReadFile(outFile)
+	require.NoError(t, err)
+	exportedState := gjson.Get(string(exportedContent), "app_state").Raw
+
+	systest.Sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
+		state, err := sjson.SetRawBytes(genesis, "app_state", []byte(exportedState))
+		require.NoError(t, err)
+		return state
+	})
+	systest.Sut.StartChain(t)
+	systest.Sut.AwaitNBlocks(t, 2)
+}
 
 func TestExportCmd_WithHeight(t *testing.T) {
 	systest.Sut.ResetChain(t)

@@ -22,12 +22,14 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
+// Send handles the Send message, transferring coins from one account to another
 func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
 	var (
 		from, to []byte
 		err      error
 	)
 
+	// Ensure the Keeper implements BaseKeeper and perform address conversion
 	if base, ok := k.Keeper.(BaseKeeper); ok {
 		from, err = base.addrCdc.StringToBytes(msg.FromAddress)
 		if err != nil {
@@ -65,6 +67,7 @@ func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 	return &types.MsgSendResponse{}, nil
 }
 
+// MultiSend handles a multi-send operation where multiple outputs are specified
 func (k msgServer) MultiSend(ctx context.Context, msg *types.MsgMultiSend) (*types.MsgMultiSendResponse, error) {
 	if len(msg.Inputs) == 0 {
 		return nil, types.ErrNoInputs
@@ -162,6 +165,7 @@ func (k msgServer) SetSendEnabled(ctx context.Context, msg *types.MsgSetSendEnab
 	return &types.MsgSetSendEnabledResponse{}, nil
 }
 
+// Burn handles the burning of coins from an account
 func (k msgServer) Burn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
 	var (
 		from []byte

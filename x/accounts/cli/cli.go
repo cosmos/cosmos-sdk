@@ -93,30 +93,42 @@ func GetTxInitCmd() *cobra.Command {
 	return cmd
 }
 
+// GetExecuteCmd returns a command for executing a state transition on an account.
 func GetExecuteCmd() *cobra.Command {
+
+	// Create a new Cobra command with the "execute" use case and a short description.
 	cmd := &cobra.Command{
-		Use:   "execute <account-address> <execute-msg-type-url> <json-message>",
-		Short: "Execute state transition to account",
-		Args:  cobra.ExactArgs(3),
+		Use:   "execute <account-address> <execute-msg-type-url> <json-message>", // Command syntax
+		Short: "Execute state transition to account",  // Short description
+		Args:  cobra.ExactArgs(3),  // Expect exactly three arguments: account-address, execute-msg-type-url, json-message
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			// Get the transaction context from the command
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
+
+			// Retrieve the sender's address and convert it to a string format
 			sender, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
 
+			// Retrieve the schema for the specified account address (first argument)
 			schema, err := getSchemaForAccount(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
 
+			// Convert the provided JSON message (third argument) to a protobuf message
+            // using the schema and the execute message type URL (second argument)
 			msgBytes, err := handlerMsgBytes(schema.ExecuteHandlers, args[1], args[2])
 			if err != nil {
 				return err
 			}
+
+			// Construct the MsgExecute protobuf message
 			msg := v1.MsgExecute{
 				Sender:  sender,
 				Target:  args[0],
@@ -130,26 +142,40 @@ func GetExecuteCmd() *cobra.Command {
 	return cmd
 }
 
+// GetQueryAccountCmd returns a command for querying the state of an account.
 func GetQueryAccountCmd() *cobra.Command {
+
+	// Create a new Cobra command with the "query" use case and a short description.
 	cmd := &cobra.Command{
 		Use:   "query <account-address> <query-request-type-url> <json-message>",
 		Short: "Query account state",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			// Get the query context from the command
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
+			// Retrieve the schema for the specified account address (first argument)
 			schema, err := getSchemaForAccount(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
+
+			// Convert the provided JSON message (third argument) to a protobuf message
+            // using the schema and the query request type URL (second argument)
 			msgBytes, err := handlerMsgBytes(schema.QueryHandlers, args[1], args[2])
 			if err != nil {
 				return err
 			}
+
+			// Create a new QueryClient for interacting with the backend
 			queryClient := v1.NewQueryClient(clientCtx)
+
+
+			// Execute the account query with the constructed request
 			res, err := queryClient.AccountQuery(cmd.Context(), &v1.AccountQueryRequest{
 				Target:  args[0],
 				Request: msgBytes,
@@ -160,9 +186,12 @@ func GetQueryAccountCmd() *cobra.Command {
 			return clientCtx.PrintProto(res)
 		},
 	}
+
+	// Add standard query flags to the command
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
+
 
 func getSchemaForAccount(clientCtx client.Context, addr string) (*v1.SchemaResponse, error) {
 	queryClient := v1.NewQueryClient(clientCtx)

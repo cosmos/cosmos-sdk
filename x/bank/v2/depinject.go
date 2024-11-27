@@ -34,6 +34,7 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
+	AccountsKeeper types.AccountsModKeeper
 	Config       *moduletypes.Module
 	Cdc          codec.Codec
 	Environment  appmodule.Environment
@@ -59,7 +60,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		}
 	}
 
-	k := keeper.NewKeeper(authority, in.AddressCodec, in.Environment, in.Cdc)
+	k := keeper.NewKeeper(authority, in.AddressCodec, in.Environment, in.Cdc, in.AccountsKeeper)
 	m := NewAppModule(in.Cdc, k)
 
 	return ModuleOutputs{

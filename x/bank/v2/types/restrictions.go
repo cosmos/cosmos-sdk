@@ -7,7 +7,7 @@ import (
 )
 
 // A SendRestrictionFn can restrict sends and/or provide a new receiver address.
-type SendRestrictionFn func(ctx context.Context, fromAddr, toAddr []byte, amt sdk.Coins) (newToAddr []byte, err error)
+type SendRestrictionFn func(ctx context.Context, fromAddr, toAddr []byte, amt sdk.Coin) (newToAddr []byte, err error)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (SendRestrictionFn) IsOnePerModuleType() {}
@@ -15,7 +15,7 @@ func (SendRestrictionFn) IsOnePerModuleType() {}
 var _ SendRestrictionFn = NoOpSendRestrictionFn
 
 // NoOpSendRestrictionFn is a no-op SendRestrictionFn.
-func NoOpSendRestrictionFn(_ context.Context, _, toAddr []byte, _ sdk.Coins) ([]byte, error) {
+func NoOpSendRestrictionFn(_ context.Context, _, toAddr []byte, _ sdk.Coin) ([]byte, error) {
 	return toAddr, nil
 }
 
@@ -44,7 +44,7 @@ func ComposeSendRestrictions(restrictions ...SendRestrictionFn) SendRestrictionF
 	case 1:
 		return toRun[0]
 	}
-	return func(ctx context.Context, fromAddr, toAddr []byte, amt sdk.Coins) ([]byte, error) {
+	return func(ctx context.Context, fromAddr, toAddr []byte, amt sdk.Coin) ([]byte, error) {
 		var err error
 		for _, r := range toRun {
 			toAddr, err = r(ctx, fromAddr, toAddr, amt)

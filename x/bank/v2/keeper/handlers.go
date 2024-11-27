@@ -9,11 +9,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/v2/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	assetv1 "cosmossdk.io/x/accounts/defaults/asset/v1"
 )
 
 type handlers struct {
@@ -76,11 +78,35 @@ func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSe
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
-	// TODO: Check denom enable
-
-	err = h.SendCoins(ctx, from, to, msg.Amount)
-	if err != nil {
-		return nil, err
+	for _, coin := range msg.Amount {
+		// Check if denom impl AssetAccount
+		denomAcc, err := h.assetAccount.Get(ctx, coin.Denom)
+		fmt.Println("denomAcc", coin.Denom, denomAcc, err)
+		if err == nil {
+			msg := &assetv1.MsgTransfer{
+				From: from,
+				To: to,
+				Amount: coin.Amount,
+			}
+			resp, err := h.accountsKeeper.Execute(ctx, denomAcc, nil, msg, sdk.NewCoins())
+			fmt.Println("Execute", resp, err)
+			if err != nil {
+				return nil, err
+			}
+			transferResp, ok := resp.(*assetv1.MsgTransferResponse)
+			if !ok {
+				return nil, errors.New("Invalid response")
+			}
+			// Update bank balance of [from, to] from transfer response
+			h.Keeper.balances.Set(ctx, collections.Join(transferResp.FromBalance.Addr, coin.Denom), transferResp.FromBalance.Amount)
+			h.Keeper.balances.Set(ctx, collections.Join(transferResp.ToBalance.Addr, coin.Denom), transferResp.ToBalance.Amount)
+		} else if err != nil && errors.Is(err, collections.ErrNotFound) {
+			// If denom not implement AssetAccount, run sdk logic
+			err = h.SendCoin(ctx, from, to, coin)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return &types.MsgSendResponse{}, nil
@@ -114,12 +140,13 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
-	// TODO: should mint to mint module then transfer?
-	err = h.MintCoins(ctx, to, msg.Amount)
-	if err != nil {
-		return nil, err
+	for _, coin := range msg.Amount {
+		err = h.MintCoins(ctx, to, coin)
+		if err != nil {
+			return nil, err
+		}
 	}
-
+	
 	return &types.MsgMintResponse{}, nil
 }
 

@@ -81,10 +81,6 @@ func initFixture(t *testing.T) *fixture {
 	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
-
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
@@ -128,17 +124,14 @@ func initFixture(t *testing.T) *fixture {
 		authority.String(),
 	)
 
-	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
-
 	msgRouter := baseapp.NewMsgServiceRouter()
 	grpcRouter := baseapp.NewGRPCQueryRouter()
 	cometService := runtime.NewContextAwareCometInfoService()
 
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensustypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometService)
-	require.NoError(t, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
-	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
+	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String())
 
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[distrtypes.StoreKey]), logger), accountKeeper, bankKeeper, stakingKeeper, cometService, distrtypes.ModuleName, authority.String(),
@@ -155,23 +148,7 @@ func initFixture(t *testing.T) *fixture {
 	valAddr := sdk.ValAddress(addr)
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
-	// set proposer and vote infos
-	ctx := newCtx.WithProposer(valConsAddr).WithCometInfo(comet.Info{
-		LastCommit: comet.CommitInfo{
-			Votes: []comet.VoteInfo{
-				{
-					Validator: comet.Validator{
-						Address: valAddr,
-						Power:   100,
-					},
-					BlockIDFlag: comet.BlockIDFlagCommit,
-				},
-			},
-		},
-		ProposerAddress: valConsAddr,
-	})
-
-	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
@@ -186,7 +163,21 @@ func initFixture(t *testing.T) *fixture {
 		grpcRouter,
 	)
 
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+	// set proposer and vote infos
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context()).WithProposer(valConsAddr).WithCometInfo(comet.Info{
+		LastCommit: comet.CommitInfo{
+			Votes: []comet.VoteInfo{
+				{
+					Validator: comet.Validator{
+						Address: valAddr,
+						Power:   100,
+					},
+					BlockIDFlag: comet.BlockIDFlagCommit,
+				},
+			},
+		},
+		ProposerAddress: valConsAddr,
+	})
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))

@@ -50,7 +50,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	toVersion := uint64(200)
 	keyCount := 10
 	for version := uint64(1); version <= toVersion; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
@@ -105,7 +105,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	latestVersion := originalLatestVersion + 1
 	keyCount := 10
 	for ; latestVersion < 2*originalLatestVersion; latestVersion++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(latestVersion)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", latestVersion, i)), []byte(fmt.Sprintf("value-%d-%d", latestVersion, i)), false)
@@ -147,7 +147,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 
 	// apply changeset against the migrated store
 	for version := latestVersion + 1; version <= latestVersion+10; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)

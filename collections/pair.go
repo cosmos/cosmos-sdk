@@ -247,6 +247,16 @@ func (p pairKeyCodec[K1, K2]) SchemaCodec() (codec.SchemaCodec[Pair[K1, K2]], er
 
 	return codec.SchemaCodec[Pair[K1, K2]]{
 		Fields: []schema.Field{field1, field2},
+		ToSchemaType: func(pair Pair[K1, K2]) (any, error) {
+			return []interface{}{pair.K1(), pair.K2()}, nil
+		},
+		FromSchemaType: func(a any) (Pair[K1, K2], error) {
+			aSlice, ok := a.([]interface{})
+			if !ok || len(aSlice) != 2 {
+				return Pair[K1, K2]{}, fmt.Errorf("expected slice of length 2, got %T", a)
+			}
+			return Join(aSlice[0].(K1), aSlice[1].(K2)), nil
+		},
 	}, nil
 }
 

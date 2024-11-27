@@ -79,7 +79,7 @@ message Description {
   // details define other optional details.
   string details = 5;
   // metadata defines extra information about the validator.
-  Metadata metadata = 6 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  Metadata metadata = 6 [(gogoproto.nullable) = true, (amino.dont_omitempty) = false];
 }
 
 // Metadata defines extra information about the validator.

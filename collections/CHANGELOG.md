@@ -33,6 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#22641](https://github.com/cosmos/cosmos-sdk/pull/22641) Add reverse iterator support for `Triple`.
 * [#17656](https://github.com/cosmos/cosmos-sdk/pull/17656) Introduces `Vec`, a collection type that allows to represent a growable array on top of a KVStore.
 * [#18933](https://github.com/cosmos/cosmos-sdk/pull/18933) Add LookupMap implementation. It is basic wrapping of the standard Map methods but is not iterable.
 * [#19343](https://github.com/cosmos/cosmos-sdk/pull/19343) Simplify IndexedMap creation by allowing to infer indexes through reflection.

@@ -12,21 +12,21 @@ import (
 )
 
 type RestTestCase struct {
-	name    string
-	url     string
-	expCode int
-	expOut  string
+	Name    string
+	Url     string
+	ExpCode int
+	ExpOut  string
 }
 
 // RunRestQueries runs given Rest testcases by making requests and
 // checking response with expected output
-func RunRestQueries(t *testing.T, testCases []RestTestCase) {
+func RunRestQueries(t *testing.T, testCases ...RestTestCase) {
 	t.Helper()
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp := GetRequestWithHeaders(t, tc.url, nil, tc.expCode)
-			require.JSONEq(t, tc.expOut, string(resp))
+		t.Run(tc.Name, func(t *testing.T) {
+			resp := GetRequestWithHeaders(t, tc.Url, nil, tc.ExpCode)
+			require.JSONEq(t, tc.ExpOut, string(resp))
 		})
 	}
 }
@@ -34,12 +34,12 @@ func RunRestQueries(t *testing.T, testCases []RestTestCase) {
 // TestRestQueryIgnoreNumbers runs given rest testcases by making requests and
 // checking response with expected output ignoring number values
 // This method is used when number values in response are non-deterministic
-func TestRestQueryIgnoreNumbers(t *testing.T, testCases []RestTestCase) {
+func TestRestQueryIgnoreNumbers(t *testing.T, testCases ...RestTestCase) {
 	t.Helper()
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
+		t.Run(tc.Name, func(t *testing.T) {
+			resp, err := testutil.GetRequest(tc.Url)
 			require.NoError(t, err)
 
 			// regular expression pattern to match any numeric value in the JSON
@@ -50,7 +50,7 @@ func TestRestQueryIgnoreNumbers(t *testing.T, testCases []RestTestCase) {
 			require.NoError(t, err)
 
 			// replace all numeric values in the above JSONs with `NUMBER` text
-			expectedJSON := r.ReplaceAllString(tc.expOut, `"NUMBER"`)
+			expectedJSON := r.ReplaceAllString(tc.ExpOut, `"NUMBER"`)
 			actualJSON := r.ReplaceAllString(string(resp), `"NUMBER"`)
 
 			// compare two jsons

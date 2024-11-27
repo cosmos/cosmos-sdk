@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 
 var (
 	sum                   = sha256.Sum256([]byte("test-hash"))
+	emptyHash             = sha256.Sum256([]byte(""))
 	DefaulConsensusParams = &v1.ConsensusParams{
 		Block: &v1.BlockParams{
 			MaxGas: 5000000,
@@ -124,6 +126,7 @@ func TestConsensus_InitChain_Without_UpdateParam(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 	assertStoreLatestVersion(t, mockStore, 1)
@@ -144,6 +147,7 @@ func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -159,15 +163,16 @@ func TestConsensus_InitChain_Invalid_Height(t *testing.T) {
 		InitialHeight: 2,
 	})
 	require.NoError(t, err)
-	assertStoreLatestVersion(t, mockStore, 0)
+	assertStoreLatestVersion(t, mockStore, 1)
 
-	// Shouldn't be able to commit genesis block 2
+	// Shouldn't be able to commit genesis block 3
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
-		Height: 2,
+		Height: 3,
+		Hash:   emptyHash[:],
 	})
 	require.Error(t, err)
-	require.True(t, strings.Contains(err.Error(), "unable to commit the changeset"))
+	require.True(t, strings.Contains(err.Error(), "invalid height"))
 }
 
 func TestConsensus_FinalizeBlock_Invalid_Height(t *testing.T) {
@@ -182,12 +187,14 @@ func TestConsensus_FinalizeBlock_Invalid_Height(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 3,
+		Hash:   emptyHash[:],
 	})
 	require.Error(t, err)
 }
@@ -206,6 +213,7 @@ func TestConsensus_FinalizeBlock_NoTxs(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -236,6 +244,7 @@ func TestConsensus_FinalizeBlock_MultiTxs_OutOfGas(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -267,6 +276,7 @@ func TestConsensus_FinalizeBlock_MultiTxs(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -554,6 +564,7 @@ func TestConsensus_Info(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -570,7 +581,8 @@ func TestConsensus_Query(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Write data to state storage
-	err := c.store.GetStateStorage().ApplyChangeset(1, &store.Changeset{
+	err := c.store.GetStateStorage().ApplyChangeset(&store.Changeset{
+		Version: 1,
 		Changes: []store.StateChanges{
 			{
 				Actor: actorName,
@@ -597,6 +609,7 @@ func TestConsensus_Query(t *testing.T) {
 		Time:   time.Now(),
 		Height: 1,
 		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -625,7 +638,7 @@ func TestConsensus_Query(t *testing.T) {
 	require.Equal(t, res.Value, []byte(nil))
 }
 
-func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *Consensus[mock.Tx] {
+func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *consensus[mock.Tx] {
 	t.Helper()
 
 	msgRouterBuilder := getMsgRouterBuilder(t, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
@@ -687,22 +700,27 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		nil,
 	)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil }, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
+	return &consensus[mock.Tx]{
+		logger:           log.NewNopLogger(),
+		appName:          "testing-app",
+		app:              am,
+		mempool:          mempool,
+		store:            mockStore,
+		cfg:              Config{AppTomlConfig: DefaultAppTomlConfig()},
+		txCodec:          mock.TxCodec{},
+		chainID:          "test",
+		getProtoRegistry: sync.OnceValues(proto.MergedRegistry),
+	}
 }
 
 // Check target version same with store's latest version
 // And should have commit info of target version
-// If block 0, commitInfo returned should be nil
 func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 	t.Helper()
 	version, err := store.GetLatestVersion()
 	require.NoError(t, err)
-	require.Equal(t, version, target)
+	require.Equal(t, target, version)
 	commitInfo, err := store.GetStateCommitment().GetCommitInfo(version)
 	require.NoError(t, err)
-	if target != 0 {
-		require.Equal(t, commitInfo.Version, target)
-	} else {
-		require.Nil(t, commitInfo)
-	}
+	require.Equal(t, target, commitInfo.Version)
 }

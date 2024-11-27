@@ -77,7 +77,7 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Codec,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
-		EnablesSignModes:      ctx.TxConfig.SignModeHandler().SupportedModes(),
+		EnabledSignModes:      ctx.TxConfig.SignModeHandler().SupportedModes(),
 	})
 	if err != nil {
 		return Factory{}, err

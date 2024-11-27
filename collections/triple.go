@@ -311,6 +311,16 @@ func (t tripleKeyCodec[K1, K2, K3]) SchemaCodec() (codec.SchemaCodec[Triple[K1, 
 
 	return codec.SchemaCodec[Triple[K1, K2, K3]]{
 		Fields: []schema.Field{field1, field2, field3},
+		ToSchemaType: func(t Triple[K1, K2, K3]) (any, error) {
+			return []interface{}{t.K1(), t.K2(), t.K3()}, nil
+		},
+		FromSchemaType: func(a any) (Triple[K1, K2, K3], error) {
+			aSlice, ok := a.([]interface{})
+			if !ok || len(aSlice) != 3 {
+				return Triple[K1, K2, K3]{}, fmt.Errorf("expected slice of length 3, got %T", a)
+			}
+			return Join3(aSlice[0].(K1), aSlice[1].(K2), aSlice[2].(K3)), nil
+		},
 	}, nil
 }
 
@@ -340,5 +350,38 @@ func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1,
 	return &Range[Triple[K1, K2, K3]]{
 		start: RangeKeyExact(key),
 		end:   RangeKeyPrefixEnd(key),
+	}
+}
+
+// NewPrefixUntilTripleRangeReversed defines a collection query which ranges until the provided Pair prefix
+// in reverse order.
+// Unstable: this API might change in the future.
+func NewPrefixUntilTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+	key := TriplePrefix[K1, K2, K3](k1)
+	return &Range[Triple[K1, K2, K3]]{
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
+	}
+}
+
+// NewPrefixedTripleRangeReversed provides a Range for all keys prefixed with the given
+// first part of the Triple key in reverse order.
+func NewPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+	key := TriplePrefix[K1, K2, K3](k1)
+	return &Range[Triple[K1, K2, K3]]{
+		start: RangeKeyExact(key),
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
+	}
+}
+
+// NewSuperPrefixedTripleRangeReversed provides a Range for all keys prefixed with the given
+// first and second parts of the Triple key in reverse order.
+func NewSuperPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1, K2, K3]] {
+	key := TripleSuperPrefix[K1, K2, K3](k1, k2)
+	return &Range[Triple[K1, K2, K3]]{
+		start: RangeKeyExact(key),
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
 	}
 }

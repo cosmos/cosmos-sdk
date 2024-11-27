@@ -8,18 +8,20 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestBankV2SendTxCmd(t *testing.T) {
 	// Currently only run with app v2
-	if !isV2() {
+	if !systest.IsV2() {
 		t.Skip()
 	}
 	// scenario: test bank send command
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	valAddr := gjson.Get(cli.Keys("keys", "list"), "1.address").String()
@@ -28,7 +30,7 @@ func TestBankV2SendTxCmd(t *testing.T) {
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 	denom := "stake"
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// query validator balance and make sure it has enough balance
 	var transferAmount int64 = 1000
@@ -43,7 +45,7 @@ func TestBankV2SendTxCmd(t *testing.T) {
 	rsp := cli.Run(append(bankSendCmdArgs, "--fees=1stake")...)
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 
 	// Check balance after send
 	valRaw := cli.CustomQuery("q", "bankv2", "balance", valAddr, denom)

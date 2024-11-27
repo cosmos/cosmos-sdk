@@ -56,7 +56,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 			if isCriticalField || !allowUnknownNonCriticals {
 				// The tag is critical, so report it.
 				return hasUnknownNonCriticals, ErrUnknownField.Wrapf(
-					"%s: {TagNum: %d, WireType:%q}",
+					"%s: {TagNum: %d, WireType:%q} ------ HERES!",
 					desc.FullName(), tagNum, WireTypeToString(wireType))
 			}
 		}
@@ -140,7 +140,7 @@ type errUnknownField struct {
 
 // String implements fmt.Stringer.
 func (twt *errUnknownField) String() string {
-	return fmt.Sprintf("errUnknownField %q: {TagNum: %d, WireType:%q}",
+	return fmt.Sprintf("errUnknownField %q: {TagNum: %d, WireType:%q} ----- HEREEE112222",
 		twt.Desc.FullName(), twt.TagNum, WireTypeToString(twt.WireType))
 }
 

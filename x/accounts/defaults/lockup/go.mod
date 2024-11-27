@@ -1,6 +1,6 @@
 module cosmossdk.io/x/accounts/defaults/lockup
 
-go 1.23.2
+go 1.23.1
 
 require (
 	cosmossdk.io/collections v0.4.0

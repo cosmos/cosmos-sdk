@@ -1,6 +1,6 @@
 module cosmossdk.io/x/authz
 
-go 1.23.2
+go 1.23.1
 
 require (
 	cosmossdk.io/api v0.7.6

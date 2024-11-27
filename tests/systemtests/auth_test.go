@@ -55,7 +55,7 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	newSignFile := systest.StoreTempFile(t, []byte(updated))
 
 	broadcastCmd := []string{"tx", "broadcast", newSignFile.Name()}
-	rsp = cli.RunCommandWithArgs(cli.WithTXFlags(broadcastCmd...)...)
+	rsp = cli.WithRunErrorsIgnored().RunCommandWithArgs(cli.WithTXFlags(broadcastCmd...)...) //  // ignore run errors, as comet exit with 1 on rpc errors
 	systest.RequireTxFailure(t, rsp)
 
 	// test sign-batch tx command

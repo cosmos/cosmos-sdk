@@ -17,11 +17,10 @@ import (
 
 func newTestRootStore(ss store.VersionedWriter, sc store.Committer) *Store {
 	noopLog := coretesting.NewNopLogger()
-	pm := pruning.NewManager(sc.(store.Pruner), ss.(store.Pruner), nil, nil)
+	pm := pruning.NewManager(sc.(store.Pruner), nil)
 	return &Store{
 		logger:          noopLog,
 		telemetry:       metrics.Metrics{},
-		stateStorage:    ss,
 		stateCommitment: sc,
 		pruningManager:  pm,
 		isMigrating:     false,

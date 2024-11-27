@@ -34,9 +34,6 @@ type Store struct {
 	// holds the db instance for closing it
 	dbCloser io.Closer
 
-	// stateStorage reflects the state storage backend
-	stateStorage store.VersionedWriter
-
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
 
@@ -67,7 +64,6 @@ type Store struct {
 func New(
 	dbCloser io.Closer,
 	logger corelog.Logger,
-	ss store.VersionedWriter,
 	sc store.Committer,
 	pm *pruning.Manager,
 	mm *migration.Manager,
@@ -76,7 +72,6 @@ func New(
 	return &Store{
 		dbCloser:         dbCloser,
 		logger:           logger,
-		stateStorage:     ss,
 		stateCommitment:  sc,
 		pruningManager:   pm,
 		migrationManager: mm,
@@ -88,11 +83,9 @@ func New(
 // Close closes the store and resets all internal fields. Note, Close() is NOT
 // idempotent and should only be called once.
 func (s *Store) Close() (err error) {
-	err = errors.Join(err, s.stateStorage.Close())
 	err = errors.Join(err, s.stateCommitment.Close())
 	err = errors.Join(err, s.dbCloser.Close())
 
-	s.stateStorage = nil
 	s.stateCommitment = nil
 	s.lastCommitInfo = nil
 
@@ -113,13 +106,6 @@ func (s *Store) SetInitialVersion(v uint64) error {
 // and the version exists in the state commitment, since the state storage will be
 // synced during migration.
 func (s *Store) getVersionedReader(version uint64) (store.VersionedReader, error) {
-	isExist, err := s.stateStorage.VersionExists(version)
-	if err != nil {
-		return nil, err
-	}
-	if isExist {
-		return s.stateStorage, nil
-	}
 
 	if vReader, ok := s.stateCommitment.(store.VersionedReader); ok {
 		isExist, err := vReader.VersionExists(version)
@@ -152,10 +138,6 @@ func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
 	vReader, err := s.getVersionedReader(v)
 	return NewReaderMap(v, vReader), err
-}
-
-func (s *Store) GetStateStorage() store.VersionedWriter {
-	return s.stateStorage
 }
 
 func (s *Store) GetStateCommitment() store.Committer {
@@ -282,14 +264,15 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 		return err
 	}
 
-	// if the state storage implements the UpgradableDatabase interface, prune the
-	// deleted store keys
-	upgradableDatabase, ok := s.stateStorage.(store.UpgradableDatabase)
-	if ok {
-		if err := upgradableDatabase.PruneStoreKeys(upgrades.Deleted, version); err != nil {
-			return fmt.Errorf("failed to prune store keys %v: %w", upgrades.Deleted, err)
-		}
-	}
+	//TODO why are we not pruning sc keys?
+	// // if the state storage implements the UpgradableDatabase interface, prune the
+	// // deleted store keys
+	// upgradableDatabase, ok := s.stateStorage.(store.UpgradableDatabase)
+	// if ok {
+	// 	if err := upgradableDatabase.PruneStoreKeys(upgrades.Deleted, version); err != nil {
+	// 		return fmt.Errorf("failed to prune store keys %v: %w", upgrades.Deleted, err)
+	// 	}
+	// }
 
 	return nil
 }
@@ -347,18 +330,6 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	s.pruningManager.PausePruning()
 
 	eg := new(errgroup.Group)
-
-	// if migrating the changeset will be sent to migration manager to fill SS
-	// otherwise commit to SS async here
-	if !s.isMigrating {
-		eg.Go(func() error {
-			if err := s.stateStorage.ApplyChangeset(cs); err != nil {
-				return fmt.Errorf("failed to commit SS: %w", err)
-			}
-
-			return nil
-		})
-	}
 
 	// commit SC async
 	var cInfo *proof.CommitInfo

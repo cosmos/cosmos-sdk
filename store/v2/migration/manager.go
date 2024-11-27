@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
-	"cosmossdk.io/store/v2/storage"
 )
 
 const (
@@ -39,7 +38,6 @@ type Manager struct {
 	logger           log.Logger
 	snapshotsManager *snapshots.Manager
 
-	stateStorage    *storage.StorageStore
 	stateCommitment *commitment.CommitStore
 
 	db              corestore.KVStoreWithBatch
@@ -53,11 +51,10 @@ type Manager struct {
 // NewManager returns a new Manager.
 //
 // NOTE: `sc` can be `nil` if don't want to migrate the commitment.
-func NewManager(db corestore.KVStoreWithBatch, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
+func NewManager(db corestore.KVStoreWithBatch, sm *snapshots.Manager, sc *commitment.CommitStore, logger log.Logger) *Manager {
 	return &Manager{
 		logger:           logger,
 		snapshotsManager: sm,
-		stateStorage:     ss,
 		stateCommitment:  sc,
 		db:               db,
 	}

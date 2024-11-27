@@ -57,8 +57,6 @@ type RootStore interface {
 
 // Backend defines the interface for the RootStore backends.
 type Backend interface {
-	// GetStateStorage returns the SS backend.
-	GetStateStorage() VersionedWriter
 
 	// GetStateCommitment returns the SC backend.
 	GetStateCommitment() Committer

@@ -13,8 +13,6 @@ import (
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 var storeKeys = []string{"store1", "store2"}
@@ -37,10 +35,6 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 
 	snapshotsManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), commitStore, nil, nil, coretesting.NewNopLogger())
 
-	storageDB, err := pebbledb.New(t.TempDir())
-	require.NoError(t, err)
-	newStorageStore := storage.NewStorageStore(storageDB, coretesting.NewNopLogger()) // for store/v2
-
 	db1 := dbm.NewMemDB()
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
@@ -54,7 +48,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 		newCommitStore = nil
 	}
 
-	return NewManager(db, snapshotsManager, newStorageStore, newCommitStore, coretesting.NewNopLogger()), commitStore
+	return NewManager(db, snapshotsManager, newCommitStore, coretesting.NewNopLogger()), commitStore
 }
 
 func TestMigrateState(t *testing.T) {

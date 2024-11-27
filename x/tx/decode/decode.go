@@ -72,7 +72,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	// Make sure txBytes follow ADR-027.
 	err := rejectNonADR027TxRaw(txBytes)
 	if err != nil {
-		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE %x", txBytes))
 	}
 
 	var raw v1beta1.TxRaw
@@ -81,12 +81,12 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	fileResolver := d.signingCtx.FileResolver()
 	err = RejectUnknownFieldsStrict(txBytes, raw.ProtoReflect().Descriptor(), fileResolver)
 	if err != nil {
-		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE 1 %x", txBytes))
 	}
 
 	err = proto.Unmarshal(txBytes, &raw)
 	if err != nil {
-		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE 2 %x", txBytes))
 	}
 
 	var body v1beta1.TxBody
@@ -94,12 +94,12 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	// allow non-critical unknown fields in TxBody
 	txBodyHasUnknownNonCriticals, err := RejectUnknownFields(raw.BodyBytes, body.ProtoReflect().Descriptor(), true, fileResolver)
 	if err != nil {
-		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE 3 %x", txBytes))
 	}
 
 	err = proto.Unmarshal(raw.BodyBytes, &body)
 	if err != nil {
-		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE 4 %x", txBytes))
 	}
 
 	var authInfo v1beta1.AuthInfo
@@ -107,12 +107,12 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	// reject all unknown proto fields in AuthInfo
 	err = RejectUnknownFieldsStrict(raw.AuthInfoBytes, authInfo.ProtoReflect().Descriptor(), fileResolver)
 	if err != nil {
-		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE 5 %x", txBytes))
 	}
 
 	err = proto.Unmarshal(raw.AuthInfoBytes, &authInfo)
 	if err != nil {
-		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE 6 %x", txBytes))
 	}
 
 	theTx := &v1beta1.Tx{
@@ -150,14 +150,14 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		msg := reflect.New(gogoType.Elem()).Interface().(gogoproto.Message)
 		err = d.codec.Unmarshal(anyMsg.Value, msg)
 		if err != nil {
-			return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+			return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE 7 %x", txBytes))
 		}
 		msgs = append(msgs, msg)
 
 		// fetch signers with dynamic message
 		ss, signerErr := d.signingCtx.GetSigners(dynamicMsg)
 		if signerErr != nil {
-			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error())
+			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error()+fmt.Sprintf("HEREEE 8 %x", txBytes))
 		}
 		for _, s := range ss {
 			_, seen := seenSigners[string(s)]
@@ -173,7 +173,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	if authInfo.Fee != nil && authInfo.Fee.Payer != "" {
 		feeAddr, err := d.signingCtx.AddressCodec().StringToBytes(authInfo.Fee.Payer)
 		if err != nil {
-			return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+			return nil, errorsmod.Wrap(ErrTxDecode, err.Error()+fmt.Sprintf("HEREEE 9 %x", txBytes))
 		}
 
 		if _, seen := seenSigners[string(feeAddr)]; !seen {

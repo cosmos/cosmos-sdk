@@ -10,8 +10,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/runtime/v2/services"
-	"cosmossdk.io/server/v2/stf"
 	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -97,7 +95,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	}
 	startupCfg.GenesisAccounts = genAccounts
 	res.App, err = integration.NewApp(
-		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger(), services.NewGenesisHeaderService(stf.HeaderService{}))),
+		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
 		startupCfg, nil, nil,
 		&res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
 	require.NoError(t, err)

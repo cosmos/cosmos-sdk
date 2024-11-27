@@ -100,9 +100,13 @@ func createTestFixture(t *testing.T) *fixture {
 
 	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
 
+	startupCfg.BranchService = &integration.BranchService{}
+	startupCfg.RouterServiceBuilder = serviceBuilder
+	startupCfg.HeaderService = &integration.HeaderService{}
+
 	res.app, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger(), &integration.HeaderService{})),
-		startupCfg, &integration.BranchService{}, serviceBuilder,
+		startupCfg,
 		&res.bankKeeper, &res.distrKeeper, &res.authKeeper, &res.stakingKeeper, &res.poolKeeper, &res.cdc)
 	require.NoError(t, err)
 

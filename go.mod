@@ -3,7 +3,7 @@ go 1.23.1
 module github.com/cosmos/cosmos-sdk
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20240701160653-fedbb9acfd2f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
 	cosmossdk.io/core v1.0.0-alpha.6
@@ -86,7 +86,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
-	github.com/cosmos/iavl v1.3.1 // indirect
+	github.com/cosmos/iavl v1.3.2 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -186,7 +186,7 @@ require (
 // TODO remove after all modules have their own go.mods
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241111180559-13c234f421e8 // main
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241127063259-f296a5005ce8 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
 	cosmossdk.io/x/bank => ./x/bank

@@ -133,7 +133,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			profilePicUri, _ := cmd.Flags().GetString(FlagMetadataProfilePicUri)
 			socialHandlesUris, _ := cmd.Flags().GetStringArray(FlagMetadataSocialHandleUris)
 
-			metadata := types.Metadata{
+			metadata := &types.Metadata{
 				ProfilePicUri:    profilePicUri,
 				SocialHandleUris: socialHandlesUris,
 			}
@@ -401,7 +401,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		config.Website,
 		config.SecurityContact,
 		config.Details,
-		config.Metadata,
+		&config.Metadata,
 	)
 
 	// get the initial validator commission parameters

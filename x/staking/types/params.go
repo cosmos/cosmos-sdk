@@ -110,7 +110,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateKeyRotationFee(p.KeyRotationFee); err != nil {
+	if err := validateKeyRotationFee(p.BondDenom, p.KeyRotationFee); err != nil {
 		return err
 	}
 
@@ -215,17 +215,13 @@ func validateMinCommissionRate(i interface{}) error {
 	return nil
 }
 
-func validateKeyRotationFee(i interface{}) error {
-	v, ok := i.(sdk.Coin)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+func validateKeyRotationFee(bondDenom string, coin sdk.Coin) error {
+	if coin.IsNil() {
+		return fmt.Errorf("cons pubkey rotation fee cannot be nil: %s", coin)
 	}
 
-	if v.IsNil() {
-		return fmt.Errorf("cons pubkey rotation fee cannot be nil: %s", v)
-	}
-	if v.IsLTE(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)) {
-		return fmt.Errorf("cons pubkey rotation fee cannot be negative or zero: %s", v)
+	if coin.IsLTE(sdk.NewInt64Coin(bondDenom, 0)) {
+		return fmt.Errorf("cons pubkey rotation fee cannot be negative or zero: %s", coin)
 	}
 
 	return nil

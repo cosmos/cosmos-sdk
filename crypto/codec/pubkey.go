@@ -1,6 +1,8 @@
 package codec
 
 import (
+	"github.com/cometbft/cometbft/crypto/bls12381"
+
 	"cosmossdk.io/errors"
 
 	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -29,7 +31,7 @@ func PubKeyToProto(pk cryptokeys.JSONPubkey) (cryptotypes.PubKey, error) {
 		return &secp256k1.PubKey{
 			Key: pk.Value,
 		}, nil
-	case bls12_381.PubKeyName:
+	case bls12381.PubKeyName:
 		return &bls12_381.PubKey{
 			Key: pk.Value,
 		}, nil
@@ -60,7 +62,7 @@ func PubKeyFromProto(pk cryptotypes.PubKey) (cryptokeys.JSONPubkey, error) {
 		}, nil
 	case *bls12_381.PubKey:
 		return cryptokeys.JSONPubkey{
-			KeyType: bls12_381.PubKeyName,
+			KeyType: bls12381.PubKeyName,
 			Value:   pk.Bytes(),
 		}, nil
 	default:

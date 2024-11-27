@@ -430,7 +430,7 @@ func (k Keeper) TokenizeShareRecordReward(c context.Context, req *types.QueryTok
 				RecordId: record.Id,
 				Reward:   recordReward.Add(moduleBalanceDecCoins...),
 			})
-			totalRewards = totalRewards.Add(recordReward...)
+			totalRewards = totalRewards.Add(recordReward...).Add(moduleBalanceDecCoins...)
 		} else if !moduleBalance.IsZero() {
 			rewards = append(rewards, types.TokenizeShareRecordReward{
 				RecordId: record.Id,

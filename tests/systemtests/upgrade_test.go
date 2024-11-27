@@ -19,16 +19,13 @@ import (
 )
 
 func TestChainUpgrade(t *testing.T) {
-	// err> panic: failed to load latest version: failed to load store: initial version set to 22, but found earlier version 1 [cosmossdk.io/store@v1.1.1/rootmulti/store.go:256]
-	t.Skip("Skipped until any v052 artifact is available AND main branch handles the store upgrade proper")
-
 	// Scenario:
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed
 	// then the chain upgrades successfully
 	systest.Sut.StopChain()
 
-	legacyBinary := FetchExecutable(t, "v0.52")
+	legacyBinary := FetchExecutable(t, "0.52.0-beta.3")
 	t.Logf("+++ legacy binary: %s\n", legacyBinary)
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()

@@ -83,24 +83,24 @@ Module Dependencies are the modules that an application may depend on and which 
 > X signals that the module was not spun out into its own go.mod file.
 > N/A signals that the module was not available in the Cosmos SDK at that time.
 
-| Cosmos SDK                  | 0.50.z | 0.52.z |
-| --------------------------- | ------ | ------ |
-| cosmossdk.io/x/accounts     | N/A    | 0.2.z  |
-| cosmossdk.io/x/bank         | X      | 0.2.z  |
-| cosmossdk.io/x/circuit      | 0.1.z  | 0.2.z  |
-| cosmossdk.io/x/consensus    | X      | 0.2.z  |
-| cosmossdk.io/x/distribution | X      | 0.2.z  |
-| cosmossdk.io/x/epochs       | N/A    | 0.2.z  |
-| cosmossdk.io/x/evidence     | 0.1.z  | 0.2.z  |
-| cosmossdk.io/x/feegrant     | 0.1.z  | 0.2.z  |
-| cosmossdk.io/x/gov          | X      | 0.2.z  |
-| cosmossdk.io/x/group        | X      | 0.2.z  |
-| cosmossdk.io/x/mint         | X      | 0.2.z  |
-| cosmossdk.io/x/nft          | 0.1.z  | 0.2.z  |
-| cosmossdk.io/x/protocolpool | N/A    | 0.2.z  |
-| cosmossdk.io/x/slashing     | X      | 0.2.z  |
-| cosmossdk.io/x/staking      | X      | 0.2.z  |
-| cosmossdk.io/x/upgrade      | 0.1.z  | 0.2.z  |
+| Cosmos SDK                   | 0.50.z | 0.52.z |
+| ---------------------------  | ------ | ------ |
+| cosmos-sdk.io/x/accounts     | N/A    | 0.2.z  |
+| cosmos-sdk.io/x/bank         | X      | 0.2.z  |
+| cosmos-sdk.io/x/circuit      | 0.1.z  | 0.2.z  |
+| cosmos-sdk.io/x/consensus    | X      | 0.2.z  |
+| cosmos-sdk.io/x/distribution | X      | 0.2.z  |
+| cosmos-sdk.io/x/epochs       | N/A    | 0.2.z  |
+| cosmos-sdk.io/x/evidence     | 0.1.z  | 0.2.z  |
+| cosmos-sdk.io/x/feegrant     | 0.1.z  | 0.2.z  |
+| cosmos-sdk.io/x/gov          | X      | 0.2.z  |
+| cosmos-sdk.io/x/group        | X      | 0.2.z  |
+| cosmos-sdk.io/x/mint         | X      | 0.2.z  |
+| cosmos-sdk.io/x/nft          | 0.1.z  | 0.2.z  |
+| cosmos-sdk.io/x/protocolpool | N/A    | 0.2.z  |
+| cosmos-sdk.io/x/slashing     | X      | 0.2.z  |
+| cosmos-sdk.io/x/staking      | X      | 0.2.z  |
+| cosmos-sdk.io/x/upgrade      | 0.1.z  | 0.2.z  |
 
 ## Disambiguation
 

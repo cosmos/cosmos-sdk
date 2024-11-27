@@ -37,6 +37,8 @@ var (
 	ExecBinaryUnversionedRegExp = regexp.MustCompile(`^(\w+)-?.*$`)
 
 	MaxGas = 10_000_000
+	// DefaultApiPort is the port for the node to interact with
+	DefaultApiPort = 1317
 )
 
 type TestnetInitializer interface {
@@ -89,7 +91,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		outputDir:         "./testnet",
 		blockTime:         blockTime,
 		rpcAddr:           "tcp://localhost:26657",
-		apiAddr:           fmt.Sprintf("http://localhost:%d", apiPortStart),
+		apiAddr:           fmt.Sprintf("http://localhost:%d", DefaultApiPort),
 		initialNodesCount: nodesCount,
 		outBuff:           ring.New(100),
 		errBuff:           ring.New(100),
@@ -99,16 +101,32 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		projectName:       nameTokens[0],
 		pids:              make(map[int]struct{}, nodesCount),
 	}
-	s.testnetInitializer = NewSingleHostTestnetCmdInitializer(execBinary, WorkDir, s.chainID, s.outputDir, s.initialNodesCount, s.minGasPrice, s.CommitTimeout(), s.Log)
+	if len(initer) > 0 {
+		s.testnetInitializer = initer[0]
+	} else {
+		s.testnetInitializer = NewSingleHostTestnetCmdInitializer(execBinary, WorkDir, s.chainID, s.outputDir, s.initialNodesCount, s.minGasPrice, s.CommitTimeout(), s.Log)
+	}
 	return s
 }
 
+// SetExecBinary sets the executable binary for the system under test.
 func (s *SystemUnderTest) SetExecBinary(binary string) {
 	s.execBinary = binary
 }
 
+// ExecBinary returns the path of the binary executable associated with the SystemUnderTest instance.
+func (s *SystemUnderTest) ExecBinary() string {
+	return s.execBinary
+}
+
+// SetTestnetInitializer sets the initializer for the testnet configuration.
 func (s *SystemUnderTest) SetTestnetInitializer(testnetInitializer TestnetInitializer) {
 	s.testnetInitializer = testnetInitializer
+}
+
+// TestnetInitializer returns the testnet initializer associated with the SystemUnderTest.
+func (s *SystemUnderTest) TestnetInitializer() TestnetInitializer {
+	return s.testnetInitializer
 }
 
 // CommitTimeout returns the max time to wait for a commit. Default to 90% of block time
@@ -761,6 +779,10 @@ func (s *SystemUnderTest) CurrentHeight() int64 {
 // NodesCount returns the number of node instances used
 func (s *SystemUnderTest) NodesCount() int {
 	return s.nodesCount
+}
+
+func (s *SystemUnderTest) BlockTime() time.Duration {
+	return s.blockTime
 }
 
 type Node struct {

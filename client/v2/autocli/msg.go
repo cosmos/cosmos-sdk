@@ -278,6 +278,8 @@ func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transa
 
 // userConfirmation returns a function that prompts the user for confirmation
 // before signing and broadcasting a transaction.
+//
+//nolint:unused // It is used in generateOrBroadcastTxWithV2 however linting is complaining.
 func (b *Builder) userConfirmation(cmd *cobra.Command) func([]byte) (bool, error) {
 	format, _ := cmd.Flags().GetString(flags.FlagOutput)
 	printer := print.Printer{

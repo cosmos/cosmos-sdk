@@ -581,7 +581,7 @@ func TestConsensus_Query(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Write data to state storage
-	err := c.store.GetStateStorage().ApplyChangeset(&store.Changeset{
+	err := c.store.GetStateCommitment().WriteChangeset(&store.Changeset{
 		Version: 1,
 		Changes: []store.StateChanges{
 			{
@@ -596,6 +596,8 @@ func TestConsensus_Query(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
+	_, err = c.store.GetStateCommitment().Commit(1)
 	require.NoError(t, err)
 
 	_, err = c.InitChain(context.Background(), &abciproto.InitChainRequest{
@@ -681,9 +683,8 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	)
 	require.NoError(t, err)
 
-	ss := cometmock.NewMockStorage(log.NewNopLogger(), t.TempDir())
 	sc := cometmock.NewMockCommiter(log.NewNopLogger(), string(actorName), "stf")
-	mockStore := cometmock.NewMockStore(ss, sc)
+	mockStore := cometmock.NewMockStore(sc)
 
 	am := appmanager.New(appmanager.Config{
 		ValidateTxGasLimit: gasLimit,

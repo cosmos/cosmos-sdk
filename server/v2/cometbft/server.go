@@ -126,7 +126,6 @@ func New[T transaction.Tx](
 		indexEvents[e] = struct{}{}
 	}
 
-	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
 	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
 
 	snapshotStore, err := GetSnapshotStore(srv.config.ConfigTomlConfig.RootDir)
@@ -154,7 +153,6 @@ func New[T transaction.Tx](
 		snapshotStore,
 		srv.serverOptions.SnapshotOptions(cfg),
 		sc,
-		ss,
 		nil, // extensions snapshotter registered below
 		logger,
 	)

@@ -180,29 +180,9 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
-	var val []byte
-	var err error
-	if s.isMigrating { // if we're migrating, we need to query the SC backend
-		val, err = s.stateCommitment.Get(storeKey, version, key)
-		if err != nil {
-			return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
-		}
-	} else {
-		val, err = s.stateStorage.Get(storeKey, version, key)
-		if err != nil {
-			return store.QueryResult{}, fmt.Errorf("failed to query SS store: %w", err)
-		}
-		if val == nil {
-			// fallback to querying SC backend if not found in SS backend
-			//
-			// Note, this should only used during migration, i.e. while SS and IAVL v2
-			// are being asynchronously synced.
-			bz, scErr := s.stateCommitment.Get(storeKey, version, key)
-			if scErr != nil {
-				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", scErr)
-			}
-			val = bz
-		}
+	val, err := s.stateCommitment.Get(storeKey, version, key)
+	if err != nil {
+		return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
 	}
 
 	result := store.QueryResult{

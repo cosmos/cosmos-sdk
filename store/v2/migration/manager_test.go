@@ -33,7 +33,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 	snapshotsStore, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 
-	snapshotsManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), commitStore, nil, nil, coretesting.NewNopLogger())
+	snapshotsManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), commitStore, nil, coretesting.NewNopLogger())
 
 	db1 := dbm.NewMemDB()
 	multiTrees1 := make(map[string]commitment.Tree)

@@ -68,7 +68,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 
 	snapshotsStore, err := snapshots.NewStore(s.T().TempDir())
 	s.Require().NoError(err)
-	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, nil, testLog)
+	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, testLog)
 	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, sc, testLog)
 	pm := pruning.NewManager(sc, nil)
 
@@ -108,7 +108,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 		s.Require().NoError(err)
 
 		// check if the migration is completed
-		ver, err := s.rootStore.GetStateStorage().GetLatestVersion()
+		ver, err := s.rootStore.GetLatestVersion()
 		s.Require().NoError(err)
 		if ver == latestVersion {
 			break

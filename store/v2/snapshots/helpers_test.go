@@ -169,22 +169,6 @@ func (m *mockCommitSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{snapshotstypes.CurrentFormat}
 }
 
-type mockStorageSnapshotter struct {
-	items map[string][]byte
-}
-
-func (m *mockStorageSnapshotter) Restore(version uint64, chStorage <-chan *corestore.StateChanges) error {
-	// mock consuming chStorage to check if the loop closed properly
-	//
-	// ref: https://github.com/cosmos/cosmos-sdk/pull/21106
-	for change := range chStorage {
-		for _, kv := range change.StateChanges {
-			m.items[string(kv.Key)] = kv.Value
-		}
-	}
-	return nil
-}
-
 type mockErrorCommitSnapshotter struct{}
 
 var _ snapshots.CommitSnapshotter = (*mockErrorCommitSnapshotter)(nil)
@@ -214,7 +198,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	store, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 	hung := newHungCommitSnapshotter()
-	mgr := snapshots.NewManager(store, opts, hung, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
+	mgr := snapshots.NewManager(store, opts, hung, nil, coretesting.NewNopLogger())
 
 	// Channel to ensure the test doesn't finish until the goroutine is done.
 	// Without this, there are intermittent test failures about

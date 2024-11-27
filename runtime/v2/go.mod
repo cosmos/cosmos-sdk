@@ -65,7 +65,6 @@ require (
 	github.com/linxGnu/grocksdb v1.9.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/gomega v1.28.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

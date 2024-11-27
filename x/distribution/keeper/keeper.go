@@ -133,7 +133,7 @@ func NewKeeper(
 			"validator_historical_rewards",
 			collections.NamedPairKeyCodec(
 				"validator_address",
-				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey),
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 				"period",
 				sdk.LEUint64Key,
 			),
@@ -145,7 +145,7 @@ func NewKeeper(
 			"validator_slash_events",
 			collections.NamedTripleKeyCodec(
 				"validator_address",
-				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey),
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 				"height",
 				collections.Uint64Key,
 				"period",

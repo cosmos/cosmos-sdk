@@ -61,9 +61,9 @@ func TestExportCmd_WithHeight(t *testing.T) {
 		args          []string
 		expZeroHeight bool
 	}{
-		{"should export correct height", []string{"genesis", "export", "--home", systest.Sut.NodeDir(0)}, false},
+		{"should export correct height", []string{"genesis", "export", "--home", systest.Sut.NodeDir(0), "--log_level=disabled"}, false},
 		{"should export correct height with --height", []string{"genesis", "export", "--height=5", "--home", systest.Sut.NodeDir(0), "--log_level=disabled"}, false},
-		{"should export height 0 with --for-zero-height", []string{"genesis", "export", "--for-zero-height=true", "--home", systest.Sut.NodeDir(0)}, true},
+		{"should export height 0 with --for-zero-height", []string{"genesis", "export", "--for-zero-height=true", "--home", systest.Sut.NodeDir(0), "--log_level=disabled"}, true},
 	}
 
 	for _, tc := range testCases {

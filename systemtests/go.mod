@@ -1,6 +1,8 @@
 module cosmossdk.io/systemtests
 
-go 1.23
+go 1.23.1
+
+toolchain go1.23.3
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
@@ -26,7 +28,7 @@ require (
 require (
 	cosmossdk.io/math v1.4.0
 	github.com/cometbft/cometbft v0.38.15
-	github.com/cometbft/cometbft/api v1.0.0-rc.1
+	github.com/cometbft/cometbft/api v1.0.0-rc2
 	github.com/creachadair/tomledit v0.0.26
 	github.com/tidwall/gjson v1.14.2
 	github.com/tidwall/sjson v1.2.5

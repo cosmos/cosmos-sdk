@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"os"
-
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
@@ -291,14 +289,14 @@ func (b *Builder) userConfirmation(cmd *cobra.Command) func([]byte) (bool, error
 		if err != nil {
 			return false, err
 		}
-		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
+		buf := bufio.NewReader(cmd.InOrStdin())
+		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, cmd.ErrOrStderr())
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncanceled transaction\n", err)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "error: %v\ncanceled transaction\n", err)
 			return false, err
 		}
 		if !ok {
-			_, _ = fmt.Fprintln(os.Stderr, "canceled transaction")
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "canceled transaction")
 			return false, nil
 		}
 

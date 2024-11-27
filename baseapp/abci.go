@@ -971,8 +971,6 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 	header := app.finalizeBlockState.Context().BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
-	fmt.Println("Commit", header.Height)
-
 	if app.precommiter != nil {
 		app.precommiter(app.finalizeBlockState.Context())
 	}

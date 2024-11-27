@@ -126,12 +126,24 @@ func (c *CometBFTBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]
 func (c *CometBFTBroadcaster) broadcast(ctx context.Context, txBytes []byte,
 	fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error),
 ) (*apiacbci.TxResponse, error) {
-	bResult, err := fn(ctx, txBytes)
+	res, err := fn(ctx, txBytes)
 	if errRes := checkCometError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}
 
-	return newResponseFormatBroadcastTx(bResult), err
+	if res == nil {
+		return nil, err
+	}
+
+	parsedLogs, _ := parseABCILogs(res.Log)
+	return &apiacbci.TxResponse{
+		Code:      res.Code,
+		Codespace: res.Codespace,
+		Data:      res.Data.String(),
+		RawLog:    res.Log,
+		Logs:      parsedLogs,
+		Txhash:    res.Hash.String(),
+	}, err
 }
 
 // checkCometError checks for errors returned by the CometBFT network and returns an appropriate TxResponse.
@@ -145,7 +157,8 @@ func checkCometError(err error, tx cmttypes.Tx) *apiacbci.TxResponse {
 	txHash := fmt.Sprintf("%X", tx.Hash())
 
 	switch {
-	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())):
+	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())) ||
+		strings.Contains(errStr, strings.ToLower(sdkerrors.ErrTxInMempoolCache.Error())):
 		return &apiacbci.TxResponse{
 			Code:      sdkerrors.ErrTxInMempoolCache.ABCICode(),
 			Codespace: sdkerrors.ErrTxInMempoolCache.Codespace(),
@@ -166,31 +179,15 @@ func checkCometError(err error, tx cmttypes.Tx) *apiacbci.TxResponse {
 			Txhash:    txHash,
 		}
 
-	default:
+	case strings.Contains(errStr, "no signatures supplied"):
 		return &apiacbci.TxResponse{
-			Code:      999, // unknown code
-			Codespace: sdkerrors.RootCodespace,
-			RawLog:    errStr,
+			Code:      sdkerrors.ErrNoSignatures.ABCICode(),
+			Codespace: sdkerrors.ErrNoSignatures.Codespace(),
 			Txhash:    txHash,
 		}
-	}
-}
 
-// newResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from cometbft
-func newResponseFormatBroadcastTx(res *coretypes.ResultBroadcastTx) *apiacbci.TxResponse {
-	if res == nil {
+	default:
 		return nil
-	}
-
-	parsedLogs, _ := parseABCILogs(res.Log)
-
-	return &apiacbci.TxResponse{
-		Code:      res.Code,
-		Codespace: res.Codespace,
-		Data:      res.Data.String(),
-		RawLog:    res.Log,
-		Logs:      parsedLogs,
-		Txhash:    res.Hash.String(),
 	}
 }
 

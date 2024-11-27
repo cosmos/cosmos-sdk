@@ -49,7 +49,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog)
+	ss := storage.NewStorageStore(sqliteDB, noopLog, nil)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, nil, iavl.DefaultConfig())
 	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, nil, iavl.DefaultConfig())
@@ -69,7 +69,7 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog)
+	ss := storage.NewStorageStore(sqliteDB, noopLog, nil)
 
 	mdb := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
@@ -537,7 +537,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	mdb2 := dbm.NewMemDB()
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog)
+	ss := storage.NewStorageStore(sqliteDB, noopLog, nil)
 
 	tree := iavl.NewIavlTree(mdb1, noopLog, nil, iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
@@ -568,7 +568,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	// "restart"
 	sqliteDB, err = sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss = storage.NewStorageStore(sqliteDB, noopLog)
+	ss = storage.NewStorageStore(sqliteDB, noopLog, nil)
 
 	tree = iavl.NewIavlTree(mdb1, noopLog, nil, iavl.DefaultConfig())
 	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
@@ -619,7 +619,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	ss := storage.NewStorageStore(sqliteDB, noopLog)
+	ss := storage.NewStorageStore(sqliteDB, noopLog, nil)
 
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()

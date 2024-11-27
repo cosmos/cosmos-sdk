@@ -3,9 +3,12 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"sync"
+	"time"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/snapshots"
 )
@@ -16,38 +19,59 @@ const (
 )
 
 var (
-	_ store.VersionedWriter        = (*StorageStore)(nil)
-	_ snapshots.StorageSnapshotter = (*StorageStore)(nil)
-	_ store.Pruner                 = (*StorageStore)(nil)
-	_ store.UpgradableDatabase     = (*StorageStore)(nil)
+	_              store.VersionedWriter        = (*StorageStore)(nil)
+	_              snapshots.StorageSnapshotter = (*StorageStore)(nil)
+	_              store.Pruner                 = (*StorageStore)(nil)
+	_              store.UpgradableDatabase     = (*StorageStore)(nil)
+	once                                        = sync.Once{}
+	metricOpKey                                 = []string{"store", "ss", "op"}
+	metricApplyKey                              = []string{"store", "ss", "apply"}
+	metricPruneKey                              = []string{"store", "ss", "prune"}
+	removeLabel                                 = telemetry.Label{Name: "method", Value: "remove"}
+	getLabel                                    = telemetry.Label{Name: "method", Value: "get"}
+	hasLabel                                    = telemetry.Label{Name: "method", Value: "has"}
+	setLabel                                    = telemetry.Label{Name: "method", Value: "set"}
 )
 
 // StorageStore is a wrapper around the store.VersionedWriter interface.
 type StorageStore struct {
 	logger log.Logger
+	ts     telemetry.Service
 	db     Database
 }
 
 // NewStorageStore returns a reference to a new StorageStore.
-func NewStorageStore(db Database, logger log.Logger) *StorageStore {
+func NewStorageStore(db Database, logger log.Logger, ts telemetry.Service) *StorageStore {
+	if ts == nil {
+		ts = &telemetry.NopService{}
+	}
+	once.Do(func() {
+		ts.RegisterHistogram(metricOpKey, telemetry.Buckets.StoreOpsOrder, "method")
+		ts.RegisterSummary(metricApplyKey)
+		ts.RegisterSummary(metricPruneKey)
+	})
 	return &StorageStore{
 		logger: logger,
+		ts:     ts,
 		db:     db,
 	}
 }
 
 // Has returns true if the key exists in the store.
 func (ss *StorageStore) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
+	defer ss.ts.MeasureSince(time.Now(), metricOpKey, hasLabel)
 	return ss.db.Has(storeKey, version, key)
 }
 
 // Get returns the value associated with the given key.
 func (ss *StorageStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
+	defer ss.ts.MeasureSince(time.Now(), metricOpKey, getLabel)
 	return ss.db.Get(storeKey, version, key)
 }
 
 // ApplyChangeset applies the given changeset to the storage.
 func (ss *StorageStore) ApplyChangeset(cs *corestore.Changeset) error {
+	defer ss.ts.MeasureSince(time.Now(), metricApplyKey)
 	b, err := ss.db.NewBatch(cs.Version)
 	if err != nil {
 		return err
@@ -101,6 +125,7 @@ func (ss *StorageStore) ReverseIterator(storeKey []byte, version uint64, start, 
 
 // Prune prunes the store up to the given version.
 func (ss *StorageStore) Prune(version uint64) error {
+	defer ss.ts.MeasureSince(time.Now(), metricPruneKey)
 	return ss.db.Prune(version)
 }
 

@@ -47,7 +47,7 @@ func (s *PruningManagerTestSuite) SetupTest() {
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	s.ss = storage.NewStorageStore(sqliteDB, nopLog)
+	s.ss = storage.NewStorageStore(sqliteDB, nopLog, nil)
 	scPruningOption := store.NewPruningOptionWithCustom(0, 1)  // prune all
 	ssPruningOption := store.NewPruningOptionWithCustom(5, 10) // prune some
 	s.manager = NewManager(s.sc, s.ss, scPruningOption, ssPruningOption)

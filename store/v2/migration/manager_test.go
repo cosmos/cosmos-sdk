@@ -39,7 +39,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 
 	storageDB, err := pebbledb.New(t.TempDir())
 	require.NoError(t, err)
-	newStorageStore := storage.NewStorageStore(storageDB, coretesting.NewNopLogger()) // for store/v2
+	newStorageStore := storage.NewStorageStore(storageDB, coretesting.NewNopLogger(), nil) // for store/v2
 
 	db1 := dbm.NewMemDB()
 	multiTrees1 := make(map[string]commitment.Tree)

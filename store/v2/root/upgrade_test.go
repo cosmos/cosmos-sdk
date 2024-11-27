@@ -46,7 +46,7 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 	// create storage and commitment stores
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, testLog)
+	ss := storage.NewStorageStore(sqliteDB, testLog, nil)
 	sc, err := commitment.NewCommitStore(multiTrees, nil, s.commitDB, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, ss, nil, nil)

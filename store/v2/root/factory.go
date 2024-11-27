@@ -118,7 +118,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	ss = storage.NewStorageStore(ssDb, opts.Logger)
+	ss = storage.NewStorageStore(ssDb, opts.Logger, opts.Telemetry)
 
 	metadata := commitment.NewMetadataStore(opts.SCRawDB)
 	latestVersion, err := metadata.GetLatestVersion()
@@ -148,7 +148,8 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		} else {
 			switch storeOpts.SCType {
 			case SCTypeIavl:
-				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, nil, storeOpts.IavlConfig), nil
+				fmt.Printf("telemetry: %v\n", opts.Telemetry)
+				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.Telemetry, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
 				return nil, errors.New("iavl v2 not supported")
 			default:

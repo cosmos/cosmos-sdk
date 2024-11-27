@@ -18,7 +18,7 @@ func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (*storage.StorageStore, error) {
 			db, err := New(dir)
-			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
+			return storage.NewStorageStore(db, coretesting.NewNopLogger(), nil), err
 		},
 		EmptyBatchSize: 0,
 	}

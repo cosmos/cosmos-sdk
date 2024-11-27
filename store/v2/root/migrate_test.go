@@ -64,7 +64,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	// create a new storage and commitment stores
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, testLog)
+	ss := storage.NewStorageStore(sqliteDB, testLog, nil)
 
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {

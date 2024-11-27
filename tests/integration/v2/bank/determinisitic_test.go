@@ -14,8 +14,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	"cosmossdk.io/runtime/v2/services"
-	"cosmossdk.io/server/v2/stf"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -110,8 +108,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	)
 
 	var bankKeeper bankkeeper.Keeper
-	diConfig = depinject.Configs(diConfig, depinject.Supply(acctsModKeeper, log.NewNopLogger(), services.NewGenesisHeaderService(stf.HeaderService{})))
-	app, err := integration.NewApp(diConfig, startupConfig, nil, nil, &bankKeeper)
+	diConfig = depinject.Configs(diConfig, depinject.Supply(acctsModKeeper, log.NewNopLogger()))
+	app, err := integration.NewApp(diConfig, startupConfig, &bankKeeper)
 	require.NoError(t, err)
 	require.NotNil(t, app)
 	return &deterministicFixture{app: app, bankKeeper: bankKeeper, T: t}

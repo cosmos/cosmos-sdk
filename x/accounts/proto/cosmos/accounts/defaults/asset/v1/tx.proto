@@ -13,7 +13,6 @@ option go_package = "cosmossdk.io/x/accounts/defaults/asset/v1";
 
 // MsgInitAssetAccount defines a message that enables creating a asset account.
 message MsgInitAssetAccount {
-  option (amino.name)      = "cosmos-sdk/MsgInitAssetAccount";
   option (gogoproto.equal) = true;
 
   // owner of the asset account
@@ -21,10 +20,44 @@ message MsgInitAssetAccount {
   // denom
   string denom = 2;
 
-  string symbol = 3;
-
-  uint64 decimals = 4;
+  repeated Balance init_balance = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgInitAssetAccountResponse defines the Msg/InitLockupAccount response type.
 message MsgInitAssetAccountResponse {}
+
+// MsgTransfer defines a message that enables transferring from a account to another.
+message MsgTransfer {
+  option (gogoproto.equal) = true;
+
+  bytes from = 1;
+
+  bytes to = 2;
+
+  string amount = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+message MsgTransferResponse {
+  option (gogoproto.equal) = true;
+
+  Balance from_balance = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  Balance to_balance = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message Balance {
+  option (gogoproto.equal) = true;
+
+  bytes  addr   = 1;
+  string amount = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}

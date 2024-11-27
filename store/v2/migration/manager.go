@@ -103,9 +103,6 @@ func (m *Manager) Migrate(height uint64) error {
 
 	eg := new(errgroup.Group)
 	eg.Go(func() error {
-		return m.stateStorage.Restore(height, chStorage)
-	})
-	eg.Go(func() error {
 		defer close(chStorage)
 		if m.stateCommitment != nil {
 			if _, err := m.stateCommitment.Restore(height, 0, ms, chStorage); err != nil {
@@ -247,9 +244,6 @@ func (m *Manager) Sync() error {
 				if _, err := m.stateCommitment.Commit(version); err != nil {
 					return fmt.Errorf("failed to commit changeset to commitment: %w", err)
 				}
-			}
-			if err := m.stateStorage.ApplyChangeset(cs); err != nil {
-				return fmt.Errorf("failed to write changeset to storage: %w", err)
 			}
 
 			m.mtx.Lock()

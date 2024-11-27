@@ -99,16 +99,6 @@ func TestMigrateState(t *testing.T) {
 				require.Nil(t, val)
 			}
 
-			// check the storage
-			for version := uint64(1); version < toVersion; version++ {
-				for _, storeKey := range storeKeys {
-					for i := 0; i < keyCount; i++ {
-						val, err := m.stateStorage.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
-						require.NoError(t, err)
-						require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", version, i)), val)
-					}
-				}
-			}
 		})
 	}
 }
@@ -187,17 +177,6 @@ func TestStartMigrateState(t *testing.T) {
 				val, err = m.stateCommitment.Get([]byte("store2"), toVersion-1, []byte("key-100-0"))
 				require.NoError(t, err)
 				require.Nil(t, val)
-			}
-
-			// check the storage
-			for version := uint64(1); version < toVersion; version++ {
-				for _, storeKey := range storeKeys {
-					for i := 0; i < keyCount; i++ {
-						val, err := m.stateStorage.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
-						require.NoError(t, err)
-						require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", version, i)), val)
-					}
-				}
 			}
 
 			// check if migration db write change set to storage

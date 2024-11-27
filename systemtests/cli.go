@@ -437,9 +437,14 @@ func RequireTxSuccess(t *testing.T, got string) {
 	require.Equal(t, int64(0), code, "non success tx code : %s", details)
 }
 
-// RequireTxFailure require the received response to contain any failure code and the passed msgsgs
+// RequireTxFailure require the received response to contain any failure code and the passed msgs
+// From CometBFT v1, an RPC error won't return ABCI response, and error must be parsed
 func RequireTxFailure(t *testing.T, got string, containsMsgs ...string) {
 	t.Helper()
+	if strings.Contains(got, "broadcast error on transaction validation") {
+		return // tx is invalid, no need to parse
+	}
+
 	code, details := parseResultCode(t, got)
 	require.NotEqual(t, int64(0), code, details)
 	for _, msg := range containsMsgs {

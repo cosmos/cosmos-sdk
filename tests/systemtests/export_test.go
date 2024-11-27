@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -68,6 +69,11 @@ func TestExportCmd_WithHeight(t *testing.T) {
 
 	for _, tc := range testCases {
 		res := cli.RunCommandWithArgs(tc.args...)
+		// sometimes the output contains some logs, so we need to extract the json part
+		if i := strings.Index(res, "{"); i > 0 {
+			res = res[i:]
+		}
+
 		height := gjson.Get(res, "initial_height").Int()
 		if tc.expZeroHeight {
 			require.Equal(t, height, int64(0))

@@ -39,6 +39,7 @@ var (
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ schema.HasModuleCodec           = AppModule{}
 )
 
 // AppModule implements an application module for the bank module.

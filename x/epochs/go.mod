@@ -1,6 +1,6 @@
 module cosmossdk.io/x/epochs
 
-go 1.23.1
+go 1.23.2
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -20,7 +20,7 @@ require (
 	google.golang.org/grpc v1.68.0
 )
 
-require cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
+require cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
@@ -180,6 +180,8 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/schema => ../../schema
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking

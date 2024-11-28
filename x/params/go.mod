@@ -1,6 +1,6 @@
 module cosmossdk.io/x/params
 
-go 1.23.1
+go 1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -169,6 +169,7 @@ replace github.com/cosmos/cosmos-sdk => ../..
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution

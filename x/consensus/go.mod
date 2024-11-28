@@ -1,6 +1,6 @@
 module cosmossdk.io/x/consensus
 
-go 1.23.1
+go 1.23.2
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -8,6 +8,7 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
 	cosmossdk.io/depinject v1.1.0
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -27,7 +28,6 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
@@ -175,6 +175,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking

@@ -1,6 +1,6 @@
 module cosmossdk.io/x/staking
 
-go 1.23.1
+go 1.23.2
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -160,8 +160,9 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 )
 
+require cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
+
 require (
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	github.com/bytedance/sonic v1.12.4 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

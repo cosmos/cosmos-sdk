@@ -395,7 +395,6 @@ func (t Kind) ValidateValueType(value interface{}) error {
 		if !ok {
 			return fmt.Errorf("expected string, got %T", value)
 		}
-
 	case DecimalKind:
 		_, ok := value.(string)
 		if !ok {

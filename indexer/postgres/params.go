@@ -108,10 +108,11 @@ func (tm *objectIndexer) bindParam(field schema.Field, value interface{}) (param
 
 		param = int64(t)
 	} else if field.Kind == schema.AddressKind {
-		param, err = tm.options.addressCodec.BytesToString(value.([]byte))
-		if err != nil {
-			return nil, fmt.Errorf("address encoding failed for field %q: %w", field.Name, err)
+		t, ok := value.(string)
+		if !ok {
+			return nil, fmt.Errorf("expected string value for field %q, got %T", field.Name, value)
 		}
+		param = t
 	}
 	return
 }

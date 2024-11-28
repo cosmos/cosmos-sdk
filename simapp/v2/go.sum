@@ -214,8 +214,8 @@ cosmossdk.io/runtime/v2 v2.0.0-20241119134933-d697a3de0f95 h1:hYI7pvrmdkgFZJ4HVQ
 cosmossdk.io/runtime/v2 v2.0.0-20241119134933-d697a3de0f95/go.mod h1:J4Wv2eOwAz8t14Ak8XBMWDoFbwqwyllMaJF91O7n/wI=
 cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b h1:svpFdulZRrYz+RTHu2u9CeKkMKrIHx5354vjiHerovo=
 cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-cosmossdk.io/server/v2 v2.0.0-20241120173909-b45cf753a7a3 h1:92+h62WOgxdb3eqjIT1sNn+/gcQYLvtZ9eln84h0nMg=
-cosmossdk.io/server/v2 v2.0.0-20241120173909-b45cf753a7a3/go.mod h1:gPATMrgLSzDoJiyoY+N8ULwfvAJ3Ooh6TYFsW60tHW0=
+cosmossdk.io/server/v2 v2.0.0-20241128145253-6cfe2dc1bb37 h1:zZvYQ/xSv5hsWcJiZOOqYrywzMm2TN+xdkedPgRdoss=
+cosmossdk.io/server/v2 v2.0.0-20241128145253-6cfe2dc1bb37/go.mod h1:T4ptCA8LAxlBZ/MYJQTHMPNuvb+cgMsrPX31njPtJmw=
 cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95 h1:GOznErJieaI0OS0LDUsu5Vy3qPnCyjdvkncejP0Zv5s=
 cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95/go.mod h1:elhlrldWtm+9U4PxE0G3wjz83yQwVVGVAOncXJPY1Xc=
 cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95 h1:cK7wvmlA18AvLcaInseKTBmt5EXtLwafe7oH1rx7veU=

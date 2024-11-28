@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
-	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
+	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.0.0-20241107084833-00f3065e70ee
 	cosmossdk.io/log v1.5.0
@@ -35,14 +35,8 @@ require (
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v1.0.0-alpha.2 // main
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
-<<<<<<< HEAD
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
-	github.com/cometbft/cometbft/api v1.0.0-rc.1
-	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
-=======
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2
->>>>>>> ca48cef25 (build(deps): bump cometbft to v1.0.0-rc2 (#22577))
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -51,7 +45,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
 )
@@ -68,7 +62,7 @@ require (
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -96,10 +90,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-<<<<<<< HEAD
-=======
 	github.com/cosmos/cosmos-db v1.1.0 // indirect
->>>>>>> ca48cef25 (build(deps): bump cometbft to v1.0.0-rc2 (#22577))
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
@@ -111,26 +102,15 @@ require (
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
-<<<<<<< HEAD
-	github.com/dgraph-io/badger/v4 v4.3.0 // indirect
-	github.com/dgraph-io/ristretto v1.0.0 // indirect
-=======
 	github.com/dgraph-io/badger/v4 v4.4.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
->>>>>>> ca48cef25 (build(deps): bump cometbft to v1.0.0-rc2 (#22577))
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-<<<<<<< HEAD
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/getsentry/sentry-go v0.29.0 // indirect
-	github.com/go-kit/kit v0.13.0 // indirect
-=======
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
-	github.com/getsentry/sentry-go v0.27.0 // indirect
->>>>>>> ca48cef25 (build(deps): bump cometbft to v1.0.0-rc2 (#22577))
+	github.com/getsentry/sentry-go v0.29.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -176,11 +156,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-<<<<<<< HEAD
-	github.com/klauspost/compress v1.17.10 // indirect
-=======
 	github.com/klauspost/compress v1.17.11 // indirect
->>>>>>> ca48cef25 (build(deps): bump cometbft to v1.0.0-rc2 (#22577))
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -206,14 +182,14 @@ require (
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.20.4 // indirect
+	github.com/prometheus/client_golang v1.20.5 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.59.1 // indirect
+	github.com/prometheus/common v0.60.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
-	github.com/rs/cors v1.11.0 // indirect
+	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect

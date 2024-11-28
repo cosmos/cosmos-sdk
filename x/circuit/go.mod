@@ -4,12 +4,12 @@ go 1.23.2
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/collections v0.4.0
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -177,8 +177,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/collections => ../../collections
-	cosmossdk.io/schema => ../../schema
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking

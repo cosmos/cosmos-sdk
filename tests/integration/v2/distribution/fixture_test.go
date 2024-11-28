@@ -105,7 +105,7 @@ func createTestFixture(t *testing.T) *fixture {
 	startupCfg.HeaderService = &integration.HeaderService{}
 
 	res.app, err = integration.NewApp(
-		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger(), &integration.HeaderService{})),
+		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
 		startupCfg,
 		&res.bankKeeper, &res.distrKeeper, &res.authKeeper, &res.stakingKeeper, &res.poolKeeper, &res.cdc)
 	require.NoError(t, err)

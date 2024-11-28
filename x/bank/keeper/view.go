@@ -75,18 +75,10 @@ func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak type
 		Environment:   env,
 		cdc:           cdc,
 		ak:            ak,
-<<<<<<< HEAD
-		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey.WithName("supply"), sdk.IntValue),
-		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey.WithName("denom_metadata"), codec.CollValue[types.Metadata](cdc)),
-		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey.WithName("send_enabled"), codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
-		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.NamedPairKeyCodec("address", sdk.AccAddressKey, "balances", collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
-=======
-		addrCdc:       ak.AddressCodec(),
 		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey.WithName("denom"), sdk.IntValue),
 		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey.WithName("denom"), codec.CollValue[types.Metadata](cdc)),
 		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey.WithName("denom"), codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
 		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.NamedPairKeyCodec("address", sdk.AccAddressKey, "denom", collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
->>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 

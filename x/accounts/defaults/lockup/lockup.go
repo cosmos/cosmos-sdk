@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"maps"
 	"slices"
 	"time"
@@ -30,16 +29,15 @@ import (
 )
 
 var (
-	OriginalLockingPrefix   = collections.NewPrefix(0)
-	DelegatedFreePrefix     = collections.NewPrefix(1)
-	DelegatedLockingPrefix  = collections.NewPrefix(2)
-	EndTimePrefix           = collections.NewPrefix(3)
-	StartTimePrefix         = collections.NewPrefix(4)
-	LockingPeriodsPrefix    = collections.NewPrefix(5)
-	OwnerPrefix             = collections.NewPrefix(6)
-	WithdrawedCoinsPrefix   = collections.NewPrefix(7)
-	UnbondEntriesPrefix     = collections.NewPrefix(8)
-	UnbondingSequencePrefix = collections.NewPrefix(9)
+	OriginalLockingPrefix  = collections.NewPrefix(0)
+	DelegatedFreePrefix    = collections.NewPrefix(1)
+	DelegatedLockingPrefix = collections.NewPrefix(2)
+	EndTimePrefix          = collections.NewPrefix(3)
+	StartTimePrefix        = collections.NewPrefix(4)
+	LockingPeriodsPrefix   = collections.NewPrefix(5)
+	OwnerPrefix            = collections.NewPrefix(6)
+	WithdrawedCoinsPrefix  = collections.NewPrefix(7)
+	UnbondEntriesPrefix    = collections.NewPrefix(8)
 )
 
 var (
@@ -54,16 +52,15 @@ type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...st
 // newBaseLockup creates a new BaseLockup object.
 func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 	BaseLockup := &BaseLockup{
-		Owner:             collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
-		OriginalLocking:   collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
-		DelegatedFree:     collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
-		DelegatedLocking:  collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
-		WithdrawedCoins:   collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
-		UnbondEntries:     collections.NewMap(d.SchemaBuilder, UnbondEntriesPrefix, "unbond_entries", collections.Uint64Key, codec.CollValue[lockuptypes.UnbondingEntry](d.LegacyStateCodec)),
-		UnbondingSequence: collections.NewSequence(d.SchemaBuilder, UnbondingSequencePrefix, "unbonding_sequence"),
-		addressCodec:      d.AddressCodec,
-		headerService:     d.Environment.HeaderService,
-		EndTime:           collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
+		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
+		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
+		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
+		WithdrawedCoins:  collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
+		UnbondEntries:    collections.NewMap(d.SchemaBuilder, UnbondEntriesPrefix, "unbond_entries", collections.StringKey, codec.CollValue[lockuptypes.UnbondingEntries](d.LegacyStateCodec)),
+		addressCodec:     d.AddressCodec,
+		headerService:    d.Environment.HeaderService,
+		EndTime:          collections.NewItem(d.SchemaBuilder, EndTimePrefix, "end_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 	}
 
 	return BaseLockup
@@ -71,15 +68,15 @@ func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 
 type BaseLockup struct {
 	// Owner is the address of the account owner.
-	Owner             collections.Item[[]byte]
-	OriginalLocking   collections.Map[string, math.Int]
-	DelegatedFree     collections.Map[string, math.Int]
-	DelegatedLocking  collections.Map[string, math.Int]
-	WithdrawedCoins   collections.Map[string, math.Int]
-	UnbondingSequence collections.Sequence
-	UnbondEntries     collections.Map[uint64, lockuptypes.UnbondingEntry]
-	addressCodec      address.Codec
-	headerService     header.Service
+	Owner            collections.Item[[]byte]
+	OriginalLocking  collections.Map[string, math.Int]
+	DelegatedFree    collections.Map[string, math.Int]
+	DelegatedLocking collections.Map[string, math.Int]
+	WithdrawedCoins  collections.Map[string, math.Int]
+	// map val address to unbonding entries
+	UnbondEntries collections.Map[string, lockuptypes.UnbondingEntries]
+	addressCodec  address.Codec
+	headerService header.Service
 	// lockup end time.
 	EndTime collections.Item[time.Time]
 }
@@ -211,60 +208,37 @@ func (bva *BaseLockup) Undelegate(
 		return nil, err
 	}
 
+	header := bva.headerService.HeaderInfo(ctx)
+
 	msgUndelegateResp, err := accountstd.UnpackAny[stakingtypes.MsgUndelegateResponse](resp[0])
 	if err != nil {
 		return nil, err
 	}
 
-	ubdSeq, err := bva.UnbondingSequence.Next(ctx)
+	entries, err := bva.UnbondEntries.Get(ctx, msg.ValidatorAddress)
 	if err != nil {
-		return nil, err
+		if !errorsmod.IsOf(err, collections.ErrNotFound) {
+			entries = lockuptypes.UnbondingEntries{
+				Entries: []*lockuptypes.UnbondingEntry{},
+			}
+		} else {
+			return nil, err
+		}
 	}
 
-	err = bva.UnbondEntries.Set(ctx, ubdSeq, lockuptypes.UnbondingEntry{
-		Id:               ubdSeq,
+	entries.Entries = append(entries.Entries, &lockuptypes.UnbondingEntry{
 		EndTime:          msgUndelegateResp.CompletionTime,
 		Amount:           msgUndelegateResp.Amount,
 		ValidatorAddress: msg.ValidatorAddress,
+		CreationHeight:   header.Height,
 	})
+
+	err = bva.UnbondEntries.Set(ctx, msg.ValidatorAddress, entries)
 	if err != nil {
 		return nil, err
 	}
 
 	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
-}
-
-func (bva *BaseLockup) UpdateUndelegationEntry(
-	ctx context.Context, msg *lockuptypes.MsgUpdateUndelegationEntry,
-) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
-) {
-	err := bva.checkSender(ctx, msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-	entry, err := bva.UnbondEntries.Get(ctx, msg.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	hs := bva.headerService.HeaderInfo(ctx)
-	if entry.EndTime.After(hs.Time) {
-		return nil, fmt.Errorf("unbonding not matured yet, expecting end time at: %s", entry.EndTime.String())
-	}
-
-	err = bva.TrackUndelegation(ctx, sdk.NewCoins(entry.Amount))
-	if err != nil {
-		return nil, err
-	}
-
-	// remove entry
-	err = bva.UnbondEntries.Remove(ctx, msg.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &lockuptypes.MsgExecuteMessagesResponse{}, nil
 }
 
 func (bva *BaseLockup) WithdrawReward(
@@ -472,6 +446,51 @@ func getStakingDenom(ctx context.Context) (string, error) {
 	return resp.Params.BondDenom, nil
 }
 
+// iterates through all the unbonding entries and check if any of the entries are matured and handled.
+func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
+	whoami := accountstd.Whoami(ctx)
+	delAddr, err := bva.addressCodec.BytesToString(whoami)
+	if err != nil {
+		return err
+	}
+
+	currentTime := bva.headerService.HeaderInfo(ctx).Time
+
+	err = bva.UnbondEntries.Walk(ctx, nil, func(key string, value lockuptypes.UnbondingEntries) (stop bool, err error) {
+		// if not mature then skip
+		if value.EndTime.After(currentTime) {
+			return false, nil
+		}
+
+		ubdEntries := []stakingtypes.UnbondingDelegationEntry{}
+		entries, err := bva.getUbdEntries(ctx, delAddr, key)
+		if err != nil {
+			return true, err
+		}
+
+		ubdEntries = append(ubdEntries, entries...)
+
+		found := false
+		// check if the entry is still exist in the unbonding entries
+		for _, entry := range ubdEntries {
+			if entry.GetCompletionTime().Equal(value.EndTime) && entry.CreationHeight == value.CreationHeight {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			err = bva.TrackUndelegation(ctx, sdk.NewCoins(value.Amount))
+			if err != nil {
+				return true, err
+			}
+		}
+
+		return false, nil
+	})
+	return err
+}
+
 // TrackDelegation tracks a delegation amount for any given lockup account type
 // given the amount of coins currently being locked and the current account balance
 // of the delegation denominations.
@@ -600,6 +619,17 @@ func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sd
 	}
 
 	return resp.Balance, nil
+}
+
+func (bva BaseLockup) getUbdEntries(ctx context.Context, delAddr, valAddr string) ([]stakingtypes.UnbondingDelegationEntry, error) {
+	resp, err := accountstd.QueryModule[*stakingtypes.QueryUnbondingDelegationResponse](
+		ctx, &stakingtypes.QueryUnbondingDelegationRequest{DelegatorAddr: delAddr, ValidatorAddr: valAddr},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Unbond.Entries, nil
 }
 
 func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, amount, lockedCoins sdk.Coins) error {
@@ -748,7 +778,6 @@ func (bva BaseLockup) QueryUnbondingEntries(ctx context.Context, _ *lockuptypes.
 func (bva BaseLockup) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, bva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, bva.WithdrawReward)
-	accountstd.RegisterExecuteHandler(builder, bva.UpdateUndelegationEntry)
 }
 
 func (bva BaseLockup) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

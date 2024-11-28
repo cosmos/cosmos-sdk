@@ -143,12 +143,6 @@ func TestPeriodicAccountUndelegate(t *testing.T) {
 	require.True(t, ubdEntry.Amount.Amount.Equal(math.NewInt(1)))
 	require.True(t, ubdEntry.ValidatorAddress == "val_address")
 
-	_, err = acc.UpdateUndelegationEntry(sdkCtx, &lockuptypes.MsgUpdateUndelegationEntry{
-		Sender: "owner",
-		Id:     ubdSeq - 1,
-	})
-	require.NoError(t, err)
-
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
 	require.NoError(t, err)
 	require.True(t, delLocking.Equal(math.ZeroInt()))

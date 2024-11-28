@@ -141,6 +141,15 @@ type GRPCConfig struct {
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
 }
 
+// RESTConfig defines configuration for the rest server.
+type RESTConfig struct {
+	// Enable defines if the rest server should be enabled.
+	Enable bool `mapstructure:"enable"`
+
+	// Address defines the API server to listen on
+	Address string `mapstructure:"address"`
+}
+
 // StateSyncConfig defines the state sync snapshot configuration.
 type StateSyncConfig struct {
 	// SnapshotInterval sets the interval at which state sync snapshots are taken.
@@ -184,6 +193,7 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	REST      RESTConfig       `mapstructure:"rest"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 	Streaming StreamingConfig  `mapstructure:"streaming"`
 	Mempool   MempoolConfig    `mapstructure:"mempool"`

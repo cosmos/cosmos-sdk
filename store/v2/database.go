@@ -41,6 +41,7 @@ type UpgradableDatabase interface {
 
 // Committer defines an API for committing state.
 type Committer interface {
+	UpgradeableStore
 	// WriteChangeset writes the changeset to the commitment state.
 	WriteChangeset(cs *corestore.Changeset) error
 

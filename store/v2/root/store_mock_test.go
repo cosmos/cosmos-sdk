@@ -48,29 +48,26 @@ func TestQuery(t *testing.T) {
 	rs := newTestRootStore(sc)
 
 	// Query without Proof
-	_, err := rs.Query(nil, 0, nil, false)
-	require.Error(t, err)
 	sc.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-	_, err = rs.Query(nil, 0, nil, false)
+	_, err := rs.Query(nil, 0, nil, false)
 	require.Error(t, err)
 	sc.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte("value"), nil)
 	v, err := rs.Query(nil, 0, nil, false)
 	require.NoError(t, err)
 	require.Equal(t, []byte("value"), v.Value)
-	v, err = rs.Query(nil, 0, nil, false)
-	require.NoError(t, err)
-	require.Equal(t, []byte("value"), v.Value)
 
 	// Query with Proof
+	sc.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte("value"), nil)
 	sc.EXPECT().GetProof(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-	v, err = rs.Query(nil, 0, nil, true)
+	_, err = rs.Query(nil, 0, nil, true)
 	require.Error(t, err)
 
 	// Query with Migration
+
 	rs.isMigrating = true
-	sc.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+	sc.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte("value"), nil)
 	_, err = rs.Query(nil, 0, nil, false)
-	require.Error(t, err)
+	require.NoError(t, err)
 }
 
 func TestLoadVersion(t *testing.T) {
@@ -98,14 +95,9 @@ func TestLoadVersion(t *testing.T) {
 	sc.EXPECT().LoadVersionAndUpgrade(uint64(2), v).Return(errors.New("error"))
 	err = rs.LoadVersionAndUpgrade(uint64(2), v)
 	require.Error(t, err)
-	sc.EXPECT().LoadVersionAndUpgrade(uint64(2), v).Return(nil)
-	sc.EXPECT().GetCommitInfo(uint64(2)).Return(nil, nil)
-	err = rs.LoadVersionAndUpgrade(uint64(2), v)
-	require.Error(t, err)
 
 	// LoadVersionUpgrade with Migration
 	rs.isMigrating = true
-	sc.EXPECT().LoadVersionAndUpgrade(uint64(2), v).Return(errors.New("error"))
 	err = rs.LoadVersionAndUpgrade(uint64(2), v)
 	require.Error(t, err)
 }

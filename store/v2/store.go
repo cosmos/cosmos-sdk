@@ -57,7 +57,6 @@ type RootStore interface {
 
 // Backend defines the interface for the RootStore backends.
 type Backend interface {
-
 	// GetStateCommitment returns the SC backend.
 	GetStateCommitment() Committer
 }

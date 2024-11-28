@@ -88,7 +88,6 @@ func (m *Manager) GetStateCommitment() *commitment.CommitStore {
 
 // Migrate migrates the whole state at the given height to the new store/v2.
 func (m *Manager) Migrate(height uint64) error {
-	fmt.Println(1, "migration start")
 	// create the migration stream and snapshot,
 	// which acts as protoio.Reader and snapshots.WriteCloser.
 	ms := NewMigrationStream(defaultChannelBufferSize)
@@ -102,7 +101,6 @@ func (m *Manager) Migrate(height uint64) error {
 	eg := new(errgroup.Group)
 	eg.Go(func() error {
 		defer close(chStorage)
-		fmt.Println(2, "restore")
 		if _, err := m.stateCommitment.Restore(height, 0, ms, chStorage); err != nil {
 			return err
 		}

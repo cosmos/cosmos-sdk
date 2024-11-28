@@ -19,11 +19,11 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.5.0
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b //main
 	cosmossdk.io/server/v2 v2.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/store/v2 v2.0.0-20241108140525-43e28b43ad7a // main
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b //main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -31,7 +31,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
 	sigs.k8s.io/yaml v1.4.0
@@ -44,7 +44,6 @@ require (
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect

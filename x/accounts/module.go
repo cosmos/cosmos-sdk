@@ -62,6 +62,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
+// RegisterQueryHandlers registers the query handlers for the accounts module.
 func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 	queryServer := NewQueryServer(am.k)
 
@@ -71,7 +72,7 @@ func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 	appmodulev2.RegisterMsgHandler(router, queryServer.Schema)
 }
 
-// RegisterMsgHandlers registers the message handlers for the bank module.
+// RegisterMsgHandlers registers the message handlers for the accounts module.
 func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 	msgServer := NewMsgServer(am.k)
 

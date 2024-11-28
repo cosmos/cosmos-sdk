@@ -2,9 +2,11 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/core/server"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"io"
 	"strings"
 	"sync"
@@ -735,11 +737,11 @@ func TestOptimisticExecution(t *testing.T) {
 
 	// mock optimistic execution
 	calledTimes := 0
-	optimisticMockFunc := func(_ context.Context, _ *abciproto.FinalizeBlockRequest) (*abciproto.FinalizeBlockResponse, error) {
+	optimisticMockFunc := func(context.Context, *abci.FinalizeBlockRequest) (*server.BlockResponse, store.WriterMap, []mock.Tx, error) {
 		calledTimes++
-		return nil, errors.New("test error")
+		return nil, nil, nil, errors.New("test error")
 	}
-	c.optimisticExec = oe.NewOptimisticExecution(log.NewNopLogger(), optimisticMockFunc)
+	c.optimisticExec = oe.NewOptimisticExecution[mock.Tx](log.NewNopLogger(), optimisticMockFunc)
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),

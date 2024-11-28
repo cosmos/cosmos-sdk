@@ -494,20 +494,28 @@ func (c *consensus[T]) FinalizeBlock(
 		aborted := c.optimisticExec.AbortIfNeeded(req.Hash)
 
 		// Wait for the OE to finish, regardless of whether it was aborted or not
-		res, err := c.optimisticExec.WaitResult()
+		res, optimistErr := c.optimisticExec.WaitResult()
 
-		if aborted {
-			resp, newState, decodedTxs, err = c.internalFinalizeBlock(ctx, req)
-			if err != nil {
-				return nil, err
+		if !aborted {
+			if res != nil {
+				resp = res.Resp
+				newState = res.StateChanges
+				decodedTxs = res.DecodedTxs
 			}
-		} else {
-			resp = res.Resp
-			newState = res.StateChanges
-			decodedTxs = res.DecodedTxs
+
+			if optimistErr != nil {
+				return nil, optimistErr
+			}
 		}
 
 		c.optimisticExec.Reset()
+	}
+
+	if resp == nil { // if we didn't run OE, run the normal finalize block
+		resp, newState, decodedTxs, err = c.internalFinalizeBlock(ctx, req)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// after we get the changeset we can produce the commit hash,

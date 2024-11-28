@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-
 	"cosmossdk.io/log"
 )
 
@@ -73,10 +72,6 @@ func (oe *OptimisticExecution[T]) Reset() {
 	oe.response = nil
 	oe.err = nil
 	oe.initialized = false
-}
-
-func (oe *OptimisticExecution[T]) Enabled() bool {
-	return oe != nil
 }
 
 // Initialized returns true if the OE was initialized, meaning that it contains

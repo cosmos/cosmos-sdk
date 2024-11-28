@@ -7,8 +7,10 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/schema"
 	"cosmossdk.io/x/consensus/keeper"
 	"cosmossdk.io/x/consensus/types"
 
@@ -96,3 +98,9 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // ConsensusVersion implements HasConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+// ModuleCodec implements schema.HasModuleCodec.
+// It allows the indexer to decode the module's KVPairUpdate.
+func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
+	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
+}

@@ -8,10 +8,12 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/schema"
 	"cosmossdk.io/x/circuit/ante"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
@@ -116,4 +118,10 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	validator := ante.NewCircuitBreakerDecorator(&am.keeper)
 	return validator.ValidateTx(ctx, tx)
+}
+
+// ModuleCodec implements schema.HasModuleCodec.
+// It allows the indexer to decode the module's KVPairUpdate.
+func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
+	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
 }

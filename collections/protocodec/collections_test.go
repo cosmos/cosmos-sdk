@@ -1,4 +1,4 @@
-package codec_test
+package protocodec_test
 
 import (
 	"testing"

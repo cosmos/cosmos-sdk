@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -17,25 +16,6 @@ import (
 
 	systest "cosmossdk.io/systemtests"
 )
-
-// PebbleDB logs are printed directly to stderr.
-// Cosmos-DB and Store/v2 do not provide a way to override the logger.
-// This isn't problematic in a real-world scenario, but it makes it hard to test the output.
-// https://github.com/cockroachdb/pebble/blob/v1.1.2/internal/base/logger.go#L26-L40
-func trimPebbleDBStdErr(input string) string {
-	re := regexp.MustCompile(`^\[JOB \d+\] WAL .+ stopped reading at offset: .+; replayed \d+ keys in \d+ batches$`)
-
-	lines := strings.Split(input, "\n")
-	// filter out lines that match the regex
-	var filtered []string
-	for _, line := range lines {
-		if !re.MatchString(line) {
-			filtered = append(filtered, line)
-		}
-	}
-
-	return strings.Join(filtered, "\n")
-}
 
 func TestChainExportImport(t *testing.T) {
 	// Scenario:
@@ -89,7 +69,16 @@ func TestExportCmd_WithHeight(t *testing.T) {
 
 	for _, tc := range testCases {
 		res := cli.RunCommandWithArgs(tc.args...)
-		height := gjson.Get(trimPebbleDBStdErr(res), "initial_height").Int()
+		// PebbleDB logs are printed directly to stderr.
+		// Cosmos-DB and Store/v2 do not provide a way to override the logger.
+		// This isn't problematic in a real-world scenario, but it makes it hard to test the output.
+		// https://github.com/cockroachdb/pebble/blob/v1.1.2/internal/base/logger.go#L26-L40
+		// We trim the output to get the JSON part only
+		if i := strings.Index(res, "{"); i > 0 {
+			res = res[i:]
+		}
+
+		height := gjson.Get(res, "initial_height").Int()
 		if tc.expZeroHeight {
 			require.Equal(t, height, int64(0))
 		} else {

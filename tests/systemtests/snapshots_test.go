@@ -5,6 +5,7 @@ package systemtests
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -42,7 +43,15 @@ func TestSnapshots(t *testing.T) {
 
 	// Check snapshots list
 	res = cli.RunCommandWithArgs(command, "list", fmt.Sprintf("--home=%s", node0Dir))
-	require.Contains(t, trimPebbleDBStdErr(res), "height: 5")
+
+	// PebbleDB logs are printed directly to stderr.
+	// Cosmos-DB and Store/v2 do not provide a way to override the logger.
+	// This isn't problematic in a real-world scenario, but it makes it hard to test the output.
+	// https://github.com/cockroachdb/pebble/blob/v1.1.2/internal/base/logger.go#L26-L40
+	// We trim the output to get the JSON part only
+	result := strings.Split(res, "\n")
+
+	require.Contains(t, result[len(result)-1], "height: 5")
 
 	// Dump snapshot
 	res = cli.RunCommandWithArgs(command, "dump", "5", "3", fmt.Sprintf("--home=%s", node0Dir), fmt.Sprintf("--output=%s/5-3.tar.gz", node0Dir))

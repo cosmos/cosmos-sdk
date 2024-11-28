@@ -4,7 +4,8 @@ go 1.23.2
 
 require (
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
+	ccosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b// main
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
 	cosmossdk.io/depinject v1.1.0
@@ -165,22 +166,6 @@ require (
 )
 
 require (
-<<<<<<< HEAD
-=======
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
-	cosmossdk.io/log v1.5.0
-	github.com/dgraph-io/badger/v4 v4.3.0 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/flatbuffers v2.0.8+incompatible // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/supranational/blst v0.3.13 // indirect
-	go.opencensus.io v0.24.0 // indirect
-)
-
-require cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
-
-require (
->>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 	github.com/bytedance/sonic v1.12.4 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

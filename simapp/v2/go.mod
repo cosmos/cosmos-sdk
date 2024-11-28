@@ -68,10 +68,10 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // indirect; main
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main

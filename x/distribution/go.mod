@@ -4,18 +4,14 @@ go 1.23.2
 
 require (
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.4.0
-<<<<<<< HEAD
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
-=======
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
->>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0

@@ -3,21 +3,10 @@ module cosmossdk.io/server/v2/cometbft
 go 1.23.2
 
 replace (
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241108140525-43e28b43ad7a // main
-=======
-	cosmossdk.io/api => ../../../api
-	cosmossdk.io/collections => ../../../collections
-	cosmossdk.io/core/testing => ../../../core/testing
-	cosmossdk.io/server/v2 => ../
-	cosmossdk.io/server/v2/appmanager => ../appmanager
-	cosmossdk.io/server/v2/stf => ../stf
-	cosmossdk.io/store => ../../../store
-	cosmossdk.io/store/v2 => ../../../store/v2
->>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
@@ -26,7 +15,7 @@ replace (
 
 require (
 	cosmossdk.io/api v0.8.0
-	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.5.0
@@ -34,6 +23,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/store/v2 v2.0.0-20241108140525-43e28b43ad7a // main
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b //main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1

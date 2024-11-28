@@ -5,11 +5,11 @@ go 1.23.3
 require (
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
-	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/indexer/postgres v0.0.0-20241107084833-00f3065e70ee
+	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
@@ -49,9 +49,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
+	github.com/jackc/pgx/v5 v5.7.1
 )
-
-require github.com/jackc/pgx/v5 v5.7.1
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
@@ -63,7 +62,7 @@ require (
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -252,13 +251,8 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241127063259-f296a5005ce8 // main
 	cosmossdk.io/client/v2 => ../client/v2
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
-=======
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/store => ../store
->>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
@@ -285,8 +279,6 @@ replace (
 
 // Below are the long-lived replace of the SimApp
 replace (
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
-	cosmossdk.io/schema => ../schema
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

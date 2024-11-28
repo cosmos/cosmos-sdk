@@ -244,16 +244,6 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 		return err
 	}
 
-	//TODO why are we not pruning sc keys?
-	// // if the state storage implements the UpgradableDatabase interface, prune the
-	// // deleted store keys
-	// upgradableDatabase, ok := s.stateStorage.(store.UpgradableDatabase)
-	// if ok {
-	// 	if err := upgradableDatabase.PruneStoreKeys(upgrades.Deleted, version); err != nil {
-	// 		return fmt.Errorf("failed to prune store keys %v: %w", upgrades.Deleted, err)
-	// 	}
-	// }
-
 	return nil
 }
 

@@ -4,8 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -15,7 +14,6 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
-	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
 const (
@@ -40,9 +38,9 @@ type Manager struct {
 
 	stateCommitment *commitment.CommitStore
 
-	db              corestore.KVStoreWithBatch
-	mtx             sync.Mutex // mutex for migratedVersion
-	migratedVersion uint64
+	db corestore.KVStoreWithBatch
+
+	migratedVersion atomic.Uint64
 
 	chChangeset <-chan *VersionedChangeset
 	chDone      <-chan struct{}
@@ -90,10 +88,10 @@ func (m *Manager) GetStateCommitment() *commitment.CommitStore {
 
 // Migrate migrates the whole state at the given height to the new store/v2.
 func (m *Manager) Migrate(height uint64) error {
+	fmt.Println(1, "migration start")
 	// create the migration stream and snapshot,
 	// which acts as protoio.Reader and snapshots.WriteCloser.
 	ms := NewMigrationStream(defaultChannelBufferSize)
-
 	if err := m.snapshotsManager.CreateMigration(height, ms); err != nil {
 		return err
 	}
@@ -104,49 +102,9 @@ func (m *Manager) Migrate(height uint64) error {
 	eg := new(errgroup.Group)
 	eg.Go(func() error {
 		defer close(chStorage)
-		if m.stateCommitment != nil {
-			if _, err := m.stateCommitment.Restore(height, 0, ms, chStorage); err != nil {
-				return err
-			}
-		} else { // there is no commitment migration, just consume the stream to restore the state storage
-			var storeKey []byte
-		loop:
-			for {
-				snapshotItem := snapshotstypes.SnapshotItem{}
-				err := ms.ReadMsg(&snapshotItem)
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				if err != nil {
-					return fmt.Errorf("failed to read snapshot item: %w", err)
-				}
-				switch item := snapshotItem.Item.(type) {
-				case *snapshotstypes.SnapshotItem_Store:
-					storeKey = []byte(item.Store.Name)
-				case *snapshotstypes.SnapshotItem_IAVL:
-					if item.IAVL.Height == 0 { // only restore the leaf nodes
-						key := item.IAVL.Key
-						if key == nil {
-							key = []byte{}
-						}
-						value := item.IAVL.Value
-						if value == nil {
-							value = []byte{}
-						}
-						chStorage <- &corestore.StateChanges{
-							Actor: storeKey,
-							StateChanges: []corestore.KVPair{
-								{
-									Key:   key,
-									Value: value,
-								},
-							},
-						}
-					}
-				default:
-					break loop
-				}
-			}
+		fmt.Println(2, "restore")
+		if _, err := m.stateCommitment.Restore(height, 0, ms, chStorage); err != nil {
+			return err
 		}
 		return nil
 	})
@@ -155,9 +113,7 @@ func (m *Manager) Migrate(height uint64) error {
 		return err
 	}
 
-	m.mtx.Lock()
-	m.migratedVersion = height
-	m.mtx.Unlock()
+	m.migratedVersion.Add(height)
 
 	return nil
 }
@@ -201,9 +157,7 @@ func (m *Manager) writeChangeset() error {
 // GetMigratedVersion returns the migrated version.
 // It is used to check the migrated version in the RootStore.
 func (m *Manager) GetMigratedVersion() uint64 {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-	return m.migratedVersion
+	return m.migratedVersion.Load()
 }
 
 // Sync catches up the Changesets which are committed while the migration is in progress.
@@ -246,9 +200,7 @@ func (m *Manager) Sync() error {
 				}
 			}
 
-			m.mtx.Lock()
-			m.migratedVersion = version
-			m.mtx.Unlock()
+			m.migratedVersion.Add(version)
 
 			version += 1
 		}

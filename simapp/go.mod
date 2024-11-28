@@ -1,6 +1,6 @@
 module cosmossdk.io/simapp
 
-go 1.23.1
+go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0 // main
@@ -252,8 +252,13 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241127063259-f296a5005ce8 // main
 	cosmossdk.io/client/v2 => ../client/v2
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
+=======
+	cosmossdk.io/collections => ../collections
+	cosmossdk.io/store => ../store
+>>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
@@ -280,6 +285,8 @@ replace (
 
 // Below are the long-lived replace of the SimApp
 replace (
+	cosmossdk.io/indexer/postgres => ../indexer/postgres
+	cosmossdk.io/schema => ../schema
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

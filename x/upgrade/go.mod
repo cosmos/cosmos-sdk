@@ -1,6 +1,6 @@
 module cosmossdk.io/x/upgrade
 
-go 1.23.1
+go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0
@@ -210,10 +210,16 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
+=======
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/store => ../../store
+>>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking

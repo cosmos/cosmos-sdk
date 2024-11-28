@@ -1,6 +1,6 @@
 module cosmossdk.io/x/consensus
 
-go 1.23.1
+go 1.23.2
 
 require (
 	cosmossdk.io/api v0.8.0 // main
@@ -8,7 +8,12 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
 	cosmossdk.io/depinject v1.1.0
+<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
+=======
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
+	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
+>>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -27,7 +32,6 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect; main
@@ -177,10 +181,16 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
+=======
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/store => ../../store
+>>>>>>> bd76b47e1 (feat(indexer): add to modules and implement proto fields (#22544))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking
 )

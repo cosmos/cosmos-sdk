@@ -1,6 +1,6 @@
 module cosmossdk.io/x/group
 
-go 1.23.1
+go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0 // main

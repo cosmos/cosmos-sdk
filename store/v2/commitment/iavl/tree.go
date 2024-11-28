@@ -65,7 +65,8 @@ func (t *IavlTree) WorkingHash() []byte {
 
 // LoadVersion loads the state at the given version.
 func (t *IavlTree) LoadVersion(version uint64) error {
-	return t.tree.LoadVersionForOverwriting(int64(version))
+	_, err := t.tree.LoadVersion(int64(version))
+	return err
 }
 
 // Commit commits the current state to the tree.

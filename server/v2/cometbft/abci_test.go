@@ -60,10 +60,10 @@ func getQueryRouterBuilder[T any, PT interface {
 	*T
 	proto.Message
 },
-	U any, UT interface {
-		*U
-		proto.Message
-	}](
+U any, UT interface {
+	*U
+	proto.Message
+}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -90,10 +90,10 @@ func getMsgRouterBuilder[T any, PT interface {
 	*T
 	transaction.Msg
 },
-	U any, UT interface {
-		*U
-		transaction.Msg
-	}](
+U any, UT interface {
+	*U
+	transaction.Msg
+}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -518,6 +518,12 @@ func TestConsensus_ProcessProposal(t *testing.T) {
 	require.Error(t, err)
 
 	// NoOp handler
+	// dummy optimistic execution
+	optimisticMockFunc := func(context.Context, *abci.FinalizeBlockRequest) (*server.BlockResponse, store.WriterMap, []mock.Tx, error) {
+		return nil, nil, nil, errors.New("test error")
+	}
+	c.optimisticExec = oe.NewOptimisticExecution[mock.Tx](log.NewNopLogger(), optimisticMockFunc)
+
 	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
 	_, err = c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,

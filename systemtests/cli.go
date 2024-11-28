@@ -27,17 +27,18 @@ type (
 
 // CLIWrapper provides a more convenient way to interact with the CLI binary from the Go tests
 type CLIWrapper struct {
-	t              *testing.T
-	nodeAddress    string
-	chainID        string
-	homeDir        string
-	fees           string
-	Debug          bool
-	assertErrorFn  RunErrorAssert
-	awaitNextBlock awaitNextBlock
-	expTXCommitted bool
-	execBinary     string
-	nodesCount     int
+	t               *testing.T
+	nodeAddress     string
+	chainID         string
+	homeDir         string
+	fees            string
+	Debug           bool
+	assertErrorFn   RunErrorAssert
+	awaitNextBlock  awaitNextBlock
+	expTXCommitted  bool
+	execBinary      string
+	nodesCount      int
+	runSingleOutput bool
 }
 
 // NewCLIWrapper constructor
@@ -54,6 +55,7 @@ func NewCLIWrapper(t *testing.T, sut *SystemUnderTest, verbose bool) *CLIWrapper
 		"1"+sdk.DefaultBondDenom,
 		verbose,
 		assert.NoError,
+		false,
 		true,
 	)
 }
@@ -70,6 +72,7 @@ func NewCLIWrapperX(
 	fees string,
 	debug bool,
 	assertErrorFn RunErrorAssert,
+	runSingleOutput bool,
 	expTXCommitted bool,
 ) *CLIWrapper {
 	t.Helper()
@@ -77,17 +80,18 @@ func NewCLIWrapperX(
 		t.Fatal("name of executable binary must not be empty")
 	}
 	return &CLIWrapper{
-		t:              t,
-		execBinary:     execBinary,
-		nodeAddress:    nodeAddress,
-		chainID:        chainID,
-		homeDir:        homeDir,
-		Debug:          debug,
-		awaitNextBlock: awaiter,
-		nodesCount:     nodesCount,
-		fees:           fees,
-		assertErrorFn:  assertErrorFn,
-		expTXCommitted: expTXCommitted,
+		t:               t,
+		execBinary:      execBinary,
+		nodeAddress:     nodeAddress,
+		chainID:         chainID,
+		homeDir:         homeDir,
+		Debug:           debug,
+		awaitNextBlock:  awaiter,
+		nodesCount:      nodesCount,
+		fees:            fees,
+		assertErrorFn:   assertErrorFn,
+		runSingleOutput: runSingleOutput,
+		expTXCommitted:  expTXCommitted,
 	}
 }
 
@@ -102,6 +106,12 @@ func (c CLIWrapper) WithRunErrorsIgnored() CLIWrapper {
 func (c CLIWrapper) WithRunErrorMatcher(f RunErrorAssert) CLIWrapper {
 	return c.clone(func(r *CLIWrapper) {
 		r.assertErrorFn = f
+	})
+}
+
+func (c CLIWrapper) WithRunSingleOutput() CLIWrapper {
+	return c.clone(func(r *CLIWrapper) {
+		r.runSingleOutput = true
 	})
 }
 
@@ -135,6 +145,7 @@ func (c CLIWrapper) clone(mutator ...func(r *CLIWrapper)) CLIWrapper {
 		c.fees,
 		c.Debug,
 		c.assertErrorFn,
+		c.runSingleOutput,
 		c.expTXCommitted,
 	)
 	for _, m := range mutator {
@@ -235,6 +246,11 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		cmd := exec.Command(locateExecutable(c.execBinary), args...) //nolint:gosec // test code only
 		cmd.Dir = WorkDir
 		cmd.Stdin = input
+
+		if c.runSingleOutput {
+			return cmd.Output()
+		}
+
 		return cmd.CombinedOutput()
 	}()
 

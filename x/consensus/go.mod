@@ -1,14 +1,14 @@
 module cosmossdk.io/x/consensus
 
-go 1.23.1
+go 1.23.2
 
 require (
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2

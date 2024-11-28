@@ -1,10 +1,10 @@
 module github.com/cosmos/cosmos-sdk/tests
 
-go 1.23.1
+go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0 // main
 	cosmossdk.io/depinject v1.1.0
@@ -23,7 +23,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/stretchr/testify v1.10.0
@@ -72,7 +72,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/indexer/postgres v0.0.0-20241107084833-00f3065e70ee // indirect
+	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b // indirect
 	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241107153845-4e240908dd60 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect

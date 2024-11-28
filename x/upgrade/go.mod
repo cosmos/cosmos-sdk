@@ -1,6 +1,6 @@
 module cosmossdk.io/x/upgrade
 
-go 1.23.1
+go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0
@@ -40,7 +40,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // indirect
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // indirect
 	cosmossdk.io/math v1.4.0 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect

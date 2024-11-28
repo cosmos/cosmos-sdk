@@ -2,11 +2,11 @@ package iavlv2
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"testing"
 
 	"github.com/cosmos/iavl/v2"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"

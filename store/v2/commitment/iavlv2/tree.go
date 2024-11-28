@@ -1,10 +1,10 @@
 package iavlv2
 
 import (
-	corestore "cosmossdk.io/core/store"
 	"errors"
 	"fmt"
 
+	corestore "cosmossdk.io/core/store"
 	"github.com/cosmos/iavl/v2"
 	ics23 "github.com/cosmos/ics23/go"
 

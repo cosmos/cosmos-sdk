@@ -176,7 +176,6 @@ replace github.com/cosmos/cosmos-sdk => ../../../../.
 
 replace (
 	cosmossdk.io/api => ../../../../api
-	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/bank => ../../../bank

@@ -30,7 +30,9 @@ func TestChainUpgrade(t *testing.T) {
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
 	systest.Sut.SetExecBinary(legacyBinary)
-	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
+	// the v0.50 binary needs a different initializer than later versions.
+	// some startup flags were renamed
+	systest.Sut.SetTestnetInitializer(systest.NewModifyConfigYamlInitializer(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))

@@ -26,6 +26,7 @@ type Keeper struct {
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
+	Schema      collections.Schema
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
@@ -33,11 +34,19 @@ var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 // NewKeeper creates a new Keeper instance.
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
-	return Keeper{
+	k := Keeper{
 		Environment: env,
 		authority:   authority,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
+
+	var err error
+	k.Schema, err = sb.Build()
+	if err != nil {
+		panic(fmt.Sprintf("failed to build schema: %v", err))
+	}
+
+	return k
 }
 
 // GetAuthority returns the authority address for the consensus module.

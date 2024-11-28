@@ -104,7 +104,12 @@ func NewKeeper(
 			sb,
 			types.DelegatorStartingInfoPrefix,
 			"delegators_starting_info",
-			collections.PairKeyCodec(sdk.ValAddressKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.NamedPairKeyCodec(
+				"validator_address",
+				sdk.ValAddressKey,
+				"delegator_address",
+				sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			),
 			codec.CollValue[types.DelegatorStartingInfo](cdc),
 		),
 		ValidatorsAccumulatedCommission: collections.NewMap(
@@ -126,14 +131,26 @@ func NewKeeper(
 			sb,
 			types.ValidatorHistoricalRewardsPrefix,
 			"validator_historical_rewards",
-			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LEUint64Key), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.NamedPairKeyCodec(
+				"validator_address",
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+				"period",
+				sdk.LEUint64Key,
+			),
 			codec.CollValue[types.ValidatorHistoricalRewards](cdc),
 		),
 		ValidatorSlashEvents: collections.NewMap(
 			sb,
 			types.ValidatorSlashEventPrefix,
 			"validator_slash_events",
-			collections.TripleKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), collections.Uint64Key, collections.Uint64Key), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+			collections.NamedTripleKeyCodec(
+				"validator_address",
+				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
+				"height",
+				collections.Uint64Key,
+				"period",
+				collections.Uint64Key,
+			),
 			codec.CollValue[types.ValidatorSlashEvent](cdc),
 		),
 	}

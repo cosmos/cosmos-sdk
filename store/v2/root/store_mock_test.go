@@ -100,11 +100,12 @@ func TestLoadVersion(t *testing.T) {
 	require.Error(t, err)
 	sc.EXPECT().LoadVersionAndUpgrade(uint64(2), v).Return(nil)
 	sc.EXPECT().GetCommitInfo(uint64(2)).Return(nil, nil)
-	// err = rs.LoadVersionAndUpgrade(uint64(2), v) //TODO why is this not working?
-	// require.Error(t, err)
+	err = rs.LoadVersionAndUpgrade(uint64(2), v)
+	require.Error(t, err)
 
 	// LoadVersionUpgrade with Migration
 	rs.isMigrating = true
+	sc.EXPECT().LoadVersionAndUpgrade(uint64(2), v).Return(errors.New("error"))
 	err = rs.LoadVersionAndUpgrade(uint64(2), v)
 	require.Error(t, err)
 }

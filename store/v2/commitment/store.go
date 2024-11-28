@@ -425,7 +425,6 @@ func (c *CommitStore) Restore(
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
-		storeKey     []byte
 	)
 
 loop:
@@ -449,7 +448,6 @@ loop:
 				}
 			}
 
-			storeKey = []byte(item.Store.Name)
 			tree := c.multiTrees[item.Store.Name]
 			if tree == nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", item.Store.Name)
@@ -479,16 +477,6 @@ loop:
 					node.Value = []byte{}
 				}
 
-				// If the node is a leaf node, it will be written to the storage.
-				chStorage <- &corestore.StateChanges{
-					Actor: storeKey,
-					StateChanges: []corestore.KVPair{
-						{
-							Key:   node.Key,
-							Value: node.Value,
-						},
-					},
-				}
 			}
 			err := importer.Add(node)
 			if err != nil {

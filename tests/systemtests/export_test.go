@@ -67,7 +67,10 @@ func TestExportCmd_WithHeight(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		res := cli.RunCommandWithArgs(tc.args...)
+		res := cli.
+			WithRunErrorsIgnored().
+			WithRunSingleOutput(). // pebbledb prints logs to stderr, we cannot override the logger in store/v2 and cosmos-db. This isn't problematic in a real-world scenario, but it makes it hard to test the output
+			RunCommandWithArgs(tc.args...)
 		height := gjson.Get(res, "initial_height").Int()
 		if tc.expZeroHeight {
 			require.Equal(t, height, int64(0))

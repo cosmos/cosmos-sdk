@@ -4,8 +4,12 @@ go 1.23.1
 
 require (
 	cosmossdk.io/math v1.4.0
+<<<<<<< HEAD
 	cosmossdk.io/systemtests v0.0.0-20241126144654-14d98d277124
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
+=======
+	cosmossdk.io/systemtests v1.0.0-rc.1.0.20241128092904-215d5c16f64d
+>>>>>>> ca48cef25 (build(deps): bump cometbft to v1.0.0-rc2 (#22577))
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
@@ -59,7 +63,12 @@ require (
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
+<<<<<<< HEAD
 	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33 // indirect
+=======
+	github.com/cosmos/cosmos-db v1.1.0 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
+>>>>>>> ca48cef25 (build(deps): bump cometbft to v1.0.0-rc2 (#22577))
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect

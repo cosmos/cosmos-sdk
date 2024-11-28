@@ -16,10 +16,17 @@ cosmossdk.io/math v1.4.0 h1:XbgExXFnXmF/CccPPEto40gOO7FpWu9yWNAZPN3nkNQ=
 cosmossdk.io/math v1.4.0/go.mod h1:O5PkD4apz2jZs4zqFdTr16e1dcaQCc5z6lkEnrrppuk=
 cosmossdk.io/store v1.1.0 h1:LnKwgYMc9BInn9PhpTFEQVbL9UK475G2H911CGGnWHk=
 cosmossdk.io/store v1.1.0/go.mod h1:oZfW/4Fc/zYqu3JmQcQdUJ3fqu5vnYTn3LZFFy8P8ng=
+<<<<<<< HEAD
 cosmossdk.io/systemtests v0.0.0-20241126144654-14d98d277124 h1:pzhysmpO6+HA/vnJKVTfmtZAtCJJzLqsBZAwzOCFa7Q=
 cosmossdk.io/systemtests v0.0.0-20241126144654-14d98d277124/go.mod h1:IQrj3oVhIBn1X8183/IL1z3l7HgjePVSHLeZtUUjGjI=
 cosmossdk.io/x/tx v1.0.0-alpha.2 h1:UW80FMm7B0fiAMsrfe5+HabSJ3XBg+tQa6/GK9prqWk=
 cosmossdk.io/x/tx v1.0.0-alpha.2/go.mod h1:r4yTKSJ7ZCCR95YbBfY3nfvbgNw6m9F6f25efWYYQWo=
+=======
+cosmossdk.io/systemtests v1.0.0-rc.1.0.20241128092904-215d5c16f64d h1:zZUt9DD+3qvwnpQHPwYJ5+NEUU4wMFeNpPBegWMfbn8=
+cosmossdk.io/systemtests v1.0.0-rc.1.0.20241128092904-215d5c16f64d/go.mod h1:ME2eFY/+2CjaFrPOMW8paPXupMzYaDMTKQ1sRvi71hU=
+cosmossdk.io/x/tx v0.13.3-0.20240419091757-db5906b1e894 h1:kHEvzVqpNv/9pnaEPBsgE/FMc+cVmWjSsInRufkZkpQ=
+cosmossdk.io/x/tx v0.13.3-0.20240419091757-db5906b1e894/go.mod h1:Tb6/tpONmtL5qFdOMdv1pdvrtJNxcazZBoz04HB71ss=
+>>>>>>> ca48cef25 (build(deps): bump cometbft to v1.0.0-rc2 (#22577))
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
@@ -145,8 +152,8 @@ github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSV
 github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/cosmos/btcutil v1.0.5 h1:t+ZFcX77LpKtDBhjucvnOH8C2l2ioGsBNEQ3jef8xFk=
 github.com/cosmos/btcutil v1.0.5/go.mod h1:IyB7iuqZMJlthe2tkIFL33xPyzbFYP0XVdS8P5lUPis=
-github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33 h1:NnqmEOIzUPazzBrhGenzI1AQCBtJ0Hbnb/DDoykpko0=
-github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33/go.mod h1:Z8IXcFJ9PqKK6BIsVOB3QXtkKoqUOp1vRvPT39kOXEA=
+github.com/cosmos/cosmos-db v1.1.0 h1:KLHNVQ73h7vawXTpj9UJ7ZR2IXv51tsEHkQJJ9EBDzI=
+github.com/cosmos/cosmos-db v1.1.0/go.mod h1:t7c4A6cfGdpUwwVxrQ0gQLeRQqGUBJu0yvE4F/26REg=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5 h1:eNcayDLpip+zVLRLYafhzLvQlSmyab+RC5W7ZfmxJLA=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5/go.mod h1:hQGLpiIUloJBMdQMMWb/4wRApmI9hjHH05nefC0Ojec=
 github.com/cosmos/cosmos-sdk v0.50.6 h1:efR3MsvMHX5sxS3be+hOobGk87IzlZbSpsI2x/Vw3hk=

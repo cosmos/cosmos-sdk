@@ -106,17 +106,13 @@ func (s *Store) SetInitialVersion(v uint64) error {
 // and the version exists in the state commitment, since the state storage will be
 // synced during migration.
 func (s *Store) getVersionedReader(version uint64) (store.VersionedReader, error) {
-
-	if vReader, ok := s.stateCommitment.(store.VersionedReader); ok {
-		isExist, err := vReader.VersionExists(version)
-		if err != nil {
-			return nil, err
-		}
-		if isExist {
-			return vReader, nil
-		}
+	isExist, err := s.stateCommitment.VersionExists(version)
+	if err != nil {
+		return nil, err
 	}
-
+	if isExist {
+		return s.stateCommitment, nil
+	}
 	return nil, fmt.Errorf("version %d does not exist", version)
 }
 
@@ -125,7 +121,6 @@ func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	if err != nil {
 		return 0, nil, err
 	}
-
 	vReader, err := s.getVersionedReader(v)
 	if err != nil {
 		return 0, nil, err

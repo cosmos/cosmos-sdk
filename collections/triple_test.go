@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
-	"cosmossdk.io/core/testing"
+	coretesting "cosmossdk.io/core/testing"
 )
 
 func TestTriple(t *testing.T) {
@@ -45,10 +45,30 @@ func TestTripleRange(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, keys[:3], gotKeys)
 
+	// we prefix over (1) with "reverse" enabled, we expect 3 results in reverse order
+	iter, err = keySet.Iterate(ctx, collections.NewPrefixedTripleRangeReversed[uint64, string, []byte](uint64(1)))
+	require.NoError(t, err)
+	gotKeys, err = iter.Keys()
+	require.NoError(t, err)
+	require.Len(t, gotKeys, 3)
+	for i := range gotKeys {
+		require.Equal(t, gotKeys[i], keys[len(gotKeys)-i-1])
+	}
+
 	// we super prefix over Join(1, "A") we expect 2 results
 	iter, err = keySet.Iterate(ctx, collections.NewSuperPrefixedTripleRange[uint64, string, []byte](1, "A"))
 	require.NoError(t, err)
 	gotKeys, err = iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, keys[:2], gotKeys)
+
+	// we prefix over Join(1, "A") with "reverse" enabled, we expect 2 results in reverse order
+	iter, err = keySet.Iterate(ctx, collections.NewSuperPrefixedTripleRangeReversed[uint64, string, []byte](1, "A"))
+	require.NoError(t, err)
+	gotKeys, err = iter.Keys()
+	require.NoError(t, err)
+	require.Len(t, gotKeys, 2)
+	for i := range gotKeys {
+		require.Equal(t, gotKeys[i], keys[len(gotKeys)-i-1])
+	}
 }

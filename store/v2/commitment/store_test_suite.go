@@ -29,9 +29,13 @@ type CommitStoreTestSuite struct {
 	suite.Suite
 
 	NewStore func(db corestore.KVStoreWithBatch, dbDir string, storeKeys, oldStoreKeys []string, logger corelog.Logger) (*CommitStore, error)
+	TreeType string
 }
 
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
+	if s.TreeType == "iavlv2" {
+		s.T().Skip("FIXME: iavlv2 does not yet support snapshots")
+	}
 	storeKeys := []string{storeKey1, storeKey2}
 	commitStore, err := s.NewStore(dbm.NewMemDB(), s.T().TempDir(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)

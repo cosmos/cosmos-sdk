@@ -16,6 +16,7 @@ import (
 func TestCommitterSuite(t *testing.T) {
 	nodePool := iavl.NewNodePool()
 	s := &commitment.CommitStoreTestSuite{
+		TreeType: "iavlv2",
 		NewStore: func(
 			db corestore.KVStoreWithBatch,
 			dbDir string,

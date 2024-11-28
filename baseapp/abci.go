@@ -996,9 +996,10 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
 				if app.streamingManager.StopNodeOnErr {
+					err = fmt.Errorf("Commit listening hook failed: %w", err)
 					rollbackErr := app.cms.RollbackToVersion(blockHeight - 1)
 					if rollbackErr != nil {
-						return nil, rollbackErr
+						return nil, errors.Join(err, rollbackErr)
 					}
 					return nil, err
 				}

@@ -84,6 +84,8 @@ func initCometConfig() cometbft.CfgOption {
 	cfg.Consensus.TimeoutCommit = 5 * time.Second
 	// overwrite default pprof listen address
 	cfg.RPC.PprofListenAddress = "localhost:6060"
+	// use previous db backend
+	cfg.DBBackend = "goleveldb"
 
 	return cometbft.OverwriteDefaultConfigTomlConfig(cfg)
 }

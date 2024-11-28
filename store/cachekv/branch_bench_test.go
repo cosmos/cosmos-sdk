@@ -74,7 +74,6 @@ func Benchmark_GetSparse(b *testing.B) {
 var keySink, valueSink any
 
 func Benchmark_Iterate(b *testing.B) {
-
 	for _, stackSize := range stackSizes {
 		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
 			bs := makeBranchStack(b, stackSize)

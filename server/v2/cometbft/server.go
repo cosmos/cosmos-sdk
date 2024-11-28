@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -162,7 +163,7 @@ func New[T transaction.Tx](
 		}
 	}
 
-	srv.Consensus = &consensus[T]{
+	c := &consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
 		app:                    app,
@@ -189,6 +190,13 @@ func New[T transaction.Tx](
 		addrPeerFilter:         srv.serverOptions.AddrPeerFilter,
 		idPeerFilter:           srv.serverOptions.IdPeerFilter,
 	}
+
+	c.optimisticExec = oe.NewOptimisticExecution(
+		logger,
+		c.internalFinalizeBlock,
+	)
+
+	srv.Consensus = c
 
 	return srv, nil
 }

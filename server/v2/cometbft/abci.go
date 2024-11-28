@@ -2,7 +2,6 @@ package cometbft
 
 import (
 	"context"
-	"cosmossdk.io/server/v2/cometbft/oe"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -12,7 +11,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/collections"
@@ -29,6 +28,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/streaming"
@@ -443,7 +443,6 @@ func (c *consensus[T]) ProcessProposal(
 	if req.Height > int64(c.initialHeight) {
 		// abort any running OE
 		c.optimisticExec.Abort()
-		//c.setState(execModeFinalize, header)
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
@@ -468,7 +467,7 @@ func (c *consensus[T]) ProcessProposal(
 	// After the first block has been processed, the next blocks will get executed
 	// optimistically, so that when the ABCI client calls `FinalizeBlock` the app
 	// can have a response ready.
-	if c.optimisticExec.Enabled() && req.Height > int64(c.initialHeight) {
+	if req.Height > int64(c.initialHeight) {
 		c.optimisticExec.Execute(req)
 	}
 
@@ -508,7 +507,6 @@ func (c *consensus[T]) FinalizeBlock(
 			decodedTxs = res.DecodedTxs
 		}
 
-		// if it was aborted, we need to reset the state
 		c.optimisticExec.Reset()
 	}
 

@@ -5,11 +5,10 @@ go 1.23.3
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
-	cosmossdk.io/collections v0.4.1-0.20241104084251-838f1557af0a
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/indexer/postgres v0.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.1.1
@@ -50,7 +49,10 @@ require (
 	google.golang.org/protobuf v1.35.2
 )
 
-require github.com/jackc/pgx/v5 v5.7.1
+require (
+	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b
+	github.com/jackc/pgx/v5 v5.7.1
+)
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
@@ -62,7 +64,7 @@ require (
 	cloud.google.com/go/iam v1.1.13 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -280,8 +282,6 @@ replace (
 
 // Below are the long-lived replace of the SimApp
 replace (
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
-	cosmossdk.io/schema => ../schema
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

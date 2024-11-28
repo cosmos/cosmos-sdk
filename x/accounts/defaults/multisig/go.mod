@@ -3,7 +3,7 @@ module cosmossdk.io/x/accounts/defaults/multisig
 go 1.23.3
 
 require (
-	cosmossdk.io/collections v0.4.0
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
@@ -23,7 +23,7 @@ require (
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
@@ -176,7 +176,6 @@ replace github.com/cosmos/cosmos-sdk => ../../../../.
 
 replace (
 	cosmossdk.io/api => ../../../../api
-	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/bank => ../../../bank

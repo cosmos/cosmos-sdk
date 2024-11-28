@@ -17,7 +17,7 @@ func (tm *objectIndexer) createTable(ctx context.Context, conn dbConn) error {
 
 	sqlStr := buf.String()
 	if tm.options.logger != nil {
-		tm.options.logger.Debug("Creating table %s", "table", tm.tableName(), "sql", sqlStr)
+		tm.options.logger.Debug("Creating table", "table", tm.tableName(), "sql", sqlStr)
 	}
 	_, err = conn.ExecContext(ctx, sqlStr)
 	return err

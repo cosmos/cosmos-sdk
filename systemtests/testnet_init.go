@@ -13,8 +13,8 @@ import (
 	"github.com/creachadair/tomledit/parser"
 )
 
-// isV2 checks if the tests run with simapp v2
-func isV2() bool {
+// IsV2 checks if the tests run with simapp v2
+func IsV2() bool {
 	buildOptions := os.Getenv("COSMOS_BUILD_OPTIONS")
 	return strings.Contains(buildOptions, "v2")
 }
@@ -77,7 +77,7 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 		"--single-host",
 	}
 
-	if isV2() {
+	if IsV2() {
 		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
 	} else {
 		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
@@ -136,7 +136,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		"--keyring-backend=test",
 	}
 
-	if isV2() {
+	if IsV2() {
 		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
 	} else {
 		args = append(args, "--minimum-gas-prices="+s.minGasPrice)

@@ -13,8 +13,6 @@ import (
 )
 
 func TestSnapshots(t *testing.T) {
-	t.Skip("Skip snapshots test, flaky due to pebbledb logs on CI")
-
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	systest.Sut.StartChain(t)
@@ -80,8 +78,6 @@ func TestSnapshots(t *testing.T) {
 }
 
 func TestPrune(t *testing.T) {
-	t.Skip("Skip snapshots test, flaky due to pebbledb logs on CI")
-
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 

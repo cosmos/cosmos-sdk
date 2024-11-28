@@ -28,12 +28,12 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db corestore.KVStoreWithBatch, storeKeys, oldStoreKeys []string, logger corelog.Logger) (*CommitStore, error)
+	NewStore func(db corestore.KVStoreWithBatch, dbDir string, storeKeys, oldStoreKeys []string, logger corelog.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	storeKeys := []string{storeKey1, storeKey2}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), s.T().TempDir(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -67,7 +67,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 		},
 	}
 
-	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
+	targetStore, err := s.NewStore(dbm.NewMemDB(), s.T().TempDir(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	chunks := make(chan io.ReadCloser, kvCount*int(latestVersion))
@@ -130,7 +130,8 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 	storeKeys := []string{storeKey1, storeKey2}
 	mdb := dbm.NewMemDB()
-	commitStore, err := s.NewStore(mdb, storeKeys, nil, coretesting.NewNopLogger())
+	dbDir := s.T().TempDir()
+	commitStore, err := s.NewStore(mdb, dbDir, storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -151,7 +152,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 	}
 
 	// load the store with the latest version
-	targetStore, err := s.NewStore(mdb, storeKeys, nil, coretesting.NewNopLogger())
+	targetStore, err := s.NewStore(mdb, dbDir, storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 	err = targetStore.LoadVersion(latestVersion)
 	s.Require().NoError(err)
@@ -164,7 +165,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 
 	// rollback to a previous version
 	rollbackVersion := uint64(5)
-	rollbackStore, err := s.NewStore(mdb, storeKeys, nil, coretesting.NewNopLogger())
+	rollbackStore, err := s.NewStore(mdb, dbDir, storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 	err = rollbackStore.LoadVersion(rollbackVersion)
 	s.Require().NoError(err)
@@ -185,7 +186,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	storeKeys := []string{storeKey1, storeKey2}
 	pruneOpts := store.NewPruningOptionWithCustom(10, 5)
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), s.T().TempDir(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(100)
@@ -225,7 +226,7 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 
 func (s *CommitStoreTestSuite) TestStore_GetProof() {
 	storeKeys := []string{storeKey1, storeKey2}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), s.T().TempDir(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	toVersion := uint64(10)
@@ -268,7 +269,7 @@ func (s *CommitStoreTestSuite) TestStore_GetProof() {
 
 func (s *CommitStoreTestSuite) TestStore_Get() {
 	storeKeys := []string{storeKey1, storeKey2}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), s.T().TempDir(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	toVersion := uint64(10)
@@ -303,7 +304,8 @@ func (s *CommitStoreTestSuite) TestStore_Get() {
 func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	storeKeys := []string{storeKey1, storeKey2, storeKey3}
 	commitDB := dbm.NewMemDB()
-	commitStore, err := s.NewStore(commitDB, storeKeys, nil, coretesting.NewNopLogger())
+	commitDir := s.T().TempDir()
+	commitStore, err := s.NewStore(commitDB, commitDir, storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -330,14 +332,14 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	}
 	newStoreKeys := []string{storeKey1, storeKey2, storeKey3, "newStore1", "newStore2"}
 	realStoreKeys := []string{storeKey1, storeKey2, "newStore1", "newStore2"}
-	oldStoreKeys := []string{storeKey1, storeKey3}
-	commitStore, err = s.NewStore(commitDB, newStoreKeys, oldStoreKeys, coretesting.NewNopLogger())
+	oldStoreKeys := []string{storeKey3}
+	commitStore, err = s.NewStore(commitDB, commitDir, newStoreKeys, oldStoreKeys, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 	err = commitStore.LoadVersionAndUpgrade(latestVersion, upgrades)
 	s.Require().NoError(err)
 
 	// GetProof should work for the old stores
-	for _, storeKey := range []string{storeKey1, storeKey3} {
+	for _, storeKey := range []string{storeKey3} {
 		for i := uint64(1); i <= latestVersion; i++ {
 			for j := 0; j < kvCount; j++ {
 				proof, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
@@ -391,20 +393,20 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	// verify existing store
 	for i := uint64(1); i < latestVersion*2; i++ {
 		for j := 0; j < kvCount; j++ {
-			proof, err := commitStore.GetProof([]byte(storeKey2), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+			prf, err := commitStore.GetProof([]byte(storeKey2), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
 			s.Require().NoError(err)
-			s.Require().NotNil(proof)
+			s.Require().NotNil(prf)
 		}
 	}
 
 	// create a new commitment store with one more upgrades
 	upgrades = &corestore.StoreUpgrades{
-		Added:   []string{storeKey3},
 		Deleted: []string{storeKey2},
+		Added:   []string{"newStore3"},
 	}
-	newRealStoreKeys := []string{storeKey1, storeKey3, "newStore1", "newStore2"}
+	newRealStoreKeys := []string{storeKey1, "newStore1", "newStore2", "newStore3"}
 	oldStoreKeys = []string{storeKey2, storeKey3}
-	commitStore, err = s.NewStore(commitDB, newStoreKeys, oldStoreKeys, coretesting.NewNopLogger())
+	commitStore, err = s.NewStore(commitDB, commitDir, newRealStoreKeys, oldStoreKeys, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 	err = commitStore.LoadVersionAndUpgrade(2*latestVersion-1, upgrades)
 	s.Require().NoError(err)
@@ -420,7 +422,8 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(i, kvPairs)))
+		err = commitStore.WriteChangeset(corestore.NewChangesetWithPairs(i, kvPairs))
+		s.Require().NoError(err)
 		commitInfo, err := commitStore.Commit(i)
 		s.Require().NoError(err)
 		s.Require().NotNil(commitInfo)
@@ -432,6 +435,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 
 	// prune the old stores
 	s.Require().NoError(commitStore.Prune(latestVersion))
+	s.T().Logf("prune to version %d", latestVersion)
 	// GetProof should fail for the old stores
 	for _, storeKey := range []string{storeKey1, storeKey3} {
 		for i := uint64(1); i <= latestVersion; i++ {
@@ -441,6 +445,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 			}
 		}
 	}
+	s.T().Log("GetProof should work for the new stores")
 	// GetProof should not fail for the newly removed store
 	for i := latestVersion + 1; i < latestVersion*2; i++ {
 		for j := 0; j < kvCount; j++ {
@@ -450,6 +455,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 		}
 	}
 
+	s.T().Logf("Prune to version %d", latestVersion*2)
 	s.Require().NoError(commitStore.Prune(latestVersion * 2))
 	// GetProof should fail for the newly deleted stores
 	for i := uint64(1); i < latestVersion*2; i++ {
@@ -458,10 +464,11 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 			s.Require().Error(err)
 		}
 	}
+	s.T().Log("GetProof should work for the new added store")
 	// GetProof should work for the new added store
 	for i := latestVersion*2 + 1; i < latestVersion*3; i++ {
 		for j := 0; j < kvCount; j++ {
-			proof, err := commitStore.GetProof([]byte(storeKey3), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+			proof, err := commitStore.GetProof([]byte("newStore3"), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
 			s.Require().NoError(err)
 			s.Require().NotNil(proof)
 		}

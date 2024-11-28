@@ -1,6 +1,7 @@
 package iavlv2
 
 import (
+	corestore "cosmossdk.io/core/store"
 	"errors"
 	"fmt"
 
@@ -13,6 +14,7 @@ import (
 
 var (
 	_ commitment.Tree      = (*Tree)(nil)
+	_ commitment.Reader    = (*Tree)(nil)
 	_ store.PausablePruner = (*Tree)(nil)
 )
 
@@ -87,9 +89,27 @@ func (t *Tree) Get(version uint64, key []byte) ([]byte, error) {
 		return nil, err
 	}
 	if int64(version) != t.tree.Version() {
+		cloned, err := t.tree.ReadonlyClone()
+		if err != nil {
+			return nil, err
+		}
+		if err = cloned.LoadVersion(int64(version)); err != nil {
+			return nil, err
+		}
+		return cloned.Get(key)
+	} else {
+		return t.tree.Get(key)
+	}
+}
+
+func (t *Tree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
+	if err := isHighBitSet(version); err != nil {
+		return nil, err
+	}
+	if int64(version) != t.tree.Version() {
 		return nil, fmt.Errorf("loading past version not yet supported")
 	}
-	return t.tree.Get(key)
+	return t.tree.Iterator(start, end, ascending)
 }
 
 func (t *Tree) Export(version uint64) (commitment.Exporter, error) {

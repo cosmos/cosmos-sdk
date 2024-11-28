@@ -130,8 +130,7 @@ func (e *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error 
 var _ branch.Service = &BranchService{}
 
 // custom branch service for integration tests
-type BranchService struct {
-}
+type BranchService struct{}
 
 func (bs *BranchService) Execute(ctx context.Context, f func(ctx context.Context) error) error {
 	_, ok := ctx.Value(contextKey).(*integrationContext)

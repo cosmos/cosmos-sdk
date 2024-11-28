@@ -9,8 +9,10 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/schema"
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
@@ -181,4 +183,10 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 	reg.Add(weights.Get("msg_set_withdraw_address", 50), simulation.MsgSetWithdrawAddressFactory(am.keeper))
 	reg.Add(weights.Get("msg_withdraw_delegation_reward", 50), simulation.MsgWithdrawDelegatorRewardFactory(am.keeper, am.stakingKeeper))
 	reg.Add(weights.Get("msg_withdraw_validator_commission", 50), simulation.MsgWithdrawValidatorCommissionFactory(am.keeper, am.stakingKeeper))
+}
+
+// ModuleCodec implements schema.HasModuleCodec.
+// It allows the indexer to decode the module's KVPairUpdate.
+func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
+	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
 }

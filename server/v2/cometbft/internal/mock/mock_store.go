@@ -50,7 +50,6 @@ func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
 }
 
 func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, error) {
-
 	err := s.Committer.WriteChangeset(changeset)
 	if err != nil {
 		return []byte{}, err

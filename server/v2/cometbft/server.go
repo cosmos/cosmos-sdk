@@ -2,7 +2,6 @@ package cometbft
 
 import (
 	"context"
-	"cosmossdk.io/server/v2/cometbft/oe"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -35,6 +34,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 

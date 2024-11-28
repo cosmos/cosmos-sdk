@@ -421,7 +421,6 @@ func TestSnapshot_Take_Prune(t *testing.T) {
 }
 
 func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
-	//TODO: race condition
 	store := setupStore(t)
 
 	items := [][]byte{

@@ -77,7 +77,6 @@ func (s *PruningManagerTestSuite) TestPrune() {
 		return count == len(storeKeys)
 	}
 	s.Require().Eventually(checkSCPrune, 10*time.Second, 1*time.Second)
-
 }
 
 func TestPruningOption(t *testing.T) {

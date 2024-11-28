@@ -42,7 +42,7 @@ func TestSnapshots(t *testing.T) {
 
 	// Check snapshots list
 	res = cli.RunCommandWithArgs(command, "list", fmt.Sprintf("--home=%s", node0Dir))
-	require.Contains(t, res, "height: 5")
+	require.Contains(t, trimPebbleDBStdErr(res), "height: 5")
 
 	// Dump snapshot
 	res = cli.RunCommandWithArgs(command, "dump", "5", "3", fmt.Sprintf("--home=%s", node0Dir), fmt.Sprintf("--output=%s/5-3.tar.gz", node0Dir))

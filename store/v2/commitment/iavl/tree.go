@@ -78,6 +78,10 @@ func (t *IavlTree) Commit() ([]byte, uint64, error) {
 func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
+		if immutableTree == nil {
+			// at version 0, root key will not exist
+			return t.tree.GetProof(key)
+		}
 		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
 	}
 
@@ -88,6 +92,10 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
+		if immutableTree == nil {
+			// at version 0, root key will not exist
+			return t.tree.Get(key)
+		}
 		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
 	}
 
@@ -98,6 +106,10 @@ func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 func (t *IavlTree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
+		if immutableTree == nil {
+			// at version 0, root key may not exist
+			return t.tree.Iterator(start, end, ascending)
+		}
 		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
 	}
 

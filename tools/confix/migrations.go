@@ -41,7 +41,7 @@ type v2KeyChangesMap map[string][]string
 var v2KeyChanges = v2KeyChangesMap{
 	"minimum-gas-prices": []string{"server.minimum-gas-prices"},
 	"min-retain-blocks":  []string{"comet.min-retain-blocks"},
-	"index-events":       []string{"comet.index-events"},
+	"index-events":       []string{"comet.index-abci-events"},
 	"halt-height":        []string{"comet.halt-height"},
 	"halt-time":          []string{"comet.halt-time"},
 	"app-db-backend":     []string{"store.app-db-backend"},

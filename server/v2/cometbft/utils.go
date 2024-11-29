@@ -2,9 +2,12 @@ package cometbft
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
+	"slices"
 	"strings"
 	"time"
 
@@ -70,16 +73,20 @@ func finalizeBlockResponse(
 	cp *cmtproto.ConsensusParams,
 	appHash []byte,
 	indexSet map[string]struct{},
+	disableABCIEvents,
 	debug bool,
 ) (*abci.FinalizeBlockResponse, error) {
-	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
+	events := make([]abci.Event, 0)
 
-	events, err := intoABCIEvents(allEvents, indexSet)
-	if err != nil {
-		return nil, err
+	if !disableABCIEvents {
+		var err error
+		events, err = intoABCIEvents(append(in.BeginBlockEvents, in.EndBlockEvents...), indexSet)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	txResults, err := intoABCITxResults(in.TxResults, indexSet, debug)
+	txResults, err := intoABCITxResults(in.TxResults, indexSet, disableABCIEvents, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +98,7 @@ func finalizeBlockResponse(
 		AppHash:               appHash,
 		ConsensusParamUpdates: cp,
 	}
+
 	return resp, nil
 }
 
@@ -108,12 +116,21 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 	return valsetUpdates
 }
 
-func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}, debug bool) ([]*abci.ExecTxResult, error) {
+func intoABCITxResults(
+	results []server.TxResult,
+	indexSet map[string]struct{},
+	disableABCIEvents, debug bool,
+) ([]*abci.ExecTxResult, error) {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
-		events, err := intoABCIEvents(results[i].Events, indexSet)
-		if err != nil {
-			return nil, err
+		var err error
+		events := make([]abci.Event, 0)
+
+		if !disableABCIEvents {
+			events, err = intoABCIEvents(results[i].Events, indexSet)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		res[i] = responseExecTxResultWithEvents(
@@ -132,16 +149,42 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) ([]abci.
 	indexAll := len(indexSet) == 0
 	abciEvents := make([]abci.Event, len(events))
 	for i, e := range events {
-		attributes, err := e.Attributes()
-		if err != nil {
-			return nil, err
-		}
-		abciEvents[i] = abci.Event{
-			Type:       e.Type,
-			Attributes: make([]abci.EventAttribute, len(attributes)),
+		attrs := make([]event.Attribute, 0)
+
+		if e.Data != nil {
+			resp, err := e.Data()
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal event data: %w", err)
+			}
+
+			var attrMap map[string]json.RawMessage
+			if err := json.Unmarshal(resp, &attrMap); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal event data: %w", err)
+			}
+
+			// sort the keys to ensure the order is always the same
+			keys := slices.Sorted(maps.Keys(attrMap))
+			for _, k := range keys {
+				v := attrMap[k]
+				attrs = append(attrs, event.Attribute{
+					Key:   k,
+					Value: string(v),
+				})
+			}
+		} else {
+			var err error
+			attrs, err = e.Attributes()
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		for j, attr := range attributes {
+		abciEvents[i] = abci.Event{
+			Type:       e.Type,
+			Attributes: make([]abci.EventAttribute, len(attrs)),
+		}
+
+		for j, attr := range attrs {
 			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
 			abciEvents[i].Attributes[j] = abci.EventAttribute{
 				Key:   attr.Key,
@@ -154,26 +197,9 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) ([]abci.
 }
 
 func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struct{}) ([]byte, error) {
-	indexAll := len(indexSet) == 0
-	abciEvents := make([]abci.Event, len(txRes.Events))
-	for i, e := range txRes.Events {
-		attributes, err := e.Attributes()
-		if err != nil {
-			return nil, err
-		}
-		abciEvents[i] = abci.Event{
-			Type:       e.Type,
-			Attributes: make([]abci.EventAttribute, len(attributes)),
-		}
-
-		for j, attr := range attributes {
-			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
-			abciEvents[i].Attributes[j] = abci.EventAttribute{
-				Key:   attr.Key,
-				Value: attr.Value,
-				Index: index || indexAll,
-			}
-		}
+	abciEvents, err := intoABCIEvents(txRes.Events, indexSet)
+	if err != nil {
+		return nil, err
 	}
 
 	msgResponses := make([]*gogoany.Any, len(txRes.Resp))

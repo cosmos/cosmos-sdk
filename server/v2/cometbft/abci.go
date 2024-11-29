@@ -62,9 +62,9 @@ type consensus[T transaction.Tx] struct {
 	streamingManager streaming.Manager
 	mempool          mempool.Mempool[T]
 
-	cfg           Config
-	chainID       string
-	indexedEvents map[string]struct{}
+	cfg               Config
+	chainID           string
+	indexedABCIEvents map[string]struct{}
 
 	initialHeight uint64
 	// this is only available after this node has committed a block (in FinalizeBlock),
@@ -105,9 +105,12 @@ func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 			return nil, err
 		}
 
-		events, err := intoABCIEvents(resp.Events, c.indexedEvents)
-		if err != nil {
-			return nil, err
+		events := make([]abci.Event, 0)
+		if !c.cfg.AppTomlConfig.DisableABCIEvents {
+			events, err = intoABCIEvents(resp.Events, c.indexedABCIEvents)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		cometResp := &abciproto.CheckTxResponse{
@@ -116,6 +119,7 @@ func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 			GasUsed:   uint64ToInt64(resp.GasUsed),
 			Events:    events,
 		}
+
 		if resp.Error != nil {
 			space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
 			cometResp.Code = code
@@ -557,7 +561,7 @@ func (c *consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents, c.cfg.AppTomlConfig.Trace)
+	return finalizeBlockResponse(resp, cp, appHash, c.indexedABCIEvents, c.cfg.AppTomlConfig.DisableABCIEvents, c.cfg.AppTomlConfig.Trace)
 }
 
 func (c *consensus[T]) internalFinalizeBlock(

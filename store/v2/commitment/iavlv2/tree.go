@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	corestore "cosmossdk.io/core/store"
 	"github.com/cosmos/iavl/v2"
 	ics23 "github.com/cosmos/ics23/go"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 )

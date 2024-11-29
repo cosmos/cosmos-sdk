@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -15,6 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 const (
@@ -25,18 +26,18 @@ func TestWithdrawAllRewardsCmd(t *testing.T) {
 	// scenario: test distribution withdraw all rewards command
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	newAddr := cli.AddKey("newAddr")
 	require.NotEmpty(t, newAddr)
 
 	var initialAmount int64 = 10000000
 	initialBalance := fmt.Sprintf("%d%s", initialAmount, distrTestDenom)
-	sut.ModifyGenesisCLI(t,
+	systest.Sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", newAddr, initialBalance},
 	)
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// query balance
 	newAddrBal := cli.QueryBalance(newAddr, distrTestDenom)
@@ -54,11 +55,11 @@ func TestWithdrawAllRewardsCmd(t *testing.T) {
 
 	// delegate tokens to validator1
 	rsp = cli.RunAndWait("tx", "staking", "delegate", val1Addr, delegation, "--from="+newAddr, "--fees=1"+distrTestDenom)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// delegate tokens to validator2
 	rsp = cli.RunAndWait("tx", "staking", "delegate", val2Addr, delegation, "--from="+newAddr, "--fees=1"+distrTestDenom)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// check updated balance: newAddrBal - delegatedBal - fees
 	expBal := newAddrBal - (delegationAmount * 2) - 2
@@ -101,32 +102,32 @@ func TestWithdrawAllRewardsCmd(t *testing.T) {
 
 	// test withdraw-all-rewards transaction
 	rsp = cli.RunAndWait(withdrawCmdArgs...)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 }
 
 func TestDistrValidatorGRPCQueries(t *testing.T) {
 	// scenario: test distribution validator grpc gateway queries
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
 	valOperAddr := cli.GetKeyAddrPrefix("node0", "val")
 	require.NotEmpty(t, valOperAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	sut.AwaitNBlocks(t, 3)
+	systest.Sut.AwaitNBlocks(t, 3)
 
-	baseurl := sut.APIAddress()
+	baseurl := systest.Sut.APIAddress()
 	expectedAmountOutput := fmt.Sprintf(`{"denom":"%s","amount":"203.105000000000000000"}`, distrTestDenom)
 
 	// test params grpc endpoint
 	paramsURL := baseurl + "/cosmos/distribution/v1beta1/params"
 
-	paramsTestCases := []RestTestCase{
+	paramsTestCases := []systest.RestTestCase{
 		{
 			"gRPC request params",
 			paramsURL,
@@ -134,13 +135,13 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 			`{"params":{"community_tax":"0.020000000000000000","base_proposer_reward":"0.000000000000000000","bonus_proposer_reward":"0.000000000000000000","withdraw_addr_enabled":true}}`,
 		},
 	}
-	RunRestQueries(t, paramsTestCases)
+	systest.RunRestQueries(t, paramsTestCases...)
 
 	// test validator distribution info grpc endpoint
 	validatorsURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s`
 	validatorsOutput := fmt.Sprintf(`{"operator_address":"%s","self_bond_rewards":[],"commission":[%s]}`, valAddr, expectedAmountOutput)
 
-	validatorsTestCases := []RestTestCase{
+	validatorsTestCases := []systest.RestTestCase{
 		{
 			"gRPC request validator with valid validator address",
 			fmt.Sprintf(validatorsURL, valOperAddr),
@@ -148,12 +149,12 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 			validatorsOutput,
 		},
 	}
-	TestRestQueryIgnoreNumbers(t, validatorsTestCases)
+	systest.TestRestQueryIgnoreNumbers(t, validatorsTestCases...)
 
 	// test outstanding rewards grpc endpoint
 	outstandingRewardsURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards`
 
-	rewardsTestCases := []RestTestCase{
+	rewardsTestCases := []systest.RestTestCase{
 		{
 			"gRPC request outstanding rewards with valid validator address",
 			fmt.Sprintf(outstandingRewardsURL, valOperAddr),
@@ -161,12 +162,12 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 			fmt.Sprintf(`{"rewards":{"rewards":[%s]}}`, expectedAmountOutput),
 		},
 	}
-	TestRestQueryIgnoreNumbers(t, rewardsTestCases)
+	systest.TestRestQueryIgnoreNumbers(t, rewardsTestCases...)
 
 	// test validator commission grpc endpoint
 	commissionURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/commission`
 
-	commissionTestCases := []RestTestCase{
+	commissionTestCases := []systest.RestTestCase{
 		{
 			"gRPC request commission with valid validator address",
 			fmt.Sprintf(commissionURL, valOperAddr),
@@ -174,13 +175,13 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 			fmt.Sprintf(`{"commission":{"commission":[%s]}}`, expectedAmountOutput),
 		},
 	}
-	TestRestQueryIgnoreNumbers(t, commissionTestCases)
+	systest.TestRestQueryIgnoreNumbers(t, commissionTestCases...)
 
 	// test validator slashes grpc endpoint
 	slashURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/slashes`
 	invalidHeightOutput := `{"code":3, "message":"strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
 
-	slashTestCases := []RestTestCase{
+	slashTestCases := []systest.RestTestCase{
 		{
 			"invalid start height",
 			fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "-3", "3"),
@@ -200,15 +201,15 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 			`{"slashes":[],"pagination":{"next_key":null,"total":"0"}}`,
 		},
 	}
-	RunRestQueries(t, slashTestCases)
+	systest.RunRestQueries(t, slashTestCases...)
 }
 
 func TestDistrDelegatorGRPCQueries(t *testing.T) {
 	// scenario: test distribution validator gsrpc gateway queries
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
@@ -218,17 +219,12 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 
 	// update commission rate of node0 validator
 	// generate new gentx and copy it to genesis.json before starting network
-	rsp := cli.RunCommandWithArgs("genesis", "gentx", "node0", "100000000"+distrTestDenom, "--chain-id="+cli.chainID, "--commission-rate=0.01", "--home", sut.nodePath(0), "--keyring-backend=test")
-	// extract gentx path from above command output
-	re := regexp.MustCompile(`"(.*?\.json)"`)
-	match := re.FindStringSubmatch(rsp)
-	require.GreaterOrEqual(t, len(match), 1)
-
-	updatedGentx := filepath.Join(WorkDir, match[1])
-	updatedGentxBz, err := os.ReadFile(updatedGentx) // #nosec G304
+	outFile := filepath.Join(t.TempDir(), "gentx.json")
+	rsp := cli.RunCommandWithArgs("genesis", "gentx", "node0", "100000000"+distrTestDenom, "--chain-id="+cli.ChainID(), "--commission-rate=0.01", "--home", systest.Sut.NodeDir(0), "--keyring-backend=test", "--output-document="+outFile)
+	updatedGentxBz, err := os.ReadFile(outFile) // #nosec G304
 	require.NoError(t, err)
 
-	sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
+	systest.Sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
 		state, err := sjson.SetRawBytes(genesis, "app_state.genutil.gen_txs.0", updatedGentxBz)
 		require.NoError(t, err)
 		return state
@@ -240,26 +236,26 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 
 	var initialAmount int64 = 1000000000
 	initialBalance := fmt.Sprintf("%d%s", initialAmount, distrTestDenom)
-	sut.ModifyGenesisCLI(t,
+	systest.Sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", delAddr, initialBalance},
 	)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// delegate some tokens to valOperAddr
 	rsp = cli.RunAndWait("tx", "staking", "delegate", valOperAddr, "100000000"+distrTestDenom, "--from="+delAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
-	sut.AwaitNBlocks(t, 5)
+	systest.Sut.AwaitNBlocks(t, 5)
 
-	baseurl := sut.APIAddress()
+	baseurl := systest.Sut.APIAddress()
 
 	// test delegator rewards grpc endpoint
 	delegatorRewardsURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/rewards`
 	expectedAmountOutput := `{"denom":"stake","amount":"0.121275000000000000"}`
 	rewardsOutput := fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[%s]}],"total":[%s]}`, valOperAddr, expectedAmountOutput, expectedAmountOutput)
 
-	delegatorRewardsTestCases := []RestTestCase{
+	delegatorRewardsTestCases := []systest.RestTestCase{
 		{
 			"valid rewards request with valid delegator address",
 			fmt.Sprintf(delegatorRewardsURL, delAddr),
@@ -273,11 +269,11 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 			fmt.Sprintf(`{"rewards":[%s]}`, expectedAmountOutput),
 		},
 	}
-	TestRestQueryIgnoreNumbers(t, delegatorRewardsTestCases)
+	systest.TestRestQueryIgnoreNumbers(t, delegatorRewardsTestCases...)
 
 	// test delegator validators grpc endpoint
 	delegatorValsURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/validators`
-	valsTestCases := []RestTestCase{
+	valsTestCases := []systest.RestTestCase{
 		{
 			"gRPC request delegator validators with valid delegator address",
 			fmt.Sprintf(delegatorValsURL, delAddr),
@@ -285,11 +281,11 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 			fmt.Sprintf(`{"validators":["%s"]}`, valOperAddr),
 		},
 	}
-	RunRestQueries(t, valsTestCases)
+	systest.RunRestQueries(t, valsTestCases...)
 
 	// test withdraw address grpc endpoint
 	withdrawAddrURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/withdraw_address`
-	withdrawAddrTestCases := []RestTestCase{
+	withdrawAddrTestCases := []systest.RestTestCase{
 		{
 			"gRPC request withdraw address with valid delegator address",
 			fmt.Sprintf(withdrawAddrURL, delAddr),
@@ -297,5 +293,5 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 			fmt.Sprintf(`{"withdraw_address":"%s"}`, delAddr),
 		},
 	}
-	RunRestQueries(t, withdrawAddrTestCases)
+	systest.RunRestQueries(t, withdrawAddrTestCases...)
 }

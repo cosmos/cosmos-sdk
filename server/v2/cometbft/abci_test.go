@@ -2,14 +2,18 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/core/server"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"io"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"cosmossdk.io/server/v2/cometbft/oe"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cosmos/gogoproto/proto"
@@ -56,10 +60,10 @@ func getQueryRouterBuilder[T any, PT interface {
 	*T
 	proto.Message
 },
-	U any, UT interface {
-		*U
-		proto.Message
-	}](
+U any, UT interface {
+	*U
+	proto.Message
+}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -86,10 +90,10 @@ func getMsgRouterBuilder[T any, PT interface {
 	*T
 	transaction.Msg
 },
-	U any, UT interface {
-		*U
-		transaction.Msg
-	}](
+U any, UT interface {
+	*U
+	transaction.Msg
+}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -514,6 +518,12 @@ func TestConsensus_ProcessProposal(t *testing.T) {
 	require.Error(t, err)
 
 	// NoOp handler
+	// dummy optimistic execution
+	optimisticMockFunc := func(context.Context, *abci.FinalizeBlockRequest) (*server.BlockResponse, store.WriterMap, []mock.Tx, error) {
+		return nil, nil, nil, errors.New("test error")
+	}
+	c.optimisticExec = oe.NewOptimisticExecution[mock.Tx](log.NewNopLogger(), optimisticMockFunc)
+
 	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
 	_, err = c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
@@ -723,4 +733,77 @@ func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 	commitInfo, err := store.GetStateCommitment().GetCommitInfo(version)
 	require.NoError(t, err)
 	require.Equal(t, target, commitInfo.Version)
+}
+
+func TestOptimisticExecution(t *testing.T) {
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+
+	// Set up handlers
+	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
+
+	// mock optimistic execution
+	calledTimes := 0
+	optimisticMockFunc := func(context.Context, *abci.FinalizeBlockRequest) (*server.BlockResponse, store.WriterMap, []mock.Tx, error) {
+		calledTimes++
+		return nil, nil, nil, errors.New("test error")
+	}
+	c.optimisticExec = oe.NewOptimisticExecution[mock.Tx](log.NewNopLogger(), optimisticMockFunc)
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	theHash := sha256.Sum256([]byte("test"))
+	ppReq := &abciproto.ProcessProposalRequest{
+		Height: 2,
+		Hash:   theHash[:],
+		Time:   time.Now(),
+		Txs:    [][]byte{mockTx.Bytes()},
+	}
+
+	// Start optimistic execution
+	resp, err := c.ProcessProposal(context.Background(), ppReq)
+	require.NoError(t, err)
+	require.Equal(t, resp.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
+
+	// Initialize FinalizeBlock with correct hash - should use optimistic result
+	theHash = sha256.Sum256([]byte("test"))
+	fbReq := &abciproto.FinalizeBlockRequest{
+		Height: 2,
+		Hash:   theHash[:],
+		Time:   ppReq.Time,
+		Txs:    ppReq.Txs,
+	}
+	fbResp, err := c.FinalizeBlock(context.Background(), fbReq)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "test error") // from optimisticMockFunc
+	require.Equal(t, 1, calledTimes)
+
+	resp, err = c.ProcessProposal(context.Background(), ppReq)
+	require.NoError(t, err)
+	require.Equal(t, resp.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
+
+	theWrongHash := sha256.Sum256([]byte("wrong_hash"))
+	fbReq.Hash = theWrongHash[:]
+
+	// Initialize FinalizeBlock with wrong hash - should abort optimistic execution
+	// Because is aborted, the result comes from the normal execution
+	fbResp, err = c.FinalizeBlock(context.Background(), fbReq)
+	require.NotNil(t, fbResp)
+	require.NoError(t, err)
+	require.Equal(t, 2, calledTimes)
+
+	// Verify optimistic execution was reset
+	require.False(t, c.optimisticExec.Initialized())
 }

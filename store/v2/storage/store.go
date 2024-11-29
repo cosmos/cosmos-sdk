@@ -153,7 +153,8 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.Stat
 				if err := b.Write(); err != nil {
 					return err
 				}
-				if err := b.Reset(); err != nil {
+				b, err = ss.db.NewBatch(version)
+				if err != nil {
 					return err
 				}
 			}

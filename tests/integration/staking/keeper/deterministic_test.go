@@ -210,9 +210,9 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 	})
 }
 
-func metadataGenerator() *rapid.Generator[stakingtypes.Metadata] {
-	return rapid.Custom(func(t *rapid.T) stakingtypes.Metadata {
-		return stakingtypes.Metadata{
+func metadataGenerator() *rapid.Generator[*stakingtypes.Metadata] {
+	return rapid.Custom(func(t *rapid.T) *stakingtypes.Metadata {
+		return &stakingtypes.Metadata{
 			ProfilePicUri:    generateUri(t),
 			SocialHandleUris: []string{generateUri(t), generateUri(t)},
 		}
@@ -325,7 +325,7 @@ func getStaticValidator(t *testing.T, f *deterministicFixture) stakingtypes.Vali
 			"website",
 			"securityContact",
 			"details",
-			stakingtypes.Metadata{},
+			&stakingtypes.Metadata{},
 		),
 		UnbondingHeight: 10,
 		UnbondingTime:   time.Date(2022, 10, 1, 0, 0, 0, 0, time.UTC),
@@ -361,7 +361,7 @@ func getStaticValidator2(t *testing.T, f *deterministicFixture) stakingtypes.Val
 			"website",
 			"securityContact",
 			"details",
-			stakingtypes.Metadata{},
+			&stakingtypes.Metadata{},
 		),
 		UnbondingHeight: 100132,
 		UnbondingTime:   time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),

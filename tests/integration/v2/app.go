@@ -14,6 +14,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	corebranch "cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/server"
@@ -53,6 +54,8 @@ const (
 
 type stateMachineTx = transaction.Tx
 
+type handler = func(ctx context.Context) (transaction.Msg, error)
+
 // DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
@@ -88,6 +91,11 @@ type StartupConfig struct {
 	GenesisAccounts []GenesisAccount
 	// HomeDir defines the home directory of the app where config and data will be stored.
 	HomeDir string
+	// BranchService defines the custom branch service to be used in the app.
+	BranchService corebranch.Service
+	// RouterServiceBuilder defines the custom builder
+	// for msg router and query router service to be used in the app.
+	RouterServiceBuilder runtime.RouterServiceBuilder
 }
 
 func DefaultStartUpConfig(t *testing.T) StartupConfig {
@@ -113,6 +121,26 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 		GenesisBehavior: Genesis_COMMIT,
 		GenesisAccounts: []GenesisAccount{ga},
 		HomeDir:         homedir,
+		BranchService:   stf.BranchService{},
+		RouterServiceBuilder: runtime.NewRouterBuilder(
+			stf.NewMsgRouterService, stf.NewQueryRouterService(),
+		),
+	}
+}
+
+// RunMsgConfig defines the run message configuration.
+type RunMsgConfig struct {
+	Commit bool
+}
+
+// Option is a function that can be used to configure the integration app.
+type Option func(*RunMsgConfig)
+
+// WithAutomaticCommit enables automatic commit.
+// This means that the integration app will automatically commit the state after each msg.
+func WithAutomaticCommit() Option {
+	return func(cfg *RunMsgConfig) {
+		cfg.Commit = true
 	}
 }
 
@@ -159,6 +187,8 @@ func NewApp(
 				kvFactory,
 				&eventService{},
 				storeBuilder,
+				startupConfig.BranchService,
+				startupConfig.RouterServiceBuilder,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -395,6 +425,31 @@ func (a *App) SignCheckDeliver(
 	require.NoError(t, err)
 
 	return txResult
+}
+
+// RunMsg runs the handler for a transaction message.
+// It required the context to have the integration context.
+// a new state is committed if the option WithAutomaticCommit is set in options.
+func (app *App) RunMsg(t *testing.T, ctx context.Context, handler handler, option ...Option) (resp transaction.Msg, err error) {
+	// set options
+	cfg := &RunMsgConfig{}
+	for _, opt := range option {
+		opt(cfg)
+	}
+
+	// need to have integration context
+	integrationCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	require.True(t, ok)
+
+	resp, err = handler(ctx)
+
+	if cfg.Commit {
+		app.lastHeight++
+		_, err := app.Commit(integrationCtx.state)
+		require.NoError(t, err)
+	}
+
+	return resp, err
 }
 
 // CheckBalance checks the balance of the given address.

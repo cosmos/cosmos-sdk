@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
+	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 const (
@@ -47,9 +47,9 @@ func TestStorageTestSuite(t *testing.T) {
 func (s *RootStoreTestSuite) SetupTest() {
 	noopLog := coretesting.NewNopLogger()
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
+	pebbleDB, err := pebbledb.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog, nil)
+	ss := storage.NewStorageStore(pebbleDB, noopLog, nil)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, nil, iavl.DefaultConfig())
 	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, nil, iavl.DefaultConfig())
@@ -67,9 +67,9 @@ func (s *RootStoreTestSuite) SetupTest() {
 func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption) {
 	noopLog := coretesting.NewNopLogger()
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
+	pebbleDB, err := pebbledb.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog, nil)
+	ss := storage.NewStorageStore(pebbleDB, noopLog, nil)
 
 	mdb := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
@@ -535,9 +535,9 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()
-	sqliteDB, err := sqlite.New(s.T().TempDir())
+	pebbleDB, err := pebbledb.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog, nil)
+	ss := storage.NewStorageStore(pebbleDB, noopLog, nil)
 
 	tree := iavl.NewIavlTree(mdb1, noopLog, nil, iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
@@ -566,9 +566,9 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().Equal(uint64(0), actualHeightToPrune)
 
 	// "restart"
-	sqliteDB, err = sqlite.New(s.T().TempDir())
+	pebbleDB, err = pebbledb.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss = storage.NewStorageStore(sqliteDB, noopLog, nil)
+	ss = storage.NewStorageStore(pebbleDB, noopLog, nil)
 
 	tree = iavl.NewIavlTree(mdb1, noopLog, nil, iavl.DefaultConfig())
 	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
@@ -616,10 +616,10 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	noopLog := coretesting.NewNopLogger()
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
+	pebbleDB, err := pebbledb.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	ss := storage.NewStorageStore(sqliteDB, noopLog, nil)
+	ss := storage.NewStorageStore(pebbleDB, noopLog, nil)
 
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()

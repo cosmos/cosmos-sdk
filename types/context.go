@@ -251,7 +251,7 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c
 }
 
-// WithIsRecheckTx called with true will also set true on checkTx in order to
+// WithIsReCheckTx called with true will also set true on checkTx in order to
 // enforce the invariant that if recheckTx = true then checkTx = true as well.
 func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 	if isRecheckTx {

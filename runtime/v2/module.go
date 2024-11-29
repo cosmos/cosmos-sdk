@@ -15,11 +15,13 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
+	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/core/transaction"
@@ -216,15 +218,17 @@ func ProvideEnvironment(
 	memKvService store.MemoryStoreService,
 	headerService header.Service,
 	eventService event.Service,
+	branchService branch.Service,
+	routerBuilder RouterServiceBuilder,
 ) appmodulev2.Environment {
 	return appmodulev2.Environment{
 		Logger:             logger,
-		BranchService:      stf.BranchService{},
+		BranchService:      branchService,
 		EventService:       eventService,
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      headerService,
-		QueryRouterService: stf.NewQueryRouterService(),
-		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
+		QueryRouterService: routerBuilder.BuildQueryRouter(),
+		MsgRouterService:   routerBuilder.BuildMsgRouter([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,
@@ -235,6 +239,41 @@ func ProvideTelemetryService(cfg GlobalConfig, factory telemetry.ServiceFactory)
 	return factory(server.ConfigMap(cfg))
 }
 
+// RouterServiceBuilder builds the msg router and query router service during app initialization.
+// this is mainly use for testing to override message router service in the environment and not in stf.
+type RouterServiceBuilder interface {
+	// BuildMsgRouter return a msg router service.
+	// - actor is the module store key.
+	BuildMsgRouter(actor []byte) router.Service
+	BuildQueryRouter() router.Service
+}
+
+type RouterServiceFactory func([]byte) router.Service
+
+// routerBuilder implements RouterServiceBuilder
+type routerBuilder struct {
+	msgRouterServiceFactory RouterServiceFactory
+	queryRouter             router.Service
+}
+
+func NewRouterBuilder(
+	msgRouterServiceFactory RouterServiceFactory,
+	queryRouter router.Service,
+) RouterServiceBuilder {
+	return routerBuilder{
+		msgRouterServiceFactory: msgRouterServiceFactory,
+		queryRouter:             queryRouter,
+	}
+}
+
+func (b routerBuilder) BuildMsgRouter(actor []byte) router.Service {
+	return b.msgRouterServiceFactory(actor)
+}
+
+func (b routerBuilder) BuildQueryRouter() router.Service {
+	return b.queryRouter
+}
+
 // DefaultServiceBindings provides default services for the following service interfaces:
 // - store.KVStoreServiceFactory
 // - telemetry.ServiceFactory
@@ -242,6 +281,8 @@ func ProvideTelemetryService(cfg GlobalConfig, factory telemetry.ServiceFactory)
 // - comet.Service
 // - event.Service
 // - store/v2/root.Builder
+// - branch.Service
+// - RouterServiceBuilder
 //
 // They are all required.  For most use cases these default services bindings should be sufficient.
 // Power users (or tests) may wish to provide their own services bindings, in which case they must
@@ -268,17 +309,24 @@ func DefaultServiceBindings() depinject.Config {
 			// }
 			return services.NewPrometheusTelemetryService()
 		}
+		routerBuilder RouterServiceBuilder = routerBuilder{
+			msgRouterServiceFactory: stf.NewMsgRouterService,
+			queryRouter:             stf.NewQueryRouterService(),
+		}
 		cometService  comet.Service = &services.ContextAwareCometInfoService{}
 		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
 		eventService                = services.NewGenesisEventService(stf.NewEventService())
 		storeBuilder                = root.NewBuilderWithTelemetry(services.NewPrometheusTelemetryService())
+		branchService               = stf.BranchService{}
 	)
 	return depinject.Supply(
 		kvServiceFactory,
 		telemetryFactory,
+		routerBuilder,
 		headerService,
 		cometService,
 		eventService,
 		storeBuilder,
+		branchService,
 	)
 }

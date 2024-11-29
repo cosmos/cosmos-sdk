@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/rocksdb"
-	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
 type (
@@ -28,7 +27,6 @@ type (
 )
 
 const (
-	SSTypeSQLite SSType = "sqlite"
 	SSTypePebble SSType = "pebble"
 	SSTypeRocks  SSType = "rocksdb"
 	SCTypeIavl   SCType = "iavl"
@@ -37,7 +35,7 @@ const (
 
 // Options are the options for creating a root store.
 type Options struct {
-	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"State storage database type. Currently we support: \"sqlite\", \"pebble\" and \"rocksdb\""`
+	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"State storage database type. Currently we support: \"pebble\" and \"rocksdb\""`
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`
 	SSPruningOption *store.PruningOption `mapstructure:"ss-pruning-option" toml:"ss-pruning-option" comment:"Pruning options for state storage"`
 	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
@@ -57,7 +55,7 @@ type FactoryOptions struct {
 // DefaultStoreOptions returns the default options for creating a root store.
 func DefaultStoreOptions() Options {
 	return Options{
-		SSType: SSTypeSQLite,
+		SSType: SSTypePebble,
 		SCType: SCTypeIavl,
 		SCPruningOption: &store.PruningOption{
 			KeepRecent: 2,
@@ -94,12 +92,6 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 
 	storeOpts := opts.Options
 	switch storeOpts.SSType {
-	case SSTypeSQLite:
-		dir := fmt.Sprintf("%s/data/ss/sqlite", opts.RootDir)
-		if err = ensureDir(dir); err != nil {
-			return nil, err
-		}
-		ssDb, err = sqlite.New(dir)
 	case SSTypePebble:
 		dir := fmt.Sprintf("%s/data/ss/pebble", opts.RootDir)
 		if err = ensureDir(dir); err != nil {

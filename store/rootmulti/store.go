@@ -254,7 +254,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
 		if err != nil {
-			return errorsmod.Wrap(err, "failed to load store")
+			return errorsmod.Wrapf(err, "failed to load store for %s", key.Name())
 		}
 
 		newStores[key] = store

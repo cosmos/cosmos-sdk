@@ -10,8 +10,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"cosmossdk.io/server/v2/cometbft/oe"
-
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"

@@ -73,20 +73,23 @@ func finalizeBlockResponse(
 	cp *cmtproto.ConsensusParams,
 	appHash []byte,
 	indexSet map[string]struct{},
-	disableABCIEvents,
-	debug bool,
+	cfg *AppTomlConfig,
 ) (*abci.FinalizeBlockResponse, error) {
 	events := make([]abci.Event, 0)
 
-	if !disableABCIEvents {
+	if !cfg.DisableABCIEvents {
 		var err error
-		events, err = intoABCIEvents(append(in.BeginBlockEvents, in.EndBlockEvents...), indexSet)
+		events, err = intoABCIEvents(
+			append(in.BeginBlockEvents, in.EndBlockEvents...),
+			indexSet,
+			cfg.DisableIndexABCIEvents,
+		)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	txResults, err := intoABCITxResults(in.TxResults, indexSet, disableABCIEvents, debug)
+	txResults, err := intoABCITxResults(in.TxResults, indexSet, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -119,15 +122,15 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 func intoABCITxResults(
 	results []server.TxResult,
 	indexSet map[string]struct{},
-	disableABCIEvents, debug bool,
+	cfg *AppTomlConfig,
 ) ([]*abci.ExecTxResult, error) {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
 		var err error
 		events := make([]abci.Event, 0)
 
-		if !disableABCIEvents {
-			events, err = intoABCIEvents(results[i].Events, indexSet)
+		if !cfg.DisableABCIEvents {
+			events, err = intoABCIEvents(results[i].Events, indexSet, cfg.DisableIndexABCIEvents)
 			if err != nil {
 				return nil, err
 			}
@@ -138,14 +141,14 @@ func intoABCITxResults(
 			results[i].GasWanted,
 			results[i].GasUsed,
 			events,
-			debug,
+			cfg.Trace,
 		)
 	}
 
 	return res, nil
 }
 
-func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) ([]abci.Event, error) {
+func intoABCIEvents(events []event.Event, indexSet map[string]struct{}, indexNone bool) ([]abci.Event, error) {
 	indexAll := len(indexSet) == 0
 	abciEvents := make([]abci.Event, len(events))
 	for i, e := range events {
@@ -189,15 +192,15 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) ([]abci.
 			abciEvents[i].Attributes[j] = abci.EventAttribute{
 				Key:   attr.Key,
 				Value: attr.Value,
-				Index: index || indexAll,
+				Index: !indexNone && (index || indexAll),
 			}
 		}
 	}
 	return abciEvents, nil
 }
 
-func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struct{}) ([]byte, error) {
-	abciEvents, err := intoABCIEvents(txRes.Events, indexSet)
+func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struct{}, indexNone bool) ([]byte, error) {
+	abciEvents, err := intoABCIEvents(txRes.Events, indexSet, indexNone)
 	if err != nil {
 		return nil, err
 	}

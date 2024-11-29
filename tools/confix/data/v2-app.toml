@@ -24,7 +24,10 @@ standalone = false
 # index-abci-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed.
 index-abci-events = []
 
-# disable-abci-events disables the ABCI event indexing. It is useful when relying on the indexer for event indexing.
+# disable-index-abci-events disables the ABCI event indexing done by CometBFT. Useful when relying on the SDK indexer for event indexing, but still want events to be included in FinalizeBlockResponse.
+disable-index-abci-events = false
+
+# disable-abci-events disables all ABCI events. Useful when relying on the SDK indexer for event indexing.
 disable-abci-events = false
 
 # mempool defines the configuration for the SDK built-in app-side mempool implementations.

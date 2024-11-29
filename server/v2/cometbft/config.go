@@ -27,8 +27,9 @@ func DefaultAppTomlConfig() *AppTomlConfig {
 			Target:            make(map[string]indexer.Config),
 			ChannelBufferSize: 1024,
 		},
-		IndexABCIEvents:   make([]string, 0),
-		DisableABCIEvents: false,
+		IndexABCIEvents:        make([]string, 0),
+		DisableIndexABCIEvents: false,
+		DisableABCIEvents:      false,
 	}
 }
 
@@ -42,10 +43,11 @@ type AppTomlConfig struct {
 	Standalone      bool   `mapstructure:"standalone" toml:"standalone" comment:"standalone starts the application without the CometBFT node. The node should be started separately."`
 
 	// Sub configs
-	Mempool           mempool.Config         `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
-	Indexer           indexer.IndexingConfig `mapstructure:"indexer" toml:"indexer" comment:"indexer defines the configuration for the SDK built-in indexer implementation."`
-	IndexABCIEvents   []string               `mapstructure:"index-abci-events" toml:"index-abci-events" comment:"index-abci-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed."`
-	DisableABCIEvents bool                   `mapstructure:"disable-abci-events" toml:"disable-abci-events" comment:"disable-abci-events disables the ABCI event indexing. It is useful when relying on the indexer for event indexing."`
+	Mempool                mempool.Config         `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
+	Indexer                indexer.IndexingConfig `mapstructure:"indexer" toml:"indexer" comment:"indexer defines the configuration for the SDK built-in indexer implementation."`
+	IndexABCIEvents        []string               `mapstructure:"index-abci-events" toml:"index-abci-events" comment:"index-abci-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed."`
+	DisableIndexABCIEvents bool                   `mapstructure:"disable-index-abci-events" toml:"disable-index-abci-events" comment:"disable-index-abci-events disables the ABCI event indexing done by CometBFT. Useful when relying on the SDK indexer for event indexing, but still want events to be included in FinalizeBlockResponse."`
+	DisableABCIEvents      bool                   `mapstructure:"disable-abci-events" toml:"disable-abci-events" comment:"disable-abci-events disables all ABCI events. Useful when relying on the SDK indexer for event indexing."`
 }
 
 // CfgOption is a function that allows to overwrite the default server configuration.

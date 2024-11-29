@@ -107,7 +107,11 @@ func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 
 		events := make([]abci.Event, 0)
 		if !c.cfg.AppTomlConfig.DisableABCIEvents {
-			events, err = intoABCIEvents(resp.Events, c.indexedABCIEvents)
+			events, err = intoABCIEvents(
+				resp.Events,
+				c.indexedABCIEvents,
+				c.cfg.AppTomlConfig.DisableIndexABCIEvents,
+			)
 			if err != nil {
 				return nil, err
 			}
@@ -561,7 +565,13 @@ func (c *consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.indexedABCIEvents, c.cfg.AppTomlConfig.DisableABCIEvents, c.cfg.AppTomlConfig.Trace)
+	return finalizeBlockResponse(
+		resp,
+		cp,
+		appHash,
+		c.indexedABCIEvents,
+		c.cfg.AppTomlConfig,
+	)
 }
 
 func (c *consensus[T]) internalFinalizeBlock(

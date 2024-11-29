@@ -268,11 +268,15 @@ func (c *CommitStore) getReader(storeKey string) (Reader, error) {
 
 // VersionExists implements store.VersionedReader.
 func (c *CommitStore) VersionExists(version uint64) (bool, error) {
-	ci, err := c.metadata.GetCommitInfo(version)
-	if ci == nil && err == nil {
-		// the key doesn't exist in this path meaning we may be in genesis
+	latestVersion, err := c.metadata.GetLatestVersion()
+	if err != nil {
+		return false, err
+	}
+	if latestVersion == 0 {
 		return true, nil
 	}
+
+	ci, err := c.metadata.GetCommitInfo(version)
 	return ci != nil, err
 }
 

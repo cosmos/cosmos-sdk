@@ -263,6 +263,74 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 		cs := corestore.NewChangeset(uint64(v))
 		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
+		_, err := s.rootStore.Commit(cs)
+		s.Require().ErrorContains(err, "was already saved")
+	}
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latest) // should have stayed at 3 after failed commits
+
+	// query state and ensure values returned are based on the loaded version
+	_, ro, err = s.rootStore.StateLatest()
+	s.Require().NoError(err)
+
+	reader, err = ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	val, err = reader.Get([]byte("key"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val003"), val)
+}
+
+func (s *RootStoreTestSuite) TestLoadVersionForOverwriting() {
+	// write and commit a few changesets
+	for v := uint64(1); v <= 5; v++ {
+		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
+
+		cs := corestore.NewChangeset(v)
+		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
+
+		commitHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().NotNil(commitHash)
+	}
+
+	// ensure the latest version is correct
+	latest, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), latest)
+
+	// attempt to load a non-existent version
+	err = s.rootStore.LoadVersionForOverwriting(6)
+	s.Require().Error(err)
+
+	// attempt to load a previously committed version
+	err = s.rootStore.LoadVersionForOverwriting(3)
+	s.Require().NoError(err)
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latest)
+
+	// query state and ensure values returned are based on the loaded version
+	_, ro, err := s.rootStore.StateLatest()
+	s.Require().NoError(err)
+
+	reader, err := ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	val, err := reader.Get([]byte("key"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val003"), val)
+
+	// attempt to write and commit a few changesets
+	for v := 4; v <= 5; v++ {
+		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
+
+		cs := corestore.NewChangeset(uint64(v))
+		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
+
 		commitHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 		s.Require().NotNil(commitHash)

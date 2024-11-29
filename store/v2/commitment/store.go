@@ -87,7 +87,16 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	for storeKey := range c.multiTrees {
 		storeKeys = append(storeKeys, storeKey)
 	}
-	return c.loadVersion(targetVersion, storeKeys)
+	return c.loadVersion(targetVersion, storeKeys, false)
+}
+
+func (c *CommitStore) LoadVersionForOverwriting(targetVersion uint64) error {
+	storeKeys := make([]string, 0, len(c.multiTrees))
+	for storeKey := range c.multiTrees {
+		storeKeys = append(storeKeys, storeKey)
+	}
+
+	return c.loadVersion(targetVersion, storeKeys, true)
 }
 
 // LoadVersionAndUpgrade implements store.UpgradeableStore.
@@ -133,10 +142,10 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 		return err
 	}
 
-	return c.loadVersion(targetVersion, newStoreKeys)
+	return c.loadVersion(targetVersion, newStoreKeys, true)
 }
 
-func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string) error {
+func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, overrideAfter bool) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
 	if err != nil {
@@ -154,8 +163,14 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string) erro
 	}
 
 	for _, storeKey := range storeKeys {
-		if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
-			return err
+		if overrideAfter {
+			if err := c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion); err != nil {
+				return err
+			}
+		} else {
+			if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
+				return err
+			}
 		}
 	}
 

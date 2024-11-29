@@ -12,7 +12,7 @@ import (
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
+	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 type MockStore struct {
@@ -21,7 +21,7 @@ type MockStore struct {
 }
 
 func NewMockStorage(logger log.Logger, dir string) storev2.VersionedWriter {
-	storageDB, _ := sqlite.New(dir)
+	storageDB, _ := pebbledb.New(dir)
 	ss := storage.NewStorageStore(storageDB, logger)
 	return ss
 }

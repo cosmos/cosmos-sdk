@@ -76,9 +76,8 @@ func (t *IavlTree) Commit() ([]byte, uint64, error) {
 
 // GetProof returns a proof for the given key and version.
 func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
-	versions := t.tree.AvailableVersions()
-	// if the length of version is 0 we are in genesis
-	if len(versions) == 0 {
+
+	if t.tree.Version() == int64(version) {
 		return t.tree.GetProof(key)
 	}
 
@@ -92,11 +91,10 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 
 // Get implements the Reader interface.
 func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
-	versions := t.tree.AvailableVersions()
-	// if the length of version is 0 we are in genesis
-	if len(versions) == 0 {
+	if t.tree.Version() == int64(version) {
 		return t.tree.Get(key)
 	}
+
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
@@ -107,9 +105,7 @@ func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 
 // Iterator implements the Reader interface.
 func (t *IavlTree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
-	versions := t.tree.AvailableVersions()
-	// if the length of version is 0 we are in genesis
-	if len(versions) == 0 {
+	if t.tree.Version() == int64(version) {
 		return t.tree.Iterator(start, end, ascending)
 	}
 

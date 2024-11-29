@@ -510,8 +510,10 @@ func (rs *Store) Commit() types.CommitID {
 		rs.PausePruning(true)
 		// unset the committing flag on all stores to continue the pruning
 		defer rs.PausePruning(false)
+
+		cInfo := commitStores(version, rs.stores, rs.removalMap)
 		rs.lastCommitInfoMut.Lock()
-		rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
+		rs.lastCommitInfo = cInfo
 		rs.lastCommitInfoMut.Unlock()
 	}()
 

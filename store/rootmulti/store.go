@@ -60,6 +60,7 @@ type Store struct {
 	db                  corestore.KVStoreWithBatch
 	logger              iavltree.Logger
 	lastCommitInfo      *types.CommitInfo
+	lastCommitInfoMut   sync.RWMutex
 	pruningManager      *pruning.Manager
 	iavlCacheSize       int
 	iavlDisableFastNode bool
@@ -288,7 +289,9 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
+	rs.lastCommitInfoMut.Lock()
 	rs.lastCommitInfo = cInfo
+	rs.lastCommitInfoMut.Unlock()
 	rs.stores = newStores
 
 	// load any snapshot heights we missed from disk to be pruned on the next run
@@ -434,16 +437,24 @@ func (rs *Store) PopStateCache() []*types.StoreKVPair {
 
 // LatestVersion returns the latest version in the store
 func (rs *Store) LatestVersion() int64 {
-	if rs.lastCommitInfo == nil {
+	lastCommitInfo := rs.LastCommitInfo()
+	if lastCommitInfo == nil {
 		return GetLatestVersion(rs.db)
 	}
 
-	return rs.lastCommitInfo.Version
+	return lastCommitInfo.Version
+}
+
+func (rs *Store) LastCommitInfo() *types.CommitInfo {
+	rs.lastCommitInfoMut.RLock()
+	defer rs.lastCommitInfoMut.RUnlock()
+	return rs.lastCommitInfo
 }
 
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
-	if rs.lastCommitInfo == nil {
+	lastCommitInfo := rs.LastCommitInfo()
+	if lastCommitInfo == nil {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
@@ -451,16 +462,16 @@ func (rs *Store) LastCommitID() types.CommitID {
 			Hash:    appHash, // set empty apphash to sha256([]byte{}) if info is nil
 		}
 	}
-	if len(rs.lastCommitInfo.CommitID().Hash) == 0 {
+	if len(lastCommitInfo.CommitID().Hash) == 0 {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
-			Version: rs.lastCommitInfo.Version,
+			Version: lastCommitInfo.Version,
 			Hash:    appHash, // set empty apphash to sha256([]byte{}) if hash is nil
 		}
 	}
 
-	return rs.lastCommitInfo.CommitID()
+	return lastCommitInfo.CommitID()
 }
 
 // PausePruning temporarily pauses the pruning of all individual stores which implement
@@ -499,10 +510,15 @@ func (rs *Store) Commit() types.CommitID {
 		rs.PausePruning(true)
 		// unset the committing flag on all stores to continue the pruning
 		defer rs.PausePruning(false)
+		rs.lastCommitInfoMut.Lock()
 		rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
+		rs.lastCommitInfoMut.Unlock()
 	}()
 
+	rs.lastCommitInfoMut.Lock()
 	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
+	rs.lastCommitInfoMut.Unlock()
+
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 
 	// remove remnants of removed stores
@@ -781,8 +797,9 @@ func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 	// Otherwise, we query for the commit info from disk.
 	var commitInfo *types.CommitInfo
 
-	if res.Height == rs.lastCommitInfo.Version {
-		commitInfo = rs.lastCommitInfo
+	lastCommitInfo := rs.LastCommitInfo()
+	if res.Height == lastCommitInfo.Version {
+		commitInfo = lastCommitInfo
 	} else {
 		commitInfo, err = rs.GetCommitInfo(res.Height)
 		if err != nil {

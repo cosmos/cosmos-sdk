@@ -124,6 +124,7 @@ type BaseApp struct {
 	prepareProposalState *state
 	processProposalState *state
 	finalizeBlockState   *state
+	stateMut             sync.RWMutex
 
 	// An inter-block write-through cache provided to the context during the ABCI
 	// FinalizeBlock call.
@@ -494,6 +495,9 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 			WithHeaderInfo(headerInfo),
 	}
 
+	app.stateMut.Lock()
+	defer app.stateMut.Unlock()
+
 	switch mode {
 	case execModeCheck:
 		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
@@ -633,6 +637,9 @@ func validateBasicTxMsgs(router *MsgServiceRouter, msgs []sdk.Msg) error {
 }
 
 func (app *BaseApp) getState(mode execMode) *state {
+	app.stateMut.RLock()
+	defer app.stateMut.RUnlock()
+
 	switch mode {
 	case execModeFinalize:
 		return app.finalizeBlockState
@@ -706,7 +713,8 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, error) {
 	var events []abci.Event
 	if app.preBlocker != nil {
-		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
+		finalizeState := app.getState(execModeFinalize)
+		ctx := finalizeState.Context().WithEventManager(sdk.NewEventManager())
 		if err := app.preBlocker(ctx, req); err != nil {
 			return nil, err
 		}
@@ -716,7 +724,7 @@ func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, erro
 		// GasMeter must be set after we get a context with updated consensus params.
 		gasMeter := app.getBlockGasMeter(ctx)
 		ctx = ctx.WithBlockGasMeter(gasMeter)
-		app.finalizeBlockState.SetContext(ctx)
+		finalizeState.SetContext(ctx)
 		events = ctx.EventManager().ABCIEvents()
 
 		// append PreBlock attributes to all events
@@ -738,7 +746,7 @@ func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, er
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.Context())
+		resp, err = app.beginBlocker(app.getState(execModeFinalize).Context())
 		if err != nil {
 			return resp, err
 		}
@@ -801,7 +809,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
 
 	if app.endBlocker != nil {
-		eb, err := app.endBlocker(app.finalizeBlockState.Context())
+		eb, err := app.endBlocker(app.getState(execModeFinalize).Context())
 		if err != nil {
 			return endblock, err
 		}

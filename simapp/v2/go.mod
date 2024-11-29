@@ -11,9 +11,9 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241119134933-d697a3de0f95 // main
-	cosmossdk.io/server/v2 v2.0.0-20241128145253-6cfe2dc1bb37 // main
+	cosmossdk.io/server/v2 v2.0.0-20241129190247-24d456db40a8 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08 // main
+	cosmossdk.io/store/v2 v2.0.0-20241129190247-24d456db40a8 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
@@ -174,12 +174,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-<<<<<<< HEAD
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
-=======
-	github.com/mattn/go-runewidth v0.0.14 // indirect
->>>>>>> 24d456db4 (feat(store/v2): add support for iavl/v2 (#22424))
 	github.com/mdp/qrterminal/v3 v3.2.0 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

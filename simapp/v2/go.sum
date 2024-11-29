@@ -214,16 +214,16 @@ cosmossdk.io/runtime/v2 v2.0.0-20241119134933-d697a3de0f95 h1:hYI7pvrmdkgFZJ4HVQ
 cosmossdk.io/runtime/v2 v2.0.0-20241119134933-d697a3de0f95/go.mod h1:J4Wv2eOwAz8t14Ak8XBMWDoFbwqwyllMaJF91O7n/wI=
 cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b h1:svpFdulZRrYz+RTHu2u9CeKkMKrIHx5354vjiHerovo=
 cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-cosmossdk.io/server/v2 v2.0.0-20241128145253-6cfe2dc1bb37 h1:zZvYQ/xSv5hsWcJiZOOqYrywzMm2TN+xdkedPgRdoss=
-cosmossdk.io/server/v2 v2.0.0-20241128145253-6cfe2dc1bb37/go.mod h1:T4ptCA8LAxlBZ/MYJQTHMPNuvb+cgMsrPX31njPtJmw=
+cosmossdk.io/server/v2 v2.0.0-20241129190247-24d456db40a8 h1:FkHyUGwkMdohzNls+7qmg7nPjOLidMDOP6X0N21kD5g=
+cosmossdk.io/server/v2 v2.0.0-20241129190247-24d456db40a8/go.mod h1:NT1O+DPv2bWxqX8QTtvBbjXpeXFw5doT2hoRRNr8ob4=
 cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95 h1:GOznErJieaI0OS0LDUsu5Vy3qPnCyjdvkncejP0Zv5s=
 cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95/go.mod h1:elhlrldWtm+9U4PxE0G3wjz83yQwVVGVAOncXJPY1Xc=
 cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95 h1:cK7wvmlA18AvLcaInseKTBmt5EXtLwafe7oH1rx7veU=
 cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95/go.mod h1:4e9SzLyeGptQ3tSR6nKCNwCu7Ye4uUS2WIJih29dG2c=
 cosmossdk.io/store v1.0.0-rc.0.0.20241119134933-d697a3de0f95 h1:5hIgRL6VsicdJ7FVK6AG7cSy1C8tiVbCp6W3Y+QQ5ko=
 cosmossdk.io/store v1.0.0-rc.0.0.20241119134933-d697a3de0f95/go.mod h1:ceNwMZIU8ZIDoeUdA9+sGxz3GVt0orEGoVpkBfa/UtU=
-cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08 h1:7dIhcS/VhEM/vnZWDVtDKqCF/OGaq8Gx+5ekD9GT71k=
-cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08/go.mod h1:A2aW375561viy3GcD8GhUwUWnow+R2Du6yCSpAGwsgY=
+cosmossdk.io/store/v2 v2.0.0-20241129190247-24d456db40a8 h1:LvlYyjMBF6+CV3lOCnkZqNk0+LkVehDnTPHh+JLO7Mg=
+cosmossdk.io/store/v2 v2.0.0-20241129190247-24d456db40a8/go.mod h1:1DbksNgjyQ1XxlCYqkU82WqBGWcxmgciO5dBf6dRhKM=
 cosmossdk.io/x/tx v1.0.0-alpha.2 h1:UW80FMm7B0fiAMsrfe5+HabSJ3XBg+tQa6/GK9prqWk=
 cosmossdk.io/x/tx v1.0.0-alpha.2/go.mod h1:r4yTKSJ7ZCCR95YbBfY3nfvbgNw6m9F6f25efWYYQWo=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -678,15 +678,8 @@ github.com/mattn/go-isatty v0.0.19/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D
 github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
-<<<<<<< HEAD
 github.com/mattn/go-runewidth v0.0.15 h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZgg3U=
 github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
-github.com/mattn/go-sqlite3 v1.14.22 h1:2gZY6PC6kBnID23Tichd1K+Z0oS6nE/XwU+Vz/5o4kU=
-github.com/mattn/go-sqlite3 v1.14.22/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
-=======
-github.com/mattn/go-runewidth v0.0.14 h1:+xnbZSEeDbOIg5/mE6JF0w6n9duR1l3/WmbinWVwUuU=
-github.com/mattn/go-runewidth v0.0.14/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
->>>>>>> 24d456db4 (feat(store/v2): add support for iavl/v2 (#22424))
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/mdp/qrterminal/v3 v3.2.0 h1:qteQMXO3oyTK4IHwj2mWsKYYRBOp1Pj2WRYFYYNTCdk=
 github.com/mdp/qrterminal/v3 v3.2.0/go.mod h1:XGGuua4Lefrl7TLEsSONiD+UEjQXJZ4mPzF+gWYIJkk=

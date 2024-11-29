@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -144,9 +145,10 @@ func exposeStoreKeysSorted(keysStr []string, keys map[string]*storetypes.KVStore
 	return exposeStoreKeys
 }
 
-func eventToAppDataEvent(event abci.Event) (appdata.Event, error) {
+func eventToAppDataEvent(event abci.Event, height int64) (appdata.Event, error) {
 	appdataEvent := appdata.Event{
-		Type: event.Type,
+		BlockNumber: uint64(height),
+		Type:        event.Type,
 		Attributes: func() ([]appdata.EventAttribute, error) {
 			attrs := make([]appdata.EventAttribute, len(event.Attributes))
 			for j, attr := range event.Attributes {
@@ -208,10 +210,16 @@ func NewListenerWrapper(listener appdata.Listener) listenerWrapper {
 
 func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
 	if p.listener.StartBlock != nil {
+		// this is to avoid putting all txs along with the block data
+		reqWithoutTxs := req
+		reqWithoutTxs.Txs = nil
+
 		if err := p.listener.StartBlock(appdata.StartBlockData{
 			Height:      uint64(req.Height),
 			HeaderBytes: nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
-			HeaderJSON:  nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+			HeaderJSON: func() (json.RawMessage, error) {
+				return json.Marshal(reqWithoutTxs)
+			},
 		}); err != nil {
 			return err
 		}
@@ -219,9 +227,10 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 	if p.listener.OnTx != nil {
 		for i, tx := range req.Txs {
 			if err := p.listener.OnTx(appdata.TxData{
-				TxIndex: int32(i),
-				Bytes:   func() ([]byte, error) { return tx, nil },
-				JSON:    nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+				BlockNumber: uint64(req.Height),
+				TxIndex:     int32(i),
+				Bytes:       func() ([]byte, error) { return tx, nil },
+				JSON:        nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
 			}); err != nil {
 				return err
 			}
@@ -231,14 +240,14 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 		events := make([]appdata.Event, len(res.Events))
 		var err error
 		for i, event := range res.Events {
-			events[i], err = eventToAppDataEvent(event)
+			events[i], err = eventToAppDataEvent(event, req.Height)
 			if err != nil {
 				return err
 			}
 		}
 		for _, txResult := range res.TxResults {
 			for _, event := range txResult.Events {
-				appdataEvent, err := eventToAppDataEvent(event)
+				appdataEvent, err := eventToAppDataEvent(event, req.Height)
 				if err != nil {
 					return err
 				}

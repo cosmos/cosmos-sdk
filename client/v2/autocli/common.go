@@ -284,7 +284,7 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		ConsensusAddressCodec: b.ConsensusAddressCodec,
 		Cdc:                   b.Cdc,
 		Keyring:               k,
-		EnabledSignmodes:      signModesToApiSignModes(b.EnabledSignModes),
+		EnabledSignModes:      signModesToApiSignModes(b.EnabledSignModes),
 	}
 
 	return clientcontext.SetInContext(cmd.Context(), clientCtx), nil

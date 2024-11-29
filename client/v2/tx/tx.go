@@ -151,7 +151,7 @@ func newFactory(ctx clientcontext.Context, conn grpc.ClientConn) (Factory, error
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Cdc,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
-		EnabledSignModes:      ctx.EnabledSignmodes,
+		EnabledSignModes:      ctx.EnabledSignModes,
 	})
 	if err != nil {
 		return Factory{}, err

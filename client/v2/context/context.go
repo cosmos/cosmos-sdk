@@ -32,7 +32,7 @@ type Context struct {
 
 	Keyring keyring.Keyring
 
-	EnabledSignmodes []apisigning.SignMode
+	EnabledSignModes []apisigning.SignMode
 }
 
 // SetInContext stores the provided autocli.Context in the given Go context.Context.

@@ -76,7 +76,6 @@ func (t *IavlTree) Commit() ([]byte, uint64, error) {
 
 // GetProof returns a proof for the given key and version.
 func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
-
 	if t.tree.Version() == int64(version) {
 		return t.tree.GetProof(key)
 	}

@@ -607,8 +607,6 @@ func TestConsensus_Query(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	_, err = c.store.GetStateCommitment().Commit(1)
-	require.NoError(t, err)
 
 	_, err = c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),

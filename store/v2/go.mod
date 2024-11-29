@@ -7,7 +7,6 @@ require (
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.5.0
-	github.com/bvinc/go-sqlite-lite v0.6.1
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
@@ -29,6 +28,7 @@ require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
 	github.com/bytedance/sonic v1.12.4 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

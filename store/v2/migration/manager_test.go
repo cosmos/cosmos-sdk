@@ -48,7 +48,6 @@ func setupMigrationManager(t *testing.T) (*Manager, *commitment.CommitStore) {
 }
 
 func TestMigrateState(t *testing.T) {
-	fmt.Println("start")
 	m, orgCommitStore := setupMigrationManager(t)
 	// apply changeset
 	toVersion := uint64(100)

@@ -111,7 +111,7 @@ func (m *Manager) Migrate(height uint64) error {
 		return err
 	}
 
-	m.migratedVersion.Add(height)
+	m.migratedVersion.Store(height)
 
 	return nil
 }
@@ -198,7 +198,7 @@ func (m *Manager) Sync() error {
 				}
 			}
 
-			m.migratedVersion.Add(version)
+			m.migratedVersion.Store(version)
 
 			version += 1
 		}

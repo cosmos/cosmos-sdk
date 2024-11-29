@@ -74,6 +74,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			if err != nil {
 				return err
 			}
+			defer db.Close()
 
 			logger := log.NewLogger(cmd.OutOrStdout())
 			app := appCreator(logger, db, nil, vp)

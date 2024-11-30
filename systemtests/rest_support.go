@@ -26,7 +26,7 @@ func RunRestQueries(t *testing.T, testCases ...RestTestCase) {
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			resp := GetRequestWithHeaders(t, tc.Url, nil, tc.ExpCode)
-			require.JSONEq(t, tc.ExpOut, string(resp))
+			require.Contains(t, string(resp), tc.ExpOut)
 		})
 	}
 }

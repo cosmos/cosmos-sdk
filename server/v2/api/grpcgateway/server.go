@@ -31,7 +31,7 @@ type Server[T transaction.Tx] struct {
 
 	server            *http.Server
 	gRPCSrv           *grpc.Server
-	gRPCGatewayRouter *runtime.ServeMux
+	GRPCGatewayRouter *runtime.ServeMux
 }
 
 // New creates a new gRPC-gateway server.
@@ -53,7 +53,7 @@ func New[T transaction.Tx](
 
 	s := &Server[T]{
 		gRPCSrv: grpcSrv,
-		gRPCGatewayRouter: runtime.NewServeMux(
+		GRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
 
@@ -115,7 +115,7 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", s.gRPCGatewayRouter)
+	mux.Handle("/", s.GRPCGatewayRouter)
 
 	s.server = &http.Server{
 		Addr:    s.config.Address,

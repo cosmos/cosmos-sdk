@@ -64,6 +64,10 @@ func (t *Tree) LoadVersion(version uint64) error {
 	return t.tree.LoadVersion(int64(version))
 }
 
+func (t *Tree) LoadVersionForOverwriting(version uint64) error {
+	panic("unimplemented")
+}
+
 func (t *Tree) Commit() ([]byte, uint64, error) {
 	h, v, err := t.tree.SaveVersion()
 	return h, uint64(v), err

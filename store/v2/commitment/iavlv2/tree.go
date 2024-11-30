@@ -65,7 +65,7 @@ func (t *Tree) LoadVersion(version uint64) error {
 }
 
 func (t *Tree) LoadVersionForOverwriting(version uint64) error {
-	return t.LoadVersion(version) // TODO: implement overwriting
+	return fmt.Errorf("not yet supported")
 }
 
 func (t *Tree) Commit() ([]byte, uint64, error) {

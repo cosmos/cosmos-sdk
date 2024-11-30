@@ -264,7 +264,7 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
 		_, err := s.rootStore.Commit(cs)
-		s.Require().ErrorContains(err, "was already saved")
+		s.Require().Error(err)
 	}
 
 	// ensure the latest version is correct

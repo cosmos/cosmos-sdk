@@ -128,6 +128,10 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
+func (s *Server[T]) GrpcServer() *grpc.Server {
+	return s.grpcSrv
+}
+
 func makeUnknownServiceHandler(
 	handlers map[string]appmodulev2.Handler,
 	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),

@@ -83,6 +83,13 @@ func New[T transaction.Tx](
 	return s, nil
 }
 
+// NewWithConfigOptions creates a new gRPC-gateway server with the provided config options.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+	return &Server[T]{
+		cfgOptions: opts,
+	}
+}
+
 func (s *Server[T]) Name() string {
 	return ServerName
 }

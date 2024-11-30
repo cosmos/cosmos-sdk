@@ -12,6 +12,7 @@ import (
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	grpcserver "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/grpcgateway"
 	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
@@ -83,6 +84,7 @@ func InitRootCmd[T transaction.Tx](
 			&serverstore.Server[T]{},
 			&telemetry.Server[T]{},
 			&rest.Server[T]{},
+			&grpcgateway.Server[T]{},
 		)
 	}
 
@@ -140,6 +142,16 @@ func InitRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
+	grpcgatewayServer, err := grpcgateway.New[T](
+		logger,
+		deps.GlobalConfig,
+		grpcServer.GrpcServer(),
+		simApp.InterfaceRegistry(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	// wire server commands
 	return serverv2.AddCommands[T](
 		rootCmd,
@@ -152,6 +164,7 @@ func InitRootCmd[T transaction.Tx](
 		storeComponent,
 		telemetryServer,
 		restServer,
+		grpcgatewayServer,
 	)
 }
 

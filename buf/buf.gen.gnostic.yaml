@@ -1,0 +1,7 @@
+# buf gnostic plugin for outputting openapi v3
+version: v2
+managed:
+  enabled: true
+plugins:
+  - remote: buf.build/community/google-gnostic-openapi:v0.7.0
+    out: .

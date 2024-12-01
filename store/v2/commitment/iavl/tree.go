@@ -76,7 +76,8 @@ func (t *IavlTree) Commit() ([]byte, uint64, error) {
 
 // GetProof returns a proof for the given key and version.
 func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
-	if t.tree.Version() == int64(version) {
+	// if the tree is empty we will be in genesis
+	if t.tree.IsEmpty() {
 		return t.tree.GetProof(key)
 	}
 
@@ -90,7 +91,8 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 
 // Get implements the Reader interface.
 func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
-	if t.tree.Version() == int64(version) {
+	// if the tree is empty we will be in geneiss
+	if t.tree.IsEmpty() {
 		return t.tree.Get(key)
 	}
 
@@ -104,7 +106,8 @@ func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 
 // Iterator implements the Reader interface.
 func (t *IavlTree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
-	if t.tree.Version() == int64(version) {
+	// if the tree is empty we will be in geneiss
+	if t.tree.IsEmpty() {
 		return t.tree.Iterator(start, end, ascending)
 	}
 

@@ -29,6 +29,10 @@ type RootStore interface {
 	// LoadVersion loads the RootStore to the given version.
 	LoadVersion(version uint64) error
 
+	// LoadVersionForOverwriting loads the state at the given version.
+	// Any versions greater than targetVersion will be deleted.
+	LoadVersionForOverwriting(version uint64) error
+
 	// LoadLatestVersion behaves identically to LoadVersion except it loads the
 	// latest version implicitly.
 	LoadLatestVersion() error

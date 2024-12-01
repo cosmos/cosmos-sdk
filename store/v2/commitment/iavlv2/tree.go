@@ -113,7 +113,11 @@ func (t *Tree) Iterator(version uint64, start, end []byte, ascending bool) (core
 	if int64(version) != t.tree.Version() {
 		return nil, fmt.Errorf("loading past version not yet supported")
 	}
-	return t.tree.Iterator(start, end, ascending)
+	if ascending {
+		return t.tree.Iterator(start, end, false)
+	} else {
+		return t.tree.ReverseIterator(start, end)
+	}
 }
 
 func (t *Tree) Export(version uint64) (commitment.Exporter, error) {

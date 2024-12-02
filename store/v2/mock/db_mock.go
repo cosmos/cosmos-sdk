@@ -188,6 +188,20 @@ func (mr *MockStateCommitterMockRecorder) LoadVersionAndUpgrade(version, upgrade
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadVersionAndUpgrade", reflect.TypeOf((*MockStateCommitter)(nil).LoadVersionAndUpgrade), version, upgrades)
 }
 
+// LoadVersionForOverwriting mocks base method.
+func (m *MockStateCommitter) LoadVersionForOverwriting(targetVersion uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadVersionForOverwriting", targetVersion)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// LoadVersionForOverwriting indicates an expected call of LoadVersionForOverwriting.
+func (mr *MockStateCommitterMockRecorder) LoadVersionForOverwriting(targetVersion any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadVersionForOverwriting", reflect.TypeOf((*MockStateCommitter)(nil).LoadVersionForOverwriting), targetVersion)
+}
+
 // PausePruning mocks base method.
 func (m *MockStateCommitter) PausePruning(pause bool) {
 	m.ctrl.T.Helper()

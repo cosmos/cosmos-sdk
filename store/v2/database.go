@@ -39,6 +39,10 @@ type Committer interface {
 	// LoadVersion loads the tree at the given version.
 	LoadVersion(targetVersion uint64) error
 
+	// LoadVersionForOverwriting loads the tree at the given version.
+	// Any versions greater than targetVersion will be deleted.
+	LoadVersionForOverwriting(targetVersion uint64) error
+
 	// Commit commits the working tree to the database.
 	Commit(version uint64) (*proof.CommitInfo, error)
 

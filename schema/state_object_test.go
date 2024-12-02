@@ -93,7 +93,7 @@ func TestObjectType_Validate(t *testing.T) {
 					},
 				},
 			},
-			errContains: "invalid field name",
+			errContains: "field name cannot be empty, might be missing the named key codec",
 		},
 		{
 			name: "invalid value field",
@@ -105,7 +105,7 @@ func TestObjectType_Validate(t *testing.T) {
 					},
 				},
 			},
-			errContains: "invalid field name",
+			errContains: "field name cannot be empty, might be missing the named key codec",
 		},
 		{
 			name:        "no fields",
@@ -146,7 +146,7 @@ func TestObjectType_Validate(t *testing.T) {
 					},
 				},
 			},
-			errContains: "duplicate field name",
+			errContains: "duplicate key field name \"field1\" for stateObjectType: object1",
 		},
 		{
 			name: "nullable key field",

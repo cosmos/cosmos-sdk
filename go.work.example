@@ -22,6 +22,7 @@ use (
 	./server/v2/appmanager
 	./store
 	./store/v2
+	./systemtests
 	./runtime/v2
 	./tools/cosmovisor
 	./tools/confix

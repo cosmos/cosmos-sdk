@@ -18,6 +18,9 @@ func initCometBFTConfig() *cmtcfg.Config {
 	// display only error logs by default except for p2p and state
 	cfg.LogLevel = "*:error,p2p:info,state:info"
 
+	// use previous db backend
+	cfg.DBBackend = "goleveldb"
+
 	// these values put a higher strain on node memory
 	// cfg.P2P.MaxNumInboundPeers = 100
 	// cfg.P2P.MaxNumOutboundPeers = 40

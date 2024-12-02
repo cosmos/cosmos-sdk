@@ -74,10 +74,17 @@ service Query {
     option (google.api.http).get               = "/cosmos/bank/v1beta1/params";
   }
 
+  // DenomsMetadata queries the client metadata for all registered coin
+  // denominations.
+  rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata";
+  }
+
   // DenomMetadata queries the client metadata of a given coin denomination.
   rpc DenomMetadata(QueryDenomMetadataRequest) returns (QueryDenomMetadataResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata/{denom=**}";
   }
 
   // DenomMetadataByQueryString queries the client metadata of a given coin denomination.
@@ -85,12 +92,6 @@ service Query {
       returns (QueryDenomMetadataByQueryStringResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata_by_query_string";
-  }
-  // DenomsMetadata queries the client metadata for all registered coin
-  // denominations.
-  rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
-    option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata";
   }
 
   // DenomOwners queries for all account addresses that own a particular token
@@ -101,7 +102,7 @@ service Query {
   rpc DenomOwners(QueryDenomOwnersRequest) returns (QueryDenomOwnersResponse) {
     option (cosmos_proto.method_added_in)      = "cosmos-sdk 0.46";
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get               = "/cosmos/bank/v1beta1/denom_owners/{denom}";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/denom_owners/{denom=**}";
   }
 
   // DenomOwnersByQuery queries for all account addresses that own a particular token

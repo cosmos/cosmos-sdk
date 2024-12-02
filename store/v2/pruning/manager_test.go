@@ -15,7 +15,7 @@ import (
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
+	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 var storeKeys = []string{"store1", "store2", "store3"}
@@ -45,9 +45,9 @@ func (s *PruningManagerTestSuite) SetupTest() {
 	s.sc, err = commitment.NewCommitStore(multiTrees, nil, mdb, nopLog)
 	s.Require().NoError(err)
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
+	pebbleDB, err := pebbledb.New(s.T().TempDir())
 	s.Require().NoError(err)
-	s.ss = storage.NewStorageStore(sqliteDB, nopLog)
+	s.ss = storage.NewStorageStore(pebbleDB, nopLog)
 	scPruningOption := store.NewPruningOptionWithCustom(0, 1)  // prune all
 	ssPruningOption := store.NewPruningOptionWithCustom(5, 10) // prune some
 	s.manager = NewManager(s.sc, s.ss, scPruningOption, ssPruningOption)

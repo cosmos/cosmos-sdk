@@ -11,9 +11,9 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241119134933-d697a3de0f95 // main
-	cosmossdk.io/server/v2 v2.0.0-20241129190247-24d456db40a8 // main
+	cosmossdk.io/server/v2 v2.0.0-20241202115147-f350775d0ed2 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20241129190247-24d456db40a8 // main
+	cosmossdk.io/store/v2 v2.0.0-20241202115147-f350775d0ed2 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000

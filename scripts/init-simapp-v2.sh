@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 
-# SIMD_BIN=${SIMD_BIN:=$(which simdv2 2>/dev/null)}
-ROOT=$PWD
-
-SIMD_BIN="$ROOT/build/simdv2"
-
-COSMOS_BUILD_OPTIONS=v2 make build
+SIMD_BIN=${SIMD_BIN:=$(which simdv2 2>/dev/null)}
 
 if [ -z "$SIMD_BIN" ]; then echo "SIMD_BIN is not set. Make sure to run 'COSMOS_BUILD_OPTIONS=v2 make install' before"; exit 1; fi
 echo "using $SIMD_BIN"

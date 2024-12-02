@@ -12,16 +12,15 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/bank/v2/keeper"
-	banktypes "cosmossdk.io/x/bank/v2/types"
-
 	accountskeeper "cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
 	asset "cosmossdk.io/x/accounts/defaults/asset"
 	assetmock "cosmossdk.io/x/accounts/defaults/asset/mock"
 	assetv1 "cosmossdk.io/x/accounts/defaults/asset/v1"
-
+	"cosmossdk.io/x/bank/v2/keeper"
 	banktestutil "cosmossdk.io/x/bank/v2/testutil"
+	banktypes "cosmossdk.io/x/bank/v2/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -237,7 +236,6 @@ func (suite *KeeperTestSuite) TestBurnCoins() {
 	require.Equal(acc1BarBalance.Amount, math.NewInt(91))
 	acc1StakeBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], stakeDenom)
 	require.Equal(acc1StakeBalance.Amount, math.NewInt(90))
-
 }
 
 // func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {

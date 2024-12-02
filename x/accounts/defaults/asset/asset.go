@@ -7,11 +7,11 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	assettypes "cosmossdk.io/x/accounts/defaults/asset/v1"
 
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -31,7 +31,7 @@ func NewAssetAccount(d accountstd.Dependencies) (*AssetAccount, error) {
 		Denom:        collections.NewItem(d.SchemaBuilder, DenomPrefix, "denom", collections.StringValue),
 		Balance:      collections.NewMap(d.SchemaBuilder, BalancePrefix, "balance", collections.BytesKey, sdk.IntValue),
 		Supply:       collections.NewItem(d.SchemaBuilder, SupplyPrefix, "supply", sdk.IntValue),
-		transferFunc: make(map[string]func(ctx context.Context, from []byte, to []byte, amount math.Int) ([][]byte, error)),
+		transferFunc: make(map[string]func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte, error)),
 		mintFunc:     make(map[string]func(ctx context.Context, to []byte, amount math.Int) ([][]byte, error)),
 		burnFunc:     make(map[string]func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error)),
 
@@ -243,7 +243,6 @@ func (aa *AssetAccount) SubUnlockedCoins(ctx context.Context, addr []byte, amt m
 	newBalance := balance.Sub(amt)
 
 	return aa.SetBalance(ctx, addr, newBalance)
-
 }
 
 func (aa *AssetAccount) AddCoins(ctx context.Context, addr []byte, amt math.Int) error {

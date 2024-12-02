@@ -7,8 +7,8 @@ import (
 	v1 "cosmossdk.io/x/accounts/defaults/asset/v1"
 )
 
-func DefaultTransfer(aa v1.AssetAccountI) func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte,error) {
-	return func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte,error) {
+func DefaultTransfer(aa v1.AssetAccountI) func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte, error) {
+	return func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte, error) {
 		err := aa.SubUnlockedCoins(ctx, from, amount)
 		if err != nil {
 			return nil, err
@@ -23,8 +23,8 @@ func DefaultTransfer(aa v1.AssetAccountI) func(ctx context.Context, from, to []b
 	}
 }
 
-func DefaultMint(aa v1.AssetAccountI) func(ctx context.Context, to []byte, amount math.Int) ([][]byte,error) {
-	return func(ctx context.Context, to []byte, amount math.Int) ([][]byte,error) {
+func DefaultMint(aa v1.AssetAccountI) func(ctx context.Context, to []byte, amount math.Int) ([][]byte, error) {
+	return func(ctx context.Context, to []byte, amount math.Int) ([][]byte, error) {
 		err := aa.AddCoins(ctx, to, amount)
 		if err != nil {
 			return nil, err
@@ -34,8 +34,8 @@ func DefaultMint(aa v1.AssetAccountI) func(ctx context.Context, to []byte, amoun
 	}
 }
 
-func DefaultBurn(aa v1.AssetAccountI) func(ctx context.Context, from []byte, amount math.Int) ([][]byte,error) {
-	return func(ctx context.Context, from []byte, amount math.Int) ([][]byte,error) {
+func DefaultBurn(aa v1.AssetAccountI) func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error) {
+	return func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error) {
 		err := aa.SubUnlockedCoins(ctx, from, amount)
 		if err != nil {
 			return nil, err

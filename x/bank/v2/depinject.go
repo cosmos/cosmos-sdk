@@ -35,10 +35,10 @@ type ModuleInputs struct {
 	depinject.In
 
 	AccountsKeeper types.AccountsModKeeper
-	Config       *moduletypes.Module
-	Cdc          codec.Codec
-	Environment  appmodule.Environment
-	AddressCodec address.Codec
+	Config         *moduletypes.Module
+	Cdc            codec.Codec
+	Environment    appmodule.Environment
+	AddressCodec   address.Codec
 }
 
 type ModuleOutputs struct {

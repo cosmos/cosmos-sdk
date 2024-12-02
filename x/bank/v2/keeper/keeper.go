@@ -166,7 +166,6 @@ func (k Keeper) SendCoin(ctx context.Context, from, to []byte, amt sdk.Coin) err
 	)
 }
 
-
 // GetSupply retrieves the Supply from store
 func (k Keeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
 	amt, err := k.supply.Get(ctx, denom)

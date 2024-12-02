@@ -13,9 +13,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/v2/types"
 
+	assetv1 "cosmossdk.io/x/accounts/defaults/asset/v1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	assetv1 "cosmossdk.io/x/accounts/defaults/asset/v1"
 )
 
 type handlers struct {
@@ -83,8 +83,8 @@ func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSe
 		denomAcc, err := h.assetAccount.Get(ctx, coin.Denom)
 		if err == nil {
 			msg := &assetv1.MsgTransfer{
-				From: from,
-				To: to,
+				From:   from,
+				To:     to,
 				Amount: coin.Amount,
 			}
 			resp, err := h.accountsKeeper.Execute(ctx, denomAcc, nil, msg, sdk.NewCoins())
@@ -148,7 +148,7 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 		if err == nil {
 
 			msg := &assetv1.MsgMint{
-				To: to,
+				To:     to,
 				Amount: coin.Amount,
 			}
 			resp, err := h.accountsKeeper.Execute(ctx, denomAcc, nil, msg, sdk.NewCoins())
@@ -174,7 +174,7 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 			}
 		}
 	}
-	
+
 	return &types.MsgMintResponse{}, nil
 }
 
@@ -211,7 +211,7 @@ func (h handlers) MsgBurn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBu
 		denomAcc, err := h.assetAccount.Get(ctx, coin.Denom)
 		if err == nil {
 			msg := &assetv1.MsgBurn{
-				From: from,
+				From:   from,
 				Amount: coin.Amount,
 			}
 			resp, err := h.accountsKeeper.Execute(ctx, denomAcc, nil, msg, sdk.NewCoins())
@@ -237,7 +237,7 @@ func (h handlers) MsgBurn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBu
 			}
 		}
 	}
-	
+
 	return &types.MsgBurnResponse{}, nil
 }
 

@@ -9,13 +9,13 @@ import (
 
 var fee = math.LegacyNewDecWithPrec(10, 2) // 10%
 
-func CustomTransfer(aa v1.AssetAccountI) func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte,error) {
-	return func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte,error) {
+func CustomTransfer(aa v1.AssetAccountI) func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte, error) {
+	return func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte, error) {
 		err := aa.SubUnlockedCoins(ctx, from, amount)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		feeAmount := math.LegacyNewDecFromInt(amount).Mul(fee).TruncateInt()
 		transferAmount := amount.Sub(feeAmount)
 		owner, err := aa.GetOwner(ctx)
@@ -37,8 +37,8 @@ func CustomTransfer(aa v1.AssetAccountI) func(ctx context.Context, from, to []by
 	}
 }
 
-func CustomMint(aa v1.AssetAccountI) func(ctx context.Context, to []byte, amount math.Int) ([][]byte,error) {
-	return func(ctx context.Context, to []byte, amount math.Int) ([][]byte,error) {
+func CustomMint(aa v1.AssetAccountI) func(ctx context.Context, to []byte, amount math.Int) ([][]byte, error) {
+	return func(ctx context.Context, to []byte, amount math.Int) ([][]byte, error) {
 		feeAmount := math.LegacyNewDecFromInt(amount).Mul(fee).TruncateInt()
 		mintAmount := amount.Sub(feeAmount)
 		owner, err := aa.GetOwner(ctx)
@@ -60,8 +60,8 @@ func CustomMint(aa v1.AssetAccountI) func(ctx context.Context, to []byte, amount
 	}
 }
 
-func CustomBurn(aa v1.AssetAccountI) func(ctx context.Context, from []byte, amount math.Int) ([][]byte,error) {
-	return func(ctx context.Context, from []byte, amount math.Int) ([][]byte,error) {
+func CustomBurn(aa v1.AssetAccountI) func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error) {
+	return func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error) {
 		feeAmount := math.LegacyNewDecFromInt(amount).Mul(fee).TruncateInt()
 		burnAmount := amount.Sub(feeAmount)
 		err := aa.SubUnlockedCoins(ctx, from, burnAmount)

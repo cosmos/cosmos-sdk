@@ -198,7 +198,7 @@ func initTestnetFiles[T transaction.Tx](
 		grpcgatewayConfig := grpcgateway.DefaultConfig()
 		restConfig := rest.DefaultConfig()
 
-    if args.singleMachine {
+		if args.singleMachine {
 			portOffset = i
 			p2pPortStart = 16656 // use different start point to not conflict with rpc port
 			nodeConfig.P2P.AddrBookStrict = false

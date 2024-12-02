@@ -34,7 +34,7 @@ message MsgInit {
   // account_type is the type of the account to be created.
   string account_type = 2;
   // message is the message to be sent to the account.
-  google.protobuf.Any message = 3;
+  string json_message = 3;
   // funds contains the coins that the account wants to
   // send alongside the request.
   repeated cosmos.base.v1beta1.Coin funds = 4

@@ -28,6 +28,7 @@ import (
 	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -67,6 +68,7 @@ func InitRootCmd[T transaction.Tx](
 		txCommand(),
 		keys.Commands(),
 		offchain.OffChain(),
+		version.NewVersionCommand(),
 	)
 
 	// build CLI skeleton for initial config parsing or a client application invocation

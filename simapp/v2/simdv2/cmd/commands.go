@@ -3,7 +3,6 @@ package cmd
 import (
 	"io"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/offchain"
@@ -28,16 +27,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
-
-type ModuleWithGRPCGateway interface {
-	RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux)
-}
 
 // CommandDependencies is a struct that contains all the dependencies needed to initialize the root command.
 // an alternative design could fetch these even later from the command context
@@ -147,12 +143,10 @@ func InitRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
-	grpcSrv := grpcServer.GrpcServer()
-
 	grpcgatewayServer, err := grpcgateway.New[T](
 		logger,
 		deps.GlobalConfig,
-		grpcSrv,
+		nil,
 		simApp.InterfaceRegistry(),
 	)
 	if err != nil {
@@ -160,7 +154,8 @@ func InitRootCmd[T transaction.Tx](
 	}
 
 	for _, mod := range deps.ModuleManager.Modules() {
-		if gmod, ok := mod.(ModuleWithGRPCGateway); ok {
+		if gmod, ok := mod.(module.HasGRPCGateway); ok {
+			// TODO(@julienrbrt) https://github.com/cosmos/cosmos-sdk/pull/22701#pullrequestreview-2470651390
 			gmod.RegisterGRPCGatewayRoutes(deps.ClientContext, grpcgatewayServer.GRPCGatewayRouter)
 		}
 	}

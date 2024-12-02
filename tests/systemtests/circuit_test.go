@@ -230,10 +230,10 @@ func testCircuitTxCommand(t *testing.T, cli *systest.CLIWrapper, txType, superAd
 			// test given msg transaction to confirm
 			for _, tx := range tc.executeTxs {
 				tx = append(tx, "--fees=2stake")
-				rsp = cli.RunCommandWithArgs(cli.WithTXFlags(tx...)...)
+				rsp = cli.WithRunErrorsIgnored().RunCommandWithArgs(cli.WithTXFlags(tx...)...)
 				if txType == "disable" {
 					systest.RequireTxFailure(t, rsp)
-					require.Contains(t, gjson.Get(rsp, "raw_log").String(), "tx type not allowed")
+					require.Contains(t, rsp, "tx type not allowed")
 					continue
 				}
 				systest.RequireTxSuccess(t, rsp)

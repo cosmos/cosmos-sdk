@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
@@ -26,7 +28,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring``
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"   // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
-	"github.com/stretchr/testify/require"
 )
 
 type suite struct {

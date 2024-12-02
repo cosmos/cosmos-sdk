@@ -2,12 +2,9 @@ package cometbft
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"maps"
 	"math"
-	"slices"
 	"strings"
 	"time"
 
@@ -153,33 +150,10 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}, indexNon
 	abciEvents := make([]abci.Event, len(events))
 	for i, e := range events {
 		attrs := make([]event.Attribute, 0)
-
-		if e.Data != nil {
-			resp, err := e.Data()
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal event data: %w", err)
-			}
-
-			var attrMap map[string]json.RawMessage
-			if err := json.Unmarshal(resp, &attrMap); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal event data: %w", err)
-			}
-
-			// sort the keys to ensure the order is always the same
-			keys := slices.Sorted(maps.Keys(attrMap))
-			for _, k := range keys {
-				v := attrMap[k]
-				attrs = append(attrs, event.Attribute{
-					Key:   k,
-					Value: string(v),
-				})
-			}
-		} else {
-			var err error
-			attrs, err = e.Attributes()
-			if err != nil {
-				return nil, err
-			}
+		var err error
+		attrs, err = e.Attributes()
+		if err != nil {
+			return nil, err
 		}
 
 		abciEvents[i] = abci.Event{

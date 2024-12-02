@@ -64,7 +64,7 @@ func (k Keeper) GetAccountsKeeper() types.AccountsModKeeper {
 
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
-func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coin) error {
+func (k Keeper) MintCoin(ctx context.Context, addr []byte, amounts sdk.Coin) error {
 	// TODO: Mint restriction & permission
 
 	if !amounts.IsValid() {
@@ -90,6 +90,37 @@ func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coin) er
 		types.EventTypeCoinMint,
 		event.NewAttribute(types.AttributeKeyMinter, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
+	)
+}
+
+func (k Keeper) BurnCoin(ctx context.Context, address []byte, amount sdk.Coin) error {
+	// TODO: Burn restriction & permission
+
+	if !amount.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
+	}
+
+	err := k.subUnlockedCoin(ctx, address, amount)
+	if err != nil {
+		return err
+	}
+
+	supply := k.GetSupply(ctx, amount.GetDenom())
+	supply = supply.Sub(amount)
+	k.setSupply(ctx, supply)
+
+	addrStr, err := k.addressCodec.BytesToString(address)
+	if err != nil {
+		return err
+	}
+
+	k.Logger.Debug("burned tokens from account", "amount", amount.String(), "from", addrStr)
+
+	// emit burn event
+	return k.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinBurn,
+		event.NewAttribute(types.AttributeKeyBurner, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amount.String()),
 	)
 }
 

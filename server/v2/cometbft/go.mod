@@ -6,7 +6,7 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241108140525-43e28b43ad7a // main
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241202115147-f350775d0ed2 // main
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
@@ -20,10 +20,10 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b //main
-	cosmossdk.io/server/v2 v2.0.0-20241129190247-24d456db40a8 // main
+	cosmossdk.io/server/v2 v2.0.0-20241202115147-f350775d0ed2 // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95 // main
-	cosmossdk.io/store/v2 v2.0.0-20241129190247-24d456db40a8 // main
+	cosmossdk.io/store/v2 v2.0.0-20241202115147-f350775d0ed2 // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2

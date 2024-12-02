@@ -25,8 +25,8 @@ minimum-gas-prices = '0stake'
 app-db-backend = 'goleveldb'
 
 [store.options]
-# State storage database type. Currently we support: "sqlite", "pebble" and "rocksdb"
-ss-type = 'sqlite'
+# State storage database type. Currently we support: "pebble" and "rocksdb"
+ss-type = 'pebble'
 # State commitment database type. Currently we support: "iavl" and "iavl-v2"
 sc-type = 'iavl'
 

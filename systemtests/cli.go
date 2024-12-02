@@ -27,17 +27,18 @@ type (
 
 // CLIWrapper provides a more convenient way to interact with the CLI binary from the Go tests
 type CLIWrapper struct {
-	t              *testing.T
-	nodeAddress    string
-	chainID        string
-	homeDir        string
-	fees           string
-	Debug          bool
-	assertErrorFn  RunErrorAssert
-	awaitNextBlock awaitNextBlock
-	expTXCommitted bool
-	execBinary     string
-	nodesCount     int
+	t               *testing.T
+	nodeAddress     string
+	chainID         string
+	homeDir         string
+	fees            string
+	Debug           bool
+	assertErrorFn   RunErrorAssert
+	awaitNextBlock  awaitNextBlock
+	expTXCommitted  bool
+	execBinary      string
+	nodesCount      int
+	runSingleOutput bool
 }
 
 // NewCLIWrapper constructor
@@ -54,6 +55,7 @@ func NewCLIWrapper(t *testing.T, sut *SystemUnderTest, verbose bool) *CLIWrapper
 		"1"+sdk.DefaultBondDenom,
 		verbose,
 		assert.NoError,
+		false,
 		true,
 	)
 }
@@ -70,6 +72,7 @@ func NewCLIWrapperX(
 	fees string,
 	debug bool,
 	assertErrorFn RunErrorAssert,
+	runSingleOutput bool,
 	expTXCommitted bool,
 ) *CLIWrapper {
 	t.Helper()
@@ -77,17 +80,18 @@ func NewCLIWrapperX(
 		t.Fatal("name of executable binary must not be empty")
 	}
 	return &CLIWrapper{
-		t:              t,
-		execBinary:     execBinary,
-		nodeAddress:    nodeAddress,
-		chainID:        chainID,
-		homeDir:        homeDir,
-		Debug:          debug,
-		awaitNextBlock: awaiter,
-		nodesCount:     nodesCount,
-		fees:           fees,
-		assertErrorFn:  assertErrorFn,
-		expTXCommitted: expTXCommitted,
+		t:               t,
+		execBinary:      execBinary,
+		nodeAddress:     nodeAddress,
+		chainID:         chainID,
+		homeDir:         homeDir,
+		Debug:           debug,
+		awaitNextBlock:  awaiter,
+		nodesCount:      nodesCount,
+		fees:            fees,
+		assertErrorFn:   assertErrorFn,
+		runSingleOutput: runSingleOutput,
+		expTXCommitted:  expTXCommitted,
 	}
 }
 
@@ -100,39 +104,37 @@ func (c CLIWrapper) WithRunErrorsIgnored() CLIWrapper {
 
 // WithRunErrorMatcher assert function to ensure run command error value
 func (c CLIWrapper) WithRunErrorMatcher(f RunErrorAssert) CLIWrapper {
-	return *NewCLIWrapperX(
-		c.t,
-		c.execBinary,
-		c.nodeAddress,
-		c.chainID,
-		c.awaitNextBlock,
-		c.nodesCount,
-		c.homeDir,
-		c.fees,
-		c.Debug,
-		f,
-		c.expTXCommitted,
-	)
+	return c.clone(func(r *CLIWrapper) {
+		r.assertErrorFn = f
+	})
+}
+
+func (c CLIWrapper) WithRunSingleOutput() CLIWrapper {
+	return c.clone(func(r *CLIWrapper) {
+		r.runSingleOutput = true
+	})
 }
 
 func (c CLIWrapper) WithNodeAddress(nodeAddr string) CLIWrapper {
-	return *NewCLIWrapperX(
-		c.t,
-		c.execBinary,
-		nodeAddr,
-		c.chainID,
-		c.awaitNextBlock,
-		c.nodesCount,
-		c.homeDir,
-		c.fees,
-		c.Debug,
-		c.assertErrorFn,
-		c.expTXCommitted,
-	)
+	return c.clone(func(r *CLIWrapper) {
+		r.nodeAddress = nodeAddr
+	})
 }
 
 func (c CLIWrapper) WithAssertTXUncommitted() CLIWrapper {
-	return *NewCLIWrapperX(
+	return c.clone(func(r *CLIWrapper) {
+		r.expTXCommitted = false
+	})
+}
+
+func (c CLIWrapper) WithChainID(newChainID string) CLIWrapper {
+	return c.clone(func(r *CLIWrapper) {
+		r.chainID = newChainID
+	})
+}
+
+func (c CLIWrapper) clone(mutator ...func(r *CLIWrapper)) CLIWrapper {
+	r := NewCLIWrapperX(
 		c.t,
 		c.execBinary,
 		c.nodeAddress,
@@ -143,8 +145,13 @@ func (c CLIWrapper) WithAssertTXUncommitted() CLIWrapper {
 		c.fees,
 		c.Debug,
 		c.assertErrorFn,
-		false,
+		c.runSingleOutput,
+		c.expTXCommitted,
 	)
+	for _, m := range mutator {
+		m(r)
+	}
+	return *r
 }
 
 // Run main entry for executing cli commands.
@@ -156,7 +163,7 @@ func (c CLIWrapper) Run(args ...string) string {
 	}) {
 		args = append(args, "--fees="+c.fees) // add default fee
 	}
-	args = c.withTXFlags(args...)
+	args = c.WithTXFlags(args...)
 	execOutput, ok := c.run(args)
 	if !ok {
 		return execOutput
@@ -207,14 +214,14 @@ func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration
 
 // Keys wasmd keys CLI command
 func (c CLIWrapper) Keys(args ...string) string {
-	args = c.withKeyringFlags(args...)
+	args = c.WithKeyringFlags(args...)
 	out, _ := c.run(args)
 	return out
 }
 
 // CustomQuery main entrypoint for wasmd CLI queries
 func (c CLIWrapper) CustomQuery(args ...string) string {
-	args = c.withQueryFlags(args...)
+	args = c.WithQueryFlags(args...)
 	out, _ := c.run(args)
 	return out
 }
@@ -239,6 +246,11 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		cmd := exec.Command(locateExecutable(c.execBinary), args...) //nolint:gosec // test code only
 		cmd.Dir = WorkDir
 		cmd.Stdin = input
+
+		if c.runSingleOutput {
+			return cmd.Output()
+		}
+
 		return cmd.CombinedOutput()
 	}()
 
@@ -254,23 +266,32 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 	return strings.TrimSpace(string(gotOut)), ok
 }
 
-func (c CLIWrapper) withQueryFlags(args ...string) []string {
+// WithQueryFlags append the test default query flags to the given args
+func (c CLIWrapper) WithQueryFlags(args ...string) []string {
 	args = append(args, "--output", "json")
-	return c.withChainFlags(args...)
+	return c.WithTargetNodeFlags(args...)
 }
 
-func (c CLIWrapper) withTXFlags(args ...string) []string {
+// WithTXFlags append the test default TX flags to the given args.
+// This includes
+// - broadcast-mode: sync
+// - output: json
+// - chain-id
+// - keyring flags
+// - target-node
+func (c CLIWrapper) WithTXFlags(args ...string) []string {
 	args = append(args,
 		"--broadcast-mode", "sync",
 		"--output", "json",
 		"--yes",
 		"--chain-id", c.chainID,
 	)
-	args = c.withKeyringFlags(args...)
-	return c.withChainFlags(args...)
+	args = c.WithKeyringFlags(args...)
+	return c.WithTargetNodeFlags(args...)
 }
 
-func (c CLIWrapper) withKeyringFlags(args ...string) []string {
+// WithKeyringFlags append the test default keyring flags to the given args
+func (c CLIWrapper) WithKeyringFlags(args ...string) []string {
 	r := append(args,
 		"--home", c.homeDir,
 		"--keyring-backend", "test",
@@ -283,7 +304,8 @@ func (c CLIWrapper) withKeyringFlags(args ...string) []string {
 	return append(r, "--output", "json")
 }
 
-func (c CLIWrapper) withChainFlags(args ...string) []string {
+// WithTargetNodeFlags append the test default target node address flags to the given args
+func (c CLIWrapper) WithTargetNodeFlags(args ...string) []string {
 	return append(args,
 		"--node", c.nodeAddress,
 	)
@@ -297,7 +319,7 @@ func (c CLIWrapper) WasmExecute(contractAddr, msg, from string, args ...string) 
 
 // AddKey add key to default keyring. Returns address
 func (c CLIWrapper) AddKey(name string) string {
-	cmd := c.withKeyringFlags("keys", "add", name, "--no-backup")
+	cmd := c.WithKeyringFlags("keys", "add", name, "--no-backup")
 	out, _ := c.run(cmd)
 	addr := gjson.Get(out, "address").String()
 	require.NotEmpty(c.t, addr, "got %q", out)
@@ -306,7 +328,7 @@ func (c CLIWrapper) AddKey(name string) string {
 
 // AddKeyFromSeed recovers the key from given seed and add it to default keyring. Returns address
 func (c CLIWrapper) AddKeyFromSeed(name, mnemoic string) string {
-	cmd := c.withKeyringFlags("keys", "add", name, "--recover")
+	cmd := c.WithKeyringFlags("keys", "add", name, "--recover")
 	out, _ := c.runWithInput(cmd, strings.NewReader(mnemoic))
 	addr := gjson.Get(out, "address").String()
 	require.NotEmpty(c.t, addr, "got %q", out)
@@ -315,7 +337,7 @@ func (c CLIWrapper) AddKeyFromSeed(name, mnemoic string) string {
 
 // GetKeyAddr returns Acc address
 func (c CLIWrapper) GetKeyAddr(name string) string {
-	cmd := c.withKeyringFlags("keys", "show", name, "-a")
+	cmd := c.WithKeyringFlags("keys", "show", name, "-a")
 	out, _ := c.run(cmd)
 	addr := strings.Trim(out, "\n")
 	require.NotEmpty(c.t, addr, "got %q", out)
@@ -324,7 +346,7 @@ func (c CLIWrapper) GetKeyAddr(name string) string {
 
 // GetKeyAddrPrefix returns key address with Beach32 prefix encoding for a key (acc|val|cons)
 func (c CLIWrapper) GetKeyAddrPrefix(name, prefix string) string {
-	cmd := c.withKeyringFlags("keys", "show", name, "-a", "--bech="+prefix)
+	cmd := c.WithKeyringFlags("keys", "show", name, "-a", "--bech="+prefix)
 	out, _ := c.run(cmd)
 	addr := strings.Trim(out, "\n")
 	require.NotEmpty(c.t, addr, "got %q", out)
@@ -413,6 +435,10 @@ func (c CLIWrapper) SubmitAndVoteGovProposal(proposalJson string, args ...string
 	return ourProposalID
 }
 
+func (c CLIWrapper) ChainID() string {
+	return c.chainID
+}
+
 // Version returns the current version of the client binary
 func (c CLIWrapper) Version() string {
 	v, ok := c.run([]string{"version"})
@@ -427,9 +453,14 @@ func RequireTxSuccess(t *testing.T, got string) {
 	require.Equal(t, int64(0), code, "non success tx code : %s", details)
 }
 
-// RequireTxFailure require the received response to contain any failure code and the passed msgsgs
+// RequireTxFailure require the received response to contain any failure code and the passed msgs
+// From CometBFT v1, an RPC error won't return ABCI response, and error must be parsed
 func RequireTxFailure(t *testing.T, got string, containsMsgs ...string) {
 	t.Helper()
+	if strings.Contains(got, "broadcast error on transaction validation") {
+		return // tx is invalid, no need to parse
+	}
+
 	code, details := parseResultCode(t, got)
 	require.NotEqual(t, int64(0), code, details)
 	for _, msg := range containsMsgs {

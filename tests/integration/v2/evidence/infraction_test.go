@@ -1,4 +1,4 @@
-package evidence_test
+package evidence
 
 import (
 	"bytes"
@@ -14,12 +14,10 @@ import (
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/router"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktypes "cosmossdk.io/x/bank/types"
+	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
@@ -29,8 +27,8 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
-	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/runtime/v2/services"
 	_ "cosmossdk.io/x/accounts"  // import as blank for app wiring
 	_ "cosmossdk.io/x/bank"      // import as blank for app wiring
@@ -77,11 +75,12 @@ type fixture struct {
 	ctx context.Context
 	cdc codec.Codec
 
-	accountKeeper  authkeeper.AccountKeeper
-	bankKeeper     bankkeeper.Keeper
-	evidenceKeeper keeper.Keeper
-	slashingKeeper slashingkeeper.Keeper
-	stakingKeeper  *stakingkeeper.Keeper
+	accountKeeper   authkeeper.AccountKeeper
+	bankKeeper      bankkeeper.Keeper
+	evidenceKeeper  keeper.Keeper
+	slashingKeeper  slashingkeeper.Keeper
+	stakingKeeper   *stakingkeeper.Keeper
+	consensusKeeper consensuskeeper.Keeper
 }
 
 func initFixture(t *testing.T) *fixture {
@@ -102,57 +101,20 @@ func initFixture(t *testing.T) *fixture {
 		configurator.GenutilModule(),
 	}
 
-	var err error
 	startupCfg := integration.DefaultStartUpConfig(t)
-
-	msgRouterService := integration.NewRouterService()
-	res.registerMsgRouterService(msgRouterService)
-
-	var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
-		return msgRouterService
-	}
-
-	queryRouterService := integration.NewRouterService()
-	res.registerQueryRouterService(queryRouterService)
-
-	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
-
 	startupCfg.BranchService = &integration.BranchService{}
-	startupCfg.RouterServiceBuilder = serviceBuilder
 	startupCfg.HeaderService = &integration.HeaderService{}
 
+	var err error
 	res.app, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
 		startupCfg,
-		&res.bankKeeper, &res.accountKeeper, &res.stakingKeeper, &res.slashingKeeper, &res.evidenceKeeper, &res.cdc)
+		&res.bankKeeper, &res.accountKeeper, &res.stakingKeeper, &res.slashingKeeper, &res.evidenceKeeper, &res.consensusKeeper, &res.cdc)
 	require.NoError(t, err)
-
-	router := evidencetypes.NewRouter()
-	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(res.evidenceKeeper))
-	res.evidenceKeeper.SetRouter(router)
 
 	res.ctx = res.app.StateLatestContext(t)
 
 	return &res
-}
-
-func (s *fixture) registerMsgRouterService(router *integration.RouterService) {
-	// register custom router service
-	bankSendHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
-		msg, ok := req.(*banktypes.MsgSend)
-		if !ok {
-			return nil, integration.ErrInvalidMsgType
-		}
-		msgServer := bankkeeper.NewMsgServerImpl(s.bankKeeper)
-		resp, err := msgServer.Send(ctx, msg)
-		return resp, err
-	}
-
-	router.RegisterHandler(bankSendHandler, "cosmos.bank.v1beta1.MsgSend")
-}
-
-func (s *fixture) registerQueryRouterService(router *integration.RouterService) {
-	// register custom router service
 }
 
 func TestHandleDoubleSign(t *testing.T) {
@@ -185,7 +147,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	consaddrStr, err := f.stakingKeeper.ConsensusAddressCodec().BytesToString(valpubkey.Address())
 	assert.NilError(t, err)
-	height := f.app.LastBlockHeight() + 1
+	height := f.app.LastBlockHeight()
 	info := slashingtypes.NewValidatorSigningInfo(consaddrStr, int64(height), time.Unix(0, 0), false, int64(0))
 	err = f.slashingKeeper.ValidatorSigningInfo.Set(f.ctx, sdk.ConsAddress(valpubkey.Address()), info)
 	assert.NilError(t, err)
@@ -280,18 +242,22 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	assert.NilError(t, err)
 	assert.DeepEqual(t, amt, val.GetBondedTokens())
 
-	// nci := comet.Info{Evidence: []comet.Evidence{{
-	// 	Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
-	// 	Type:      comet.DuplicateVote, //
-	// 	Time:      ctx.HeaderInfo().Time,
-	// 	Height:    0,
-	// }}}
+	nci := comet.Info{Evidence: []comet.Evidence{{
+		Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
+		Type:      comet.DuplicateVote, //
+		Time:      integration.HeaderInfoFromContext(ctx).Time,
+		Height:    0,
+	}}}
 
-	// cp := simtestutil.DefaultConsensusParams
+	require.NotNil(t, f.consensusKeeper.ParamsStore)
+	require.NoError(t, f.consensusKeeper.ParamsStore.Set(ctx, *simtestutil.DefaultConsensusParams))
+	cp, err := f.consensusKeeper.ParamsStore.Get(ctx)
 
-	// ctx = ctx.WithCometInfo(nci)
-	// ctx = ctx.WithConsensusParams(*simtestutil.DefaultConsensusParams)
-	// ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1, Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
+	ctx = context.WithValue(ctx, corecontext.CometInfoKey, nci)
+	ctx = integration.SetHeaderInfo(ctx, header.Info{
+		Height: int64(f.app.LastBlockHeight()) + cp.Evidence.MaxAgeNumBlocks + 1,
+		Time:   integration.HeaderInfoFromContext(ctx).Time.Add(cp.Evidence.MaxAgeDuration + 1),
+	})
 
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx, cometInfoService))
 
@@ -305,8 +271,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	sdkCtx := sdk.UnwrapSDKContext(f.ctx)
-	ctx := sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Time: time.Now()})
+	ctx := integration.SetHeaderInfo(f.ctx, header.Info{Time: time.Now()})
 	populateValidators(t, f)
 
 	power := int64(100)
@@ -369,7 +334,9 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 		}},
 	}
 
-	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci), cometInfoService)
+	ctxWithCometInfo := context.WithValue(ctx, corecontext.CometInfoKey, nci)
+
+	err = f.evidenceKeeper.BeginBlocker(ctxWithCometInfo, cometInfoService)
 	assert.NilError(t, err)
 
 	// should be jailed and tombstoned
@@ -385,7 +352,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci), cometInfoService)
+	err = f.evidenceKeeper.BeginBlocker(ctxWithCometInfo, cometInfoService)
 	assert.NilError(t, err)
 
 	// tokens should be the same (capped slash)
@@ -394,13 +361,12 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.Assert(t, valInfo.GetTokens().Equal(newTokens))
 
 	// jump to past the unbonding period
-	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Unix(1, 0).Add(stakingParams.UnbondingTime)})
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: time.Unix(1, 0).Add(stakingParams.UnbondingTime)})
 
 	// require we cannot unjail
 	assert.Error(t, f.slashingKeeper.Unjail(ctx, operatorAddr), slashingtypes.ErrValidatorJailed.Error())
 
 	// require we be able to unbond now
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	del, _ := f.stakingKeeper.Delegations.Get(ctx, collections.Join(sdk.AccAddress(operatorAddr), operatorAddr))
 	validator, _ := f.stakingKeeper.GetValidator(ctx, operatorAddr)
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()

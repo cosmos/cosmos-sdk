@@ -81,6 +81,14 @@ func SetHeaderInfo(ctx context.Context, h header.Info) context.Context {
 	return ctx
 }
 
+func HeaderInfoFromContext(ctx context.Context) header.Info {
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if ok {
+		return iCtx.header
+	}
+	return header.Info{}
+}
+
 func GasMeterFromContext(ctx context.Context) gas.Meter {
 	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
 	if !ok {

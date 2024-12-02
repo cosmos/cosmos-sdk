@@ -108,11 +108,8 @@ func DeterministicIterationsV2[request, response proto.Message](
 ) {
 	t.Helper()
 	prevRes, err := queryFn(req)
-	fmt.Println("req", req)
-	fmt.Println("prevRes", prevRes, err)
 	gasMeter := meterFn()
 	gasConsumed := gasMeter.Consumed()
-	fmt.Println("gasConsumed", gasConsumed)
 	require.NoError(t, err)
 	assertGas(t, gasConsumed)
 

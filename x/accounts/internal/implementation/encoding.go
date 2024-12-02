@@ -1,6 +1,7 @@
 package implementation
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"cosmossdk.io/core/transaction"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/gogoproto/jsonpb"
 )
 
 // ProtoMsgG is a generic interface for protobuf messages.
@@ -64,4 +66,17 @@ func Merge(a, b transaction.Msg) {
 
 func Equal(a, b transaction.Msg) bool {
 	return proto.Equal(a, b)
+}
+
+func EncodeMsgJSONToProto(name, jsonMsg string) (proto.Message, error) {
+	typ := proto.MessageType(name)
+	if typ == nil {
+		return nil, fmt.Errorf("message type %s not found", name)
+	}
+	msg := reflect.New(typ.Elem()).Interface().(proto.Message)
+	err := jsonpb.Unmarshal(bytes.NewBufferString(jsonMsg), msg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON to proto.Message: %w", err)
+	}
+	return msg, nil
 }

@@ -43,25 +43,10 @@ func GetTxInitCmd() *cobra.Command {
 				return err
 			}
 
-			// we need to convert the message from json to a protobuf message
-			// to know which message to use, we need to know the account type
-			// init message schema.
-			accClient := v1.NewQueryClient(clientCtx)
-			schema, err := accClient.Schema(cmd.Context(), &v1.SchemaRequest{
-				AccountType: args[0],
-			})
-			if err != nil {
-				return err
-			}
-
-			msgBytes, err := encodeJSONToProto(schema.InitSchema.Request, args[1])
-			if err != nil {
-				return err
-			}
 			msg := v1.MsgInit{
 				Sender:      sender,
 				AccountType: args[0],
-				Message:     msgBytes,
+				JsonMessage: args[1],
 			}
 
 			isGenesis, err := cmd.Flags().GetBool("genesis")

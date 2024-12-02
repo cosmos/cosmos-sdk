@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
+	// "google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/x/accounts/accountstd"
@@ -17,13 +17,13 @@ func TestMsgServer(t *testing.T) {
 	s := NewMsgServer(k)
 
 	// create
-	initMsg, err := implementation.PackAny(&emptypb.Empty{})
-	require.NoError(t, err)
+	// initMsg, err := implementation.PackAny(&emptypb.Empty{})
+	// require.NoError(t, err)
 
 	initResp, err := s.Init(ctx, &v1.MsgInit{
 		Sender:      "sender",
 		AccountType: "test",
-		Message:     initMsg,
+		JsonMessage: `{}`,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, initResp)

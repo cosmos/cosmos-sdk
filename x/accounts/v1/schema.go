@@ -12,12 +12,12 @@ import (
 func MakeAccountsSchemas(impls map[string]implementation.Implementation) map[string]*SchemaResponse {
 	m := make(map[string]*SchemaResponse, len(impls))
 	for name, impl := range impls {
-		m[name] = makeAccountSchema(impl)
+		m[name] = MakeAccountSchema(impl)
 	}
 	return m
 }
 
-func makeAccountSchema(impl implementation.Implementation) *SchemaResponse {
+func MakeAccountSchema(impl implementation.Implementation) *SchemaResponse {
 	return &SchemaResponse{
 		InitSchema: &SchemaResponse_Handler{
 			Request:  impl.InitHandlerSchema.RequestSchema.Name,

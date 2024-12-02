@@ -40,12 +40,10 @@ func TestGenesis(t *testing.T) {
 		return testAccountType, acc, err
 	})
 	// add to state a genesis account init msg.
-	initMsg, err := implementation.PackAny(&types.Empty{})
-	require.NoError(t, err)
 	state.InitAccountMsgs = append(state.InitAccountMsgs, &v1.MsgInit{
 		Sender:      "sender-2",
 		AccountType: testAccountType,
-		Message:     initMsg,
+		JsonMessage: `{}`,
 		Funds:       nil,
 	})
 	err = k.ImportState(ctx, state)

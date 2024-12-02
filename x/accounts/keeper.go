@@ -173,8 +173,10 @@ func (k Keeper) initFromMsg(ctx context.Context, initMsg *v1.MsgInit) (transacti
 		return nil, nil, err
 	}
 
+	schema := v1.MakeAccountSchema(k.accounts[initMsg.AccountType])
+
 	// decode message bytes into the concrete boxed message type
-	msg, err := implementation.UnpackAnyRaw(initMsg.Message)
+	msg, err := implementation.EncodeMsgJSONToProto(schema.InitSchema.Request, initMsg.JsonMessage)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -81,7 +81,6 @@ func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSe
 	for _, coin := range msg.Amount {
 		// Check if denom impl AssetAccount
 		denomAcc, err := h.assetAccount.Get(ctx, coin.Denom)
-		fmt.Println("denomAcc", coin.Denom, denomAcc, err)
 		if err == nil {
 			msg := &assetv1.MsgTransfer{
 				From: from,
@@ -89,7 +88,6 @@ func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSe
 				Amount: coin.Amount,
 			}
 			resp, err := h.accountsKeeper.Execute(ctx, denomAcc, nil, msg, sdk.NewCoins())
-			fmt.Println("Execute", resp, err)
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +145,6 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 	for _, coin := range msg.Amount {
 		// Check if denom impl AssetAccount
 		denomAcc, err := h.assetAccount.Get(ctx, coin.Denom)
-		fmt.Println("denomAcc", coin.Denom, denomAcc, err)
 		if err == nil {
 
 			msg := &assetv1.MsgMint{
@@ -155,7 +152,6 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 				Amount: coin.Amount,
 			}
 			resp, err := h.accountsKeeper.Execute(ctx, denomAcc, nil, msg, sdk.NewCoins())
-			fmt.Println("Execute", resp, err)
 			if err != nil {
 				return nil, err
 			}
@@ -213,7 +209,6 @@ func (h handlers) MsgBurn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBu
 	for _, coin := range msg.Amount {
 		// Check if denom impl AssetAccount
 		denomAcc, err := h.assetAccount.Get(ctx, coin.Denom)
-		fmt.Println("denomAcc", coin.Denom, denomAcc, err)
 		if err == nil {
 			msg := &assetv1.MsgBurn{
 				From: from,

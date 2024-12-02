@@ -3,7 +3,6 @@ package asset
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -27,7 +26,6 @@ var (
 
 // newBaseLockup creates a new BaseLockup object.
 func NewAssetAccount(d accountstd.Dependencies) (*AssetAccount, error) {
-	fmt.Println("go here, addr codec", d.AddressCodec)
 	AssetAccount := &AssetAccount{
 		Owner:        collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		Denom:        collections.NewItem(d.SchemaBuilder, DenomPrefix, "denom", collections.StringValue),
@@ -59,9 +57,6 @@ type AssetAccount struct {
 func (aa *AssetAccount) Init(ctx context.Context, msg *assettypes.MsgInitAssetAccountWrapper) (
 	*assettypes.MsgInitAssetAccountResponse, error,
 ) {
-	fmt.Println("msg", msg, msg.Owner)
-	fmt.Println("transfer func", msg.TransferFunc)
-	fmt.Println("address codec", aa.addressCodec)
 	owner, err := aa.addressCodec.StringToBytes(msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'owner' address: %s", err)
@@ -79,7 +74,6 @@ func (aa *AssetAccount) Init(ctx context.Context, msg *assettypes.MsgInitAssetAc
 	totalSupply := math.ZeroInt()
 	for _, balance := range msg.InitBalance {
 		totalSupply = totalSupply.Add(balance.Amount)
-		fmt.Println("Init addr", balance.Addr)
 		err = aa.Balance.Set(ctx, balance.Addr, balance.Amount)
 		if err != nil {
 			return nil, err
@@ -236,10 +230,7 @@ func (aa *AssetAccount) SubUnlockedCoins(ctx context.Context, addr []byte, amt m
 		return err
 	}
 
-	fmt.Println("From addr", addr)
 	balance := aa.GetBalance(ctx, addr)
-	fmt.Println("GetBalance", balance, err)
-
 	_, err = balance.SafeSub(amt)
 	if err != nil {
 		return errorsmod.Wrapf(

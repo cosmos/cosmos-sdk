@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -152,7 +151,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (suite *KeeperTestSuite) TestSendCoins() {
-	fmt.Println("check")
 	ctx := suite.ctx
 	require := suite.Require()
 	sendAmt := sdk.NewCoins(newFooCoin(10), newBarCoin(10), newStakeCoin(10))
@@ -161,27 +159,23 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 
 	// Set balances for acc0 and then try send to acc1
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], newStakeCoin(100)))
-	rsp, err := handler.MsgSend(ctx, &banktypes.MsgSend{
+	_, err := handler.MsgSend(ctx, &banktypes.MsgSend{
 		FromAddress: accAddrs[0].String(),
 		ToAddress:   accAddrs[1].String(),
 		Amount:      sendAmt,
 	})
 	require.NoError(err)
-	fmt.Println("Send", rsp, err)
 
 	// Check acc0 balances
 	acc0FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], fooDenom)
 	require.Equal(acc0FooBalance.Amount, math.NewInt(90))
 	acc0BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], barDenom)
 	require.Equal(acc0BarBalance.Amount, math.NewInt(90))
-	fmt.Println("acc0BarBalance", acc0BarBalance)
 	acc0StakeBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], stakeDenom)
 	require.Equal(acc0StakeBalance.Amount, math.NewInt(90))
-	fmt.Println("acc0BarBalance", acc0BarBalance)
 
 	// Check acc1 balances
 	acc1FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[1], fooDenom)
-	fmt.Println("acc1 foo balance", acc1FooBalance)
 	require.Equal(acc1FooBalance.Amount, math.NewInt(10))
 	acc1BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[1], barDenom)
 	require.Equal(acc1BarBalance.Amount, math.NewInt(9))
@@ -194,24 +188,21 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 }
 
 func (suite *KeeperTestSuite) TestMintCoins() {
-	fmt.Println("check")
 	ctx := suite.ctx
 	require := suite.Require()
 	mintAmt := sdk.NewCoins(newFooCoin(10), newBarCoin(10), newStakeCoin(10))
 
 	handler := keeper.NewHandlers(&suite.bankKeeper)
 
-	rsp, err := handler.MsgMint(ctx, &banktypes.MsgMint{
+	_, err := handler.MsgMint(ctx, &banktypes.MsgMint{
 		Authority: authtypes.NewModuleAddress("gov").String(),
 		ToAddress: accAddrs[1].String(),
 		Amount:    mintAmt,
 	})
 	require.NoError(err)
-	fmt.Println("Send", rsp, err)
 
 	// Check acc1 balances
 	acc1FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[1], fooDenom)
-	fmt.Println("acc1 foo balance", acc1FooBalance)
 	require.Equal(acc1FooBalance.Amount, math.NewInt(10))
 	acc1BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[1], barDenom)
 	require.Equal(acc1BarBalance.Amount, math.NewInt(9))
@@ -224,7 +215,6 @@ func (suite *KeeperTestSuite) TestMintCoins() {
 }
 
 func (suite *KeeperTestSuite) TestBurnCoins() {
-	fmt.Println("check")
 	ctx := suite.ctx
 	require := suite.Require()
 	burnAmount := sdk.NewCoins(newFooCoin(10), newBarCoin(10), newStakeCoin(10))
@@ -233,17 +223,15 @@ func (suite *KeeperTestSuite) TestBurnCoins() {
 
 	// Set balances for acc0 and then try burn
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], newStakeCoin(100)))
-	rsp, err := handler.MsgBurn(ctx, &banktypes.MsgBurn{
+	_, err := handler.MsgBurn(ctx, &banktypes.MsgBurn{
 		Authority:       authtypes.NewModuleAddress("gov").String(),
 		BurnFromAddress: accAddrs[0].String(),
 		Amount:          burnAmount,
 	})
 	require.NoError(err)
-	fmt.Println("Send", rsp, err)
 
 	// Check acc0 balances
 	acc1FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], fooDenom)
-	fmt.Println("acc1 foo balance", acc1FooBalance)
 	require.Equal(acc1FooBalance.Amount, math.NewInt(90))
 	acc1BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], barDenom)
 	require.Equal(acc1BarBalance.Amount, math.NewInt(91))
@@ -251,83 +239,6 @@ func (suite *KeeperTestSuite) TestBurnCoins() {
 	require.Equal(acc1StakeBalance.Amount, math.NewInt(90))
 
 }
-
-// func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Module() {
-// 	ctx := suite.ctx
-// 	require := suite.Require()
-// 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
-// 	sendAmt := sdk.NewCoins(newFooCoin(10), newBarCoin(10))
-
-// 	// Try send with empty balances
-// 	err := suite.bankKeeper.SendCoins(ctx, accAddrs[0], burnerAcc.GetAddress(), sendAmt)
-// 	require.Error(err)
-
-// 	// Set balances for acc0 and then try send to acc1
-// 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
-// 	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], burnerAcc.GetAddress(), sendAmt))
-
-// 	// Check balances
-// 	acc0FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], fooDenom)
-// 	require.Equal(acc0FooBalance.Amount, math.NewInt(90))
-// 	acc0BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], barDenom)
-// 	require.Equal(acc0BarBalance.Amount, math.NewInt(40))
-// 	burnerFooBalance := suite.bankKeeper.GetBalance(ctx, burnerAcc.GetAddress(), fooDenom)
-// 	require.Equal(burnerFooBalance.Amount, math.NewInt(10))
-// 	burnerBarBalance := suite.bankKeeper.GetBalance(ctx, burnerAcc.GetAddress(), barDenom)
-// 	require.Equal(burnerBarBalance.Amount, math.NewInt(10))
-// }
-
-// func (suite *KeeperTestSuite) TestSendCoins_Module_To_Account() {
-// 	ctx := suite.ctx
-// 	require := suite.Require()
-// 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
-
-// 	require.NoError(suite.bankKeeper.MintCoins(ctx, mintAcc.GetAddress(), balances))
-
-// 	// Try send from burner module
-// 	err := suite.bankKeeper.SendCoins(ctx, burnerAcc.GetAddress(), accAddrs[4], balances)
-// 	require.Error(err)
-
-// 	// Send from mint module
-// 	err = suite.bankKeeper.SendCoins(ctx, mintAcc.GetAddress(), accAddrs[4], balances)
-// 	require.NoError(err)
-
-// 	// Check balances
-// 	acc4FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[4], fooDenom)
-// 	require.Equal(acc4FooBalance.Amount, math.NewInt(100))
-// 	acc4BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[4], barDenom)
-// 	require.Equal(acc4BarBalance.Amount, math.NewInt(50))
-// 	mintFooBalance := suite.bankKeeper.GetBalance(ctx, mintAcc.GetAddress(), fooDenom)
-// 	require.Equal(mintFooBalance.Amount, math.NewInt(0))
-// 	mintBarBalance := suite.bankKeeper.GetBalance(ctx, mintAcc.GetAddress(), barDenom)
-// 	require.Equal(mintBarBalance.Amount, math.NewInt(0))
-// }
-
-// func (suite *KeeperTestSuite) TestSendCoins_Module_To_Module() {
-// 	ctx := suite.ctx
-// 	require := suite.Require()
-// 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
-
-// 	require.NoError(suite.bankKeeper.MintCoins(ctx, mintAcc.GetAddress(), balances))
-
-// 	// Try send from burner module
-// 	err := suite.bankKeeper.SendCoins(ctx, burnerAcc.GetAddress(), mintAcc.GetAddress(), sdk.NewCoins(newFooCoin(100), newBarCoin(50)))
-// 	require.Error(err)
-
-// 	// Send from mint module to burn module
-// 	err = suite.bankKeeper.SendCoins(ctx, mintAcc.GetAddress(), burnerAcc.GetAddress(), sdk.NewCoins(newFooCoin(100), newBarCoin(50)))
-// 	require.NoError(err)
-
-// 	// Check balances
-// 	burnerFooBalance := suite.bankKeeper.GetBalance(ctx, burnerAcc.GetAddress(), fooDenom)
-// 	require.Equal(burnerFooBalance.Amount, math.NewInt(100))
-// 	burnerBarBalance := suite.bankKeeper.GetBalance(ctx, burnerAcc.GetAddress(), barDenom)
-// 	require.Equal(burnerBarBalance.Amount, math.NewInt(50))
-// 	mintFooBalance := suite.bankKeeper.GetBalance(ctx, mintAcc.GetAddress(), fooDenom)
-// 	require.Equal(mintFooBalance.Amount, math.NewInt(0))
-// 	mintBarBalance := suite.bankKeeper.GetBalance(ctx, mintAcc.GetAddress(), barDenom)
-// 	require.Equal(mintBarBalance.Amount, math.NewInt(0))
-// }
 
 // func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {
 // 	ctx := suite.ctx

@@ -674,9 +674,10 @@ func TestAuthzGRPCQueries(t *testing.T) {
 
 	// test query grant grpc endpoint
 	grantURL := baseurl + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
-	bech32FailOutput := `decoding bech32 failed: invalid separator index -1`
-	emptyStrOutput := `empty address string is not allowed`
-	invalidMsgTypeOutput := `authorization not found for invalidMsg type`
+
+	bech32FailOutput := `{"code":2, "message":"decoding bech32 failed: invalid separator index -1", "details":[]}`
+	emptyStrOutput := `{"code":2, "message":"empty address string is not allowed", "details":[]}`
+	invalidMsgTypeOutput := `{"code":2, "message":"codespace authz code 2: authorization not found: authorization not found for invalidMsg type", "details":[]}`
 	expGrantOutput := fmt.Sprintf(`{"grants":[{%s}],"pagination":null}`, grant1)
 
 	grantTestCases := []systest.RestTestCase{
@@ -760,7 +761,7 @@ func TestAuthzGRPCQueries(t *testing.T) {
 
 	// test query grants by granter grpc endpoint
 	grantsByGranterURL := baseurl + "/cosmos/authz/v1beta1/grants/granter/%s"
-	decodingFailedOutput := `decoding bech32 failed: invalid character in string`
+	decodingFailedOutput := `{"code":2, "message":"decoding bech32 failed: invalid character in string: ' '", "details":[]}`
 	noAuthorizationsOutput := `{"grants":[],"pagination":{"next_key":null,"total":"0"}}`
 	granterQueryOutput := fmt.Sprintf(`{"grants":[{"granter":"%s","grantee":"%s",%s}],"pagination":{"next_key":null,"total":"1"}}`,
 		grantee1Addr, grantee2Addr, grant4)

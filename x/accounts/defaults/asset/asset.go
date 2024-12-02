@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -26,23 +25,17 @@ var (
 	Type          = "asset-account"
 )
 
-var (
-	CONTINUOUS_LOCKING_ACCOUNT = "continuous-locking-account"
-	DELAYED_LOCKING_ACCOUNT    = "delayed-locking-account"
-	PERIODIC_LOCKING_ACCOUNT   = "periodic-locking-account"
-	PERMANENT_LOCKING_ACCOUNT  = "permanent-locking-account"
-)
-
-type getLockedCoinsFunc = func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error)
-
 // newBaseLockup creates a new BaseLockup object.
 func NewAssetAccount(d accountstd.Dependencies) (*AssetAccount, error) {
 	fmt.Println("go here, addr codec", d.AddressCodec)
 	AssetAccount := &AssetAccount{
-		Owner:   collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
-		Denom:   collections.NewItem(d.SchemaBuilder, DenomPrefix, "denom", collections.StringValue),
-		Balance: collections.NewMap(d.SchemaBuilder, BalancePrefix, "balance", collections.BytesKey, sdk.IntValue),
-		Supply:  collections.NewItem(d.SchemaBuilder, SupplyPrefix, "supply", sdk.IntValue),
+		Owner:        collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
+		Denom:        collections.NewItem(d.SchemaBuilder, DenomPrefix, "denom", collections.StringValue),
+		Balance:      collections.NewMap(d.SchemaBuilder, BalancePrefix, "balance", collections.BytesKey, sdk.IntValue),
+		Supply:       collections.NewItem(d.SchemaBuilder, SupplyPrefix, "supply", sdk.IntValue),
+		transferFunc: make(map[string]func(ctx context.Context, from []byte, to []byte, amount math.Int) ([][]byte, error)),
+		mintFunc:     make(map[string]func(ctx context.Context, to []byte, amount math.Int) ([][]byte, error)),
+		burnFunc:     make(map[string]func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error)),
 
 		addressCodec:  d.AddressCodec,
 		headerService: d.Environment.HeaderService,
@@ -58,7 +51,9 @@ type AssetAccount struct {
 	Supply        collections.Item[math.Int]
 	addressCodec  address.Codec
 	headerService header.Service
-	transferFunc  func(ctx context.Context, from, to []byte, amount math.Int) error
+	transferFunc  map[string]func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte, error)
+	mintFunc      map[string]func(ctx context.Context, to []byte, amount math.Int) ([][]byte, error)
+	burnFunc      map[string]func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error)
 }
 
 func (aa *AssetAccount) Init(ctx context.Context, msg *assettypes.MsgInitAssetAccountWrapper) (
@@ -96,7 +91,9 @@ func (aa *AssetAccount) Init(ctx context.Context, msg *assettypes.MsgInitAssetAc
 		return nil, err
 	}
 
-	aa.transferFunc = msg.TransferFunc(aa)
+	aa.transferFunc[msg.Denom] = msg.TransferFunc(aa)
+	aa.mintFunc[msg.Denom] = msg.MintFunc(aa)
+	aa.burnFunc[msg.Denom] = msg.BurnFunc(aa)
 
 	return &assettypes.MsgInitAssetAccountResponse{}, nil
 }
@@ -111,6 +108,16 @@ func (aa *AssetAccount) GetDenom(ctx context.Context) (
 	return denom, nil
 }
 
+func (aa *AssetAccount) GetOwner(ctx context.Context) (
+	[]byte, error,
+) {
+	owner, err := aa.Owner.Get(ctx)
+	if err != nil {
+		return []byte{}, err
+	}
+	return owner, nil
+}
+
 func (aa *AssetAccount) GetBalance(ctx context.Context, addr []byte) math.Int {
 	balance, err := aa.Balance.Get(ctx, addr)
 	if err != nil {
@@ -123,36 +130,103 @@ func (aa *AssetAccount) SetBalance(ctx context.Context, addr []byte, amt math.In
 	return aa.Balance.Set(ctx, addr, amt)
 }
 
-func (aa *AssetAccount) GetSupply(ctx context.Context) (
-	math.Int, error,
-) {
+func (aa *AssetAccount) GetSupply(ctx context.Context) math.Int {
 	supply, err := aa.Supply.Get(ctx)
 	if err != nil {
-		return math.ZeroInt(), err
+		return math.ZeroInt()
 	}
-	return supply, nil
+	return supply
+}
+
+func (aa *AssetAccount) SetSupply(ctx context.Context, supply math.Int) error {
+	return aa.Supply.Set(ctx, supply)
 }
 
 func (aa *AssetAccount) Transfer(ctx context.Context, msg *assettypes.MsgTransfer) (*assettypes.MsgTransferResponse, error) {
 	if msg == nil {
 		return nil, errors.New("empty msg")
 	}
-	err := aa.transferFunc(ctx, msg.From, msg.To, msg.Amount)
+	denom, err := aa.GetDenom(ctx)
 	if err != nil {
 		return nil, err
 	}
-	fromBalance := aa.GetBalance(ctx, msg.From)
-	toBalance := aa.GetBalance(ctx, msg.To)
-	
-	return &assettypes.MsgTransferResponse{
-		FromBalance: assettypes.Balance{
-			Addr:   msg.From,
-			Amount: fromBalance,
-		},
-		ToBalance: assettypes.Balance{
-			Addr:   msg.To,
-			Amount: toBalance,
-		},
+	changeAddr, err := aa.transferFunc[denom](ctx, msg.From, msg.To, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+	resp := &assettypes.MsgTransferResponse{
+		Supply: aa.GetSupply(ctx),
+	}
+
+	for _, addr := range changeAddr {
+		balance := aa.GetBalance(ctx, addr)
+		resp.Balances = append(resp.Balances, assettypes.Balance{Addr: addr, Amount: balance})
+	}
+
+	return resp, nil
+}
+
+func (aa *AssetAccount) Mint(ctx context.Context, msg *assettypes.MsgMint) (*assettypes.MsgMintResponse, error) {
+	if msg == nil {
+		return nil, errors.New("empty msg")
+	}
+	denom, err := aa.GetDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+	changeAddr, err := aa.mintFunc[denom](ctx, msg.To, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+	resp := &assettypes.MsgMintResponse{
+		Supply: aa.GetSupply(ctx),
+	}
+
+	for _, addr := range changeAddr {
+		balance := aa.GetBalance(ctx, addr)
+		resp.Balances = append(resp.Balances, assettypes.Balance{Addr: addr, Amount: balance})
+	}
+
+	return resp, nil
+}
+
+func (aa *AssetAccount) Burn(ctx context.Context, msg *assettypes.MsgBurn) (*assettypes.MsgBurnResponse, error) {
+	if msg == nil {
+		return nil, errors.New("empty msg")
+	}
+
+	denom, err := aa.GetDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	changeAddr, err := aa.burnFunc[denom](ctx, msg.From, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+	resp := &assettypes.MsgBurnResponse{
+		Supply: aa.GetSupply(ctx),
+	}
+
+	for _, addr := range changeAddr {
+		balance := aa.GetBalance(ctx, addr)
+		resp.Balances = append(resp.Balances, assettypes.Balance{Addr: addr, Amount: balance})
+	}
+
+	return resp, nil
+}
+
+func (aa *AssetAccount) QueryOwner(ctx context.Context, msg *assettypes.QueryOwnerRequest) (*assettypes.QueryOwnerResponse, error) {
+	if msg == nil {
+		return nil, errors.New("empty msg")
+	}
+	owner, err := aa.GetOwner(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &assettypes.QueryOwnerResponse{
+		Owner: owner,
 	}, nil
 }
 
@@ -196,6 +270,8 @@ func (a *AssetAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
 
 func (aa *AssetAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, aa.Transfer)
+	accountstd.RegisterExecuteHandler(builder, aa.Mint)
+	accountstd.RegisterExecuteHandler(builder, aa.Burn)
 }
 
 // RegisterQueryHandlers implements implementation.Account.

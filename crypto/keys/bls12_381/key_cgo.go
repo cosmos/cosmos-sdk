@@ -4,13 +4,12 @@ package bls12_381
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 
 	"github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/crypto/bls12381"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -84,11 +83,6 @@ func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if len(msg) > bls12381.MaxMsgLen {
-		hash := sha256.Sum256(msg)
-		return secretKey.Sign(hash[:])
-	}
-
 	return secretKey.Sign(msg)
 }
 
@@ -149,11 +143,6 @@ func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
 	pubK, err := bls12381.NewPublicKeyFromBytes(pubKey.Key)
 	if err != nil { // invalid pubkey
 		return false
-	}
-
-	if len(msg) > bls12381.MaxMsgLen {
-		hash := sha256.Sum256(msg)
-		msg = hash[:]
 	}
 
 	return pubK.VerifySignature(msg, sig)

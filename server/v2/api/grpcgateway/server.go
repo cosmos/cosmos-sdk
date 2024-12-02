@@ -9,7 +9,6 @@ import (
 	gateway "github.com/cosmos/gogogateway"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
@@ -30,7 +29,6 @@ type Server[T transaction.Tx] struct {
 	cfgOptions []CfgOption
 
 	server            *http.Server
-	gRPCSrv           *grpc.Server
 	GRPCGatewayRouter *runtime.ServeMux
 }
 
@@ -38,7 +36,6 @@ type Server[T transaction.Tx] struct {
 func New[T transaction.Tx](
 	logger log.Logger,
 	config server.ConfigMap,
-	grpcSrv *grpc.Server,
 	ir jsonpb.AnyResolver,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
@@ -52,7 +49,6 @@ func New[T transaction.Tx](
 	}
 
 	s := &Server[T]{
-		gRPCSrv: grpcSrv,
 		GRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),

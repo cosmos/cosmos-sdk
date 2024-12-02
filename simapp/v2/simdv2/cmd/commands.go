@@ -148,7 +148,6 @@ func InitRootCmd[T transaction.Tx](
 	grpcgatewayServer, err := grpcgateway.New[T](
 		logger,
 		deps.GlobalConfig,
-		nil,
 		simApp.InterfaceRegistry(),
 	)
 	if err != nil {

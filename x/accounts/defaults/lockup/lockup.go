@@ -480,6 +480,7 @@ func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
 
 	currentTime := bva.headerService.HeaderInfo(ctx).Time
 
+	removeKeys := []string{}
 	err = bva.UnbondEntries.Walk(ctx, nil, func(key string, value lockuptypes.UnbondingEntries) (stop bool, err error) {
 		for i := 0; i < len(value.Entries); i++ {
 			entry := value.Entries[i]
@@ -524,10 +525,7 @@ func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
 		}
 
 		if len(value.Entries) == 0 {
-			err = bva.UnbondEntries.Remove(ctx, key)
-			if err != nil {
-				return true, err
-			}
+			removeKeys = append(removeKeys, key)
 		} else {
 			err = bva.UnbondEntries.Set(ctx, key, value)
 			if err != nil {
@@ -537,6 +535,13 @@ func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
 
 		return false, nil
 	})
+
+	for _, key := range removeKeys {
+		err = bva.UnbondEntries.Remove(ctx, key)
+		if err != nil {
+			return err
+		}
+	}
 	return err
 }
 

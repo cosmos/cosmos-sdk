@@ -87,6 +87,9 @@ func TestPermanentAccountUndelegate(t *testing.T) {
 	err = acc.CheckUbdEntriesMature(sdkCtx)
 	require.NoError(t, err)
 
+	_, err = acc.UnbondEntries.Get(sdkCtx, "val_address")
+	require.Error(t, err)
+
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
 	require.NoError(t, err)
 	require.True(t, delLocking.Equal(math.ZeroInt()))

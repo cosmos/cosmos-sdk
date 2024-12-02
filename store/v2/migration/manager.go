@@ -19,8 +19,6 @@ import (
 const (
 	// defaultChannelBufferSize is the default buffer size for the migration stream.
 	defaultChannelBufferSize = 1024
-	// defaultStorageBufferSize is the default buffer size for the storage snapshotter.
-	defaultStorageBufferSize = 1024
 
 	migrateChangesetKeyFmt = "m/cs_%x" // m/cs_<version>
 )

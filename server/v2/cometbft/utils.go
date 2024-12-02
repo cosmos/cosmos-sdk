@@ -149,9 +149,7 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}, indexNon
 	indexAll := len(indexSet) == 0
 	abciEvents := make([]abci.Event, len(events))
 	for i, e := range events {
-		attrs := make([]event.Attribute, 0)
-		var err error
-		attrs, err = e.Attributes()
+		attrs, err := e.Attributes()
 		if err != nil {
 			return nil, err
 		}

@@ -24,46 +24,7 @@ func TxCmd(name string) *cobra.Command {
 		RunE:               client.ValidateCmd,
 		DisableFlagParsing: true,
 	}
-	cmd.AddCommand(GetTxInitCmd(), GetExecuteCmd())
-	return cmd
-}
-
-func GetTxInitCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "init <account-type> <json-message>",
-		Short: "Initialize a new account",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			sender, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-
-			msg := v1.MsgInit{
-				Sender:      sender,
-				AccountType: args[0],
-				JsonMessage: args[1],
-			}
-
-			isGenesis, err := cmd.Flags().GetBool("genesis")
-			if err != nil {
-				return err
-			}
-
-			// in case the genesis flag is provided then the init message is printed.
-			if isGenesis {
-				return clientCtx.WithOutputFormat(flags.OutputFormatJSON).PrintProto(&msg)
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-		},
-	}
-	cmd.Flags().Bool("genesis", false, "if true will print the json init message for genesis")
-	flags.AddTxFlagsToCmd(cmd)
+	cmd.AddCommand(GetExecuteCmd())
 	return cmd
 }
 

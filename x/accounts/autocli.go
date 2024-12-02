@@ -29,8 +29,20 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			EnhanceCustomCommand: true,
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service:              accountsv1.Msg_ServiceDesc.ServiceName,
-			RpcCommandOptions:    []*autocliv1.RpcCommandOptions{},
+			Service: accountsv1.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Init",
+					Use:       "init <account-type> <json-message>",
+					Short:     "Initialize a new account",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "sender"},
+						{ProtoField: "account_type"},
+						{ProtoField: "json_message"},
+						{ProtoField: "funds", Varargs: true},
+					},
+				},
+			},
 			EnhanceCustomCommand: true,
 		},
 	}

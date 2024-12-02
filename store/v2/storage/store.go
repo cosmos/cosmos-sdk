@@ -27,10 +27,8 @@ var (
 	metricOpKey                                 = []string{"store", "ss", "op"}
 	metricApplyKey                              = []string{"store", "ss", "apply"}
 	metricPruneKey                              = []string{"store", "ss", "prune"}
-	removeLabel                                 = telemetry.Label{Name: "method", Value: "remove"}
 	getLabel                                    = telemetry.Label{Name: "method", Value: "get"}
 	hasLabel                                    = telemetry.Label{Name: "method", Value: "has"}
-	setLabel                                    = telemetry.Label{Name: "method", Value: "set"}
 )
 
 // StorageStore is a wrapper around the store.VersionedWriter interface.

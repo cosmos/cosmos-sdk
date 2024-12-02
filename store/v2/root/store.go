@@ -272,7 +272,7 @@ func (s *Store) LoadVersion(version uint64) error {
 func (s *Store) LoadVersionForOverwriting(version uint64) error {
 	if s.telemetry != nil {
 		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "load_version_for_overwriting")
+		defer s.telemetry.MeasureSince(now, []string{"root_store", "load_version_for_overwriting"})
 	}
 
 	return s.loadVersion(version, nil, true)

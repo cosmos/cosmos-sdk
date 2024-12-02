@@ -15,7 +15,8 @@ $SIMD_BIN config set client keyring-default-keyname alice
 $SIMD_BIN config set app rest.enable true
 $SIMD_BIN config set app telemetry.prometheus-retention-time 600
 $SIMD_BIN config set app store.options.iavl-config.cache-size 1000000
-$SIMD_BIN config set app store.options.ss-type pebble
+$SIMD_BIN config set app store.options.ss-type iavl-v2
+$SIMD_BIN config set app store.options.sc-type iavl-v2
 $SIMD_BIN keys add alice --indiscreet
 $SIMD_BIN keys add bob --indiscreet
 

@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/telemetry"
+	iavl_v2 "github.com/cosmos/iavl/v2"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/commitment/iavlv2"
 	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage"
+	ssiavl "cosmossdk.io/store/v2/storage/iavlv2"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/rocksdb"
 )
@@ -29,6 +32,7 @@ type (
 const (
 	SSTypePebble SSType = "pebble"
 	SSTypeRocks  SSType = "rocksdb"
+	SSTypeIavlV2 SSType = "iavl-v2"
 	SCTypeIavl   SCType = "iavl"
 	SCTypeIavlV2 SCType = "iavl-v2"
 )
@@ -55,7 +59,7 @@ type FactoryOptions struct {
 // DefaultStoreOptions returns the default options for creating a root store.
 func DefaultStoreOptions() Options {
 	return Options{
-		SSType: SSTypePebble,
+		SSType: SSTypeIavlV2,
 		SCType: SCTypeIavl,
 		SCPruningOption: &store.PruningOption{
 			KeepRecent: 2,
@@ -90,28 +94,6 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 	)
 
-	storeOpts := opts.Options
-	switch storeOpts.SSType {
-	case SSTypePebble:
-		dir := fmt.Sprintf("%s/data/ss/pebble", opts.RootDir)
-		if err = ensureDir(dir); err != nil {
-			return nil, err
-		}
-		ssDb, err = pebbledb.New(dir)
-	case SSTypeRocks:
-		dir := fmt.Sprintf("%s/data/ss/rocksdb", opts.RootDir)
-		if err = ensureDir(dir); err != nil {
-			return nil, err
-		}
-		ssDb, err = rocksdb.New(dir)
-	default:
-		return nil, fmt.Errorf("unknown storage type: %s", opts.Options.SSType)
-	}
-	if err != nil {
-		return nil, err
-	}
-	ss = storage.NewStorageStore(ssDb, opts.Logger, opts.Telemetry)
-
 	metadata := commitment.NewMetadataStore(opts.SCRawDB)
 	latestVersion, err := metadata.GetLatestVersion()
 	if err != nil {
@@ -138,12 +120,16 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		if internal.IsMemoryStoreKey(key) {
 			return mem.New(), nil
 		} else {
-			switch storeOpts.SCType {
+			switch opts.Options.SCType {
 			case SCTypeIavl:
-				fmt.Printf("telemetry: %v\n", opts.Telemetry)
-				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.Telemetry, storeOpts.IavlConfig), nil
+				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.Telemetry, opts.Options.IavlConfig), nil
 			case SCTypeIavlV2:
-				return nil, errors.New("iavl v2 not supported")
+				dir := fmt.Sprintf("%s/data/sc/iavl-v2/%s", opts.RootDir, key)
+				iavlOpts := iavl_v2.DefaultTreeOptions()
+				iavlOpts.EvictionDepth = 1
+				iavlOpts.HeightFilter = 22
+				pool := iavl_v2.NewNodePool()
+				return iavlv2.NewTree(iavlOpts, iavl_v2.SqliteDbOptions{Path: dir}, pool)
 			default:
 				return nil, errors.New("unsupported commitment store type")
 			}
@@ -172,6 +158,33 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
-	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
+	switch opts.Options.SSType {
+	case SSTypePebble:
+		dir := fmt.Sprintf("%s/data/ss/pebble", opts.RootDir)
+		if err = ensureDir(dir); err != nil {
+			return nil, err
+		}
+		ssDb, err = pebbledb.New(dir)
+	case SSTypeRocks:
+		dir := fmt.Sprintf("%s/data/ss/rocksdb", opts.RootDir)
+		if err = ensureDir(dir); err != nil {
+			return nil, err
+		}
+		ssDb, err = rocksdb.New(dir)
+	case SSTypeIavlV2:
+		treez := make(map[string]ssiavl.Reader, len(opts.StoreKeys))
+		for key, tree := range trees {
+			treez[key] = tree.(ssiavl.Reader)
+		}
+		ssDb = ssiavl.NewStore(treez, opts.Telemetry)
+	default:
+		return nil, fmt.Errorf("unknown storage type: %s", opts.Options.SSType)
+	}
+	if err != nil {
+		return nil, err
+	}
+	ss = storage.NewStorageStore(ssDb, opts.Logger, opts.Telemetry)
+
+	pm := pruning.NewManager(sc, ss, opts.Options.SCPruningOption, opts.Options.SSPruningOption)
 	return New(opts.SCRawDB, opts.Logger, ss, sc, pm, nil, opts.Telemetry)
 }

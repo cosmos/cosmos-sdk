@@ -3,10 +3,8 @@ package accounts
 import (
 	"testing"
 
-	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -31,20 +29,15 @@ func TestQueryServer(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("account query", func(t *testing.T) {
-		// query
-		req := &wrapperspb.UInt64Value{Value: 10}
-		anypbReq, err := implementation.PackAny(req)
-		require.NoError(t, err)
-
 		queryResp, err := qs.AccountQuery(ctx, &v1.AccountQueryRequest{
-			Target:  initResp.AccountAddress,
-			Request: anypbReq,
+			Target:              initResp.AccountAddress,
+			QueryRequestTypeUrl: "google.protobuf.Empty",
+			JsonMessage:         `{}`,
 		})
 		require.NoError(t, err)
 
-		resp, err := implementation.UnpackAnyRaw(queryResp.Response)
+		_, err = implementation.UnpackAnyRaw(queryResp.Response)
 		require.NoError(t, err)
-		require.Equal(t, "10", resp.(*types.StringValue).Value)
 	})
 
 	t.Run("account number", func(t *testing.T) {

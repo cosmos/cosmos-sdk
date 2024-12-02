@@ -6,6 +6,12 @@ import (
 
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
+
+	"bytes"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"reflect"
 )
 
 var _ v1.QueryServer = &queryServer{}
@@ -33,8 +39,22 @@ func (q *queryServer) AccountQuery(ctx context.Context, request *v1.AccountQuery
 		return nil, err
 	}
 
+	accountType, err := q.k.AccountsByType.Get(ctx, targetAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	schema, ok := q.schemas[accountType]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errAccountTypeNotFound, request.Target)
+	}
+
+	anyyy, err := handlerMsgBytes(schema.QueryHandlers, request.QueryRequestTypeUrl, request.JsonMessage)
+	if err != nil {
+		return nil, fmt.Errorf("%s", err.Error())
+	}
 	// decode req into boxed concrete type
-	queryReq, err := implementation.UnpackAnyRaw(request.Request)
+	queryReq, err := implementation.UnpackAnyRaw(anyyy)
 	if err != nil {
 		return nil, err
 	}
@@ -99,3 +119,31 @@ const (
 	SimulateBundlerPaymentGasLimit = SimulateAuthenticateGasLimit
 	ExecuteGasLimit                = SimulateAuthenticateGasLimit
 )
+
+func handlerMsgBytes(handlersSchema []*v1.SchemaResponse_Handler, msgTypeURL, msgString string) (*codectypes.Any, error) {
+	var msgSchema *v1.SchemaResponse_Handler
+	for _, handler := range handlersSchema {
+		fmt.Println(handler.Request)
+		if handler.Request == msgTypeURL {
+			msgSchema = handler
+			break
+		}
+	}
+	if msgSchema == nil {
+		return nil, fmt.Errorf("handler for message type %s not found", msgTypeURL)
+	}
+	return encodeJSONToProto(msgSchema.Request, msgString)
+}
+
+func encodeJSONToProto(name, jsonMsg string) (*codectypes.Any, error) {
+	impl := gogoproto.MessageType(name)
+	if impl == nil {
+		return nil, fmt.Errorf("message type %s not found", name)
+	}
+	msg := reflect.New(impl.Elem()).Interface().(gogoproto.Message)
+	err := jsonpb.Unmarshal(bytes.NewBufferString(jsonMsg), msg)
+	if err != nil {
+		return nil, fmt.Errorf("provided message is not valid %s: %w", jsonMsg, err)
+	}
+	return codectypes.NewAnyWithValue(msg)
+}

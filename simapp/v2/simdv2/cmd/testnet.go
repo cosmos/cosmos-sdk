@@ -345,7 +345,6 @@ func initTestnetFiles[T transaction.Tx](
 		cometServer := cometbft.NewWithConfigOptions[T](cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig))
 		storeServer := &store.Server[T]{}
 		grpcServer := grpc.NewWithConfigOptions[T](grpc.OverwriteDefaultConfig(grpcConfig))
-
 		grpcgatewayServer := grpcgateway.NewWithConfigOptions[T](grpcgateway.OverwriteDefaultConfig(grpcgatewayConfig))
 		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer, grpcgatewayServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))

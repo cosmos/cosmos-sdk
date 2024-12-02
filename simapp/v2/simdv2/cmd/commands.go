@@ -3,6 +3,7 @@ package cmd
 import (
 	"io"
 
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/offchain"
@@ -21,7 +22,6 @@ import (
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -33,11 +33,10 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
 type ModuleWithGRPCGateway interface {
-	RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux)
+	RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux)
 }
 
 // CommandDependencies is a struct that contains all the dependencies needed to initialize the root command.

@@ -3,6 +3,7 @@ package accounts
 import (
 	"testing"
 
+	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -31,13 +32,18 @@ func TestQueryServer(t *testing.T) {
 	t.Run("account query", func(t *testing.T) {
 		queryResp, err := qs.AccountQuery(ctx, &v1.AccountQueryRequest{
 			Target:              initResp.AccountAddress,
-			QueryRequestTypeUrl: "google.protobuf.Empty",
-			JsonMessage:         `{}`,
+			QueryRequestTypeUrl: "google.protobuf.UInt64Value",
+			JsonMessage:         `10`,
 		})
 		require.NoError(t, err)
 
-		_, err = implementation.UnpackAnyRaw(queryResp.Response)
+		resp, err := implementation.UnpackAnyRaw(queryResp.Response)
 		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		stringResp, ok := resp.(*types.StringValue)
+		require.True(t, ok, "expected *types.StringValue, got %T", resp)
+		require.Equal(t, "10", stringResp.Value)
 	})
 
 	t.Run("account number", func(t *testing.T) {

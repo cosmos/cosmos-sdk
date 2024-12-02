@@ -28,17 +28,6 @@ func TxCmd(name string) *cobra.Command {
 	return cmd
 }
 
-func QueryCmd(name string) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                name,
-		Short:              "Query command for the " + name + " module",
-		RunE:               client.ValidateCmd,
-		DisableFlagParsing: true,
-	}
-	cmd.AddCommand(GetQueryAccountCmd())
-	return cmd
-}
-
 func GetTxInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init <account-type> <json-message>",
@@ -127,42 +116,6 @@ func GetExecuteCmd() *cobra.Command {
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-func GetQueryAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "query <account-address> <query-request-type-url> <json-message>",
-		Short: "Query account state",
-		Args:  cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			// schema, err := getSchemaForAccount(clientCtx, args[0])
-			// if err != nil {
-			// 	return err
-			// }
-			// msgBytes, err := handlerMsgBytes(schema.QueryHandlers, args[1], args[2])
-			// if err != nil {
-			// 	return err
-			// }
-			queryClient := v1.NewQueryClient(clientCtx)
-			res, err := queryClient.AccountQuery(cmd.Context(), &v1.AccountQueryRequest{
-				Target: args[0],
-				// Request: msgBytes,
-				QueryRequestTypeUrl: args[1],
-				JsonMessage:         args[2],
-			})
-			if err != nil {
-				return err
-			}
-			return clientCtx.PrintProto(res)
-		},
-	}
-	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 

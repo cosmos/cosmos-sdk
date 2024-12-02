@@ -121,7 +121,7 @@ func (AppModule) GetTxCmd() *cobra.Command {
 }
 
 func (AppModule) GetQueryCmd() *cobra.Command {
-	return cli.QueryCmd(ModuleName)
+	return nil
 }
 
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }

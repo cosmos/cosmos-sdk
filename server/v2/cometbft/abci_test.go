@@ -785,6 +785,7 @@ func TestOptimisticExecution(t *testing.T) {
 		Txs:    ppReq.Txs,
 	}
 	fbResp, err := c.FinalizeBlock(context.Background(), fbReq)
+	require.Nil(t, fbResp)
 	require.Error(t, err)
 	require.ErrorContains(t, err, "test error") // from optimisticMockFunc
 	require.Equal(t, 1, calledTimes)

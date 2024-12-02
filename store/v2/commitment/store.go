@@ -487,7 +487,6 @@ loop:
 				if node.Value == nil {
 					node.Value = []byte{}
 				}
-
 			}
 			err := importer.Add(node)
 			if err != nil {

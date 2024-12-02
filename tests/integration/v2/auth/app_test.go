@@ -20,7 +20,6 @@ import (
 	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	_ "cosmossdk.io/x/staking"   // import as blank for app wirings
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
@@ -33,7 +32,6 @@ import (
 type suite struct {
 	app *integration.App
 
-	cdc codec.Codec
 	ctx context.Context
 
 	authKeeper     authkeeper.AccountKeeper

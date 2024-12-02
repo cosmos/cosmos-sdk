@@ -2,14 +2,15 @@ package lockup
 
 import (
 	"context"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/v1"
 
@@ -280,5 +281,65 @@ func TestQueryLockupAccountBaseInfo(t *testing.T) {
 	res, err := baseLockup.QueryLockupAccountBaseInfo(ctx, &lockuptypes.QueryLockupAccountInfoRequest{})
 	require.Equal(t, res.OriginalLocking.AmountOf("test"), math.NewInt(10))
 	require.Equal(t, res.Owner, "owner")
+	require.NoError(t, err)
+
+}
+
+func TestWithdrawUnlockedCoins(t *testing.T) {
+	const (
+		liquid         = 6
+		locked         = 4
+		initialBalance = liquid + locked // note: 10 is setup in the bank mock
+		staked         = 7
+		unstaked       = staked
+		denom          = "test"
+	)
+	ctx, ss := newMockContext(t)
+	now := time.Now()
+	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
+		Time: now,
+	})
+
+	baseLockup := setup(t, ctx, ss)
+	require.NoError(t, baseLockup.OriginalLocking.Set(ctx, denom, math.NewInt(locked)))
+
+	foreverLocked := func(ctx context.Context, time time.Time, denoms ...string) (sdk.Coins, error) {
+		return sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(locked))), nil
+	}
+
+	// delegate
+	_, err := baseLockup.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
+		Sender:           "owner",
+		ValidatorAddress: "validator",
+		Amount:           sdk.NewCoin(denom, math.NewInt(staked)),
+	}, foreverLocked)
+	require.NoError(t, err)
+	// balance should be 10 - 7 = 3
+
+	_, err = baseLockup.Undelegate(sdkCtx, &lockuptypes.MsgUndelegate{
+		Sender:           "owner",
+		ValidatorAddress: "validator",
+		Amount:           sdk.NewCoin(denom, math.NewInt(unstaked)),
+	})
+	require.NoError(t, err)
+	// when unbonding time has expired
+	sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: now.Add(21*24*time.Hour + time.Minute)})
+
+	// balance should be 3 + 7 = 10 now
+	_, err = baseLockup.UnbondEntries.Get(sdkCtx, "validator")
+	require.NoError(t, err)
+	amount, err := baseLockup.DelegatedLocking.Get(sdkCtx, denom)
+	require.NoError(t, err)
+	assert.Equal(t, amount.String(), math.NewInt(locked).String())
+
+	// when WithdrawUnlockedCoins is called,
+	// only the liquid amount should be returned
+	res, err := baseLockup.WithdrawUnlockedCoins(sdkCtx, &lockuptypes.MsgWithdraw{
+		Withdrawer: "owner",
+		ToAddress:  "my-receiver",
+		Denoms:     []string{denom},
+	}, foreverLocked)
+	// 4 stake is still locked. nothing to return
+	require.Equal(t, math.NewInt(0).String(), res.AmountReceived.AmountOf(denom).String())
 	require.NoError(t, err)
 }

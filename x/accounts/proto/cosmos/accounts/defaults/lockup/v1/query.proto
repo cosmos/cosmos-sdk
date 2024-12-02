@@ -5,6 +5,7 @@ import "cosmos/accounts/defaults/lockup/v1/lockup.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/x/accounts/defaults/lockup/v1";
 
@@ -44,7 +45,9 @@ message QueryLockupAccountInfoResponse {
 }
 
 // QueryUnbondingEntriesRequest is used to query the lockup account unbonding entries.
-message QueryUnbondingEntriesRequest {}
+message QueryUnbondingEntriesRequest {
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
 
 // QueryUnbondingEntriesResponse returns the lockup account unbonding entries.
 message QueryUnbondingEntriesResponse {

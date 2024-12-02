@@ -215,23 +215,41 @@ func (bva *BaseLockup) Undelegate(
 		return nil, err
 	}
 
+	isNewEntry := true
+	skipEntriesIteration := false
 	entries, err := bva.UnbondEntries.Get(ctx, msg.ValidatorAddress)
 	if err != nil {
-		if !errorsmod.IsOf(err, collections.ErrNotFound) {
+		if errorsmod.IsOf(err, collections.ErrNotFound) {
 			entries = lockuptypes.UnbondingEntries{
 				Entries: []*lockuptypes.UnbondingEntry{},
 			}
+			skipEntriesIteration = true
 		} else {
 			return nil, err
 		}
 	}
 
-	entries.Entries = append(entries.Entries, &lockuptypes.UnbondingEntry{
-		EndTime:          msgUndelegateResp.CompletionTime,
-		Amount:           msgUndelegateResp.Amount,
-		ValidatorAddress: msg.ValidatorAddress,
-		CreationHeight:   header.Height,
-	})
+	if !skipEntriesIteration {
+		for i, entry := range entries.Entries {
+			if entry.CreationHeight == header.Height && entry.EndTime.Equal(msgUndelegateResp.CompletionTime) {
+				entry.Amount = entry.Amount.Add(msg.Amount)
+
+				// update the entry
+				entries.Entries[i] = entry
+				isNewEntry = false
+				break
+			}
+		}
+	}
+
+	if isNewEntry {
+		entries.Entries = append(entries.Entries, &lockuptypes.UnbondingEntry{
+			EndTime:          msgUndelegateResp.CompletionTime,
+			Amount:           msgUndelegateResp.Amount,
+			ValidatorAddress: msg.ValidatorAddress,
+			CreationHeight:   header.Height,
+		})
+	}
 
 	err = bva.UnbondEntries.Set(ctx, msg.ValidatorAddress, entries)
 	if err != nil {
@@ -457,32 +475,35 @@ func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
 	currentTime := bva.headerService.HeaderInfo(ctx).Time
 
 	err = bva.UnbondEntries.Walk(ctx, nil, func(key string, value lockuptypes.UnbondingEntries) (stop bool, err error) {
-		// if not mature then skip
-		if value.EndTime.After(currentTime) {
-			return false, nil
-		}
-
-		ubdEntries := []stakingtypes.UnbondingDelegationEntry{}
-		entries, err := bva.getUbdEntries(ctx, delAddr, key)
-		if err != nil {
-			return true, err
-		}
-
-		ubdEntries = append(ubdEntries, entries...)
-
-		found := false
-		// check if the entry is still exist in the unbonding entries
-		for _, entry := range ubdEntries {
-			if entry.GetCompletionTime().Equal(value.EndTime) && entry.CreationHeight == value.CreationHeight {
-				found = true
-				break
+		for _, entry := range value.Entries {
+			// if not mature then skip
+			if entry.EndTime.After(currentTime) {
+				return false, nil
 			}
-		}
 
-		if !found {
-			err = bva.TrackUndelegation(ctx, sdk.NewCoins(value.Amount))
+			ubdEntries := []stakingtypes.UnbondingDelegationEntry{}
+			entries, err := bva.getUbdEntries(ctx, delAddr, key)
 			if err != nil {
 				return true, err
+			}
+
+			ubdEntries = append(ubdEntries, entries...)
+
+			found := false
+			// check if the entry is still exist in the unbonding entries
+			for _, e := range ubdEntries {
+				if e.GetCompletionTime().Equal(entry.EndTime) && entry.CreationHeight == entry.CreationHeight {
+					found = true
+					break
+				}
+			}
+
+			// if not found then assume ubd entry is being handled
+			if !found {
+				err = bva.TrackUndelegation(ctx, sdk.NewCoins(entry.Amount))
+				if err != nil {
+					return true, err
+				}
 			}
 		}
 
@@ -758,20 +779,16 @@ func (bva BaseLockup) QueryLockupAccountBaseInfo(ctx context.Context, _ *lockupt
 	}, nil
 }
 
-func (bva BaseLockup) QueryUnbondingEntries(ctx context.Context, _ *lockuptypes.QueryUnbondingEntriesRequest) (
+func (bva BaseLockup) QueryUnbondingEntries(ctx context.Context, req *lockuptypes.QueryUnbondingEntriesRequest) (
 	*lockuptypes.QueryUnbondingEntriesResponse, error,
 ) {
-	entries := []*lockuptypes.UnbondingEntry{}
-	err := bva.UnbondEntries.Walk(ctx, nil, func(key uint64, value lockuptypes.UnbondingEntry) (stop bool, err error) {
-		entries = append(entries, &value)
-		return false, nil
-	})
+	entries, err := bva.UnbondEntries.Get(ctx, req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
 	return &lockuptypes.QueryUnbondingEntriesResponse{
-		UnbondingEntries: entries,
+		UnbondingEntries: entries.Entries,
 	}, nil
 }
 

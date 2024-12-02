@@ -102,13 +102,14 @@ func TestContinousAccountUndelegate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ubdSeq, err := acc.UnbondingSequence.Peek(sdkCtx)
+	entries, err := acc.UnbondEntries.Get(sdkCtx, "val_address")
 	require.NoError(t, err)
-	// sequence should be the previous one
-	ubdEntry, err := acc.UnbondEntries.Get(sdkCtx, ubdSeq-1)
+	require.Len(t, entries.Entries, 1)
+	require.True(t, entries.Entries[0].Amount.Amount.Equal(math.NewInt(1)))
+	require.True(t, entries.Entries[0].ValidatorAddress == "val_address")
+
+	err = acc.CheckUbdEntriesMature(sdkCtx)
 	require.NoError(t, err)
-	require.True(t, ubdEntry.Amount.Amount.Equal(math.NewInt(1)))
-	require.True(t, ubdEntry.ValidatorAddress == "val_address")
 
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
 	require.NoError(t, err)

@@ -21,6 +21,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/grpcgateway"
+	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/store"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -185,6 +186,7 @@ func initTestnetFiles[T transaction.Tx](
 		rpcPort  = 26657
 		apiPort  = 1317
 		grpcPort = 9090
+		restPort = 8080
 	)
 	p2pPortStart := 26656
 
@@ -194,7 +196,9 @@ func initTestnetFiles[T transaction.Tx](
 		var portOffset int
 		grpcConfig := grpc.DefaultConfig()
 		grpcgatewayConfig := grpcgateway.DefaultConfig()
-		if args.singleMachine {
+		restConfig := rest.DefaultConfig()
+
+    if args.singleMachine {
 			portOffset = i
 			p2pPortStart = 16656 // use different start point to not conflict with rpc port
 			nodeConfig.P2P.AddrBookStrict = false
@@ -211,6 +215,11 @@ func initTestnetFiles[T transaction.Tx](
 			grpcgatewayConfig = &grpcgateway.Config{
 				Enable:  true,
 				Address: fmt.Sprintf("127.0.0.1:%d", apiPort+portOffset),
+			}
+
+			restConfig = &rest.Config{
+				Enable:  true,
+				Address: fmt.Sprintf("127.0.0.1:%d", restPort+portOffset),
 			}
 		}
 
@@ -346,7 +355,8 @@ func initTestnetFiles[T transaction.Tx](
 		storeServer := &store.Server[T]{}
 		grpcServer := grpc.NewWithConfigOptions[T](grpc.OverwriteDefaultConfig(grpcConfig))
 		grpcgatewayServer := grpcgateway.NewWithConfigOptions[T](grpcgateway.OverwriteDefaultConfig(grpcgatewayConfig))
-		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer, grpcgatewayServer)
+		restServer := rest.NewWithConfigOptions[T](rest.OverwriteDefaultConfig(restConfig))
+		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer, grpcgatewayServer, restServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

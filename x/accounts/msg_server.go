@@ -66,7 +66,7 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	}
 
 	// decode message bytes into the concrete boxed message type
-	req, err := implementation.UnpackAnyRaw(execute.Message)
+	req, err := implementation.EncodeMsgJSONToProto(execute.JsonMessage)
 	if err != nil {
 		return nil, err
 	}

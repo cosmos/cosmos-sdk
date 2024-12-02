@@ -57,10 +57,12 @@ message MsgExecute {
   // target is the address of the account to be executed.
   string target = 2;
   // message is the message to be sent to the account.
-  google.protobuf.Any message = 3;
+  string json_message = 3;
+
+  string execute_msg_type_url = 4;
   // funds contains the coins that the account wants to
   // send alongside the request.
-  repeated cosmos.base.v1beta1.Coin funds = 4
+  repeated cosmos.base.v1beta1.Coin funds = 5
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 

@@ -50,26 +50,26 @@ func (iter *cacheMergeIterator) Valid() bool {
 func (iter *cacheMergeIterator) Next() {
 	iter.assertValid()
 
-	switch {
-	case !iter.parent.Valid():
-		// If parent is invalid, get the next cache item.
+	if !iter.parent.Valid() {
+		// Parent is invalid, so we advance the cache iterator
 		iter.cache.Next()
-	case !iter.cache.Valid():
-		// If cache is invalid, get the next parent item.
+	} else if !iter.cache.Valid(){
+		// Cache is invalid, so we advance the parent iterator
 		iter.parent.Next()
-	default:
-		// Both are valid.  Compare keys.
+	} else {
+		// Both iterators are valid, so we compare their keys
 		keyP, keyC := iter.parent.Key(), iter.cache.Key()
 		switch iter.compare(keyP, keyC) {
 		case -1: // parent < cache
-			iter.parent.Next()
+			iter.parent.Next() // Advance parent
 		case 0: // parent == cache
-			iter.parent.Next()
+			iter.parent.Next() // Advance both iterators, since they are equal
 			iter.cache.Next()
 		case 1: // parent > cache
-			iter.cache.Next()
+			iter.cache.Next() // Advance cache
 		}
 	}
+
 	iter.valid = iter.skipUntilExistsOrInvalid()
 }
 

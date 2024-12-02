@@ -267,4 +267,4 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 
 
-This document will be updated at the end of the quarter on what was achieved and what was not. Shortly before the quarter concludes a new section will be added for the next quarter. We are working on updating the complete one year roadmap and will be posting it here as well. 
+This document will be updated at the end of the quarter on what was achieved and what was not. Shortly before the quarter concludes a new section will be added for the next quarter. We are working on updating the complete one-year roadmap and will be posting it here as well. 

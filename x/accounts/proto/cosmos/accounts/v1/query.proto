@@ -23,7 +23,9 @@ message AccountQueryRequest {
   // target defines the account to be queried.
   string target = 1;
   // request defines the query message being sent to the account.
-  google.protobuf.Any request = 2;
+  string query_request_type_url = 2;
+
+  string json_message = 3;
 }
 
 // AccountQueryResponse is the response type for the Query/AccountQuery RPC method.

@@ -95,13 +95,9 @@ func (m *Manager) Migrate(height uint64) error {
 		return err
 	}
 
-	// restore the snapshot
-	chStorage := make(chan *corestore.StateChanges, defaultStorageBufferSize)
-
 	eg := new(errgroup.Group)
 	eg.Go(func() error {
-		defer close(chStorage)
-		if _, err := m.stateCommitment.Restore(height, 0, ms, chStorage); err != nil {
+		if _, err := m.stateCommitment.Restore(height, 0, ms); err != nil {
 			return err
 		}
 		return nil

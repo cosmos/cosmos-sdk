@@ -106,7 +106,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 
 	keyCount := 10
 	// check old store keys are queryable
-	oldStoreKeys := []string{"store1", "store3"}
+	oldStoreKeys := []string{"store1", "store2", "store3"}
 	for _, storeKey := range oldStoreKeys {
 		for version := uint64(1); version <= v; version++ {
 			for i := 0; i < keyCount; i++ {

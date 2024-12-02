@@ -433,7 +433,6 @@ func (c *CommitStore) Restore(
 	version uint64,
 	format uint32,
 	protoReader protoio.Reader,
-	chStorage chan<- *corestore.StateChanges,
 ) (snapshotstypes.SnapshotItem, error) {
 	var (
 		importer     Importer
@@ -460,7 +459,6 @@ loop:
 					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
 				}
 			}
-
 			tree := c.multiTrees[item.Store.Name]
 			if tree == nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", item.Store.Name)
@@ -489,6 +487,7 @@ loop:
 				if node.Value == nil {
 					node.Value = []byte{}
 				}
+
 			}
 			err := importer.Add(node)
 			if err != nil {

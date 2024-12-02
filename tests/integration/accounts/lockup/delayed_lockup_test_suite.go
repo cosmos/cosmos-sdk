@@ -161,6 +161,11 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
+
+		// check if the entry is removed
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr, val.OperatorAddress)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.Len(t, entries, 0)
 	})
 	// Test to withdraw all the remain funds to an account of choice
 	t.Run("ok - execute withdraw message", func(t *testing.T) {

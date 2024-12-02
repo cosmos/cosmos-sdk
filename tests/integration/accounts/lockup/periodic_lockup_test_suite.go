@@ -228,5 +228,10 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 		delFree := lockupAccountInfoResponse.DelegatedFree
 		require.True(t, delFree.AmountOf("stake").Equal(math.NewInt(100)))
+
+		// check if the entry is removed
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr, val.OperatorAddress)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.Len(t, entries, 0)
 	})
 }

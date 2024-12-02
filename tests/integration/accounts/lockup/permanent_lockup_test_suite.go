@@ -164,5 +164,10 @@ func (s *IntegrationTestSuite) TestPermanentLockingAccount() {
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		// matured ubd entry should be cleared so del locking should only be 10
 		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(10)))
+
+		// check if the entry is removed
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr, val.OperatorAddress)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.Len(t, entries, 0)
 	})
 }

@@ -481,34 +481,57 @@ func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
 	currentTime := bva.headerService.HeaderInfo(ctx).Time
 
 	err = bva.UnbondEntries.Walk(ctx, nil, func(key string, value lockuptypes.UnbondingEntries) (stop bool, err error) {
-		for _, entry := range value.Entries {
+		for i := 0; i < len(value.Entries); i++ {
+			entry := value.Entries[i]
 			// if not mature then skip
 			if entry.EndTime.After(currentTime) {
 				return false, nil
 			}
 
+			skipIteration := false
 			entries, err := bva.getUbdEntries(ctx, delAddr, key)
 			if err != nil {
+				// if ubd delegation is empty then skip the next iteration check
 				if !errorsmod.IsOf(err, stakingtypes.ErrNoUnbondingDelegation) {
 					return true, err
 				}
+
+				skipIteration = true
 			}
 
 			found := false
 			// check if the entry is still exist in the unbonding entries
-			for _, e := range entries {
-				if e.CompletionTime.Equal(entry.EndTime) && entry.CreationHeight == entry.CreationHeight {
-					found = true
-					break
+			if !skipIteration {
+				for _, e := range entries {
+					if e.CompletionTime.Equal(entry.EndTime) && entry.CreationHeight == entry.CreationHeight {
+						found = true
+						break
+					}
 				}
 			}
 
-			// if not found then assume ubd entry is being handled
-			if !found {
+			// if not found or ubd delegation is empty then assume ubd entry is being handled
+			if !found || skipIteration {
 				err = bva.TrackUndelegation(ctx, sdk.NewCoins(entry.Amount))
 				if err != nil {
 					return true, err
 				}
+
+				// remove entry
+				value.Entries = append(value.Entries[:i], value.Entries[i+1:]...)
+				i--
+			}
+		}
+
+		if len(value.Entries) == 0 {
+			err = bva.UnbondEntries.Remove(ctx, key)
+			if err != nil {
+				return true, err
+			}
+		} else {
+			err = bva.UnbondEntries.Set(ctx, key, value)
+			if err != nil {
+				return true, err
 			}
 		}
 
@@ -795,7 +818,13 @@ func (bva BaseLockup) QueryUnbondingEntries(ctx context.Context, req *lockuptype
 ) {
 	entries, err := bva.UnbondEntries.Get(ctx, req.ValidatorAddress)
 	if err != nil {
-		return nil, err
+		if !errorsmod.IsOf(err, collections.ErrNotFound) {
+			return nil, err
+		}
+
+		entries = lockuptypes.UnbondingEntries{
+			Entries: []*lockuptypes.UnbondingEntry{},
+		}
 	}
 
 	return &lockuptypes.QueryUnbondingEntriesResponse{

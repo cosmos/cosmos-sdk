@@ -127,37 +127,22 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 		require.Equal(t, len(ubd.Entries), 1)
 
 		// check if an entry is added
-		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr)
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr, val.OperatorAddress)
 		entries := unbondingEntriesResponse.UnbondingEntries
 		require.True(t, entries[0].Amount.Amount.Equal(math.NewInt(100)))
 		require.True(t, entries[0].ValidatorAddress == val.OperatorAddress)
 	})
 
 	// Update context time
-	// After unbond time elapsed
-	ctx = ctx.WithHeaderInfo(header.Info{
-		Time: currentTime.Add(time.Second * 11),
-	})
-
-	t.Run("ok - execute tracking unbonding entry", func(t *testing.T) {
-		msg := &types.MsgUpdateUndelegationEntry{
-			Sender: ownerAddrStr,
-			Id:     0,
-		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
-		require.NoError(t, err)
-
-		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
-		delLocking := lockupAccountInfoResponse.DelegatedLocking
-		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
-	})
-
-	// Update context time
 	// After endtime fund should be unlock
+	// And unbond time elapsed
 	ctx = ctx.WithHeaderInfo(header.Info{
 		Time: currentTime.Add(time.Second * 61),
 	})
+
+	// trigger endblock for staking to handle matured unbonding delegation
+	_, err = app.StakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 
 	// Check if token is sendable after unlock
 	t.Run("ok - execute send message", func(t *testing.T) {
@@ -171,6 +156,11 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 
 		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
 		require.True(t, balance.Amount.Equal(math.NewInt(100)))
+
+		// check if tracking ubd entry is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 	})
 	// Test to withdraw all the remain funds to an account of choice
 	t.Run("ok - execute withdraw message", func(t *testing.T) {
@@ -187,8 +177,8 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 		require.NoError(t, err)
 
 		// withdrawable amount should be
-		// 1000stake - 100stake( above sent amt ) - 100stake(above delegate amt) = 800stake
+		// 1000stake - 100stake( above sent amt ) = 800stake
 		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
-		require.True(t, balance.Amount.Equal(math.NewInt(800)))
+		require.True(t, balance.Amount.Equal(math.NewInt(900)))
 	})
 }

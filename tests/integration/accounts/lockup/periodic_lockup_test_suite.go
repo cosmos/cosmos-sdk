@@ -187,7 +187,7 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 		require.Equal(t, len(ubd.Entries), 1)
 
 		// check if an entry is added
-		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr)
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr, val.OperatorAddress)
 		entries := unbondingEntriesResponse.UnbondingEntries
 		require.True(t, entries[0].Amount.Amount.Equal(math.NewInt(100)))
 		require.True(t, entries[0].ValidatorAddress == val.OperatorAddress)
@@ -199,19 +199,9 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 		Time: currentTime.Add(time.Minute * 3),
 	})
 
-	t.Run("ok - execute tracking unbonding entry", func(t *testing.T) {
-		msg := &types.MsgUpdateUndelegationEntry{
-			Sender: ownerAddrStr,
-			Id:     0,
-		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
-		require.NoError(t, err)
-
-		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
-		delLocking := lockupAccountInfoResponse.DelegatedLocking
-		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
-	})
+	// trigger endblock for staking to handle matured unbonding delegation
+	_, err = app.StakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
@@ -233,6 +223,9 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 
 		// check if tracking is updated accordingly
 		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		// check if matured ubd entry cleared
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 		delFree := lockupAccountInfoResponse.DelegatedFree
 		require.True(t, delFree.AmountOf("stake").Equal(math.NewInt(100)))
 	})

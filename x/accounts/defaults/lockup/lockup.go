@@ -160,6 +160,12 @@ func (bva *BaseLockup) Delegate(
 		return nil, err
 	}
 
+	// refresh ubd entries to make sure delegation locking amount is up to date
+	err = bva.CheckUbdEntriesMature(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	err = bva.TrackDelegation(
 		ctx,
 		sdk.Coins{*balance},
@@ -481,18 +487,17 @@ func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
 				return false, nil
 			}
 
-			ubdEntries := []stakingtypes.UnbondingDelegationEntry{}
 			entries, err := bva.getUbdEntries(ctx, delAddr, key)
 			if err != nil {
-				return true, err
+				if !errorsmod.IsOf(err, stakingtypes.ErrNoUnbondingDelegation) {
+					return true, err
+				}
 			}
-
-			ubdEntries = append(ubdEntries, entries...)
 
 			found := false
 			// check if the entry is still exist in the unbonding entries
-			for _, e := range ubdEntries {
-				if e.GetCompletionTime().Equal(entry.EndTime) && entry.CreationHeight == entry.CreationHeight {
+			for _, e := range entries {
+				if e.CompletionTime.Equal(entry.EndTime) && entry.CreationHeight == entry.CreationHeight {
 					found = true
 					break
 				}
@@ -704,6 +709,12 @@ func (bva BaseLockup) IterateCoinEntries(
 // GetNotBondedLockedCoin returns the coin that are not spendable that are not bonded by denom
 // for a lockup account. If the coin by the provided denom are not locked, an coin with zero amount is returned.
 func (bva BaseLockup) GetNotBondedLockedCoin(ctx context.Context, lockedCoin sdk.Coin, denom string) (sdk.Coin, error) {
+	// refresh the unbonding entries
+	err := bva.CheckUbdEntriesMature(ctx)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
 	bondDenom, err := getStakingDenom(ctx)
 	if err != nil {
 		return sdk.Coin{}, err

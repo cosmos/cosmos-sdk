@@ -72,8 +72,10 @@ func (s *IntegrationTestSuite) queryLockupAccInfo(ctx sdk.Context, app *simapp.S
 	return lockupAccountInfoResponse
 }
 
-func (s *IntegrationTestSuite) queryUnbondingEntries(ctx sdk.Context, app *simapp.SimApp, accAddr []byte) *types.QueryUnbondingEntriesResponse {
-	req := &types.QueryUnbondingEntriesRequest{}
+func (s *IntegrationTestSuite) queryUnbondingEntries(ctx sdk.Context, app *simapp.SimApp, accAddr []byte, valAddr string) *types.QueryUnbondingEntriesResponse {
+	req := &types.QueryUnbondingEntriesRequest{
+		ValidatorAddress: valAddr,
+	}
 	resp, err := s.queryAcc(ctx, req, app, accAddr)
 	require.NoError(s.T(), err)
 	require.NotNil(s.T(), resp)

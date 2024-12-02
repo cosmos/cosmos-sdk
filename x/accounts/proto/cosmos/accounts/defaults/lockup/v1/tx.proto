@@ -97,17 +97,6 @@ message MsgSend {
   ];
 }
 
-// MsgUpdateUndelegationEntry defines a message that enable lockup account to update delegation tracking
-message MsgUpdateUndelegationEntry {
-  option (cosmos.msg.v1.signer) = "sender";
-
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  uint64 id     = 2;
-}
-
 // MsgExecuteMessagesResponse defines the response for lockup execute operations
 message MsgExecuteMessagesResponse {
   repeated google.protobuf.Any responses = 1;

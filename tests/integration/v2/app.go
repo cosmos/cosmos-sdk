@@ -336,7 +336,7 @@ func (a *App) Deliver(
 	require.NoError(t, err)
 	a.lastHeight++
 
-	// update block height if integeration context is present
+	// update block height if integration context is present
 	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
 	if ok {
 		iCtx.header.Height = int64(a.lastHeight)

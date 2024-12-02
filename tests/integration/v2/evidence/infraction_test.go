@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/collections"
@@ -16,38 +17,37 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2/services"
+	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
+	_ "cosmossdk.io/x/bank"     // import as blank for app wiring
 	bankkeeper "cosmossdk.io/x/bank/keeper"
+	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
+	_ "cosmossdk.io/x/evidence" // import as blank for app wiring
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	minttypes "cosmossdk.io/x/mint/types"
+	_ "cosmossdk.io/x/slashing" // import as blank for app wiring
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	slashingtypes "cosmossdk.io/x/slashing/types"
+	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
-	"cosmossdk.io/runtime/v2/services"
-	_ "cosmossdk.io/x/accounts"  // import as blank for app wiring
-	_ "cosmossdk.io/x/bank"      // import as blank for app wiring
-	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
-	_ "cosmossdk.io/x/evidence"  // import as blank for app wiring
-	_ "cosmossdk.io/x/slashing"  // import as blank for app wiring
-	_ "cosmossdk.io/x/staking"   // import as blank for app wiring
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"   // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
-	"github.com/stretchr/testify/require"
 )
 
 var (

@@ -218,6 +218,7 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 	return nil
 }
 
+// GetProof returns a proof for the given key and version.
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
 	rawStoreKey := conv.UnsafeBytesToStr(storeKey)
 	tree, ok := c.multiTrees[rawStoreKey]
@@ -253,8 +254,12 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 // WARNING: This function is only used during the migration process. The SC layer
 // generally does not provide a reader for the CommitStore.
 func (c *CommitStore) getReader(storeKey string) (Reader, error) {
-	tree, ok := c.multiTrees[storeKey]
-	if !ok {
+	var tree Tree
+	if storeTree, ok := c.oldTrees[storeKey]; ok {
+		tree = storeTree
+	} else if storeTree, ok := c.multiTrees[storeKey]; ok {
+		tree = storeTree
+	} else {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
 

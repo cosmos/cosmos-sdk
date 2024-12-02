@@ -18,7 +18,7 @@ import (
 	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/snapshots"
 	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
+	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 var storeKeys = []string{"store1", "store2", "store3"}
@@ -62,9 +62,9 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	}
 
 	// create a new storage and commitment stores
-	sqliteDB, err := sqlite.New(s.T().TempDir())
+	pebbleDB, err := pebbledb.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, testLog)
+	ss := storage.NewStorageStore(pebbleDB, testLog)
 
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {

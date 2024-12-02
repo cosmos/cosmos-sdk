@@ -34,6 +34,10 @@ func (t *Tree) LoadVersion(version uint64) error {
 	return nil
 }
 
+func (t *Tree) LoadVersionForOverwriting(version uint64) error {
+	return nil
+}
+
 func (t *Tree) Commit() ([]byte, uint64, error) {
 	return nil, 0, nil
 }

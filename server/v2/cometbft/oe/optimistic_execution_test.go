@@ -5,12 +5,13 @@ import (
 	"errors"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	"github.com/stretchr/testify/assert"
+
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/stretchr/testify/assert"
 )
 
 func testFinalizeBlock[T transaction.Tx](context.Context, *abci.FinalizeBlockRequest) (*server.BlockResponse, store.WriterMap, []T, error) {

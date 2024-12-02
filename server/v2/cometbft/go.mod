@@ -1,6 +1,6 @@
 module cosmossdk.io/server/v2/cometbft
 
-go 1.23.2
+go 1.23.3
 
 replace (
 	cosmossdk.io/api => ../../../api

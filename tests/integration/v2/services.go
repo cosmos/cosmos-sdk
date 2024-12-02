@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
@@ -69,6 +70,15 @@ var contextKey = contextKeyType{}
 type integrationContext struct {
 	state    corestore.WriterMap
 	gasMeter gas.Meter
+	header   header.Info
+}
+
+func SetHeaderInfo(ctx context.Context, h header.Info) context.Context {
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if ok {
+		iCtx.header = h
+	}
+	return ctx
 }
 
 func GasMeterFromContext(ctx context.Context) gas.Meter {
@@ -195,4 +205,16 @@ func (rs RouterService) Invoke(ctx context.Context, req transaction.Msg) (transa
 		return nil, fmt.Errorf("no handler for typeURL %s", typeUrl)
 	}
 	return rs.handlers[typeUrl](ctx, req)
+}
+
+var _ header.Service = &HeaderService{}
+
+type HeaderService struct{}
+
+func (h *HeaderService) HeaderInfo(ctx context.Context) header.Info {
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if !ok {
+		return header.Info{}
+	}
+	return iCtx.header
 }

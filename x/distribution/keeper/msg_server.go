@@ -243,6 +243,11 @@ func (k msgServer) WithdrawTokenizeShareRecordReward(goCtx context.Context, msg 
 	if err != nil {
 		return nil, err
 	}
+
+	if k.bankKeeper.BlockedAddr(ownerAddr) {
+		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", ownerAddr)
+	}
+
 	amount, err := k.Keeper.WithdrawTokenizeShareRecordReward(ctx, ownerAddr, msg.RecordId)
 	if err != nil {
 		return nil, err
@@ -271,6 +276,11 @@ func (k msgServer) WithdrawAllTokenizeShareRecordReward(goCtx context.Context, m
 	if err != nil {
 		return nil, err
 	}
+
+	if k.bankKeeper.BlockedAddr(ownerAddr) {
+		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", ownerAddr)
+	}
+
 	amount, err := k.Keeper.WithdrawAllTokenizeShareRecordReward(ctx, ownerAddr)
 	if err != nil {
 		return nil, err

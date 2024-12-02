@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/errors"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 
@@ -230,6 +231,10 @@ func (k Keeper) WithdrawSingleShareRecordReward(ctx context.Context, recordID ui
 		return err
 	}
 	owner := sdk.AccAddress(ownerAddr)
+
+	if k.bankKeeper.BlockedAddr(owner) {
+		return errors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", owner.String())
+	}
 
 	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(record.Validator)
 	if err != nil {

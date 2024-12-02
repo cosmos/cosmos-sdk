@@ -145,7 +145,7 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 * Toolkit/SDK ADR. 
     * Objective: 
-        * Produce a RFC/ADR on how to make core composable
+        * Produce an RFC/ADR on how to make core composable
         * Merge RFC/ADR into main
     * Progress: 
         * on pause until abci 2.0 integration is completed 

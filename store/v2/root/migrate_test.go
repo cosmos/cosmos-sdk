@@ -17,8 +17,6 @@ import (
 	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/snapshots"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 var storeKeys = []string{"store1", "store2", "store3"}
@@ -61,11 +59,6 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 		s.Require().NoError(err)
 	}
 
-	// create a new storage and commitment stores
-	pebbleDB, err := pebbledb.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(pebbleDB, testLog)
-
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		multiTrees1[storeKey] = iavl.NewIavlTree(dbm.NewMemDB(), nopLog, iavl.DefaultConfig())
@@ -75,12 +68,12 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 
 	snapshotsStore, err := snapshots.NewStore(s.T().TempDir())
 	s.Require().NoError(err)
-	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, nil, testLog)
-	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, ss, sc, testLog)
-	pm := pruning.NewManager(sc, ss, nil, nil)
+	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, testLog)
+	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, sc, testLog)
+	pm := pruning.NewManager(sc, nil)
 
 	// assume no storage store, simulate the migration process
-	s.rootStore, err = New(dbm.NewMemDB(), testLog, ss, orgSC, pm, migrationManager, nil)
+	s.rootStore, err = New(dbm.NewMemDB(), testLog, orgSC, pm, migrationManager, nil)
 	s.Require().NoError(err)
 }
 
@@ -115,7 +108,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 		s.Require().NoError(err)
 
 		// check if the migration is completed
-		ver, err := s.rootStore.GetStateStorage().GetLatestVersion()
+		ver, err := s.rootStore.GetLatestVersion()
 		s.Require().NoError(err)
 		if ver == latestVersion {
 			break

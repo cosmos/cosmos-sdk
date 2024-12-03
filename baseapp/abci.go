@@ -1327,6 +1327,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  height,
+			Time:    header.Time,
 		}).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)

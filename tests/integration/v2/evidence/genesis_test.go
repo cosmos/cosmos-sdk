@@ -1,45 +1,33 @@
-package evidence_test
+package evidence
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type GenesisTestSuite struct {
 	suite.Suite
 
-	ctx    sdk.Context
+	ctx    context.Context
 	keeper keeper.Keeper
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
-	var evidenceKeeper keeper.Keeper
+	f := initFixture(suite.T())
 
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			depinject.Supply(log.NewNopLogger()),
-			AppConfig,
-		),
-		&evidenceKeeper)
-	require.NoError(suite.T(), err)
-
-	suite.ctx = app.BaseApp.NewContext(false)
-	suite.keeper = evidenceKeeper
+	suite.ctx = f.ctx
+	suite.keeper = f.evidenceKeeper
 }
 
 func (suite *GenesisTestSuite) TestInitGenesis() {

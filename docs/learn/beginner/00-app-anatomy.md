@@ -57,7 +57,9 @@ In general, the core of the state-machine is defined in a file called `app.go`. 
 
 ### Type Definition of the Application
 
-The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
+<!-- TODO(@julienrbrt), in next follow up introduce runtime, then app anatomy within runtime doc -->
+
+<!-- The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
 
 * **A reference to [`baseapp`](../advanced/00-baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by CometBFT to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://docs.cometbft.com/v1.0/spec/abci/) and the [routing logic](../advanced/00-baseapp.md#service-routers).
 * **A list of store keys**. The [store](../advanced/04-store.md), which contains the entire state, is implemented as a [`multistore`](../advanced/04-store.md#multistore) (i.e. a store of stores) in the Cosmos SDK. Each module uses one or multiple stores in the multistore to persist their part of the state. These stores can be accessed with specific keys that are declared in the `app` type. These keys, along with the `keepers`, are at the heart of the [object-capabilities model](../advanced/10-ocap.md) of the Cosmos SDK.
@@ -70,7 +72,7 @@ See an example of application type definition from `simapp`, the Cosmos SDK's ow
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/simapp/app.go#L145-L186
-```
+``` -->
 
 ### Constructor Function
 

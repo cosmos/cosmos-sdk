@@ -1257,8 +1257,8 @@ var (
 	md_MsgExecute                      protoreflect.MessageDescriptor
 	fd_MsgExecute_sender               protoreflect.FieldDescriptor
 	fd_MsgExecute_target               protoreflect.FieldDescriptor
-	fd_MsgExecute_json_message         protoreflect.FieldDescriptor
 	fd_MsgExecute_execute_msg_type_url protoreflect.FieldDescriptor
+	fd_MsgExecute_json_message         protoreflect.FieldDescriptor
 	fd_MsgExecute_funds                protoreflect.FieldDescriptor
 )
 
@@ -1267,8 +1267,8 @@ func init() {
 	md_MsgExecute = File_cosmos_accounts_v1_tx_proto.Messages().ByName("MsgExecute")
 	fd_MsgExecute_sender = md_MsgExecute.Fields().ByName("sender")
 	fd_MsgExecute_target = md_MsgExecute.Fields().ByName("target")
-	fd_MsgExecute_json_message = md_MsgExecute.Fields().ByName("json_message")
 	fd_MsgExecute_execute_msg_type_url = md_MsgExecute.Fields().ByName("execute_msg_type_url")
+	fd_MsgExecute_json_message = md_MsgExecute.Fields().ByName("json_message")
 	fd_MsgExecute_funds = md_MsgExecute.Fields().ByName("funds")
 }
 
@@ -1349,15 +1349,15 @@ func (x *fastReflection_MsgExecute) Range(f func(protoreflect.FieldDescriptor, p
 			return
 		}
 	}
-	if x.JsonMessage != "" {
-		value := protoreflect.ValueOfString(x.JsonMessage)
-		if !f(fd_MsgExecute_json_message, value) {
-			return
-		}
-	}
 	if x.ExecuteMsgTypeUrl != "" {
 		value := protoreflect.ValueOfString(x.ExecuteMsgTypeUrl)
 		if !f(fd_MsgExecute_execute_msg_type_url, value) {
+			return
+		}
+	}
+	if x.JsonMessage != "" {
+		value := protoreflect.ValueOfString(x.JsonMessage)
+		if !f(fd_MsgExecute_json_message, value) {
 			return
 		}
 	}
@@ -1386,10 +1386,10 @@ func (x *fastReflection_MsgExecute) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Sender != ""
 	case "cosmos.accounts.v1.MsgExecute.target":
 		return x.Target != ""
-	case "cosmos.accounts.v1.MsgExecute.json_message":
-		return x.JsonMessage != ""
 	case "cosmos.accounts.v1.MsgExecute.execute_msg_type_url":
 		return x.ExecuteMsgTypeUrl != ""
+	case "cosmos.accounts.v1.MsgExecute.json_message":
+		return x.JsonMessage != ""
 	case "cosmos.accounts.v1.MsgExecute.funds":
 		return len(x.Funds) != 0
 	default:
@@ -1412,10 +1412,10 @@ func (x *fastReflection_MsgExecute) Clear(fd protoreflect.FieldDescriptor) {
 		x.Sender = ""
 	case "cosmos.accounts.v1.MsgExecute.target":
 		x.Target = ""
-	case "cosmos.accounts.v1.MsgExecute.json_message":
-		x.JsonMessage = ""
 	case "cosmos.accounts.v1.MsgExecute.execute_msg_type_url":
 		x.ExecuteMsgTypeUrl = ""
+	case "cosmos.accounts.v1.MsgExecute.json_message":
+		x.JsonMessage = ""
 	case "cosmos.accounts.v1.MsgExecute.funds":
 		x.Funds = nil
 	default:
@@ -1440,11 +1440,11 @@ func (x *fastReflection_MsgExecute) Get(descriptor protoreflect.FieldDescriptor)
 	case "cosmos.accounts.v1.MsgExecute.target":
 		value := x.Target
 		return protoreflect.ValueOfString(value)
-	case "cosmos.accounts.v1.MsgExecute.json_message":
-		value := x.JsonMessage
-		return protoreflect.ValueOfString(value)
 	case "cosmos.accounts.v1.MsgExecute.execute_msg_type_url":
 		value := x.ExecuteMsgTypeUrl
+		return protoreflect.ValueOfString(value)
+	case "cosmos.accounts.v1.MsgExecute.json_message":
+		value := x.JsonMessage
 		return protoreflect.ValueOfString(value)
 	case "cosmos.accounts.v1.MsgExecute.funds":
 		if len(x.Funds) == 0 {
@@ -1476,10 +1476,10 @@ func (x *fastReflection_MsgExecute) Set(fd protoreflect.FieldDescriptor, value p
 		x.Sender = value.Interface().(string)
 	case "cosmos.accounts.v1.MsgExecute.target":
 		x.Target = value.Interface().(string)
-	case "cosmos.accounts.v1.MsgExecute.json_message":
-		x.JsonMessage = value.Interface().(string)
 	case "cosmos.accounts.v1.MsgExecute.execute_msg_type_url":
 		x.ExecuteMsgTypeUrl = value.Interface().(string)
+	case "cosmos.accounts.v1.MsgExecute.json_message":
+		x.JsonMessage = value.Interface().(string)
 	case "cosmos.accounts.v1.MsgExecute.funds":
 		lv := value.List()
 		clv := lv.(*_MsgExecute_5_list)
@@ -1514,10 +1514,10 @@ func (x *fastReflection_MsgExecute) Mutable(fd protoreflect.FieldDescriptor) pro
 		panic(fmt.Errorf("field sender of message cosmos.accounts.v1.MsgExecute is not mutable"))
 	case "cosmos.accounts.v1.MsgExecute.target":
 		panic(fmt.Errorf("field target of message cosmos.accounts.v1.MsgExecute is not mutable"))
-	case "cosmos.accounts.v1.MsgExecute.json_message":
-		panic(fmt.Errorf("field json_message of message cosmos.accounts.v1.MsgExecute is not mutable"))
 	case "cosmos.accounts.v1.MsgExecute.execute_msg_type_url":
 		panic(fmt.Errorf("field execute_msg_type_url of message cosmos.accounts.v1.MsgExecute is not mutable"))
+	case "cosmos.accounts.v1.MsgExecute.json_message":
+		panic(fmt.Errorf("field json_message of message cosmos.accounts.v1.MsgExecute is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.MsgExecute"))
@@ -1535,9 +1535,9 @@ func (x *fastReflection_MsgExecute) NewField(fd protoreflect.FieldDescriptor) pr
 		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.v1.MsgExecute.target":
 		return protoreflect.ValueOfString("")
-	case "cosmos.accounts.v1.MsgExecute.json_message":
-		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.v1.MsgExecute.execute_msg_type_url":
+		return protoreflect.ValueOfString("")
+	case "cosmos.accounts.v1.MsgExecute.json_message":
 		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.v1.MsgExecute.funds":
 		list := []*v1beta1.Coin{}
@@ -1619,11 +1619,11 @@ func (x *fastReflection_MsgExecute) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.JsonMessage)
+		l = len(x.ExecuteMsgTypeUrl)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.ExecuteMsgTypeUrl)
+		l = len(x.JsonMessage)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -1678,17 +1678,17 @@ func (x *fastReflection_MsgExecute) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0x2a
 			}
 		}
-		if len(x.ExecuteMsgTypeUrl) > 0 {
-			i -= len(x.ExecuteMsgTypeUrl)
-			copy(dAtA[i:], x.ExecuteMsgTypeUrl)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ExecuteMsgTypeUrl)))
-			i--
-			dAtA[i] = 0x22
-		}
 		if len(x.JsonMessage) > 0 {
 			i -= len(x.JsonMessage)
 			copy(dAtA[i:], x.JsonMessage)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.JsonMessage)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.ExecuteMsgTypeUrl) > 0 {
+			i -= len(x.ExecuteMsgTypeUrl)
+			copy(dAtA[i:], x.ExecuteMsgTypeUrl)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ExecuteMsgTypeUrl)))
 			i--
 			dAtA[i] = 0x1a
 		}
@@ -1821,38 +1821,6 @@ func (x *fastReflection_MsgExecute) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field JsonMessage", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.JsonMessage = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExecuteMsgTypeUrl", wireType)
 				}
 				var stringLen uint64
@@ -1882,6 +1850,38 @@ func (x *fastReflection_MsgExecute) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.ExecuteMsgTypeUrl = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field JsonMessage", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.JsonMessage = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 2 {
@@ -4398,10 +4398,9 @@ type MsgExecute struct {
 	// sender is the address of the sender of this message.
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// target is the address of the account to be executed.
-	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
-	// message is the message to be sent to the account.
-	JsonMessage       string `protobuf:"bytes,3,opt,name=json_message,json=jsonMessage,proto3" json:"json_message,omitempty"`
-	ExecuteMsgTypeUrl string `protobuf:"bytes,4,opt,name=execute_msg_type_url,json=executeMsgTypeUrl,proto3" json:"execute_msg_type_url,omitempty"`
+	Target            string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"` // message is the message to be sent to the account.
+	ExecuteMsgTypeUrl string `protobuf:"bytes,3,opt,name=execute_msg_type_url,json=executeMsgTypeUrl,proto3" json:"execute_msg_type_url,omitempty"`
+	JsonMessage       string `protobuf:"bytes,4,opt,name=json_message,json=jsonMessage,proto3" json:"json_message,omitempty"`
 	// funds contains the coins that the account wants to
 	// send alongside the request.
 	Funds []*v1beta1.Coin `protobuf:"bytes,5,rep,name=funds,proto3" json:"funds,omitempty"`
@@ -4441,16 +4440,16 @@ func (x *MsgExecute) GetTarget() string {
 	return ""
 }
 
-func (x *MsgExecute) GetJsonMessage() string {
+func (x *MsgExecute) GetExecuteMsgTypeUrl() string {
 	if x != nil {
-		return x.JsonMessage
+		return x.ExecuteMsgTypeUrl
 	}
 	return ""
 }
 
-func (x *MsgExecute) GetExecuteMsgTypeUrl() string {
+func (x *MsgExecute) GetJsonMessage() string {
 	if x != nil {
-		return x.ExecuteMsgTypeUrl
+		return x.JsonMessage
 	}
 	return ""
 }
@@ -4711,13 +4710,13 @@ var file_cosmos_accounts_v1_tx_proto_rawDesc = []byte{
 	0x80, 0x02, 0x0a, 0x0a, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x12, 0x16,
 	0x0a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
 	0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x21,
-	0x0a, 0x0c, 0x6a, 0x73, 0x6f, 0x6e, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x6a, 0x73, 0x6f, 0x6e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67,
-	0x65, 0x12, 0x2f, 0x0a, 0x14, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x5f, 0x6d, 0x73, 0x67,
-	0x5f, 0x74, 0x79, 0x70, 0x65, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x11, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x4d, 0x73, 0x67, 0x54, 0x79, 0x70, 0x65, 0x55,
-	0x72, 0x6c, 0x12, 0x61, 0x0a, 0x05, 0x66, 0x75, 0x6e, 0x64, 0x73, 0x18, 0x05, 0x20, 0x03, 0x28,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x2f,
+	0x0a, 0x14, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x5f, 0x6d, 0x73, 0x67, 0x5f, 0x74, 0x79,
+	0x70, 0x65, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11, 0x65, 0x78,
+	0x65, 0x63, 0x75, 0x74, 0x65, 0x4d, 0x73, 0x67, 0x54, 0x79, 0x70, 0x65, 0x55, 0x72, 0x6c, 0x12,
+	0x21, 0x0a, 0x0c, 0x6a, 0x73, 0x6f, 0x6e, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x6a, 0x73, 0x6f, 0x6e, 0x4d, 0x65, 0x73, 0x73, 0x61,
+	0x67, 0x65, 0x12, 0x61, 0x0a, 0x05, 0x66, 0x75, 0x6e, 0x64, 0x73, 0x18, 0x05, 0x20, 0x03, 0x28,
 	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde,
 	0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,

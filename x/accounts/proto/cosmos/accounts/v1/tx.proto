@@ -57,9 +57,10 @@ message MsgExecute {
   // target is the address of the account to be executed.
   string target = 2;
   // message is the message to be sent to the account.
-  string json_message = 3;
 
-  string execute_msg_type_url = 4;
+  string execute_msg_type_url = 3;
+
+  string json_message = 4;
   // funds contains the coins that the account wants to
   // send alongside the request.
   repeated cosmos.base.v1beta1.Coin funds = 5

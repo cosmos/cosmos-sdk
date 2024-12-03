@@ -17,9 +17,9 @@ Modules define most of the logic of Cosmos SDK applications. Developers compose 
 
 ## Role of Modules in a Cosmos SDK Application
 
-The Cosmos SDK can be thought of as the Ruby-on-Rails of blockchain development. It comes with a core that provides the basic functionalities every blockchain application needs, like a [boilerplate implementation of the ABCI](../../learn/advanced/00-baseapp.md) to communicate with the underlying consensus engine, a [`multistore`](../../learn/advanced/04-store.md#multistore) to persist state, a [server](../../learn/advanced/03-node.md) to form a full-node and [interfaces](./09-module-interfaces.md) to handle queries.
+The Cosmos SDK can be thought of as the Next.js or Ruby-on-Rails of blockchain development. It comes with a core that provides the basic functionalities every blockchain application needs, like a [boilerplate implementation of the ABCI](../../learn/advanced/00-baseapp.md) to communicate with the underlying consensus engine, a [`multistore`](../../learn/advanced/04-store.md#multistore) to persist state, a [server](../../learn/advanced/03-node.md) to form a full-node and [interfaces](./09-module-interfaces.md) to handle queries.
 
-On top of this core, the Cosmos SDK enables developers to build modules that implement the business logic of their application. In other words, SDK modules implement the bulk of the logic of applications, while the core does the wiring and enables modules to be composed together. The end goal is to build a robust ecosystem of open-source Cosmos SDK modules, making it increasingly easier to build complex blockchain applications.
+On top of this core, the Cosmos SDK enables developers to build modules that implement the business logic of their application. In other words, SDK modules implement the bulk of the logic of applications, while the core does the wiring (via [runtime](../building-apps/00-runtime.md)) and enables modules to be composed together. The end goal is to build a robust ecosystem of open-source Cosmos SDK modules, making it increasingly easier to build complex blockchain applications.
 
 Cosmos SDK modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one or more `KVStore`s in the [main multistore](../../learn/advanced/04-store.md), as well as a subset of [message types](./02-messages-and-queries.md#messages). These messages are routed by one of the main components of Cosmos SDK core, [`BaseApp`](../../learn/advanced/00-baseapp.md), to a module Protobuf [`Msg` service](./03-msg-services.md) that defines them.
 
@@ -42,8 +42,7 @@ flowchart TD
 
 As a result of this architecture, building a Cosmos SDK application usually revolves around writing modules to implement the specialized logic of the application and composing them with existing modules to complete the application. Developers will generally work on modules that implement logic needed for their specific use case that do not exist yet, and will use existing modules for more generic functionalities like staking, accounts, or token management.
 
-
-### Modules as Sudo
+### Modules as super-users
 
 Modules have the ability to perform actions that are not available to regular users. This is because modules are given sudo permissions by the state machine. Modules can reject another modules desire to execute a function but this logic must be explicit. Examples of this can be seen when modules create functions to modify parameters:
 

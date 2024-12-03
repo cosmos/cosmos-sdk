@@ -10,19 +10,13 @@ type Manager struct {
 	scPruner store.Pruner
 	// scPruningOption are the pruning options for the SC.
 	scPruningOption *store.PruningOption
-	// ssPruner is the pruner for the SS.
-	ssPruner store.Pruner
-	// ssPruningOption are the pruning options for the SS.
-	ssPruningOption *store.PruningOption
 }
 
 // NewManager creates a new Pruning Manager.
-func NewManager(scPruner, ssPruner store.Pruner, scPruningOption, ssPruningOption *store.PruningOption) *Manager {
+func NewManager(scPruner store.Pruner, scPruningOption *store.PruningOption) *Manager {
 	return &Manager{
 		scPruner:        scPruner,
 		scPruningOption: scPruningOption,
-		ssPruner:        ssPruner,
-		ssPruningOption: ssPruningOption,
 	}
 }
 
@@ -39,24 +33,12 @@ func (m *Manager) Prune(version uint64) error {
 		}
 	}
 
-	// Prune the SS.
-	if m.ssPruningOption != nil {
-		if prune, pruneTo := m.ssPruningOption.ShouldPrune(version); prune {
-			if err := m.ssPruner.Prune(pruneTo); err != nil {
-				return err
-			}
-		}
-	}
-
 	return nil
 }
 
 func (m *Manager) signalPruning(pause bool) {
 	if scPausablePruner, ok := m.scPruner.(store.PausablePruner); ok {
 		scPausablePruner.PausePruning(pause)
-	}
-	if ssPausablePruner, ok := m.ssPruner.(store.PausablePruner); ok {
-		ssPausablePruner.PausePruning(pause)
 	}
 }
 

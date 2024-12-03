@@ -11,19 +11,10 @@ import (
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 type MockStore struct {
-	Storage   storev2.VersionedWriter
 	Committer storev2.Committer
-}
-
-func NewMockStorage(logger log.Logger, dir string) storev2.VersionedWriter {
-	storageDB, _ := pebbledb.New(dir)
-	ss := storage.NewStorageStore(storageDB, logger)
-	return ss
 }
 
 func NewMockCommiter(logger log.Logger, actors ...string) storev2.Committer {
@@ -36,8 +27,8 @@ func NewMockCommiter(logger log.Logger, actors ...string) storev2.Committer {
 	return sc
 }
 
-func NewMockStore(ss storev2.VersionedWriter, sc storev2.Committer) *MockStore {
-	return &MockStore{Storage: ss, Committer: sc}
+func NewMockStore(sc storev2.Committer) *MockStore {
+	return &MockStore{Committer: sc}
 }
 
 func (s *MockStore) GetLatestVersion() (uint64, error) {
@@ -59,12 +50,7 @@ func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
 }
 
 func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, error) {
-	err := s.Storage.ApplyChangeset(changeset)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	err = s.Committer.WriteChangeset(changeset)
+	err := s.Committer.WriteChangeset(changeset)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -79,10 +65,6 @@ func (s *MockStore) StateAt(version uint64) (corestore.ReaderMap, error) {
 		return nil, fmt.Errorf("failed to get commit info for version %d: %w", version, err)
 	}
 	return NewMockReaderMap(version, s), nil
-}
-
-func (s *MockStore) GetStateStorage() storev2.VersionedWriter {
-	return s.Storage
 }
 
 func (s *MockStore) GetStateCommitment() storev2.Committer {

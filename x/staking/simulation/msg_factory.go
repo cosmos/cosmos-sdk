@@ -321,21 +321,11 @@ func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.M
 			return nil, nil
 		}
 		// check whether the new cons key associated with another validator
-		newConsAddr := sdk.ConsAddress(otherAccount.ConsKey.PubKey().Address())
-
-		if _, err := k.GetValidatorByConsAddr(ctx, newConsAddr); err == nil {
-			reporter.Skip("cons key already used")
+		assertKeyUnused(ctx, reporter, k, otherAccount.ConsKey.PubKey())
+		if reporter.IsSkipped() {
 			return nil, nil
 		}
 		msg := must(types.NewMsgRotateConsPubKey(val.GetOperator(), otherAccount.ConsKey.PubKey()))
-
-		// check if there's another key rotation for this same key in the same block
-		for _, r := range must(k.GetBlockConsPubKeyRotationHistory(ctx)) {
-			if r.NewConsPubkey.Compare(msg.NewPubkey) == 0 {
-				reporter.Skip("cons key already used in this block")
-				return nil, nil
-			}
-		}
 		return []simsx.SimAccount{valOper}, msg
 	}
 }
@@ -371,6 +361,16 @@ func randomValidator(ctx context.Context, reporter simsx.SimulationReporter, k *
 
 // skips execution if there's another key rotation for the same key in the same block
 func assertKeyUnused(ctx context.Context, reporter simsx.SimulationReporter, k *keeper.Keeper, newPubKey cryptotypes.PubKey) {
+	newConsAddr := sdk.ConsAddress(newPubKey.Address())
+	if rotatedTo, _ := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newConsAddr); rotatedTo != nil {
+		reporter.Skip("consensus key already used")
+		return
+	}
+	if _, err := k.GetValidatorByConsAddr(ctx, newConsAddr); err == nil {
+		reporter.Skip("cons key already used")
+		return
+	}
+
 	allRotations, err := k.GetBlockConsPubKeyRotationHistory(ctx)
 	if err != nil {
 		reporter.Skipf("cannot get block cons key rotation history: %s", err.Error())

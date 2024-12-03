@@ -87,59 +87,59 @@ func NewSimApp[T transaction.Tx](
 			AppConfig(),
 			config,
 			depinject.Supply(
-			// ADVANCED CONFIGURATION
+				// ADVANCED CONFIGURATION
 
-			//
-			// AUTH
-			//
-			// For providing a custom function required in auth to generate custom account types
-			// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
-			//
-			// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
-			//
-			// For providing a custom a base account type add it below.
-			// By default the auth module uses authtypes.ProtoBaseAccount().
-			//
-			// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
-			//
-			// For providing a different address codec, add it below.
-			// By default the auth module uses a Bech32 address codec,
-			// with the prefix defined in the auth module configuration.
-			//
-			// func() address.Codec { return <- custom address codec type -> }
+				//
+				// AUTH
+				//
+				// For providing a custom function required in auth to generate custom account types
+				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
+				//
+				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
+				//
+				// For providing a custom a base account type add it below.
+				// By default the auth module uses authtypes.ProtoBaseAccount().
+				//
+				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
+				//
+				// For providing a different address codec, add it below.
+				// By default the auth module uses a Bech32 address codec,
+				// with the prefix defined in the auth module configuration.
+				//
+				// func() address.Codec { return <- custom address codec type -> }
 
-			//
-			// STAKING
-			//
-			// For provinding a different validator and consensus address codec, add it below.
-			// By default the staking module uses the bech32 prefix provided in the auth config,
-			// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
-			// When providing a custom address codec in auth, custom address codecs must be provided here as well.
-			//
-			// func() runtime.ValidatorAddressCodec { return <- custom validator address codec type -> }
-			// func() runtime.ConsensusAddressCodec { return <- custom consensus address codec type -> }
+				//
+				// STAKING
+				//
+				// For provinding a different validator and consensus address codec, add it below.
+				// By default the staking module uses the bech32 prefix provided in the auth config,
+				// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
+				// When providing a custom address codec in auth, custom address codecs must be provided here as well.
+				//
+				// func() runtime.ValidatorAddressCodec { return <- custom validator address codec type -> }
+				// func() runtime.ConsensusAddressCodec { return <- custom consensus address codec type -> }
 
-			//
-			// MINT
-			//
+				//
+				// MINT
+				//
 
-			// For providing a custom inflation function for x/mint add here your
-			// custom function that implements the minttypes.InflationCalculationFn
-			// interface.
+				// For providing a custom inflation function for x/mint add here your
+				// custom function that implements the minttypes.InflationCalculationFn
+				// interface.
 			),
 			depinject.Provide(
-			// if you want to provide a custom public key you
-			// can do it from here.
-			// Example:
-			// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
-			//
-			// You can also provide a custom public key with a custom validation function:
-			//
-			// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
-			//			if len(pub.Key) != 64 {
-			//				return fmt.Errorf("invalid pub key size")
-			//			}
-			// 		})
+				// if you want to provide a custom public key you
+				// can do it from here.
+				// Example:
+				// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
+				//
+				// You can also provide a custom public key with a custom validation function:
+				//
+				// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
+				//			if len(pub.Key) != 64 {
+				//				return fmt.Errorf("invalid pub key size")
+				//			}
+				// 		})
 			),
 		)
 	)

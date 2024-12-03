@@ -19,6 +19,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// flagUnsafeSkipUpgradesV2 is a custom flag that allows the user to skip upgrades
+// It is used in a v2 chain.
+const flagUnsafeSkipUpgradesV2 = "server.unsafe-skip-upgrades"
+
 var _ depinject.OnePerModuleType = AppModule{}
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -36,6 +40,7 @@ func ProvideConfig(key depinject.OwnModuleKey) coreserver.ModuleConfigMap {
 		Module: depinject.ModuleKey(key).Name(),
 		Config: coreserver.ConfigMap{
 			server.FlagUnsafeSkipUpgrades: []int{},
+			flagUnsafeSkipUpgradesV2:      []int{},
 			flags.FlagHome:                "",
 		},
 	}
@@ -66,10 +71,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	skipUpgrades, ok := in.ConfigMap[server.FlagUnsafeSkipUpgrades]
+	skipUpgrades, ok := in.ConfigMap[flagUnsafeSkipUpgradesV2] // check v2
 	if !ok || skipUpgrades == nil {
-		skipUpgrades = []int{}
+		skipUpgrades, ok = in.ConfigMap[server.FlagUnsafeSkipUpgrades] // check v1
+		if !ok || skipUpgrades == nil {
+			skipUpgrades = []int{}
+		}
 	}
+
 	heights := cast.ToIntSlice(skipUpgrades) // safe to use cast here as we've handled nil case
 	for _, h := range heights {
 		skipUpgradeHeights[int64(h)] = true

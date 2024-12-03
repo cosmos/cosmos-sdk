@@ -82,10 +82,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
-
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
@@ -127,8 +123,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		authority.String(),
 	)
 
-	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
-
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger()), authtypes.NewModuleAddress("gov").String())
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
@@ -138,7 +132,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
 	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
@@ -216,9 +210,9 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 	})
 }
 
-func metadataGenerator() *rapid.Generator[stakingtypes.Metadata] {
-	return rapid.Custom(func(t *rapid.T) stakingtypes.Metadata {
-		return stakingtypes.Metadata{
+func metadataGenerator() *rapid.Generator[*stakingtypes.Metadata] {
+	return rapid.Custom(func(t *rapid.T) *stakingtypes.Metadata {
+		return &stakingtypes.Metadata{
 			ProfilePicUri:    generateUri(t),
 			SocialHandleUris: []string{generateUri(t), generateUri(t)},
 		}
@@ -331,7 +325,7 @@ func getStaticValidator(t *testing.T, f *deterministicFixture) stakingtypes.Vali
 			"website",
 			"securityContact",
 			"details",
-			stakingtypes.Metadata{},
+			&stakingtypes.Metadata{},
 		),
 		UnbondingHeight: 10,
 		UnbondingTime:   time.Date(2022, 10, 1, 0, 0, 0, 0, time.UTC),
@@ -367,7 +361,7 @@ func getStaticValidator2(t *testing.T, f *deterministicFixture) stakingtypes.Val
 			"website",
 			"securityContact",
 			"details",
-			stakingtypes.Metadata{},
+			&stakingtypes.Metadata{},
 		),
 		UnbondingHeight: 100132,
 		UnbondingTime:   time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),

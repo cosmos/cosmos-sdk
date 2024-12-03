@@ -16,9 +16,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 	t.Parallel()
 
 	f := initFixture(t)
-
 	ctx, queryClient := f.ctx, f.legacyQueryClient
-
 	addrs, _ := createValidators(t, f, []int64{5, 5, 5})
 
 	var (

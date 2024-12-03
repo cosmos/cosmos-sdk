@@ -139,6 +139,22 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, err
 	}
 
+	// if this delegation is from a liquid staking provider (identified if the delegator
+	// is an ICA account), it cannot exceed the global or validator bond cap
+	if k.DelegatorIsLiquidStaker(valAddr) {
+		shares, err := validator.SharesFromTokens(msg.Value.Amount)
+		if err != nil {
+			return nil, err
+		}
+		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Value.Amount, false); err != nil {
+			return nil, err
+		}
+		validator, err = k.SafelyIncreaseValidatorLiquidShares(ctx, valAddr, shares, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded

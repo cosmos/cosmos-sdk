@@ -51,12 +51,14 @@ func TestBaseAccount(t *testing.T) {
 }
 
 func sendTx(t *testing.T, ctx sdk.Context, app *simapp.SimApp, sender []byte, msg sdk.Msg) {
+	t.Helper()
 	tx := sign(t, ctx, app, sender, privKey, msg)
 	_, _, err := app.SimDeliver(app.TxEncode, tx)
 	require.NoError(t, err)
 }
 
 func sign(t *testing.T, ctx sdk.Context, app *simapp.SimApp, from sdk.AccAddress, privKey cryptotypes.PrivKey, msg sdk.Msg) sdk.Tx {
+	t.Helper()
 	r := rand.New(rand.NewSource(0))
 
 	accNum, err := app.AccountsKeeper.AccountByNumber.Get(ctx, from)
@@ -81,12 +83,14 @@ func sign(t *testing.T, ctx sdk.Context, app *simapp.SimApp, from sdk.AccAddress
 }
 
 func bechify(t *testing.T, app *simapp.SimApp, addr []byte) string {
+	t.Helper()
 	bech32, err := app.AuthKeeper.AddressCodec().BytesToString(addr)
 	require.NoError(t, err)
 	return bech32
 }
 
 func fundAccount(t *testing.T, app *simapp.SimApp, ctx sdk.Context, addr sdk.AccAddress, amt string) {
+	t.Helper()
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, coins(t, amt)))
 }
 

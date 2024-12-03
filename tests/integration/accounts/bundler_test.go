@@ -209,6 +209,7 @@ func TestMsgServer_ExecuteBundle(t *testing.T) {
 }
 
 func makeTx(t *testing.T, msg gogoproto.Message, sig []byte, xt *account_abstractionv1.TxExtension) []byte {
+	t.Helper()
 	anyMsg, err := codectypes.NewAnyWithValue(msg)
 	require.NoError(t, err)
 

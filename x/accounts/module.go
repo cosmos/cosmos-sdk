@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	v1 "cosmossdk.io/x/accounts/v1"
 
@@ -59,16 +58,6 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	v1.RegisterMsgServer(registrar, NewMsgServer(am.k))
 
 	return nil
-}
-
-// RegisterQueryHandlers registers the query handlers for the accounts module.
-func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
-	queryServer := NewQueryServer(am.k)
-
-	appmodulev2.RegisterMsgHandler(router, queryServer.AccountNumber)
-	appmodulev2.RegisterMsgHandler(router, queryServer.AccountQuery)
-	appmodulev2.RegisterMsgHandler(router, queryServer.AccountType)
-	appmodulev2.RegisterMsgHandler(router, queryServer.Schema)
 }
 
 // App module genesis

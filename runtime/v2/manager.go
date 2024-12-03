@@ -186,7 +186,7 @@ func (m *MM[T]) InitGenesisJSON(
 					return nil, fmt.Errorf("validator InitGenesis updates already set by a previous module: current module %s", moduleName)
 				}
 
-				validatorUpdates = append(validatorUpdates, validatorUpdates...)
+				validatorUpdates = append(validatorUpdates, moduleValUpdates...)
 			}
 		}
 	}

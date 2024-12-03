@@ -2,7 +2,9 @@ package multisig
 
 import (
 	"context"
+	"encoding/json"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +16,14 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
+
+	"bytes"
+	"fmt"
+	"reflect"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 func setup(t *testing.T, _ context.Context, ss store.KVStoreService, timefn func() time.Time) *Account {
@@ -567,7 +577,8 @@ func TestProposalPassing(t *testing.T) {
 		0, []byte("multisig_acc"), []byte("addr1"), TestFunds,
 		func(ictx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			if execmsg, ok := msg.(*accountsv1.MsgExecute); ok {
-				updateCfg, err := accountstd.UnpackAny[v1.MsgUpdateConfig](execmsg.GetMessage())
+				anyExecmsg, err := encodeJSONToProto(execmsg.ExecuteMsgTypeUrl, execmsg.JsonMessage)
+				updateCfg, err := accountstd.UnpackAny[v1.MsgUpdateConfig](anyExecmsg)
 				if err != nil {
 					return nil, err
 				}
@@ -600,11 +611,18 @@ func TestProposalPassing(t *testing.T) {
 	anymsg, err := accountstd.PackAny(msg)
 	require.NoError(t, err)
 
+	split := strings.Split(anymsg.TypeUrl, "/")
+	nameTypeUrl := split[len(split)-1]
+
+	jsonReq, err := json.Marshal(msg)
+	require.NoError(t, err)
+
 	execMsg := &accountsv1.MsgExecute{
-		Sender:  "multisig_acc",
-		Target:  "multisig_acc",
-		Message: anymsg,
-		Funds:   nil,
+		Sender:            "multisig_acc",
+		Target:            "multisig_acc",
+		ExecuteMsgTypeUrl: nameTypeUrl,
+		JsonMessage:       string(jsonReq),
+		Funds:             nil,
 	}
 	execMsgAny, err := accountstd.PackAny(execMsg)
 	require.NoError(t, err)
@@ -709,4 +727,17 @@ func TestWeightOverflow(t *testing.T) {
 	})
 	_, err = acc.Init(ctx, startAcc)
 	require.ErrorContains(t, err, "overflow")
+}
+
+func encodeJSONToProto(name, jsonMsg string) (*codectypes.Any, error) {
+	impl := gogoproto.MessageType(name)
+	if impl == nil {
+		return nil, fmt.Errorf("message type %s not found", name)
+	}
+	msg := reflect.New(impl.Elem()).Interface().(gogoproto.Message)
+	err := jsonpb.Unmarshal(bytes.NewBufferString(jsonMsg), msg)
+	if err != nil {
+		return nil, fmt.Errorf("provided message is not valid %s: %w", jsonMsg, err)
+	}
+	return codectypes.NewAnyWithValue(msg)
 }

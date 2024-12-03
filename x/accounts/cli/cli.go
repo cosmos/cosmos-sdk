@@ -43,19 +43,11 @@ func GetExecuteCmd() *cobra.Command {
 				return err
 			}
 
-			schema, err := getSchemaForAccount(clientCtx, args[0])
-			if err != nil {
-				return err
-			}
-
-			msgBytes, err := handlerMsgBytes(schema.ExecuteHandlers, args[1], args[2])
-			if err != nil {
-				return err
-			}
 			msg := v1.MsgExecute{
-				Sender:  sender,
-				Target:  args[0],
-				Message: msgBytes,
+				Sender:            sender,
+				Target:            args[0],
+				ExecuteMsgTypeUrl: args[1],
+				JsonMessage:       args[2],
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)

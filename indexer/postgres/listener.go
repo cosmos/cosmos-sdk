@@ -82,69 +82,77 @@ func (i *indexerImpl) listener() appdata.Listener {
 			i.tx, err = i.db.BeginTx(i.ctx, nil)
 			return nil, err
 		},
-		OnTx: func(td appdata.TxData) error {
-			var bz []byte
-			if td.Bytes != nil {
+		OnTx:    txListener(i),
+		OnEvent: eventListener(i),
+	}
+}
+
+func txListener(i *indexerImpl) func(data appdata.TxData) error {
+	return func(td appdata.TxData) error {
+		var bz []byte
+		if td.Bytes != nil {
+			var err error
+			bz, err = td.Bytes()
+			if err != nil {
+				return err
+			}
+		}
+
+		var jsonData json.RawMessage
+		if td.JSON != nil {
+			var err error
+			jsonData, err = td.JSON()
+			if err != nil {
+				return err
+			}
+		}
+
+		_, err := i.tx.Exec("INSERT INTO tx (block_number, index_in_block, data, bytes) VALUES ($1, $2, $3, $4)",
+			td.BlockNumber, td.TxIndex, jsonData, bz)
+
+		return err
+	}
+}
+
+func eventListener(i *indexerImpl) func(data appdata.EventData) error {
+	return func(data appdata.EventData) error {
+		for _, e := range data.Events {
+			var (
+				jsonData       json.RawMessage
+				jsonAttributes json.RawMessage
+			)
+
+			if e.Data != nil {
 				var err error
-				bz, err = td.Bytes()
+				jsonData, err = e.Data()
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to get event data: %w", err)
 				}
 			}
 
-			var jsonData json.RawMessage
-			if td.JSON != nil {
-				var err error
-				jsonData, err = td.JSON()
+			if e.Attributes != nil {
+				attrs, err := e.Attributes()
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to get event attributes: %w", err)
+				}
+
+				attrsMap := map[string]interface{}{}
+				for _, attr := range attrs {
+					attrsMap[attr.Key] = attr.Value
+				}
+
+				jsonAttributes, err = json.Marshal(attrsMap)
+				if err != nil {
+					return fmt.Errorf("failed to marshal event attributes: %w", err)
 				}
 			}
 
-			_, err := i.tx.Exec("INSERT INTO tx (block_number, index_in_block, data, bytes) VALUES ($1, $2, $3, $4)",
-				td.BlockNumber, td.TxIndex, jsonData, bz)
-
-			return err
-		},
-		OnEvent: func(data appdata.EventData) error {
-			for _, e := range data.Events {
-				var (
-					jsonData       json.RawMessage
-					jsonAttributes json.RawMessage
-				)
-
-				if e.Data != nil {
-					var err error
-					jsonData, err = e.Data()
-					if err != nil {
-						return fmt.Errorf("failed to get event data: %w", err)
-					}
-				}
-
-				if e.Attributes != nil {
-					attrs, err := e.Attributes()
-					if err != nil {
-						return fmt.Errorf("failed to get event attributes: %w", err)
-					}
-
-					attrsMap := map[string]interface{}{}
-					for _, attr := range attrs {
-						attrsMap[attr.Key] = attr.Value
-					}
-
-					jsonAttributes, err = json.Marshal(attrsMap)
-					if err != nil {
-						return fmt.Errorf("failed to marshal event attributes: %w", err)
-					}
-				}
-
-				_, err := i.tx.Exec("INSERT INTO event (block_number, block_stage, tx_index, msg_index, event_index, type, data, attributes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-					e.BlockNumber, e.BlockStage, e.TxIndex, e.MsgIndex, e.EventIndex, e.Type, jsonData, jsonAttributes)
-				if err != nil {
-					return fmt.Errorf("failed to index event: %w", err)
-				}
+			_, err := i.tx.Exec("INSERT INTO event (block_number, block_stage, tx_index, msg_index, event_index, type, data, attributes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+				e.BlockNumber, e.BlockStage, e.TxIndex, e.MsgIndex, e.EventIndex, e.Type, jsonData, jsonAttributes)
+			if err != nil {
+				return fmt.Errorf("failed to index event: %w", err)
 			}
-			return nil
-		},
+		}
+		return nil
 	}
 }

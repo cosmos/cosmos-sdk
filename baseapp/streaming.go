@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -49,7 +50,7 @@ func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*stor
 	app.cms.AddListeners(exposedKeys)
 
 	app.streamingManager = storetypes.StreamingManager{
-		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener.Listener}},
+		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener.Listener, app.txDecoder}},
 		StopNodeOnErr: true,
 	}
 
@@ -199,7 +200,8 @@ func eventToAppDataEvent(event abci.Event, height int64) (appdata.Event, error) 
 }
 
 type listenerWrapper struct {
-	listener appdata.Listener
+	listener  appdata.Listener
+	txDecoder sdk.TxDecoder
 }
 
 // NewListenerWrapper creates a new listenerWrapper.
@@ -210,7 +212,7 @@ func NewListenerWrapper(listener appdata.Listener) listenerWrapper {
 
 func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
 	if p.listener.StartBlock != nil {
-		// this is to avoid putting all txs along with the block data
+		// clean up redundant data
 		reqWithoutTxs := req
 		reqWithoutTxs.Txs = nil
 
@@ -230,7 +232,15 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 				BlockNumber: uint64(req.Height),
 				TxIndex:     int32(i),
 				Bytes:       func() ([]byte, error) { return tx, nil },
-				JSON:        nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+				JSON: func() (json.RawMessage, error) {
+					sdkTx, err := p.txDecoder(tx)
+					if err != nil {
+						// if the transaction cannot be decoded, return the error as JSON
+						// as there are some txs that might not be decodeable by the txDecoder
+						return json.Marshal(err)
+					}
+					return json.Marshal(sdkTx)
+				}, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
 			}); err != nil {
 				return err
 			}

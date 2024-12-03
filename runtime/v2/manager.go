@@ -181,8 +181,8 @@ func (m *MM[T]) InitGenesisJSON(
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
-			if len(validatorUpdates) > 0 {
-				if len(moduleValUpdates) > 0 {
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
 					return nil, fmt.Errorf("validator InitGenesis updates already set by a previous module: current module %s", moduleName)
 				}
 

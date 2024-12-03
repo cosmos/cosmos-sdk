@@ -122,11 +122,9 @@ func (a appManager[T]) InitGenesis(
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
 	}
+
 	// run block
 	blockRequest.Txs = genTxs
-
-	// do something with valUpdates
-	_ = valUpdates
 
 	blockResponse, blockZeroState, err := a.stf.DeliverBlock(ctx, blockRequest, genesisState)
 	if err != nil {
@@ -142,6 +140,17 @@ func (a appManager[T]) InitGenesis(
 	err = genesisState.ApplyStateChanges(stateChanges)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to apply block zero state changes to genesis state: %w", err)
+	}
+
+	// override validator updates with the ones from the genesis state
+	// this triggers only when x/staking or another module that returns validator updates in InitGenesis
+	// otherwise, genutil validator updates takes precedence (returned from executing the genesis txs (as it implements appmodule.GenesisDecoder) in the end block)
+	if len(valUpdates) > 0 && len(blockResponse.ValidatorUpdates) == 0 {
+		blockResponse.ValidatorUpdates = valUpdates
+	}
+
+	if len(valUpdates) > 0 && len(blockResponse.ValidatorUpdates) > 0 {
+		return nil, nil, errors.New("validator updates returned from InitGenesis and genesis transactions, only one can be used")
 	}
 
 	return blockResponse, genesisState, err

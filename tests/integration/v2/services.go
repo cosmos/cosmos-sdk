@@ -76,10 +76,11 @@ type integrationContext struct {
 
 func SetHeaderInfo(ctx context.Context, h header.Info) context.Context {
 	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
-	if ok {
-		iCtx.header = h
+	if !ok {
+		return ctx
 	}
-	return ctx
+	iCtx.header = h
+	return context.WithValue(ctx, contextKey, iCtx)
 }
 
 func HeaderInfoFromContext(ctx context.Context) header.Info {

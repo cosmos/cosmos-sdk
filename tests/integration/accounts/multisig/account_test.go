@@ -1,6 +1,8 @@
 package multisig
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -141,12 +143,19 @@ func (s *IntegrationTestSuite) TestConfigUpdate() {
 			EarlyExecution: false,
 		},
 	}
+	anyUpdateMsg := codectypes.UnsafePackAny(updateMsg)
+
+	split := strings.Split(anyUpdateMsg.TypeUrl, "/")
+	nameTypeUrl := split[len(split)-1]
+	jsonReq, err := json.Marshal(updateMsg)
+	s.NoError(err)
 
 	msgExec := &accountsv1.MsgExecute{
-		Sender:  accAddrStr,
-		Target:  accAddrStr,
-		Message: codectypes.UnsafePackAny(updateMsg),
-		Funds:   []sdk.Coin{},
+		Sender:            accAddrStr,
+		Target:            accAddrStr,
+		ExecuteMsgTypeUrl: nameTypeUrl,
+		JsonMessage:       string(jsonReq),
+		Funds:             []sdk.Coin{},
 	}
 
 	s.createProposal(ctx, accountAddr, s.members[0], codectypes.UnsafePackAny(msgExec))
@@ -157,7 +166,7 @@ func (s *IntegrationTestSuite) TestConfigUpdate() {
 		Vote:       v1.VoteOption_VOTE_OPTION_YES,
 	}
 
-	err := s.executeTx(ctx, voteReq, accountAddr, s.members[0])
+	err = s.executeTx(ctx, voteReq, accountAddr, s.members[0])
 	s.NoError(err)
 
 	err = s.executeProposal(ctx, accountAddr, s.members[0], 0)
@@ -172,25 +181,34 @@ func (s *IntegrationTestSuite) TestConfigUpdate() {
 
 	// Try to remove a member, but it doesn't reach passing threshold
 	// create proposal
+	msgUpdate := &v1.MsgUpdateConfig{
+		UpdateMembers: []*v1.Member{
+			{
+				Address: s.membersAddr[1],
+				Weight:  0,
+			},
+		},
+		Config: &v1.Config{
+			Threshold:      200, // 3 members with 100 power each, 2/3 majority
+			Quorum:         200,
+			VotingPeriod:   120,
+			Revote:         false,
+			EarlyExecution: false,
+		},
+	}
+	anyMsgUpdate := codectypes.UnsafePackAny(msgUpdate)
+
+	split = strings.Split(anyMsgUpdate.TypeUrl, "/")
+	nameTypeUrl = split[len(split)-1]
+	jsonReq, err = json.Marshal(msgUpdate)
+	s.NoError(err)
+
 	msgExec = &accountsv1.MsgExecute{
-		Sender: accAddrStr,
-		Target: accAddrStr,
-		Message: codectypes.UnsafePackAny(&v1.MsgUpdateConfig{
-			UpdateMembers: []*v1.Member{
-				{
-					Address: s.membersAddr[1],
-					Weight:  0,
-				},
-			},
-			Config: &v1.Config{
-				Threshold:      200, // 3 members with 100 power each, 2/3 majority
-				Quorum:         200,
-				VotingPeriod:   120,
-				Revote:         false,
-				EarlyExecution: false,
-			},
-		}),
-		Funds: []sdk.Coin{},
+		Sender:            accAddrStr,
+		Target:            accAddrStr,
+		ExecuteMsgTypeUrl: nameTypeUrl,
+		JsonMessage:       string(jsonReq),
+		Funds:             []sdk.Coin{},
 	}
 
 	s.createProposal(ctx, accountAddr, s.members[0], codectypes.UnsafePackAny(msgExec))

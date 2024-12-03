@@ -58,12 +58,6 @@ ifeq (v2,$(findstring v2,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 # DB backend selection
-ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += gcc
-endif
-ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += badgerdb
-endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1

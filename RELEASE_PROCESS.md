@@ -57,7 +57,7 @@ A _patch release_ is an increment of the patch number (eg: `v1.2.0` → `v1.2.1`
 
 **Patch release must not break API nor consensus.**
 
-Updates to the release branch should come from `main` by backporting PRs (usually done by automatic cherry-pick followed by a PRs to the release branch). The backports must be marked using `backport/Y` label in PR for main.
+Updates to the release branch should come from `main` by backporting PRs (usually done by automatic cherry-pick followed by PRs to the release branch). The backports must be marked using `backport/Y` label in PR for main.
 It is the PR author's responsibility to fix merge conflicts, update changelog entries, and
 ensure CI passes. If a PR originates from an external contributor, a core team member assumes
 responsibility to perform this process instead of the original author.

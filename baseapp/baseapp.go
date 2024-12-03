@@ -199,14 +199,16 @@ type BaseApp struct {
 }
 
 type customMiddlewares struct {
-	deliverTxer               sdk.DeliverTxer     // logic to run on any deliver tx
-	beforeCommitter           sdk.BeforeCommitter // logic to run before committing state
-	afterCommitter            sdk.AfterCommitter  // logic to run after committing state
-	createOracleResultTx      sdk.CreateOracleResultTxHandler
-	fetchOracleVotes          sdk.FetchOracleVotesHandler
-	doesOracleResultExist     sdk.DoesOracleResultExistHandler
-	doesSubAccountBelongToVal sdk.DoesSubAccountBelongToValHandler
-	validateOracleVotes       sdk.ValidateOracleVotesHandler
+	deliverTxer                 sdk.DeliverTxer     // logic to run on any deliver tx
+	beforeCommitter             sdk.BeforeCommitter // logic to run before committing state
+	afterCommitter              sdk.AfterCommitter  // logic to run after committing state
+	createOracleResultTx        sdk.CreateOracleResultTxHandler
+	fetchOracleVotes            sdk.FetchOracleVotesHandler
+	doesOracleResultExist       sdk.DoesOracleResultExistHandler
+	doesSubAccountBelongToVal   sdk.DoesSubAccountBelongToValHandler
+	validateOracleVotes         sdk.ValidateOracleVotesHandler
+	beforeInternalFinalizeBlock func(blockHeight int64)
+	afterInternalFinalizeBlock  func(blockHeight int64)
 
 	msgHandlerMiddleware sdk.MsgHandlerMiddleware // middleware that wraps msg handlers
 }

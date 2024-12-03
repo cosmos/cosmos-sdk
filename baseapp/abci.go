@@ -710,6 +710,16 @@ func (app *BaseApp) WriteFinalizeBlockState() {
 // only used to handle early cancellation, for anything related to state app.finalizeBlockState.Context()
 // must be used.
 func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	if app.afterInternalFinalizeBlock != nil {
+		defer func(blockHeight int64) {
+			app.afterInternalFinalizeBlock(blockHeight)
+		}(req.Height)
+	}
+
+	if app.beforeInternalFinalizeBlock != nil {
+		app.beforeInternalFinalizeBlock(req.Height)
+	}
+
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {

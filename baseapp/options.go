@@ -284,6 +284,24 @@ func (app *BaseApp) SetValidateOracleVotes(validateOracleVotes sdk.ValidateOracl
 	app.validateOracleVotes = validateOracleVotes
 }
 
+// SetBeforeInternalFinalizeBlock registers beforeInternalFinalizeBlock
+func (app *BaseApp) SetBeforeInternalFinalizeBlock(cb func(blockHeight int64)) {
+	if app.sealed {
+		panic("SetBeforeInternalFinalizeBlock() on sealed BaseApp")
+	}
+
+	app.beforeInternalFinalizeBlock = cb
+}
+
+// SetAfterInternalFinalizeBlock registers afterInternalFinalizeBlock
+func (app *BaseApp) SetAfterInternalFinalizeBlock(cb func(blockHeight int64)) {
+	if app.sealed {
+		panic("SetAfterInternalFinalizeBlock() on sealed BaseApp")
+	}
+
+	app.afterInternalFinalizeBlock = cb
+}
+
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	if app.sealed {
 		panic("SetAnteHandler() on sealed BaseApp")

@@ -276,17 +276,19 @@ func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules                  map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
-	OrderInitGenesis         []string
-	OrderExportGenesis       []string
-	OrderPreBlockers         []string
-	OrderBeginBlockers       []string
-	OrderEndBlockers         []string
-	OrderPrepareCheckStaters []string
-	OrderPrecommiters        []string
-	OrderMigrations          []string
-	beforeModuleEndBlock     func(moduleName string)
-	afterModuleEndBlock      func(moduleName string)
+	Modules                     map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
+	OrderInitGenesis            []string
+	OrderExportGenesis          []string
+	OrderPreBlockers            []string
+	OrderBeginBlockers          []string
+	OrderEndBlockers            []string
+	OrderPrepareCheckStaters    []string
+	OrderPrecommiters           []string
+	OrderMigrations             []string
+	beforeModuleEndBlock        func(blockHeight int64, moduleName string)
+	afterModuleEndBlock         func(blockHeight int64, moduleName string)
+	beforeInternalFinalizeBlock func(blockHeight int64)
+	afterInternalFinalizeBlock  func(blockHeight int64)
 }
 
 // NewManager creates a new Manager object.
@@ -459,12 +461,12 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterBeforeModuleEndBlock registers beforeModuleEndBlock
-func (m *Manager) RegisterBeforeModuleEndBlock(cb func(moduleName string)) {
+func (m *Manager) RegisterBeforeModuleEndBlock(cb func(blockHeight int64, moduleName string)) {
 	m.beforeModuleEndBlock = cb
 }
 
 // RegisterAfterModuleEndBlock registers afterModuleEndBlock
-func (m *Manager) RegisterAfterModuleEndBlock(cb func(moduleName string)) {
+func (m *Manager) RegisterAfterModuleEndBlock(cb func(blockHeight int64, moduleName string)) {
 	m.afterModuleEndBlock = cb
 }
 
@@ -815,7 +817,7 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	for _, moduleName := range m.OrderEndBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
 			if m.beforeModuleEndBlock != nil {
-				m.beforeModuleEndBlock(moduleName)
+				m.beforeModuleEndBlock(ctx.BlockHeight(), moduleName)
 			}
 
 			startTime := time.Now()
@@ -826,18 +828,18 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 			telemetry.ModuleMeasureSince(moduleName, startTime, telemetry.MetricKeyEndBlocker)
 
 			if m.afterModuleEndBlock != nil {
-				m.afterModuleEndBlock(moduleName)
+				m.afterModuleEndBlock(ctx.BlockHeight(), moduleName)
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
 			if m.beforeModuleEndBlock != nil {
-				m.beforeModuleEndBlock(moduleName)
+				m.beforeModuleEndBlock(ctx.BlockHeight(), moduleName)
 			}
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
 				return sdk.EndBlock{}, err
 			}
 			if m.afterModuleEndBlock != nil {
-				m.afterModuleEndBlock(moduleName)
+				m.afterModuleEndBlock(ctx.BlockHeight(), moduleName)
 			}
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set

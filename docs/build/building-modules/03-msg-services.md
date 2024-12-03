@@ -17,7 +17,7 @@ A Protobuf `Msg` service processes [messages](./02-messages-and-queries.md#messa
 
 ## Implementation of a module `Msg` service
 
-Each module should define a Protobuf `Msg` service, which will be responsible for processing requests (implementing `sdk.Msg`) and returning responses.
+Each module should define a Protobuf `Msg` service, which will be responsible for processing requests (implementing `transaction.Msg`) and returning responses.
 
 As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
 
@@ -30,24 +30,12 @@ https://github.com/cosmos/cosmos-sdk/blob/28fa3b8/x/bank/types/tx.pb.go#L564-L57
 When possible, the existing module's [`Keeper`](./06-keeper.md) should implement `MsgServer`, otherwise a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/28fa3b8/x/bank/keeper/msg_server.go#L16-L19
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/bank/keeper/msg_server.go#L13-L15
 ```
 
-`msgServer` methods can retrieve the auxiliary information or services using the environment variable, it is always located in the keeper:
+`msgServer` methods can retrieve the auxiliary information or services using the environment variable, it is should always be located in the [keeper](./06-keeper.md).
 
-Environment: 
-
-```go reference 
-https://github.com/cosmos/cosmos-sdk/blob/07151304e2ec6a185243d083f59a2d543253cb15/core/appmodule/v2/environment.go#L14-L29
-```
-
-Keeper Example: 
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/07151304e2ec6a185243d083f59a2d543253cb15/x/bank/keeper/keeper.go#L56-L58
-```
-
-`transaction.Msg` processing usually follows these 3 steps:
+A `transaction.Msg` processing usually follows these 3 steps:
 
 ### Validation
 
@@ -79,30 +67,47 @@ After the validation is successful, the `msgServer` method uses the [`keeper`](.
 
 ### Events 
 
-Before returning, `msgServer` methods generally emit one or more [events](../../learn/advanced/08-events.md) by using the `EventManager` held in `environment`.
+Before returning, `msgServer` methods generally emit one or more [events](../../learn/advanced/08-events.md) by using the `EventService` held in `environment`.
 
 There are two ways to emit events, typed events using protobuf or arbitrary key & values.
 
-Typed Events:
+For typed events:
 
 ```go
-ctx.EventManager().EmitTypedEvent(
-	&group.EventABC{Key1: Value1,  Key2, Value2})
+environment.EventService.EventManager(ctx).Emit(&group.EventABC{Key1: Value1,  Key2, Value2})
 ```
 
-Arbitrary Events: 
+Or using simple KV events: 
 
 ```go
-ctx.EventManager().EmitEvent(
-	sdk.NewEvent(
+environment.EventService.EventManager(ctx).EmitKV(
 		eventType,  // e.g. sdk.EventTypeMessage for a message, types.CustomEventType for a custom event defined in the module
-		sdk.NewAttribute(key1, value1),
-		sdk.NewAttribute(key2, value2),
-	),
+        event.Attribute{Key: key1, Value: value1},
+        event.Attribute{Key: key2, Value: value2},
 )
 ```
 
 These events are relayed back to the underlying consensus engine and can be used by service providers to implement services around the application. Click [here](../../learn/advanced/08-events.md) to learn more about events.
+
+### Telemetry
+
+:::Warning
+Telemetry adds a performance overhead to the chain. It is recommended to only use this in critical paths
+:::
+
+New [telemetry metrics](../../learn/advanced/09-telemetry.md) can be created from `msgServer` methods when handling messages.
+
+This is an example from the `x/auth/vesting` module:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/vesting/msg_server.go#L76-L88
+```
+
+## How it works
+
+:::warning
+This flow concerns only a Cosmos SDK *baseapp*, and not Cosmos SDK v2.
+:::
 
 The invoked `msgServer` method returns a `proto.Message` response and an `error`. These return values are then wrapped into an `*sdk.Result` or an `error`:
 
@@ -149,17 +154,3 @@ sequenceDiagram
     
     baseApp->>User: result, error code
 ```
-
-## Telemetry
-
-New [telemetry metrics](../../learn/advanced/09-telemetry.md) can be created from `msgServer` methods when handling messages.
-
-This is an example from the `x/auth/vesting` module:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/vesting/msg_server.go#L76-L88
-```
-
-:::Warning
-Telemetry adds a performance overhead to the chain. It is recommended to only use this in critical paths
-:::

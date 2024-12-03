@@ -297,6 +297,10 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 		return nil, err
 	}
 
+	if k.bankKeeper.BlockedAddr(ownerAddr) {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", ownerAddr)
+	}
+
 	if record.Owner != ownerAddr.String() {
 		return nil, types.ErrNotTokenizeShareRecordOwner
 	}
@@ -344,6 +348,10 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 
 // withdraw reward for all owning TokenizeShareRecord
 func (k Keeper) WithdrawAllTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
+	if k.bankKeeper.BlockedAddr(ownerAddr) {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", ownerAddr)
+	}
+
 	totalRewards := sdk.Coins{}
 
 	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)

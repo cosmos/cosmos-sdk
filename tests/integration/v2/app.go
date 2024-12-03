@@ -341,7 +341,6 @@ func (a *App) Deliver(
 	if ok {
 		iCtx.header.Height = int64(a.lastHeight)
 	}
-
 	return resp, state
 }
 

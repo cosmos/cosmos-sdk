@@ -13,7 +13,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
-	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -168,7 +167,7 @@ func TestHandleDoubleSign(t *testing.T) {
 		}},
 	}
 
-	ctx = context.WithValue(ctx, corecontext.CometInfoKey, nci)
+	ctx = integration.SetCometInfo(ctx, nci)
 	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx, cometInfoService))
 
 	// should be jailed and tombstoned
@@ -253,7 +252,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	require.NoError(t, f.consensusKeeper.ParamsStore.Set(ctx, *simtestutil.DefaultConsensusParams))
 	cp, err := f.consensusKeeper.ParamsStore.Get(ctx)
 
-	ctx = context.WithValue(ctx, corecontext.CometInfoKey, nci)
+	ctx = integration.SetCometInfo(ctx, nci)
 	ctx = integration.SetHeaderInfo(ctx, header.Info{
 		Height: int64(f.app.LastBlockHeight()) + cp.Evidence.MaxAgeNumBlocks + 1,
 		Time:   integration.HeaderInfoFromContext(ctx).Time.Add(cp.Evidence.MaxAgeDuration + 1),
@@ -334,7 +333,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 		}},
 	}
 
-	ctxWithCometInfo := context.WithValue(ctx, corecontext.CometInfoKey, nci)
+	ctxWithCometInfo := integration.SetCometInfo(ctx, nci)
 
 	err = f.evidenceKeeper.BeginBlocker(ctxWithCometInfo, cometInfoService)
 	assert.NilError(t, err)

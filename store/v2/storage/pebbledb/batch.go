@@ -88,6 +88,7 @@ func (b *Batch) Delete(storeKey, key []byte) error {
 	return b.set(storeKey, b.version, key, []byte(tombstoneVal))
 }
 
+// Write flushes any accumulated data to disk and closes the batch.
 func (b *Batch) Write() (err error) {
 	defer func() {
 		err = errors.Join(err, b.batch.Close())

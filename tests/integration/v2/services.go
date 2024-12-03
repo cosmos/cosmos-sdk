@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
@@ -87,6 +88,10 @@ func HeaderInfoFromContext(ctx context.Context) header.Info {
 		return iCtx.header
 	}
 	return header.Info{}
+}
+
+func SetCometInfo(ctx context.Context, c comet.Info) context.Context {
+	return context.WithValue(ctx, corecontext.CometInfoKey, c)
 }
 
 func GasMeterFromContext(ctx context.Context) gas.Meter {

@@ -134,6 +134,7 @@ func (a *AppBuilder[T]) initGenesis(ctx context.Context, src io.Reader, txHandle
 	if err != nil {
 		return nil, fmt.Errorf("failed to read import state: %w", err)
 	}
+
 	var genesisJSON map[string]json.RawMessage
 	if err = json.Unmarshal(bz, &genesisJSON); err != nil {
 		return nil, err

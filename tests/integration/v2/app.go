@@ -17,6 +17,7 @@ import (
 	corebranch "cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -96,6 +97,8 @@ type StartupConfig struct {
 	// RouterServiceBuilder defines the custom builder
 	// for msg router and query router service to be used in the app.
 	RouterServiceBuilder runtime.RouterServiceBuilder
+	// HeaderService defines the custom header service to be used in the app.
+	HeaderService header.Service
 }
 
 func DefaultStartUpConfig(t *testing.T) StartupConfig {
@@ -125,6 +128,7 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 		RouterServiceBuilder: runtime.NewRouterBuilder(
 			stf.NewMsgRouterService, stf.NewQueryRouterService(),
 		),
+		HeaderService: services.NewGenesisHeaderService(stf.HeaderService{}),
 	}
 }
 
@@ -182,13 +186,13 @@ func NewApp(
 						"minimum-gas-prices": "0stake",
 					},
 				},
-				services.NewGenesisHeaderService(stf.HeaderService{}),
 				cometService,
 				kvFactory,
 				&eventService{},
 				storeBuilder,
 				startupConfig.BranchService,
 				startupConfig.RouterServiceBuilder,
+				startupConfig.HeaderService,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -313,6 +317,10 @@ type App struct {
 	txConfig   client.TxConfig
 }
 
+func (a App) LastBlockHeight() uint64 {
+	return a.lastHeight
+}
+
 // Deliver delivers a block with the given transactions and returns the resulting state.
 func (a *App) Deliver(
 	t *testing.T, ctx context.Context, txs []stateMachineTx,
@@ -327,6 +335,12 @@ func (a *App) Deliver(
 	resp, state, err := a.DeliverBlock(ctx, req)
 	require.NoError(t, err)
 	a.lastHeight++
+
+	// update block height if integration context is present
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if ok {
+		iCtx.header.Height = int64(a.lastHeight)
+	}
 	return resp, state
 }
 

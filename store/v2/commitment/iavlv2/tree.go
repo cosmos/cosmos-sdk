@@ -64,6 +64,10 @@ func (t *Tree) LoadVersion(version uint64) error {
 	return t.tree.LoadVersion(int64(version))
 }
 
+func (t *Tree) LoadVersionForOverwriting(version uint64) error {
+	return t.LoadVersion(version) // TODO: implement overwriting
+}
+
 func (t *Tree) Commit() ([]byte, uint64, error) {
 	h, v, err := t.tree.SaveVersion()
 	return h, uint64(v), err
@@ -109,7 +113,11 @@ func (t *Tree) Iterator(version uint64, start, end []byte, ascending bool) (core
 	if int64(version) != t.tree.Version() {
 		return nil, fmt.Errorf("loading past version not yet supported")
 	}
-	return t.tree.Iterator(start, end, ascending)
+	if ascending {
+		return t.tree.Iterator(start, end, false)
+	} else {
+		return t.tree.ReverseIterator(start, end)
+	}
 }
 
 func (t *Tree) Export(version uint64) (commitment.Exporter, error) {

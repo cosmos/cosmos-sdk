@@ -16,8 +16,6 @@ import (
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 const (
@@ -47,18 +45,14 @@ func TestStorageTestSuite(t *testing.T) {
 func (s *RootStoreTestSuite) SetupTest() {
 	noopLog := coretesting.NewNopLogger()
 
-	pebbleDB, err := pebbledb.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(pebbleDB, noopLog)
-
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, nil, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
-	pm := pruning.NewManager(sc, ss, nil, nil)
-	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
+	pm := pruning.NewManager(sc, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
@@ -66,10 +60,6 @@ func (s *RootStoreTestSuite) SetupTest() {
 
 func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption) {
 	noopLog := coretesting.NewNopLogger()
-
-	pebbleDB, err := pebbledb.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(pebbleDB, noopLog)
 
 	mdb := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
@@ -81,18 +71,18 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 	sc, err := commitment.NewCommitStore(multiTrees, nil, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
-	pm := pruning.NewManager(sc, ss, config, config)
+	pm := pruning.NewManager(sc, config)
 
-	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
 }
 
-func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedWriter, sc store.Committer, pm *pruning.Manager) {
+func (s *RootStoreTestSuite) newStoreWithBackendMount(sc store.Committer, pm *pruning.Manager) {
 	noopLog := coretesting.NewNopLogger()
 
-	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
@@ -105,10 +95,6 @@ func (s *RootStoreTestSuite) TearDownTest() {
 
 func (s *RootStoreTestSuite) TestGetStateCommitment() {
 	s.Require().Equal(s.rootStore.GetStateCommitment(), s.rootStore.(*Store).stateCommitment)
-}
-
-func (s *RootStoreTestSuite) TestGetStateStorage() {
-	s.Require().Equal(s.rootStore.GetStateStorage(), s.rootStore.(*Store).stateStorage)
 }
 
 func (s *RootStoreTestSuite) TestSetInitialVersion() {
@@ -239,6 +225,74 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 
 	// attempt to load a previously committed version
 	err = s.rootStore.LoadVersion(3)
+	s.Require().NoError(err)
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latest)
+
+	// query state and ensure values returned are based on the loaded version
+	_, ro, err := s.rootStore.StateLatest()
+	s.Require().NoError(err)
+
+	reader, err := ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	val, err := reader.Get([]byte("key"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val003"), val)
+
+	// attempt to write and commit a few changesets
+	for v := 4; v <= 5; v++ {
+		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
+
+		cs := corestore.NewChangeset(uint64(v))
+		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
+
+		_, err := s.rootStore.Commit(cs)
+		s.Require().Error(err)
+	}
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latest) // should have stayed at 3 after failed commits
+
+	// query state and ensure values returned are based on the loaded version
+	_, ro, err = s.rootStore.StateLatest()
+	s.Require().NoError(err)
+
+	reader, err = ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	val, err = reader.Get([]byte("key"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val003"), val)
+}
+
+func (s *RootStoreTestSuite) TestLoadVersionForOverwriting() {
+	// write and commit a few changesets
+	for v := uint64(1); v <= 5; v++ {
+		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
+
+		cs := corestore.NewChangeset(v)
+		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
+
+		commitHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().NotNil(commitHash)
+	}
+
+	// ensure the latest version is correct
+	latest, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), latest)
+
+	// attempt to load a non-existent version
+	err = s.rootStore.LoadVersionForOverwriting(6)
+	s.Require().Error(err)
+
+	// attempt to load a previously committed version
+	err = s.rootStore.LoadVersionForOverwriting(3)
 	s.Require().NoError(err)
 
 	// ensure the latest version is correct
@@ -535,17 +589,14 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()
-	pebbleDB, err := pebbledb.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(pebbleDB, noopLog)
 
 	tree := iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
-	pm := pruning.NewManager(sc, ss, pruneOpt, pruneOpt)
+	pm := pruning.NewManager(sc, pruneOpt)
 
-	s.newStoreWithBackendMount(ss, sc, pm)
+	s.newStoreWithBackendMount(sc, pm)
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -565,18 +616,13 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().False(ok)
 	s.Require().Equal(uint64(0), actualHeightToPrune)
 
-	// "restart"
-	pebbleDB, err = pebbledb.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss = storage.NewStorageStore(pebbleDB, noopLog)
-
 	tree = iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
 	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
-	pm = pruning.NewManager(sc, ss, pruneOpt, pruneOpt)
+	pm = pruning.NewManager(sc, pruneOpt)
 
-	s.newStoreWithBackendMount(ss, sc, pm)
+	s.newStoreWithBackendMount(sc, pm)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().NoError(err)
 
@@ -616,11 +662,6 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	noopLog := coretesting.NewNopLogger()
 
-	pebbleDB, err := pebbledb.New(s.T().TempDir())
-	s.Require().NoError(err)
-
-	ss := storage.NewStorageStore(pebbleDB, noopLog)
-
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
@@ -632,9 +673,9 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	sc, err := commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
-	pm := pruning.NewManager(sc, ss, nil, nil)
+	pm := pruning.NewManager(sc, nil)
 
-	s.newStoreWithBackendMount(ss, sc, pm)
+	s.newStoreWithBackendMount(sc, pm)
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	// perform changes
@@ -719,9 +760,9 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	sc, err = commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
-	pm = pruning.NewManager(sc, ss, nil, nil)
+	pm = pruning.NewManager(sc, nil)
 
-	s.newStoreWithBackendMount(ss, sc, pm)
+	s.newStoreWithBackendMount(sc, pm)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)
 

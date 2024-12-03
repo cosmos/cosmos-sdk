@@ -46,11 +46,9 @@ var v2KeyChanges = v2KeyChangesMap{
 	"halt-time":          []string{"comet.halt-time"},
 	"app-db-backend":     []string{"store.app-db-backend"},
 	"pruning-keep-recent": []string{
-		"store.options.ss-pruning-option.keep-recent",
 		"store.options.sc-pruning-option.keep-recent",
 	},
 	"pruning-interval": []string{
-		"store.options.ss-pruning-option.interval",
 		"store.options.sc-pruning-option.interval",
 	},
 	"iavl-cache-size":       []string{"store.options.iavl-config.cache-size"},

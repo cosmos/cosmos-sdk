@@ -3,7 +3,6 @@ package root
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -14,28 +13,20 @@ import (
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/pruning"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/pebbledb"
-	"cosmossdk.io/store/v2/storage/rocksdb"
 )
 
 type (
-	SSType string
 	SCType string
 )
 
 const (
-	SSTypePebble SSType = "pebble"
-	SSTypeRocks  SSType = "rocksdb"
 	SCTypeIavl   SCType = "iavl"
 	SCTypeIavlV2 SCType = "iavl-v2"
 )
 
 // Options are the options for creating a root store.
 type Options struct {
-	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"State storage database type. Currently we support: \"pebble\" and \"rocksdb\""`
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`
-	SSPruningOption *store.PruningOption `mapstructure:"ss-pruning-option" toml:"ss-pruning-option" comment:"Pruning options for state storage"`
 	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
 }
@@ -52,13 +43,8 @@ type FactoryOptions struct {
 // DefaultStoreOptions returns the default options for creating a root store.
 func DefaultStoreOptions() Options {
 	return Options{
-		SSType: SSTypePebble,
 		SCType: SCTypeIavl,
 		SCPruningOption: &store.PruningOption{
-			KeepRecent: 2,
-			Interval:   100,
-		},
-		SSPruningOption: &store.PruningOption{
 			KeepRecent: 2,
 			Interval:   100,
 		},
@@ -75,39 +61,11 @@ func DefaultStoreOptions() Options {
 // necessary, but demonstrates the required steps and configuration to create a root store.
 func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	var (
-		ssDb      storage.Database
-		ss        *storage.StorageStore
-		sc        *commitment.CommitStore
-		err       error
-		ensureDir = func(dir string) error {
-			if err := os.MkdirAll(dir, 0o0755); err != nil {
-				return fmt.Errorf("failed to create directory %s: %w", dir, err)
-			}
-			return nil
-		}
+		sc  *commitment.CommitStore
+		err error
 	)
 
 	storeOpts := opts.Options
-	switch storeOpts.SSType {
-	case SSTypePebble:
-		dir := fmt.Sprintf("%s/data/ss/pebble", opts.RootDir)
-		if err = ensureDir(dir); err != nil {
-			return nil, err
-		}
-		ssDb, err = pebbledb.New(dir)
-	case SSTypeRocks:
-		dir := fmt.Sprintf("%s/data/ss/rocksdb", opts.RootDir)
-		if err = ensureDir(dir); err != nil {
-			return nil, err
-		}
-		ssDb, err = rocksdb.New(dir)
-	default:
-		return nil, fmt.Errorf("unknown storage type: %s", opts.Options.SSType)
-	}
-	if err != nil {
-		return nil, err
-	}
-	ss = storage.NewStorageStore(ssDb, opts.Logger)
 
 	metadata := commitment.NewMetadataStore(opts.SCRawDB)
 	latestVersion, err := metadata.GetLatestVersion()
@@ -168,6 +126,6 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
-	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
-	return New(opts.SCRawDB, opts.Logger, ss, sc, pm, nil, nil)
+	pm := pruning.NewManager(sc, storeOpts.SCPruningOption)
+	return New(opts.SCRawDB, opts.Logger, sc, pm, nil, nil)
 }

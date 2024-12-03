@@ -141,9 +141,10 @@ func (m *MM[T]) InitGenesisJSON(
 	ctx context.Context,
 	genesisData map[string]json.RawMessage,
 	txHandler func(json.RawMessage) error,
-) error {
+) ([]appmodulev2.ValidatorUpdate, error) {
 	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
-	var seenValUpdates bool
+
+	var validatorUpdates []appmodulev2.ValidatorUpdate
 	for _, moduleName := range m.config.InitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
@@ -158,38 +159,39 @@ func (m *MM[T]) InitGenesisJSON(
 		case appmodulev2.GenesisDecoder: // GenesisDecoder needs to supersede HasGenesis and HasABCIGenesis.
 			genTxs, err := module.DecodeGenesisJSON(genesisData[moduleName])
 			if err != nil {
-				return err
+				return nil, err
 			}
 			for _, jsonTx := range genTxs {
 				if err := txHandler(jsonTx); err != nil {
-					return fmt.Errorf("failed to handle genesis transaction: %w", err)
+					return nil, fmt.Errorf("failed to handle genesis transaction: %w", err)
 				}
 			}
 		case appmodulev2.HasGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return fmt.Errorf("init module %s: %w", moduleName, err)
+				return nil, fmt.Errorf("init module %s: %w", moduleName, err)
 			}
 		case appmodulev2.HasABCIGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
+			var err error
 			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
-			if len(moduleValUpdates) > 0 {
-				if seenValUpdates {
-					return fmt.Errorf("validator InitGenesis updates already set by a previous module: current module %s", moduleName)
-				} else {
-					seenValUpdates = true
+			if len(validatorUpdates) > 0 {
+				if len(moduleValUpdates) > 0 {
+					return nil, fmt.Errorf("validator InitGenesis updates already set by a previous module: current module %s", moduleName)
 				}
+
+				validatorUpdates = append(validatorUpdates, validatorUpdates...)
 			}
 		}
-
 	}
-	return nil
+
+	return validatorUpdates, nil
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules

@@ -2,6 +2,7 @@ package appmanager
 
 import (
 	"context"
+	"iter"
 
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
@@ -40,4 +41,12 @@ type StateTransitionFunction[T transaction.Tx] interface {
 		gasLimit uint64,
 		req transaction.Msg,
 	) (transaction.Msg, error)
+
+	// DeliverSims provides an interface for state transitions by sims.
+	DeliverSims(
+		ctx context.Context,
+		block *server.BlockRequest[T],
+		state store.ReaderMap,
+		simsBuilder func(ctx context.Context) iter.Seq[T],
+	) (blockResult *server.BlockResponse, newState store.WriterMap, err error)
 }

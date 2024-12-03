@@ -1320,8 +1320,6 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		WithBlockHeader(*header).
 		WithBlockHeight(height)
 
-	fmt.Println("=========DAMIAN WAS HERE=========")
-
 	if !isLatest {
 		rms, ok := app.cms.(*rootmulti.Store)
 		if ok {

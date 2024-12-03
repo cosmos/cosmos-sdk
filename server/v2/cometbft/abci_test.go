@@ -702,10 +702,10 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	},
 		mockStore,
 		s,
-		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, []appmodulev2.ValidatorUpdate, error) {
 			_, st, err := mockStore.StateLatest()
 			require.NoError(t, err)
-			return branch.DefaultNewWriterMap(st), nil
+			return branch.DefaultNewWriterMap(st), nil, nil
 		},
 		nil,
 	)

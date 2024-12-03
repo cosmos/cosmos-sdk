@@ -107,7 +107,7 @@ func (a appManager[T]) InitGenesis(
 	txDecoder transaction.Codec[T],
 ) (*server.BlockResponse, corestore.WriterMap, error) {
 	var genTxs []T
-	genesisState, err := a.initGenesis(
+	genesisState, valUpdates, err := a.initGenesis(
 		ctx,
 		bytes.NewBuffer(initGenesisJSON),
 		func(jsonTx json.RawMessage) error {
@@ -124,6 +124,9 @@ func (a appManager[T]) InitGenesis(
 	}
 	// run block
 	blockRequest.Txs = genTxs
+
+	// do something with valUpdates
+	_ = valUpdates
 
 	blockResponse, blockZeroState, err := a.stf.DeliverBlock(ctx, blockRequest, genesisState)
 	if err != nil {

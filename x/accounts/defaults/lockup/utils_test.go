@@ -78,7 +78,8 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 				return &stakingtypes.MsgDelegateResponse{}, nil
 			case "/cosmos.staking.v1beta1.MsgUndelegate":
 				return &stakingtypes.MsgUndelegateResponse{
-					Amount: sdk.NewCoin("test", math.NewInt(1)),
+					CompletionTime: time.Now().Add(stakingtypes.DefaultUnbondingTime),
+					Amount:         msg.(*stakingtypes.MsgUndelegate).Amount,
 				}, nil
 			case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
 				return &distrtypes.MsgWithdrawDelegatorRewardResponse{}, nil

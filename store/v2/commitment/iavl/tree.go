@@ -83,7 +83,7 @@ func (t *IavlTree) Commit() ([]byte, uint64, error) {
 
 // GetProof returns a proof for the given key and version.
 func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
-	// the mutable tree is empty at genesis & when the key is removed, but the immutable tree is not
+	// the mutable tree is empty at genesis & when the storekey is removed, but the immutable tree is not but the immutable tree is not empty when the storekey is removed
 	// by checking the latest version we can determine if we are in genesis or have a key that has been removed
 	lv, err := t.tree.GetLatestVersion()
 	if err != nil {
@@ -103,7 +103,7 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 
 // Get implements the Reader interface.
 func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
-	// the mutable tree is empty at genesis & when the key is removed, but the immutable tree is not
+	// the mutable tree is empty at genesis & when the storekey is removed, but the immutable tree is not but the immutable tree is not empty when the storekey is removed
 	// by checking the latest version we can determine if we are in genesis or have a key that has been removed
 	lv, err := t.tree.GetLatestVersion()
 	if err != nil {
@@ -123,7 +123,7 @@ func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 
 // Iterator implements the Reader interface.
 func (t *IavlTree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
-	// the mutable tree is empty at genesis & when the key is removed, but the immutable tree is not
+	// the mutable tree is empty at genesis & when the storekey is removed, but the immutable tree is not empty when the storekey is removed
 	// by checking the latest version we can determine if we are in genesis or have a key that has been removed
 	lv, err := t.tree.GetLatestVersion()
 	if err != nil {

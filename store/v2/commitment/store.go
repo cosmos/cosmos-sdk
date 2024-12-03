@@ -293,7 +293,7 @@ func (c *CommitStore) VersionExists(version uint64) (bool, error) {
 		return false, err
 	}
 	if latestVersion == 0 {
-		return true, nil
+		return version == 0, nil
 	}
 
 	ci, err := c.metadata.GetCommitInfo(version)

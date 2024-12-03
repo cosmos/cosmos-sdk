@@ -3,9 +3,11 @@ package distribution
 import (
 	"testing"
 
-	"cosmossdk.io/x/distribution/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/x/distribution/types"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

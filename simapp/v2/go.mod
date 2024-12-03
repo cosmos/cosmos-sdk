@@ -10,12 +10,15 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241119134933-d697a3de0f95 // main
-	cosmossdk.io/server/v2 v2.0.0-20241202115147-f350775d0ed2 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20241203161819-94cfcc11aaf5 // main
+	cosmossdk.io/server/v2 v2.0.0-20241203161819-94cfcc11aaf5 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20241202115147-f350775d0ed2 // main
+	cosmossdk.io/store/v2 v2.0.0-20241203161819-94cfcc11aaf5 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
+	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
@@ -34,28 +37,12 @@ require (
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.35.2
-)
-
-require (
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
-)
-
-require (
-	github.com/bytedance/sonic v1.12.4 // indirect
-	github.com/bytedance/sonic/loader v0.2.1 // indirect
-	github.com/cloudwego/base64x v0.1.4 // indirect
-	github.com/cloudwego/iasm v0.2.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
-	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	golang.org/x/arch v0.12.0 // indirect
 )
 
 require (
@@ -71,8 +58,8 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95 // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95 // indirect; main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20241203161819-94cfcc11aaf5 // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20241203161819-94cfcc11aaf5 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
 	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -87,8 +74,12 @@ require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
+	github.com/bytedance/sonic v1.12.4 // indirect
+	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
+	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
@@ -165,6 +156,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -209,6 +201,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/zondax/hid v0.9.2 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect
@@ -222,6 +215,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/otel/trace v1.27.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.29.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect

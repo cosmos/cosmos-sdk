@@ -7,13 +7,12 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/client/v2/autocli/keyring"
+	clientcontext "cosmossdk.io/client/v2/context"
 	"cosmossdk.io/core/address"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -44,19 +43,19 @@ type addressValue struct {
 	value string
 }
 
-func (a addressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
+func (a *addressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	return protoreflect.ValueOfString(a.value), nil
 }
 
-func (a addressValue) String() string {
+func (a *addressValue) String() string {
 	return a.value
 }
 
 // Set implements the flag.Value interface for addressValue.
 func (a *addressValue) Set(s string) error {
 	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
-	keyring := getKeyringFromCtx(a.ctx)
-	addr, err := keyring.LookupAddressByKeyName(s)
+	k := getKeyringFromCtx(a.ctx)
+	addr, err := k.LookupAddressByKeyName(s)
 	if err == nil {
 		addrStr, err := a.addressCodec.BytesToString(addr)
 		if err != nil {
@@ -77,7 +76,7 @@ func (a *addressValue) Set(s string) error {
 	return nil
 }
 
-func (a addressValue) Type() string {
+func (a *addressValue) Type() string {
 	return "account address or key name"
 }
 
@@ -110,8 +109,8 @@ func (a consensusAddressValue) String() string {
 
 func (a *consensusAddressValue) Set(s string) error {
 	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
-	keyring := getKeyringFromCtx(a.ctx)
-	addr, err := keyring.LookupAddressByKeyName(s)
+	k := getKeyringFromCtx(a.ctx)
+	addr, err := k.LookupAddressByKeyName(s)
 	if err == nil {
 		addrStr, err := a.addressCodec.BytesToString(addr)
 		if err != nil {
@@ -147,20 +146,18 @@ func (a *consensusAddressValue) Set(s string) error {
 	return nil
 }
 
+// getKeyringFromCtx retrieves the keyring from the provided context.
+// If the context is nil or does not contain a valid client context,
+// it returns a no-op keyring implementation.
 func getKeyringFromCtx(ctx *context.Context) keyring.Keyring {
-	dctx := *ctx
-	if dctx != nil {
-		if clientCtx := dctx.Value(client.ClientContextKey); clientCtx != nil {
-			k, err := sdkkeyring.NewAutoCLIKeyring(clientCtx.(*client.Context).Keyring, clientCtx.(*client.Context).AddressCodec)
-			if err != nil {
-				panic(fmt.Errorf("failed to create keyring: %w", err))
-			}
-
-			return k
-		} else if k := dctx.Value(keyring.KeyringContextKey); k != nil {
-			return k.(*keyring.KeyringImpl)
-		}
+	if *ctx == nil {
+		return keyring.NoKeyring{}
 	}
 
-	return keyring.NoKeyring{}
+	c, err := clientcontext.ClientContextFromGoContext(*ctx)
+	if err != nil {
+		return keyring.NoKeyring{}
+	}
+
+	return c.Keyring
 }

@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -117,7 +116,7 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 }
 
 func (AppModule) GetTxCmd() *cobra.Command {
-	return cli.TxCmd(ModuleName)
+	return nil
 }
 
 func (AppModule) GetQueryCmd() *cobra.Command {

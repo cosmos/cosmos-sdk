@@ -42,6 +42,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "funds", Varargs: true},
 					},
 				},
+				{
+					RpcMethod: "Execute",
+					Use:       "execute <account-address> <execute-msg-type-url> <json-message>",
+					Short:     "Execute state transition to account",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "sender"},
+						{ProtoField: "target"},
+						{ProtoField: "execute_msg_type_url"},
+						{ProtoField: "json_message"},
+						{ProtoField: "funds", Varargs: true},
+					},
+				},
 			},
 			EnhanceCustomCommand: true,
 		},

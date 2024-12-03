@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/rocksdb"
-	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
 var storeKey1 = []byte("store1")
@@ -35,10 +34,6 @@ var (
 				db.SetSync(false)
 			}
 
-			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
-		},
-		"btree_sqlite": func(dataDir string) (store.VersionedWriter, error) {
-			db, err := sqlite.New(dataDir)
 			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
 		},
 	}

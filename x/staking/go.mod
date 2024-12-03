@@ -1,18 +1,18 @@
 module cosmossdk.io/x/staking
 
-go 1.23.1
+go 1.23.2
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/collections v0.4.0
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f // indirect
-	github.com/cometbft/cometbft/api v1.0.0-rc.1
+	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9 // indirect
+	github.com/cometbft/cometbft/api v1.0.0-rc2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -47,17 +47,16 @@ require (
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft-db v0.15.0 // indirect
+	github.com/cometbft/cometbft-db v1.0.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.3.1 // indirect
+	github.com/cosmos/iavl v1.3.2 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
-	github.com/dgraph-io/ristretto v0.1.2-0.20240116140435-c67e07994f91 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
@@ -65,7 +64,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
-	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
@@ -91,7 +89,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -114,7 +112,7 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	github.com/rs/cors v1.11.0 // indirect
+	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -152,22 +150,24 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	cosmossdk.io/log v1.5.0
-	github.com/dgraph-io/badger/v4 v4.3.0 // indirect
+	github.com/dgraph-io/badger/v4 v4.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/flatbuffers v2.0.8+incompatible // indirect
+	github.com/google/flatbuffers v24.3.25+incompatible // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
 	go.opencensus.io v0.24.0 // indirect
 )
 
+require cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+
 require (
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	github.com/bytedance/sonic v1.12.4 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
-	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
+	github.com/cosmos/cosmos-db v1.1.0 // indirect
+	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -182,7 +182,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/tx => ../tx

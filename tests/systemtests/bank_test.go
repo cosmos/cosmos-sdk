@@ -5,6 +5,7 @@ package systemtests
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,10 +57,14 @@ func TestBankSendTxCmd(t *testing.T) {
 
 	// test tx bank send with unauthorized signature
 	assertUnauthorizedErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-		require.Len(t, gotOutputs, 1)
-		code := gjson.Get(gotOutputs[0].(string), "code")
-		require.True(t, code.Exists())
-		require.Greater(t, code.Int(), int64(0), gotOutputs[0])
+		var hasString bool
+		for _, output := range gotOutputs {
+			if strings.Contains(output.(string), "signature verification failed; please verify account number") {
+				hasString = true
+				break
+			}
+		}
+		require.True(t, hasString, "outputs doesn't contain: signature verification failed; please verify account number")
 		return false
 	}
 	invalidCli := cli.WithChainID(cli.ChainID() + "a") // set invalid chain-id

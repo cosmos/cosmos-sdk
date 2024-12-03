@@ -21,6 +21,7 @@ func (m *moduleIndexer) createEnumType(ctx context.Context, conn dbConn, enum sc
 		}
 	} else {
 		// the enum type already exists
+		// TODO: add a check to ensure the existing enum type matches the expected values, and update it if necessary?
 		return nil
 	}
 

@@ -24,11 +24,10 @@ When a transaction is relayed from the underlying consensus engine to the Cosmos
 
 Defining Protobuf `Msg` services is the recommended way to handle messages. A Protobuf `Msg` service should be created for each module, typically in `tx.proto` (see more info about [conventions and naming](../../learn/advanced/05-encoding.md#faq)). It must have an RPC service method defined for each message in the module.
 
-
-Each `Msg` service method must have exactly one argument, which must implement the `transaction.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
+Each `Msg` service method must have exactly one argument, which must implement the [`transaction.Msg`](https://pkg.go.dev/cosmossdk.io/core@v1.0.0-alpha.6/transaction#Msg) interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
 
 ```protobuf
-  rpc Send(MsgSend) returns (MsgSendResponse);
+rpc Send(MsgSend) returns (MsgSendResponse);
 ```
 
 See an example of a `Msg` service definition from `x/bank` module:
@@ -45,37 +44,29 @@ https://github.com/cosmos/cosmos-sdk/blob/28fa3b8/x/bank/proto/cosmos/bank/v1bet
 https://github.com/cosmos/cosmos-sdk/blob/main/core/transaction/transaction.go#L8
 ```
 
-To attach a `ValidateBasic()` method to a message, then you must add methods to the type adhereing to the `HasValidateBasic`.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L88
-```
-
-In 0.50+ signers from the `GetSigners()` call is automated via a protobuf annotation. 
-
+Signers from the `GetSigners()` call is automated via a protobuf annotation. 
 Read more about the signer field [here](./05-protobuf-annotations.md).
 
 ```protobuf reference 
-https://github.com/cosmos/cosmos-sdk/blob/e6848d99b55a65d014375b295bdd7f9641aac95e/proto/cosmos/bank/v1beta1/tx.proto#L40
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/bank/proto/cosmos/bank/v1beta1/tx.proto#L45
 ```
 
 If there is a need for custom signers then there is an alternative path which can be taken. A function which returns `signing.CustomGetSigner` for a specific message can be defined. 
 
 ```go
 func ProvideBankSendTransactionGetSigners() signing.CustomGetSigner {
+	// Extract the signer from the signature.
+	signer, err := coretypes.LatestSigner(Tx).Sender(ethTx)
+    if err != nil {
+		return nil, err
+	}
 
-			// Extract the signer from the signature.
-			signer, err := coretypes.LatestSigner(Tx).Sender(ethTx)
-      if err != nil {
-				return nil, err
-			}
-
-			// Return the signer in the required format.
-			return [][]byte{signer.Bytes()}, nil
+	// Return the signer in the required format.
+	return [][]byte{signer.Bytes()}, nil
 }
 ```
 
-When using dependency injection (depinject) this can be provided to the application via the provide method.
+This can be provided to the application using depinject's `Provide` method in the application's `app.go`:
 
 ```go
 depinject.Provide(banktypes.ProvideBankSendTransactionGetSigners)
@@ -88,7 +79,7 @@ The Cosmos SDK uses Protobuf definitions to generate client and server code:
 
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer` implementation in `RegisterServices` method from the [`AppModule` interface](./01-module-manager.md#appmodule).
 
-In order for clients (CLI and grpc-gateway) to have these URLs registered, the Cosmos SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](01-module-manager.md#hasregisterinterfaces) method, using the proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
+In order for clients (CLI and gRPC-gateway) to have these URLs registered, the Cosmos SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](01-module-manager.md#hasregisterinterfaces) method, using the proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
 
 
 ## Queries
@@ -102,7 +93,7 @@ Queries should be defined using [Protobuf services](https://protobuf.dev/program
 Here's an example of such a `Query` service definition:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/auth/v1beta1/query.proto#L14-L89
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/auth/v1beta1/query.proto#L15-L81
 ```
 
 As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).

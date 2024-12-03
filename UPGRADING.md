@@ -372,6 +372,8 @@ been added to avoid the use of the Accounts.String() method.
 +type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
 ```
 
+The interface `HasProposalMsgs` has been renamed to `HasLegacyProposalMsgs`, as we've introduced a new simulation framework, simpler and easier to use, named [simsx](https://github.com/cosmos/cosmos-sdk/blob/main/simsx/README.md).
+
 ##### Depinject
 
 Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appconfig`.

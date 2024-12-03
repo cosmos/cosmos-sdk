@@ -240,7 +240,7 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 						return json.Marshal(err)
 					}
 					return json.Marshal(sdkTx)
-				}, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+				},
 			}); err != nil {
 				return err
 			}

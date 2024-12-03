@@ -71,15 +71,6 @@ func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 	appmodulev2.RegisterMsgHandler(router, queryServer.Schema)
 }
 
-// RegisterMsgHandlers registers the message handlers for the accounts module.
-func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
-	msgServer := NewMsgServer(am.k)
-
-	appmodulev2.RegisterMsgHandler(router, msgServer.Execute)
-	appmodulev2.RegisterMsgHandler(router, msgServer.ExecuteBundle)
-	appmodulev2.RegisterMsgHandler(router, msgServer.Init)
-}
-
 // App module genesis
 
 func (am AppModule) DefaultGenesis() json.RawMessage {

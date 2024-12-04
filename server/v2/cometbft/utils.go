@@ -13,6 +13,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	grpcstatus "google.golang.org/grpc/status"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"

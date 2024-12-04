@@ -272,11 +272,17 @@ func queryResult(err error, debug bool) *abci.QueryResponse {
 
 func gRPCErrorToSDKError(err error) *abci.QueryResponse {
 	toQueryResp := func(sdkErr *errorsmod.Error, err error) *abci.QueryResponse {
-		return &abci.QueryResponse{
+		res := &abci.QueryResponse{
 			Code:      sdkErr.ABCICode(),
 			Codespace: sdkErr.Codespace(),
-			Log:       err.Error(),
 		}
+		type grpcstatus interface{ GRPCStatus() *status.Status }
+		if grpcErr, ok := err.(grpcstatus); ok {
+			res.Log = grpcErr.GRPCStatus().Message()
+		} else {
+			res.Log = err.Error()
+		}
+		return res
 
 	}
 

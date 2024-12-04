@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241203212527-7d117425d880 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20241204100030-c47fb8ab2dcb // main
 	cosmossdk.io/server/v2 v2.0.0-20241203212527-7d117425d880 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20241203212527-7d117425d880 // main

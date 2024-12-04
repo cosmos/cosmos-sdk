@@ -34,6 +34,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
@@ -126,7 +127,6 @@ func New[T transaction.Tx](
 		indexEvents[e] = struct{}{}
 	}
 
-	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
 	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
 
 	snapshotStore, err := GetSnapshotStore(srv.config.ConfigTomlConfig.RootDir)
@@ -154,7 +154,6 @@ func New[T transaction.Tx](
 		snapshotStore,
 		srv.serverOptions.SnapshotOptions(cfg),
 		sc,
-		ss,
 		nil, // extensions snapshotter registered below
 		logger,
 	)
@@ -164,7 +163,7 @@ func New[T transaction.Tx](
 		}
 	}
 
-	srv.Consensus = &consensus[T]{
+	c := &consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
 		app:                    app,
@@ -191,6 +190,13 @@ func New[T transaction.Tx](
 		addrPeerFilter:         srv.serverOptions.AddrPeerFilter,
 		idPeerFilter:           srv.serverOptions.IdPeerFilter,
 	}
+
+	c.optimisticExec = oe.NewOptimisticExecution(
+		logger,
+		c.internalFinalizeBlock,
+	)
+
+	srv.Consensus = c
 
 	return srv, nil
 }

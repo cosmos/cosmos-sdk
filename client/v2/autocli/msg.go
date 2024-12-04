@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 
@@ -13,8 +14,11 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/flags"
+	"cosmossdk.io/client/v2/internal/print"
 	"cosmossdk.io/client/v2/internal/util"
+	v2tx "cosmossdk.io/client/v2/tx"
 	addresscodec "cosmossdk.io/core/address"
+	"cosmossdk.io/core/transaction"
 
 	// the following will be extracted to a separate module
 	// https://github.com/cosmos/cosmos-sdk/issues/14403
@@ -23,6 +27,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 )
 
@@ -227,4 +232,77 @@ func (b *Builder) handleGovProposal(
 	}
 
 	return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+}
+
+// generateOrBroadcastTxWithV2 generates or broadcasts a transaction with the provided messages using v2 transaction handling.
+//
+//nolint:unused // It'll be used once BuildMsgMethodCommand is updated to use factory v2.
+func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transaction.Msg) error {
+	ctx, err := b.getContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	cConn, err := b.GetClientConn(cmd)
+	if err != nil {
+		return err
+	}
+
+	var bz []byte
+	genOnly, _ := cmd.Flags().GetBool(v2tx.FlagGenerateOnly)
+	isDryRun, _ := cmd.Flags().GetBool(v2tx.FlagDryRun)
+	if genOnly {
+		bz, err = v2tx.GenerateOnly(ctx, cConn, msgs...)
+	} else if isDryRun {
+		bz, err = v2tx.DryRun(ctx, cConn, msgs...)
+	} else {
+		skipConfirm, _ := cmd.Flags().GetBool("yes")
+		if skipConfirm {
+			bz, err = v2tx.GenerateAndBroadcastTxCLI(ctx, cConn, msgs...)
+		} else {
+			bz, err = v2tx.GenerateAndBroadcastTxCLIWithPrompt(ctx, cConn, b.userConfirmation(cmd), msgs...)
+		}
+	}
+	if err != nil {
+		return err
+	}
+
+	output, _ := cmd.Flags().GetString(flags.FlagOutput)
+	p := print.Printer{
+		Output:       cmd.OutOrStdout(),
+		OutputFormat: output,
+	}
+
+	return p.PrintBytes(bz)
+}
+
+// userConfirmation returns a function that prompts the user for confirmation
+// before signing and broadcasting a transaction.
+//
+//nolint:unused // It is used in generateOrBroadcastTxWithV2 however linting is complaining.
+func (b *Builder) userConfirmation(cmd *cobra.Command) func([]byte) (bool, error) {
+	format, _ := cmd.Flags().GetString(flags.FlagOutput)
+	printer := print.Printer{
+		Output:       cmd.OutOrStdout(),
+		OutputFormat: format,
+	}
+
+	return func(bz []byte) (bool, error) {
+		err := printer.PrintBytes(bz)
+		if err != nil {
+			return false, err
+		}
+		buf := bufio.NewReader(cmd.InOrStdin())
+		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, cmd.ErrOrStderr())
+		if err != nil {
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "error: %v\ncanceled transaction\n", err)
+			return false, err
+		}
+		if !ok {
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "canceled transaction")
+			return false, nil
+		}
+
+		return true, nil
+	}
 }

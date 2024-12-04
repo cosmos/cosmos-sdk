@@ -41,6 +41,12 @@ max-recv-msg-size = 10485760
 # The default value is math.MaxInt32.
 max-send-msg-size = 2147483647
 
+[grpc-gateway]
+# Enable defines if the gRPC-gateway should be enabled.
+enable = true
+# Address defines the address the gRPC-gateway server binds to.
+address = 'localhost:1317'
+
 [rest]
 # Enable defines if the REST server should be enabled.
 enable = true
@@ -56,17 +62,8 @@ minimum-gas-prices = '0stake'
 app-db-backend = 'goleveldb'
 
 [store.options]
-# State storage database type. Currently we support: "sqlite", "pebble" and "rocksdb"
-ss-type = 'sqlite'
 # State commitment database type. Currently we support: "iavl" and "iavl-v2"
 sc-type = 'iavl'
-
-# Pruning options for state storage
-[store.options.ss-pruning-option]
-# Number of recent heights to keep on disk.
-keep-recent = 2
-# Height interval at which pruned heights are removed from disk.
-interval = 100
 
 # Pruning options for state commitment
 [store.options.sc-pruning-option]

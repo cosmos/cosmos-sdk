@@ -903,8 +903,12 @@ func (app *BaseApp) FinalizeBlock(req *abci.FinalizeBlockRequest) (res *abci.Fin
 	defer func() {
 		// call the streaming service hooks with the FinalizeBlock messages
 		for _, streamingListener := range app.streamingManager.ABCIListeners {
-			if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {
+			if streamErr := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); streamErr != nil {
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
+				if app.streamingManager.StopNodeOnErr {
+					// if StopNodeOnErr is set, we should return the streamErr in order to stop the node
+					err = streamErr
+				}
 			}
 		}
 	}()
@@ -976,11 +980,11 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 		rms.SetCommitHeader(header)
 	}
 
-	app.cms.Commit()
-
 	resp := &abci.CommitResponse{
 		RetainHeight: retainHeight,
 	}
+
+	app.cms.Commit()
 
 	abciListeners := app.streamingManager.ABCIListeners
 	if len(abciListeners) > 0 {
@@ -991,6 +995,14 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 		for _, abciListener := range abciListeners {
 			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+				if app.streamingManager.StopNodeOnErr {
+					err = fmt.Errorf("Commit listening hook failed: %w", err)
+					rollbackErr := app.cms.RollbackToVersion(blockHeight - 1)
+					if rollbackErr != nil {
+						return nil, errors.Join(err, rollbackErr)
+					}
+					return nil, err
+				}
 			}
 		}
 	}
@@ -1315,6 +1327,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  height,
+			Time:    header.Time,
 		}).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)

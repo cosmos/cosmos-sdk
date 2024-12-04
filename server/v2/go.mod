@@ -4,6 +4,7 @@ go 1.23
 
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/schema => ../../schema
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/stf => ./stf
 	cosmossdk.io/store/v2 => ../../store/v2

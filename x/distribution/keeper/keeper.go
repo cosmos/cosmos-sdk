@@ -231,6 +231,7 @@ func (k Keeper) WithdrawSingleShareRecordReward(ctx context.Context, recordID ui
 	}
 	owner := sdk.AccAddress(ownerAddr)
 
+	// This check is necessary to prevent sending rewards to a blacklisted address
 	if k.bankKeeper.BlockedAddr(owner) {
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", owner.String())
 	}
@@ -297,6 +298,7 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 		return nil, err
 	}
 
+	// This check is necessary to prevent sending rewards to a blacklisted address
 	if k.bankKeeper.BlockedAddr(ownerAddr) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", ownerAddr)
 	}
@@ -348,6 +350,7 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 
 // withdraw reward for all owning TokenizeShareRecord
 func (k Keeper) WithdrawAllTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
+	// This check is necessary to prevent sending rewards to a blacklisted address
 	if k.bankKeeper.BlockedAddr(ownerAddr) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", ownerAddr)
 	}

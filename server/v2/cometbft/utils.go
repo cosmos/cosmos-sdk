@@ -18,7 +18,7 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors/v2"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -257,9 +257,8 @@ func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
 	return ci
 }
 
-// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
-// info from the error.
-func QueryResult(err error, debug bool) *abci.QueryResponse {
+// queryResult returns a ResponseQuery from an error. It will try to parse ABCI info from the error.
+func queryResult(err error, debug bool) *abci.QueryResponse {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
 	return &abci.QueryResponse{
 		Codespace: space,

@@ -121,6 +121,7 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 		}
 
 		sort.Sort(abcitypes.ValidatorUpdates(req.Validators))
+		sort.Sort(abcitypes.ValidatorUpdates(res.Validators))
 
 		for i := range res.Validators {
 			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {

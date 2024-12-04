@@ -11,6 +11,8 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/runtime/v2/services"
+	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/x/accounts"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
@@ -20,7 +22,6 @@ import (
 	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	_ "cosmossdk.io/x/staking"   // import as blank for app wirings
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
@@ -33,7 +34,6 @@ import (
 type suite struct {
 	app *integration.App
 
-	cdc codec.Codec
 	ctx context.Context
 
 	authKeeper     authkeeper.AccountKeeper
@@ -79,6 +79,7 @@ func createTestSuite(t *testing.T) *suite {
 
 	startupCfg.BranchService = &integration.BranchService{}
 	startupCfg.RouterServiceBuilder = serviceBuilder
+	startupCfg.HeaderService = services.NewGenesisHeaderService(stf.HeaderService{})
 
 	res.app, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Provide(

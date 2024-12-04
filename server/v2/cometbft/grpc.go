@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -15,6 +16,7 @@ import (
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	storeserver "cosmossdk.io/server/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -208,10 +210,15 @@ func (s nodeServer[T]) Config(ctx context.Context, _ *nodeservice.ConfigRequest)
 		minGasPricesStr = minGasPrices.(string)
 	}
 
+	storeCfg, err := storeserver.UnmarshalConfig(s.cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	return &nodeservice.ConfigResponse{
 		MinimumGasPrice:   minGasPricesStr,
-		PruningKeepRecent: "ambiguous in v2",
-		PruningInterval:   "ambiguous in v2",
+		PruningKeepRecent: fmt.Sprintf("%d", storeCfg.Options.SCPruningOption.KeepRecent),
+		PruningInterval:   fmt.Sprintf("%d", storeCfg.Options.SCPruningOption.Interval),
 		HaltHeight:        s.cometBFTAppConfig.HaltHeight,
 	}, nil
 }

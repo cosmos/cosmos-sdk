@@ -13,7 +13,6 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	grpcstatus "google.golang.org/grpc/status"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -277,8 +276,8 @@ func gRPCErrorToSDKError(err error) *abci.QueryResponse {
 			Code:      sdkErr.ABCICode(),
 			Codespace: sdkErr.Codespace(),
 		}
-		type grpcstatus interface{ GRPCStatus() *status.Status }
-		if grpcErr, ok := err.(grpcstatus); ok {
+		type grpcStatus interface{ GRPCStatus() *grpcstatus.Status }
+		if grpcErr, ok := err.(grpcStatus); ok {
 			res.Log = grpcErr.GRPCStatus().Message()
 		} else {
 			res.Log = err.Error()

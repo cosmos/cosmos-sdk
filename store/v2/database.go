@@ -7,19 +7,6 @@ import (
 	"cosmossdk.io/store/v2/proof"
 )
 
-// VersionedWriter defines an API for a versioned database that allows reads,
-// writes, iteration and commitment over a series of versions.
-type VersionedWriter interface {
-	VersionedReader
-
-	SetLatestVersion(version uint64) error
-	ApplyChangeset(cs *corestore.Changeset) error
-
-	// Closer releases associated resources. It should NOT be idempotent. It must
-	// only be called once and any call after may panic.
-	io.Closer
-}
-
 type VersionedReader interface {
 	Has(storeKey []byte, version uint64, key []byte) (bool, error)
 	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)
@@ -41,6 +28,8 @@ type UpgradableDatabase interface {
 
 // Committer defines an API for committing state.
 type Committer interface {
+	UpgradeableStore
+	VersionedReader
 	// WriteChangeset writes the changeset to the commitment state.
 	WriteChangeset(cs *corestore.Changeset) error
 
@@ -49,6 +38,10 @@ type Committer interface {
 
 	// LoadVersion loads the tree at the given version.
 	LoadVersion(targetVersion uint64) error
+
+	// LoadVersionForOverwriting loads the tree at the given version.
+	// Any versions greater than targetVersion will be deleted.
+	LoadVersionForOverwriting(targetVersion uint64) error
 
 	// Commit commits the working tree to the database.
 	Commit(version uint64) (*proof.CommitInfo, error)

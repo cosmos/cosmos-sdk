@@ -2,18 +2,16 @@ package cometbft
 
 import (
 	"context"
-	"cosmossdk.io/core/server"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
-	abci "github.com/cometbft/cometbft/abci/types"
 	"io"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"cosmossdk.io/server/v2/cometbft/oe"
+	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cosmos/gogoproto/proto"
@@ -21,6 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -28,6 +27,7 @@ import (
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	cometmock "cosmossdk.io/server/v2/cometbft/internal/mock"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -60,10 +60,10 @@ func getQueryRouterBuilder[T any, PT interface {
 	*T
 	proto.Message
 },
-U any, UT interface {
-	*U
-	proto.Message
-}](
+	U any, UT interface {
+		*U
+		proto.Message
+	}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -90,10 +90,10 @@ func getMsgRouterBuilder[T any, PT interface {
 	*T
 	transaction.Msg
 },
-U any, UT interface {
-	*U
-	transaction.Msg
-}](
+	U any, UT interface {
+		*U
+		transaction.Msg
+	}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -591,7 +591,7 @@ func TestConsensus_Query(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Write data to state storage
-	err := c.store.GetStateStorage().ApplyChangeset(&store.Changeset{
+	err := c.store.GetStateCommitment().WriteChangeset(&store.Changeset{
 		Version: 1,
 		Changes: []store.StateChanges{
 			{
@@ -691,9 +691,8 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	)
 	require.NoError(t, err)
 
-	ss := cometmock.NewMockStorage(log.NewNopLogger(), t.TempDir())
 	sc := cometmock.NewMockCommiter(log.NewNopLogger(), string(actorName), "stf")
-	mockStore := cometmock.NewMockStore(ss, sc)
+	mockStore := cometmock.NewMockStore(sc)
 
 	am := appmanager.New(appmanager.Config{
 		ValidateTxGasLimit: gasLimit,
@@ -702,10 +701,10 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	},
 		mockStore,
 		s,
-		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, []appmodulev2.ValidatorUpdate, error) {
 			_, st, err := mockStore.StateLatest()
 			require.NoError(t, err)
-			return branch.DefaultNewWriterMap(st), nil
+			return branch.DefaultNewWriterMap(st), nil, nil
 		},
 		nil,
 	)
@@ -786,6 +785,7 @@ func TestOptimisticExecution(t *testing.T) {
 		Txs:    ppReq.Txs,
 	}
 	fbResp, err := c.FinalizeBlock(context.Background(), fbReq)
+	require.Nil(t, fbResp)
 	require.Error(t, err)
 	require.ErrorContains(t, err, "test error") // from optimisticMockFunc
 	require.Equal(t, 1, calledTimes)

@@ -79,8 +79,6 @@ func TestLoadStore(t *testing.T) {
 	cIDHp := types.CommitID{Version: verHp, Hash: hash}
 	require.Nil(t, err)
 
-	// TODO: Prune this height
-
 	// Create current height Hc
 	updated, err = tree.Set([]byte("hello"), []byte("ciao"))
 	require.NoError(t, err)

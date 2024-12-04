@@ -3,19 +3,20 @@ package autocli
 import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // AppOptions are input options for an autocli enabled app. These options can be built via depinject based on an app config.
@@ -38,8 +39,15 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
-	// ClientCtx contains the necessary information needed to execute the commands.
-	ClientCtx client.Context
+	AddressCodec          address.Codec                 // AddressCodec is used to encode/decode account addresses.
+	ValidatorAddressCodec address.ValidatorAddressCodec // ValidatorAddressCodec is used to encode/decode validator addresses.
+	ConsensusAddressCodec address.ConsensusAddressCodec // ConsensusAddressCodec is used to encode/decode consensus addresses.
+
+	// Cdc is the codec used for binary encoding/decoding of messages.
+	Cdc codec.Codec
+
+	// TxConfigOpts contains options for configuring transaction handling.
+	TxConfigOpts authtx.ConfigOptions
 
 	skipValidation bool
 }
@@ -63,19 +71,19 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
-			FileResolver:          appOptions.ClientCtx.InterfaceRegistry,
-			AddressCodec:          appOptions.ClientCtx.AddressCodec,
-			ValidatorAddressCodec: appOptions.ClientCtx.ValidatorAddressCodec,
-			ConsensusAddressCodec: appOptions.ClientCtx.ConsensusAddressCodec,
+			FileResolver:          appOptions.Cdc.InterfaceRegistry(),
+			AddressCodec:          appOptions.AddressCodec,
+			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
-		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
-			return client.GetClientQueryContext(cmd)
-		},
+		GetClientConn: getQueryClientConn(appOptions.Cdc),
 		AddQueryConnFlags: func(c *cobra.Command) {
 			sdkflags.AddQueryFlagsToCmd(c)
 			sdkflags.AddKeyringFlags(c.Flags())
 		},
-		AddTxConnFlags: sdkflags.AddTxFlagsToCmd,
+		AddTxConnFlags:   sdkflags.AddTxFlagsToCmd,
+		Cdc:              appOptions.Cdc,
+		EnabledSignModes: appOptions.TxConfigOpts.EnabledSignModes,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)
@@ -170,9 +178,9 @@ func NewAppOptionsFromConfig(
 
 	return AppOptions{
 		Modules:        cfg.Modules,
-		ClientCtx:      client.Context{InterfaceRegistry: interfaceRegistry},
 		ModuleOptions:  moduleOptions,
 		skipValidation: true,
+		Cdc:            codec.NewProtoCodec(interfaceRegistry),
 	}, nil
 }
 

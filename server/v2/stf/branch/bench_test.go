@@ -105,6 +105,7 @@ func Benchmark_Iterate(b *testing.B) {
 
 // makeBranchStack creates a branch stack of the given size and initializes it with unique key-value pairs.
 func makeBranchStack(b *testing.B, stackSize int) Store[store.KVStore] {
+	b.Helper()
 	parent := coretesting.NewMemKV()
 	branch := NewStore[store.KVStore](parent)
 	for i := 1; i < stackSize; i++ {

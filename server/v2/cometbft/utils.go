@@ -270,23 +270,32 @@ func queryResult(err error, debug bool) *abci.QueryResponse {
 	}
 }
 
-func gRPCErrorToSDKError(err error) error {
+func gRPCErrorToSDKError(err error) *abci.QueryResponse {
+	toQueryResp := func(sdkErr *errorsmod.Error, err error) *abci.QueryResponse {
+		return &abci.QueryResponse{
+			Code:      sdkErr.ABCICode(),
+			Codespace: sdkErr.Codespace(),
+			Log:       err.Error(),
+		}
+
+	}
+
 	status, ok := grpcstatus.FromError(err)
 	if !ok {
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		return toQueryResp(sdkerrors.ErrInvalidRequest, err)
 	}
 
 	switch status.Code() {
 	case codes.NotFound:
-		return sdkerrors.ErrKeyNotFound.Wrap(err.Error())
+		return toQueryResp(sdkerrors.ErrKeyNotFound, err)
 	case codes.InvalidArgument:
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		return toQueryResp(sdkerrors.ErrInvalidRequest, err)
 	case codes.FailedPrecondition:
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		return toQueryResp(sdkerrors.ErrInvalidRequest, err)
 	case codes.Unauthenticated:
-		return sdkerrors.ErrUnauthorized.Wrap(err.Error())
+		return toQueryResp(sdkerrors.ErrUnauthorized, err)
 	default:
-		return sdkerrors.ErrUnknownRequest.Wrap(err.Error())
+		return toQueryResp(sdkerrors.ErrUnknownRequest, err)
 	}
 }
 

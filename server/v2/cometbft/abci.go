@@ -286,7 +286,7 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 	res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 	if err != nil {
-		resp := queryResult(gRPCErrorToSDKError(err), c.cfg.AppTomlConfig.Trace)
+		resp := gRPCErrorToSDKError(err)
 		resp.Height = req.Height
 		return resp, true, nil
 	}

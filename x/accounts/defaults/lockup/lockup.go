@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"maps"
-	"slices"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -336,105 +334,6 @@ func (bva *BaseLockup) SendCoins(
 	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
-// WithdrawUnlockedCoins allow owner to withdraw the unlocked token for a specific denoms to an
-// account of choice. Update the withdrawed token tracking for lockup account
-func (bva *BaseLockup) WithdrawUnlockedCoins(
-	ctx context.Context, msg *lockuptypes.MsgWithdraw, getLockedCoinsFunc getLockedCoinsFunc,
-) (
-	*lockuptypes.MsgWithdrawResponse, error,
-) {
-	err := bva.checkSender(ctx, msg.Withdrawer)
-	if err != nil {
-		return nil, err
-	}
-	whoami := accountstd.Whoami(ctx)
-	fromAddress, err := bva.addressCodec.BytesToString(whoami)
-	if err != nil {
-		return nil, err
-	}
-
-	// deduplicate the denoms
-	denoms := make(map[string]struct{})
-	for _, denom := range msg.Denoms {
-		denoms[denom] = struct{}{}
-	}
-	uniqueDenoms := slices.Collect(maps.Keys(denoms))
-
-	hs := bva.headerService.HeaderInfo(ctx)
-	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, uniqueDenoms...)
-	if err != nil {
-		return nil, err
-	}
-
-	amount := sdk.Coins{}
-	for _, denom := range uniqueDenoms {
-		balance, err := bva.getBalance(ctx, fromAddress, denom)
-		if err != nil {
-			return nil, err
-		}
-		lockedAmt := lockedCoins.AmountOf(denom)
-
-		// get lockedCoin from that are not bonded for the sent denom
-		notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, sdk.NewCoin(denom, lockedAmt), denom)
-		if err != nil {
-			return nil, err
-		}
-
-		spendable, err := balance.SafeSub(notBondedLockedCoin)
-		if err != nil {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
-				"locked amount exceeds account balance funds: %s > %s", notBondedLockedCoin, balance)
-		}
-
-		withdrawedAmt, err := bva.WithdrawedCoins.Get(ctx, denom)
-		if err != nil {
-			return nil, err
-		}
-		originalLockingAmt, err := bva.OriginalLocking.Get(ctx, denom)
-		if err != nil {
-			return nil, err
-		}
-
-		// withdrawable amount is equal to original locking amount subtract already withdrawed amount
-		withdrawableAmt, err := originalLockingAmt.SafeSub(withdrawedAmt)
-		if err != nil {
-			return nil, err
-		}
-
-		withdrawAmt := math.MinInt(withdrawableAmt, spendable.Amount)
-		// if zero amount go to the next iteration
-		if withdrawAmt.IsZero() {
-			continue
-		}
-		amount = append(amount, sdk.NewCoin(denom, withdrawAmt))
-
-		// update the withdrawed amount
-		err = bva.WithdrawedCoins.Set(ctx, denom, withdrawedAmt.Add(withdrawAmt))
-		if err != nil {
-			return nil, err
-		}
-	}
-	if len(amount) == 0 {
-		return nil, errors.New("no tokens available for withdrawing")
-	}
-
-	msgSend := &banktypes.MsgSend{
-		FromAddress: fromAddress,
-		ToAddress:   msg.ToAddress,
-		Amount:      amount,
-	}
-
-	_, err = sendMessage(ctx, msgSend)
-	if err != nil {
-		return nil, err
-	}
-
-	return &lockuptypes.MsgWithdrawResponse{
-		Receiver:       msg.ToAddress,
-		AmountReceived: amount,
-	}, nil
-}
-
 func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
@@ -675,6 +574,16 @@ func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sd
 	return resp.Balance, nil
 }
 
+func (bva BaseLockup) getBalances(ctx context.Context, sender string) (sdk.Coins, error) {
+	// Query account balance for the sent denom
+	resp, err := accountstd.QueryModule[*banktypes.QueryAllBalancesResponse](ctx, &banktypes.QueryAllBalancesRequest{Address: sender})
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Balances, nil
+}
+
 func (bva BaseLockup) getUbdEntries(ctx context.Context, delAddr, valAddr string) ([]stakingtypes.UnbondingDelegationEntry, error) {
 	resp, err := accountstd.QueryModule[*stakingtypes.QueryUnbondingDelegationResponse](
 		ctx, &stakingtypes.QueryUnbondingDelegationRequest{DelegatorAddr: delAddr, ValidatorAddr: valAddr},
@@ -834,6 +743,43 @@ func (bva BaseLockup) QueryUnbondingEntries(ctx context.Context, req *lockuptype
 
 	return &lockuptypes.QueryUnbondingEntriesResponse{
 		UnbondingEntries: entries.Entries,
+	}, nil
+}
+
+func (bva BaseLockup) QuerySpendableTokens(ctx context.Context, lockedCoins sdk.Coins) (
+	*lockuptypes.QuerySpendableAmountResponse, error,
+) {
+	whoami := accountstd.Whoami(ctx)
+	accAddr, err := bva.addressCodec.BytesToString(whoami)
+	if err != nil {
+		return nil, err
+	}
+
+	balances, err := bva.getBalances(ctx, accAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	spendables := sdk.Coins{}
+	for _, balance := range balances {
+		lockedAmt := lockedCoins.AmountOf(balance.Denom)
+
+		// get lockedCoin from that are not bonded for the sent denom
+		notBondedLockedCoin, err := bva.GetNotBondedLockedCoin(ctx, sdk.NewCoin(balance.Denom, lockedAmt), balance.Denom)
+		if err != nil {
+			return nil, err
+		}
+
+		spendable, hasNeg := sdk.Coins{balance}.SafeSub(notBondedLockedCoin)
+		if hasNeg {
+			spendable = sdk.Coins{sdk.NewCoin(balance.Denom, math.ZeroInt())}
+		}
+
+		spendables = spendables.Add(spendable...)
+	}
+
+	return &lockuptypes.QuerySpendableAmountResponse{
+		SpendableTokens: spendables,
 	}, nil
 }
 

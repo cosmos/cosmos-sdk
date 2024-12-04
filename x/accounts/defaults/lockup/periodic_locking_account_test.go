@@ -183,40 +183,6 @@ func TestPeriodicAccountSendCoins(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestPeriodicAccountWithdrawUnlockedCoins(t *testing.T) {
-	ctx, ss := newMockContext(t)
-	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
-		Time: time.Now(),
-	})
-
-	acc := setupPeriodicAccount(t, sdkCtx, ss)
-	_, err := acc.WithdrawUnlockedCoins(sdkCtx, &lockuptypes.MsgWithdraw{
-		Withdrawer: "owner",
-		ToAddress:  "receiver",
-		Denoms:     []string{"test"},
-	})
-	require.Error(t, err)
-
-	startTime, err := acc.StartTime.Get(sdkCtx)
-	require.NoError(t, err)
-
-	// Update context time to unlocked first period token
-	sdkCtx = sdkCtx.WithHeaderInfo(header.Info{
-		Time: startTime.Add(time.Minute * 1),
-	})
-
-	// withdraw unlocked token
-	resp, err := acc.WithdrawUnlockedCoins(sdkCtx, &lockuptypes.MsgWithdraw{
-		Withdrawer: "owner",
-		ToAddress:  "receiver",
-		Denoms:     []string{"test", "test"}, // duplicate tokens should be ignored
-	})
-	require.NoError(t, err)
-	require.Equal(t, resp.AmountReceived.Len(), 1)
-	require.Equal(t, resp.AmountReceived, sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))))
-	require.Equal(t, resp.Receiver, "receiver")
-}
-
 func TestPeriodicAccountGetLockCoinInfo(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{

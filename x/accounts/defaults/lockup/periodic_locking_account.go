@@ -134,12 +134,6 @@ func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *lockuptyp
 	return pva.BaseLockup.SendCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
-func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
-	*lockuptypes.MsgWithdrawResponse, error,
-) {
-	return pva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
-}
-
 // IteratePeriods iterates over all the Periods entries.
 func (pva PeriodicLockingAccount) IteratePeriods(
 	ctx context.Context,
@@ -336,7 +330,6 @@ func (pva PeriodicLockingAccount) RegisterInitHandler(builder *accountstd.InitBu
 func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, pva.SendCoins)
-	accountstd.RegisterExecuteHandler(builder, pva.WithdrawUnlockedCoins)
 	pva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 

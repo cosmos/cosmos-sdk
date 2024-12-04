@@ -28,7 +28,6 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 	require.NoError(t, err)
 	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.DELAYED_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
 		Owner: ownerAddrStr,
@@ -60,19 +59,6 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
 		}
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
-		require.NotNil(t, err)
-	})
-	t.Run("error - execute withdraw message, no withdrawable token", func(t *testing.T) {
-		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
-		require.NoError(t, err)
-		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
-		require.NoError(t, err)
-		msg := &types.MsgWithdraw{
-			Withdrawer: ownerAddr,
-			ToAddress:  withdrawAddr,
-			Denoms:     []string{"stake"},
-		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
@@ -166,24 +152,5 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr, val.OperatorAddress)
 		entries := unbondingEntriesResponse.UnbondingEntries
 		require.Len(t, entries, 0)
-	})
-	// Test to withdraw all the remain funds to an account of choice
-	t.Run("ok - execute withdraw message", func(t *testing.T) {
-		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
-		require.NoError(t, err)
-		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
-		require.NoError(t, err)
-		msg := &types.MsgWithdraw{
-			Withdrawer: ownerAddr,
-			ToAddress:  withdrawAddr,
-			Denoms:     []string{"stake"},
-		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
-		require.NoError(t, err)
-
-		// withdrawable amount should be
-		// 1000stake - 100stake( above sent amt ) = 800stake
-		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
-		require.True(t, balance.Amount.Equal(math.NewInt(900)))
 	})
 }

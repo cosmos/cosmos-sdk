@@ -149,36 +149,6 @@ func TestContinousAccountSendCoins(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestContinousAccountWithdrawUnlockedCoins(t *testing.T) {
-	ctx, ss := newMockContext(t)
-	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
-		Time: time.Now(),
-	})
-
-	acc := setupContinousAccount(t, sdkCtx, ss)
-	_, err := acc.WithdrawUnlockedCoins(sdkCtx, &lockuptypes.MsgWithdraw{
-		Withdrawer: "owner",
-		ToAddress:  "receiver",
-		Denoms:     []string{"test"},
-	})
-	require.Error(t, err)
-
-	startTime, err := acc.StartTime.Get(sdkCtx)
-	require.NoError(t, err)
-
-	// Update context time to unlocked half of the original locking amount
-	sdkCtx = sdkCtx.WithHeaderInfo(header.Info{
-		Time: startTime.Add(time.Minute * 1),
-	})
-
-	_, err = acc.WithdrawUnlockedCoins(sdkCtx, &lockuptypes.MsgWithdraw{
-		Withdrawer: "owner",
-		ToAddress:  "receiver",
-		Denoms:     []string{"test"},
-	})
-	require.NoError(t, err)
-}
-
 func TestContinousAccountGetLockCoinInfo(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{

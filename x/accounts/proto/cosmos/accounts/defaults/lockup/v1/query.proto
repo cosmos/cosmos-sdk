@@ -63,3 +63,12 @@ message QueryLockingPeriodsResponse {
   // lockup_periods defines the value of the periodic lockup account locking periods.
   repeated Period locking_periods = 1;
 }
+
+// QuerySpendableAmountRequest is used to query the lockup account total spendable tokens.
+message QuerySpendableAmountRequest {}
+
+// QuerySpendableAmountResponse returns lockup account total spendable tokens.
+message QuerySpendableAmountResponse {
+  repeated cosmos.base.v1beta1.Coin spendable_tokens = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}

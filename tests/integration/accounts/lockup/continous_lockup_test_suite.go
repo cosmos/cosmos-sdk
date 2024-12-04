@@ -28,7 +28,6 @@ func (s *IntegrationTestSuite) TestContinuousLockingAccount() {
 	require.NoError(t, err)
 	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.CONTINUOUS_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
 		Owner:     ownerAddrStr,
@@ -63,19 +62,6 @@ func (s *IntegrationTestSuite) TestContinuousLockingAccount() {
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
-	t.Run("error - execute withdraw message, no withdrawable token", func(t *testing.T) {
-		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
-		require.NoError(t, err)
-		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
-		require.NoError(t, err)
-		msg := &types.MsgWithdraw{
-			Withdrawer: ownerAddr,
-			ToAddress:  withdrawAddr,
-			Denoms:     []string{"stake"},
-		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
-		require.NotNil(t, err)
-	})
 
 	// Update context time
 	// 12 sec = 1/5 of a minute so 200stake should be released
@@ -96,23 +82,7 @@ func (s *IntegrationTestSuite) TestContinuousLockingAccount() {
 		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
 		require.True(t, balance.Amount.Equal(math.NewInt(100)))
 	})
-	t.Run("ok - execute withdraw message", func(t *testing.T) {
-		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
-		require.NoError(t, err)
-		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
-		require.NoError(t, err)
-		msg := &types.MsgWithdraw{
-			Withdrawer: ownerAddr,
-			ToAddress:  withdrawAddr,
-			Denoms:     []string{"stake"},
-		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
-		require.NoError(t, err)
 
-		// withdrawable amount should be 200 - 100 = 100stake
-		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
-		require.True(t, balance.Amount.Equal(math.NewInt(100)))
-	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
 			Sender:           ownerAddrStr,

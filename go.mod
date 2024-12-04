@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
+	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
@@ -54,6 +54,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/tendermint/go-amino v0.16.0
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
+	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.29.0
 	golang.org/x/sync v0.9.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
@@ -186,7 +187,7 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241127063259-f296a5005ce8 // main
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking
 )

@@ -254,7 +254,7 @@ replace (
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/core/testing => cosmossdk.io/core/testing v0.0.0-20241107153845-4e240908dd60
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08
 	cosmossdk.io/x/accounts => ../x/accounts

@@ -12,6 +12,7 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	benchmarkmodulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
@@ -39,6 +40,7 @@ import (
 	_ "cosmossdk.io/x/bank/v2" // import for side-effects
 	bankv2types "cosmossdk.io/x/bank/v2/types"
 	bankmodulev2 "cosmossdk.io/x/bank/v2/types/module"
+	benchmark "cosmossdk.io/x/benchmark/module"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects
@@ -173,6 +175,7 @@ var (
 						circuittypes.ModuleName,
 						pooltypes.ModuleName,
 						epochstypes.ModuleName,
+						benchmark.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
@@ -181,7 +184,7 @@ var (
 					// OrderMigrations: []string{},
 					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
 					GasConfig: &runtimev2.GasConfig{
-						ValidateTxGasLimit: 100_000,
+						ValidateTxGasLimit: 10_000_000,
 						QueryGasLimit:      100_000,
 						SimulationGasLimit: 100_000,
 					},
@@ -300,6 +303,20 @@ var (
 			{
 				Name:   bankv2types.ModuleName,
 				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
+			},
+			{
+				Name: benchmark.ModuleName,
+				Config: appconfig.WrapAny(&benchmarkmodulev1.Module{
+					GenesisParams: &benchmarkmodulev1.GeneratorParams{
+						Seed:         34,
+						BucketCount:  5,
+						GenesisCount: 20_000_000,
+						KeyMean:      64,
+						KeyStdDev:    12,
+						ValueMean:    1024,
+						ValueStdDev:  256,
+					},
+				}),
 			},
 		},
 	})

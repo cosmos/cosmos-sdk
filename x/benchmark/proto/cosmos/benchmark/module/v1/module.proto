@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package cosmos.benchmark.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+// Module is the config object of the benchmark module.
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "cosmossdk.io/x/benchmark"
+  };
+
+  GeneratorParams genesis_params = 1;
+}
+
+// GenesisParams defines the genesis parameters for the benchmark module.
+message GeneratorParams {
+  uint64 seed         = 1;
+  uint64 bucket_count = 2;
+
+  uint64 key_mean      = 3;
+  uint64 key_std_dev   = 4;
+  uint64 value_mean    = 6;
+  uint64 value_std_dev = 7;
+
+  uint64 genesis_count = 8;
+
+  float insert_weight = 9;
+  float update_weight = 10;
+  float get_weight    = 12;
+  float delete_weight = 11;
+}

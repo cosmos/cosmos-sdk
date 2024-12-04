@@ -243,6 +243,7 @@ func (k msgServer) WithdrawTokenizeShareRecordReward(goCtx context.Context, msg 
 	if err != nil {
 		return nil, err
 	}
+
 	amount, err := k.Keeper.WithdrawTokenizeShareRecordReward(ctx, ownerAddr, msg.RecordId)
 	if err != nil {
 		return nil, err
@@ -271,6 +272,7 @@ func (k msgServer) WithdrawAllTokenizeShareRecordReward(goCtx context.Context, m
 	if err != nil {
 		return nil, err
 	}
+
 	amount, err := k.Keeper.WithdrawAllTokenizeShareRecordReward(ctx, ownerAddr)
 	if err != nil {
 		return nil, err

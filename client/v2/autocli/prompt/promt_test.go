@@ -14,12 +14,21 @@ import (
 	address2 "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
+func getReader(inputs []string) io.ReadCloser {
+	// https://github.com/manifoldco/promptui/issues/63#issuecomment-621118463
+	var paddedInputs []string
+	for _, input := range inputs {
+		padding := strings.Repeat("a", 4096-1-len(input)%4096)
+		paddedInputs = append(paddedInputs, input+"\n"+padding)
+	}
+	return io.NopCloser(strings.NewReader(strings.Join(paddedInputs, "")))
+}
+
 func TestPromptMessage(t *testing.T) {
 	tests := []struct {
-		name    string
-		msg     protoreflect.Message
-		inputs  []string
-		wantErr bool
+		name   string
+		msg    protoreflect.Message
+		inputs []string
 	}{
 		{
 			name:   "community pool spend",
@@ -49,6 +58,45 @@ func TestPromptMessage(t *testing.T) {
 			reader := io.NopCloser(strings.NewReader(strings.Join(paddedInputs, "")))
 
 			got, err := promptMessage(address2.NewBech32Codec("cosmos"), address2.NewBech32Codec("cosmosvaloper"), address2.NewBech32Codec("cosmosvalcons"), "prefix", reader, tt.msg)
+			require.NoError(t, err)
+			require.NotNil(t, got)
+		})
+	}
+}
+
+type innerStruct struct {
+	A string
+	B int
+}
+
+type testStruct struct {
+	A string
+	B int
+	C *innerStruct
+	D innerStruct
+	E *string
+	F []string
+}
+
+func TestPromptStruct(t *testing.T) {
+	type testCase[T any] struct {
+		name   string
+		data   T
+		inputs []string
+	}
+	tests := []testCase[testStruct]{
+		{
+			name: "test struct",
+			data: testStruct{},
+			inputs: []string{
+				"a", "1", "b", "2", "c", "3", "pointerStr", "list",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inputs := getReader(tt.inputs)
+			got, err := promptStruct("testStruct", tt.data, inputs)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 		})

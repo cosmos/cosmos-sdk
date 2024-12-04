@@ -122,9 +122,9 @@ func New[T transaction.Tx](
 		}
 	}
 
-	indexEvents := make(map[string]struct{}, len(srv.config.AppTomlConfig.IndexEvents))
-	for _, e := range srv.config.AppTomlConfig.IndexEvents {
-		indexEvents[e] = struct{}{}
+	indexedABCIEvents := make(map[string]struct{}, len(srv.config.AppTomlConfig.IndexABCIEvents))
+	for _, e := range srv.config.AppTomlConfig.IndexABCIEvents {
+		indexedABCIEvents[e] = struct{}{}
 	}
 
 	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
@@ -183,7 +183,7 @@ func New[T transaction.Tx](
 		checkTxHandler:         srv.serverOptions.CheckTxHandler,
 		extendVote:             srv.serverOptions.ExtendVoteHandler,
 		chainID:                chainID,
-		indexedEvents:          indexEvents,
+		indexedABCIEvents:      indexedABCIEvents,
 		initialHeight:          0,
 		queryHandlersMap:       queryHandlers,
 		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),

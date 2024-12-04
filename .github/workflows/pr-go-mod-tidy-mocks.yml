@@ -42,6 +42,8 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          # FIXME: Remove this retry after https://github.com/uber-go/mock/issues/226 get fixed
+          max_attempts: 3
       - name: Generate mocks
         run: make mocks
       - name: Check for diffs

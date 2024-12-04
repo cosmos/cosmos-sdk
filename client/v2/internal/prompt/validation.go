@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"cosmossdk.io/core/address"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,4 +36,16 @@ func ValidatePromptCoins(input string) error {
 	}
 
 	return nil
+}
+
+// ValidateAddress returns a validation function that checks if a string is a valid address
+// for the given address codec.
+func ValidateAddress(ac address.Codec) func(string) error {
+	return func(i string) error {
+		if _, err := ac.StringToBytes(i); err != nil {
+			return fmt.Errorf("invalid consensus address")
+		}
+
+		return nil
+	}
 }

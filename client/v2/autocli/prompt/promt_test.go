@@ -1,32 +1,56 @@
 package prompt
 
 import (
-	govtypes "cosmossdk.io/api/cosmos/gov/v1beta1"
+	"io"
+	"strings"
+	"testing"
+
+	protocolpool "cosmossdk.io/api/cosmos/protocolpool/v1"
+	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/client/v2/internal/testpb"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	address2 "github.com/cosmos/cosmos-sdk/codec/address"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"reflect"
-	"testing"
 )
 
-func TestPrompt(t *testing.T) {
+func TestPromptMessage(t *testing.T) {
 	tests := []struct {
 		name    string
-		want    protoreflect.Message
+		msg     protoreflect.Message
+		inputs  []string
 		wantErr bool
 	}{
-		{},
+		{
+			name:   "community pool spend",
+			inputs: []string{"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", "cosmos129lxcu2n3hx54fdxlwsahqkjr3sp32cxm00zlm", "10000", "stake", "No"},
+			msg: (&protocolpool.MsgCommunityPoolSpend{
+				Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			}).ProtoReflect(),
+		},
+		{
+			name: "testPb",
+			inputs: []string{"1", "2", "string", "bytes", "10101010", "0", "234234", "3", "4", "5", "true", "ENUM_ONE",
+				"bar", "6", "10000", "stake", "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+				"bytes", "6", "7", "false", "false", "true,false,true", "1,2,3", "hello,hola,ciao", "ENUM_ONE,ENUM_TWO",
+				"10239", "0", "No", "bar", "343", "No", "134", "positional2", "23455", "stake", "No", "deprecate",
+				"shorthand", "false", "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z"},
+			msg: (&testpb.MsgRequest{}).ProtoReflect(),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Prompt(address2.NewBech32Codec("cosmos"), address2.NewBech32Codec("cosmosval"), address2.NewBech32Codec("cosmos"), "prefix", (&govtypes.MsgSubmitProposal{}).ProtoReflect())
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Prompt() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			// https://github.com/manifoldco/promptui/issues/63#issuecomment-621118463
+			var paddedInputs []string
+			for _, input := range tt.inputs {
+				padding := strings.Repeat("a", 4096-1-len(input)%4096)
+				paddedInputs = append(paddedInputs, input+"\n"+padding)
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Prompt() got = %v, want %v", got, tt.want)
-			}
+			reader := io.NopCloser(strings.NewReader(strings.Join(paddedInputs, "")))
+
+			got, err := promptMessage(address2.NewBech32Codec("cosmos"), address2.NewBech32Codec("cosmosvaloper"), address2.NewBech32Codec("cosmosvalcons"), "prefix", reader, tt.msg)
+			require.NoError(t, err)
+			require.NotNil(t, got)
 		})
 	}
 }

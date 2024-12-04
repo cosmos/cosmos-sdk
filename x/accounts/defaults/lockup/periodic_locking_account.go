@@ -81,12 +81,6 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		if err != nil {
 			return nil, err
 		}
-
-		// Set initial value for all withdrawed token
-		err = pva.WithdrawedCoins.Set(ctx, coin.Denom, math.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	bondDenom, err := getStakingDenom(ctx)

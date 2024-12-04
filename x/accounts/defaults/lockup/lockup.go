@@ -34,8 +34,7 @@ var (
 	StartTimePrefix        = collections.NewPrefix(4)
 	LockingPeriodsPrefix   = collections.NewPrefix(5)
 	OwnerPrefix            = collections.NewPrefix(6)
-	WithdrawedCoinsPrefix  = collections.NewPrefix(7)
-	UnbondEntriesPrefix    = collections.NewPrefix(8)
+	UnbondEntriesPrefix    = collections.NewPrefix(7)
 )
 
 var (
@@ -54,7 +53,6 @@ func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
 		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
 		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
-		WithdrawedCoins:  collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
 		UnbondEntries:    collections.NewMap(d.SchemaBuilder, UnbondEntriesPrefix, "unbond_entries", collections.StringKey, codec.CollValue[lockuptypes.UnbondingEntries](d.LegacyStateCodec)),
 		addressCodec:     d.AddressCodec,
 		headerService:    d.Environment.HeaderService,
@@ -70,7 +68,6 @@ type BaseLockup struct {
 	OriginalLocking  collections.Map[string, math.Int]
 	DelegatedFree    collections.Map[string, math.Int]
 	DelegatedLocking collections.Map[string, math.Int]
-	WithdrawedCoins  collections.Map[string, math.Int]
 	// map val address to unbonding entries
 	UnbondEntries collections.Map[string, lockuptypes.UnbondingEntries]
 	addressCodec  address.Codec
@@ -96,12 +93,6 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupA
 	sortedAmt := funds.Sort()
 	for _, coin := range sortedAmt {
 		err = bva.OriginalLocking.Set(ctx, coin.Denom, coin.Amount)
-		if err != nil {
-			return nil, err
-		}
-
-		// Set initial value for all locked token
-		err = bva.WithdrawedCoins.Set(ctx, coin.Denom, math.ZeroInt())
 		if err != nil {
 			return nil, err
 		}

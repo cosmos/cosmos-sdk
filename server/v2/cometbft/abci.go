@@ -11,8 +11,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
@@ -40,7 +38,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -296,26 +293,6 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 	resp, err = queryResponse(res, req.Height)
 	return resp, true, err
-}
-
-func gRPCErrorToSDKError(err error) error {
-	status, ok := grpcstatus.FromError(err)
-	if !ok {
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-
-	switch status.Code() {
-	case codes.NotFound:
-		return sdkerrors.ErrKeyNotFound.Wrap(err.Error())
-	case codes.InvalidArgument:
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	case codes.FailedPrecondition:
-		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	case codes.Unauthenticated:
-		return sdkerrors.ErrUnauthorized.Wrap(err.Error())
-	default:
-		return sdkerrors.ErrUnknownRequest.Wrap(err.Error())
-	}
 }
 
 // InitChain implements types.Application.

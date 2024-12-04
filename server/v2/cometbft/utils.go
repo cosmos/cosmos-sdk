@@ -12,16 +12,19 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors" // we aren't using errors/v2 as it doesn't support grpc status codes
 	"cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func queryResponse(res transaction.Msg, height int64) (*abci.QueryResponse, error) {
@@ -264,6 +267,26 @@ func queryResult(err error, debug bool) *abci.QueryResponse {
 		Codespace: space,
 		Code:      code,
 		Log:       log,
+	}
+}
+
+func gRPCErrorToSDKError(err error) error {
+	status, ok := grpcstatus.FromError(err)
+	if !ok {
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	switch status.Code() {
+	case codes.NotFound:
+		return sdkerrors.ErrKeyNotFound.Wrap(err.Error())
+	case codes.InvalidArgument:
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	case codes.FailedPrecondition:
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	case codes.Unauthenticated:
+		return sdkerrors.ErrUnauthorized.Wrap(err.Error())
+	default:
+		return sdkerrors.ErrUnknownRequest.Wrap(err.Error())
 	}
 }
 

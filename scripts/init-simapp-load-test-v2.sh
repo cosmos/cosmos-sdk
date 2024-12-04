@@ -17,6 +17,9 @@ $SIMD_BIN config set app telemetry.prometheus-retention-time 600
 $SIMD_BIN config set app store.options.iavl-config.cache-size 1000000
 $SIMD_BIN config set app store.options.ss-type iavl-v2
 $SIMD_BIN config set app store.options.sc-type iavl-v2
+sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' "$SIMD_HOME"/config/config.toml
+sed -i '' 's/prometheus = false/prometheus = true/' "$SIMD_HOME"/config/config.toml
+
 $SIMD_BIN keys add alice --indiscreet
 $SIMD_BIN keys add bob --indiscreet
 

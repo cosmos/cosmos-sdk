@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/telemetry"
 	"github.com/cosmos/iavl/v2"
 	ics23 "github.com/cosmos/ics23/go"
 
@@ -19,16 +21,26 @@ var (
 )
 
 type Tree struct {
-	tree *iavl.Tree
+	tree      *iavl.Tree
+	log       log.Logger
+	telemetry telemetry.Service
+	path      string
+	dirty     bool
 }
 
-func NewTree(treeOptions iavl.TreeOptions, dbOptions iavl.SqliteDbOptions, pool *iavl.NodePool) (*Tree, error) {
+func NewTree(
+	treeOptions iavl.TreeOptions,
+	dbOptions iavl.SqliteDbOptions,
+	log log.Logger,
+	telemetry telemetry.Service,
+) (*Tree, error) {
+	pool := iavl.NewNodePool()
 	sql, err := iavl.NewSqliteDb(pool, dbOptions)
 	if err != nil {
 		return nil, err
 	}
 	tree := iavl.NewTree(sql, pool, treeOptions)
-	return &Tree{tree: tree}, nil
+	return &Tree{tree: tree, log: log, telemetry: telemetry, path: dbOptions.Path}, nil
 }
 
 func (t *Tree) Set(key, value []byte) error {
@@ -88,11 +100,25 @@ func (t *Tree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, err
 	return t.tree.GetProof(int64(version), key)
 }
 
+// TODO
+// must support concurrent Get with concurrent Commit
+// must support dirty version even if nothing was written at h+1
+
 func (t *Tree) Get(version uint64, key []byte) ([]byte, error) {
 	if err := isHighBitSet(version); err != nil {
 		return nil, err
 	}
-	if int64(version) != t.tree.Version() {
+	h := t.tree.Version()
+	v := int64(version)
+	switch {
+	case v == h:
+		return t.tree.Get(key)
+	case v == h+1 && (t.tree.IsDirty() || t.tree.IsEmpty()):
+		// permit h+1 reads if the tree is dirty or empty
+		return t.tree.Get(key)
+	case v > h:
+		return nil, fmt.Errorf("get: cannot read future version %d; h: %d path=%s", v, h, t.path)
+	case v < h:
 		cloned, err := t.tree.ReadonlyClone()
 		if err != nil {
 			return nil, err
@@ -101,8 +127,8 @@ func (t *Tree) Get(version uint64, key []byte) ([]byte, error) {
 			return nil, err
 		}
 		return cloned.Get(key)
-	} else {
-		return t.tree.Get(key)
+	default:
+		return nil, fmt.Errorf("unexpected version comparison: tree version: %d, requested: %d", h, v)
 	}
 }
 
@@ -110,7 +136,17 @@ func (t *Tree) Has(version uint64, key []byte) (bool, error) {
 	if err := isHighBitSet(version); err != nil {
 		return false, err
 	}
-	if int64(version) != t.tree.Version() {
+	h := t.tree.Version()
+	v := int64(version)
+	switch {
+	case v == h:
+		return t.tree.Has(key)
+	case v == h+1 && (t.tree.IsDirty() || t.tree.IsEmpty()):
+		// permit h+1 reads if the tree is dirty or empty
+		return t.tree.Has(key)
+	case v > h:
+		return false, fmt.Errorf("has: cannot read future version %d; h: %d", v, h)
+	case v < h:
 		cloned, err := t.tree.ReadonlyClone()
 		if err != nil {
 			return false, err
@@ -119,8 +155,8 @@ func (t *Tree) Has(version uint64, key []byte) (bool, error) {
 			return false, err
 		}
 		return cloned.Has(key)
-	} else {
-		return t.tree.Has(key)
+	default:
+		return false, fmt.Errorf("unexpected version comparison: tree version: %d, requested: %d", h, v)
 	}
 }
 
@@ -162,6 +198,10 @@ func (t *Tree) Prune(version uint64) error {
 
 // PausePruning is unnecessary in IAVL v2 due to the advanced pruning mechanism
 func (t *Tree) PausePruning(bool) {}
+
+func (t *Tree) IsConcurrentSafe() bool {
+	return true
+}
 
 func (t *Tree) WorkingHash() []byte {
 	return t.tree.Hash()

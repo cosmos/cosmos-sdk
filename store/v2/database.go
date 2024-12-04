@@ -20,6 +20,13 @@ type VersionedWriter interface {
 	io.Closer
 }
 
+type LatestReader interface {
+	Has(storeKey []byte, key []byte) (bool, error)
+	Get(storeKey []byte, key []byte) ([]byte, error)
+	Iterator(storeKey []byte, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey []byte, start, end []byte) (corestore.Iterator, error)
+}
+
 type VersionedReader interface {
 	Has(storeKey []byte, version uint64, key []byte) (bool, error)
 	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)

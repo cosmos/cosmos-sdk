@@ -308,4 +308,5 @@ replace (
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/store/v2 => ../../store/v2
+	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
 )

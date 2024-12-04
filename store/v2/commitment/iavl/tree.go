@@ -195,3 +195,7 @@ func (t *IavlTree) Import(version uint64) (commitment.Importer, error) {
 func (t *IavlTree) Close() error {
 	return t.tree.Close()
 }
+
+func (t *IavlTree) IsConcurrentSafe() bool {
+	return false
+}

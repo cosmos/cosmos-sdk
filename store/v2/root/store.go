@@ -10,8 +10,6 @@ import (
 
 	"cosmossdk.io/core/telemetry"
 
-	"golang.org/x/sync/errgroup"
-
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -61,6 +59,9 @@ type Store struct {
 	chDone chan struct{}
 	// isMigrating reflects whether the store is currently migrating
 	isMigrating bool
+
+	preCommit        sync.RWMutex
+	preCommitVersion uint64
 }
 
 // New creates a new root Store instance.
@@ -142,9 +143,18 @@ func (s *Store) getVersionedReader(version uint64) (store.VersionedReader, error
 }
 
 func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
-	v, err := s.GetLatestVersion()
-	if err != nil {
-		return 0, nil, err
+	// TODO
+	// this should return a NewReaderMap which behaves differently from StateAt, always the latest version at
+	// the time the read hits the db.
+	s.preCommit.RLock()
+	v := s.preCommitVersion
+	s.preCommit.RUnlock()
+	if v == 0 {
+		var err error
+		v, err = s.GetLatestVersion()
+		if err != nil {
+			return 0, nil, err
+		}
 	}
 
 	vReader, err := s.getVersionedReader(v)
@@ -174,7 +184,7 @@ func (s *Store) GetStateCommitment() store.Committer {
 // latest version set, which is based off of the SC view.
 func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if s.lastCommitInfo != nil {
-		return s.lastCommitInfo.CommitID(), nil
+		return *s.lastCommitInfo.CommitID(), nil
 	}
 
 	latestVersion, err := s.stateCommitment.GetLatestVersion()
@@ -354,6 +364,7 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades, overrid
 // from the SC tree. Finally, it commits the SC tree and returns the hash of
 // the CommitInfo.
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
+	s.logger.Warn("begin commit", "version", cs.Version)
 	if s.telemetry != nil {
 		now := time.Now()
 		defer func() {
@@ -371,43 +382,45 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	// background pruning process (iavl v1 for example) which must be paused during the commit
 	s.pruningManager.PausePruning()
 
-	eg := new(errgroup.Group)
+	//eg := new(errgroup.Group)
 
 	// if migrating the changeset will be sent to migration manager to fill SS
 	// otherwise commit to SS async here
-	if !s.isMigrating {
-		eg.Go(func() error {
-			st := time.Now()
-			if err := s.stateStorage.ApplyChangeset(cs); err != nil {
-				return fmt.Errorf("failed to commit SS: %w", err)
-			}
-			s.logger.Warn(fmt.Sprintf("ss commit version %d took %s", cs.Version, time.Since(st)))
+	//if !s.isMigrating {
+	//	eg.Go(func() error {
+	//		st := time.Now()
+	//		if err := s.stateStorage.ApplyChangeset(cs); err != nil {
+	//			return fmt.Errorf("failed to commit SS: %w", err)
+	//		}
+	//		s.logger.Warn(fmt.Sprintf("ss commit version %d took %s", cs.Version, time.Since(st)))
+	//
+	//		return nil
+	//	})
+	//}
 
-			return nil
-		})
+	st := time.Now()
+	s.preCommit.Lock()
+	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
+		s.preCommit.Unlock()
+		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
+	lastVersion := s.preCommitVersion
+	s.preCommitVersion = cs.Version
+	s.preCommit.Unlock()
 
-	// commit SC async
-	var cInfo *proof.CommitInfo
-	eg.Go(func() error {
-		st := time.Now()
-		if err := s.stateCommitment.WriteChangeset(cs); err != nil {
-			return fmt.Errorf("failed to write batch to SC store: %w", err)
-		}
-		var scErr error
-		cInfo, scErr = s.stateCommitment.Commit(cs.Version)
-		if scErr != nil {
-			return fmt.Errorf("failed to commit SC store: %w", scErr)
-		}
-		s.logger.Warn(fmt.Sprintf("sc commit version %d took %s", cs.Version, time.Since(st)))
-		return nil
-	})
-
-	if err := eg.Wait(); err != nil {
-		return nil, err
+	cInfo, err := s.stateCommitment.Commit(cs.Version)
+	if err != nil {
+		s.preCommit.Lock()
+		s.preCommitVersion = lastVersion
+		s.preCommit.Unlock()
+		return nil, fmt.Errorf("failed to commit SC store: %w", err)
 	}
+	s.logger.Warn(fmt.Sprintf("sc commit version %d took %s", cs.Version, time.Since(st)))
 
 	if cInfo.Version != cs.Version {
+		s.preCommit.Lock()
+		s.preCommitVersion = lastVersion
+		s.preCommit.Unlock()
 		return nil, fmt.Errorf("commit version mismatch: got %d, expected %d", cInfo.Version, cs.Version)
 	}
 	s.lastCommitInfo = cInfo

@@ -126,10 +126,10 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			case SCTypeIavlV2:
 				dir := fmt.Sprintf("%s/data/sc/iavl-v2/%s", opts.RootDir, key)
 				iavlOpts := iavl_v2.DefaultTreeOptions()
-				iavlOpts.EvictionDepth = 1
-				iavlOpts.HeightFilter = 22
-				pool := iavl_v2.NewNodePool()
-				return iavlv2.NewTree(iavlOpts, iavl_v2.SqliteDbOptions{Path: dir}, pool)
+				iavlOpts.EvictionDepth = 22
+				iavlOpts.HeightFilter = 1
+				iavlOpts.CheckpointInterval = 70
+				return iavlv2.NewTree(iavlOpts, iavl_v2.SqliteDbOptions{Path: dir}, opts.Logger, opts.Telemetry)
 			default:
 				return nil, errors.New("unsupported commitment store type")
 			}

@@ -221,8 +221,8 @@ cosmossdk.io/server/v2/appmanager v0.0.0-20241107153845-4e240908dd60 h1:M26/YrNR
 cosmossdk.io/server/v2/appmanager v0.0.0-20241107153845-4e240908dd60/go.mod h1:mONOF8GRbxs5R04zMscuQQI1gx/XHTY7imKjcwLI5uo=
 cosmossdk.io/server/v2/stf v0.0.0-20241107153845-4e240908dd60 h1:+PYG1Wjsu8ZX5vvINPu7UjRxzT9m9sJ9SlS8MVApmOU=
 cosmossdk.io/server/v2/stf v0.0.0-20241107153845-4e240908dd60/go.mod h1:njNsfl5hKTylxDgSiBTLuOM1tic04aPk0k5Af6ybPN0=
-cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 h1:p69ThBO2dqCHKA3GcVoGr18Q4oH04asl1TsDPloxtSI=
-cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3/go.mod h1:uaysXSQHWUykekFPvS1JqQ7HM58Zuqcby1DNlLQPWSg=
+cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d h1:KQM4Q6kjwlM4HuDZRV8/ZDXX3whjfStndYNTsRrbboQ=
+cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d/go.mod h1:oZBBY4BrkYnghr6MFL0MP5mGqpkPedHcWkXwXddd6tU=
 cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08 h1:7dIhcS/VhEM/vnZWDVtDKqCF/OGaq8Gx+5ekD9GT71k=
 cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08/go.mod h1:A2aW375561viy3GcD8GhUwUWnow+R2Du6yCSpAGwsgY=
 cosmossdk.io/x/tx v1.0.0-alpha.2 h1:UW80FMm7B0fiAMsrfe5+HabSJ3XBg+tQa6/GK9prqWk=

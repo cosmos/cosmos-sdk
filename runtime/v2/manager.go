@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc"
 	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
@@ -485,7 +484,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if err := registerServices(module, app, protoregistry.GlobalFiles); err != nil {
+		if err := registerServices(module, app, gogoproto.HybridResolver); err != nil {
 			return err
 		}
 
@@ -618,7 +617,7 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], registry *protoregistry.Files) error {
+func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], registry gogoproto.Resolver) error {
 	// case module with services
 	if services, ok := s.(hasServicesV1); ok {
 		c := &configurator{
@@ -671,7 +670,7 @@ type configurator struct {
 
 	stfQueryRouter *stf.MsgRouterBuilder
 	stfMsgRouter   *stf.MsgRouterBuilder
-	registry       *protoregistry.Files
+	registry       gogoproto.Resolver
 	err            error
 }
 

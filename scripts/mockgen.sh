@@ -1,26 +1,5 @@
 #!/usr/bin/env bash
 
-max_attempts=3
-
-retry() {
-    local retries=$1
-    shift
-    local command="$@"
-    local count=0
-
-    until $command; do
-        exit_code=$?
-        count=$((count + 1))
-        if [ $count -lt $retries ]; then
-            echo "Attempt $count failed! Retrying in 1 second..."
-            sleep 1
-        else
-            echo "Command failed after $count attempts."
-            return $exit_code
-        fi
-    done
-}
-
 mockgen_cmd="mockgen"
 $mockgen_cmd -source=baseapp/abci_utils.go -package mock -destination baseapp/testutil/mock/mocks.go
 $mockgen_cmd -source=client/account_retriever.go -package mock -destination testutil/mock/account_retriever.go
@@ -49,4 +28,5 @@ $mockgen_cmd -source=x/auth/vesting/types/expected_keepers.go -package testutil 
 $mockgen_cmd -source=x/protocolpool/types/expected_keepers.go -package testutil -destination x/protocolpool/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/upgrade/types/expected_keepers.go -package testutil -destination x/upgrade/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=core/gas/service.go -package gas -destination core/testing/gas/service_mocks.go
-retry $max_attempts $mockgen_cmd -source=client/v2/broadcast/comet/comet.go -package testutil -destination client/v2/broadcast/comet/testutil/comet_mock.go
+# FIXME: uncomment this when regeneration is required due to https://github.com/uber-go/mock/issues/226
+# $mockgen_cmd -source=client/v2/broadcast/comet/comet.go -package testutil -destination client/v2/broadcast/comet/testutil/comet_mock.go

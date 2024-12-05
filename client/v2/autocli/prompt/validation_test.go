@@ -1,11 +1,14 @@
 package prompt
 
 import (
-	"cosmossdk.io/core/address"
-	address2 "github.com/cosmos/cosmos-sdk/codec/address"
 	"testing"
 
+
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/address"
+
+	address2 "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 func TestValidatePromptNotEmpty(t *testing.T) {

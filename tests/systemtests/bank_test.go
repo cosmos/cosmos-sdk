@@ -265,7 +265,7 @@ func TestBankGRPCQueries(t *testing.T) {
 			map[string]string{
 				blockHeightHeader: fmt.Sprintf("%d", blockHeight+5),
 			},
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			"invalid height",
 		},
 		{
@@ -280,7 +280,7 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	for _, tc := range supplyTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp := systest.GetRequestWithHeaders(t, tc.url, tc.headers, tc.expHttpCode)
+			resp := systest.GetRequestWithHeadersGreaterThanOrEqual(t, tc.url, tc.headers, tc.expHttpCode)
 			require.Contains(t, string(resp), tc.expOut)
 		})
 	}

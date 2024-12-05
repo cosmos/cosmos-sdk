@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -687,10 +686,25 @@ func TestConsensus_GRPCQuery(t *testing.T) {
 	require.Equal(t, res.Code, uint32(1))
 	require.Contains(t, res.Log, "no query path provided")
 
+	// query request not exist in handler map
+	invalidReq := testdata.EchoRequest{
+		Message: "echo",
+	}
+	invalidReqBz, err := invalidReq.Marshal()
+	require.NoError(t, err)
+	invalidQuery := abci.QueryRequest{
+		Data: invalidReqBz,
+		Path: "testpb.EchoRequest",
+	}
+	invalidRes, err := c.Query(context.TODO(), &invalidQuery)
+	require.Error(t, err)
+	require.Nil(t, invalidRes)
+	require.Contains(t, err.Error(), "no query handler found")
+
+	// Valid query
 	req := testdata.SayHelloRequest{Name: "foo"}
 	reqBz, err := req.Marshal()
 	require.NoError(t, err)
-
 	reqQuery := abci.QueryRequest{
 		Data: reqBz,
 		Path: "testpb.SayHelloRequest",
@@ -733,7 +747,6 @@ func TestConsensus_P2PQuery(t *testing.T) {
 		Path: "/p2p/filter/addr/1.1.1.1:8000",
 	}
 	res, err = c.Query(context.TODO(), &addrQuery)
-	fmt.Println("p2p res", res, err)
 	require.NoError(t, err)
 	require.Equal(t, uint32(3), res.Code)
 
@@ -763,14 +776,6 @@ func TestConsensus_AppQuery(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// signingCtx := cdc.InterfaceRegistry().SigningContext()
-	// txConfig := authtx.NewTxConfig(
-	// 	cdc,
-	// 	signingCtx.AddressCodec(),
-	// 	signingCtx.ValidatorAddressCodec(),
-	// 	authtx.DefaultSignModes,
-	// )
-
 	tx := mock.Tx{
 		Sender:   testAcc,
 		Msg:      &gogotypes.BoolValue{Value: true},
@@ -784,10 +789,10 @@ func TestConsensus_AppQuery(t *testing.T) {
 		Data: txBytes,
 	}
 	queryResult, err := c.Query(context.TODO(), &query)
-	fmt.Println("queryResult", queryResult, err)
 	require.NoError(t, err)
 	require.True(t, queryResult.IsOK(), queryResult.Log)
 
+	// Query app version
 	res, err := c.Query(context.TODO(), &abci.QueryRequest{Path: "app/version"})
 	require.NoError(t, err)
 	require.True(t, res.IsOK())
@@ -815,8 +820,6 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 			Params: cParams,
 		}, nil
 	})
-
-	fmt.Println("name", proto.MessageName(&testdata.SayHelloRequest{}))
 
 	var helloFooHandler = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 		typedReq := msg.(*testdata.SayHelloRequest)

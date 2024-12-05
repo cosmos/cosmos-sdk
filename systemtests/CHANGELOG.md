@@ -38,7 +38,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [v1.0.0-rc.3] - 2024-12-05
 
-* [](https://github.com/cosmos/cosmos-sdk/pull/) Add greater than or equal support in Rest test suite
+* [#22774](https://github.com/cosmos/cosmos-sdk/pull/22774) Add greater than or equal support in Rest test suite
 
 ## [v1.0.0-rc.2] - 2024-11-26
 

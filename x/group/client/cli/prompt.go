@@ -50,14 +50,14 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec, 
 	}
 
 	// set group policy address
-	groupPolicyAddress, err := prompt.PromptString("Enter group policy address", client.ValidatePromptAddress)
+	groupPolicyAddress, err := prompt.PromptString("Enter group policy address", prompt.ValidateAddress(addressCodec))
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set group policy address: %w", err)
 	}
 	proposal.GroupPolicyAddress = groupPolicyAddress
 
 	// set proposer address
-	proposerAddress, err := prompt.PromptString("Enter proposer address", client.ValidatePromptAddress)
+	proposerAddress, err := prompt.PromptString("Enter proposer address", prompt.ValidateAddress(addressCodec))
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposer address: %w", err)
 	}

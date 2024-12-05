@@ -10,15 +10,14 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/internal/prompt"
 	addresscodec "cosmossdk.io/core/address"
 )
 
 // PromptMessage prompts the user for values to populate a protobuf message interactively.
 // It returns the populated message and any error encountered during prompting.
 func PromptMessage(
-	addressCodec, validatorAddressCodec addresscodec.Codec,
-	consensusAddressCodec addresscodec.Codec, promptPrefix string, msg protoreflect.Message,
+	addressCodec, validatorAddressCodec, consensusAddressCodec addresscodec.Codec,
+	promptPrefix string, msg protoreflect.Message,
 ) (protoreflect.Message, error) {
 	return promptMessage(addressCodec, validatorAddressCodec, consensusAddressCodec, promptPrefix, nil, msg)
 }
@@ -26,9 +25,8 @@ func PromptMessage(
 // promptMessage prompts the user for values to populate a protobuf message interactively.
 // stdIn is provided to make the function easier to unit test by allowing injection of predefined inputs.
 func promptMessage(
-	addressCodec, validatorAddressCodec addresscodec.Codec,
-	consensusAddressCodec addresscodec.Codec, promptPrefix string,
-	stdIn io.ReadCloser, msg protoreflect.Message,
+	addressCodec, validatorAddressCodec, consensusAddressCodec addresscodec.Codec,
+	promptPrefix string, stdIn io.ReadCloser, msg protoreflect.Message,
 ) (protoreflect.Message, error) {
 	fields := msg.Descriptor().Fields()
 	for i := 0; i < fields.Len(); i++ {
@@ -36,7 +34,7 @@ func promptMessage(
 		fieldName := string(field.Name())
 
 		promptUi := promptui.Prompt{
-			Validate: prompt.ValidatePromptNotEmpty,
+			Validate: ValidatePromptNotEmpty,
 			Stdin:    stdIn,
 		}
 
@@ -54,11 +52,11 @@ func promptMessage(
 		if ok {
 			switch scalarField {
 			case flag.AddressStringScalarType:
-				promptUi.Validate = prompt.ValidateAddress(addressCodec)
+				promptUi.Validate = ValidateAddress(addressCodec)
 			case flag.ValidatorAddressStringScalarType:
-				promptUi.Validate = prompt.ValidateAddress(validatorAddressCodec)
+				promptUi.Validate = ValidateAddress(validatorAddressCodec)
 			case flag.ConsensusAddressStringScalarType:
-				promptUi.Validate = prompt.ValidateAddress(consensusAddressCodec)
+				promptUi.Validate = ValidateAddress(consensusAddressCodec)
 			default:
 				// prompt.Validate = ValidatePromptNotEmpty (we possibly don't want to force all fields to be non-empty)
 				promptUi.Validate = nil
@@ -195,11 +193,6 @@ func promptInnerMessage(
 ) error {
 	fieldName := promptPrefix + "." + string(f.Name())
 	nestedMsg := msg.Get(f).Message()
-	// if nestedMsg.IsValid() {
-	//	nestedMsg = nestedMsg.New()
-	//} else {
-	//	nestedMsg = msg.Get(f).Message()
-	//}
 	nestedMsg = nestedMsg.New()
 	// Recursively prompt for nested message fields
 	updatedMsg, err := promptMessage(

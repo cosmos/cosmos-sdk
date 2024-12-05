@@ -81,7 +81,7 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec, 
 	}
 
 	// set deposit
-	proposal.Deposit, err = prompt.PromptString("Enter proposal deposit", client.ValidatePromptCoins)
+	proposal.Deposit, err = prompt.PromptString("Enter proposal deposit", ValidatePromptCoins)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal deposit: %w", err)
 	}
@@ -148,12 +148,12 @@ func PromptMetadata(skip bool) (types.ProposalMetadata, error) {
 		return metadata, nil
 	}
 
-	title, err := prompt.PromptString("Enter proposal title", client.ValidatePromptNotEmpty)
+	title, err := prompt.PromptString("Enter proposal title", ValidatePromptNotEmpty)
 	if err != nil {
 		return types.ProposalMetadata{}, fmt.Errorf("failed to set proposal title: %w", err)
 	}
 
-	summary, err := prompt.PromptString("Enter proposal summary", client.ValidatePromptNotEmpty)
+	summary, err := prompt.PromptString("Enter proposal summary", ValidatePromptNotEmpty)
 	if err != nil {
 		return types.ProposalMetadata{}, fmt.Errorf("failed to set proposal summary: %w", err)
 	}

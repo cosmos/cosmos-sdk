@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	"github.com/manifoldco/promptui"
-
-	"cosmossdk.io/client/v2/internal/prompt"
 )
 
 // PromptStruct prompts for values of a struct's fields interactively.
@@ -82,7 +80,7 @@ func promptStruct[T any](promptPrefix string, data T, stdIn io.ReadCloser) (T, e
 		// create prompts
 		prompt := promptui.Prompt{
 			Label:    fmt.Sprintf("Enter %s %s", promptPrefix, strings.Title(fieldName)), // nolint:staticcheck // strings.Title has a better API
-			Validate: prompt.ValidatePromptNotEmpty,
+			Validate: ValidatePromptNotEmpty,
 			Stdin:    stdIn,
 		}
 

@@ -1,30 +1,46 @@
-package prompt_test
+package prompt
 
 import (
+	"cosmossdk.io/core/address"
+	address2 "github.com/cosmos/cosmos-sdk/codec/address"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/client/v2/internal/prompt"
 )
 
 func TestValidatePromptNotEmpty(t *testing.T) {
 	require := require.New(t)
 
-	require.NoError(prompt.ValidatePromptNotEmpty("foo"))
-	require.ErrorContains(prompt.ValidatePromptNotEmpty(""), "input cannot be empty")
+	require.NoError(ValidatePromptNotEmpty("foo"))
+	require.ErrorContains(ValidatePromptNotEmpty(""), "input cannot be empty")
 }
 
-func TestValidatePromptURL(t *testing.T) {
-	require := require.New(t)
-
-	require.NoError(prompt.ValidatePromptURL("https://example.com"))
-	require.ErrorContains(prompt.ValidatePromptURL("foo"), "invalid URL")
-}
-
-func TestValidatePromptCoins(t *testing.T) {
-	require := require.New(t)
-
-	require.NoError(prompt.ValidatePromptCoins("100stake"))
-	require.ErrorContains(prompt.ValidatePromptCoins("foo"), "invalid coins")
+func TestValidateAddress(t *testing.T) {
+	tests := []struct {
+		name string
+		ac   address.Codec
+		addr string
+	}{
+		{
+			name: "address",
+			ac:   address2.NewBech32Codec("cosmos"),
+			addr: "cosmos129lxcu2n3hx54fdxlwsahqkjr3sp32cxm00zlm",
+		},
+		{
+			name: "validator address",
+			ac:   address2.NewBech32Codec("cosmosvaloper"),
+			addr: "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z",
+		},
+		{
+			name: "consensus address",
+			ac:   address2.NewBech32Codec("cosmosvalcons"),
+			addr: "cosmosvalcons136uu5rj23kdr3jjcmjt7aw5qpugjjat2klgrus",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateAddress(tt.ac)(tt.addr)
+			require.NoError(t, err)
+		})
+	}
 }

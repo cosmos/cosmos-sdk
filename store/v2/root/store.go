@@ -144,7 +144,7 @@ func (s *Store) GetStateCommitment() store.Committer {
 // latest version set, which is based off of the SC view.
 func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if s.lastCommitInfo != nil {
-		return s.lastCommitInfo.CommitID(), nil
+		return *s.lastCommitInfo.CommitID(), nil
 	}
 
 	latestVersion, err := s.stateCommitment.GetLatestVersion()

@@ -1541,3 +1541,34 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: x/consensus/
+
+  test-tools-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.2"
+          check-latest: true
+          cache: true
+          cache-dependency-path: tools/benchmark/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            tools/benchmark/**/*.go
+            tools/benchmark/go.mod
+            tools/benchmark/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd tools/benchmark
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace' ./...
+      - name: sonarcloud
+        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: tools/benchmark/

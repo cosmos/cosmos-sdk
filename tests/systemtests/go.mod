@@ -2,6 +2,8 @@ module github.com/cosmos/cosmos-sdk/tests/systemtests
 
 go 1.23
 
+replace cosmossdk.io/systemtests => ../../systemtests
+
 require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/systemtests v1.0.0-rc.1.0.20241128092904-215d5c16f64d

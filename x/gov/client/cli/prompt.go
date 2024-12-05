@@ -176,6 +176,9 @@ func NewCmdDraftProposal() *cobra.Command {
 			}
 
 			selectedProposalType, err := prompt.Select("Select proposal type", getProposalSuggestions())
+			if err != nil {
+				return fmt.Errorf("failed to prompt proposal types: %w", err)
+			}
 			var proposal proposalType
 			for _, p := range suggestedProposalTypes {
 				if strings.EqualFold(p.Name, selectedProposalType) {

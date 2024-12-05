@@ -17,7 +17,7 @@ import (
 // PromptMessage prompts the user for values to populate a protobuf message interactively.
 // It returns the populated message and any error encountered during prompting.
 func PromptMessage(
-	addressCodec addresscodec.Codec, validatorAddressCodec addresscodec.Codec,
+	addressCodec, validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec, promptPrefix string, msg protoreflect.Message,
 ) (protoreflect.Message, error) {
 	return promptMessage(addressCodec, validatorAddressCodec, consensusAddressCodec, promptPrefix, nil, msg)
@@ -26,11 +26,10 @@ func PromptMessage(
 // promptMessage prompts the user for values to populate a protobuf message interactively.
 // stdIn is provided to make the function easier to unit test by allowing injection of predefined inputs.
 func promptMessage(
-	addressCodec addresscodec.Codec, validatorAddressCodec addresscodec.Codec,
+	addressCodec, validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec, promptPrefix string,
 	stdIn io.ReadCloser, msg protoreflect.Message,
 ) (protoreflect.Message, error) {
-
 	fields := msg.Descriptor().Fields()
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
@@ -178,7 +177,7 @@ func promptList(field protoreflect.FieldDescriptor, msg protoreflect.Message, pr
 // promptInnerMessage and promptMessageList respectively.
 func promptInnerMessageKind(
 	f protoreflect.FieldDescriptor, addressCodec addresscodec.Codec,
-	validatorAddressCodec addresscodec.Codec, consensusAddressCodec addresscodec.Codec,
+	validatorAddressCodec, consensusAddressCodec addresscodec.Codec,
 	promptPrefix string, stdIn io.ReadCloser, msg protoreflect.Message,
 ) error {
 	if f.IsList() {
@@ -191,12 +190,12 @@ func promptInnerMessageKind(
 // recursively prompts for its fields, and sets the populated message on the parent message.
 func promptInnerMessage(
 	f protoreflect.FieldDescriptor, addressCodec addresscodec.Codec,
-	validatorAddressCodec addresscodec.Codec, consensusAddressCodec addresscodec.Codec,
+	validatorAddressCodec, consensusAddressCodec addresscodec.Codec,
 	promptPrefix string, stdIn io.ReadCloser, msg protoreflect.Message,
 ) error {
 	fieldName := promptPrefix + "." + string(f.Name())
 	nestedMsg := msg.Get(f).Message()
-	//if nestedMsg.IsValid() {
+	// if nestedMsg.IsValid() {
 	//	nestedMsg = nestedMsg.New()
 	//} else {
 	//	nestedMsg = msg.Get(f).Message()
@@ -223,7 +222,7 @@ func promptInnerMessage(
 // prompting for their fields, and appending them to the list until the user chooses to stop.
 func promptMessageList(
 	f protoreflect.FieldDescriptor, addressCodec addresscodec.Codec,
-	validatorAddressCodec addresscodec.Codec, consensusAddressCodec addresscodec.Codec,
+	validatorAddressCodec, consensusAddressCodec addresscodec.Codec,
 	promptPrefix string, stdIn io.ReadCloser, msg protoreflect.Message,
 ) error {
 	list := msg.Mutable(f).List()

@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/client/v2/internal/testpb"
-	"google.golang.org/protobuf/reflect/protoreflect"
 
 	address2 "github.com/cosmos/cosmos-sdk/codec/address"
 )
@@ -31,11 +31,13 @@ func TestPromptMessage(t *testing.T) {
 	}{
 		{
 			name: "testPb",
-			inputs: []string{"1", "2", "string", "bytes", "10101010", "0", "234234", "3", "4", "5", "true", "ENUM_ONE",
+			inputs: []string{
+				"1", "2", "string", "bytes", "10101010", "0", "234234", "3", "4", "5", "true", "ENUM_ONE",
 				"bar", "6", "10000", "stake", "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 				"bytes", "6", "7", "false", "false", "true,false,true", "1,2,3", "hello,hola,ciao", "ENUM_ONE,ENUM_TWO",
 				"10239", "0", "No", "bar", "343", "No", "134", "positional2", "23455", "stake", "No", "deprecate",
-				"shorthand", "false", "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z"},
+				"shorthand", "false", "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z",
+			},
 			msg: (&testpb.MsgRequest{}).ProtoReflect(),
 		},
 	}

@@ -24,7 +24,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "ValidatorDistributionInfo",
 					Use:       "validator-distribution-info <validator>",
 					Short:     "Query validator distribution info",
-					Example:   fmt.Sprintf(`Example: $ %s query distribution validator-distribution-info [validator-address]`, version.AppName),
+					Example:   fmt.Sprintf(`$ %s query distribution validator-distribution-info [validator-address]`, version.AppName),
 
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},

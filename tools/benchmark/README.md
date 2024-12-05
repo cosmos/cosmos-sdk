@@ -1,7 +1,7 @@
-# x/benchmark
+# cosmossdk.io/tools/benchmark
 
 A benchmark module to test chain and storage performance. It can be used to holistically test
-the end to end performance of a node. Given an initial configuration x/benchmark provides:
+the end to end performance of a node. Given an initial configuration tools/benchmark provides:
 
 * A possibly enormous sequence of key-value sets in InitGenesis distributed across n storekeys,
   e.g. 20M keys across 5 store keys

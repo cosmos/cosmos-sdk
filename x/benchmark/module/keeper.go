@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
 	"cosmossdk.io/x/benchmark"
 	gen "cosmossdk.io/x/benchmark/generator"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 var (

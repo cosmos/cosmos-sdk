@@ -219,6 +219,7 @@ func TestOverSlashing(t *testing.T) {
 	ctx = integration.SetHeaderInfo(ctx, header.Info{Height: int64(f.app.LastBlockHeight()) + 1})
 	_, state := f.app.Deliver(t, ctx, nil)
 	_, err = f.app.Commit(state)
+	require.NoError(t, err)
 
 	// delegate all accs to evil val
 	delMsg := stakingtypes.NewMsgDelegate(testAcc1.String(), evilValAddr.String(), testCoin)

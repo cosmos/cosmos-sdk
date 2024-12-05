@@ -23,7 +23,6 @@ import (
 	_ "cosmossdk.io/x/slashing"     // import as blank for app wiring
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
-	"cosmossdk.io/x/slashing/types"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
@@ -48,7 +47,6 @@ import (
 var (
 	priv1        = secp256k1.GenPrivKey()
 	addr1        = sdk.AccAddress(priv1.PubKey().Address())
-	addrCodec    = codecaddress.NewBech32Codec("cosmos")
 	valaddrCodec = codecaddress.NewBech32Codec("cosmosvaloper")
 
 	valKey  = ed25519.GenPrivKey()
@@ -156,6 +154,7 @@ func TestSlashingMsgs(t *testing.T) {
 	createValidatorMsg, err := stakingtypes.NewMsgCreateValidator(
 		addrStrVal, valKey.PubKey(), bondCoin, description, commission, math.OneInt(),
 	)
+	require.NoError(t, err)
 
 	_ = f.app.SignCheckDeliver(t, f.ctx, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, []cryptotypes.PrivKey{priv1}, "")
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(f.bankKeeper.GetAllBalances(f.ctx, addr1)))
@@ -166,11 +165,11 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, addrStrVal, validator.OperatorAddress)
 	require.Equal(t, stakingtypes.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := &types.MsgUnjail{ValidatorAddr: addrStrVal}
+	unjailMsg := &slashingtypes.MsgUnjail{ValidatorAddr: addrStrVal}
 
 	_, err = f.slashingKeeper.ValidatorSigningInfo.Get(f.ctx, sdk.ConsAddress(valAddr))
 	require.NoError(t, err)
 
 	// unjail should fail with validator not jailed error
-	_ = f.app.SignCheckDeliver(t, f.ctx, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, []cryptotypes.PrivKey{priv1}, types.ErrValidatorNotJailed.Error())
+	_ = f.app.SignCheckDeliver(t, f.ctx, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, []cryptotypes.PrivKey{priv1}, slashingtypes.ErrValidatorNotJailed.Error())
 }

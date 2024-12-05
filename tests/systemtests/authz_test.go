@@ -54,6 +54,8 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 	require.NotEqual(t, granterAddr, grantee7Addr)
 	grantee8Addr := cli.AddKey("grantee8")
 	require.NotEqual(t, granterAddr, grantee8Addr)
+	grantee9Addr := cli.AddKey("grantee9")
+	require.NotEqual(t, granterAddr, grantee9Addr)
 
 	systest.Sut.StartChain(t)
 
@@ -106,13 +108,6 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			[]string{"delegate", "--deny-validators=invalid"},
 			"decoding bech32 failed",
 			false,
-		},
-		{
-			"unbond authorization without allow or deny list",
-			grantee1Addr,
-			[]string{"unbond", "--spend-limit=1000" + testDenom},
-			"",
-			true,
 		},
 		{
 			"unbond authorization with invalid allowed validator address",
@@ -171,30 +166,37 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			false,
 		},
 		{
-			"valid unbond authorization",
+			"valid delegate authorization without allow or deny list",
 			grantee5Addr,
+			[]string{"delegate", "--spend-limit=1000" + testDenom},
+			"",
+			false,
+		},
+		{
+			"valid unbond authorization",
+			grantee6Addr,
 			[]string{"unbond", "--deny-validators=" + valOperAddr},
 			"",
 			false,
 		},
 		{
+			"valid unbond authorization without allow or deny list",
+			grantee7Addr,
+			[]string{"unbond", "--spend-limit=1000" + testDenom},
+			"",
+			false,
+		},
+		{
 			"valid redelegate authorization",
-			grantee6Addr,
+			grantee8Addr,
 			[]string{"redelegate", "--allowed-validators=" + valOperAddr},
 			"",
 			false,
 		},
 		{
-			"redelegate authorization without allow or deny list",
-			grantee7Addr,
+			"valid redelegate authorization without allow or deny list",
+			grantee9Addr,
 			[]string{"redelegate", "--spend-limit=1000" + testDenom},
-			"",
-			false,
-		},
-		{
-			"delegate authorization without allow or deny list",
-			grantee8Addr,
-			[]string{"delegate", "--spend-limit=1000" + testDenom},
 			"",
 			false,
 		},

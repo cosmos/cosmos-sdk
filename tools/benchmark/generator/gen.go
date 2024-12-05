@@ -13,7 +13,7 @@ import (
 	"github.com/cespare/xxhash/v2"
 
 	module "cosmossdk.io/api/cosmos/benchmark/module/v1"
-	"cosmossdk.io/x/benchmark"
+	"cosmossdk.io/tools/benchmark"
 )
 
 type Options struct {

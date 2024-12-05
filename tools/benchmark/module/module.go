@@ -16,9 +16,9 @@ import (
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/benchmark"
-	"cosmossdk.io/x/benchmark/client/cli"
-	gen "cosmossdk.io/x/benchmark/generator"
+	"cosmossdk.io/tools/benchmark"
+	"cosmossdk.io/tools/benchmark/client/cli"
+	gen "cosmossdk.io/tools/benchmark/generator"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/module"

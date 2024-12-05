@@ -9,8 +9,8 @@ import (
 	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
-	"cosmossdk.io/x/benchmark"
-	gen "cosmossdk.io/x/benchmark/generator"
+	"cosmossdk.io/tools/benchmark"
+	gen "cosmossdk.io/tools/benchmark/generator"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

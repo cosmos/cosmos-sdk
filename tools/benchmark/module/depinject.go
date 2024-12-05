@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
-	gen "cosmossdk.io/x/benchmark/generator"
+	gen "cosmossdk.io/tools/benchmark/generator"
 )
 
 const ModuleName = "benchmark"

@@ -32,6 +32,7 @@ import (
 	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
+	benchmark "cosmossdk.io/tools/benchmark/module"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
@@ -40,7 +41,6 @@ import (
 	_ "cosmossdk.io/x/bank/v2" // import for side-effects
 	bankv2types "cosmossdk.io/x/bank/v2/types"
 	bankmodulev2 "cosmossdk.io/x/bank/v2/types/module"
-	benchmark "cosmossdk.io/x/benchmark/module"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects

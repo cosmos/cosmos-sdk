@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/x/benchmark"
-	gen "cosmossdk.io/x/benchmark/generator"
+	"cosmossdk.io/tools/benchmark"
+	gen "cosmossdk.io/tools/benchmark/generator"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )

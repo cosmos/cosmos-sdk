@@ -3,7 +3,6 @@ package math
 import (
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -152,11 +151,11 @@ func TestNewDecFromInt64(t *testing.T) {
 		},
 		"max value": {
 			src: math.MaxInt64,
-			exp: strconv.Itoa(math.MaxInt64),
+			exp: "9223372036854.775807E+6",
 		},
 		"min value": {
 			src: math.MinInt64,
-			exp: strconv.Itoa(math.MinInt64),
+			exp: "9223372036854.775808E+6",
 		},
 	}
 	for name, spec := range specs {
@@ -1247,15 +1246,17 @@ func TestToBigInt(t *testing.T) {
 		{"12345.6", "", ErrNonIntegral},
 	}
 	for idx, tc := range tcs {
-		a, err := NewDecFromString(tc.intStr)
-		require.NoError(t, err)
-		b, err := a.BigInt()
-		if tc.isError == nil {
-			require.NoError(t, err, "test_%d", idx)
-			require.Equal(t, tc.out, b.String(), "test_%d", idx)
-		} else {
-			require.ErrorIs(t, err, tc.isError, "test_%d", idx)
-		}
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			a, err := NewDecFromString(tc.intStr)
+			require.NoError(t, err)
+			b, err := a.BigInt()
+			if tc.isError == nil {
+				require.NoError(t, err, "test_%d", idx)
+				require.Equal(t, tc.out, b.String(), "test_%d", idx)
+			} else {
+				require.ErrorIs(t, err, tc.isError, "test_%d", idx)
+			}
+		})
 	}
 }
 
@@ -1309,55 +1310,38 @@ func must[T any](r T, err error) T {
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
-	t.Skip("not supported, yet")
 	specs := map[string]struct {
 		x      Dec
 		exp    string
 		expErr error
 	}{
-		"No trailing zeros": {
-			x:   NewDecFromInt64(123456),
-			exp: "1.23456E+5",
-		},
-		"Trailing zeros": {
-			x:   NewDecFromInt64(123456000),
-			exp: "1.23456E+8",
-		},
 		"Zero value": {
 			x:   NewDecFromInt64(0),
-			exp: "0E+0",
+			exp: "0",
 		},
 		"-0": {
 			x:   NewDecFromInt64(-0),
-			exp: "0E+0",
+			exp: "0",
 		},
-		"Decimal value": {
-			x:   must(NewDecFromString("1.30000")),
-			exp: "1.3E+0",
+		"1 decimal place": {
+			x:   must(NewDecFromString("0.1")),
+			exp: "0.1",
 		},
-		"Positive value": {
-			x:   NewDecFromInt64(10),
-			exp: "1E+1",
+		"2 decimal places": {
+			x:   must(NewDecFromString("0.01")),
+			exp: "0.01",
 		},
-		"negative 10": {
-			x:   NewDecFromInt64(-10),
-			exp: "-1E+1",
+		"3 decimal places": {
+			x:   must(NewDecFromString("0.001")),
+			exp: "0.001",
 		},
-		"9 with trailing zeros": {
-			x:   must(NewDecFromString("9." + strings.Repeat("0", 34))),
-			exp: "9E+0",
-		},
-		"negative 1 with negative exponent zeros": {
-			x:   must(NewDecFromString("-1.000001")),
-			exp: "-1.000001E+0",
-		},
-		"negative 1 with trailing zeros": {
-			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
-			exp: "-1E+0",
+		"4 decimal places": {
+			x:   must(NewDecFromString("0.0001")),
+			exp: "0.0001",
 		},
 		"5 decimal places": {
 			x:   must(NewDecFromString("0.00001")),
-			exp: "1E-5",
+			exp: "0.00001",
 		},
 		"6 decimal places": {
 			x:   must(NewDecFromString("0.000001")),
@@ -1367,17 +1351,73 @@ func TestMarshalUnmarshal(t *testing.T) {
 			x:   must(NewDecFromString("0.0000001")),
 			exp: "1E-7",
 		},
+		"1": {
+			x:   must(NewDecFromString("1")),
+			exp: "1",
+		},
+		"12": {
+			x:   must(NewDecFromString("12")),
+			exp: "12",
+		},
+		"123": {
+			x:   must(NewDecFromString("123")),
+			exp: "123",
+		},
+		"1234": {
+			x:   must(NewDecFromString("1234")),
+			exp: "1234",
+		},
+		"12345": {
+			x:   must(NewDecFromString("12345")),
+			exp: "12345",
+		},
+		"123456": {
+			x:   must(NewDecFromString("123456")),
+			exp: "123456",
+		},
+		"1234567": {
+			x:   must(NewDecFromString("1234567")),
+			exp: "1.234567E+6",
+		},
+		"12345678": {
+			x:   must(NewDecFromString("12345678")),
+			exp: "12.345678E+6",
+		},
+		"123456789": {
+			x:   must(NewDecFromString("123456789")),
+			exp: "123.456789E+6",
+		},
+		"1234567890": {
+			x:   must(NewDecFromString("1234567890")),
+			exp: "123.456789E+7",
+		},
+		"12345678900": {
+			x:   must(NewDecFromString("12345678900")),
+			exp: "123.456789E+8",
+		},
+		"negative 1 with negative exponent": {
+			x:   must(NewDecFromString("-1.000001")),
+			exp: "-1.000001",
+		},
+		"-1.0000001 - negative 1 with negative exponent": {
+			x:   must(NewDecFromString("-1.0000001")),
+			exp: "-1.0000001",
+		},
+		"3 decimal places before the comma": {
+			x:   must(NewDecFromString("100")),
+			exp: "100",
+		},
 		"4 decimal places before the comma": {
 			x:   must(NewDecFromString("1000")),
-			exp: "1E+3",
+			exp: "1000",
 		},
 		"5 decimal places before the comma": {
 			x:   must(NewDecFromString("10000")),
-			exp: "1E+4",
+			exp: "10000",
 		},
 		"6 decimal places before the comma": {
 			x:   must(NewDecFromString("100000")),
-			exp: "1E+5",
+			exp: "100000",
 		},
 		"7 decimal places before the comma": {
 			x:   must(NewDecFromString("1000000")),
@@ -1388,12 +1428,12 @@ func TestMarshalUnmarshal(t *testing.T) {
 			exp: "1E+100000",
 		},
 		"1.1e100000": {
-			x:      NewDecWithExp(11, 100_000),
-			expErr: ErrInvalidDec,
+			x:   must(NewDecFromString("1.1e100000")),
+			exp: "1.1E+100000",
 		},
-		"1.e100000": {
-			x:   NewDecWithExp(1, 100_000),
-			exp: "1E+100000",
+		"1e100001": {
+			x:      NewDecWithExp(1, 100_001),
+			expErr: ErrInvalidDec,
 		},
 	}
 	for name, spec := range specs {
@@ -1404,9 +1444,12 @@ func TestMarshalUnmarshal(t *testing.T) {
 				return
 			}
 			require.NoError(t, gotErr)
-			unmarshalled := new(Dec)
-			require.NoError(t, unmarshalled.Unmarshal(marshaled))
-			assert.Equal(t, spec.exp, unmarshalled.dec.Text('E'))
+			assert.Equal(t, spec.exp, string(marshaled))
+			// and backwards
+			unmarshalledDec := new(Dec)
+			require.NoError(t, unmarshalledDec.Unmarshal(marshaled))
+			assert.Equal(t, spec.exp, unmarshalledDec.String())
+			assert.True(t, spec.x.Equal(*unmarshalledDec))
 		})
 	}
 }

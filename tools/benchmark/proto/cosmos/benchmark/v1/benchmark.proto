@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package cosmos.benchmark.v1;
 
-option go_package = "cosmossdk.io/x/benchmark";
+option go_package = "cosmossdk.io/tools/benchmark";
 
 // Op is a message describing a benchmark operation.
 message Op {

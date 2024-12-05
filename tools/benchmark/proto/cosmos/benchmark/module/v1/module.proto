@@ -7,7 +7,7 @@ import "cosmos/app/v1alpha1/module.proto";
 // Module is the config object of the benchmark module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/x/benchmark"
+    go_import: "cosmossdk.io/tools/benchmark"
   };
 
   GeneratorParams genesis_params = 1;

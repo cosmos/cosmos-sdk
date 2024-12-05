@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -21,7 +20,6 @@ import (
 
 	"reflect"
 
-	"cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
@@ -37,13 +35,8 @@ import (
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 	consensustypes "cosmossdk.io/x/consensus/types"
-	"github.com/cosmos/cosmos-sdk/baseapp/testutil"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
@@ -998,38 +991,4 @@ func TestOptimisticExecution(t *testing.T) {
 
 	// Verify optimistic execution was reset
 	require.False(t, c.optimisticExec.Initialized())
-}
-
-func newTxCounter(t *testing.T, cfg client.TxConfig, ac address.Codec, counter int64, msgCounters ...int64) signing.Tx {
-	t.Helper()
-	_, _, addr := testdata.KeyTestPubAddr()
-	addrStr, err := ac.BytesToString(addr)
-	require.NoError(t, err)
-	msgs := make([]sdk.Msg, 0, len(msgCounters))
-	for _, c := range msgCounters {
-		msg := &testutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addrStr}
-		msgs = append(msgs, msg)
-	}
-
-	builder := cfg.NewTxBuilder()
-	err = builder.SetMsgs(msgs...)
-	require.NoError(t, err)
-	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
-	setTxSignature(t, builder, uint64(counter))
-
-	return builder.GetTx()
-}
-
-func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
-	t.Helper()
-	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
-	pubKey := privKey.PubKey()
-	err := builder.SetSignatures(
-		signingtypes.SignatureV2{
-			PubKey:   pubKey,
-			Sequence: nonce,
-			Data:     &signingtypes.SingleSignatureData{},
-		},
-	)
-	require.NoError(t, err)
 }

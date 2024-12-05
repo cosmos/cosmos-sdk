@@ -11,16 +11,24 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
+	_ "cosmossdk.io/x/bank"     // import as blank for app wiring
+	bankkeeper "cosmossdk.io/x/bank/keeper"
+	banktestutil "cosmossdk.io/x/bank/testutil"
+	_ "cosmossdk.io/x/consensus"    // import as blank for app wiring
+	_ "cosmossdk.io/x/distribution" // import as blank for app wiring
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
+	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
+	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
+	_ "cosmossdk.io/x/slashing"     // import as blank for app wiring
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
 	"cosmossdk.io/x/slashing/types"
 	slashingtypes "cosmossdk.io/x/slashing/types"
+	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktestutil "cosmossdk.io/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -30,21 +38,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	_ "cosmossdk.io/x/accounts"     // import as blank for app wiring
-	_ "cosmossdk.io/x/bank"         // import as blank for app wiring
-	_ "cosmossdk.io/x/consensus"    // import as blank for app wiring
-	_ "cosmossdk.io/x/distribution" // import as blank for app wiring
-	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
-	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
-	_ "cosmossdk.io/x/slashing"     // import as blank for app wiring
-	_ "cosmossdk.io/x/staking"      // import as blank for app wiring
-
-	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/genutil" // import as blank for app wiring
 )
 
 var (

@@ -134,10 +134,6 @@ func TestSlashRedelegation(t *testing.T) {
 	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
-	_, state = f.app.Deliver(t, ctx, nil)
-	_, err = f.app.Commit(state)
-	require.NoError(t, err)
-
 	// confirm that account 1 and account 2 has been slashed, and the slash amount is correct
 	balance1AfterSlashing := f.bankKeeper.GetBalance(ctx, testAcc1, bondDenom)
 	balance2AfterSlashing := f.bankKeeper.GetBalance(ctx, testAcc2, bondDenom)

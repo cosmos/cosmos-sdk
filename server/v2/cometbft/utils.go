@@ -289,7 +289,6 @@ func gRPCErrorToSDKError(err error) *abci.QueryResponse {
 			res.Log = err.Error()
 		}
 		return res
-
 	}
 
 	status, ok := grpcstatus.FromError(err)

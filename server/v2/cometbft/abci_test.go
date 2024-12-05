@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -15,10 +16,9 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-
-	"reflect"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
@@ -35,9 +35,9 @@ import (
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 	consensustypes "cosmossdk.io/x/consensus/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 var (
@@ -810,7 +810,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		}, nil
 	})
 
-	var helloFooHandler = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
+	helloFooHandler := func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 		typedReq := msg.(*testdata.SayHelloRequest)
 		handler := testdata.QueryImpl{}
 		typedResp, err := handler.SayHello(ctx, typedReq)

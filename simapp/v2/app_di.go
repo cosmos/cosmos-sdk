@@ -19,11 +19,13 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
+	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
+	_ "github.com/jackc/pgx/v5/stdlib" // Import and register pgx driver
 )
 
 // SimApp extends an ABCI application, but with most of its parameters exported.

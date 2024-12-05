@@ -417,7 +417,7 @@ func (s STF[T]) endBlock(
 	}
 	events = append(events, ctx.events...)
 	for i := range events {
-		ctx.events[i].BlockNumber = uint64(ctx.headerInfo.Height)
+		events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		events[i].BlockStage = appdata.EndBlockStage
 		events[i].EventIndex = int32(i + 1)
 	}

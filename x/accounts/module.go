@@ -7,9 +7,11 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/schema"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
@@ -125,3 +127,9 @@ func (AppModule) GetQueryCmd() *cobra.Command {
 }
 
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+// ModuleCodec implements `schema.HasModuleCodec` interface.
+// It allows the indexer to decode the module's KVPairUpdate.
+func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
+	return am.k.Schema.ModuleCodec(collections.IndexingOptions{})
+}

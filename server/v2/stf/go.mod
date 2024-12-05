@@ -10,6 +10,8 @@ require (
 	github.com/tidwall/btree v1.7.0
 )
 
+replace cosmossdk.io/schema => ../../schema
+
 require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect

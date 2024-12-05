@@ -62,9 +62,14 @@ func NewKeeper(
 		accounts:         nil,
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
-		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
-		AccountByNumber:  collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey, collections.Uint64Value),
-		AccountsState:    collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.BytesValue),
+		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey.WithName("address"), collections.StringValue.WithName("type")),
+		AccountByNumber:  collections.NewMap(sb, AccountByNumber, "account_by_number", collections.BytesKey.WithName("address"), collections.Uint64Value.WithName("number")),
+		AccountsState: collections.NewMap(sb, implementation.AccountStatePrefix, "accounts_state", collections.NamedPairKeyCodec(
+			"number",
+			collections.Uint64Key,
+			"key",
+			collections.BytesKey,
+		), collections.BytesValue),
 	}
 
 	schema, err := sb.Build()

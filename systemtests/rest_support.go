@@ -45,6 +45,35 @@ func RunRestQueries(t *testing.T, testCases ...RestTestCase) {
 func RunRestQueriesIgnoreNumbers(t *testing.T, testCases ...RestTestCase) {
 	t.Helper()
 
+	// regex for standalone quoted numbers (e.g., "-3" or "0.02")
+	standaloneQuotedNumberRegex := regexp.MustCompile(`"(-?\d+(\.\d+)?)"`)
+	// regex for numbers in escaped strings (e.g., \"-3\")
+	escapedNumberRegex := regexp.MustCompile(`\\\"(-?\d+(\.\d+)?)\\\"`)
+	// regex for unquoted numbers (e.g., 2, -1, 0.02,)
+	unquotedNumberRegex := regexp.MustCompile(`\b-?\d+(\.\d+)?\b,`)
+
+	replaceNumber := func(input string) string {
+		// handle numbers in escaped strings
+		result := escapedNumberRegex.ReplaceAllStringFunc(input, func(match string) string {
+			// replace with escaped "NUMBER"
+			return `\"NUMBER\"`
+		})
+
+		// handle standalone quoted numbers
+		result = standaloneQuotedNumberRegex.ReplaceAllStringFunc(result, func(match string) string {
+			// replace with "NUMBER" (quotes preserved)
+			return `"NUMBER"`
+		})
+
+		// handle unquoted numbers
+		result = unquotedNumberRegex.ReplaceAllStringFunc(result, func(match string) string {
+			// replace with "NUMBER" (add quotes to ensure json validity)
+			return `"NUMBER",`
+		})
+
+		return result
+	}
+
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			if tc.ExpCodeGTE > 0 && tc.ExpCode > 0 {
@@ -58,17 +87,8 @@ func RunRestQueriesIgnoreNumbers(t *testing.T, testCases ...RestTestCase) {
 				resp = GetRequestWithHeaders(t, tc.Url, nil, tc.ExpCode)
 			}
 
-			// regular expression pattern to match any numeric value in the JSON
-			// expects when the number is in a word
-			numberRegexPattern := `"[^"]*"|(\b-?\d+(\.\d+)?\b)`
-
-			// compile the regex
-			r, err := regexp.Compile(numberRegexPattern)
-			require.NoError(t, err)
-
-			// replace all numeric values in the above JSONs with `NUMBER` text
-			expectedJSON := r.ReplaceAllString(tc.ExpOut, `"NUMBER"`)
-			actualJSON := r.ReplaceAllString(string(resp), `"NUMBER"`)
+			expectedJSON := replaceNumber(tc.ExpOut)
+			actualJSON := replaceNumber(string(resp))
 
 			// compare two jsons
 			require.JSONEq(t, expectedJSON, actualJSON)

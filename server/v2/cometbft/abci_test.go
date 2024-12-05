@@ -5,7 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -18,6 +20,9 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
+	"reflect"
+
+	"cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
@@ -33,6 +38,14 @@ import (
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 	consensustypes "cosmossdk.io/x/consensus/types"
+	"github.com/cosmos/cosmos-sdk/baseapp/testutil"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 var (
@@ -53,7 +66,9 @@ var (
 		Msg:      &gogotypes.BoolValue{Value: true},
 		GasLimit: 0,
 	}
-	actorName = []byte("cookies")
+	actorName  = []byte("cookies")
+	testAcc    = sdk.AccAddress([]byte("addr1_______________"))
+	versionStr = "0.0.0"
 )
 
 func getQueryRouterBuilder[T any, PT interface {
@@ -587,7 +602,7 @@ func TestConsensus_Info(t *testing.T) {
 //   - GRPC request
 //   - app request
 //   - p2p request
-func TestConsensus_Query(t *testing.T) {
+func TestConsensus_QueryStore(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Write data to state storage
@@ -648,11 +663,143 @@ func TestConsensus_Query(t *testing.T) {
 	require.Equal(t, res.Value, []byte(nil))
 }
 
+func TestConsensus_GRPCQuery(t *testing.T) {
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	// empty request
+	res, err := c.Query(context.Background(), &abciproto.QueryRequest{})
+	require.NoError(t, err)
+	require.Equal(t, res.Code, uint32(1))
+	require.Contains(t, res.Log, "no query path provided")
+
+	req := testdata.SayHelloRequest{Name: "foo"}
+	reqBz, err := req.Marshal()
+	require.NoError(t, err)
+
+	reqQuery := abci.QueryRequest{
+		Data: reqBz,
+		Path: "testpb.SayHelloRequest",
+	}
+
+	resQuery, err := c.Query(context.TODO(), &reqQuery)
+	require.NoError(t, err)
+	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
+
+	var response testdata.SayHelloResponse
+	require.NoError(t, response.Unmarshal(resQuery.Value))
+	require.Equal(t, "Hello foo!", response.Greeting)
+}
+
+func TestConsensus_P2PQuery(t *testing.T) {
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	// empty request
+	res, err := c.Query(context.Background(), &abciproto.QueryRequest{})
+	require.NoError(t, err)
+	require.Equal(t, res.Code, uint32(1))
+	require.Contains(t, res.Log, "no query path provided")
+
+	addrQuery := abci.QueryRequest{
+		Path: "/p2p/filter/addr/1.1.1.1:8000",
+	}
+	res, err = c.Query(context.TODO(), &addrQuery)
+	fmt.Println("p2p res", res, err)
+	require.NoError(t, err)
+	require.Equal(t, uint32(3), res.Code)
+
+	idQuery := abci.QueryRequest{
+		Path: "/p2p/filter/id/testid",
+	}
+	res, err = c.Query(context.TODO(), &idQuery)
+	require.NoError(t, err)
+	require.Equal(t, uint32(4), res.Code)
+}
+
+func TestConsensus_AppQuery(t *testing.T) {
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	// signingCtx := cdc.InterfaceRegistry().SigningContext()
+	// txConfig := authtx.NewTxConfig(
+	// 	cdc,
+	// 	signingCtx.AddressCodec(),
+	// 	signingCtx.ValidatorAddressCodec(),
+	// 	authtx.DefaultSignModes,
+	// )
+
+	tx := mock.Tx{
+		Sender:   testAcc,
+		Msg:      &gogotypes.BoolValue{Value: true},
+		GasLimit: 1000,
+	}
+	txBytes := tx.Bytes()
+
+	// simulate by calling Query with encoded tx
+	query := abci.QueryRequest{
+		Path: "/app/simulate",
+		Data: txBytes,
+	}
+	queryResult, err := c.Query(context.TODO(), &query)
+	fmt.Println("queryResult", queryResult, err)
+	require.NoError(t, err)
+	require.True(t, queryResult.IsOK(), queryResult.Log)
+
+	res, err := c.Query(context.TODO(), &abci.QueryRequest{Path: "app/version"})
+	require.NoError(t, err)
+	require.True(t, res.IsOK())
+	require.Equal(t, versionStr, string(res.Value))
+}
+
 func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *consensus[mock.Tx] {
 	t.Helper()
 
+	queryHandler := make(map[string]appmodulev2.Handler)
 	msgRouterBuilder := getMsgRouterBuilder(t, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-		return nil, nil
+		return msg, nil
 	})
 
 	queryRouterBuilder := getQueryRouterBuilder(t, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
@@ -668,6 +815,34 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 			Params: cParams,
 		}, nil
 	})
+
+	fmt.Println("name", proto.MessageName(&testdata.SayHelloRequest{}))
+
+	var helloFooHandler = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
+		typedReq := msg.(*testdata.SayHelloRequest)
+		handler := testdata.QueryImpl{}
+		typedResp, err := handler.SayHello(ctx, typedReq)
+		if err != nil {
+			return nil, err
+		}
+
+		return typedResp, nil
+	}
+
+	queryRouterBuilder.RegisterHandler(
+		proto.MessageName(&testdata.SayHelloRequest{}),
+		helloFooHandler,
+	)
+
+	queryHandler[proto.MessageName(&testdata.SayHelloRequest{})] = appmodulev2.Handler{
+		Func: helloFooHandler,
+		MakeMsg: func() transaction.Msg {
+			return reflect.New(gogoproto.MessageType(proto.MessageName(&testdata.SayHelloRequest{})).Elem()).Interface().(transaction.Msg)
+		},
+		MakeMsgResp: func() transaction.Msg {
+			return reflect.New(gogoproto.MessageType(proto.MessageName(&testdata.SayHelloResponse{})).Elem()).Interface().(transaction.Msg)
+		},
+	}
 
 	s, err := stf.New(
 		log.NewNopLogger().With("module", "stf"),
@@ -709,6 +884,16 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		nil,
 	)
 
+	addrPeerFilter := func(info string) (*abci.QueryResponse, error) {
+		require.Equal(t, "1.1.1.1:8000", info)
+		return &abci.QueryResponse{Code: uint32(3)}, nil
+	}
+
+	idPeerFilter := func(id string) (*abci.QueryResponse, error) {
+		require.Equal(t, "testid", id)
+		return &abci.QueryResponse{Code: uint32(4)}, nil
+	}
+
 	return &consensus[mock.Tx]{
 		logger:           log.NewNopLogger(),
 		appName:          "testing-app",
@@ -719,6 +904,10 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		txCodec:          mock.TxCodec{},
 		chainID:          "test",
 		getProtoRegistry: sync.OnceValues(proto.MergedRegistry),
+		queryHandlersMap: queryHandler,
+		addrPeerFilter:   addrPeerFilter,
+		idPeerFilter:     idPeerFilter,
+		version:          versionStr,
 	}
 }
 
@@ -806,4 +995,38 @@ func TestOptimisticExecution(t *testing.T) {
 
 	// Verify optimistic execution was reset
 	require.False(t, c.optimisticExec.Initialized())
+}
+
+func newTxCounter(t *testing.T, cfg client.TxConfig, ac address.Codec, counter int64, msgCounters ...int64) signing.Tx {
+	t.Helper()
+	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(t, err)
+	msgs := make([]sdk.Msg, 0, len(msgCounters))
+	for _, c := range msgCounters {
+		msg := &testutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addrStr}
+		msgs = append(msgs, msg)
+	}
+
+	builder := cfg.NewTxBuilder()
+	err = builder.SetMsgs(msgs...)
+	require.NoError(t, err)
+	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
+	setTxSignature(t, builder, uint64(counter))
+
+	return builder.GetTx()
+}
+
+func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
+	t.Helper()
+	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
+	pubKey := privKey.PubKey()
+	err := builder.SetSignatures(
+		signingtypes.SignatureV2{
+			PubKey:   pubKey,
+			Sequence: nonce,
+			Data:     &signingtypes.SingleSignatureData{},
+		},
+	)
+	require.NoError(t, err)
 }

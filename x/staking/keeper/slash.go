@@ -405,7 +405,8 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		// if the delegator holds a validator bond to destination validator, decrease the destination validator bond shares
 		if delegation.ValidatorBond {
 			if err := k.SafelyDecreaseValidatorBond(ctx, valDstAddr, sharesToUnbond); err != nil {
-				return math.ZeroInt(), err
+				// Log an error instead of panicking to handle operation failures gracefully
+				k.Logger(ctx).Error("failed to decrease validator bond", "error", err)
 			}
 		}
 
@@ -413,10 +414,12 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		// is an ICA account), the global and validator liquid totals should be decremented
 		if k.DelegatorIsLiquidStaker(delegatorAddress) {
 			if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokensToBurn); err != nil {
-				return math.ZeroInt(), err
+				// Log an error instead of panicking to handle operation failures gracefully
+				k.Logger(ctx).Error("failed to decrease total liquid staked tokens", "error", err)
 			}
 			if _, err := k.DecreaseValidatorLiquidShares(ctx, valDstAddr, sharesToUnbond); err != nil {
-				return math.ZeroInt(), err
+				// Log an error instead of panicking to handle operation failures gracefully
+				k.Logger(ctx).Error("failed to decrease validator liquid shares", "error", err)
 			}
 		}
 

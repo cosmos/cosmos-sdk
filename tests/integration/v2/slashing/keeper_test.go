@@ -11,118 +11,15 @@ import (
 	"cosmossdk.io/core/comet"
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-
-	_ "cosmossdk.io/x/accounts"     // import as blank for app wiring
-	_ "cosmossdk.io/x/bank"         // import as blank for app wiring
-	_ "cosmossdk.io/x/consensus"    // import as blank for app wiring
-	_ "cosmossdk.io/x/distribution" // import as blank for app wiring
-	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
-	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
-	_ "cosmossdk.io/x/slashing"     // import as blank for app wiring
-	_ "cosmossdk.io/x/staking"      // import as blank for app wiring
-
-	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 )
-
-type fixture struct {
-	app *integration.App
-
-	ctx context.Context
-	cdc codec.Codec
-
-	accountKeeper  authkeeper.AccountKeeper
-	bankKeeper     bankkeeper.Keeper
-	slashingKeeper slashingkeeper.Keeper
-	stakingKeeper  *stakingkeeper.Keeper
-
-	slashingMsgServer slashingtypes.MsgServer
-	txConfig          client.TxConfig
-
-	addrDels []sdk.AccAddress
-	valAddrs []sdk.ValAddress
-}
-
-func initFixture(t *testing.T) *fixture {
-	t.Helper()
-
-	res := fixture{}
-
-	moduleConfigs := []configurator.ModuleOption{
-		configurator.AccountsModule(),
-		configurator.AuthModule(),
-		configurator.BankModule(),
-		configurator.StakingModule(),
-		configurator.SlashingModule(),
-		configurator.TxModule(),
-		configurator.ValidateModule(),
-		configurator.ConsensusModule(),
-		configurator.GenutilModule(),
-		configurator.MintModule(),
-		configurator.DistributionModule(),
-		configurator.ProtocolPoolModule(),
-	}
-
-	var err error
-	startupCfg := integration.DefaultStartUpConfig(t)
-
-	startupCfg.BranchService = &integration.BranchService{}
-	startupCfg.HeaderService = &integration.HeaderService{}
-
-	res.app, err = integration.NewApp(
-		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
-		startupCfg,
-		&res.bankKeeper, &res.accountKeeper, &res.stakingKeeper, &res.slashingKeeper, &res.cdc, &res.txConfig)
-	require.NoError(t, err)
-
-	res.ctx = res.app.StateLatestContext(t)
-
-	// set default staking params
-	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	err = res.slashingKeeper.Params.Set(res.ctx, testutil.TestParams())
-	assert.NilError(t, err)
-
-	addrDels := simtestutil.AddTestAddrsIncremental(res.bankKeeper, res.stakingKeeper, res.ctx, 6, res.stakingKeeper.TokensFromConsensusPower(res.ctx, 200))
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
-
-	consaddr0, err := res.stakingKeeper.ConsensusAddressCodec().BytesToString(addrDels[0])
-	require.NoError(t, err)
-	consaddr1, err := res.stakingKeeper.ConsensusAddressCodec().BytesToString(addrDels[1])
-	require.NoError(t, err)
-
-	info1 := slashingtypes.NewValidatorSigningInfo(consaddr0, int64(4), time.Unix(2, 0), false, int64(10))
-	info2 := slashingtypes.NewValidatorSigningInfo(consaddr1, int64(5), time.Unix(2, 0), false, int64(10))
-
-	err = res.slashingKeeper.ValidatorSigningInfo.Set(res.ctx, sdk.ConsAddress(addrDels[0]), info1)
-	require.NoError(t, err)
-	err = res.slashingKeeper.ValidatorSigningInfo.Set(res.ctx, sdk.ConsAddress(addrDels[1]), info2)
-	require.NoError(t, err)
-
-	res.addrDels = addrDels
-	res.valAddrs = valAddrs
-
-	res.slashingMsgServer = slashingkeeper.NewMsgServerImpl(res.slashingKeeper)
-
-	return &res
-}
 
 func TestUnJailNotBonded(t *testing.T) {
 	t.Parallel()

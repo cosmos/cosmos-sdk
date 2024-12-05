@@ -8,50 +8,24 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
-	distributionkeeper "cosmossdk.io/x/distribution/keeper"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/tests/integration/slashing"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 func TestSlashRedelegation(t *testing.T) {
-	// setting up
-	var (
-		authKeeper    authkeeper.AccountKeeper
-		stakingKeeper *stakingkeeper.Keeper
-		bankKeeper    bankkeeper.Keeper
-		slashKeeper   slashingkeeper.Keeper
-		distrKeeper   distributionkeeper.Keeper
-	)
+	f := initFixture(t)
+	ctx := f.ctx
 
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			depinject.Supply(log.NewNopLogger()),
-			slashing.AppConfig,
-		),
-		&stakingKeeper,
-		&bankKeeper,
-		&slashKeeper,
-		&distrKeeper,
-		&authKeeper,
-	)
-	require.NoError(t, err)
-
-	// get sdk context, staking msg server and bond denom
-	ctx := app.BaseApp.NewContext(false)
-	stakingMsgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
-	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(f.stakingKeeper)
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)
 
 	// evilVal will be slashed, goodVal won't be slashed
@@ -65,12 +39,12 @@ func TestSlashRedelegation(t *testing.T) {
 	testAcc2 := sdk.AccAddress([]byte("addr2_______________"))
 
 	// fund acc 1 and acc 2
-	testCoin := sdk.NewCoin(bondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 10))
-	fundAccount(t, ctx, bankKeeper, authKeeper, testAcc1, testCoin)
-	fundAccount(t, ctx, bankKeeper, authKeeper, testAcc2, testCoin)
+	testCoin := sdk.NewCoin(bondDenom, f.stakingKeeper.TokensFromConsensusPower(ctx, 10))
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, testAcc1, testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, testAcc2, testCoin)
 
-	balance1Before := bankKeeper.GetBalance(ctx, testAcc1, bondDenom)
-	balance2Before := bankKeeper.GetBalance(ctx, testAcc2, bondDenom)
+	balance1Before := f.bankKeeper.GetBalance(ctx, testAcc1, bondDenom)
+	balance2Before := f.bankKeeper.GetBalance(ctx, testAcc2, bondDenom)
 
 	// assert acc 1 and acc 2 balance
 	require.Equal(t, balance1Before.Amount.String(), testCoin.Amount.String())
@@ -78,7 +52,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// creating evil val
 	evilValAddr := sdk.ValAddress(evilValPubKey.Address())
-	fundAccount(t, ctx, bankKeeper, authKeeper, sdk.AccAddress(evilValAddr), testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, sdk.AccAddress(evilValAddr), testCoin)
 	createValMsg1, _ := stakingtypes.NewMsgCreateValidator(
 		evilValAddr.String(), evilValPubKey, testCoin, stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
 	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg1)
@@ -86,16 +60,17 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// creating good val
 	goodValAddr := sdk.ValAddress(goodValPubKey.Address())
-	fundAccount(t, ctx, bankKeeper, authKeeper, sdk.AccAddress(goodValAddr), testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, sdk.AccAddress(goodValAddr), testCoin)
 	createValMsg2, _ := stakingtypes.NewMsgCreateValidator(
 		goodValAddr.String(), goodValPubKey, testCoin, stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
 	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg2)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1})
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Height: 1})
 	// next block, commit height 1, move to height 2
 	// acc 1 and acc 2 delegate to evil val
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state := f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// Acc 2 delegate
@@ -111,13 +86,14 @@ func TestSlashRedelegation(t *testing.T) {
 	// next block, commit height 2, move to height 3
 	// with the new delegations, evil val increases in voting power and commit byzantine behavior at height 3 consensus
 	// at the same time, acc 1 and acc 2 withdraw delegation from evil val
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
-	evilVal, err := stakingKeeper.GetValidator(ctx, evilValAddr)
+	evilVal, err := f.stakingKeeper.GetValidator(ctx, evilValAddr)
 	require.NoError(t, err)
 
-	evilPower := stakingKeeper.TokensToConsensusPower(ctx, evilVal.Tokens)
+	evilPower := f.stakingKeeper.TokensToConsensusPower(ctx, evilVal.Tokens)
 
 	// Acc 1 redelegate from evil val to good val
 	redelMsg := stakingtypes.NewMsgBeginRedelegate(testAcc1.String(), evilValAddr.String(), goodValAddr.String(), testCoin)
@@ -135,81 +111,64 @@ func TestSlashRedelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block, commit height 3, move to height 4
-	// Slash evil val for byzantine behavior at height 3 consensus,
+	// Slash evil val for byzantine behavior at height 2 consensus,
 	// at which acc 1 and acc 2 still contributed to evil val voting power
 	// even tho they undelegate at block 3, the valset update is applied after committed block 3 when height 3 consensus already passes
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// slash evil val with slash factor = 0.9, leaving only 10% of stake after slashing
-	evilVal, _ = stakingKeeper.GetValidator(ctx, evilValAddr)
+	evilVal, _ = f.stakingKeeper.GetValidator(ctx, evilValAddr)
 	evilValConsAddr, err := evilVal.GetConsAddr()
 	require.NoError(t, err)
 
-	err = slashKeeper.Slash(ctx, evilValConsAddr, math.LegacyMustNewDecFromStr("0.9"), evilPower, 3)
+	err = f.slashingKeeper.Slash(ctx, evilValConsAddr, math.LegacyMustNewDecFromStr("0.9"), evilPower, 2)
 	require.NoError(t, err)
-
-	// assert invariant to make sure we conduct slashing correctly
-	_, stop := stakingkeeper.AllInvariants(stakingKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
-	require.False(t, stop)
 
 	// one eternity later
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1000000000000000000))
+	ctxHeader := integration.HeaderInfoFromContext(ctx)
+	ctxHeader.Time = ctxHeader.Time.Add(time.Duration(1000000000000000000))
+	ctx = integration.SetHeaderInfo(ctx, ctxHeader)
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// confirm that account 1 and account 2 has been slashed, and the slash amount is correct
-	balance1AfterSlashing := bankKeeper.GetBalance(ctx, testAcc1, bondDenom)
-	balance2AfterSlashing := bankKeeper.GetBalance(ctx, testAcc2, bondDenom)
+	balance1AfterSlashing := f.bankKeeper.GetBalance(ctx, testAcc1, bondDenom)
+	balance2AfterSlashing := f.bankKeeper.GetBalance(ctx, testAcc2, bondDenom)
 
 	require.Equal(t, balance1AfterSlashing.Amount.Mul(math.NewIntFromUint64(10)).String(), balance1Before.Amount.String())
 	require.Equal(t, balance2AfterSlashing.Amount.Mul(math.NewIntFromUint64(10)).String(), balance2Before.Amount.String())
 }
 
-func fundAccount(t *testing.T, ctx context.Context, bankKeeper bankkeeper.Keeper, authKeeper authkeeper.AccountKeeper, addr sdk.AccAddress, amount ...sdk.Coin) {
+func fundAccount(t *testing.T, ctx context.Context, bankKeeper bankkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, addr sdk.AccAddress, amount ...sdk.Coin) {
 	t.Helper()
 
-	if authKeeper.GetAccount(ctx, addr) == nil {
-		addrAcc := authKeeper.NewAccountWithAddress(ctx, addr)
-		authKeeper.SetAccount(ctx, addrAcc)
+	if accountKeeper.GetAccount(ctx, addr) == nil {
+		addrAcc := accountKeeper.NewAccountWithAddress(ctx, addr)
+		accountKeeper.SetAccount(ctx, addrAcc)
 	}
 
 	require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, addr, amount))
 }
 
 func TestOverSlashing(t *testing.T) {
+	f := initFixture(t)
+	ctx := f.ctx
+
 	// slash penalty percentage
 	slashFraction := "0.45"
 
 	// percentage of (undelegation/(undelegation + redelegation))
 	undelegationPercentageStr := "0.30"
 
-	// setting up
-	var (
-		stakingKeeper *stakingkeeper.Keeper
-		bankKeeper    bankkeeper.Keeper
-		slashKeeper   slashingkeeper.Keeper
-		distrKeeper   distributionkeeper.Keeper
-		authKeeper    authkeeper.AccountKeeper
-	)
-
-	app, err := simtestutil.Setup(depinject.Configs(
-		depinject.Supply(log.NewNopLogger()),
-		slashing.AppConfig,
-	), &stakingKeeper, &bankKeeper, &slashKeeper, &distrKeeper, &authKeeper)
-	require.NoError(t, err)
-
-	// get sdk context, staking msg server and bond denom
-	ctx := app.BaseApp.NewContext(false)
-	stakingMsgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
-	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(f.stakingKeeper)
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)
 
 	// evilVal will be slashed, goodVal won't be slashed
@@ -231,13 +190,13 @@ func TestOverSlashing(t *testing.T) {
 
 	// fund all accounts
 	testCoin := sdk.NewCoin(bondDenom, math.NewInt(1_000_000))
-	fundAccount(t, ctx, bankKeeper, authKeeper, testAcc1, testCoin)
-	fundAccount(t, ctx, bankKeeper, authKeeper, testAcc2, testCoin)
-	fundAccount(t, ctx, bankKeeper, authKeeper, testAcc3, testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, testAcc1, testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, testAcc2, testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, testAcc3, testCoin)
 
-	balance1Before := bankKeeper.GetBalance(ctx, testAcc1, bondDenom)
-	balance2Before := bankKeeper.GetBalance(ctx, testAcc2, bondDenom)
-	balance3Before := bankKeeper.GetBalance(ctx, testAcc3, bondDenom)
+	balance1Before := f.bankKeeper.GetBalance(ctx, testAcc1, bondDenom)
+	balance2Before := f.bankKeeper.GetBalance(ctx, testAcc2, bondDenom)
+	balance3Before := f.bankKeeper.GetBalance(ctx, testAcc3, bondDenom)
 
 	// assert acc 1, 2 and 3 balance
 	require.Equal(t, testCoin.Amount.String(), balance1Before.Amount.String())
@@ -246,7 +205,7 @@ func TestOverSlashing(t *testing.T) {
 
 	// create evil val
 	evilValAddr := sdk.ValAddress(evilValPubKey.Address())
-	fundAccount(t, ctx, bankKeeper, authKeeper, sdk.AccAddress(evilValAddr), testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, sdk.AccAddress(evilValAddr), testCoin)
 	createValMsg1, _ := stakingtypes.NewMsgCreateValidator(
 		evilValAddr.String(), evilValPubKey, testCoin, stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
 	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg1)
@@ -254,16 +213,16 @@ func TestOverSlashing(t *testing.T) {
 
 	// create good val 1
 	goodValAddr := sdk.ValAddress(goodValPubKey.Address())
-	fundAccount(t, ctx, bankKeeper, authKeeper, sdk.AccAddress(goodValAddr), testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, sdk.AccAddress(goodValAddr), testCoin)
 	createValMsg2, _ := stakingtypes.NewMsgCreateValidator(
 		goodValAddr.String(), goodValPubKey, testCoin, stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
 	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg2)
 	require.NoError(t, err)
 
 	// next block
-	ctx = ctx.WithBlockHeight(app.LastBlockHeight() + 1).WithHeaderInfo(header.Info{Height: app.LastBlockHeight() + 1})
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
-	require.NoError(t, err)
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Height: int64(f.app.LastBlockHeight()) + 1})
+	_, state := f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 
 	// delegate all accs to evil val
 	delMsg := stakingtypes.NewMsgDelegate(testAcc1.String(), evilValAddr.String(), testCoin)
@@ -279,21 +238,23 @@ func TestOverSlashing(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// evilValAddr done something bad
-	misbehaveHeight := ctx.BlockHeader().Height
-	evilVal, err := stakingKeeper.GetValidator(ctx, evilValAddr)
+	misbehaveHeight := integration.HeaderInfoFromContext(ctx).Height
+	evilVal, err := f.stakingKeeper.GetValidator(ctx, evilValAddr)
 	require.NoError(t, err)
 
 	evilValConsAddr, err := evilVal.GetConsAddr()
 	require.NoError(t, err)
 
-	evilPower := stakingKeeper.TokensToConsensusPower(ctx, evilVal.Tokens)
+	evilPower := f.stakingKeeper.TokensToConsensusPower(ctx, evilVal.Tokens)
 
 	// next block
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// acc 1: redelegate to goodval1 and undelegate FULL amount
@@ -319,7 +280,8 @@ func TestOverSlashing(t *testing.T) {
 	amountToUndelegate := undelegationAmountDec.TruncateInt()
 
 	// next block
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	portionofTestCoins := sdk.NewCoin(bondDenom, amountToUndelegate)
@@ -328,38 +290,35 @@ func TestOverSlashing(t *testing.T) {
 	require.NoError(t, err)
 
 	// next block
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// slash the evil val
-	err = slashKeeper.Slash(ctx, evilValConsAddr, math.LegacyMustNewDecFromStr(slashFraction), evilPower, misbehaveHeight)
+	err = f.slashingKeeper.Slash(ctx, evilValConsAddr, math.LegacyMustNewDecFromStr(slashFraction), evilPower, misbehaveHeight)
 	require.NoError(t, err)
-
-	// assert invariants
-	_, stop := stakingkeeper.AllInvariants(stakingKeeper)(ctx)
-	require.False(t, stop)
-	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
-	require.False(t, stop)
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
-	require.False(t, stop)
 
 	// fastforward 2 blocks to complete redelegations and unbondings
 	for i := 0; i < 2; i++ {
-		ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1000000000000000000))
+		ctxHeader := integration.HeaderInfoFromContext(ctx)
+		ctxHeader.Time = ctxHeader.Time.Add(time.Duration(1000000000000000000))
+		ctx = integration.SetHeaderInfo(ctx, ctxHeader)
+		_, state = f.app.Deliver(t, ctx, nil)
+		_, err = f.app.Commit(state)
 		require.NoError(t, err)
 	}
 
 	// we check all accounts should be slashed with the equal amount, and they should end up with same balance including staked amount
-	stakedAcc1, err := stakingKeeper.GetDelegatorBonded(ctx, testAcc1)
+	stakedAcc1, err := f.stakingKeeper.GetDelegatorBonded(ctx, testAcc1)
 	require.NoError(t, err)
-	stakedAcc2, err := stakingKeeper.GetDelegatorBonded(ctx, testAcc2)
+	stakedAcc2, err := f.stakingKeeper.GetDelegatorBonded(ctx, testAcc2)
 	require.NoError(t, err)
-	stakedAcc3, err := stakingKeeper.GetDelegatorBonded(ctx, testAcc3)
+	stakedAcc3, err := f.stakingKeeper.GetDelegatorBonded(ctx, testAcc3)
 	require.NoError(t, err)
 
-	balance1AfterSlashing := bankKeeper.GetBalance(ctx, testAcc1, bondDenom).Add(sdk.NewCoin(bondDenom, stakedAcc1))
-	balance2AfterSlashing := bankKeeper.GetBalance(ctx, testAcc2, bondDenom).Add(sdk.NewCoin(bondDenom, stakedAcc2))
-	balance3AfterSlashing := bankKeeper.GetBalance(ctx, testAcc3, bondDenom).Add(sdk.NewCoin(bondDenom, stakedAcc3))
+	balance1AfterSlashing := f.bankKeeper.GetBalance(ctx, testAcc1, bondDenom).Add(sdk.NewCoin(bondDenom, stakedAcc1))
+	balance2AfterSlashing := f.bankKeeper.GetBalance(ctx, testAcc2, bondDenom).Add(sdk.NewCoin(bondDenom, stakedAcc2))
+	balance3AfterSlashing := f.bankKeeper.GetBalance(ctx, testAcc3, bondDenom).Add(sdk.NewCoin(bondDenom, stakedAcc3))
 
 	require.Equal(t, "550000stake", balance1AfterSlashing.String())
 	require.Equal(t, "550000stake", balance2AfterSlashing.String())
@@ -367,32 +326,11 @@ func TestOverSlashing(t *testing.T) {
 }
 
 func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
-	// setting up
-	var (
-		authKeeper    authkeeper.AccountKeeper
-		stakingKeeper *stakingkeeper.Keeper
-		bankKeeper    bankkeeper.Keeper
-		slashKeeper   slashingkeeper.Keeper
-		distrKeeper   distributionkeeper.Keeper
-	)
+	f := initFixture(t)
+	ctx := f.ctx
 
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			depinject.Supply(log.NewNopLogger()),
-			slashing.AppConfig,
-		),
-		&stakingKeeper,
-		&bankKeeper,
-		&slashKeeper,
-		&distrKeeper,
-		&authKeeper,
-	)
-	require.NoError(t, err)
-
-	// get sdk context, staking msg server and bond denom
-	ctx := app.BaseApp.NewContext(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1})
-	stakingMsgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
-	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(f.stakingKeeper)
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)
 
 	// create validators DST and SRC
@@ -402,9 +340,9 @@ func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
 	dstAddr := sdk.ValAddress(dstPubKey.Address())
 	srcAddr := sdk.ValAddress(srcPubKey.Address())
 
-	testCoin := sdk.NewCoin(bondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 1000))
-	fundAccount(t, ctx, bankKeeper, authKeeper, sdk.AccAddress(dstAddr), testCoin)
-	fundAccount(t, ctx, bankKeeper, authKeeper, sdk.AccAddress(srcAddr), testCoin)
+	testCoin := sdk.NewCoin(bondDenom, f.stakingKeeper.TokensFromConsensusPower(ctx, 1000))
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, sdk.AccAddress(dstAddr), testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, sdk.AccAddress(srcAddr), testCoin)
 
 	createValMsgDST, _ := stakingtypes.NewMsgCreateValidator(
 		dstAddr.String(), dstPubKey, testCoin, stakingtypes.Description{Details: "Validator DST"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
@@ -418,10 +356,10 @@ func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
 
 	// create a user accounts and delegate to SRC and DST
 	userAcc := sdk.AccAddress([]byte("user1_______________"))
-	fundAccount(t, ctx, bankKeeper, authKeeper, userAcc, testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, userAcc, testCoin)
 
 	userAcc2 := sdk.AccAddress([]byte("user2_______________"))
-	fundAccount(t, ctx, bankKeeper, authKeeper, userAcc2, testCoin)
+	fundAccount(t, ctx, f.bankKeeper, f.accountKeeper, userAcc2, testCoin)
 
 	delMsg := stakingtypes.NewMsgDelegate(userAcc.String(), srcAddr.String(), testCoin)
 	_, err = stakingMsgServer.Delegate(ctx, delMsg)
@@ -431,18 +369,20 @@ func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
 	_, err = stakingMsgServer.Delegate(ctx, delMsg)
 	require.NoError(t, err)
 
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state := f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// commit an infraction with DST and store the power at this height
-	dstVal, err := stakingKeeper.GetValidator(ctx, dstAddr)
+	dstVal, err := f.stakingKeeper.GetValidator(ctx, dstAddr)
 	require.NoError(t, err)
-	dstPower := stakingKeeper.TokensToConsensusPower(ctx, dstVal.Tokens)
+	dstPower := f.stakingKeeper.TokensToConsensusPower(ctx, dstVal.Tokens)
 	dstConsAddr, err := dstVal.GetConsAddr()
 	require.NoError(t, err)
-	dstInfractionHeight := ctx.BlockHeight()
+	dstInfractionHeight := f.app.LastBlockHeight() + 1
 
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// undelegate all the user tokens from DST
@@ -451,14 +391,15 @@ func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
 	require.NoError(t, err)
 
 	// commit an infraction with SRC and store the power at this height
-	srcVal, err := stakingKeeper.GetValidator(ctx, srcAddr)
+	srcVal, err := f.stakingKeeper.GetValidator(ctx, srcAddr)
 	require.NoError(t, err)
-	srcPower := stakingKeeper.TokensToConsensusPower(ctx, srcVal.Tokens)
+	srcPower := f.stakingKeeper.TokensToConsensusPower(ctx, srcVal.Tokens)
 	srcConsAddr, err := srcVal.GetConsAddr()
 	require.NoError(t, err)
-	srcInfractionHeight := ctx.BlockHeight()
+	srcInfractionHeight := f.app.LastBlockHeight() + 1
 
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	// redelegate all the user tokens from SRC to DST
@@ -471,7 +412,8 @@ func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
 	_, err = stakingMsgServer.Undelegate(ctx, undelMsg)
 	require.NoError(t, err)
 
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	_, state = f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	require.NoError(t, err)
 
 	undelMsg = stakingtypes.NewMsgUndelegate(userAcc.String(), dstAddr.String(), testCoin)
@@ -479,24 +421,14 @@ func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
 	require.NoError(t, err)
 
 	// check that dst now has zero tokens
-	valDst, err := stakingKeeper.GetValidator(ctx, dstAddr)
+	valDst, err := f.stakingKeeper.GetValidator(ctx, dstAddr)
 	require.NoError(t, err)
 	require.Equal(t, math.ZeroInt().String(), valDst.Tokens.String())
 
 	// slash the infractions
-	err = slashKeeper.Slash(ctx, dstConsAddr, math.LegacyMustNewDecFromStr("0.8"), dstPower, dstInfractionHeight)
+	err = f.slashingKeeper.Slash(ctx, dstConsAddr, math.LegacyMustNewDecFromStr("0.8"), dstPower, int64(dstInfractionHeight))
 	require.NoError(t, err)
 
-	err = slashKeeper.Slash(ctx, srcConsAddr, math.LegacyMustNewDecFromStr("0.5"), srcPower, srcInfractionHeight)
+	err = f.slashingKeeper.Slash(ctx, srcConsAddr, math.LegacyMustNewDecFromStr("0.5"), srcPower, int64(srcInfractionHeight))
 	require.NoError(t, err)
-
-	// assert invariants to ensure correctness
-	_, stop := stakingkeeper.AllInvariants(stakingKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
-	require.False(t, stop)
 }

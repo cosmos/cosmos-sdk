@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
@@ -16,14 +16,14 @@ require (
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	github.com/chzyer/readline v1.5.1
+	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/manifoldco/promptui v0.9.0
+	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.10.0

@@ -46,6 +46,7 @@ require (
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/benchmark v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -259,6 +260,7 @@ replace (
 	cosmossdk.io/x/accounts/defaults/multisig => ../../x/accounts/defaults/multisig
 	cosmossdk.io/x/authz => ../../x/authz
 	cosmossdk.io/x/bank => ../../x/bank
+	cosmossdk.io/x/benchmark => ../../x/benchmark
 	cosmossdk.io/x/circuit => ../../x/circuit
 	cosmossdk.io/x/consensus => ../../x/consensus
 	cosmossdk.io/x/distribution => ../../x/distribution

@@ -5,19 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/telemetry"
-	"cosmossdk.io/core/transaction"
-
-	"cosmossdk.io/core/registry"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/spf13/cobra"
-
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	_ "cosmossdk.io/api/cosmos/benchmark/v1" // for some reason this is required to make msg server registration work
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/benchmark"
 	"cosmossdk.io/x/benchmark/client/cli"
@@ -45,11 +42,10 @@ func NewAppModule(
 	storeKeys []string,
 	kvMap KVServiceMap,
 	logger log.Logger,
-	telemetryService telemetry.Service,
 ) *AppModule {
 	return &AppModule{
 		genesisParams: genesisParams,
-		keeper:        NewKeeper(kvMap, telemetryService),
+		keeper:        NewKeeper(kvMap),
 		storeKeys:     storeKeys,
 		log:           logger,
 	}

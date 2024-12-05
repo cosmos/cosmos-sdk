@@ -194,6 +194,17 @@ func TestRunMigrations(t *testing.T) {
 				}
 			}
 
+			app.ModuleManager.OrderMigrations = module.DefaultMigrationsOrder(app.ModuleManager.ModuleNames())
+			// remove benchmark module from migrations list
+			var benchmarkIdx int
+			for i, name := range app.ModuleManager.OrderMigrations {
+				if name == "benchmark" {
+					benchmarkIdx = i
+					break
+				}
+			}
+			app.ModuleManager.OrderMigrations = append(app.ModuleManager.OrderMigrations[:benchmarkIdx], app.ModuleManager.OrderMigrations[benchmarkIdx+1:]...)
+
 			// Run migrations only for bank. That's why we put the initial
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.

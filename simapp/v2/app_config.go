@@ -309,8 +309,8 @@ var (
 				Config: appconfig.WrapAny(&benchmarkmodulev1.Module{
 					GenesisParams: &benchmarkmodulev1.GeneratorParams{
 						Seed:         34,
-						BucketCount:  2,
-						GenesisCount: 5_000_000,
+						BucketCount:  1,
+						GenesisCount: 100,
 						KeyMean:      64,
 						KeyStdDev:    12,
 						ValueMean:    1024,

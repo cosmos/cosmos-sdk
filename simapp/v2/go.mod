@@ -256,7 +256,7 @@ replace (
 	cosmossdk.io/core/testing => cosmossdk.io/core/testing v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241119134933-d697a3de0f95 // main
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base

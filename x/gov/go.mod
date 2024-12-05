@@ -4,6 +4,7 @@ go 1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6
+	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
@@ -181,6 +182,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/protocolpool => ../protocolpool

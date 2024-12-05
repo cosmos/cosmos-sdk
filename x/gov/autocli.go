@@ -147,7 +147,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateMessageParams",
 					Use:       "update-params-msg-url-params <msg-url> <msg-params>",
 					Short:     "Submit a proposal to update gov module message params. Note: the entire params must be provided.",
-					Example:   fmt.Sprintf(`%s tx gov update-msg-params-proposal [msg-url]'{ params }'`, version.AppName),
+					Example:   fmt.Sprintf(`%s tx gov update-params-msg-url-params [msg-url]'{ params }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "msg_url"},
 						{ProtoField: "params"},

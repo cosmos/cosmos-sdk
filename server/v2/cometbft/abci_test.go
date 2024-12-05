@@ -590,10 +590,6 @@ func TestConsensus_Info(t *testing.T) {
 	require.Equal(t, res.LastBlockHeight, int64(1))
 }
 
-// TODO:
-//   - GRPC request
-//   - app request
-//   - p2p request
 func TestConsensus_QueryStore(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 

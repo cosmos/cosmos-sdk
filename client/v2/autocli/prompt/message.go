@@ -30,15 +30,16 @@ func promptMessage(
 	consensusAddressCodec addresscodec.Codec, promptPrefix string,
 	stdIn io.ReadCloser, msg protoreflect.Message,
 ) (protoreflect.Message, error) {
-	promptUi := promptui.Prompt{
-		Validate: prompt.ValidatePromptNotEmpty,
-		Stdin:    stdIn,
-	}
 
 	fields := msg.Descriptor().Fields()
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
 		fieldName := string(field.Name())
+
+		promptUi := promptui.Prompt{
+			Validate: prompt.ValidatePromptNotEmpty,
+			Stdin:    stdIn,
+		}
 
 		// If this signer field has already a valid default value set,
 		// use that value as the default prompt value. This is useful for

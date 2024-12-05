@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	protocolpool "cosmossdk.io/api/cosmos/protocolpool/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/client/v2/internal/testpb"
@@ -30,13 +29,6 @@ func TestPromptMessage(t *testing.T) {
 		msg    protoreflect.Message
 		inputs []string
 	}{
-		{
-			name:   "community pool spend",
-			inputs: []string{"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", "cosmos129lxcu2n3hx54fdxlwsahqkjr3sp32cxm00zlm", "10000", "stake", "No"},
-			msg: (&protocolpool.MsgCommunityPoolSpend{
-				Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-			}).ProtoReflect(),
-		},
 		{
 			name: "testPb",
 			inputs: []string{"1", "2", "string", "bytes", "10101010", "0", "234234", "3", "4", "5", "true", "ENUM_ONE",

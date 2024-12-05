@@ -12,16 +12,19 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors/v2"
+	errorsmod "cosmossdk.io/errors" // we aren't using errors/v2 as it doesn't support grpc status codes
 	"cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func queryResponse(res transaction.Msg, height int64) (*abci.QueryResponse, error) {
@@ -258,14 +261,48 @@ func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
 	return ci
 }
 
-// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
-// info from the error.
-func QueryResult(err error, debug bool) *abci.QueryResponse {
+// queryResult returns a ResponseQuery from an error. It will try to parse ABCI info from the error.
+func queryResult(err error, debug bool) *abci.QueryResponse {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
 	return &abci.QueryResponse{
 		Codespace: space,
 		Code:      code,
 		Log:       log,
+	}
+}
+
+func gRPCErrorToSDKError(err error) *abci.QueryResponse {
+	toQueryResp := func(sdkErr *errorsmod.Error, err error) *abci.QueryResponse {
+		res := &abci.QueryResponse{
+			Code:      sdkErr.ABCICode(),
+			Codespace: sdkErr.Codespace(),
+		}
+		type grpcStatus interface{ GRPCStatus() *grpcstatus.Status }
+		if grpcErr, ok := err.(grpcStatus); ok {
+			res.Log = grpcErr.GRPCStatus().Message()
+		} else {
+			res.Log = err.Error()
+		}
+		return res
+
+	}
+
+	status, ok := grpcstatus.FromError(err)
+	if !ok {
+		return toQueryResp(sdkerrors.ErrInvalidRequest, err)
+	}
+
+	switch status.Code() {
+	case codes.NotFound:
+		return toQueryResp(sdkerrors.ErrKeyNotFound, err)
+	case codes.InvalidArgument:
+		return toQueryResp(sdkerrors.ErrInvalidRequest, err)
+	case codes.FailedPrecondition:
+		return toQueryResp(sdkerrors.ErrInvalidRequest, err)
+	case codes.Unauthenticated:
+		return toQueryResp(sdkerrors.ErrUnauthorized, err)
+	default:
+		return toQueryResp(sdkerrors.ErrUnknownRequest, err)
 	}
 }
 

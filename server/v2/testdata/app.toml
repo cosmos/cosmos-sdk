@@ -30,13 +30,6 @@ ss-type = 'pebble'
 # State commitment database type. Currently we support: "iavl" and "iavl-v2"
 sc-type = 'iavl'
 
-# Pruning options for state storage
-[store.options.ss-pruning-option]
-# Number of recent heights to keep on disk.
-keep-recent = 2
-# Height interval at which pruned heights are removed from disk.
-interval = 100
-
 # Pruning options for state commitment
 [store.options.sc-pruning-option]
 # Number of recent heights to keep on disk.

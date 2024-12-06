@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	stderrors "errors"
 	"math/big"
+	"strconv"
 
 	"github.com/cockroachdb/apd/v3"
 
@@ -299,7 +300,7 @@ func (x Dec) Int64() (int64, error) {
 // fit precisely into an *big.Int.
 func (x Dec) BigInt() (*big.Int, error) {
 	y, _ := x.Reduce()
-	z, ok := new(big.Int).SetString(y.String(), 10)
+	z, ok := new(big.Int).SetString(y.Text('f'), 10)
 	if !ok {
 		return nil, ErrNonIntegral
 	}
@@ -334,7 +335,7 @@ func (x Dec) SdkIntTrim() (Int, error) {
 
 // String formatted in decimal notation: '-ddddd.dddd', no exponent
 func (x Dec) String() string {
-	return x.dec.Text('f')
+	return string(fmtE(x.dec, 'E'))
 }
 
 // Text converts the floating-point number x to a string according
@@ -407,14 +408,81 @@ func (x Dec) Reduce() (Dec, int) {
 	return y, n
 }
 
+// Marshal serializes the decimal value into a byte slice in text format.
+// This method represents the decimal in a portable and compact hybrid notation.
+// Based on the exponent value, the number is formatted into decimal: -ddddd.ddddd, no exponent
+// or scientific notation: -d.ddddE±dd
+//
+// For example, the following transformations are made:
+//   - 0 -> 0
+//   - 123 -> 123
+//   - 10000 -> 10000
+//   - -0.001 -> -0.001
+//   - -0.000000001 -> -1E-9
+//
+// Returns:
+//   - A byte slice of the decimal in text format.
+//   - An error if the decimal cannot be reduced or marshaled properly.
 func (x Dec) Marshal() ([]byte, error) {
-	// implemented in a new PR. See: https://github.com/cosmos/cosmos-sdk/issues/22525
-	panic("not implemented")
+	var d apd.Decimal
+	if _, _, err := dec128Context.Reduce(&d, &x.dec); err != nil {
+		return nil, ErrInvalidDec.Wrap(err.Error())
+	}
+	return fmtE(d, 'E'), nil
 }
 
+// fmtE formats a decimal number into a byte slice in scientific notation or fixed-point notation depending on the exponent.
+// If the adjusted exponent is between -6 and 6 inclusive, it uses fixed-point notation, otherwise it uses scientific notation.
+func fmtE(d apd.Decimal, fmt byte) []byte {
+	var scratch, dest [16]byte
+	buf := dest[:0]
+	digits := d.Coeff.Append(scratch[:0], 10)
+	totalDigits := int64(len(digits))
+	adj := int64(d.Exponent) + totalDigits - 1
+	if adj > -6 && adj < 6 {
+		return []byte(d.Text('f'))
+	}
+	switch {
+	case totalDigits > 5:
+		beforeComma := digits[0 : totalDigits-6]
+		adj -= int64(len(beforeComma) - 1)
+		buf = append(buf, beforeComma...)
+		buf = append(buf, '.')
+		buf = append(buf, digits[totalDigits-6:]...)
+	case totalDigits > 1:
+		buf = append(buf, digits[0])
+		buf = append(buf, '.')
+		buf = append(buf, digits[1:]...)
+	default:
+		buf = append(buf, digits[0:]...)
+	}
+
+	buf = append(buf, fmt)
+	var ch byte
+	if adj < 0 {
+		ch = '-'
+		adj = -adj
+	} else {
+		ch = '+'
+	}
+	buf = append(buf, ch)
+	return strconv.AppendInt(buf, adj, 10)
+}
+
+// Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
+// It returns an error if the byte slice does not represent a valid decimal.
 func (x *Dec) Unmarshal(data []byte) error {
-	// implemented in a new PR. See: https://github.com/cosmos/cosmos-sdk/issues/22525
-	panic("not implemented")
+	result, err := NewDecFromString(string(data))
+	if err != nil {
+		return ErrInvalidDec.Wrap(err.Error())
+	}
+
+	if result.dec.Form != apd.Finite {
+		return ErrInvalidDec.Wrap("unknown decimal form")
+	}
+
+	x.dec = result.dec
+	return nil
 }
 
 // MarshalTo encodes the receiver into the provided byte slice and returns the number of bytes written and any error encountered.
@@ -435,7 +503,7 @@ func (x Dec) Size() int {
 
 // MarshalJSON serializes the Dec struct into a JSON-encoded byte slice using scientific notation.
 func (x Dec) MarshalJSON() ([]byte, error) {
-	return json.Marshal(x.dec.Text('E'))
+	return json.Marshal(fmtE(x.dec, 'E'))
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface for the Dec type, converting JSON strings to Dec objects.

@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
@@ -153,13 +154,7 @@ func InitRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
-
-	for _, mod := range deps.ModuleManager.Modules() {
-		if gmod, ok := mod.(module.HasGRPCGateway); ok {
-			// TODO(@julienrbrt) https://github.com/cosmos/cosmos-sdk/pull/22701#pullrequestreview-2470651390
-			gmod.RegisterGRPCGatewayRoutes(deps.ClientContext, grpcgatewayServer.GRPCGatewayRouter)
-		}
-	}
+	registerGRPCGatewayRoutes[T](deps, grpcgatewayServer)
 
 	// wire server commands
 	return serverv2.AddCommands[T](
@@ -262,5 +257,20 @@ func RootCommandPersistentPreRun(clientCtx client.Context) func(*cobra.Command, 
 		}
 
 		return nil
+	}
+}
+
+// registerGRPCGatewayRoutes registers the gRPC gateway routes for all modules and other components
+// TODO(@julienrbrt): Eventually, this should removed and directly done within the grpcgateway.Server
+// ref: https://github.com/cosmos/cosmos-sdk/pull/22701#pullrequestreview-2470651390
+func registerGRPCGatewayRoutes[T transaction.Tx](
+	deps CommandDependencies[T],
+	server *grpcgateway.Server[T],
+) {
+	cmtservice.RegisterGRPCGatewayRoutes(deps.ClientContext, server.GRPCGatewayRouter)
+	for _, mod := range deps.ModuleManager.Modules() {
+		if gmod, ok := mod.(module.HasGRPCGateway); ok {
+			gmod.RegisterGRPCGatewayRoutes(deps.ClientContext, server.GRPCGatewayRouter)
+		}
 	}
 }

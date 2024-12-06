@@ -4,7 +4,11 @@ go 1.23.1
 
 require (
 	cosmossdk.io/math v1.4.0
+<<<<<<< HEAD
 	cosmossdk.io/systemtests v1.0.0-rc.2
+=======
+	cosmossdk.io/systemtests v1.0.0-rc.2.0.20241205143753-9e94ea87f6e4
+>>>>>>> 4caac04c2 (test(systemtests): fix gRPC tests for v1 & v2 (#22774))
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect

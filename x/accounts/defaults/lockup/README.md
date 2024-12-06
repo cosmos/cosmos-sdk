@@ -8,6 +8,7 @@
     * [PeriodicLockup](#periodiclockup)
     * [PermanentLocked](#permanentlocked)
 * [Genesis Initialization](#genesis-initialization)
+* [In An Event Of Slashing](#in-an-event-of-slashing)
 * [Examples](#examples)
     * [Simple](#simple)
     * [Slashing](#slashing)
@@ -108,6 +109,30 @@ type PermanentLockingAccount struct {
 
 <!-- TODO: once implemented -->
 
+## In An Event Of Slashing
+
+As defined, base lockup store `DelegatedLocking` by amount. In an event of a validator that the lockup account delegate to is slash which affect the actual delegation amount, this will leave the `DelegatedLocking` have an excess amount even if user undelegate all of the 
+account delegated amount. This excess amount would make the spendable amount lesser, further details are as below:
+
+Spendable amount are calculated as
+`spendableAmount` = `balance` - `notBondedLockedAmout` 
+Whereas `notBondedLockedAmout`  = `lockedAmount` - `Min(LockedAmount, DelegatedLockedAmount)`
+
+As seen in the formula above, `notBondedLockedAmout` can only be 0 or a positive value when `DelegatedLockedAmount` < `LockedAmount`
+if the `notBondedLockedAmout` is positive then `spendableAmount` is less than the actual balance. Let call `NewDelegatedLockedAmount` is the `delegatedLockedAmount` when applying N slash
+
+1. Case 1: where originally `DelegatedLockedAmount` > `lockedAmount` but when applying the slash amount the `NewDelegatedLockedAmount` < `lockedAmount` then 
+    * When not applying slash  `notBondedLockedAmout` will be 0 
+    * When apply slash `notBondedLockedAmout` will be `lockedAmount` - `NewDelegatedLockedAmount` =  a positive amount
+2. Case 2: where originally `DelegatedLockedAmount` < `lockedAmount` when applying the slash amount the `NewDelegatedLockedAmount` < `lockedAmount` then 
+    * When not applying slash `lockedAmount` - `DelegatedLockedAmount`
+    * When apply slash `notBondedLockedAmout` will be `lockedAmount` - `NewDelegatedLockedAmount` = `lockedAmount` - `(DelegatedLockedAmount - N)` = `lockedAmount` - `DelegatedLockedAmount` + N 
+3. Case 3:  where originally `DelegatedLockedAmount` > `lockedAmount` when applying the slash amount still the `NewDelegatedLockedAmount` > `lockedAmount` then `notBondedLockedAmout` will be 0 applying slash or not
+
+In the 3 cases, case 1 and case 2 seen the `notBondedLockedAmout` decrease when not applying the slash, make the `spendableAmount` higher.  
+
+Due to the natural of x/accounts, as other modules cannot assume certain account types exist so the handling of slashing event would have to be done internally inside x/accounts's accounts which in the case of lockup account would make the logic over complicated. As the above effects are only an edge case that affect a small amount of users, so here we would accept the trade off for a simpler design. The same design intention is also present in the legacy vesting account.
+
 ## Examples
 
 ### Simple
@@ -206,7 +231,7 @@ It can still, however, delegate.
     BC = 2.5 + 5 = 7.5
     ```
 
-    Notice how we have an excess amount of `DV`.
+    Notice how we have an excess amount of `DV`. This is explained in [In An Event Of Slashing](#in-an-event-of-slashing)
 
 ### Periodic Lockup
 

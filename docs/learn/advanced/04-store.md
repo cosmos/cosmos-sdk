@@ -195,12 +195,7 @@ By default, all `KVStores` are wrapped in `GasKv.Stores` when retrieved. This is
 https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/context.go#L339-L342
 ```
 
-In this case, the gas configuration set in the `context` is used. The gas configuration can be set using the `WithKVGasConfig` method of the `context`.
-Otherwise it uses the following default:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/store/v1.1.1/store/types/gas.go#L231-L242
-```
+`KVStores` can be accessed in their corresponding modules by using the [`kvStoreService` and `memStoreService`](./02-core.md#kvstore-service).
 
 ### `TraceKv` Store
 

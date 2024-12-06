@@ -3,9 +3,9 @@ package db_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"cosmossdk.io/store/db"
 	"cosmossdk.io/store/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 

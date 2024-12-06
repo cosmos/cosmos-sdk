@@ -190,6 +190,11 @@ func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struc
 		msgResponses[i] = anyMsg
 	}
 
+	errMsg := ""
+	if txRes.Error != nil {
+		errMsg = txRes.Error.Error()
+	}
+
 	res := &sdk.SimulationResponse{
 		GasInfo: sdk.GasInfo{
 			GasWanted: txRes.GasWanted,
@@ -197,7 +202,7 @@ func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struc
 		},
 		Result: &sdk.Result{
 			Data:         []byte{},
-			Log:          txRes.Error.Error(),
+			Log:          errMsg,
 			Events:       abciEvents,
 			MsgResponses: msgResponses,
 		},
@@ -284,7 +289,6 @@ func gRPCErrorToSDKError(err error) *abci.QueryResponse {
 			res.Log = err.Error()
 		}
 		return res
-
 	}
 
 	status, ok := grpcstatus.FromError(err)

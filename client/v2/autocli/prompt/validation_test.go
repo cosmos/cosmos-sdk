@@ -3,7 +3,6 @@ package prompt
 import (
 	"testing"
 
-
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"
@@ -46,4 +45,11 @@ func TestValidateAddress(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestValidatePromptURL(t *testing.T) {
+	require := require.New(t)
+
+	require.NoError(ValidatePromptURL("https://example.com"))
+	require.ErrorContains(ValidatePromptURL("foo"), "invalid URL")
 }

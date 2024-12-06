@@ -148,7 +148,7 @@ func valueOf(field protoreflect.FieldDescriptor, result string) (protoreflect.Va
 	}
 }
 
-// valueOf prompts the user for a comma-separated list of values for a repeated field.
+// promptList prompts the user for a comma-separated list of values for a repeated field.
 // The user will be prompted to enter values separated by commas which will be parsed
 // according to the field's type using valueOf.
 func promptList(field protoreflect.FieldDescriptor, msg protoreflect.Message, promptUi promptui.Prompt, promptPrefix string) (protoreflect.List, error) {

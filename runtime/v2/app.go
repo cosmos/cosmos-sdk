@@ -94,6 +94,11 @@ func (a *App[T]) SchemaDecoderResolver() decoding.DecoderResolver {
 	for moduleName, module := range a.moduleManager.Modules() {
 		moduleSet[moduleName] = module
 	}
+
+	for _, overrideKey := range a.config.OverrideStoreKeys {
+		moduleSet[overrideKey.KvStoreKey] = moduleSet[overrideKey.ModuleName]
+	}
+
 	return decoding.ModuleSetDecoderResolver(moduleSet)
 }
 

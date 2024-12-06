@@ -3,6 +3,7 @@ module cosmossdk.io/server/v2/cometbft
 go 1.23.2
 
 replace (
+	cosmossdk.io/schema => ../../../schema
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/core/testing => ../../../core/testing
 	cosmossdk.io/server/v2 => ../

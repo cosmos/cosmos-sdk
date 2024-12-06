@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -48,7 +50,7 @@ func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*stor
 	app.cms.AddListeners(exposedKeys)
 
 	app.streamingManager = storetypes.StreamingManager{
-		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener.Listener}},
+		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener.Listener, app.txDecoder}},
 		StopNodeOnErr: true,
 	}
 
@@ -144,9 +146,10 @@ func exposeStoreKeysSorted(keysStr []string, keys map[string]*storetypes.KVStore
 	return exposeStoreKeys
 }
 
-func eventToAppDataEvent(event abci.Event) (appdata.Event, error) {
+func eventToAppDataEvent(event abci.Event, height int64) (appdata.Event, error) {
 	appdataEvent := appdata.Event{
-		Type: event.Type,
+		BlockNumber: uint64(height),
+		Type:        event.Type,
 		Attributes: func() ([]appdata.EventAttribute, error) {
 			attrs := make([]appdata.EventAttribute, len(event.Attributes))
 			for j, attr := range event.Attributes {
@@ -197,7 +200,8 @@ func eventToAppDataEvent(event abci.Event) (appdata.Event, error) {
 }
 
 type listenerWrapper struct {
-	listener appdata.Listener
+	listener  appdata.Listener
+	txDecoder sdk.TxDecoder
 }
 
 // NewListenerWrapper creates a new listenerWrapper.
@@ -208,10 +212,16 @@ func NewListenerWrapper(listener appdata.Listener) listenerWrapper {
 
 func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
 	if p.listener.StartBlock != nil {
+		// clean up redundant data
+		reqWithoutTxs := req
+		reqWithoutTxs.Txs = nil
+
 		if err := p.listener.StartBlock(appdata.StartBlockData{
 			Height:      uint64(req.Height),
 			HeaderBytes: nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
-			HeaderJSON:  nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+			HeaderJSON: func() (json.RawMessage, error) {
+				return json.Marshal(reqWithoutTxs)
+			},
 		}); err != nil {
 			return err
 		}
@@ -219,9 +229,18 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 	if p.listener.OnTx != nil {
 		for i, tx := range req.Txs {
 			if err := p.listener.OnTx(appdata.TxData{
-				TxIndex: int32(i),
-				Bytes:   func() ([]byte, error) { return tx, nil },
-				JSON:    nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+				BlockNumber: uint64(req.Height),
+				TxIndex:     int32(i),
+				Bytes:       func() ([]byte, error) { return tx, nil },
+				JSON: func() (json.RawMessage, error) {
+					sdkTx, err := p.txDecoder(tx)
+					if err != nil {
+						// if the transaction cannot be decoded, return the error as JSON
+						// as there are some txs that might not be decodeable by the txDecoder
+						return json.Marshal(err)
+					}
+					return json.Marshal(sdkTx)
+				},
 			}); err != nil {
 				return err
 			}
@@ -231,14 +250,14 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 		events := make([]appdata.Event, len(res.Events))
 		var err error
 		for i, event := range res.Events {
-			events[i], err = eventToAppDataEvent(event)
+			events[i], err = eventToAppDataEvent(event, req.Height)
 			if err != nil {
 				return err
 			}
 		}
 		for _, txResult := range res.TxResults {
 			for _, event := range txResult.Events {
-				appdataEvent, err := eventToAppDataEvent(event)
+				appdataEvent, err := eventToAppDataEvent(event, req.Height)
 				if err != nil {
 					return err
 				}

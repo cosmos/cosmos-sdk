@@ -4,10 +4,13 @@ import (
 	_ "embed"
 	"fmt"
 
+	_ "github.com/jackc/pgx/v5/stdlib" // Import and register pgx driver
+
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	serverstore "cosmossdk.io/server/v2/store"

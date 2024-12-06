@@ -398,6 +398,7 @@ func protoCol(f protoreflect.FieldDescriptor) schema.Field {
 			col.Kind = schema.StringKind
 		case protoreflect.BytesKind:
 			col.Kind = schema.BytesKind
+			col.Nullable = true
 		case protoreflect.EnumKind:
 			// TODO: support enums
 			col.Kind = schema.EnumKind

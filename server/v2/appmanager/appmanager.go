@@ -230,7 +230,7 @@ func (a appManager[T]) Query(ctx context.Context, version uint64, request transa
 		_, queryState, err = a.db.StateLatest()
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid height: %w", err)
 	}
 	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 }

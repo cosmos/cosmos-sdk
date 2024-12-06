@@ -45,7 +45,9 @@ The `GetStoreType` is a simple method that returns the type of store, whereas a 
 https://github.com/cosmos/cosmos-sdk/blob/store/v1.1.1/store/types/store.go#L287-L303
 ```
 
-Branching and cache is used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A storage branch creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur. Read more about it in [context](./02-context.md#store-branching)
+Branching and cache is used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A storage branch creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur.
+
+Branching is available as a service for modules. Read more about it in the [core](./02-core.md#branch-service) documentation.
 
 ### Commit Store
 

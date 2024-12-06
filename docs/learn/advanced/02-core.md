@@ -4,8 +4,7 @@ sidebar_position: 1
 
 # Core
 
-Core is package which specifies the interfaces for core components of the Cosmos SDK.  Other
-packages in the SDK implement these interfaces to provide the core functionality.  This design
+Core (`cosmossdk.io/core`) is package which specifies the interfaces for core components of the Cosmos SDK.  Other packages in the SDK implement these interfaces to provide the core functionality.  This design
 provides modularity and flexibility to the SDK, allowing developers to swap out implementations
 of core components as needed.  As such it is often referred to as the Core API.
 
@@ -16,19 +15,28 @@ services of the SDK, such as the KVStore, EventManager, and Logger.  The `Enviro
 passed to modules and other components of the SDK to provide access to these services.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/appmodule/v2/environment.go#L16-L29
+https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.6/core/appmodule/v2/environment.go#L16-L29
 ```
 
-Historically the SDK has used an [sdk.Context](02-context.md) to pass around services and data.
+Historically the SDK has used an [sdk.Context](https://docs.cosmos.network/v0.50/learn/advanced/context) to pass around services and data.
 `Environment` is a newer construct that is intended to replace an `sdk.Context` in many cases.
 `sdk.Context` will be deprecated in the future on the same timeline as [Baseapp](00-baseapp.md).
+
+## Logger
+
+The [Logger](https://pkg.go.dev/cosmossdk.io/log) provides a structured logging interface to the SDK.  It is used throughout the SDK to log messages at various levels of severity.  The Logger service is a thin wrapper around the [zerolog](https://github.com/rs/zerolog) logging library.
+When used via environment, the logger is scoped to the module that is using it.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/runtime/module.go#L274
+```
 
 ## Branch Service
 
 The [BranchService](https://pkg.go.dev/cosmossdk.io/core/branch#Service.Execute) provides an
 interface to execute arbitrary code in a branched store.  This is useful for executing code
 that needs to make changes to the store, but may need to be rolled back if an error occurs.
-Below is a contrived example based on the `x/epoch` module's BeginBlocker logic.
+Below is a contrived example based on the `x/epochs` module's BeginBlocker logic.
 
 ```go
 func (k Keeper) BeginBlocker(ctx context.Context) error {

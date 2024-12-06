@@ -1282,7 +1282,7 @@ func TestToSdkInt(t *testing.T) {
 		{src: "1E100000", expErr: true},
 	}
 	for _, tc := range tcs {
-		t.Run(fmt.Sprintf(tc.src), func(t *testing.T) {
+		t.Run(fmt.Sprint(tc.src), func(t *testing.T) {
 			a, err := NewDecFromString(tc.src)
 			require.NoError(t, err)
 			b, gotErr := a.SdkIntTrim()

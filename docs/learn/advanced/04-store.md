@@ -149,29 +149,7 @@ The documentation on the IAVL Tree is located [here](https://github.com/cosmos/i
 https://github.com/cosmos/cosmos-sdk/blob/store/v1.1.1/store/dbadapter/store.go#L13-L16
 ```
 
-`dbadapter.Store` embeds `corestore.KVStoreWithBatch`, meaning most of the `KVStore` interface functions are implemented. The other functions (mostly miscellaneous) are manually implemented. This store is primarily used within [Transient Stores](#transient-store)
-
-### `Transient` Store 
-
-`Transient.Store` is a base-layer `KVStore` which is automatically discarded at the end of the block.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/store/v1.1.1/store/transient/store.go#L16-L19
-```
-
-`Transient.Store` is a `dbadapter.Store` with a `coretesting.NewMemDB()`. All `KVStore` methods are reused. When `Store.Commit()` is called, a new `dbadapter.Store` is assigned, discarding previous reference and making it garbage collected.
-
-This type of store is useful to persist information that is only relevant per-block. One example would be to store parameter changes (i.e. a bool set to `true` if a parameter changed in a block).
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/params/types/subspace.go#L23-L33
-```
-
-Transient stores are typically accessed via the [`context`](./02-context.md) via the `TransientStore()` method:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/context.go#L344-L347
-```
+`dbadapter.Store` embeds `corestore.KVStoreWithBatch`, meaning most of the `KVStore` interface functions are implemented. The other functions (mostly miscellaneous) are manually implemented.
 
 ## KVStore Wrappers
 

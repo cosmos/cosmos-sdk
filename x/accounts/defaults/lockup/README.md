@@ -118,8 +118,7 @@ Spendable amount are calculated as
 `spendableAmount` = `balance` - `notBondedLockedAmout` 
 Whereas `notBondedLockedAmout`  = `lockedAmount` - `Min(LockedAmount, DelegatedLockedAmount)`
 
-As seen in the formula `notBondedLockedAmout` can only be 0 or a positive value when `DelegatedLockedAmount` < `LockedAmount`
-if the `notBondedLockedAmout` is positive then `spendableAmount` is less than the actual balance. Let call `NewDelegatedLockedAmount` is the `delegatedLockedAmount` when applying N slash
+As seen in the formula `notBondedLockedAmout` can only be 0 or a positive value when `DelegatedLockedAmount` < `LockedAmount`. Let call `NewDelegatedLockedAmount` is the `delegatedLockedAmount` when applying N slash
 
 1. Case 1: where originally `DelegatedLockedAmount` > `lockedAmount` but when applying the slash amount the `NewDelegatedLockedAmount` < `lockedAmount` then 
     * When not applying slash  `notBondedLockedAmout` will be 0 
@@ -129,9 +128,9 @@ if the `notBondedLockedAmout` is positive then `spendableAmount` is less than th
     * When apply slash `notBondedLockedAmout` will be `lockedAmount` - `NewDelegatedLockedAmount` = `lockedAmount` - `(DelegatedLockedAmount - N)` = `lockedAmount` - `DelegatedLockedAmount` + N 
 3. Case 3:  where originally `DelegatedLockedAmount` > `lockedAmount` when applying the slash amount still the `NewDelegatedLockedAmount` > `lockedAmount` then `notBondedLockedAmout` will be 0 applying slash or not
 
-In the 3 cases, case 1 and case 2 seen the `notBondedLockedAmout` decrease when not applying the slash, make the `spendableAmount` higher.  
+In the 3 cases, case 1 and case 2 seen the `notBondedLockedAmout` decrease when not applying the slash, makes the `spendableAmount` higher.  
 
-Due to the natural of x/accounts, as other modules cannot assume certain account types exist so the handling of slashing event would have to be done internally inside x/accounts's accounts which in the case of lockup account would make the logic over complicated. As the above effects are only an edge case that affect a small amount of users, so here we would accept the trade off for a simpler design. The same design intention is also present in the legacy vesting account.
+Due to the nature of x/accounts, as other modules cannot assume certain account types exist so the handling of slashing event would have to be done internally inside x/accounts's accounts which in the case of lockup account would make the logic over complicated. As the above effects are only an edge case that affect a small number of users, so here we would accept the trade off for a simpler design. The same design intention is also present in the legacy vesting account.
 
 ## Examples
 

@@ -112,13 +112,13 @@ type PermanentLockingAccount struct {
 ## In An Event Of Slashing
 
 As defined, base lockup store `DelegatedLocking` by amount. In an event of a validator that the lockup account delegate to is slash which affect the actual delegation amount, this will leave the `DelegatedLocking` have an excess amount even if user undelegate all of the 
-account delegated amount. This excess amount would make the spendable amount lesser, further details are as below:
+account delegated amount. This excess amount would affect the spendable amount, further details are as below:
 
 Spendable amount are calculated as
 `spendableAmount` = `balance` - `notBondedLockedAmout` 
 Whereas `notBondedLockedAmout`  = `lockedAmount` - `Min(LockedAmount, DelegatedLockedAmount)`
 
-As seen in the formula above, `notBondedLockedAmout` can only be 0 or a positive value when `DelegatedLockedAmount` < `LockedAmount`
+As seen in the formula `notBondedLockedAmout` can only be 0 or a positive value when `DelegatedLockedAmount` < `LockedAmount`
 if the `notBondedLockedAmout` is positive then `spendableAmount` is less than the actual balance. Let call `NewDelegatedLockedAmount` is the `delegatedLockedAmount` when applying N slash
 
 1. Case 1: where originally `DelegatedLockedAmount` > `lockedAmount` but when applying the slash amount the `NewDelegatedLockedAmount` < `lockedAmount` then 

@@ -9,16 +9,20 @@ import (
 	"os"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
@@ -129,9 +133,20 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	txBytes, err := clientCtx.TxConfig.TxEncoder()(tx.GetTx())
+	// Do not emit unpopulated fields.
+	// It helps the client to be compatible accross SDK versions.
+	// Unknown fields will still be rejected by the SDK (node).
+	// However, the client should stay as compatible as possible.
+	cdc := &clientProtoCodec{Codec: clientCtx.Codec, ir: clientCtx.InterfaceRegistry}
+	encoder := authtx.DefaultJSONTxEncoder(cdc)
+
+	txBytes, err := encoder(tx.GetTx())
 	if err != nil {
-		return err
+		// falls back to the default tx encoder if the custom one fails
+		txBytes, err = clientCtx.TxConfig.TxEncoder()(tx.GetTx())
+		if err != nil {
+			return err
+		}
 	}
 
 	// broadcast to a CometBFT node
@@ -437,4 +452,17 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 	b.SetSignature(sig)
 
 	return b.GetAuxSignerData()
+}
+
+type clientProtoCodec struct {
+	codec.Codec
+	ir codectypes.InterfaceRegistry
+}
+
+// MarshalJSON implements JSONCodec.MarshalJSON method, it marshals to JSON using proto codec.
+func (cpc *clientProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) { //nolint:stdmethods // we don't want to implement Marshaler interface
+	if o == nil {
+		return nil, errors.New("cannot protobuf JSON encode nil")
+	}
+	return codec.ProtoMarshalJSONSkipEmpty(o, cpc.ir)
 }

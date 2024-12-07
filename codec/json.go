@@ -32,3 +32,25 @@ func ProtoMarshalJSON(msg proto.Message, resolver jsonpb.AnyResolver) ([]byte, e
 
 	return buf.Bytes(), nil
 }
+
+// ProtoMarshalJSONSkipEmpty provides an auxiliary function to return Proto3 JSON
+// encoded bytes of a message with empty fields omitted.
+// It is especially useful for encoding messages to be sent over the wire.
+func ProtoMarshalJSONSkipEmpty(msg proto.Message, resolver jsonpb.AnyResolver) ([]byte, error) {
+	jm := defaultJM
+	jm.EmitDefaults = false
+	if resolver != nil {
+		jm = &jsonpb.Marshaler{OrigName: true, EmitDefaults: false, AnyResolver: resolver}
+	}
+	err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm})
+	if err != nil {
+		return nil, err
+	}
+
+	buf := new(bytes.Buffer)
+	if err := jm.Marshal(buf, msg); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}

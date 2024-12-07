@@ -17,7 +17,7 @@ func TestKeeper_Init(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		sender := []byte("sender")
 
-		resp, addr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil)
+		resp, addr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil, nil)
 		require.NoError(t, err)
 		require.Equal(t, &types.Empty{}, resp)
 		require.NotNil(t, addr)
@@ -34,7 +34,7 @@ func TestKeeper_Init(t *testing.T) {
 	})
 
 	t.Run("unknown account type", func(t *testing.T) {
-		_, _, err := m.Init(ctx, "unknown", []byte("sender"), &types.Empty{}, nil)
+		_, _, err := m.Init(ctx, "unknown", []byte("sender"), &types.Empty{}, nil, nil)
 		require.ErrorIs(t, err, errAccountTypeNotFound)
 	})
 }
@@ -44,7 +44,7 @@ func TestKeeper_Execute(t *testing.T) {
 
 	// create account
 	sender := []byte("sender")
-	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil)
+	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil, nil)
 	require.NoError(t, err)
 
 	t.Run("ok", func(t *testing.T) {
@@ -70,7 +70,7 @@ func TestKeeper_Query(t *testing.T) {
 
 	// create account
 	sender := []byte("sender")
-	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil)
+	_, accAddr, err := m.Init(ctx, "test", sender, &types.Empty{}, nil, nil)
 	require.NoError(t, err)
 
 	t.Run("ok", func(t *testing.T) {

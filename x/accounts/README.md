@@ -496,6 +496,32 @@ func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryL
 * Implement this handler only for account types you want to expose via x/auth gRPC methods.
 * The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
 
+## Address Derivation
+
+The x/accounts module offers two methods for deriving addresses, both ensuring non-squattability. This means each address is uniquely tied to its creator, preventing address collisions between different creators (e.g., Alice cannot create addresses that would conflict with Bob's addresses).
+
+### Method 1: Using Address Seeds
+
+When creating an account via `MsgInit`, you can provide an `address_seed`. The address is derived using:
+
+```bash
+address = sha256(ModuleName || address_seed || creator_address)
+```
+
+### Method 2: Using Account Numbers
+If no address seed is provided, the address is derived using:
+
+```
+address = sha256(ModuleName || creator_address || next_account_number)
+```
+
+### Address Seed Best Practices
+
+1. Address seeds must be unique per creator (not globally unique)
+2. Reusing an address seed will cause account creation to fail
+3. For programmatic account creation, use an incrementing sequence number as the address seed
+4. This is particularly useful for contracts or modules that need deterministic address generation
+
 ## Genesis
 
 ### Creating accounts on genesis

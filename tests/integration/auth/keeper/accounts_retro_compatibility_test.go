@@ -74,7 +74,7 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 
 	// init three accounts
 	for n, a := range accs {
-		_, addr, err := f.accountsKeeper.Init(f.app.Context(), n, []byte("me"), &gogotypes.Empty{}, nil)
+		_, addr, err := f.accountsKeeper.Init(f.app.Context(), n, []byte("me"), &gogotypes.Empty{}, nil, nil)
 		require.NoError(t, err)
 		a.(*mockRetroCompatAccount).address = addr
 	}
@@ -132,10 +132,10 @@ func TestAccountsBaseAccountRetroCompat(t *testing.T) {
 	require.NoError(t, err)
 
 	// we init two accounts to have account num not be zero.
-	_, _, err = f.accountsKeeper.Init(f.app.Context(), "base", []byte("me"), &basev1.MsgInit{PubKey: anyPk}, nil)
+	_, _, err = f.accountsKeeper.Init(f.app.Context(), "base", []byte("me"), &basev1.MsgInit{PubKey: anyPk}, nil, nil)
 	require.NoError(t, err)
 
-	_, addr, err := f.accountsKeeper.Init(f.app.Context(), "base", []byte("me"), &basev1.MsgInit{PubKey: anyPk}, nil)
+	_, addr, err := f.accountsKeeper.Init(f.app.Context(), "base", []byte("me"), &basev1.MsgInit{PubKey: anyPk}, nil, nil)
 	require.NoError(t, err)
 
 	// try to query it via auth

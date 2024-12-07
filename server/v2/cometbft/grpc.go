@@ -3,6 +3,7 @@ package cometbft
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -24,6 +25,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 type appSimulator[T transaction.Tx] interface {
@@ -50,51 +53,6 @@ func gRPCServiceRegistrar[T transaction.Tx](
 	}
 }
 
-// CometBFTAutoCLIDescriptor is the auto-generated CLI descriptor for the CometBFT service
-var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
-	Service: cmtv1beta1.Service_ServiceDesc.ServiceName,
-	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-		{
-			RpcMethod: "GetNodeInfo",
-			Use:       "node-info",
-			Short:     "Query the current node info",
-		},
-		{
-			RpcMethod: "GetSyncing",
-			Use:       "syncing",
-			Short:     "Query node syncing status",
-		},
-		{
-			RpcMethod: "GetLatestBlock",
-			Use:       "block-latest",
-			Short:     "Query for the latest committed block",
-		},
-		{
-			RpcMethod:      "GetBlockByHeight",
-			Use:            "block-by-height <height>",
-			Short:          "Query for a committed block by height",
-			Long:           "Query for a specific committed block using the CometBFT RPC `block_by_height` method",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
-		},
-		{
-			RpcMethod: "GetLatestValidatorSet",
-			Use:       "validator-set",
-			Alias:     []string{"validator-set-latest", "comet-validator-set", "cometbft-validator-set", "tendermint-validator-set"},
-			Short:     "Query for the latest validator set",
-		},
-		{
-			RpcMethod:      "GetValidatorSetByHeight",
-			Use:            "validator-set-by-height <height>",
-			Short:          "Query for a validator set by height",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
-		},
-		{
-			RpcMethod: "ABCIQuery",
-			Skip:      true,
-		},
-	},
-}
-
 type txServer[T transaction.Tx] struct {
 	clientCtx client.Context
 	txCodec   transaction.Codec[T]
@@ -112,8 +70,33 @@ func (t txServer[T]) GetBlockWithTxs(context.Context, *txtypes.GetBlockWithTxsRe
 }
 
 // GetTx implements tx.ServiceServer.
-func (t txServer[T]) GetTx(context.Context, *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (t txServer[T]) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	if len(req.Hash) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "tx hash cannot be empty")
+	}
+
+	result, err := authtx.QueryTx(t.clientCtx, req.Hash)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return nil, status.Errorf(codes.NotFound, "tx not found: %s", req.Hash)
+		}
+
+		return nil, err
+	}
+
+	protoTx, ok := result.Tx.GetCachedValue().(*txtypes.Tx)
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "expected %T, got %T", txtypes.Tx{}, result.Tx.GetCachedValue())
+	}
+
+	return &txtypes.GetTxResponse{
+		Tx:         protoTx,
+		TxResponse: result,
+	}, nil
 }
 
 // GetTxsEvent implements tx.ServiceServer.
@@ -181,18 +164,79 @@ func (t txServer[T]) TxDecode(context.Context, *txtypes.TxDecodeRequest) (*txtyp
 }
 
 // TxDecodeAmino implements tx.ServiceServer.
-func (t txServer[T]) TxDecodeAmino(context.Context, *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (t txServer[T]) TxDecodeAmino(_ context.Context, req *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
+	if req.AminoBinary == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	var stdTx legacytx.StdTx
+	err := t.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, &stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := t.clientCtx.LegacyAmino.MarshalJSON(stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxDecodeAminoResponse{
+		AminoJson: string(res),
+	}, nil
 }
 
 // TxEncode implements tx.ServiceServer.
-func (t txServer[T]) TxEncode(context.Context, *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (t txServer[T]) TxEncode(_ context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
+	if req.Tx == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+	}
+
+	bodyBytes, err := t.clientCtx.Codec.Marshal(req.Tx.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	authInfoBytes, err := t.clientCtx.Codec.Marshal(req.Tx.AuthInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	raw := &txtypes.TxRaw{
+		BodyBytes:     bodyBytes,
+		AuthInfoBytes: authInfoBytes,
+		Signatures:    req.Tx.Signatures,
+	}
+
+	encodedBytes, err := t.clientCtx.Codec.Marshal(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxEncodeResponse{
+		TxBytes: encodedBytes,
+	}, nil
 }
 
 // TxEncodeAmino implements tx.ServiceServer.
-func (t txServer[T]) TxEncodeAmino(context.Context, *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (t txServer[T]) TxEncodeAmino(_ context.Context, req *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
+	if req.AminoJson == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx json")
+	}
+
+	var stdTx legacytx.StdTx
+	err := t.clientCtx.LegacyAmino.UnmarshalJSON([]byte(req.AminoJson), &stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	encodedBytes, err := t.clientCtx.LegacyAmino.Marshal(stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxEncodeAminoResponse{
+		AminoBinary: encodedBytes,
+	}, nil
 }
 
 var _ txtypes.ServiceServer = txServer[transaction.Tx]{}
@@ -235,4 +279,49 @@ func (s nodeServer[T]) Status(ctx context.Context, _ *nodeservice.StatusRequest)
 		AppHash:       nil,
 		ValidatorHash: nodeInfo.LastBlockAppHash,
 	}, nil
+}
+
+// CometBFTAutoCLIDescriptor is the auto-generated CLI descriptor for the CometBFT service
+var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
+	Service: cmtv1beta1.Service_ServiceDesc.ServiceName,
+	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		{
+			RpcMethod: "GetNodeInfo",
+			Use:       "node-info",
+			Short:     "Query the current node info",
+		},
+		{
+			RpcMethod: "GetSyncing",
+			Use:       "syncing",
+			Short:     "Query node syncing status",
+		},
+		{
+			RpcMethod: "GetLatestBlock",
+			Use:       "block-latest",
+			Short:     "Query for the latest committed block",
+		},
+		{
+			RpcMethod:      "GetBlockByHeight",
+			Use:            "block-by-height <height>",
+			Short:          "Query for a committed block by height",
+			Long:           "Query for a specific committed block using the CometBFT RPC `block_by_height` method",
+			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
+		},
+		{
+			RpcMethod: "GetLatestValidatorSet",
+			Use:       "validator-set",
+			Alias:     []string{"validator-set-latest", "comet-validator-set", "cometbft-validator-set", "tendermint-validator-set"},
+			Short:     "Query for the latest validator set",
+		},
+		{
+			RpcMethod:      "GetValidatorSetByHeight",
+			Use:            "validator-set-by-height <height>",
+			Short:          "Query for a validator set by height",
+			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
+		},
+		{
+			RpcMethod: "ABCIQuery",
+			Skip:      true,
+		},
+	},
 }

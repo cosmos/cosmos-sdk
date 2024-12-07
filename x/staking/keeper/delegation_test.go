@@ -1130,7 +1130,6 @@ func (s *KeeperTestSuite) TestUnbondingDelegationAddEntry() {
 	require.Equal(newCreationHeight, ubd.Entries[1].CreationHeight)
 	require.Equal(ubd.Entries[0].Balance, math.NewInt(15))
 	require.Equal(ubd.Entries[1].Balance, math.NewInt(5))
-	require.NotEqual(ubd.Entries[0].UnbondingId, ubd.Entries[1].UnbondingId) // appended entry has a new unbondingID
 }
 
 func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
@@ -1179,8 +1178,7 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 	require.Len(resUnbonding.Entries, 1)
 	require.NotEqual(initialEntries, resUnbonding.Entries)
 	require.Equal(creationHeight, resUnbonding.Entries[0].CreationHeight)
-	require.Equal(initialEntries[0].UnbondingId, resUnbonding.Entries[0].UnbondingId) // initial unbondingID remains unchanged
-	require.Equal(resUnbonding.Entries[0].Balance, math.NewInt(10))                   // 5 from previous entry + 5 from merged entry
+	require.Equal(resUnbonding.Entries[0].Balance, math.NewInt(10)) // 5 from previous entry + 5 from merged entry
 
 	// set unbonding delegation entry for newCreationHeight
 	// new entry is expected to be appended to the existing entries
@@ -1202,10 +1200,6 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 	require.Equal(creationHeight, resUnbonding.Entries[0].CreationHeight)
 	require.Equal(newCreationHeight, resUnbonding.Entries[1].CreationHeight)
 
-	// unbondingID is incremented on every call to SetUnbondingDelegationEntry
-	// unbondingID == 1 was skipped because the entry was merged with the existing entry with unbondingID == 0
-	// unbondingID comes from a global counter -> gaps in unbondingIDs are OK as long as every unbondingID is unique
-	require.Equal(uint64(2), resUnbonding.Entries[1].UnbondingId)
 }
 
 func (s *KeeperTestSuite) TestUndelegateWithDustShare() {

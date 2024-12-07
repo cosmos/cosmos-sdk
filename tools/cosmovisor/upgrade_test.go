@@ -269,6 +269,7 @@ func prepareConfig(t *testing.T, testData string, config cosmovisor.Config) *cos
 	tmpdir := copyTestData(t, testData)
 
 	config.Home = tmpdir
+	config.DataPath = filepath.Join(config.Home, "data")
 
 	err := os.Chdir(config.Root())
 	require.NoError(t, err)

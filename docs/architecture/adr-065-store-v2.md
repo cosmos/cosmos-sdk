@@ -79,13 +79,11 @@ We propose to build upon some of the great ideas introduced in [ADR-040](./adr-0
 while being a bit more flexible with the underlying implementations and overall
 less intrusive. Specifically, we propose to:
 
-* Separate the concerns of state commitment (**SC**), needed for consensus, and
-  state storage (**SS**), needed for state machine and clients.
 * Reduce layers of abstractions necessary between the RMS and underlying stores.
 * Remove unnecessary store types and implementations such as `CacheKVStore`.
-* Simplify the branching logic.
+* Remove the branching logic from the store package.
 * Ensure the `RootStore` interface remains as lightweight as possible.
-* Allow application developers to easily swap out SS and SC backends.
+* Allow application developers to easily swap out SC backends.
 
 Furthermore, we will keep IAVL as the default [SC](https://cryptography.fandom.com/wiki/Commitment_scheme)
 backend for the time being. While we might not fully settle on the use of IAVL in
@@ -95,18 +93,12 @@ to change the backing commitment store in the future should evidence arise to
 warrant a better alternative. However there is promising work being done to IAVL
 that should result in significant performance improvement <sup>[1,2]</sup>.
 
-Note, we will provide applications with the ability to use IAVL v1 and IAVL v2 as
+Note, we will provide applications with the ability to use IAVL v1,  IAVL v2 and MemIAVL as
 either SC backend, with the latter showing extremely promising performance improvements
 over IAVL v0 and v1, at the cost of a state migration.
 
-### Separating SS and SC
 
-By separating SS and SC, it will allow for us to optimize against primary use cases
-and access patterns to state. Specifically, The SS layer will be responsible for
-direct access to data in the form of (key, value) pairs, whereas the SC layer (e.g. IAVL)
-will be responsible for committing to data and providing Merkle proofs.
-
-#### State Commitment (SC)
+### State Commitment (SC)
 
 A foremost design goal is that SC backends should be easily swappable, i.e. not
 necessarily IAVL.  To this end, the scope of SC has been reduced, it must only:
@@ -121,45 +113,6 @@ due to the time and space constraints, but since store v2 defines an API for his
 proofs there should be at least one configuration of a given SC backend which
 supports this.
 
-#### State Storage (SS)
-
-The goal of SS is to provide a modular storage backend, i.e. multiple implementations,
-to facilitate storing versioned raw key/value pairs in a fast embedded database.
-The responsibility and functions of SS include the following:
-
-* Provided fast and efficient queries for versioned raw key/value pairs
-* Provide versioned CRUD operations
-* Provide versioned batching functionality
-* Provide versioned iteration (forward and reverse) functionality
-* Provide pruning functionality
-
-All of the functionality provided by an SS backend should work under a versioned
-scheme, i.e. a user should be able to get, store, and iterate over keys for the latest
-and historical versions efficiently and a store key, which is used for name-spacing
-purposes.
-
-We propose to have three defaulting SS backends for applications to choose from:
-
-* RocksDB
-    * CGO based
-    * Usage of User-Defined Timestamps as a built-in versioning mechanism
-* PebbleDB
-    * Native
-    * Manual implementation of MVCC keys for versioning
-* SQLite
-    * CGO based
-    * Single table for all state
-
-Since operators might want pruning strategies to differ in SS compared to SC,
-e.g. having a very tight pruning strategy in SC while having a looser pruning
-strategy for SS, we propose to introduce an additional pruning configuration,
-with parameters that are identical to what exists in the SDK today, and allow
-operators to control the pruning strategy of the SS layer independently of the
-SC layer.
-
-Note, the SC pruning strategy must be congruent with the operator's state sync
-configuration. This is so as to allow state sync snapshots to execute successfully,
-otherwise, a snapshot could be triggered on a height that is not available in SC.
 
 #### State Sync
 
@@ -179,7 +132,7 @@ the primary interface for the application to interact with. The `RootStore` will
 be responsible for housing SS and SC backends. Specifically, a `RootStore` will
 provide the following functionality:
 
-* Manage commitment of state (both SS and SC)
+* Manage commitment of state 
 * Provide modules access to state
 * Query delegation (i.e. get a value for a <key, height> tuple)
 * Providing commitment proofs
@@ -197,12 +150,7 @@ solely provide key prefixing/namespacing functionality for modules.
 
 #### Proofs
 
-Since the SS layer is naturally a storage layer only, without any commitments
-to (key, value) pairs, it cannot provide Merkle proofs to clients during queries.
-
-So providing inclusion and exclusion proofs, via a `CommitmentOp` type, will be
-the responsibility of the SC backend. Retrieving proofs will be done through the
-a `RootStore`, which will internally route the request to the SC backend.
+Providing a `CommitmentOp` type, will be the responsibility of the SC backend. Retrieving proofs will be done through the a `RootStore`, which will internally route the request to the SC backend.
 
 #### Commitment
 
@@ -231,9 +179,6 @@ and storage backends for further performance, in addition to a reduced amount of
 abstraction around KVStores making operations such as caching and state branching
 more intuitive.
 
-However, due to the proposed design, there are drawbacks around providing state
-proofs for historical queries.
-
 ### Backwards Compatibility
 
 This ADR proposes changes to the storage implementation in the Cosmos SDK through
@@ -243,16 +188,13 @@ be broken or modified.
 
 ### Positive
 
-* Improved performance of independent SS and SC layers
+* Improved performance of SC layers
 * Reduced layers of abstraction making storage primitives easier to understand
-* Atomic commitments for SC
 * Redesign of storage types and interfaces will allow for greater experimentation
   such as different physical storage backends and different commitment schemes
   for different application modules
 
 ### Negative
-
-* Providing proofs for historical state is challenging
 
 ### Neutral
 

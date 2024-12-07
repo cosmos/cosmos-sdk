@@ -2,9 +2,9 @@
 sidebar_position: 1
 ---
 
-# ProtocolBuffer Annotations
+# Protocol buffer Annotations
 
-This document explains the various protobuf scalars that have been added to make working with protobuf easier for Cosmos SDK application developers
+This document explains the various protobuf scalars that have been added to make working with protobuf easier for Cosmos SDK application developers.
 
 ## Signer
 
@@ -85,7 +85,7 @@ option (cosmos_proto.method_added_in) = "simapp v24.0.0";
 The amino codec was removed in `v0.50+`, this means there is not a need register `legacyAminoCodec`. To replace the amino codec, Amino protobuf annotations are used to provide information to the amino codec on how to encode and decode protobuf messages. 
 
 :::note
-Amino annotations are only used for backwards compatibility with amino. New modules are not required use amino annotations.
+Amino annotations are only used for backwards compatibility with amino.
 :::
 
 The below annotations are used to provide information to the amino codec on how to encode and decode protobuf messages in a backwards compatible manner. 

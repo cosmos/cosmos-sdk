@@ -92,7 +92,7 @@ Finally, a few more important parameters:
 
 * `voteInfos`: This parameter carries the list of validators whose precommit is missing, either
   because they did not vote or because the proposer did not include their vote. This information is
-  carried by the [Context](./02-context.md) and can be used by the application for various things like
+  carried by the [Context](./17-context.md) and can be used by the application for various things like
   punishing absent validators.
 * `minGasPrices`: This parameter defines the minimum gas prices accepted by the node. This is a
   **local** parameter, meaning each full-node can set a different `minGasPrices`. It is used in the
@@ -474,7 +474,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/baseapp/abci.go#L894
 
 * Initialize the [block gas meter](../beginner/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
 * Run the application's [`beginBlocker()`](../beginner/00-app-anatomy.md#beginblocker-and-endblocker), which mainly runs the [`BeginBlocker()`](../../build/building-modules/06-preblock-beginblock-endblock.md#beginblocker-and-endblocker) method of each of the modules.
-* Set the [`VoteInfos`](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during transaction execution and EndBlock.
+* Set the [`VoteInfos`](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./17-context.md) so that it can be used during transaction execution and EndBlock.
 
 #### Transaction Execution
 

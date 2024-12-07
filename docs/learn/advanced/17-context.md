@@ -5,7 +5,7 @@ sidebar_position: 1
 # Context
 
 :::note Synopsis
-The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It provides access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more.
+The `context` is a data structure that carries information about the current state of the application. It provides access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more.
 :::
 
 :::note Pre-requisite Readings
@@ -13,6 +13,10 @@ The `context` is a data structure intended to be passed from function to functio
 * [Anatomy of a Cosmos SDK Application](../beginner/00-app-anatomy.md)
 * [Lifecycle of a Transaction](../beginner/01-tx-lifecycle.md)
 
+:::
+
+:::warning
+The `sdk.Context` should not be used directly. `Runtime` is implementing the [core services](./02-core.md), which are using directly the `sdk.Context`.
 :::
 
 ## Context Definition

@@ -8,68 +8,43 @@ import (
 
 	"cosmossdk.io/core/comet"
 	coreheader "cosmossdk.io/core/header"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/x/slashing"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/testutil"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // TestBeginBlocker is a unit test function that tests the behavior of the BeginBlocker function.
 // It sets up the necessary dependencies and context, creates a validator, and performs various operations
 // to test the slashing logic. It checks if the validator is correctly jailed after a certain number of blocks.
 func TestBeginBlocker(t *testing.T) {
-	var (
-		interfaceRegistry codectypes.InterfaceRegistry
-		accountKeeper     authkeeper.AccountKeeper
-		bankKeeper        bankkeeper.Keeper
-		stakingKeeper     *stakingkeeper.Keeper
-		slashingKeeper    slashingkeeper.Keeper
-	)
+	f := initFixture(t)
 
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&interfaceRegistry,
-		&accountKeeper,
-		&bankKeeper,
-		&stakingKeeper,
-		&slashingKeeper,
-	)
-	require.NoError(t, err)
-
-	ctx := app.BaseApp.NewContext(false)
+	ctx := f.ctx
 
 	pks := simtestutil.CreateTestPubKeys(1)
-	simtestutil.AddTestAddrsFromPubKeys(bankKeeper, stakingKeeper, ctx, pks, stakingKeeper.TokensFromConsensusPower(ctx, 200))
+	simtestutil.AddTestAddrsFromPubKeys(f.bankKeeper, f.stakingKeeper, ctx, pks, f.stakingKeeper.TokensFromConsensusPower(ctx, 200))
 	addr, pk := sdk.ValAddress(pks[0].Address()), pks[0]
-	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
 
 	// bond the validator
 	power := int64(100)
-	acc := accountKeeper.NewAccountWithAddress(ctx, sdk.AccAddress(addr))
-	accountKeeper.SetAccount(ctx, acc)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, sdk.AccAddress(addr))
+	f.accountKeeper.SetAccount(ctx, acc)
 	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, true)
-	_, err = stakingKeeper.EndBlocker(ctx)
+	_, err := f.stakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
-	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)
 	require.Equal(
-		t, bankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
+		t, f.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
 		sdk.NewCoins(sdk.NewCoin(bondDenom, testutil.InitTokens.Sub(amt))),
 	)
-	val, err := stakingKeeper.Validator(ctx, addr)
+	val, err := f.stakingKeeper.Validator(ctx, addr)
 	require.NoError(t, err)
 	require.Equal(t, amt, val.GetBondedTokens())
 
@@ -78,57 +53,58 @@ func TestBeginBlocker(t *testing.T) {
 		Power:   power,
 	}
 
-	ctx = ctx.WithCometInfo(comet.Info{
+	ctx = integration.SetCometInfo(ctx, comet.Info{
 		LastCommit: comet.CommitInfo{Votes: []comet.VoteInfo{{
 			Validator:   abciVal,
 			BlockIDFlag: comet.BlockIDFlagCommit,
 		}}},
 	})
-	cometInfoService := runtime.NewContextAwareCometInfoService()
+	cometInfoService := &services.ContextAwareCometInfoService{}
 
-	err = slashing.BeginBlocker(ctx, slashingKeeper, cometInfoService)
+	err = slashing.BeginBlocker(ctx, f.slashingKeeper, cometInfoService)
 	require.NoError(t, err)
 
-	info, err := slashingKeeper.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(pk.Address()))
+	info, err := f.slashingKeeper.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(pk.Address()))
 	require.NoError(t, err)
-	require.Equal(t, ctx.HeaderInfo().Height, info.StartHeight)
+	require.Equal(t, integration.HeaderInfoFromContext(ctx).Height, info.StartHeight)
 	require.Equal(t, int64(0), info.IndexOffset)
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 	require.Equal(t, int64(0), info.MissedBlocksCounter)
 
 	height := int64(0)
 
-	signedBlocksWindow, err := slashingKeeper.SignedBlocksWindow(ctx)
+	signedBlocksWindow, err := f.slashingKeeper.SignedBlocksWindow(ctx)
 	require.NoError(t, err)
 	// for 100 blocks, mark the validator as having signed
 	for ; height < signedBlocksWindow; height++ {
-		ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height})
+		ctx = integration.SetHeaderInfo(ctx, coreheader.Info{Height: height})
 
-		err = slashing.BeginBlocker(ctx, slashingKeeper, cometInfoService)
+		err = slashing.BeginBlocker(ctx, f.slashingKeeper, cometInfoService)
 		require.NoError(t, err)
 	}
 
-	minSignedPerWindow, err := slashingKeeper.MinSignedPerWindow(ctx)
+	minSignedPerWindow, err := f.slashingKeeper.MinSignedPerWindow(ctx)
 	require.NoError(t, err)
 	// for 50 blocks, mark the validator as having not signed
 	for ; height < ((signedBlocksWindow * 2) - minSignedPerWindow + 1); height++ {
-		ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height}).WithCometInfo(comet.Info{
+		ctx = integration.SetHeaderInfo(ctx, coreheader.Info{Height: height})
+		ctx = integration.SetCometInfo(ctx, comet.Info{
 			LastCommit: comet.CommitInfo{Votes: []comet.VoteInfo{{
 				Validator:   abciVal,
 				BlockIDFlag: comet.BlockIDFlagAbsent,
 			}}},
 		})
 
-		err = slashing.BeginBlocker(ctx, slashingKeeper, cometInfoService)
+		err = slashing.BeginBlocker(ctx, f.slashingKeeper, cometInfoService)
 		require.NoError(t, err)
 	}
 
 	// end block
-	_, err = stakingKeeper.EndBlocker(ctx)
+	_, err = f.stakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 
 	// validator should be jailed
-	validator, err := stakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk))
+	validator, err := f.stakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk))
 	require.NoError(t, err)
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 }

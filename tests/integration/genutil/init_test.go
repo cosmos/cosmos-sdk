@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"testing"
 	"time"
@@ -27,7 +28,6 @@ import (
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	genutilhelpers "github.com/cosmos/cosmos-sdk/testutil/x/genutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -220,7 +220,7 @@ func TestStartStandAlone(t *testing.T) {
 	app, err := mock.NewApp(home, logger)
 	require.NoError(t, err)
 
-	svrAddr, _, closeFn, err := network.FreeTCPAddr()
+	svrAddr, _, closeFn, err := freeTCPAddr()
 	require.NoError(t, err)
 	require.NoError(t, closeFn())
 
@@ -391,4 +391,22 @@ func writeAndTrackDefaultConfig(v *viper.Viper, home string) error {
 		return err
 	}
 	return genutilhelpers.WriteAndTrackCometConfig(v, home, cfg)
+}
+
+// Get a free address for a test CometBFT server
+// protocol is either tcp, http, etc
+func freeTCPAddr() (addr, port string, closeFn func() error, err error) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	closeFn = func() error {
+		return l.Close()
+	}
+
+	portI := l.Addr().(*net.TCPAddr).Port
+	port = fmt.Sprintf("%d", portI)
+	addr = fmt.Sprintf("tcp://127.0.0.1:%s", port)
+	return
 }

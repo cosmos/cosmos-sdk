@@ -18,6 +18,7 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/tx/signing"
 
+	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -30,12 +31,15 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/require"
 )
 
 type fixture struct {
 	app *integration.App
 
-	cdc codec.Codec
+	cdc         codec.Codec
+	ctx         sdk.Context
+	encodingCfg moduletestutil.TestEncodingConfig
 
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
@@ -126,11 +130,24 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 
 	banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
 
+	// commit and finalize block
+	defer func() {
+		_, err := integrationApp.Commit()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	height := integrationApp.LastBlockHeight() + 1
+	_, err = integrationApp.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}})
+	require.NoError(t, err)
+
 	return &fixture{
 		app:            integrationApp,
 		cdc:            cdc,
+		ctx:            sdk.UnwrapSDKContext(integrationApp.Context()),
 		accountsKeeper: accountsKeeper,
 		authKeeper:     authKeeper,
 		bankKeeper:     bankKeeper,
+		encodingCfg:    encodingCfg,
 	}
 }

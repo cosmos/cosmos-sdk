@@ -611,20 +611,6 @@ func (mr *MockStakingHooksMockRecorder) AfterDelegationModified(ctx, delAddr, va
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDelegationModified", reflect.TypeOf((*MockStakingHooks)(nil).AfterDelegationModified), ctx, delAddr, valAddr)
 }
 
-// AfterUnbondingInitiated mocks base method.
-func (m *MockStakingHooks) AfterUnbondingInitiated(ctx context.Context, id uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AfterUnbondingInitiated", ctx, id)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AfterUnbondingInitiated indicates an expected call of AfterUnbondingInitiated.
-func (mr *MockStakingHooksMockRecorder) AfterUnbondingInitiated(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterUnbondingInitiated", reflect.TypeOf((*MockStakingHooks)(nil).AfterUnbondingInitiated), ctx, id)
-}
-
 // AfterValidatorBeginUnbonding mocks base method.
 func (m *MockStakingHooks) AfterValidatorBeginUnbonding(ctx context.Context, consAddr types1.ConsAddress, valAddr types1.ValAddress) error {
 	m.ctrl.T.Helper()

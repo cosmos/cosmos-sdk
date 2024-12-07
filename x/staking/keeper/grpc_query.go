@@ -648,7 +648,6 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 				entry.SharesDst,
 				entry.InitialBalance,
 				val.TokensFromShares(entry.SharesDst).TruncateInt(),
-				entry.UnbondingId,
 			)
 		}
 

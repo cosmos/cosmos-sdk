@@ -1199,7 +1199,6 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 	require.NotEqual(resUnbonding.Entries[0], resUnbonding.Entries[1])
 	require.Equal(creationHeight, resUnbonding.Entries[0].CreationHeight)
 	require.Equal(newCreationHeight, resUnbonding.Entries[1].CreationHeight)
-
 }
 
 func (s *KeeperTestSuite) TestUndelegateWithDustShare() {

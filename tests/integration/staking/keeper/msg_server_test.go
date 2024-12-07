@@ -58,7 +58,6 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		delegatorAddr, validatorAddr, 10,
 		ctx.HeaderInfo().Time.Add(time.Minute*10),
 		unbondingAmount.Amount,
-		0,
 		address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"),
 	)
 

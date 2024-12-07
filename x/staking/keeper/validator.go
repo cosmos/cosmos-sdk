@@ -554,7 +554,9 @@ func (k Keeper) unbondMatureValidators(
 			if err != nil {
 				return err
 			}
-			k.RemoveValidator(ctx, addr)
+			if err := k.RemoveValidator(ctx, addr); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

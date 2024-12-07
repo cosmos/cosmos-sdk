@@ -63,3 +63,23 @@ message MsgMint {
 
 // MsgMint defines the response structure for executing a MsgMint message.
 message MsgMintResponse {}
+
+// MsgBurn is the Msg/Burn request type.
+message MsgBurn {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/x/bank/v2/MsgBurn";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  string   burn_from_address               = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgBurnResponse defines the response structure for executing a MsgBurn message.
+message MsgBurnResponse {}

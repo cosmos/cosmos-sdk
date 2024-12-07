@@ -1,6 +1,6 @@
 module cosmossdk.io/x/bank
 
-go 1.23.2
+go 1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -156,7 +156,11 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+require (
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/x/accounts v0.0.0-20241127063259-f296a5005ce8
+	cosmossdk.io/x/accounts/defaults/asset v0.0.0-00010101000000-000000000000
+)
 
 require (
 	github.com/bytedance/sonic v1.12.4 // indirect
@@ -179,6 +183,8 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/accounts => ../accounts
+	cosmossdk.io/x/accounts/defaults/asset => ../accounts/defaults/asset
 	cosmossdk.io/x/staking => ../staking
 	cosmossdk.io/x/tx => ../tx
 )

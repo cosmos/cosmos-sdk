@@ -22,26 +22,30 @@ import (
 type Keeper struct {
 	appmodulev2.Environment
 
-	authority    []byte
-	addressCodec address.Codec
-	schema       collections.Schema
-	params       collections.Item[types.Params]
-	balances     *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
-	supply       collections.Map[string, math.Int]
+	accountsKeeper types.AccountsModKeeper
+	authority      []byte
+	addressCodec   address.Codec
+	schema         collections.Schema
+	params         collections.Item[types.Params]
+	balances       *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
+	supply         collections.Map[string, math.Int]
+	assetAccount   collections.Map[string, []byte]
 
 	sendRestriction *sendRestriction
 }
 
-func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
+func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec, accountsKeeper types.AccountsModKeeper) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{
 		Environment:     env,
+		accountsKeeper:  accountsKeeper,
 		authority:       authority,
 		addressCodec:    addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
 		params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		balances:        collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(collections.BytesKey, collections.StringKey), sdk.IntValue, newBalancesIndexes(sb)),
 		supply:          collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		assetAccount:    collections.NewMap(sb, types.AssetAccountKey, "asset_account", collections.StringKey, collections.BytesValue),
 		sendRestriction: newSendRestriction(),
 	}
 
@@ -54,25 +58,27 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 	return k
 }
 
+func (k Keeper) GetAccountsKeeper() types.AccountsModKeeper {
+	return k.accountsKeeper
+}
+
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
-func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coins) error {
+func (k Keeper) MintCoin(ctx context.Context, addr []byte, amounts sdk.Coin) error {
 	// TODO: Mint restriction & permission
 
 	if !amounts.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}
 
-	err := k.addCoins(ctx, addr, amounts)
+	err := k.addCoin(ctx, addr, amounts)
 	if err != nil {
 		return err
 	}
 
-	for _, amount := range amounts {
-		supply := k.GetSupply(ctx, amount.GetDenom())
-		supply = supply.Add(amount)
-		k.setSupply(ctx, supply)
-	}
+	supply := k.GetSupply(ctx, amounts.GetDenom())
+	supply = supply.Add(amounts)
+	k.setSupply(ctx, supply)
 
 	addrStr, err := k.addressCodec.BytesToString(addr)
 	if err != nil {
@@ -87,11 +93,42 @@ func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coins) e
 	)
 }
 
-// SendCoins transfers amt coins from a sending account to a receiving account.
+func (k Keeper) BurnCoin(ctx context.Context, address []byte, amount sdk.Coin) error {
+	// TODO: Burn restriction & permission
+
+	if !amount.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
+	}
+
+	err := k.subUnlockedCoin(ctx, address, amount)
+	if err != nil {
+		return err
+	}
+
+	supply := k.GetSupply(ctx, amount.GetDenom())
+	supply = supply.Sub(amount)
+	k.setSupply(ctx, supply)
+
+	addrStr, err := k.addressCodec.BytesToString(address)
+	if err != nil {
+		return err
+	}
+
+	k.Logger.Debug("burned tokens from account", "amount", amount.String(), "from", addrStr)
+
+	// emit burn event
+	return k.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinBurn,
+		event.NewAttribute(types.AttributeKeyBurner, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amount.String()),
+	)
+}
+
+// SendCoin transfers amt coins from a sending account to a receiving account.
 // Function take sender & recipient as []byte.
 // They can be sdk address or module name.
 // An error is returned upon failure.
-func (k Keeper) SendCoins(ctx context.Context, from, to []byte, amt sdk.Coins) error {
+func (k Keeper) SendCoin(ctx context.Context, from, to []byte, amt sdk.Coin) error {
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -102,12 +139,12 @@ func (k Keeper) SendCoins(ctx context.Context, from, to []byte, amt sdk.Coins) e
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, from, amt)
+	err = k.subUnlockedCoin(ctx, from, amt)
 	if err != nil {
 		return err
 	}
 
-	err = k.addCoins(ctx, to, amt)
+	err = k.addCoin(ctx, to, amt)
 	if err != nil {
 		return err
 	}
@@ -154,28 +191,26 @@ func (k Keeper) GetBalance(ctx context.Context, addr []byte, denom string) sdk.C
 // CONTRACT: The provided amount (amt) must be valid, non-negative coins.
 //
 // A coin_spent event is emitted after the operation.
-func (k Keeper) subUnlockedCoins(ctx context.Context, addr []byte, amt sdk.Coins) error {
-	for _, coin := range amt {
-		balance := k.GetBalance(ctx, addr, coin.Denom)
-		spendable := sdk.Coins{balance}
+func (k Keeper) subUnlockedCoin(ctx context.Context, addr []byte, amt sdk.Coin) error {
+	balance := k.GetBalance(ctx, addr, amt.Denom)
+	spendable := sdk.Coins{balance}
 
-		_, hasNeg := spendable.SafeSub(coin)
-		if hasNeg {
-			if len(spendable) == 0 {
-				spendable = sdk.Coins{sdk.Coin{Denom: coin.Denom, Amount: math.ZeroInt()}}
-			}
-			return errorsmod.Wrapf(
-				sdkerrors.ErrInsufficientFunds,
-				"spendable balance %s is smaller than %s",
-				spendable, coin,
-			)
+	_, hasNeg := spendable.SafeSub(amt)
+	if hasNeg {
+		if len(spendable) == 0 {
+			spendable = sdk.Coins{sdk.Coin{Denom: amt.Denom, Amount: math.ZeroInt()}}
 		}
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInsufficientFunds,
+			"spendable balance %s is smaller than %s",
+			spendable, amt,
+		)
+	}
 
-		newBalance := balance.Sub(coin)
+	newBalance := balance.Sub(amt)
 
-		if err := k.setBalance(ctx, addr, newBalance); err != nil {
-			return err
-		}
+	if err := k.setBalance(ctx, addr, newBalance); err != nil {
+		return err
 	}
 
 	addrStr, err := k.addressCodec.BytesToString(addr)
@@ -195,15 +230,13 @@ func (k Keeper) subUnlockedCoins(ctx context.Context, addr []byte, amt sdk.Coins
 // CONTRACT: The provided amount (amt) must be valid, non-negative coins.
 //
 // It emits a coin_received event after the operation.
-func (k Keeper) addCoins(ctx context.Context, addr []byte, amt sdk.Coins) error {
-	for _, coin := range amt {
-		balance := k.GetBalance(ctx, addr, coin.Denom)
-		newBalance := balance.Add(coin)
+func (k Keeper) addCoin(ctx context.Context, addr []byte, amt sdk.Coin) error {
+	balance := k.GetBalance(ctx, addr, amt.Denom)
+	newBalance := balance.Add(amt)
 
-		err := k.setBalance(ctx, addr, newBalance)
-		if err != nil {
-			return err
-		}
+	err := k.setBalance(ctx, addr, newBalance)
+	if err != nil {
+		return err
 	}
 
 	addrStr, err := k.addressCodec.BytesToString(addr)
@@ -243,6 +276,10 @@ func (k Keeper) setBalance(ctx context.Context, addr []byte, balance sdk.Coin) e
 		return nil
 	}
 	return k.balances.Set(ctx, collections.Join(addr, balance.Denom), balance.Amount)
+}
+
+func (k Keeper) SetAssetAccount(ctx context.Context, denom string, addr []byte) error {
+	return k.assetAccount.Set(ctx, denom, addr)
 }
 
 func newBalancesIndexes(sb *collections.SchemaBuilder) BalancesIndexes {

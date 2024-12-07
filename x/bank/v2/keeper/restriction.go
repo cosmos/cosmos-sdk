@@ -39,7 +39,7 @@ func (r *sendRestriction) clear() {
 var _ types.SendRestrictionFn = (*sendRestriction)(nil).apply
 
 // apply applies the send restriction if there is one. If not, it's a no-op.
-func (r *sendRestriction) apply(ctx context.Context, fromAddr, toAddr []byte, amt sdk.Coins) ([]byte, error) {
+func (r *sendRestriction) apply(ctx context.Context, fromAddr, toAddr []byte, amt sdk.Coin) ([]byte, error) {
 	if r == nil || r.fn == nil {
 		return toAddr, nil
 	}

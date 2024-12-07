@@ -545,9 +545,16 @@ func (k Keeper) unbondMatureValidators(
 			return errors.New("unexpected validator in unbonding queue; status was not unbonding")
 		}
 
-		val = k.UnbondingToUnbonded(ctx, val)
+		val, err = k.UnbondingToUnbonded(ctx, val)
+		if err != nil {
+			return err
+		}
 		if val.GetDelegatorShares().IsZero() {
-			k.RemoveValidator(ctx, val.GetOperator())
+			addr, err := k.validatorAddressCodec.StringToBytes(val.OperatorAddress)
+			if err != nil {
+				return err
+			}
+			k.RemoveValidator(ctx, addr)
 		}
 	}
 	return nil

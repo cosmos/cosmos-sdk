@@ -21,11 +21,6 @@ lint_module() {
   fi
   echo "linting $(grep "^module" go.mod) [$(date -Iseconds -u)]"
   golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=${LINT_TAGS}
-
-  # always lint simapp with app_v1 build tag, otherwise it never gets linted
-  if [[ "$(grep "^module" go.mod)" == "module cosmossdk.io/simapp" ]]; then
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=app_v1
-  fi
 }
 export -f lint_module
 

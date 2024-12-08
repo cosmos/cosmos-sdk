@@ -50,8 +50,8 @@ jobs:
         ###################
       - name: Build
         run: GOARCH=${{ matrix.go-arch }} make build
-      - name: Build Legacy
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
+      - name: Build v2
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2 make build
       - name: Build with rocksdb backend
         if: matrix.go-arch == 'amd64'
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="rocksdb" make build

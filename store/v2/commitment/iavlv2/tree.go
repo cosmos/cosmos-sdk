@@ -104,10 +104,8 @@ func (t *Tree) Get(version uint64, key []byte) ([]byte, error) {
 	h := t.tree.Version()
 	v := int64(version)
 	switch {
-	case v == h:
-		return t.tree.Get(key)
-	case v == h+1 && (t.tree.IsDirty() || t.tree.IsEmpty()):
-		// permit h+1 reads if the tree is dirty or empty
+	// TODO permit h+1 read only if the tree is dirty (i.e. has uncommitted changes from WriteChangeset)
+	case v == h || v == h+1:
 		return t.tree.Get(key)
 	case v > h:
 		return nil, fmt.Errorf("get: cannot read future version %d; h: %d path=%s", v, h, t.path)
@@ -132,10 +130,8 @@ func (t *Tree) Has(version uint64, key []byte) (bool, error) {
 	h := t.tree.Version()
 	v := int64(version)
 	switch {
-	case v == h:
-		return t.tree.Has(key)
-	case v == h+1 && (t.tree.IsDirty() || t.tree.IsEmpty()):
-		// permit h+1 reads if the tree is dirty or empty
+	// TODO permit h+1 read only if the tree is dirty (i.e. has uncommitted changes from WriteChangeset)
+	case v == h || v == h+1:
 		return t.tree.Has(key)
 	case v > h:
 		return false, fmt.Errorf("has: cannot read future version %d; h: %d", v, h)
@@ -157,15 +153,38 @@ func (t *Tree) Iterator(version uint64, start, end []byte, ascending bool) (core
 	if err := isHighBitSet(version); err != nil {
 		return nil, err
 	}
-	if int64(version) != t.tree.Version() {
-		return nil, fmt.Errorf("loading past version not yet supported")
-	}
-	if ascending {
-		// inclusive = false is IAVL v1's default behavior.
-		// the read expectations of certain modules (like x/staking) will cause a panic if this is changed.
-		return t.tree.Iterator(start, end, false)
-	} else {
-		return t.tree.ReverseIterator(start, end)
+	h := t.tree.Version()
+	v := int64(version)
+
+	switch {
+	// TODO permit h+1 read only if the tree is dirty (i.e. has uncommitted changes from WriteChangeset)
+	case v == h || v == h+1:
+		if ascending {
+			// inclusive = false is IAVL v1's default behavior.
+			// the read expectations of certain modules (like x/staking) will cause a panic if this is changed.
+			return t.tree.Iterator(start, end, false)
+		} else {
+			return t.tree.ReverseIterator(start, end)
+		}
+	case v > h:
+		return nil, fmt.Errorf("has: cannot read future version %d; h: %d", v, h)
+	case v < h:
+		cloned, err := t.tree.ReadonlyClone()
+		if err != nil {
+			return nil, err
+		}
+		if err = cloned.LoadVersion(int64(version)); err != nil {
+			return nil, err
+		}
+		if ascending {
+			// inclusive = false is IAVL v1's default behavior.
+			// the read expectations of certain modules (like x/staking) will cause a panic if this is changed.
+			return t.tree.Iterator(start, end, false)
+		} else {
+			return t.tree.ReverseIterator(start, end)
+		}
+	default:
+		return nil, fmt.Errorf("unexpected version comparison: tree version: %d, requested: %d", h, v)
 	}
 }
 

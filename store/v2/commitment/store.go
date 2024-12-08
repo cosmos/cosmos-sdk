@@ -205,7 +205,6 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 
 func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 	storeInfos := make([]*proof.StoreInfo, 0, len(c.multiTrees))
-	var i int
 	eg := new(errgroup.Group)
 	eg.SetLimit(store.MaxWriteParallelism)
 
@@ -230,7 +229,6 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 				return nil, err
 			}
 		}
-		i++
 	}
 
 	cInfo := &proof.CommitInfo{

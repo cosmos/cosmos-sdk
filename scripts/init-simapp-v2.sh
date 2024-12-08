@@ -10,8 +10,8 @@ $SIMD_BIN config set client chain-id simapp-v2-chain
 $SIMD_BIN config set client keyring-backend test
 $SIMD_BIN config set client keyring-default-keyname alice
 $SIMD_BIN config set app rest.enable true
-$SIMD_BIN config set app store.options.iavl-config.cache-size 1000000
 $SIMD_BIN config set app telemetry.prometheus-retention-time 600
+$SIMD_BIN config set app store.options.sc-type iavl-v2
 sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' "$SIMD_HOME"/config/config.toml
 sed -i '' 's/prometheus = false/prometheus = true/' "$SIMD_HOME"/config/config.toml
 

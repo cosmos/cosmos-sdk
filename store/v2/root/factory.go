@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 
+	iavl_v2 "github.com/cosmos/iavl/v2"
+
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/commitment/iavlv2"
 	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
@@ -49,7 +52,7 @@ func DefaultStoreOptions() Options {
 			Interval:   100,
 		},
 		IavlConfig: &iavl.Config{
-			CacheSize:              100_000,
+			CacheSize:              1_000_000,
 			SkipFastStorageUpgrade: true,
 		},
 	}
@@ -97,7 +100,13 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			case SCTypeIavl:
 				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
-				return nil, errors.New("iavl v2 not supported")
+				dir := fmt.Sprintf("%s/data/iavl-v2/%s", opts.RootDir, key)
+				// TODO load from config YAML or at least simapp
+				iavlOpts := iavl_v2.DefaultTreeOptions()
+				iavlOpts.EvictionDepth = 18
+				iavlOpts.HeightFilter = 1
+				iavlOpts.CheckpointInterval = 55
+				return iavlv2.NewTree(iavlOpts, iavl_v2.SqliteDbOptions{Path: dir}, opts.Logger)
 			default:
 				return nil, errors.New("unsupported commitment store type")
 			}

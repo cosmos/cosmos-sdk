@@ -8,8 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -56,6 +54,9 @@ type Store struct {
 	chDone chan struct{}
 	// isMigrating reflects whether the store is currently migrating
 	isMigrating bool
+
+	preCommit        sync.RWMutex
+	preCommitVersion uint64
 }
 
 // New creates a new root Store instance.
@@ -116,23 +117,25 @@ func (s *Store) getVersionedReader(version uint64) (store.VersionedReader, error
 	return nil, fmt.Errorf("version %d does not exist", version)
 }
 
-func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
-	v, err := s.GetLatestVersion()
-	if err != nil {
-		return 0, nil, err
-	}
-	vReader, err := s.getVersionedReader(v)
-	if err != nil {
-		return 0, nil, err
-	}
-
-	return v, NewReaderMap(v, vReader), nil
-}
-
 // StateAt returns a read-only view of the state at a given version.
 func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
 	vReader, err := s.getVersionedReader(v)
 	return NewReaderMap(v, vReader), err
+}
+
+func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
+	s.preCommit.RLock()
+	v := s.preCommitVersion
+	s.preCommit.RUnlock()
+	if v == 0 {
+		var err error
+		v, err = s.GetLatestVersion()
+		if err != nil {
+			return 0, nil, err
+		}
+	}
+
+	return v, NewReaderMap(v, s.stateCommitment), nil
 }
 
 func (s *Store) GetStateCommitment() store.Committer {
@@ -291,10 +294,14 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades, overrid
 // from the SC tree. Finally, it commits the SC tree and returns the hash of
 // the CommitInfo.
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
-	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "commit")
-	}
+	s.logger.Warn("begin commit", "version", cs.Version)
+	now := time.Now()
+	defer func() {
+		if s.telemetry != nil {
+			s.telemetry.MeasureSince(now, "root_store", "commit")
+		}
+		s.logger.Warn(fmt.Sprintf("commit version %d took %s", cs.Version, time.Since(now)))
+	}()
 
 	if err := s.handleMigration(cs); err != nil {
 		return nil, err
@@ -305,27 +312,29 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	// background pruning process (iavl v1 for example) which must be paused during the commit
 	s.pruningManager.PausePruning()
 
-	eg := new(errgroup.Group)
-
-	// commit SC async
-	var cInfo *proof.CommitInfo
-	eg.Go(func() error {
-		if err := s.stateCommitment.WriteChangeset(cs); err != nil {
-			return fmt.Errorf("failed to write batch to SC store: %w", err)
-		}
-		var scErr error
-		cInfo, scErr = s.stateCommitment.Commit(cs.Version)
-		if scErr != nil {
-			return fmt.Errorf("failed to commit SC store: %w", scErr)
-		}
-		return nil
-	})
-
-	if err := eg.Wait(); err != nil {
-		return nil, err
+	st := time.Now()
+	s.preCommit.Lock()
+	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
+		s.preCommit.Unlock()
+		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
+	lastVersion := s.preCommitVersion
+	s.preCommitVersion = cs.Version
+	s.preCommit.Unlock()
+
+	cInfo, err := s.stateCommitment.Commit(cs.Version)
+	if err != nil {
+		s.preCommit.Lock()
+		s.preCommitVersion = lastVersion
+		s.preCommit.Unlock()
+		return nil, fmt.Errorf("failed to commit SC store: %w", err)
+	}
+	s.logger.Warn(fmt.Sprintf("sc commit version %d took %s", cs.Version, time.Since(st)))
 
 	if cInfo.Version != cs.Version {
+		s.preCommit.Lock()
+		s.preCommitVersion = lastVersion
+		s.preCommit.Unlock()
 		return nil, fmt.Errorf("commit version mismatch: got %d, expected %d", cInfo.Version, cs.Version)
 	}
 	s.lastCommitInfo = cInfo

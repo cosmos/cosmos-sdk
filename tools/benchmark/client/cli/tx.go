@@ -62,8 +62,8 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 			}()
 
 			var (
-				successCount uint64
-				errCount     uint64
+				successCount int
+				errCount     int
 				since        = time.Now()
 				last         int
 			)
@@ -110,6 +110,7 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 			}()
 
 			i := 0
+			begin := time.Now()
 			ops := make([]*benchmark.Op, numOps)
 			for {
 				select {
@@ -119,10 +120,13 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 				}
 				if time.Since(since) > 5*time.Second {
 					cmd.Printf(
-						"success_tx=%d err_tx=%d seq=%d rate=%.2f/s\n",
-						successCount, errCount, accSeq, float64(i-last)/time.Since(since).Seconds())
+						"success_tx=%d err_tx=%d seq=%d rate=%.2f/s overall=%.2f/s\n",
+						successCount, errCount, accSeq,
+						float64(successCount-last)/time.Since(since).Seconds(),
+						float64(successCount)/time.Since(begin).Seconds(),
+					)
 					since = time.Now()
-					last = i
+					last = successCount
 				}
 
 				for j := range numOps {

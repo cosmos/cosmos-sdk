@@ -39,27 +39,45 @@ var (
 	BuildTags = ""
 )
 
-func getSDKVersion() string {
+type sdkBuildInfo struct {
+	sdkVersion         string
+	runtimeVersion     string
+	stfVersion         string
+	cometServerVersion string
+}
+
+func getSDKBuildInfo() sdkBuildInfo {
+	buildInfo := sdkBuildInfo{
+		sdkVersion: "unable to read deps",
+	}
+
 	deps, ok := debug.ReadBuildInfo()
 	if !ok {
-		return "unable to read deps"
+		return buildInfo
 	}
-	var sdkVersion string
+
 	for _, dep := range deps.Deps {
-		if dep.Path == "github.com/cosmos/cosmos-sdk" {
-			if dep.Replace != nil && dep.Replace.Version != "(devel)" {
-				sdkVersion = dep.Replace.Version
-			} else {
-				sdkVersion = dep.Version
-			}
-		}
-
 		switch dep.Path {
-
+		case "github.com/cosmos/cosmos-sdk":
+			buildInfo.sdkVersion = extractBuildInfo(dep)
+		case "cosmossdk.io/server/v2/cometbft":
+			buildInfo.cometServerVersion = extractBuildInfo(dep)
+		case "cosmossdk.io/runtime/v2":
+			buildInfo.runtimeVersion = extractBuildInfo(dep)
+		case "cosmossdk.io/server/v2/stf":
+			buildInfo.stfVersion = extractBuildInfo(dep)
 		}
 	}
 
-	return sdkVersion
+	return buildInfo
+}
+
+func extractBuildInfo(dep *debug.Module) string {
+	if dep.Replace != nil && dep.Replace.Version != "(devel)" {
+		return dep.Replace.Version
+	} else {
+		return dep.Version
+	}
 }
 
 // ExtraInfo contains a set of extra information provided by apps
@@ -67,31 +85,34 @@ type ExtraInfo map[string]string
 
 // Info defines the application version information.
 type Info struct {
-	Name             string     `json:"name" yaml:"name"`
-	AppName          string     `json:"server_name" yaml:"server_name"`
-	Version          string     `json:"version" yaml:"version"`
-	GitCommit        string     `json:"commit" yaml:"commit"`
-	BuildTags        string     `json:"build_tags" yaml:"build_tags"`
-	GoVersion        string     `json:"go" yaml:"go"`
-	BuildDeps        []buildDep `json:"build_deps" yaml:"build_deps"`
-	CosmosSdkVersion string     `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
-	RuntimeVersion   string     `json:"runtime_version,omitempty" yaml:"runtime_version,omitempty"`
-	StfVersion       string     `json:"stf_version,omitempty" yaml:"stf_version,omitempty"`
-	ServerVersion    string     `json:"server_version,omitempty" yaml:"server_version,omitempty"`
-	ExtraInfo        ExtraInfo  `json:"extra_info,omitempty" yaml:"extra_info,omitempty"`
+	Name               string     `json:"name" yaml:"name"`
+	AppName            string     `json:"server_name" yaml:"server_name"`
+	Version            string     `json:"version" yaml:"version"`
+	GitCommit          string     `json:"commit" yaml:"commit"`
+	BuildTags          string     `json:"build_tags" yaml:"build_tags"`
+	GoVersion          string     `json:"go" yaml:"go"`
+	BuildDeps          []buildDep `json:"build_deps" yaml:"build_deps"`
+	CosmosSdkVersion   string     `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
+	RuntimeVersion     string     `json:"runtime_version,omitempty" yaml:"runtime_version,omitempty"`
+	StfVersion         string     `json:"stf_version,omitempty" yaml:"stf_version,omitempty"`
+	CometServerVersion string     `json:"comet_server_version,omitempty" yaml:"comet_server_version,omitempty"`
+	ExtraInfo          ExtraInfo  `json:"extra_info,omitempty" yaml:"extra_info,omitempty"`
 }
 
 func NewInfo() Info {
-	sdkVersion := getSDKVersion()
+	buildInfo := getSDKBuildInfo()
 	return Info{
-		Name:             Name,
-		AppName:          AppName,
-		Version:          Version,
-		GitCommit:        Commit,
-		BuildTags:        BuildTags,
-		GoVersion:        fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
-		BuildDeps:        depsFromBuildInfo(),
-		CosmosSdkVersion: sdkVersion,
+		Name:               Name,
+		AppName:            AppName,
+		Version:            Version,
+		GitCommit:          Commit,
+		BuildTags:          BuildTags,
+		GoVersion:          fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
+		BuildDeps:          depsFromBuildInfo(),
+		CosmosSdkVersion:   buildInfo.sdkVersion,
+		RuntimeVersion:     buildInfo.runtimeVersion,
+		StfVersion:         buildInfo.stfVersion,
+		CometServerVersion: buildInfo.cometServerVersion,
 	}
 }
 

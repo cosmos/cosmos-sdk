@@ -111,15 +111,10 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	// check if we need to migrate the store
 	isMigrating := false
 	scType := storeOpts.SCType
-	ssLatestVersion, err := ss.GetLatestVersion()
-	if err != nil {
-		return nil, err
-	}
-	if ssLatestVersion != latestVersion {
-		isMigrating = true // need to migrate
-		if scType != SCTypeIavl {
-			scType = SCTypeIavl // only support iavl v1 for migration
-		}
+
+	if scType != SCTypeIavl {
+		isMigrating = true  // need to migrate
+		scType = SCTypeIavl // only support iavl v1 for migration
 	}
 
 	trees := make(map[string]commitment.Tree, len(opts.StoreKeys))
@@ -161,7 +156,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		if err != nil {
 			return nil, err
 		}
-		snapshotMgr := snapshots.NewManager(snapshotDB, snapshots.SnapshotOptions{}, sc, nil, nil, opts.Logger)
+		snapshotMgr := snapshots.NewManager(snapshotDB, snapshots.SnapshotOptions{}, sc, nil, opts.Logger)
 		var newSC *commitment.CommitStore
 		if scType != storeOpts.SCType {
 			newTrees := make(map[string]commitment.Tree, len(opts.StoreKeys))
@@ -177,9 +172,9 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 				return nil, err
 			}
 		}
-		mm = migration.NewManager(opts.SCRawDB, snapshotMgr, ss, newSC, opts.Logger)
+		mm = migration.NewManager(opts.SCRawDB, snapshotMgr, newSC, opts.Logger)
 	}
 
-	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
-	return New(opts.SCRawDB, opts.Logger, ss, sc, pm, mm, nil)
+	pm := pruning.NewManager(sc, storeOpts.SCPruningOption)
+	return New(opts.SCRawDB, opts.Logger, sc, pm, mm, nil)
 }

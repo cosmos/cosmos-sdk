@@ -197,7 +197,7 @@ func NoOpExtendVote() ExtendVoteHandler {
 
 // NoOpVerifyVoteExtensionHandler defines a no-op VerifyVoteExtension handler. It
 // will always return an ACCEPT status with no error.
-func NoOpVerifyVoteExtensionHandler() VerifyVoteExtensionhandler {
+func NoOpVerifyVoteExtensionHandler() VerifyVoteExtensionHandler {
 	return func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	}

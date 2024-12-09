@@ -19,10 +19,10 @@ type (
 	// If the verification of a transaction fails, the boolean is false and the error is non-nil.
 	ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], transaction.Codec[T], *abci.ProcessProposalRequest) error
 
-	// VerifyVoteExtensionhandler is a function type that handles the verification of a vote extension request.
+	// VerifyVoteExtensionHandler is a function type that handles the verification of a vote extension request.
 	// It takes a context, a store reader map, and a request to verify a vote extension.
 	// It returns a response to verify the vote extension and an error if any.
-	VerifyVoteExtensionhandler func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
+	VerifyVoteExtensionHandler func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
 
 	// ExtendVoteHandler is a function type that handles the extension of a vote.
 	// It takes a context, a store reader map, and a request to extend a vote.

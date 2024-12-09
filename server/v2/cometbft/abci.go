@@ -74,7 +74,7 @@ type consensus[T transaction.Tx] struct {
 
 	prepareProposalHandler handlers.PrepareHandler[T]
 	processProposalHandler handlers.ProcessHandler[T]
-	verifyVoteExt          handlers.VerifyVoteExtensionhandler
+	verifyVoteExt          handlers.VerifyVoteExtensionHandler
 	extendVote             handlers.ExtendVoteHandler
 	checkTxHandler         handlers.CheckTxHandler[T]
 

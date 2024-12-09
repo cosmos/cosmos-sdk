@@ -41,6 +41,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	addresscodec "cosmossdk.io/core/address"
 )
 
 const ServerName = "comet"
@@ -66,6 +67,7 @@ type CometBFTServer[T transaction.Tx] struct {
 }
 
 func New[T transaction.Tx](
+	consensusAddressCodec addresscodec.Codec,
 	logger log.Logger,
 	appName string,
 	store types.Store,

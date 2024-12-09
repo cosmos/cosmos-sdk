@@ -5,6 +5,7 @@ go 1.23.2
 replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/core/testing => ../../../core/testing
+	cosmossdk.io/schema => ../../../schema
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
 	cosmossdk.io/server/v2/stf => ../stf

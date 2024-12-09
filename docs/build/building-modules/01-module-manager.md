@@ -44,7 +44,7 @@ The `AppModule` interface exists to define inter-dependent module methods. Many 
 The usage of extension interfaces allows modules to define only the functionalities they need. For example, a module that does not need an `EndBlock` does not need to define the `HasEndBlocker` interface and thus the `EndBlock` method. `AppModule` and `AppModuleGenesis` are voluntarily small interfaces, that can take advantage of the `Module` patterns without having to define many placeholder functions.
 
 :::note legacy
-Prior to the introduction of the `cosmossdk.io/core` package the interfaces were defined in the `types/module` package of the Cosmos SDK. Not all interfaces have been migrated to core. Those legacy interfaces are still supported for backward compatability, but aren't described in this document and should not be used in new modules.
+Prior to the introduction of the `cosmossdk.io/core` package the interfaces were defined in the `types/module` package of the Cosmos SDK. Not all interfaces have been migrated to core. Those legacy interfaces are still supported for backward compatibility, but aren't described in this document and should not be used in new modules.
 :::
 
 

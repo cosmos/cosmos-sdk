@@ -78,9 +78,12 @@ func (t *IavlTree) LoadVersion(version uint64) error {
 			return nil
 		}
 	}
-	return t.tree.LoadVersionForOverwriting(int64(version))
+	_, err := t.tree.LoadVersion(int64(version))
+	return err
 }
 
+// LoadVersionForOverwriting loads the state at the given version.
+// Any versions greater than targetVersion will be deleted.
 func (t *IavlTree) LoadVersionForOverwriting(version uint64) error {
 	return t.tree.LoadVersionForOverwriting(int64(version))
 }

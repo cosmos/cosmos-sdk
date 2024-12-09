@@ -154,7 +154,7 @@ func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarRe
 }
 ```
 
-This design is also intended to be extensible to cover use cases of more fine grained permissioning like minting by
+This design is also intended to be extensible to cover use cases of more fine-grained permissioning like minting by
 denom prefix being restricted to certain modules (as discussed in
 [#7459](https://github.com/cosmos/cosmos-sdk/pull/7459#discussion_r529545528)).
 

@@ -44,7 +44,7 @@ func Upgrade(ctx context.Context, plan transform.Plan, doc *tomledit.Document, c
 	}
 
 	// ignore validation for serverv2 by checking any default field found in doc
-	isServerV2 := doc.First(strings.Split("store.options.ss-pruning-option", ".")...) != nil
+	isServerV2 := doc.First(strings.Split("store.options.sc-pruning-option", ".")...) != nil
 
 	// allow to skip validation
 	if !skipValidate && !isServerV2 {

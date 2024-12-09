@@ -5,23 +5,28 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	clientcontext "cosmossdk.io/client/v2/context"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 func TestSign(t *testing.T) {
+	ac := address.NewBech32Codec("cosmos")
+	vc := address.NewBech32Codec("cosmosvaloper")
 	k := keyring.NewInMemory(getCodec())
 	_, err := k.NewAccount("signVerify", mnemonic, "", "m/44'/118'/0'/0/0", hd.Secp256k1)
 	require.NoError(t, err)
 
-	ctx := client.Context{
-		TxConfig:              newTestConfig(t),
-		Codec:                 getCodec(),
-		AddressCodec:          address.NewBech32Codec("cosmos"),
-		ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
-		Keyring:               k,
+	autoKeyring, err := keyring.NewAutoCLIKeyring(k, ac)
+	require.NoError(t, err)
+
+	ctx := clientcontext.Context{
+		AddressCodec:          ac,
+		ValidatorAddressCodec: vc,
+		Cdc:                   getCodec(),
+		Keyring:               autoKeyring,
 	}
 	tests := []struct {
 		name     string
@@ -52,7 +57,7 @@ func TestSign(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Sign(ctx, tt.rawBytes, "signVerify", tt.encoding, tt.signMode, "json")
+			got, err := Sign(ctx, tt.rawBytes, mockClientConn{}, "signVerify", tt.encoding, tt.signMode, "json")
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

@@ -204,7 +204,7 @@ type customMiddlewares struct {
 	afterCommitter              sdk.AfterCommitter  // logic to run after committing state
 	createOracleResultTx        sdk.CreateOracleResultTxHandler
 	fetchOracleVotes            sdk.FetchOracleVotesHandler
-	doesOracleResultExist       sdk.DoesOracleResultExistHandler
+	fetchOracleResults          sdk.FetchOracleResultsHandler
 	doesSubAccountBelongToVal   sdk.DoesSubAccountBelongToValHandler
 	validateOracleVotes         sdk.ValidateOracleVotesHandler
 	beforeInternalFinalizeBlock func(blockHeight int64)

@@ -1028,11 +1028,11 @@ func (app *BaseApp) FetchOracleVotes(req *abci.RequestFetchOracleVotes) (*abci.R
 	return &abci.ResponseFetchOracleVotes{}, fmt.Errorf("fetchOracleVotes hook is not set")
 }
 
-func (app *BaseApp) DoesOracleResultExist(req *abci.RequestDoesOracleResultExist) (*abci.ResponseDoesOracleResultExist, error) {
-	if app.doesOracleResultExist != nil {
-		return app.doesOracleResultExist(context.Background(), req)
+func (app *BaseApp) FetchOracleResults(req *abci.RequestFetchOracleResults) (*abci.ResponseFetchOracleResults, error) {
+	if app.fetchOracleResults != nil {
+		return app.fetchOracleResults(context.Background(), req)
 	}
-	return &abci.ResponseDoesOracleResultExist{}, fmt.Errorf("doesOracleResultExist hook is not set")
+	return &abci.ResponseFetchOracleResults{}, fmt.Errorf("fetchOracleResults hook is not set")
 }
 
 func (app *BaseApp) DoesSubAccountBelongToVal(req *abci.RequestDoesSubAccountBelongToVal) (*abci.ResponseDoesSubAccountBelongToVal, error) {

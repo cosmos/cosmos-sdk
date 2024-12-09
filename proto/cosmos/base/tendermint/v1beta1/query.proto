@@ -143,14 +143,17 @@ message GetNodeInfoResponse {
 
 // VersionInfo is the type for the GetNodeInfoResponse message.
 message VersionInfo {
-  string          name               = 1;
-  string          app_name           = 2;
-  string          version            = 3;
-  string          git_commit         = 4;
-  string          build_tags         = 5;
-  string          go_version         = 6;
-  repeated Module build_deps         = 7;
-  string          cosmos_sdk_version = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
+  string          name                 = 1;
+  string          app_name             = 2;
+  string          version              = 3;
+  string          git_commit           = 4;
+  string          build_tags           = 5;
+  string          go_version           = 6;
+  repeated Module build_deps           = 7;
+  string          cosmos_sdk_version   = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
+  string          comet_server_version = 9 [(cosmos_proto.field_added_in) = "cosmos-sdk 2.0"];
+  string          runtime_version      = 10 [(cosmos_proto.field_added_in) = "cosmos-sdk 2.0"];
+  string          stf_version          = 11 [(cosmos_proto.field_added_in) = "cosmos-sdk 2.0"];
 }
 
 // Module is the type for VersionInfo

@@ -75,9 +75,9 @@ func getSDKBuildInfo() sdkBuildInfo {
 func extractBuildInfo(dep *debug.Module) string {
 	if dep.Replace != nil && dep.Replace.Version != "(devel)" {
 		return dep.Replace.Version
-	} else {
-		return dep.Version
 	}
+
+	return dep.Version
 }
 
 // ExtraInfo contains a set of extra information provided by apps

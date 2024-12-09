@@ -51,20 +51,20 @@ func getSDKBuildInfo(debugBuildInfo *debug.BuildInfo) sdkBuildInfo {
 	for _, dep := range debugBuildInfo.Deps {
 		switch dep.Path {
 		case "github.com/cosmos/cosmos-sdk":
-			buildInfo.sdkVersion = extractBuildInfo(dep)
+			buildInfo.sdkVersion = extractVersionFromBuildInfo(dep)
 		case "cosmossdk.io/server/v2/cometbft":
-			buildInfo.cometServerVersion = extractBuildInfo(dep)
+			buildInfo.cometServerVersion = extractVersionFromBuildInfo(dep)
 		case "cosmossdk.io/runtime/v2":
-			buildInfo.runtimeVersion = extractBuildInfo(dep)
+			buildInfo.runtimeVersion = extractVersionFromBuildInfo(dep)
 		case "cosmossdk.io/server/v2/stf":
-			buildInfo.stfVersion = extractBuildInfo(dep)
+			buildInfo.stfVersion = extractVersionFromBuildInfo(dep)
 		}
 	}
 
 	return buildInfo
 }
 
-func extractBuildInfo(dep *debug.Module) string {
+func extractVersionFromBuildInfo(dep *debug.Module) string {
 	if dep.Replace != nil && dep.Replace.Version != "(devel)" {
 		return dep.Replace.Version
 	}
@@ -102,6 +102,7 @@ func NewInfo() Info {
 		CosmosSdkVersion: "unable to read deps",
 	}
 
+	// use debug info more granular build info if available
 	debugBuildInfo, ok := debug.ReadBuildInfo()
 	if ok {
 		info.BuildDeps = depsFromBuildInfo(debugBuildInfo)

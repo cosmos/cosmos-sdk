@@ -4,18 +4,23 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"io"
+	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -23,15 +28,20 @@ import (
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	cometmock "cosmossdk.io/server/v2/cometbft/internal/mock"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
 	consensustypes "cosmossdk.io/x/consensus/types"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
 	sum                   = sha256.Sum256([]byte("test-hash"))
+	emptyHash             = sha256.Sum256([]byte(""))
 	DefaulConsensusParams = &v1.ConsensusParams{
 		Block: &v1.BlockParams{
 			MaxGas: 5000000,
@@ -47,16 +57,18 @@ var (
 		Msg:      &gogotypes.BoolValue{Value: true},
 		GasLimit: 0,
 	}
-	actorName = []byte("cookies")
+	actorName  = []byte("cookies")
+	testAcc    = sdk.AccAddress([]byte("addr1_______________"))
+	versionStr = "0.0.0"
 )
 
 func getQueryRouterBuilder[T any, PT interface {
 	*T
-	proto.Message
+	gogoproto.Message
 },
 	U any, UT interface {
 		*U
-		proto.Message
+		gogoproto.Message
 	}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
@@ -64,7 +76,7 @@ func getQueryRouterBuilder[T any, PT interface {
 	t.Helper()
 	queryRouterBuilder := stf.NewMsgRouterBuilder()
 	err := queryRouterBuilder.RegisterHandler(
-		proto.MessageName(PT(new(T))),
+		gogoproto.MessageName(PT(new(T))),
 		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
@@ -94,7 +106,7 @@ func getMsgRouterBuilder[T any, PT interface {
 	t.Helper()
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	err := msgRouterBuilder.RegisterHandler(
-		proto.MessageName(PT(new(T))),
+		gogoproto.MessageName(PT(new(T))),
 		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
@@ -124,6 +136,7 @@ func TestConsensus_InitChain_Without_UpdateParam(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 	assertStoreLatestVersion(t, mockStore, 1)
@@ -144,6 +157,7 @@ func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -159,15 +173,16 @@ func TestConsensus_InitChain_Invalid_Height(t *testing.T) {
 		InitialHeight: 2,
 	})
 	require.NoError(t, err)
-	assertStoreLatestVersion(t, mockStore, 0)
+	assertStoreLatestVersion(t, mockStore, 1)
 
-	// Shouldn't be able to commit genesis block 2
+	// Shouldn't be able to commit genesis block 3
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
-		Height: 2,
+		Height: 3,
+		Hash:   emptyHash[:],
 	})
 	require.Error(t, err)
-	require.True(t, strings.Contains(err.Error(), "unable to commit the changeset"))
+	require.True(t, strings.Contains(err.Error(), "invalid height"))
 }
 
 func TestConsensus_FinalizeBlock_Invalid_Height(t *testing.T) {
@@ -182,12 +197,14 @@ func TestConsensus_FinalizeBlock_Invalid_Height(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 3,
+		Hash:   emptyHash[:],
 	})
 	require.Error(t, err)
 }
@@ -206,6 +223,7 @@ func TestConsensus_FinalizeBlock_NoTxs(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -236,6 +254,7 @@ func TestConsensus_FinalizeBlock_MultiTxs_OutOfGas(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -267,6 +286,7 @@ func TestConsensus_FinalizeBlock_MultiTxs(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -504,6 +524,12 @@ func TestConsensus_ProcessProposal(t *testing.T) {
 	require.Error(t, err)
 
 	// NoOp handler
+	// dummy optimistic execution
+	optimisticMockFunc := func(context.Context, *abci.FinalizeBlockRequest) (*server.BlockResponse, store.WriterMap, []mock.Tx, error) {
+		return nil, nil, nil, errors.New("test error")
+	}
+	c.optimisticExec = oe.NewOptimisticExecution[mock.Tx](log.NewNopLogger(), optimisticMockFunc)
+
 	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
 	_, err = c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
@@ -554,6 +580,7 @@ func TestConsensus_Info(t *testing.T) {
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -562,15 +589,12 @@ func TestConsensus_Info(t *testing.T) {
 	require.Equal(t, res.LastBlockHeight, int64(1))
 }
 
-// TODO:
-//   - GRPC request
-//   - app request
-//   - p2p request
-func TestConsensus_Query(t *testing.T) {
+func TestConsensus_QueryStore(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Write data to state storage
-	err := c.store.GetStateStorage().ApplyChangeset(1, &store.Changeset{
+	err := c.store.GetStateCommitment().WriteChangeset(&store.Changeset{
+		Version: 1,
 		Changes: []store.StateChanges{
 			{
 				Actor: actorName,
@@ -597,6 +621,7 @@ func TestConsensus_Query(t *testing.T) {
 		Time:   time.Now(),
 		Height: 1,
 		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
 	})
 	require.NoError(t, err)
 
@@ -625,11 +650,149 @@ func TestConsensus_Query(t *testing.T) {
 	require.Equal(t, res.Value, []byte(nil))
 }
 
-func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *Consensus[mock.Tx] {
+func TestConsensus_GRPCQuery(t *testing.T) {
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	// empty request
+	res, err := c.Query(context.Background(), &abciproto.QueryRequest{})
+	require.NoError(t, err)
+	require.Equal(t, res.Code, uint32(1))
+	require.Contains(t, res.Log, "no query path provided")
+
+	// query request not exist in handler map
+	invalidReq := testdata.EchoRequest{
+		Message: "echo",
+	}
+	invalidReqBz, err := invalidReq.Marshal()
+	require.NoError(t, err)
+	invalidQuery := abci.QueryRequest{
+		Data: invalidReqBz,
+		Path: "testpb.EchoRequest",
+	}
+	invalidRes, err := c.Query(context.TODO(), &invalidQuery)
+	require.Error(t, err)
+	require.Nil(t, invalidRes)
+	require.Contains(t, err.Error(), "no query handler found")
+
+	// Valid query
+	req := testdata.SayHelloRequest{Name: "foo"}
+	reqBz, err := req.Marshal()
+	require.NoError(t, err)
+	reqQuery := abci.QueryRequest{
+		Data: reqBz,
+		Path: "testpb.SayHelloRequest",
+	}
+
+	resQuery, err := c.Query(context.TODO(), &reqQuery)
+	require.NoError(t, err)
+	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
+
+	var response testdata.SayHelloResponse
+	require.NoError(t, response.Unmarshal(resQuery.Value))
+	require.Equal(t, "Hello foo!", response.Greeting)
+}
+
+func TestConsensus_P2PQuery(t *testing.T) {
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	// empty request
+	res, err := c.Query(context.Background(), &abciproto.QueryRequest{})
+	require.NoError(t, err)
+	require.Equal(t, res.Code, uint32(1))
+	require.Contains(t, res.Log, "no query path provided")
+
+	addrQuery := abci.QueryRequest{
+		Path: "/p2p/filter/addr/1.1.1.1:8000",
+	}
+	res, err = c.Query(context.TODO(), &addrQuery)
+	require.NoError(t, err)
+	require.Equal(t, uint32(3), res.Code)
+
+	idQuery := abci.QueryRequest{
+		Path: "/p2p/filter/id/testid",
+	}
+	res, err = c.Query(context.TODO(), &idQuery)
+	require.NoError(t, err)
+	require.Equal(t, uint32(4), res.Code)
+}
+
+func TestConsensus_AppQuery(t *testing.T) {
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	tx := mock.Tx{
+		Sender:   testAcc,
+		Msg:      &gogotypes.BoolValue{Value: true},
+		GasLimit: 1000,
+	}
+	txBytes := tx.Bytes()
+
+	// simulate by calling Query with encoded tx
+	query := abci.QueryRequest{
+		Path: "/app/simulate",
+		Data: txBytes,
+	}
+	queryResult, err := c.Query(context.TODO(), &query)
+	require.NoError(t, err)
+	require.True(t, queryResult.IsOK(), queryResult.Log)
+
+	// Query app version
+	res, err := c.Query(context.TODO(), &abci.QueryRequest{Path: "app/version"})
+	require.NoError(t, err)
+	require.True(t, res.IsOK())
+	require.Equal(t, versionStr, string(res.Value))
+}
+
+func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *consensus[mock.Tx] {
 	t.Helper()
 
+	queryHandler := make(map[string]appmodulev2.Handler)
 	msgRouterBuilder := getMsgRouterBuilder(t, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-		return nil, nil
+		return msg, nil
 	})
 
 	queryRouterBuilder := getQueryRouterBuilder(t, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
@@ -645,6 +808,32 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 			Params: cParams,
 		}, nil
 	})
+
+	helloFooHandler := func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
+		typedReq := msg.(*testdata.SayHelloRequest)
+		handler := testdata.QueryImpl{}
+		typedResp, err := handler.SayHello(ctx, typedReq)
+		if err != nil {
+			return nil, err
+		}
+
+		return typedResp, nil
+	}
+
+	_ = queryRouterBuilder.RegisterHandler(
+		gogoproto.MessageName(&testdata.SayHelloRequest{}),
+		helloFooHandler,
+	)
+
+	queryHandler[gogoproto.MessageName(&testdata.SayHelloRequest{})] = appmodulev2.Handler{
+		Func: helloFooHandler,
+		MakeMsg: func() transaction.Msg {
+			return reflect.New(gogoproto.MessageType(gogoproto.MessageName(&testdata.SayHelloRequest{})).Elem()).Interface().(transaction.Msg)
+		},
+		MakeMsgResp: func() transaction.Msg {
+			return reflect.New(gogoproto.MessageType(gogoproto.MessageName(&testdata.SayHelloResponse{})).Elem()).Interface().(transaction.Msg)
+		},
+	}
 
 	s, err := stf.New(
 		log.NewNopLogger().With("module", "stf"),
@@ -668,9 +857,8 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	)
 	require.NoError(t, err)
 
-	ss := cometmock.NewMockStorage(log.NewNopLogger(), t.TempDir())
 	sc := cometmock.NewMockCommiter(log.NewNopLogger(), string(actorName), "stf")
-	mockStore := cometmock.NewMockStore(ss, sc)
+	mockStore := cometmock.NewMockStore(sc)
 
 	am := appmanager.New(appmanager.Config{
 		ValidateTxGasLimit: gasLimit,
@@ -679,30 +867,123 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	},
 		mockStore,
 		s,
-		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, []appmodulev2.ValidatorUpdate, error) {
 			_, st, err := mockStore.StateLatest()
 			require.NoError(t, err)
-			return branch.DefaultNewWriterMap(st), nil
+			return branch.DefaultNewWriterMap(st), nil, nil
 		},
 		nil,
 	)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil }, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
+	addrPeerFilter := func(info string) (*abci.QueryResponse, error) {
+		require.Equal(t, "1.1.1.1:8000", info)
+		return &abci.QueryResponse{Code: uint32(3)}, nil
+	}
+
+	idPeerFilter := func(id string) (*abci.QueryResponse, error) {
+		require.Equal(t, "testid", id)
+		return &abci.QueryResponse{Code: uint32(4)}, nil
+	}
+
+	return &consensus[mock.Tx]{
+		logger:           log.NewNopLogger(),
+		appName:          "testing-app",
+		app:              am,
+		mempool:          mempool,
+		store:            mockStore,
+		cfg:              Config{AppTomlConfig: DefaultAppTomlConfig()},
+		txCodec:          mock.TxCodec{},
+		chainID:          "test",
+		getProtoRegistry: sync.OnceValues(gogoproto.MergedRegistry),
+		queryHandlersMap: queryHandler,
+		addrPeerFilter:   addrPeerFilter,
+		idPeerFilter:     idPeerFilter,
+		version:          versionStr,
+	}
 }
 
 // Check target version same with store's latest version
 // And should have commit info of target version
-// If block 0, commitInfo returned should be nil
 func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 	t.Helper()
 	version, err := store.GetLatestVersion()
 	require.NoError(t, err)
-	require.Equal(t, version, target)
+	require.Equal(t, target, version)
 	commitInfo, err := store.GetStateCommitment().GetCommitInfo(version)
 	require.NoError(t, err)
-	if target != 0 {
-		require.Equal(t, commitInfo.Version, target)
-	} else {
-		require.Nil(t, commitInfo)
+	require.Equal(t, target, commitInfo.Version)
+}
+
+func TestOptimisticExecution(t *testing.T) {
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+
+	// Set up handlers
+	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
+
+	// mock optimistic execution
+	calledTimes := 0
+	optimisticMockFunc := func(context.Context, *abci.FinalizeBlockRequest) (*server.BlockResponse, store.WriterMap, []mock.Tx, error) {
+		calledTimes++
+		return nil, nil, nil, errors.New("test error")
 	}
+	c.optimisticExec = oe.NewOptimisticExecution[mock.Tx](log.NewNopLogger(), optimisticMockFunc)
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	theHash := sha256.Sum256([]byte("test"))
+	ppReq := &abciproto.ProcessProposalRequest{
+		Height: 2,
+		Hash:   theHash[:],
+		Time:   time.Now(),
+		Txs:    [][]byte{mockTx.Bytes()},
+	}
+
+	// Start optimistic execution
+	resp, err := c.ProcessProposal(context.Background(), ppReq)
+	require.NoError(t, err)
+	require.Equal(t, resp.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
+
+	// Initialize FinalizeBlock with correct hash - should use optimistic result
+	theHash = sha256.Sum256([]byte("test"))
+	fbReq := &abciproto.FinalizeBlockRequest{
+		Height: 2,
+		Hash:   theHash[:],
+		Time:   ppReq.Time,
+		Txs:    ppReq.Txs,
+	}
+	fbResp, err := c.FinalizeBlock(context.Background(), fbReq)
+	require.Nil(t, fbResp)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "test error") // from optimisticMockFunc
+	require.Equal(t, 1, calledTimes)
+
+	resp, err = c.ProcessProposal(context.Background(), ppReq)
+	require.NoError(t, err)
+	require.Equal(t, resp.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
+
+	theWrongHash := sha256.Sum256([]byte("wrong_hash"))
+	fbReq.Hash = theWrongHash[:]
+
+	// Initialize FinalizeBlock with wrong hash - should abort optimistic execution
+	// Because is aborted, the result comes from the normal execution
+	fbResp, err = c.FinalizeBlock(context.Background(), fbReq)
+	require.NotNil(t, fbResp)
+	require.NoError(t, err)
+	require.Equal(t, 2, calledTimes)
+
+	// Verify optimistic execution was reset
+	require.False(t, c.optimisticExec.Initialized())
 }

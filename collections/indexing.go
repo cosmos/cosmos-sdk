@@ -3,9 +3,12 @@ package collections
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"strings"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/tidwall/btree"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/collections/codec"
 	"cosmossdk.io/schema"
@@ -46,8 +49,45 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 			cdc.objectType.RetainDeletions = true
 		}
 
-		types = append(types, cdc.objectType)
+		// this part below is a bit hacky, it will try to convert to a proto.Message
+		// in order to get any enum types inside of it.
+		emptyVal, err := coll.ValueCodec().Decode([]byte{})
+		if err == nil {
+			// convert to proto.Message
+			pt, err := toProtoMessage(emptyVal)
+			if err == nil {
+				msgName := proto.MessageName(pt)
+				desc, err := proto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName))
+				if err != nil {
+					return schema.ModuleCodec{}, fmt.Errorf("could not find descriptor for %s: %w", msgName, err)
+				}
+				msgDesc := desc.(protoreflect.MessageDescriptor)
 
+				// go through enum descriptors and add them to types
+				for i := 0; i < msgDesc.Fields().Len(); i++ {
+					field := msgDesc.Fields().Get(i)
+					enum := field.Enum()
+					if enum == nil {
+						continue
+					}
+
+					enumType := schema.EnumType{
+						Name: strings.ReplaceAll(string(enum.FullName()), ".", "_"), // make it compatible with schema
+					}
+					for j := 0; j < enum.Values().Len(); j++ {
+						val := enum.Values().Get(j)
+						enumType.Values = append(enumType.Values, schema.EnumValueDefinition{
+							Name:  string(val.Name()),
+							Value: int32(val.Number()),
+						})
+					}
+					types = append(types, enumType)
+				}
+
+			}
+		}
+
+		types = append(types, cdc.objectType)
 		decoder.collectionLookup.Set(string(coll.GetPrefix()), cdc)
 	}
 
@@ -133,6 +173,9 @@ func (c collectionImpl[K, V]) schemaCodec() (*collectionSchemaCodec, error) {
 		if err != nil {
 			return nil, err
 		}
+		if keyDecoder.ToSchemaType == nil {
+			return x, nil
+		}
 		return keyDecoder.ToSchemaType(x)
 	}
 	ensureFieldNames(c.m.kc, "key", res.objectType.KeyFields)
@@ -147,6 +190,11 @@ func (c collectionImpl[K, V]) schemaCodec() (*collectionSchemaCodec, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if valueDecoder.ToSchemaType == nil {
+			return x, nil
+		}
+
 		return valueDecoder.ToSchemaType(x)
 	}
 	ensureFieldNames(c.m.vc, "value", res.objectType.ValueFields)
@@ -176,4 +224,35 @@ func ensureFieldNames(x any, defaultName string, cols []schema.Field) {
 		}
 		cols[i] = col
 	}
+}
+
+// toProtoMessage is a helper to convert a value to a proto.Message.
+func toProtoMessage(value interface{}) (proto.Message, error) {
+	if value == nil {
+		return nil, fmt.Errorf("value is nil")
+	}
+
+	// Check if the value already implements proto.Message
+	if msg, ok := value.(proto.Message); ok {
+		return msg, nil
+	}
+
+	// Use reflection to handle non-pointer values
+	v := reflect.ValueOf(value)
+	if v.Kind() == reflect.Ptr {
+		// Already a pointer, but doesn't implement proto.Message
+		return nil, fmt.Errorf("value is a pointer but does not implement proto.Message")
+	}
+
+	// If not a pointer, create a pointer to the value dynamically
+	ptr := reflect.New(v.Type())
+	ptr.Elem().Set(v)
+
+	// Assert if the pointer implements proto.Message
+	msg, ok := ptr.Interface().(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("value does not implement proto.Message")
+	}
+
+	return msg, nil
 }

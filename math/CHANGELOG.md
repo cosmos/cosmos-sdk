@@ -36,7 +36,19 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+* [#11783](https://github.com/cosmos/cosmos-sdk/issues/11783) feat(math): Upstream GDA based decimal type
+
+
+## [math/v1.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.4.0) - 2024-01-20
+
+### Features
+
 * [#20034](https://github.com/cosmos/cosmos-sdk/pull/20034) Significantly speedup LegacyDec.QuoTruncate and LegacyDec.QuoRoundUp.
+
+### Bug fixes
+
+* Fix [ASA-2024-010: Math](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-7225-m954-23v7) Bit length differences between Int and Dec
+
 
 ## [math/v1.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.3.0) - 2024-02-22
 

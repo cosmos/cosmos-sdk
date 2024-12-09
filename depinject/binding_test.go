@@ -300,3 +300,16 @@ func TestBindingInterfaceTwoModuleScopedAndGlobalBinding(t *testing.T) {
 	IsResolvedModuleScope(t, pond, moduleC, "Marbled")
 	IsResolvedInGlobalScope(t, pond, "Marbled")
 }
+
+func TestIgnoredField(t *testing.T) {
+	t.Parallel()
+	cfg := struct {
+		depinject.In
+		TheDuck      Duck
+		privateField bool
+		AnotherDuck  Duck
+	}{}
+
+	err := depinject.Inject(depinject.Provide(ProvideMallard), &cfg)
+	require.NoError(t, err)
+}

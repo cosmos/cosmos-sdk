@@ -82,34 +82,21 @@ func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	return nil
 }
 
-func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
-	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
-	for storeKey, tree := range c.multiTrees {
-		if internal.IsMemoryStoreKey(storeKey) {
-			continue
-		}
-		bz := []byte(storeKey)
-		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name: bz,
-			CommitID: proof.CommitID{
-				Version: version,
-				Hash:    tree.WorkingHash(),
-			},
-		})
-	}
-
-	return &proof.CommitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
-	}
-}
-
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	storeKeys := make([]string, 0, len(c.multiTrees))
 	for storeKey := range c.multiTrees {
 		storeKeys = append(storeKeys, storeKey)
 	}
-	return c.loadVersion(targetVersion, storeKeys)
+	return c.loadVersion(targetVersion, storeKeys, false)
+}
+
+func (c *CommitStore) LoadVersionForOverwriting(targetVersion uint64) error {
+	storeKeys := make([]string, 0, len(c.multiTrees))
+	for storeKey := range c.multiTrees {
+		storeKeys = append(storeKeys, storeKey)
+	}
+
+	return c.loadVersion(targetVersion, storeKeys, true)
 }
 
 // LoadVersionAndUpgrade implements store.UpgradeableStore.
@@ -155,10 +142,10 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 		return err
 	}
 
-	return c.loadVersion(targetVersion, newStoreKeys)
+	return c.loadVersion(targetVersion, newStoreKeys, true)
 }
 
-func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string) error {
+func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, overrideAfter bool) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
 	if err != nil {
@@ -176,15 +163,24 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string) erro
 	}
 
 	for _, storeKey := range storeKeys {
-		if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
-			return err
+		if overrideAfter {
+			if err := c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion); err != nil {
+				return err
+			}
+		} else {
+			if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
+				return err
+			}
 		}
 	}
 
 	// If the target version is greater than the latest version, it is the snapshot
 	// restore case, we should create a new commit info for the target version.
 	if targetVersion > latestVersion {
-		cInfo := c.WorkingCommitInfo(targetVersion)
+		cInfo, err := c.GetCommitInfo(targetVersion)
+		if err != nil {
+			return err
+		}
 		return c.metadata.flushCommitInfo(targetVersion, cInfo)
 	}
 
@@ -198,29 +194,16 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		if internal.IsMemoryStoreKey(storeKey) {
 			continue
 		}
-		// If a commit event execution is interrupted, a new iavl store's version
-		// will be larger than the RMS's metadata, when the block is replayed, we
-		// should avoid committing that iavl store again.
-		var commitID proof.CommitID
-		v, err := tree.GetLatestVersion()
+		hash, cversion, err := tree.Commit()
 		if err != nil {
 			return nil, err
 		}
-		if v >= version {
-			commitID.Version = version
-			commitID.Hash = tree.Hash()
-		} else {
-			hash, cversion, err := tree.Commit()
-			if err != nil {
-				return nil, err
-			}
-			if cversion != version {
-				return nil, fmt.Errorf("commit version %d does not match the target version %d", cversion, version)
-			}
-			commitID = proof.CommitID{
-				Version: version,
-				Hash:    hash,
-			}
+		if cversion != version {
+			return nil, fmt.Errorf("commit version %d does not match the target version %d", cversion, version)
+		}
+		commitID := proof.CommitID{
+			Version: version,
+			Hash:    hash,
 		}
 		storeInfos = append(storeInfos, proof.StoreInfo{
 			Name:     []byte(storeKey),
@@ -250,6 +233,7 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 	return nil
 }
 
+// GetProof returns a proof for the given key and version.
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
 	rawStoreKey := conv.UnsafeBytesToStr(storeKey)
 	tree, ok := c.multiTrees[rawStoreKey]
@@ -285,8 +269,12 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 // WARNING: This function is only used during the migration process. The SC layer
 // generally does not provide a reader for the CommitStore.
 func (c *CommitStore) getReader(storeKey string) (Reader, error) {
-	tree, ok := c.multiTrees[storeKey]
-	if !ok {
+	var tree Tree
+	if storeTree, ok := c.oldTrees[storeKey]; ok {
+		tree = storeTree
+	} else if storeTree, ok := c.multiTrees[storeKey]; ok {
+		tree = storeTree
+	} else {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
 
@@ -300,6 +288,14 @@ func (c *CommitStore) getReader(storeKey string) (Reader, error) {
 
 // VersionExists implements store.VersionedReader.
 func (c *CommitStore) VersionExists(version uint64) (bool, error) {
+	latestVersion, err := c.metadata.GetLatestVersion()
+	if err != nil {
+		return false, err
+	}
+	if latestVersion == 0 {
+		return version == 0, nil
+	}
+
 	ci, err := c.metadata.GetCommitInfo(version)
 	return ci != nil, err
 }
@@ -452,12 +448,10 @@ func (c *CommitStore) Restore(
 	version uint64,
 	format uint32,
 	protoReader protoio.Reader,
-	chStorage chan<- *corestore.StateChanges,
 ) (snapshotstypes.SnapshotItem, error) {
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
-		storeKey     []byte
 	)
 
 loop:
@@ -480,8 +474,6 @@ loop:
 					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
 				}
 			}
-
-			storeKey = []byte(item.Store.Name)
 			tree := c.multiTrees[item.Store.Name]
 			if tree == nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", item.Store.Name)
@@ -510,17 +502,6 @@ loop:
 				if node.Value == nil {
 					node.Value = []byte{}
 				}
-
-				// If the node is a leaf node, it will be written to the storage.
-				chStorage <- &corestore.StateChanges{
-					Actor: storeKey,
-					StateChanges: []corestore.KVPair{
-						{
-							Key:   node.Key,
-							Value: node.Value,
-						},
-					},
-				}
 			}
 			err := importer.Add(node)
 			if err != nil {
@@ -541,7 +522,39 @@ loop:
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
-	return c.metadata.GetCommitInfo(version)
+	// if the commit info is already stored, return it
+	ci, err := c.metadata.GetCommitInfo(version)
+	if err != nil {
+		return nil, err
+	}
+	if ci != nil {
+		return ci, nil
+	}
+	// otherwise built the commit info from the trees
+	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
+	for storeKey, tree := range c.multiTrees {
+		if internal.IsMemoryStoreKey(storeKey) {
+			continue
+		}
+		v := tree.Version()
+		if v != version {
+			return nil, fmt.Errorf("tree version %d does not match the target version %d", v, version)
+		}
+		bz := []byte(storeKey)
+		storeInfos = append(storeInfos, proof.StoreInfo{
+			Name: bz,
+			CommitID: proof.CommitID{
+				Version: v,
+				Hash:    tree.Hash(),
+			},
+		})
+	}
+
+	ci = &proof.CommitInfo{
+		Version:    version,
+		StoreInfos: storeInfos,
+	}
+	return ci, nil
 }
 
 func (c *CommitStore) GetLatestVersion() (uint64, error) {
@@ -554,6 +567,5 @@ func (c *CommitStore) Close() error {
 			return err
 		}
 	}
-
 	return nil
 }

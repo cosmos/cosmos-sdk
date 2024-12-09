@@ -5,6 +5,9 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // Builder manages options for building CLI commands.
@@ -19,6 +22,9 @@ type Builder struct {
 	// AddQueryConnFlags and AddTxConnFlags are functions that add flags to query and transaction commands
 	AddQueryConnFlags func(*cobra.Command)
 	AddTxConnFlags    func(*cobra.Command)
+
+	Cdc              codec.Codec
+	EnabledSignModes []signing.SignMode
 }
 
 // ValidateAndComplete the builder fields.

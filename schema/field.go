@@ -35,6 +35,10 @@ type Field struct {
 // Validate validates the field.
 func (c Field) Validate(typeSet TypeSet) error {
 	// valid name
+	if c.Name == "" {
+		return fmt.Errorf("field name cannot be empty, might be missing the named key codec")
+	}
+
 	if !ValidateName(c.Name) {
 		return fmt.Errorf("invalid field name %q", c.Name)
 	}

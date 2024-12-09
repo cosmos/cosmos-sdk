@@ -26,11 +26,15 @@ func (t *Tree) Hash() []byte {
 	return nil
 }
 
-func (t *Tree) WorkingHash() []byte {
-	return nil
+func (t *Tree) Version() uint64 {
+	return 0
 }
 
 func (t *Tree) LoadVersion(version uint64) error {
+	return nil
+}
+
+func (t *Tree) LoadVersionForOverwriting(version uint64) error {
 	return nil
 }
 

@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc"
 	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
@@ -141,9 +140,10 @@ func (m *MM[T]) InitGenesisJSON(
 	ctx context.Context,
 	genesisData map[string]json.RawMessage,
 	txHandler func(json.RawMessage) error,
-) error {
+) ([]appmodulev2.ValidatorUpdate, error) {
 	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
-	var seenValUpdates bool
+
+	var validatorUpdates []appmodulev2.ValidatorUpdate
 	for _, moduleName := range m.config.InitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
@@ -158,38 +158,39 @@ func (m *MM[T]) InitGenesisJSON(
 		case appmodulev2.GenesisDecoder: // GenesisDecoder needs to supersede HasGenesis and HasABCIGenesis.
 			genTxs, err := module.DecodeGenesisJSON(genesisData[moduleName])
 			if err != nil {
-				return err
+				return nil, err
 			}
 			for _, jsonTx := range genTxs {
 				if err := txHandler(jsonTx); err != nil {
-					return fmt.Errorf("failed to handle genesis transaction: %w", err)
+					return nil, fmt.Errorf("failed to handle genesis transaction: %w", err)
 				}
 			}
 		case appmodulev2.HasGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return fmt.Errorf("init module %s: %w", moduleName, err)
+				return nil, fmt.Errorf("init module %s: %w", moduleName, err)
 			}
 		case appmodulev2.HasABCIGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
+			var err error
 			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
-				if seenValUpdates {
-					return fmt.Errorf("validator InitGenesis updates already set by a previous module: current module %s", moduleName)
-				} else {
-					seenValUpdates = true
+				if len(validatorUpdates) > 0 {
+					return nil, fmt.Errorf("validator InitGenesis updates already set by a previous module: current module %s", moduleName)
 				}
+
+				validatorUpdates = append(validatorUpdates, moduleValUpdates...)
 			}
 		}
-
 	}
-	return nil
+
+	return validatorUpdates, nil
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules
@@ -483,7 +484,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if err := registerServices(module, app, protoregistry.GlobalFiles); err != nil {
+		if err := registerServices(module, app, gogoproto.HybridResolver); err != nil {
 			return err
 		}
 
@@ -616,7 +617,7 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], registry *protoregistry.Files) error {
+func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], registry gogoproto.Resolver) error {
 	// case module with services
 	if services, ok := s.(hasServicesV1); ok {
 		c := &configurator{
@@ -642,7 +643,7 @@ func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], re
 
 	// if module implements register msg handlers
 	if module, ok := s.(appmodulev2.HasMsgHandlers); ok {
-		wrapper := stfRouterWrapper{stfRouter: app.msgRouterBuilder}
+		wrapper := newStfRouterWrapper(app.msgRouterBuilder)
 		module.RegisterMsgHandlers(&wrapper)
 		if wrapper.error != nil {
 			return fmt.Errorf("unable to register handlers: %w", wrapper.error)
@@ -651,7 +652,7 @@ func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], re
 
 	// if module implements register query handlers
 	if module, ok := s.(appmodulev2.HasQueryHandlers); ok {
-		wrapper := stfRouterWrapper{stfRouter: app.queryRouterBuilder}
+		wrapper := newStfRouterWrapper(app.queryRouterBuilder)
 		module.RegisterQueryHandlers(&wrapper)
 
 		for path, handler := range wrapper.handlers {
@@ -669,7 +670,7 @@ type configurator struct {
 
 	stfQueryRouter *stf.MsgRouterBuilder
 	stfMsgRouter   *stf.MsgRouterBuilder
-	registry       *protoregistry.Files
+	registry       gogoproto.Resolver
 	err            error
 }
 
@@ -842,6 +843,13 @@ type stfRouterWrapper struct {
 	handlers map[string]appmodulev2.Handler
 }
 
+func newStfRouterWrapper(stfRouterBuilder *stf.MsgRouterBuilder) stfRouterWrapper {
+	wrapper := stfRouterWrapper{stfRouter: stfRouterBuilder}
+	wrapper.error = nil
+	wrapper.handlers = map[string]appmodulev2.Handler{}
+	return wrapper
+}
+
 func (s *stfRouterWrapper) RegisterHandler(handler appmodulev2.Handler) {
 	req := handler.MakeMsg()
 	requestName := gogoproto.MessageName(req)
@@ -854,7 +862,7 @@ func (s *stfRouterWrapper) RegisterHandler(handler appmodulev2.Handler) {
 	s.error = errors.Join(s.error, err)
 
 	// also make the decoder
-	if s.error == nil {
+	if s.handlers == nil {
 		s.handlers = map[string]appmodulev2.Handler{}
 	}
 	s.handlers[requestName] = handler

@@ -1,5 +1,3 @@
-//go:build app_v1
-
 package accounts
 
 import (
@@ -8,6 +6,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/simapp"
 	baseaccountv1 "cosmossdk.io/x/accounts/defaults/base/v1"
@@ -15,10 +14,15 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+)
+
+var (
+	privKey    = secp256k1.GenPrivKey()
+	accCreator = []byte("creator")
 )
 
 func TestBaseAccount(t *testing.T) {
@@ -47,12 +51,14 @@ func TestBaseAccount(t *testing.T) {
 }
 
 func sendTx(t *testing.T, ctx sdk.Context, app *simapp.SimApp, sender []byte, msg sdk.Msg) {
+	t.Helper()
 	tx := sign(t, ctx, app, sender, privKey, msg)
 	_, _, err := app.SimDeliver(app.TxEncode, tx)
 	require.NoError(t, err)
 }
 
 func sign(t *testing.T, ctx sdk.Context, app *simapp.SimApp, from sdk.AccAddress, privKey cryptotypes.PrivKey, msg sdk.Msg) sdk.Tx {
+	t.Helper()
 	r := rand.New(rand.NewSource(0))
 
 	accNum, err := app.AccountsKeeper.AccountByNumber.Get(ctx, from)
@@ -77,12 +83,14 @@ func sign(t *testing.T, ctx sdk.Context, app *simapp.SimApp, from sdk.AccAddress
 }
 
 func bechify(t *testing.T, app *simapp.SimApp, addr []byte) string {
+	t.Helper()
 	bech32, err := app.AuthKeeper.AddressCodec().BytesToString(addr)
 	require.NoError(t, err)
 	return bech32
 }
 
 func fundAccount(t *testing.T, app *simapp.SimApp, ctx sdk.Context, addr sdk.AccAddress, amt string) {
+	t.Helper()
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, coins(t, amt)))
 }
 
@@ -94,4 +102,17 @@ func toAnyPb(t *testing.T, pm gogoproto.Message) *codectypes.Any {
 	pb, err := codectypes.NewAnyWithValue(pm)
 	require.NoError(t, err)
 	return pb
+}
+
+func coins(t *testing.T, s string) sdk.Coins {
+	t.Helper()
+	coins, err := sdk.ParseCoinsNormalized(s)
+	require.NoError(t, err)
+	return coins
+}
+
+func setupApp(t *testing.T) *simapp.SimApp {
+	t.Helper()
+	app := simapp.Setup(t, false)
+	return app
 }

@@ -3,7 +3,6 @@ package store
 import (
 	"io"
 
-	coreheader "cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
@@ -31,6 +30,10 @@ type RootStore interface {
 	// LoadVersion loads the RootStore to the given version.
 	LoadVersion(version uint64) error
 
+	// LoadVersionForOverwriting loads the state at the given version.
+	// Any versions greater than targetVersion will be deleted.
+	LoadVersionForOverwriting(version uint64) error
+
 	// LoadLatestVersion behaves identically to LoadVersion except it loads the
 	// latest version implicitly.
 	LoadLatestVersion() error
@@ -40,17 +43,6 @@ type RootStore interface {
 
 	// SetInitialVersion sets the initial version on the RootStore.
 	SetInitialVersion(v uint64) error
-
-	// SetCommitHeader sets the commit header for the next commit. This call and
-	// implementation is optional. However, it must be supported in cases where
-	// queries based on block time need to be supported.
-	SetCommitHeader(h *coreheader.Info)
-
-	// WorkingHash returns the current WIP commitment hash by applying the Changeset
-	// to the SC backend. It is only used to get the hash of the intermediate state
-	// before committing, the typical use case is for the genesis block.
-	// NOTE: It also writes the changeset to the SS backend.
-	WorkingHash(cs *corestore.Changeset) ([]byte, error)
 
 	// Commit should be responsible for taking the provided changeset and flushing
 	// it to disk. Note, it will overwrite the changeset if WorkingHash() was called.
@@ -69,9 +61,6 @@ type RootStore interface {
 
 // Backend defines the interface for the RootStore backends.
 type Backend interface {
-	// GetStateStorage returns the SS backend.
-	GetStateStorage() VersionedWriter
-
 	// GetStateCommitment returns the SC backend.
 	GetStateCommitment() Committer
 }

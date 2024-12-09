@@ -44,7 +44,7 @@ type Factory struct {
 	txConfig         TxConfig
 	txParams         TxParameters
 
-	tx txState
+	tx *txState
 }
 
 func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
@@ -81,15 +81,26 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever acc
 		txConfig:         txConfig,
 		txParams:         parameters,
 
-		tx: txState{},
+		tx: &txState{},
 	}, nil
 }
 
 // validateFlagSet checks the provided flags for consistency and requirements based on the operation mode.
 func validateFlagSet(flags *pflag.FlagSet, offline bool) error {
+	dryRun, _ := flags.GetBool(flags2.FlagDryRun)
+	if offline && dryRun {
+		return errors.New("dry-run: cannot use offline mode")
+	}
+
+	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
+	chainID, _ := flags.GetString(flags2.FlagChainID)
 	if offline {
-		if !flags.Changed(flags2.FlagAccountNumber) || !flags.Changed(flags2.FlagSequence) {
+		if !generateOnly && (!flags.Changed(flags2.FlagAccountNumber) || !flags.Changed(flags2.FlagSequence)) {
 			return errors.New("account-number and sequence must be set in offline mode")
+		}
+
+		if generateOnly && chainID != "" {
+			return errors.New("chain ID cannot be used when offline and generate-only flags are set")
 		}
 
 		gas, _ := flags.GetString(flags2.FlagGas)
@@ -97,20 +108,8 @@ func validateFlagSet(flags *pflag.FlagSet, offline bool) error {
 		if gasSetting.Simulate {
 			return errors.New("simulate and offline flags cannot be set at the same time")
 		}
-	}
-
-	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
-	chainID, _ := flags.GetString(flags2.FlagChainID)
-	if offline && generateOnly && chainID != "" {
-		return errors.New("chain ID cannot be used when offline and generate-only flags are set")
-	}
-	if chainID == "" {
+	} else if chainID == "" {
 		return errors.New("chain ID required but not specified")
-	}
-
-	dryRun, _ := flags.GetBool(flags2.FlagDryRun)
-	if offline && dryRun {
-		return errors.New("dry-run: cannot use offline mode")
 	}
 
 	return nil
@@ -124,22 +123,22 @@ func prepareTxParams(parameters TxParameters, accRetriever account.AccountRetrie
 		return parameters, nil
 	}
 
-	if len(parameters.address) == 0 {
+	if len(parameters.Address) == 0 {
 		return parameters, errors.New("missing 'from address' field")
 	}
 
-	if parameters.accountNumber == 0 || parameters.sequence == 0 {
-		num, seq, err := accRetriever.GetAccountNumberSequence(context.Background(), parameters.address)
+	if parameters.AccountNumber == 0 || parameters.Sequence == 0 {
+		num, seq, err := accRetriever.GetAccountNumberSequence(context.Background(), parameters.Address)
 		if err != nil {
 			return parameters, err
 		}
 
-		if parameters.accountNumber == 0 {
-			parameters.accountNumber = num
+		if parameters.AccountNumber == 0 {
+			parameters.AccountNumber = num
 		}
 
-		if parameters.sequence == 0 {
-			parameters.sequence = seq
+		if parameters.Sequence == 0 {
+			parameters.Sequence = seq
 		}
 	}
 
@@ -328,11 +327,11 @@ func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 	}
 
 	var err error
-	if f.txParams.signMode == apitxsigning.SignMode_SIGN_MODE_UNSPECIFIED {
-		f.txParams.signMode = f.txConfig.SignModeHandler().DefaultMode()
+	if f.txParams.SignMode == apitxsigning.SignMode_SIGN_MODE_UNSPECIFIED {
+		f.txParams.SignMode = f.txConfig.SignModeHandler().DefaultMode()
 	}
 
-	pubKey, err := f.keybase.GetPubKey(f.txParams.fromName)
+	pubKey, err := f.keybase.GetPubKey(f.txParams.FromName)
 	if err != nil {
 		return nil, err
 	}
@@ -343,9 +342,9 @@ func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 	}
 
 	signerData := signing.SignerData{
-		ChainID:       f.txParams.chainID,
-		AccountNumber: f.txParams.accountNumber,
-		Sequence:      f.txParams.sequence,
+		ChainID:       f.txParams.ChainID,
+		AccountNumber: f.txParams.AccountNumber,
+		Sequence:      f.txParams.Sequence,
 		PubKey: &anypb.Any{
 			TypeUrl: codectypes.MsgTypeURL(pubKey),
 			Value:   pubKey.Bytes(),
@@ -364,13 +363,13 @@ func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 	// By setting the signatures here, we ensure that the correct SignerInfos
 	// are in place for all subsequent operations, regardless of the sign mode.
 	sigData := SingleSignatureData{
-		SignMode:  f.txParams.signMode,
+		SignMode:  f.txParams.SignMode,
 		Signature: nil,
 	}
 	sig := Signature{
 		PubKey:   pubKey,
 		Data:     &sigData,
-		Sequence: f.txParams.sequence,
+		Sequence: f.txParams.Sequence,
 	}
 
 	var prevSignatures []Signature
@@ -412,7 +411,7 @@ func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 	}
 
 	// Sign those bytes
-	sigBytes, err := f.keybase.Sign(f.txParams.fromName, bytesToSign, f.txParams.signMode)
+	sigBytes, err := f.keybase.Sign(f.txParams.FromName, bytesToSign, f.txParams.SignMode)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +424,7 @@ func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 	sig = Signature{
 		PubKey:   pubKey,
 		Data:     &sigData,
-		Sequence: f.txParams.sequence,
+		Sequence: f.txParams.Sequence,
 	}
 
 	if overwriteSig {
@@ -460,16 +459,16 @@ func (f *Factory) WithGas(gas uint64) {
 
 // WithSequence returns a copy of the Factory with an updated sequence number.
 func (f *Factory) WithSequence(sequence uint64) {
-	f.txParams.sequence = sequence
+	f.txParams.Sequence = sequence
 }
 
 // WithAccountNumber returns a copy of the Factory with an updated account number.
 func (f *Factory) WithAccountNumber(accnum uint64) {
-	f.txParams.accountNumber = accnum
+	f.txParams.AccountNumber = accnum
 }
 
 // sequence returns the sequence number.
-func (f *Factory) sequence() uint64 { return f.txParams.sequence }
+func (f *Factory) sequence() uint64 { return f.txParams.Sequence }
 
 // gasAdjustment returns the gas adjustment value.
 func (f *Factory) gasAdjustment() float64 { return f.txParams.gasAdjustment }
@@ -478,7 +477,7 @@ func (f *Factory) gasAdjustment() float64 { return f.txParams.gasAdjustment }
 func (f *Factory) simulateAndExecute() bool { return f.txParams.simulateAndExecute }
 
 // signMode returns the sign mode.
-func (f *Factory) signMode() apitxsigning.SignMode { return f.txParams.signMode }
+func (f *Factory) signMode() apitxsigning.SignMode { return f.txParams.SignMode }
 
 // getSimPK gets the public key to use for building a simulation tx.
 // Note, we should only check for keys in the keybase if we are in simulate and execute mode,
@@ -492,14 +491,14 @@ func (f *Factory) getSimPK() (cryptotypes.PubKey, error) {
 	)
 
 	if f.txParams.simulateAndExecute && f.keybase != nil {
-		pk, err = f.keybase.GetPubKey(f.txParams.fromName)
+		pk, err = f.keybase.GetPubKey(f.txParams.FromName)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		// When in dry-run mode, attempt to retrieve the account using the provided address.
 		// If the account retrieval fails, the default public key is used.
-		acc, err := f.accountRetriever.GetAccount(context.Background(), f.txParams.address)
+		acc, err := f.accountRetriever.GetAccount(context.Background(), f.txParams.Address)
 		if err != nil {
 			// If there is an error retrieving the account, return the default public key.
 			return pk, nil
@@ -516,7 +515,7 @@ func (f *Factory) getSimPK() (cryptotypes.PubKey, error) {
 func (f *Factory) getSimSignatureData(pk cryptotypes.PubKey) SignatureData {
 	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey)
 	if !ok {
-		return &SingleSignatureData{SignMode: f.txParams.signMode}
+		return &SingleSignatureData{SignMode: f.txParams.SignMode}
 	}
 
 	multiSignatureData := make([]SignatureData, 0, multisigPubKey.Threshold)

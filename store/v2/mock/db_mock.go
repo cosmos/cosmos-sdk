@@ -21,6 +21,7 @@ import (
 type MockStateCommitter struct {
 	ctrl     *gomock.Controller
 	recorder *MockStateCommitterMockRecorder
+	isgomock struct{}
 }
 
 // MockStateCommitterMockRecorder is the mock recorder for MockStateCommitter.
@@ -129,6 +130,36 @@ func (mr *MockStateCommitterMockRecorder) GetProof(storeKey, version, key any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProof", reflect.TypeOf((*MockStateCommitter)(nil).GetProof), storeKey, version, key)
 }
 
+// Has mocks base method.
+func (m *MockStateCommitter) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Has", storeKey, version, key)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Has indicates an expected call of Has.
+func (mr *MockStateCommitterMockRecorder) Has(storeKey, version, key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockStateCommitter)(nil).Has), storeKey, version, key)
+}
+
+// Iterator mocks base method.
+func (m *MockStateCommitter) Iterator(storeKey []byte, version uint64, start, end []byte) (store.Iterator, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Iterator", storeKey, version, start, end)
+	ret0, _ := ret[0].(store.Iterator)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Iterator indicates an expected call of Iterator.
+func (mr *MockStateCommitterMockRecorder) Iterator(storeKey, version, start, end any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockStateCommitter)(nil).Iterator), storeKey, version, start, end)
+}
+
 // LoadVersion mocks base method.
 func (m *MockStateCommitter) LoadVersion(targetVersion uint64) error {
 	m.ctrl.T.Helper()
@@ -157,6 +188,20 @@ func (mr *MockStateCommitterMockRecorder) LoadVersionAndUpgrade(version, upgrade
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadVersionAndUpgrade", reflect.TypeOf((*MockStateCommitter)(nil).LoadVersionAndUpgrade), version, upgrades)
 }
 
+// LoadVersionForOverwriting mocks base method.
+func (m *MockStateCommitter) LoadVersionForOverwriting(targetVersion uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadVersionForOverwriting", targetVersion)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// LoadVersionForOverwriting indicates an expected call of LoadVersionForOverwriting.
+func (mr *MockStateCommitterMockRecorder) LoadVersionForOverwriting(targetVersion any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadVersionForOverwriting", reflect.TypeOf((*MockStateCommitter)(nil).LoadVersionForOverwriting), targetVersion)
+}
+
 // PausePruning mocks base method.
 func (m *MockStateCommitter) PausePruning(pause bool) {
 	m.ctrl.T.Helper()
@@ -183,6 +228,35 @@ func (mr *MockStateCommitterMockRecorder) Prune(version any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Prune", reflect.TypeOf((*MockStateCommitter)(nil).Prune), version)
 }
 
+// PruneStoreKeys mocks base method.
+func (m *MockStateCommitter) PruneStoreKeys(storeKeys []string, version uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PruneStoreKeys", storeKeys, version)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PruneStoreKeys indicates an expected call of PruneStoreKeys.
+func (mr *MockStateCommitterMockRecorder) PruneStoreKeys(storeKeys, version any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PruneStoreKeys", reflect.TypeOf((*MockStateCommitter)(nil).PruneStoreKeys), storeKeys, version)
+}
+
+// ReverseIterator mocks base method.
+func (m *MockStateCommitter) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (store.Iterator, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReverseIterator", storeKey, version, start, end)
+	ret0, _ := ret[0].(store.Iterator)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReverseIterator indicates an expected call of ReverseIterator.
+func (mr *MockStateCommitterMockRecorder) ReverseIterator(storeKey, version, start, end any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockStateCommitter)(nil).ReverseIterator), storeKey, version, start, end)
+}
+
 // SetInitialVersion mocks base method.
 func (m *MockStateCommitter) SetInitialVersion(version uint64) error {
 	m.ctrl.T.Helper()
@@ -197,18 +271,19 @@ func (mr *MockStateCommitterMockRecorder) SetInitialVersion(version any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInitialVersion", reflect.TypeOf((*MockStateCommitter)(nil).SetInitialVersion), version)
 }
 
-// WorkingCommitInfo mocks base method.
-func (m *MockStateCommitter) WorkingCommitInfo(version uint64) *proof.CommitInfo {
+// VersionExists mocks base method.
+func (m *MockStateCommitter) VersionExists(v uint64) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WorkingCommitInfo", version)
-	ret0, _ := ret[0].(*proof.CommitInfo)
-	return ret0
+	ret := m.ctrl.Call(m, "VersionExists", v)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// WorkingCommitInfo indicates an expected call of WorkingCommitInfo.
-func (mr *MockStateCommitterMockRecorder) WorkingCommitInfo(version any) *gomock.Call {
+// VersionExists indicates an expected call of VersionExists.
+func (mr *MockStateCommitterMockRecorder) VersionExists(v any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WorkingCommitInfo", reflect.TypeOf((*MockStateCommitter)(nil).WorkingCommitInfo), version)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VersionExists", reflect.TypeOf((*MockStateCommitter)(nil).VersionExists), v)
 }
 
 // WriteChangeset mocks base method.
@@ -223,199 +298,4 @@ func (m *MockStateCommitter) WriteChangeset(cs *store.Changeset) error {
 func (mr *MockStateCommitterMockRecorder) WriteChangeset(cs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteChangeset", reflect.TypeOf((*MockStateCommitter)(nil).WriteChangeset), cs)
-}
-
-// MockStateStorage is a mock of StateStorage interface.
-type MockStateStorage struct {
-	ctrl     *gomock.Controller
-	recorder *MockStateStorageMockRecorder
-}
-
-// MockStateStorageMockRecorder is the mock recorder for MockStateStorage.
-type MockStateStorageMockRecorder struct {
-	mock *MockStateStorage
-}
-
-// NewMockStateStorage creates a new mock instance.
-func NewMockStateStorage(ctrl *gomock.Controller) *MockStateStorage {
-	mock := &MockStateStorage{ctrl: ctrl}
-	mock.recorder = &MockStateStorageMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockStateStorage) EXPECT() *MockStateStorageMockRecorder {
-	return m.recorder
-}
-
-// ApplyChangeset mocks base method.
-func (m *MockStateStorage) ApplyChangeset(version uint64, cs *store.Changeset) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ApplyChangeset", version, cs)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ApplyChangeset indicates an expected call of ApplyChangeset.
-func (mr *MockStateStorageMockRecorder) ApplyChangeset(version, cs any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyChangeset", reflect.TypeOf((*MockStateStorage)(nil).ApplyChangeset), version, cs)
-}
-
-// Close mocks base method.
-func (m *MockStateStorage) Close() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Close")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Close indicates an expected call of Close.
-func (mr *MockStateStorageMockRecorder) Close() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockStateStorage)(nil).Close))
-}
-
-// Get mocks base method.
-func (m *MockStateStorage) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", storeKey, version, key)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Get indicates an expected call of Get.
-func (mr *MockStateStorageMockRecorder) Get(storeKey, version, key any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStateStorage)(nil).Get), storeKey, version, key)
-}
-
-// GetLatestVersion mocks base method.
-func (m *MockStateStorage) GetLatestVersion() (uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLatestVersion")
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetLatestVersion indicates an expected call of GetLatestVersion.
-func (mr *MockStateStorageMockRecorder) GetLatestVersion() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestVersion", reflect.TypeOf((*MockStateStorage)(nil).GetLatestVersion))
-}
-
-// Has mocks base method.
-func (m *MockStateStorage) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Has", storeKey, version, key)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Has indicates an expected call of Has.
-func (mr *MockStateStorageMockRecorder) Has(storeKey, version, key any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockStateStorage)(nil).Has), storeKey, version, key)
-}
-
-// Iterator mocks base method.
-func (m *MockStateStorage) Iterator(storeKey []byte, version uint64, start, end []byte) (store.Iterator, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Iterator", storeKey, version, start, end)
-	ret0, _ := ret[0].(store.Iterator)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Iterator indicates an expected call of Iterator.
-func (mr *MockStateStorageMockRecorder) Iterator(storeKey, version, start, end any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockStateStorage)(nil).Iterator), storeKey, version, start, end)
-}
-
-// PausePruning mocks base method.
-func (m *MockStateStorage) PausePruning(pause bool) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "PausePruning", pause)
-}
-
-// PausePruning indicates an expected call of PausePruning.
-func (mr *MockStateStorageMockRecorder) PausePruning(pause any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PausePruning", reflect.TypeOf((*MockStateStorage)(nil).PausePruning), pause)
-}
-
-// Prune mocks base method.
-func (m *MockStateStorage) Prune(version uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Prune", version)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Prune indicates an expected call of Prune.
-func (mr *MockStateStorageMockRecorder) Prune(version any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Prune", reflect.TypeOf((*MockStateStorage)(nil).Prune), version)
-}
-
-// PruneStoreKeys mocks base method.
-func (m *MockStateStorage) PruneStoreKeys(storeKeys []string, version uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PruneStoreKeys", storeKeys, version)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// PruneStoreKeys indicates an expected call of PruneStoreKeys.
-func (mr *MockStateStorageMockRecorder) PruneStoreKeys(storeKeys, version any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PruneStoreKeys", reflect.TypeOf((*MockStateStorage)(nil).PruneStoreKeys), storeKeys, version)
-}
-
-// ReverseIterator mocks base method.
-func (m *MockStateStorage) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (store.Iterator, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReverseIterator", storeKey, version, start, end)
-	ret0, _ := ret[0].(store.Iterator)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ReverseIterator indicates an expected call of ReverseIterator.
-func (mr *MockStateStorageMockRecorder) ReverseIterator(storeKey, version, start, end any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockStateStorage)(nil).ReverseIterator), storeKey, version, start, end)
-}
-
-// SetLatestVersion mocks base method.
-func (m *MockStateStorage) SetLatestVersion(version uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetLatestVersion", version)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetLatestVersion indicates an expected call of SetLatestVersion.
-func (mr *MockStateStorageMockRecorder) SetLatestVersion(version any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLatestVersion", reflect.TypeOf((*MockStateStorage)(nil).SetLatestVersion), version)
-}
-
-// VersionExists mocks base method.
-func (m *MockStateStorage) VersionExists(v uint64) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VersionExists", v)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// VersionExists indicates an expected call of VersionExists.
-func (mr *MockStateStorageMockRecorder) VersionExists(v any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VersionExists", reflect.TypeOf((*MockStateStorage)(nil).VersionExists), v)
 }

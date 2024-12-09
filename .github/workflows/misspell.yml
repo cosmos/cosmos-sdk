@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "0 12 * * *"
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,7 +23,6 @@ jobs:
       - uses: peter-evans/create-pull-request@v7
         if: github.event_name != 'pull_request'
         with:
-          token: ${{ secrets.PRBOT_PAT }}
           commit-message: "chore: spelling errors fixes"
           title: "chore: fix spelling errors"
           branch: "bot/fix-typos"

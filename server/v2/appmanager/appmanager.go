@@ -107,7 +107,7 @@ func (a appManager[T]) InitGenesis(
 	txDecoder transaction.Codec[T],
 ) (*server.BlockResponse, corestore.WriterMap, error) {
 	var genTxs []T
-	genesisState, err := a.initGenesis(
+	genesisState, valUpdates, err := a.initGenesis(
 		ctx,
 		bytes.NewBuffer(initGenesisJSON),
 		func(jsonTx json.RawMessage) error {
@@ -122,6 +122,7 @@ func (a appManager[T]) InitGenesis(
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
 	}
+
 	// run block
 	blockRequest.Txs = genTxs
 
@@ -139,6 +140,17 @@ func (a appManager[T]) InitGenesis(
 	err = genesisState.ApplyStateChanges(stateChanges)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to apply block zero state changes to genesis state: %w", err)
+	}
+
+	// override validator updates with the ones from the init genesis state
+	// this triggers only when x/staking or another module that returns validator updates in InitGenesis
+	// otherwise, genutil validator updates takes precedence (returned from executing the genesis txs (as it implements appmodule.GenesisDecoder) in the end block)
+	if len(valUpdates) > 0 && len(blockResponse.ValidatorUpdates) > 0 {
+		return nil, nil, errors.New("validator updates returned from InitGenesis and genesis transactions, only one can be used")
+	}
+
+	if len(valUpdates) > 0 {
+		blockResponse.ValidatorUpdates = valUpdates
 	}
 
 	return blockResponse, genesisState, err
@@ -207,19 +219,18 @@ func (a appManager[T]) SimulateWithState(ctx context.Context, state corestore.Re
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
 func (a appManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
+	var (
+		queryState corestore.ReaderMap
+		err        error
+	)
 	// if version is provided attempt to do a height query.
 	if version != 0 {
-		queryState, err := a.db.StateAt(version)
-		if err != nil {
-			return nil, err
-		}
-		return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
+		queryState, err = a.db.StateAt(version)
+	} else { // otherwise rely on latest available state.
+		_, queryState, err = a.db.StateLatest()
 	}
-
-	// otherwise rely on latest available state.
-	_, queryState, err := a.db.StateLatest()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid height: %w", err)
 	}
 	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 }

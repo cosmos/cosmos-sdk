@@ -79,11 +79,13 @@ func initCometConfig() cometbft.CfgOption {
 	cfg := cmtcfg.DefaultConfig()
 
 	// display only warn logs by default except for p2p and state
-	cfg.LogLevel = "*:warn,server:info,p2p:info,state:info"
+	cfg.LogLevel = "*:warn,p2p:info,state:info,server:info,telemetry:info,grpc:info,rest:info,grpc-gateway:info,comet:info,store:info"
 	// increase block timeout
 	cfg.Consensus.TimeoutCommit = 5 * time.Second
 	// overwrite default pprof listen address
 	cfg.RPC.PprofListenAddress = "localhost:6060"
+	// use previous db backend
+	cfg.DBBackend = "goleveldb"
 
 	return cometbft.OverwriteDefaultConfigTomlConfig(cfg)
 }

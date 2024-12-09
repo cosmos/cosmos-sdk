@@ -14,6 +14,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  runtime-v2:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            runtime/v2/*.go
+            runtime/v2/go.mod
+            runtime/v2/go.sum
+      - name: test & coverage report creation
+        if: env.GIT_DIFF
+        run: |
+          cd runtime/v2 && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
+
   server-v2:
     runs-on: ubuntu-latest
     strategy:
@@ -143,7 +167,7 @@ jobs:
         if: env.GIT_DIFF
         run: |
           COSMOS_BUILD_OPTIONS=v2 make test-system
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: "testnet-setup"

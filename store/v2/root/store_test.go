@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	coreheader "cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2"
@@ -17,8 +16,6 @@ import (
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
 const (
@@ -48,18 +45,14 @@ func TestStorageTestSuite(t *testing.T) {
 func (s *RootStoreTestSuite) SetupTest() {
 	noopLog := coretesting.NewNopLogger()
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog)
-
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, nil, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
-	pm := pruning.NewManager(sc, ss, nil, nil)
-	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
+	pm := pruning.NewManager(sc, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
@@ -67,10 +60,6 @@ func (s *RootStoreTestSuite) SetupTest() {
 
 func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption) {
 	noopLog := coretesting.NewNopLogger()
-
-	sqliteDB, err := sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
 	mdb := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
@@ -82,18 +71,18 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 	sc, err := commitment.NewCommitStore(multiTrees, nil, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
-	pm := pruning.NewManager(sc, ss, config, config)
+	pm := pruning.NewManager(sc, config)
 
-	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
 }
 
-func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedWriter, sc store.Committer, pm *pruning.Manager) {
+func (s *RootStoreTestSuite) newStoreWithBackendMount(sc store.Committer, pm *pruning.Manager) {
 	noopLog := coretesting.NewNopLogger()
 
-	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
@@ -108,23 +97,15 @@ func (s *RootStoreTestSuite) TestGetStateCommitment() {
 	s.Require().Equal(s.rootStore.GetStateCommitment(), s.rootStore.(*Store).stateCommitment)
 }
 
-func (s *RootStoreTestSuite) TestGetStateStorage() {
-	s.Require().Equal(s.rootStore.GetStateStorage(), s.rootStore.(*Store).stateStorage)
-}
-
 func (s *RootStoreTestSuite) TestSetInitialVersion() {
 	initialVersion := uint64(5)
 	s.Require().NoError(s.rootStore.SetInitialVersion(initialVersion))
 
-	// perform the initial commit
-	cs := corestore.NewChangeset()
+	// perform an initial, empty commit
+	cs := corestore.NewChangeset(initialVersion)
 	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
-
-	wHash, err := s.rootStore.WorkingHash(cs)
+	_, err := s.rootStore.Commit(corestore.NewChangeset(initialVersion))
 	s.Require().NoError(err)
-	cHash, err := s.rootStore.Commit(corestore.NewChangeset())
-	s.Require().NoError(err)
-	s.Require().Equal(wHash, cHash)
 
 	// check the latest version
 	lVersion, err := s.rootStore.GetLatestVersion()
@@ -135,8 +116,9 @@ func (s *RootStoreTestSuite) TestSetInitialVersion() {
 	rInitialVersion := uint64(100)
 	s.Require().NoError(s.rootStore.SetInitialVersion(rInitialVersion))
 
+	// TODO fix version munging here
 	// perform the commit
-	cs = corestore.NewChangeset()
+	cs = corestore.NewChangeset(initialVersion + 1)
 	cs.Add(testStoreKey2Bytes, []byte("foo"), []byte("bar"), false)
 	_, err = s.rootStore.Commit(cs)
 	s.Require().NoError(err)
@@ -147,23 +129,12 @@ func (s *RootStoreTestSuite) TestSetInitialVersion() {
 	s.Require().Equal(initialVersion+1, lVersion)
 }
 
-func (s *RootStoreTestSuite) TestSetCommitHeader() {
-	h := &coreheader.Info{
-		Height:  100,
-		Hash:    []byte("foo"),
-		ChainID: "test",
-	}
-	s.rootStore.SetCommitHeader(h)
-
-	s.Require().Equal(h, s.rootStore.(*Store).commitHeader)
-}
-
 func (s *RootStoreTestSuite) TestQuery() {
 	_, err := s.rootStore.Query([]byte{}, 1, []byte("foo"), true)
 	s.Require().Error(err)
 
 	// write and commit a changeset
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(1)
 	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
 
 	commitHash, err := s.rootStore.Commit(cs)
@@ -181,14 +152,13 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 	sc := s.rootStore.GetStateCommitment()
 
 	// create a changeset and commit it to SC ONLY
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(1)
 	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
 
 	err := sc.WriteChangeset(cs)
 	s.Require().NoError(err)
 
-	ci := sc.WorkingCommitInfo(1)
-	_, err = sc.Commit(ci.Version)
+	_, err = sc.Commit(cs.Version)
 	s.Require().NoError(err)
 
 	// ensure we can query for the key, which should fallback to SC
@@ -203,7 +173,7 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 }
 
 func (s *RootStoreTestSuite) TestQueryProof() {
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(1)
 	// testStoreKey
 	cs.Add(testStoreKeyBytes, []byte("key1"), []byte("value1"), false)
 	cs.Add(testStoreKeyBytes, []byte("key2"), []byte("value2"), false)
@@ -233,10 +203,10 @@ func (s *RootStoreTestSuite) TestQueryProof() {
 
 func (s *RootStoreTestSuite) TestLoadVersion() {
 	// write and commit a few changesets
-	for v := 1; v <= 5; v++ {
+	for v := uint64(1); v <= 5; v++ {
 		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
 
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(v)
 		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
 		commitHash, err := s.rootStore.Commit(cs)
@@ -276,7 +246,75 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	for v := 4; v <= 5; v++ {
 		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
 
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(uint64(v))
+		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
+
+		_, err := s.rootStore.Commit(cs)
+		s.Require().Error(err)
+	}
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latest) // should have stayed at 3 after failed commits
+
+	// query state and ensure values returned are based on the loaded version
+	_, ro, err = s.rootStore.StateLatest()
+	s.Require().NoError(err)
+
+	reader, err = ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	val, err = reader.Get([]byte("key"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val003"), val)
+}
+
+func (s *RootStoreTestSuite) TestLoadVersionForOverwriting() {
+	// write and commit a few changesets
+	for v := uint64(1); v <= 5; v++ {
+		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
+
+		cs := corestore.NewChangeset(v)
+		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
+
+		commitHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().NotNil(commitHash)
+	}
+
+	// ensure the latest version is correct
+	latest, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(5), latest)
+
+	// attempt to load a non-existent version
+	err = s.rootStore.LoadVersionForOverwriting(6)
+	s.Require().Error(err)
+
+	// attempt to load a previously committed version
+	err = s.rootStore.LoadVersionForOverwriting(3)
+	s.Require().NoError(err)
+
+	// ensure the latest version is correct
+	latest, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latest)
+
+	// query state and ensure values returned are based on the loaded version
+	_, ro, err := s.rootStore.StateLatest()
+	s.Require().NoError(err)
+
+	reader, err := ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	val, err := reader.Get([]byte("key"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("val003"), val)
+
+	// attempt to write and commit a few changesets
+	for v := 4; v <= 5; v++ {
+		val := fmt.Sprintf("overwritten_val%03d", v) // overwritten_val004, overwritten_val005
+
+		cs := corestore.NewChangeset(uint64(v))
 		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
 		commitHash, err := s.rootStore.Commit(cs)
@@ -306,7 +344,7 @@ func (s *RootStoreTestSuite) TestCommit() {
 	s.Require().Zero(lv)
 
 	// perform changes
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(1)
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
@@ -344,7 +382,7 @@ func (s *RootStoreTestSuite) TestStateAt() {
 	// write keys over multiple versions
 	for v := uint64(1); v <= 5; v++ {
 		// perform changes
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(v)
 		for i := 0; i < 100; i++ {
 			key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
 			val := fmt.Sprintf("val%03d_%03d", i, v) // val000_1, val001_1, ..., val099_1
@@ -393,32 +431,9 @@ func (s *RootStoreTestSuite) TestStateAt() {
 	}
 }
 
-func (s *RootStoreTestSuite) TestWorkingHash() {
-	// write keys over multiple versions
-	for v := uint64(1); v <= 5; v++ {
-		// perform changes
-		cs := corestore.NewChangeset()
-		for _, storeKeyBytes := range [][]byte{testStoreKeyBytes, testStoreKey2Bytes, testStoreKey3Bytes} {
-			for i := 0; i < 100; i++ {
-				key := fmt.Sprintf("key_%x_%03d", i, storeKeyBytes) // key000, key001, ..., key099
-				val := fmt.Sprintf("val%03d_%03d", i, v)            // val000_1, val001_1, ..., val099_1
-
-				cs.Add(storeKeyBytes, []byte(key), []byte(val), false)
-			}
-		}
-
-		wHash, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
-		// execute Commit with empty changeset
-		cHash, err := s.rootStore.Commit(corestore.NewChangeset())
-		s.Require().NoError(err)
-		s.Require().Equal(wHash, cHash)
-	}
-}
-
 func (s *RootStoreTestSuite) TestPrune() {
 	// perform changes
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(1)
 	for i := 0; i < 10; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
@@ -462,6 +477,7 @@ func (s *RootStoreTestSuite) TestPrune() {
 		// write keys over multiple versions
 		for i := int64(0); i < tc.numVersions; i++ {
 			// execute Commit
+			cs.Version = uint64(i + 1)
 			cHash, err := s.rootStore.Commit(cs)
 			s.Require().NoError(err)
 			s.Require().NotNil(cHash)
@@ -500,7 +516,7 @@ func (s *RootStoreTestSuite) TestPrune() {
 
 func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	// perform changes
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(1)
 	cs.Add(testStoreKeyBytes, []byte("key"), []byte("val"), false)
 
 	const (
@@ -517,6 +533,7 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 
 	for i := uint64(0); i < numVersions; i++ {
 		// execute Commit
+		cs.Version = i + 1
 		cHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 		s.Require().NotNil(cHash)
@@ -544,21 +561,23 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	}
 
 	// Get latest
-	err = s.rootStore.LoadVersion(numVersions - 1)
+	err = s.rootStore.LoadVersion(numVersions)
 	s.Require().NoError(err)
 
 	// Test pruning the same heights again
+	cs.Version++
 	_, err = s.rootStore.Commit(cs)
 	s.Require().NoError(err)
 
 	// Ensure that can commit one more height with no panic
+	cs.Version++
 	_, err = s.rootStore.Commit(cs)
 	s.Require().NoError(err)
 }
 
 func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	// perform changes
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(1)
 	cs.Add(testStoreKeyBytes, []byte("key"), []byte("val"), false)
 
 	pruneOpt := &store.PruningOption{
@@ -570,23 +589,21 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()
-	sqliteDB, err := sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
 	tree := iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
-	pm := pruning.NewManager(sc, ss, pruneOpt, pruneOpt)
+	pm := pruning.NewManager(sc, pruneOpt)
 
-	s.newStoreWithBackendMount(ss, sc, pm)
+	s.newStoreWithBackendMount(sc, pm)
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
 	// batch delete.
-	for i := uint64(0); i < 10; i++ {
+	for i := uint64(1); i <= 10; i++ {
 		// execute Commit
+		cs.Version = i
 		cHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 		s.Require().NotNil(cHash)
@@ -599,18 +616,13 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().False(ok)
 	s.Require().Equal(uint64(0), actualHeightToPrune)
 
-	// "restart"
-	sqliteDB, err = sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss = storage.NewStorageStore(sqliteDB, noopLog)
-
 	tree = iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
 	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
-	pm = pruning.NewManager(sc, ss, pruneOpt, pruneOpt)
+	pm = pruning.NewManager(sc, pruneOpt)
 
-	s.newStoreWithBackendMount(ss, sc, pm)
+	s.newStoreWithBackendMount(sc, pm)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().NoError(err)
 
@@ -623,6 +635,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 
 	// commit one more block and ensure the heights have been pruned
 	// execute Commit
+	cs.Version++
 	cHash, err := s.rootStore.Commit(cs)
 	s.Require().NoError(err)
 	s.Require().NotNil(cHash)
@@ -649,11 +662,6 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	noopLog := coretesting.NewNopLogger()
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-
-	ss := storage.NewStorageStore(sqliteDB, noopLog)
-
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
@@ -665,14 +673,14 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	sc, err := commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
-	pm := pruning.NewManager(sc, ss, nil, nil)
+	pm := pruning.NewManager(sc, nil)
 
-	s.newStoreWithBackendMount(ss, sc, pm)
+	s.newStoreWithBackendMount(sc, pm)
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	// perform changes
 	for i := 1; i < 3; i++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(uint64(i))
 		key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d_%03d", i, 1) // val000_1, val001_1, ..., val099_1
 
@@ -699,7 +707,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	}
 
 	// more changes
-	cs1 := corestore.NewChangeset()
+	cs1 := corestore.NewChangeset(3)
 	key := fmt.Sprintf("key%03d", 3)         // key000, key001, ..., key099
 	val := fmt.Sprintf("val%03d_%03d", 3, 1) // val000_1, val001_1, ..., val099_1
 
@@ -719,7 +727,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(3), latestVer)
 
-	cs2 := corestore.NewChangeset()
+	cs2 := corestore.NewChangeset(4)
 	key = fmt.Sprintf("key%03d", 4)         // key000, key001, ..., key099
 	val = fmt.Sprintf("val%03d_%03d", 4, 3) // val000_1, val001_1, ..., val099_1
 
@@ -752,9 +760,9 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	sc, err = commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
-	pm = pruning.NewManager(sc, ss, nil, nil)
+	pm = pruning.NewManager(sc, nil)
 
-	s.newStoreWithBackendMount(ss, sc, pm)
+	s.newStoreWithBackendMount(sc, pm)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)
 
@@ -782,7 +790,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 
 func (s *RootStoreTestSuite) TestHashStableWithEmptyCommitAndRestart() {
 	err := s.rootStore.LoadLatestVersion()
-	s.Require().Nil(err)
+	s.Require().NoError(err)
 
 	emptyHash := sha256.Sum256([]byte{})
 	appHash := emptyHash[:]
@@ -790,9 +798,11 @@ func (s *RootStoreTestSuite) TestHashStableWithEmptyCommitAndRestart() {
 	lastCommitID, err := s.rootStore.LastCommitID()
 	s.Require().Nil(err)
 
-	s.Require().Equal(commitID, lastCommitID)
+	// the hash of a store with no commits is the root hash of a tree with empty hashes as leaves.
+	// it should not be equal an empty hash.
+	s.Require().NotEqual(commitID, lastCommitID)
 
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(1)
 	cs.Add(testStoreKeyBytes, []byte("key"), []byte("val"), false)
 
 	cHash, err := s.rootStore.Commit(cs)
@@ -804,7 +814,7 @@ func (s *RootStoreTestSuite) TestHashStableWithEmptyCommitAndRestart() {
 	s.Require().Equal(uint64(1), latestVersion)
 
 	// make an empty commit, it should update version, but not affect hash
-	cHash, err = s.rootStore.Commit(corestore.NewChangeset())
+	cHash, err = s.rootStore.Commit(corestore.NewChangeset(2))
 	s.Require().Nil(err)
 	s.Require().NotNil(cHash)
 	latestVersion, err = s.rootStore.GetLatestVersion()

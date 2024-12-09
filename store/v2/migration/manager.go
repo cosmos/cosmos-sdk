@@ -4,8 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -15,15 +14,11 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
-	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
-	"cosmossdk.io/store/v2/storage"
 )
 
 const (
 	// defaultChannelBufferSize is the default buffer size for the migration stream.
 	defaultChannelBufferSize = 1024
-	// defaultStorageBufferSize is the default buffer size for the storage snapshotter.
-	defaultStorageBufferSize = 1024
 
 	migrateChangesetKeyFmt = "m/cs_%x" // m/cs_<version>
 )
@@ -39,12 +34,11 @@ type Manager struct {
 	logger           log.Logger
 	snapshotsManager *snapshots.Manager
 
-	stateStorage    *storage.StorageStore
 	stateCommitment *commitment.CommitStore
 
-	db              corestore.KVStoreWithBatch
-	mtx             sync.Mutex // mutex for migratedVersion
-	migratedVersion uint64
+	db corestore.KVStoreWithBatch
+
+	migratedVersion atomic.Uint64
 
 	chChangeset <-chan *VersionedChangeset
 	chDone      <-chan struct{}
@@ -53,11 +47,10 @@ type Manager struct {
 // NewManager returns a new Manager.
 //
 // NOTE: `sc` can be `nil` if don't want to migrate the commitment.
-func NewManager(db corestore.KVStoreWithBatch, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
+func NewManager(db corestore.KVStoreWithBatch, sm *snapshots.Manager, sc *commitment.CommitStore, logger log.Logger) *Manager {
 	return &Manager{
 		logger:           logger,
 		snapshotsManager: sm,
-		stateStorage:     ss,
 		stateCommitment:  sc,
 		db:               db,
 	}
@@ -96,63 +89,14 @@ func (m *Manager) Migrate(height uint64) error {
 	// create the migration stream and snapshot,
 	// which acts as protoio.Reader and snapshots.WriteCloser.
 	ms := NewMigrationStream(defaultChannelBufferSize)
-
 	if err := m.snapshotsManager.CreateMigration(height, ms); err != nil {
 		return err
 	}
 
-	// restore the snapshot
-	chStorage := make(chan *corestore.StateChanges, defaultStorageBufferSize)
-
 	eg := new(errgroup.Group)
 	eg.Go(func() error {
-		return m.stateStorage.Restore(height, chStorage)
-	})
-	eg.Go(func() error {
-		defer close(chStorage)
-		if m.stateCommitment != nil {
-			if _, err := m.stateCommitment.Restore(height, 0, ms, chStorage); err != nil {
-				return err
-			}
-		} else { // there is no commitment migration, just consume the stream to restore the state storage
-			var storeKey []byte
-		loop:
-			for {
-				snapshotItem := snapshotstypes.SnapshotItem{}
-				err := ms.ReadMsg(&snapshotItem)
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				if err != nil {
-					return fmt.Errorf("failed to read snapshot item: %w", err)
-				}
-				switch item := snapshotItem.Item.(type) {
-				case *snapshotstypes.SnapshotItem_Store:
-					storeKey = []byte(item.Store.Name)
-				case *snapshotstypes.SnapshotItem_IAVL:
-					if item.IAVL.Height == 0 { // only restore the leaf nodes
-						key := item.IAVL.Key
-						if key == nil {
-							key = []byte{}
-						}
-						value := item.IAVL.Value
-						if value == nil {
-							value = []byte{}
-						}
-						chStorage <- &corestore.StateChanges{
-							Actor: storeKey,
-							StateChanges: []corestore.KVPair{
-								{
-									Key:   key,
-									Value: value,
-								},
-							},
-						}
-					}
-				default:
-					break loop
-				}
-			}
+		if _, err := m.stateCommitment.Restore(height, 0, ms); err != nil {
+			return err
 		}
 		return nil
 	})
@@ -161,9 +105,7 @@ func (m *Manager) Migrate(height uint64) error {
 		return err
 	}
 
-	m.mtx.Lock()
-	m.migratedVersion = height
-	m.mtx.Unlock()
+	m.migratedVersion.Store(height)
 
 	return nil
 }
@@ -207,9 +149,7 @@ func (m *Manager) writeChangeset() error {
 // GetMigratedVersion returns the migrated version.
 // It is used to check the migrated version in the RootStore.
 func (m *Manager) GetMigratedVersion() uint64 {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-	return m.migratedVersion
+	return m.migratedVersion.Load()
 }
 
 // Sync catches up the Changesets which are committed while the migration is in progress.
@@ -239,7 +179,7 @@ func (m *Manager) Sync() error {
 				continue
 			}
 
-			cs := corestore.NewChangeset()
+			cs := corestore.NewChangeset(version)
 			if err := encoding.UnmarshalChangeset(cs, csBytes); err != nil {
 				return fmt.Errorf("failed to unmarshal changeset: %w", err)
 			}
@@ -251,13 +191,8 @@ func (m *Manager) Sync() error {
 					return fmt.Errorf("failed to commit changeset to commitment: %w", err)
 				}
 			}
-			if err := m.stateStorage.ApplyChangeset(version, cs); err != nil {
-				return fmt.Errorf("failed to write changeset to storage: %w", err)
-			}
 
-			m.mtx.Lock()
-			m.migratedVersion = version
-			m.mtx.Unlock()
+			m.migratedVersion.Store(version)
 
 			version += 1
 		}

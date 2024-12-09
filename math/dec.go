@@ -2,970 +2,521 @@ package math
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
+	stderrors "errors"
 	"math/big"
 	"strconv"
-	"strings"
-	"testing"
+
+	"github.com/cockroachdb/apd/v3"
+
+	"cosmossdk.io/errors"
 )
 
-// LegacyDec NOTE: never use new(Dec) or else we will panic unmarshalling into the
-// nil embedded big.Int
-type LegacyDec struct {
-	i *big.Int
-}
+var _ customProtobufType = &Dec{}
 
 const (
-	// LegacyPrecision number of decimal places
-	LegacyPrecision = 18
-
-	// LegacyDecimalPrecisionBits bits required to represent the above precision
-	// Ceiling[Log2[10^Precision - 1]]
-	LegacyDecimalPrecisionBits = 60
-
-	// decimalTruncateBits is the minimum number of bits removed
-	// by a truncate operation. It is equal to
-	// Floor[Log2[10^Precision - 1]].
-	decimalTruncateBits = LegacyDecimalPrecisionBits - 1
-
-	maxDecBitLen = MaxBitLen + decimalTruncateBits
-
-	// maxApproxRootIterations max number of iterations in ApproxRoot function
-	maxApproxRootIterations = 300
+	// MaxExponent is the highest exponent supported. Exponents near this range will
+	// perform very slowly (many seconds per operation).
+	MaxExponent = apd.MaxExponent
+	// MinExponent is the lowest exponent supported with the same limitations as
+	// MaxExponent.
+	MinExponent = apd.MinExponent
 )
+
+// Dec is a wrapper struct around apd.Decimal that does no mutation of apd.Decimal's when performing
+// arithmetic, instead creating a new apd.Decimal for every operation ensuring usage is safe.
+//
+// Using apd.Decimal directly can be unsafe because apd operations mutate the underlying Decimal,
+// but when copying the big.Int structure can be shared between Decimal instances causing corruption.
+// This was originally discovered in regen0-network/mainnet#15.
+type Dec struct {
+	dec apd.Decimal
+}
+
+const mathCodespace = "math"
 
 var (
-	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(LegacyPrecision), nil)
-	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
-	precisionMultipliers []*big.Int
-	zeroInt              = big.NewInt(0)
-	oneInt               = big.NewInt(1)
-	tenInt               = big.NewInt(10)
-	smallestDec          = LegacySmallestDec()
+	ErrInvalidDec         = errors.Register(mathCodespace, 1, "invalid decimal")
+	ErrUnexpectedRounding = errors.Register(mathCodespace, 2, "unexpected rounding")
+	ErrNonIntegral        = errors.Register(mathCodespace, 3, "value is non-integral")
 )
 
-// Decimal errors
-var (
-	ErrLegacyEmptyDecimalStr      = errors.New("decimal string cannot be empty")
-	ErrLegacyInvalidDecimalLength = errors.New("invalid decimal length")
-	ErrLegacyInvalidDecimalStr    = errors.New("invalid decimal string")
-)
-
-// Set precision multipliers
-func init() {
-	precisionMultipliers = make([]*big.Int, LegacyPrecision+1)
-	for i := 0; i <= LegacyPrecision; i++ {
-		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
-	}
+// In cosmos-sdk#7773, decimal128 (with 34 digits of precision) was suggested for performing
+// Quo/Mult arithmetic generically across the SDK. Even though the SDK
+// has yet to support a GDA with decimal128 (34 digits), we choose to utilize it here.
+// https://github.com/cosmos/cosmos-sdk/issues/7773#issuecomment-725006142
+var dec128Context = apd.Context{
+	Precision:   34,
+	MaxExponent: MaxExponent,
+	MinExponent: MinExponent,
+	Traps:       apd.DefaultTraps,
 }
 
-func precisionInt() *big.Int {
-	return new(big.Int).Set(precisionReuse)
-}
-
-func LegacyZeroDec() LegacyDec     { return LegacyDec{new(big.Int).Set(zeroInt)} }
-func LegacyOneDec() LegacyDec      { return LegacyDec{precisionInt()} }
-func LegacySmallestDec() LegacyDec { return LegacyDec{new(big.Int).Set(oneInt)} }
-
-// calculate the precision multiplier
-func calcPrecisionMultiplier(prec int64) *big.Int {
-	if prec < 0 {
-		panic(fmt.Sprintf("negative precision %v", prec))
-	}
-
-	if prec > LegacyPrecision {
-		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", LegacyPrecision, prec))
-	}
-	zerosToAdd := LegacyPrecision - prec
-	multiplier := new(big.Int).Exp(tenInt, big.NewInt(zerosToAdd), nil)
-	return multiplier
-}
-
-// get the precision multiplier, do not mutate result
-func precisionMultiplier(prec int64) *big.Int {
-	if prec < 0 {
-		panic(fmt.Sprintf("negative precision %v", prec))
-	}
-
-	if prec > LegacyPrecision {
-		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", LegacyPrecision, prec))
-	}
-	return precisionMultipliers[prec]
-}
-
-// LegacyNewDec create a new Dec from integer assuming whole number
-func LegacyNewDec(i int64) LegacyDec {
-	return LegacyNewDecWithPrec(i, 0)
-}
-
-// LegacyNewDecWithPrec create a new Dec from integer with decimal place at prec
-// CONTRACT: prec <= Precision
-func LegacyNewDecWithPrec(i, prec int64) LegacyDec {
-	bi := big.NewInt(i)
-	return LegacyDec{
-		bi.Mul(bi, precisionMultiplier(prec)),
-	}
-}
-
-// LegacyNewDecFromBigInt create a new Dec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
-func LegacyNewDecFromBigInt(i *big.Int) LegacyDec {
-	return LegacyNewDecFromBigIntWithPrec(i, 0)
-}
-
-// LegacyNewDecFromBigIntWithPrec create a new Dec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
-func LegacyNewDecFromBigIntWithPrec(i *big.Int, prec int64) LegacyDec {
-	return LegacyDec{
-		new(big.Int).Mul(i, precisionMultiplier(prec)),
-	}
-}
-
-// LegacyNewDecFromInt create a new Dec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
-func LegacyNewDecFromInt(i Int) LegacyDec {
-	return LegacyNewDecFromIntWithPrec(i, 0)
-}
-
-// LegacyNewDecFromIntWithPrec create a new Dec from big integer with decimal place at prec
-// CONTRACT: prec <= Precision
-func LegacyNewDecFromIntWithPrec(i Int, prec int64) LegacyDec {
-	return LegacyDec{
-		new(big.Int).Mul(i.BigIntMut(), precisionMultiplier(prec)),
-	}
-}
-
-// LegacyNewDecFromStr create a decimal from an input decimal string.
-// valid must come in the form:
+// NewDecFromString converts a string to a Dec type, supporting standard, scientific, and negative notations.
+// It handles non-numeric values and overflow conditions, returning errors for invalid inputs like "NaN" or "Infinity".
 //
-//	(-) whole integers (.) decimal integers
+// Examples:
+// - "123" -> Dec{123}
+// - "-123.456" -> Dec{-123.456}
+// - "1.23E4" -> Dec{12300}
+// - "NaN" or "Infinity" -> ErrInvalidDec
 //
-// examples of acceptable input include:
+// The internal representation is an arbitrary-precision decimal: Negative × Coeff × 10*Exponent
+// The maximum exponent is 100_000 and must not be exceeded. Following values would be invalid:
+// 1E100001 -> ErrInvalidDec
+// -1E100001 -> ErrInvalidDec
+// 1E-100001 -> ErrInvalidDec
 //
-//	-123.456
-//	456.7890
-//	345
-//	-456789
-//
-// NOTE - An error will return if more decimal places
-// are provided in the string than the constant Precision.
-//
-// CONTRACT - This function does not mutate the input str.
-func LegacyNewDecFromStr(str string) (LegacyDec, error) {
-	// first extract any negative symbol
-	neg := false
-	if len(str) > 0 && str[0] == '-' {
-		neg = true
-		str = str[1:]
+// This function is essential for converting textual data into Dec types for numerical operations.
+func NewDecFromString(s string) (Dec, error) {
+	d, _, err := apd.NewFromString(s)
+	if err != nil {
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}
 
-	if len(str) == 0 {
-		return LegacyDec{}, ErrLegacyEmptyDecimalStr
+	switch d.Form {
+	case apd.NaN, apd.NaNSignaling:
+		return Dec{}, ErrInvalidDec.Wrap("not a number")
+	case apd.Infinite:
+		return Dec{}, ErrInvalidDec.Wrap(s)
+	case apd.Finite:
+		result := Dec{*d}
+		return result, nil
+	default:
+		return Dec{}, ErrInvalidDec.Wrapf("unsupported type: %d", d.Form)
+	}
+}
+
+// NewDecFromInt64 converts an int64 to a Dec type.
+// This function is useful for creating Dec values from integer literals or variables,
+// ensuring they can be used in high-precision arithmetic operations defined for Dec types.
+//
+// Example:
+// - NewDecFromInt64(123) returns a Dec representing the value 123.
+func NewDecFromInt64(x int64) Dec {
+	var res Dec
+	res.dec.SetInt64(x)
+	return res
+}
+
+// NewDecWithExp creates a Dec from a coefficient and exponent, calculated as coeff * 10^exp.
+// Useful for precise decimal representations.
+// Although this method can be used with a higher than maximum exponent or lower than minimum exponent, further arithmetic
+// or other method may fail.
+//
+// Example:
+// - NewDecWithExp(123, -2) -> Dec representing 1.23.
+func NewDecWithExp(coeff int64, exp int32) Dec {
+	var res Dec
+	res.dec.SetFinite(coeff, exp)
+	return res
+}
+
+// Add returns a new Dec representing the sum of `x` and `y` using returning a new Dec, we use apd.BaseContext.
+// This function ensures that no arguments are mutated during the operation and checks for overflow conditions.
+// If an overflow occurs, an error is returned.
+//
+// The precision is much higher as long as the max exponent is not exceeded. If the max exponent is exceeded, an error is returned.
+// For example:
+// - 1e100000 + -1e-1
+// - 1e100000 + 9e100000
+// - 1e100001 + 0
+// We can see that in apd.BaseContext the  max exponent is defined hence we cannot exceed.
+//
+// This function wraps any internal errors with a context-specific error message for clarity.
+func (x Dec) Add(y Dec) (Dec, error) {
+	var z Dec
+	_, err := apd.BaseContext.Add(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}
 
-	strs := strings.Split(str, ".")
-	lenDecs := 0
-	combinedStr := strs[0]
+	return z, nil
+}
 
-	if len(strs) == 2 { // has a decimal place
-		lenDecs = len(strs[1])
-		if lenDecs == 0 || len(combinedStr) == 0 {
-			return LegacyDec{}, ErrLegacyInvalidDecimalLength
+// Sub returns a new Dec representing the sum of `x` and `y` using returning a new Dec, we use apd.BaseContext.
+// This function ensures that no arguments are mutated during the operation and checks for overflow conditions.
+// If an overflow occurs, an error is returned.
+//
+// The precision is much higher as long as the max exponent is not exceeded. If the max exponent is exceeded, an error is returned.
+// For example:
+// - 1e-100001 - 0
+// - 1e100000 - 1e-1
+// - 1e100000 - -9e100000
+// - 1e100001 - 1e100001 (upper limit exceeded)
+// - 1e-100001 - 1e-100001 (lower limit exceeded)
+// We can see that in apd.BaseContext the  max exponent is defined hence we cannot exceed.
+//
+// This function wraps any internal errors with a context-specific error message for clarity.
+func (x Dec) Sub(y Dec) (Dec, error) {
+	var z Dec
+	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		if err2 := stderrors.Unwrap(err); err2 != nil {
+			// use unwrapped error to not return "add:" prefix from raw apd error
+			err = err2
 		}
-		combinedStr += strs[1]
-	} else if len(strs) > 2 {
-		return LegacyDec{}, ErrLegacyInvalidDecimalStr
+		return Dec{}, ErrInvalidDec.Wrap("sub: " + err.Error())
+	}
+	return z, nil
+}
+
+// Quo performs division of x by y using the decimal128 context with 34 digits of precision.
+// It returns a new Dec or an error if the division is not feasible due to constraints of decimal128.
+//
+// Within Quo half up rounding may be performed to match the defined precision. If this is unwanted, QuoExact
+// should be used instead.
+//
+// Key error scenarios:
+// - Division by zero (e.g., `123 / 0` or `0 / 0`) results in ErrInvalidDec.
+// - Non-representable values due to extreme ratios or precision limits.
+//
+// Examples:
+// - `0 / 123` yields `0`.
+// - `123 / 123` yields `1.000000000000000000000000000000000`.
+// - `-123 / 123` yields `-1.000000000000000000000000000000000`.
+// - `4 / 9` yields `0.4444444444444444444444444444444444`.
+// - `5 / 9` yields `0.5555555555555555555555555555555556`.
+// - `6 / 9` yields `0.6666666666666666666666666666666667`.
+// - `1e-100000 / 10`  yields error.
+//
+// This function is non-mutative and enhances error clarity with specific messages.
+func (x Dec) Quo(y Dec) (Dec, error) {
+	var z Dec
+	_, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}
 
-	if lenDecs > LegacyPrecision {
-		return LegacyDec{}, fmt.Errorf("value '%s' exceeds max precision by %d decimal places: max precision %d", str, LegacyPrecision-lenDecs, LegacyPrecision)
+	return z, errors.Wrap(err, "decimal quotient error")
+}
+
+// QuoExact performs division like Quo and additionally checks for rounding. It returns ErrUnexpectedRounding if
+// any rounding occurred during the division. If the division is exact, it returns the result without error.
+//
+// This function is particularly useful in financial calculations or other scenarios where precision is critical
+// and rounding could lead to significant errors.
+//
+// Key error scenarios:
+// - Division by zero (e.g., `123 / 0` or `0 / 0`) results in ErrInvalidDec.
+// - Rounding would have occurred, which is not permissible in this context, resulting in ErrUnexpectedRounding.
+//
+// Examples:
+// - `0 / 123` yields `0` without rounding.
+// - `123 / 123` yields `1.000000000000000000000000000000000` exactly.
+// - `-123 / 123` yields `-1.000000000000000000000000000000000` exactly.
+// - `1 / 9` yields error for the precision limit
+// - `1e-100000 / 10` yields error for crossing the lower exponent limit.
+// - Any division resulting in a non-terminating decimal under decimal128 precision constraints triggers ErrUnexpectedRounding.
+//
+// This function does not mutate any arguments and wraps any internal errors with a context-specific error message for clarity.
+func (x Dec) QuoExact(y Dec) (Dec, error) {
+	var z Dec
+	condition, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	if condition.Rounded() {
+		return z, ErrUnexpectedRounding
+	}
+	return z, errors.Wrap(err, "decimal quotient error")
+}
+
+// QuoInteger performs integer division of x by y, returning a new Dec formatted as decimal128 with 34 digit precision.
+// This function returns the integer part of the quotient, discarding any fractional part, and is useful in scenarios
+// where only the whole number part of the division result is needed without rounding.
+//
+// Key error scenarios:
+// - Division by zero (e.g., `123 / 0`) results in ErrInvalidDec.
+// - Overflow conditions if the result exceeds the storage capacity of a decimal128 formatted number.
+//
+// Examples:
+// - `123 / 50` yields `2` (since the fractional part .46 is discarded).
+// - `100 / 3` yields `33` (since the fractional part .3333... is discarded).
+// - `50 / 100` yields `0` (since 0.5 is less than 1 and thus discarded).
+//
+// The function does not mutate any arguments and ensures that errors are wrapped with specific messages for clarity.
+func (x Dec) QuoInteger(y Dec) (Dec, error) {
+	var z Dec
+	_, err := dec128Context.QuoInteger(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}
+
+// Mul returns a new Dec with value `x*y` (formatted as decimal128, with 34 digit precision) without
+// mutating any argument and error if there is an overflow.
+func (x Dec) Mul(y Dec) (Dec, error) {
+	var z Dec
+	if _, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec); err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}
+
+// MulExact multiplies two Dec values x and y without rounding, using decimal128 precision.
+// It returns an error if rounding is necessary to fit the result within the 34-digit limit.
+//
+// Example:
+// - MulExact(Dec{1.234}, Dec{2.345}) -> Dec{2.893}, or ErrUnexpectedRounding if precision exceeded.
+//
+// Note:
+// - This function does not alter the original Dec values.
+func (x Dec) MulExact(y Dec) (Dec, error) {
+	var z Dec
+	condition, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	if condition.Rounded() {
+		return z, ErrUnexpectedRounding
 	}
 
-	// add some extra zero's to correct to the Precision factor
-	zerosToAdd := LegacyPrecision - lenDecs
-	zeros := strings.Repeat("0", zerosToAdd)
-	combinedStr += zeros
+	return z, nil
+}
 
-	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
+// Modulo computes the remainder of division of x by y using decimal128 precision.
+// It returns an error if y is zero or if any other error occurs during the computation.
+//
+// Example:
+//   - 7 mod 3 = 1
+//   - 6 mod 3 = 0
+func (x Dec) Modulo(y Dec) (Dec, error) {
+	var z Dec
+	_, err := dec128Context.Rem(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, errors.Wrap(err, "decimal remainder error")
+}
+
+// Int64 converts x to an int64 or returns an error if x cannot
+// fit precisely into an int64.
+func (x Dec) Int64() (int64, error) {
+	return x.dec.Int64()
+}
+
+// BigInt converts x to a *big.Int or returns an error if x cannot
+// fit precisely into an *big.Int.
+func (x Dec) BigInt() (*big.Int, error) {
+	y, _ := x.Reduce()
+	z, ok := new(big.Int).SetString(y.Text('f'), 10)
 	if !ok {
-		return LegacyDec{}, fmt.Errorf("failed to set decimal string with base 10: %s", combinedStr)
+		return nil, ErrNonIntegral
 	}
-	if combined.BitLen() > maxDecBitLen {
-		return LegacyDec{}, fmt.Errorf("decimal '%s' out of range; bitLen: got %d, max %d", str, combined.BitLen(), maxDecBitLen)
-	}
-	if neg {
-		combined = new(big.Int).Neg(combined)
-	}
-
-	return LegacyDec{combined}, nil
+	return z, nil
 }
 
-// LegacyMustNewDecFromStr Decimal from string, panic on error
-func LegacyMustNewDecFromStr(s string) LegacyDec {
-	dec, err := LegacyNewDecFromStr(s)
-	if err != nil {
-		panic(err)
-	}
-	return dec
-}
-
-func (d LegacyDec) IsNil() bool                { return d.i == nil }                       // is decimal nil
-func (d LegacyDec) IsZero() bool               { return (d.i).Sign() == 0 }                // is equal to zero
-func (d LegacyDec) IsNegative() bool           { return (d.i).Sign() == -1 }               // is negative
-func (d LegacyDec) IsPositive() bool           { return (d.i).Sign() == 1 }                // is positive
-func (d LegacyDec) Equal(d2 LegacyDec) bool    { return (d.i).Cmp(d2.i) == 0 }             // equal decimals
-func (d LegacyDec) GT(d2 LegacyDec) bool       { return (d.i).Cmp(d2.i) > 0 }              // greater than
-func (d LegacyDec) GTE(d2 LegacyDec) bool      { return (d.i).Cmp(d2.i) >= 0 }             // greater than or equal
-func (d LegacyDec) LT(d2 LegacyDec) bool       { return (d.i).Cmp(d2.i) < 0 }              // less than
-func (d LegacyDec) LTE(d2 LegacyDec) bool      { return (d.i).Cmp(d2.i) <= 0 }             // less than or equal
-func (d LegacyDec) Neg() LegacyDec             { return LegacyDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
-func (d LegacyDec) NegMut() LegacyDec          { d.i.Neg(d.i); return d }                  // reverse the decimal sign, mutable
-func (d LegacyDec) Abs() LegacyDec             { return LegacyDec{new(big.Int).Abs(d.i)} } // absolute value
-func (d LegacyDec) AbsMut() LegacyDec          { d.i.Abs(d.i); return d }                  // absolute value, mutable
-func (d LegacyDec) Set(d2 LegacyDec) LegacyDec { d.i.Set(d2.i); return d }                 // set to existing dec value
-func (d LegacyDec) Clone() LegacyDec           { return LegacyDec{new(big.Int).Set(d.i)} } // clone new dec
-
-// BigInt returns a copy of the underlying big.Int.
-func (d LegacyDec) BigInt() *big.Int {
-	if d.IsNil() {
-		return nil
-	}
-
-	cp := new(big.Int)
-	return cp.Set(d.i)
-}
-
-// BigIntMut converts LegacyDec to big.Int, mutative the input
-func (d LegacyDec) BigIntMut() *big.Int {
-	if d.IsNil() {
-		return nil
-	}
-
-	return d.i
-}
-
-func (d LegacyDec) ImmutOp(op func(LegacyDec, LegacyDec) LegacyDec, d2 LegacyDec) LegacyDec {
-	return op(d.Clone(), d2)
-}
-
-func (d LegacyDec) ImmutOpInt(op func(LegacyDec, Int) LegacyDec, d2 Int) LegacyDec {
-	return op(d.Clone(), d2)
-}
-
-func (d LegacyDec) ImmutOpInt64(op func(LegacyDec, int64) LegacyDec, d2 int64) LegacyDec {
-	// TODO: use already allocated operand bigint to avoid
-	// newint each time, add mutex for race condition
-	// Issue: https://github.com/cosmos/cosmos-sdk/issues/11166
-	return op(d.Clone(), d2)
-}
-
-func (d LegacyDec) SetInt64(i int64) LegacyDec {
-	d.i.SetInt64(i)
-	d.i.Mul(d.i, precisionReuse)
-	return d
-}
-
-// Add addition
-func (d LegacyDec) Add(d2 LegacyDec) LegacyDec {
-	return d.ImmutOp(LegacyDec.AddMut, d2)
-}
-
-// AddMut mutable addition
-func (d LegacyDec) AddMut(d2 LegacyDec) LegacyDec {
-	d.i.Add(d.i, d2.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// Sub subtraction
-func (d LegacyDec) Sub(d2 LegacyDec) LegacyDec {
-	return d.ImmutOp(LegacyDec.SubMut, d2)
-}
-
-// SubMut mutable subtraction
-func (d LegacyDec) SubMut(d2 LegacyDec) LegacyDec {
-	d.i.Sub(d.i, d2.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// Mul multiplication
-func (d LegacyDec) Mul(d2 LegacyDec) LegacyDec {
-	return d.ImmutOp(LegacyDec.MulMut, d2)
-}
-
-// MulMut mutable multiplication
-func (d LegacyDec) MulMut(d2 LegacyDec) LegacyDec {
-	d.i.Mul(d.i, d2.i)
-	chopped := chopPrecisionAndRound(d.i)
-
-	if chopped.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	*d.i = *chopped
-	return d
-}
-
-// MulTruncate multiplication truncate
-func (d LegacyDec) MulTruncate(d2 LegacyDec) LegacyDec {
-	return d.ImmutOp(LegacyDec.MulTruncateMut, d2)
-}
-
-// MulTruncateMut mutable multiplication truncate
-func (d LegacyDec) MulTruncateMut(d2 LegacyDec) LegacyDec {
-	d.i.Mul(d.i, d2.i)
-	chopPrecisionAndTruncate(d.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// MulRoundUp multiplication round up at precision end.
-func (d LegacyDec) MulRoundUp(d2 LegacyDec) LegacyDec {
-	return d.ImmutOp(LegacyDec.MulRoundUpMut, d2)
-}
-
-// MulRoundUpMut mutable multiplication with round up at precision end.
-func (d LegacyDec) MulRoundUpMut(d2 LegacyDec) LegacyDec {
-	d.i.Mul(d.i, d2.i)
-	chopPrecisionAndRoundUp(d.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// MulInt multiplication
-func (d LegacyDec) MulInt(i Int) LegacyDec {
-	return d.ImmutOpInt(LegacyDec.MulIntMut, i)
-}
-
-func (d LegacyDec) MulIntMut(i Int) LegacyDec {
-	d.i.Mul(d.i, i.BigIntMut())
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// MulInt64 multiplication with int64
-func (d LegacyDec) MulInt64(i int64) LegacyDec {
-	return d.ImmutOpInt64(LegacyDec.MulInt64Mut, i)
-}
-
-func (d LegacyDec) MulInt64Mut(i int64) LegacyDec {
-	d.i.Mul(d.i, big.NewInt(i))
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// Quo quotient
-func (d LegacyDec) Quo(d2 LegacyDec) LegacyDec {
-	return d.ImmutOp(LegacyDec.QuoMut, d2)
-}
-
-var squaredPrecisionReuse = new(big.Int).Mul(precisionReuse, precisionReuse)
-
-// QuoMut mutable quotient
-func (d LegacyDec) QuoMut(d2 LegacyDec) LegacyDec {
-	// multiply by precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
-	d.i.Quo(d.i, d2.i)
-
-	chopPrecisionAndRound(d.i)
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// QuoTruncate quotient truncate
-func (d LegacyDec) QuoTruncate(d2 LegacyDec) LegacyDec {
-	return d.ImmutOp(LegacyDec.QuoTruncateMut, d2)
-}
-
-// QuoTruncateMut divides the current LegacyDec value by the provided LegacyDec value, truncating the result.
-func (d LegacyDec) QuoTruncateMut(d2 LegacyDec) LegacyDec {
-	// multiply precision once before performing division
-	d.i.Mul(d.i, precisionReuse)
-	d.i.Quo(d.i, d2.i)
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// QuoRoundUp quotient, round up
-func (d LegacyDec) QuoRoundUp(d2 LegacyDec) LegacyDec {
-	return d.ImmutOp(LegacyDec.QuoRoundupMut, d2)
-}
-
-// QuoRoundupMut mutable quotient, round up
-func (d LegacyDec) QuoRoundupMut(d2 LegacyDec) LegacyDec {
-	// multiply precision twice
-	d.i.Mul(d.i, precisionReuse)
-	_, rem := d.i.QuoRem(d.i, d2.i, big.NewInt(0))
-	if rem.Sign() > 0 && d.IsNegative() == d2.IsNegative() ||
-		rem.Sign() < 0 && d.IsNegative() != d2.IsNegative() {
-		d.i.Add(d.i, oneInt)
-	}
-
-	if d.i.BitLen() > maxDecBitLen {
-		panic("Int overflow")
-	}
-	return d
-}
-
-// QuoInt quotient
-func (d LegacyDec) QuoInt(i Int) LegacyDec {
-	return d.ImmutOpInt(LegacyDec.QuoIntMut, i)
-}
-
-func (d LegacyDec) QuoIntMut(i Int) LegacyDec {
-	d.i.Quo(d.i, i.BigIntMut())
-	return d
-}
-
-// QuoInt64 quotient with int64
-func (d LegacyDec) QuoInt64(i int64) LegacyDec {
-	return d.ImmutOpInt64(LegacyDec.QuoInt64Mut, i)
-}
-
-func (d LegacyDec) QuoInt64Mut(i int64) LegacyDec {
-	d.i.Quo(d.i, big.NewInt(i))
-	return d
-}
-
-// ApproxRoot returns an approximate estimation of a Dec's positive real nth root
-// using Newton's method (where n is positive). The algorithm starts with some guess and
-// computes the sequence of improved guesses until an answer converges to an
-// approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
-// A maximum number of 100 iterations is used a backup boundary condition for
-// cases where the answer never converges enough to satisfy the main condition.
-func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			var ok bool
-			err, ok = r.(error)
-			if !ok {
-				err = errors.New("out of bounds")
-			}
+// SdkIntTrim rounds the decimal number towards zero to the nearest integer, then converts and returns it as `sdkmath.Int`.
+// It handles both positive and negative values correctly by truncating towards zero.
+// This function returns an ErrNonIntegral error if the resulting integer is larger than the maximum value that `sdkmath.Int` can represent.
+func (x Dec) SdkIntTrim() (Int, error) {
+	y, _ := x.Reduce()
+	r := y.dec.Coeff
+	if y.dec.Exponent != 0 {
+		decs := apd.NewBigInt(10)
+		if y.dec.Exponent > 0 {
+			decs.Exp(decs, apd.NewBigInt(int64(y.dec.Exponent)), nil)
+			r.Mul(&y.dec.Coeff, decs)
+		} else {
+			decs.Exp(decs, apd.NewBigInt(int64(-y.dec.Exponent)), nil)
+			r.Quo(&y.dec.Coeff, decs)
 		}
-	}()
-
-	if d.IsNegative() {
-		absRoot, err := d.Neg().ApproxRoot(root)
-		return absRoot.NegMut(), err
 	}
-
-	// One decimal, that we invalidate later. Helps us save a heap allocation.
-	scratchOneDec := LegacyOneDec()
-	if root == 1 || d.IsZero() || d.Equal(scratchOneDec) {
-		return d, nil
+	if x.dec.Negative {
+		r.Neg(&r)
 	}
-
-	if root == 0 {
-		return scratchOneDec, nil
+	bigInt := r.MathBigInt()
+	if bigInt.BitLen() > MaxBitLen {
+		return ZeroInt(), ErrNonIntegral
 	}
-
-	guess, delta := scratchOneDec, LegacyOneDec()
-
-	for iter := 0; iter < maxApproxRootIterations && delta.Abs().GT(smallestDec); iter++ {
-		prev := guess.Power(root - 1)
-		if prev.IsZero() {
-			prev = smallestDec
-		}
-		delta.Set(d).QuoMut(prev)
-		delta.SubMut(guess)
-		delta.QuoInt64Mut(int64(root))
-
-		guess.AddMut(delta)
-	}
-
-	return guess, nil
+	return NewIntFromBigInt(bigInt), nil
 }
 
-// Power returns the result of raising to a positive integer power
-func (d LegacyDec) Power(power uint64) LegacyDec {
-	res := LegacyDec{new(big.Int).Set(d.i)}
-	return res.PowerMut(power)
+// String formatted in decimal notation: '-ddddd.dddd', no exponent
+func (x Dec) String() string {
+	return string(fmtE(x.dec, 'E'))
 }
 
-func (d LegacyDec) PowerMut(power uint64) LegacyDec {
-	if power == 0 {
-		// Set to 1 with the correct precision.
-		d.i.Set(precisionReuse)
-		return d
-	}
-	tmp := LegacyOneDec()
-
-	for i := power; i > 1; {
-		if i%2 != 0 {
-			tmp.MulMut(d)
-		}
-		i /= 2
-		d.MulMut(d)
-	}
-
-	return d.MulMut(tmp)
-}
-
-// ApproxSqrt is a wrapper around ApproxRoot for the common special case
-// of finding the square root of a number. It returns -(sqrt(abs(d)) if input is negative.
-func (d LegacyDec) ApproxSqrt() (LegacyDec, error) {
-	return d.ApproxRoot(2)
-}
-
-// IsInteger is integer, e.g. decimals are zero
-func (d LegacyDec) IsInteger() bool {
-	return new(big.Int).Rem(d.i, precisionReuse).Sign() == 0
-}
-
-// Format format decimal state
-func (d LegacyDec) Format(s fmt.State, verb rune) {
-	_, err := s.Write([]byte(d.String()))
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (d LegacyDec) String() string {
-	if d.i == nil {
-		return d.i.String()
-	}
-
-	isNeg := d.IsNegative()
-
-	if isNeg {
-		d = d.Neg()
-	}
-
-	bzInt, err := d.i.MarshalText()
-	if err != nil {
-		return ""
-	}
-	inputSize := len(bzInt)
-
-	var bzStr []byte
-
-	// TODO: Remove trailing zeros
-	// case 1, purely decimal
-	if inputSize <= LegacyPrecision {
-		bzStr = make([]byte, LegacyPrecision+2)
-
-		// 0. prefix
-		bzStr[0] = byte('0')
-		bzStr[1] = byte('.')
-
-		// set relevant digits to 0
-		for i := 0; i < LegacyPrecision-inputSize; i++ {
-			bzStr[i+2] = byte('0')
-		}
-
-		// set final digits
-		copy(bzStr[2+(LegacyPrecision-inputSize):], bzInt)
-	} else {
-		// inputSize + 1 to account for the decimal point that is being added
-		bzStr = make([]byte, inputSize+1)
-		decPointPlace := inputSize - LegacyPrecision
-
-		copy(bzStr, bzInt[:decPointPlace])                   // pre-decimal digits
-		bzStr[decPointPlace] = byte('.')                     // decimal point
-		copy(bzStr[decPointPlace+1:], bzInt[decPointPlace:]) // post-decimal digits
-	}
-
-	if isNeg {
-		return "-" + string(bzStr)
-	}
-
-	return string(bzStr)
-}
-
-// Float64 returns the float64 representation of a Dec.
-// Will return the error if the conversion failed.
-func (d LegacyDec) Float64() (float64, error) {
-	return strconv.ParseFloat(d.String(), 64)
-}
-
-// MustFloat64 returns the float64 representation of a Dec.
-// Would panic if the conversion failed.
-func (d LegacyDec) MustFloat64() float64 {
-	if value, err := strconv.ParseFloat(d.String(), 64); err != nil {
-		panic(err)
-	} else {
-		return value
-	}
-}
-
-//     ____
-//  __|    |__   "chop 'em
-//       ` \     round!"
-// ___||  ~  _     -bankers
-// |         |      __
-// |       | |   __|__|__
-// |_____:  /   | $$$    |
-//              |________|
-
-// Remove a Precision amount of rightmost digits and perform bankers rounding
-// on the remainder (gaussian rounding) on the digits which have been removed.
+// Text converts the floating-point number x to a string according
+// to the given format. The format is one of:
 //
-// Mutates the input. Use the non-mutative version if that is undesired
-func chopPrecisionAndRound(d *big.Int) *big.Int {
-	// remove the negative and add it back when returning
-	if d.Sign() == -1 {
-		// make d positive, compute chopped value, and then un-mutate d
-		d = d.Neg(d)
-		d = chopPrecisionAndRound(d)
-		d = d.Neg(d)
-		return d
+//	'e'	-d.dddde±dd, decimal exponent, exponent digits
+//	'E'	-d.ddddE±dd, decimal exponent, exponent digits
+//	'f'	-ddddd.dddd, no exponent
+//	'g'	like 'e' for large exponents, like 'f' otherwise
+//	'G'	like 'E' for large exponents, like 'f' otherwise
+//
+// If format is a different character, Text returns a "%" followed by the
+// unrecognized.Format character. The 'f' format has the possibility of
+// displaying precision that is not present in the Decimal when it appends
+// zeros (the 'g' format avoids the use of 'f' in this case). All other
+// formats always show the exact precision of the Decimal.
+func (x Dec) Text(format byte) string {
+	return x.dec.Text(format)
+}
+
+// Cmp compares x and y and returns:
+// -1 if x <  y
+// 0 if x == y
+// +1 if x >  y
+// undefined if d or x are NaN
+func (x Dec) Cmp(y Dec) int {
+	return x.dec.Cmp(&y.dec)
+}
+
+// Equal checks if the decimal values of x and y are exactly equal.
+// It returns true if both decimals represent the same value, otherwise false.
+func (x Dec) Equal(y Dec) bool {
+	return x.dec.Cmp(&y.dec) == 0
+}
+
+// IsZero returns true if the decimal is zero.
+func (x Dec) IsZero() bool {
+	return x.dec.IsZero()
+}
+
+// IsNegative returns true if the decimal is negative.
+func (x Dec) IsNegative() bool {
+	return x.dec.Negative && !x.dec.IsZero()
+}
+
+// IsPositive returns true if the decimal is positive.
+func (x Dec) IsPositive() bool {
+	return !x.dec.Negative && !x.dec.IsZero()
+}
+
+// IsFinite returns true if the decimal is finite.
+func (x Dec) IsFinite() bool {
+	return x.dec.Form == apd.Finite
+}
+
+// NumDecimalPlaces returns the number of decimal places in x.
+func (x Dec) NumDecimalPlaces() uint32 {
+	exp := x.dec.Exponent
+	if exp >= 0 {
+		return 0
+	}
+	return uint32(-exp)
+}
+
+// Reduce returns a copy of x with all trailing zeros removed and the number of zeros that were removed.
+// It does not modify the original decimal.
+func (x Dec) Reduce() (Dec, int) {
+	y := Dec{}
+	_, n := y.dec.Reduce(&x.dec)
+	return y, n
+}
+
+// Marshal serializes the decimal value into a byte slice in text format.
+// This method represents the decimal in a portable and compact hybrid notation.
+// Based on the exponent value, the number is formatted into decimal: -ddddd.ddddd, no exponent
+// or scientific notation: -d.ddddE±dd
+//
+// For example, the following transformations are made:
+//   - 0 -> 0
+//   - 123 -> 123
+//   - 10000 -> 10000
+//   - -0.001 -> -0.001
+//   - -0.000000001 -> -1E-9
+//
+// Returns:
+//   - A byte slice of the decimal in text format.
+//   - An error if the decimal cannot be reduced or marshaled properly.
+func (x Dec) Marshal() ([]byte, error) {
+	var d apd.Decimal
+	if _, _, err := dec128Context.Reduce(&d, &x.dec); err != nil {
+		return nil, ErrInvalidDec.Wrap(err.Error())
+	}
+	return fmtE(d, 'E'), nil
+}
+
+// fmtE formats a decimal number into a byte slice in scientific notation or fixed-point notation depending on the exponent.
+// If the adjusted exponent is between -6 and 6 inclusive, it uses fixed-point notation, otherwise it uses scientific notation.
+func fmtE(d apd.Decimal, fmt byte) []byte {
+	var scratch, dest [16]byte
+	buf := dest[:0]
+	digits := d.Coeff.Append(scratch[:0], 10)
+	totalDigits := int64(len(digits))
+	adj := int64(d.Exponent) + totalDigits - 1
+	if adj > -6 && adj < 6 {
+		return []byte(d.Text('f'))
+	}
+	switch {
+	case totalDigits > 5:
+		beforeComma := digits[0 : totalDigits-6]
+		adj -= int64(len(beforeComma) - 1)
+		buf = append(buf, beforeComma...)
+		buf = append(buf, '.')
+		buf = append(buf, digits[totalDigits-6:]...)
+	case totalDigits > 1:
+		buf = append(buf, digits[0])
+		buf = append(buf, '.')
+		buf = append(buf, digits[1:]...)
+	default:
+		buf = append(buf, digits[0:]...)
 	}
 
-	// get the truncated quotient and remainder
-	quo, rem := d, big.NewInt(0)
-	quo, rem = quo.QuoRem(d, precisionReuse, rem)
-
-	if rem.Sign() == 0 { // remainder is zero
-		return quo
+	buf = append(buf, fmt)
+	var ch byte
+	if adj < 0 {
+		ch = '-'
+		adj = -adj
+	} else {
+		ch = '+'
 	}
-
-	switch rem.Cmp(fivePrecision) {
-	case -1:
-		return quo
-	case 1:
-		return quo.Add(quo, oneInt)
-	default: // bankers rounding must take place
-		// always round to an even number
-		if quo.Bit(0) == 0 {
-			return quo
-		}
-		return quo.Add(quo, oneInt)
-	}
+	buf = append(buf, ch)
+	return strconv.AppendInt(buf, adj, 10)
 }
 
-func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
-	// remove the negative and add it back when returning
-	if d.Sign() == -1 {
-		// make d positive, compute chopped value, and then un-mutate d
-		d = d.Neg(d)
-		// truncate since d is negative...
-		chopPrecisionAndTruncate(d)
-		d = d.Neg(d)
-		return d
-	}
-
-	// get the truncated quotient and remainder
-	quo, rem := d, big.NewInt(0)
-	quo, rem = quo.QuoRem(d, precisionReuse, rem)
-
-	if rem.Sign() == 0 { // remainder is zero
-		return quo
-	}
-
-	return quo.Add(quo, oneInt)
-}
-
-func chopPrecisionAndRoundNonMutative(d *big.Int) *big.Int {
-	tmp := new(big.Int).Set(d)
-	return chopPrecisionAndRound(tmp)
-}
-
-// RoundInt64 rounds the decimal using bankers rounding
-func (d LegacyDec) RoundInt64() int64 {
-	chopped := chopPrecisionAndRoundNonMutative(d.i)
-	if !chopped.IsInt64() {
-		panic("Int64() out of bound")
-	}
-	return chopped.Int64()
-}
-
-// RoundInt round the decimal using bankers rounding
-func (d LegacyDec) RoundInt() Int {
-	return NewIntFromBigIntMut(chopPrecisionAndRoundNonMutative(d.i))
-}
-
-// chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
-// but always rounds down. It does not mutate the input.
-func chopPrecisionAndTruncate(d *big.Int) {
-	d.Quo(d, precisionReuse)
-}
-
-func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {
-	tmp := new(big.Int).Set(d)
-	chopPrecisionAndTruncate(tmp)
-	return tmp
-}
-
-// TruncateInt64 truncates the decimals from the number and returns an int64
-func (d LegacyDec) TruncateInt64() int64 {
-	chopped := chopPrecisionAndTruncateNonMutative(d.i)
-	if !chopped.IsInt64() {
-		panic("Int64() out of bound")
-	}
-	return chopped.Int64()
-}
-
-// TruncateInt truncates the decimals from the number and returns an Int
-func (d LegacyDec) TruncateInt() Int {
-	return NewIntFromBigIntMut(chopPrecisionAndTruncateNonMutative(d.i))
-}
-
-// TruncateDec truncates the decimals from the number and returns a Dec
-func (d LegacyDec) TruncateDec() LegacyDec {
-	return LegacyNewDecFromBigInt(chopPrecisionAndTruncateNonMutative(d.i))
-}
-
-// Ceil returns the smallest integer value (as a decimal) that is greater than
-// or equal to the given decimal.
-func (d LegacyDec) Ceil() LegacyDec {
-	tmp := new(big.Int).Set(d.i)
-
-	quo, rem := tmp, big.NewInt(0)
-	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
-
-	// no need to round with a zero remainder regardless of sign
-	if rem.Sign() == 0 {
-		return LegacyNewDecFromBigInt(quo)
-	} else if rem.Sign() == -1 {
-		return LegacyNewDecFromBigInt(quo)
-	}
-
-	if d.i.BitLen() >= maxDecBitLen {
-		panic("Int overflow")
-	}
-
-	return LegacyNewDecFromBigInt(quo.Add(quo, oneInt))
-}
-
-// LegacyMaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
-// Its negative form is the least Dec that can be passed in.
-var LegacyMaxSortableDec LegacyDec
-
-func init() {
-	LegacyMaxSortableDec = LegacyOneDec().Quo(LegacySmallestDec())
-}
-
-// LegacyValidSortableDec ensures that a Dec is within the sortable bounds,
-// a Dec can't have a precision of less than 10^-18.
-// Max sortable decimal was set to the reciprocal of SmallestDec.
-func LegacyValidSortableDec(dec LegacyDec) bool {
-	return dec.Abs().LTE(LegacyMaxSortableDec)
-}
-
-// LegacySortableDecBytes returns a byte slice representation of a Dec that can be sorted.
-// Left and right pads with 0s so there are 18 digits to left and right of the decimal point.
-// For this reason, there is a maximum and minimum value for this, enforced by ValidSortableDec.
-func LegacySortableDecBytes(dec LegacyDec) []byte {
-	if !LegacyValidSortableDec(dec) {
-		panic("dec must be within bounds")
-	}
-	// Instead of adding an extra byte to all sortable decs in order to handle max sortable, we just
-	// makes its bytes be "max" which comes after all numbers in ASCIIbetical order
-	if dec.Equal(LegacyMaxSortableDec) {
-		return []byte("max")
-	}
-	// For the same reason, we make the bytes of minimum sortable dec be --, which comes before all numbers.
-	if dec.Equal(LegacyMaxSortableDec.Neg()) {
-		return []byte("--")
-	}
-	// We move the negative sign to the front of all the left padded 0s, to make negative numbers come before positive numbers
-	if dec.IsNegative() {
-		return append([]byte("-"), []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", LegacyPrecision*2+1), dec.Abs().String()))...)
-	}
-	return []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", LegacyPrecision*2+1), dec.String()))
-}
-
-// reuse nil values
-var nilJSON []byte
-
-func init() {
-	empty := new(big.Int)
-	bz, _ := empty.MarshalText()
-	nilJSON, _ = json.Marshal(string(bz))
-}
-
-// MarshalJSON marshals the decimal
-func (d LegacyDec) MarshalJSON() ([]byte, error) {
-	if d.i == nil {
-		return nilJSON, nil
-	}
-	return json.Marshal(d.String())
-}
-
-// UnmarshalJSON defines custom decoding scheme
-func (d *LegacyDec) UnmarshalJSON(bz []byte) error {
-	if d.i == nil {
-		d.i = new(big.Int)
-	}
-
-	var text string
-	err := json.Unmarshal(bz, &text)
+// Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
+// It returns an error if the byte slice does not represent a valid decimal.
+func (x *Dec) Unmarshal(data []byte) error {
+	result, err := NewDecFromString(string(data))
 	if err != nil {
-		return err
+		return ErrInvalidDec.Wrap(err.Error())
 	}
 
-	// TODO: Reuse dec allocation
-	newDec, err := LegacyNewDecFromStr(text)
-	if err != nil {
-		return err
+	if result.dec.Form != apd.Finite {
+		return ErrInvalidDec.Wrap("unknown decimal form")
 	}
 
-	d.i = newDec.i
+	x.dec = result.dec
 	return nil
 }
 
-// MarshalYAML returns the YAML representation.
-func (d LegacyDec) MarshalYAML() (interface{}, error) {
-	return d.String(), nil
-}
-
-// Marshal implements the gogo proto custom type interface.
-func (d LegacyDec) Marshal() ([]byte, error) {
-	i := d.i
-	if i == nil {
-		i = new(big.Int)
-	}
-	return i.MarshalText()
-}
-
-// MarshalTo implements the gogo proto custom type interface.
-func (d *LegacyDec) MarshalTo(data []byte) (n int, err error) {
-	i := d.i
-	if i == nil {
-		i = new(big.Int)
-	}
-
-	if i.Sign() == 0 {
-		copy(data, []byte{0x30})
-		return 1, nil
-	}
-
-	bz, err := d.Marshal()
+// MarshalTo encodes the receiver into the provided byte slice and returns the number of bytes written and any error encountered.
+func (x Dec) MarshalTo(data []byte) (n int, err error) {
+	bz, err := x.Marshal()
 	if err != nil {
 		return 0, err
 	}
 
-	copy(data, bz)
-	return len(bz), nil
+	return copy(data, bz), nil
 }
 
-// Unmarshal implements the gogo proto custom type interface.
-func (d *LegacyDec) Unmarshal(data []byte) error {
-	if len(data) == 0 {
-		d = nil
-		return nil
-	}
-
-	if d.i == nil {
-		d.i = new(big.Int)
-	}
-
-	if err := d.i.UnmarshalText(data); err != nil {
-		return err
-	}
-
-	if d.i.BitLen() > maxDecBitLen {
-		return fmt.Errorf("decimal out of range; got: %d, max: %d", d.i.BitLen(), maxDecBitLen)
-	}
-
-	return nil
-}
-
-// Size implements the gogo proto custom type interface.
-func (d *LegacyDec) Size() int {
-	bz, _ := d.Marshal()
+// Size returns the number of bytes required to encode the Dec value, which is useful for determining storage requirements.
+func (x Dec) Size() int {
+	bz, _ := x.Marshal()
 	return len(bz)
 }
 
-// MarshalAmino Override Amino binary serialization by proxying to protobuf.
-func (d LegacyDec) MarshalAmino() ([]byte, error)   { return d.Marshal() }
-func (d *LegacyDec) UnmarshalAmino(bz []byte) error { return d.Unmarshal(bz) }
-
-// helpers
-
-// LegacyDecsEqual return true if two decimal arrays are equal.
-func LegacyDecsEqual(d1s, d2s []LegacyDec) bool {
-	if len(d1s) != len(d2s) {
-		return false
-	}
-
-	for i, d1 := range d1s {
-		if !d1.Equal(d2s[i]) {
-			return false
-		}
-	}
-	return true
+// MarshalJSON serializes the Dec struct into a JSON-encoded byte slice using scientific notation.
+func (x Dec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(fmtE(x.dec, 'E'))
 }
 
-// LegacyMinDec minimum decimal between two
-func LegacyMinDec(d1, d2 LegacyDec) LegacyDec {
-	if d1.LT(d2) {
-		return d1
-	}
-	return d2
-}
-
-// LegacyMaxDec maximum decimal between two
-func LegacyMaxDec(d1, d2 LegacyDec) LegacyDec {
-	if d1.LT(d2) {
-		return d2
-	}
-	return d1
-}
-
-// LegacyDecEq intended to be used with require/assert:  require.True(DecEq(...))
-func LegacyDecEq(t *testing.T, exp, got LegacyDec) (*testing.T, bool, string, string, string) {
-	t.Helper()
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
-
-func LegacyDecApproxEq(t *testing.T, d1, d2, tol LegacyDec) (*testing.T, bool, string, string, string) {
-	t.Helper()
-	diff := d1.Sub(d2).Abs()
-	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
-}
-
-// FormatDec formats a decimal (as encoded in protobuf) into a value-rendered
-// string following ADR-050. This function operates with string manipulation
-// (instead of manipulating the sdk.Dec object).
-func FormatDec(v string) (string, error) {
-	parts := strings.Split(v, ".")
-	if len(parts) > 2 {
-		return "", fmt.Errorf("invalid decimal: too many points in %s", v)
-	}
-
-	intPart, err := FormatInt(parts[0])
+// UnmarshalJSON implements the json.Unmarshaler interface for the Dec type, converting JSON strings to Dec objects.
+func (x *Dec) UnmarshalJSON(data []byte) error {
+	var text string
+	err := json.Unmarshal(data, &text)
 	if err != nil {
-		return "", err
+		return err
 	}
-
-	if len(parts) == 1 {
-		return intPart, nil
+	val, err := NewDecFromString(text)
+	if err != nil {
+		return err
 	}
-
-	decPart := strings.TrimRight(parts[1], "0")
-	if len(decPart) == 0 {
-		return intPart, nil
-	}
-
-	// Ensure that the decimal part has only digits.
-	// https://github.com/cosmos/cosmos-sdk/issues/12811
-	if !hasOnlyDigits(decPart) {
-		return "", fmt.Errorf("non-digits detected after decimal point in: %q", decPart)
-	}
-
-	return intPart + "." + decPart, nil
+	*x = val
+	return nil
 }

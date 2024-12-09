@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"errors"
+	"context"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -11,7 +12,8 @@ import (
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api/grpc"
+	grpcserver "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/grpcgateway"
 	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
@@ -22,9 +24,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -39,7 +47,10 @@ type CommandDependencies[T transaction.Tx] struct {
 	TxConfig      client.TxConfig
 	ModuleManager *runtimev2.MM[T]
 	SimApp        *simapp.SimApp[T]
-	Consensus     serverv2.ServerComponent[T]
+	// could generally be more generic with serverv2.ServerComponent[T]
+	// however, we want to register extra grpc handlers
+	ConsensusServer *cometbft.CometBFTServer[T]
+	ClientContext   client.Context
 }
 
 func InitRootCmd[T transaction.Tx](
@@ -61,75 +72,106 @@ func InitRootCmd[T transaction.Tx](
 		txCommand(),
 		keys.Commands(),
 		offchain.OffChain(),
+		version.NewVersionCommand(),
 	)
 
 	// build CLI skeleton for initial config parsing or a client application invocation
 	if deps.SimApp == nil {
-		if deps.Consensus == nil {
-			deps.Consensus = cometbft.NewWithConfigOptions[T](initCometConfig())
+		if deps.ConsensusServer == nil {
+			deps.ConsensusServer = cometbft.NewWithConfigOptions[T](initCometConfig())
 		}
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
+			io.NopCloser(nil),
 			deps.GlobalConfig,
 			initServerConfig(),
-			deps.Consensus,
-			&grpc.Server[T]{},
+			deps.ConsensusServer,
+			&grpcserver.Server[T]{},
 			&serverstore.Server[T]{},
 			&telemetry.Server[T]{},
 			&rest.Server[T]{},
+			&grpcgateway.Server[T]{},
 		)
 	}
 
 	// build full app!
 	simApp := deps.SimApp
-	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, deps.GlobalConfig)
-	if err != nil {
-		return nil, err
-	}
+
 	// store component (not a server)
 	storeComponent, err := serverstore.New[T](simApp.Store(), deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
-	restServer, err := rest.New[T](simApp.App.AppManager, logger, deps.GlobalConfig)
+	restServer, err := rest.New[T](logger, simApp.App.AppManager, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	// consensus component
-	if deps.Consensus == nil {
-		deps.Consensus, err = cometbft.New(
+	if deps.ConsensusServer == nil {
+		deps.ConsensusServer, err = cometbft.New(
 			logger,
 			simApp.Name(),
 			simApp.Store(),
 			simApp.App.AppManager,
+			simApp.AppCodec(),
+			&client.DefaultTxDecoder[T]{TxConfig: deps.TxConfig},
 			simApp.App.QueryHandlers(),
 			simApp.App.SchemaDecoderResolver(),
-			&genericTxDecoder[T]{deps.TxConfig},
-			deps.GlobalConfig,
 			initCometOptions[T](),
+			deps.GlobalConfig,
 		)
 		if err != nil {
 			return nil, err
 		}
 	}
-	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger)
+
+	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger, sdktelemetry.EnableTelemetry)
 	if err != nil {
 		return nil, err
 	}
+
+	grpcServer, err := grpcserver.New[T](
+		logger,
+		simApp.InterfaceRegistry(),
+		simApp.QueryHandlers(),
+		simApp.Query,
+		deps.GlobalConfig,
+		grpcserver.WithExtraGRPCHandlers[T](
+			deps.ConsensusServer.GRPCServiceRegistrar(
+				deps.ClientContext,
+				deps.GlobalConfig,
+			),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	grpcgatewayServer, err := grpcgateway.New[T](
+		logger,
+		deps.GlobalConfig,
+		simApp.InterfaceRegistry(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	registerGRPCGatewayRoutes[T](deps, grpcgatewayServer)
 
 	// wire server commands
 	return serverv2.AddCommands[T](
 		rootCmd,
 		logger,
+		simApp,
 		deps.GlobalConfig,
 		initServerConfig(),
-		deps.Consensus,
+		deps.ConsensusServer,
 		grpcServer,
 		storeComponent,
 		telemetryServer,
 		restServer,
+		grpcgatewayServer,
 	)
 }
 
@@ -221,42 +263,21 @@ func RootCommandPersistentPreRun(clientCtx client.Context) func(*cobra.Command, 
 	}
 }
 
-var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}
+// registerGRPCGatewayRoutes registers the gRPC gateway routes for all modules and other components
+// TODO(@julienrbrt): Eventually, this should removed and directly done within the grpcgateway.Server
+// ref: https://github.com/cosmos/cosmos-sdk/pull/22701#pullrequestreview-2470651390
+func registerGRPCGatewayRoutes[T transaction.Tx](
+	deps CommandDependencies[T],
+	server *grpcgateway.Server[T],
+) {
+	// those are the extra services that the CometBFT server implements (server/v2/cometbft/grpc.go)
+	cmtservice.RegisterGRPCGatewayRoutes(deps.ClientContext, server.GRPCGatewayRouter)
+	_ = nodeservice.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, nodeservice.NewServiceClient(deps.ClientContext))
+	_ = txtypes.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, txtypes.NewServiceClient(deps.ClientContext))
 
-type genericTxDecoder[T transaction.Tx] struct {
-	txConfig client.TxConfig
-}
-
-// Decode implements transaction.Codec.
-func (t *genericTxDecoder[T]) Decode(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxDecoder()(bz)
-	if err != nil {
-		return out, err
+	for _, mod := range deps.ModuleManager.Modules() {
+		if gmod, ok := mod.(module.HasGRPCGateway); ok {
+			gmod.RegisterGRPCGatewayRoutes(deps.ClientContext, server.GRPCGatewayRouter)
+		}
 	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
-// DecodeJSON implements transaction.Codec.
-func (t *genericTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxJSONDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
 }

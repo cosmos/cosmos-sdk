@@ -5,47 +5,65 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	clientcontext "cosmossdk.io/client/v2/context"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
-func Test_sign(t *testing.T) {
+func TestSign(t *testing.T) {
+	ac := address.NewBech32Codec("cosmos")
+	vc := address.NewBech32Codec("cosmosvaloper")
 	k := keyring.NewInMemory(getCodec())
+	_, err := k.NewAccount("signVerify", mnemonic, "", "m/44'/118'/0'/0/0", hd.Secp256k1)
+	require.NoError(t, err)
 
-	ctx := client.Context{
-		Keyring:      k,
-		TxConfig:     newTestConfig(t),
-		AddressCodec: address.NewBech32Codec("cosmos"),
-	}
+	autoKeyring, err := keyring.NewAutoCLIKeyring(k, ac)
+	require.NoError(t, err)
 
-	type args struct {
-		ctx      client.Context
-		fromName string
-		digest   string
+	ctx := clientcontext.Context{
+		AddressCodec:          ac,
+		ValidatorAddressCodec: vc,
+		Cdc:                   getCodec(),
+		Keyring:               autoKeyring,
 	}
 	tests := []struct {
-		name string
-		args args
+		name     string
+		rawBytes []byte
+		encoding string
+		signMode string
+		wantErr  bool
 	}{
 		{
-			name: "Sign",
-			args: args{
-				ctx:      ctx,
-				fromName: "direct",
-				digest:   "Hello world!",
-			},
+			name:     "sign direct",
+			rawBytes: []byte("hello world"),
+			encoding: noEncoder,
+			signMode: "direct",
+		},
+		{
+			name:     "sign amino",
+			rawBytes: []byte("hello world"),
+			encoding: noEncoder,
+			signMode: "amino-json",
+		},
+		{
+			name:     "not supported sign mode",
+			rawBytes: []byte("hello world"),
+			encoding: noEncoder,
+			signMode: "textual",
+			wantErr:  true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := k.NewAccount(tt.args.fromName, mnemonic, tt.name, "m/44'/118'/0'/0/0", hd.Secp256k1)
-			require.NoError(t, err)
-
-			got, err := sign(tt.args.ctx, tt.args.fromName, tt.args.digest)
-			require.NoError(t, err)
-			require.NotNil(t, got)
+			got, err := Sign(ctx, tt.rawBytes, mockClientConn{}, "signVerify", tt.encoding, tt.signMode, "json")
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, got)
+			}
 		})
 	}
 }

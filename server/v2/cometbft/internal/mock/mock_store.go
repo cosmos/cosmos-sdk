@@ -11,19 +11,10 @@ import (
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
 type MockStore struct {
-	Storage   storev2.VersionedWriter
 	Committer storev2.Committer
-}
-
-func NewMockStorage(logger log.Logger, dir string) storev2.VersionedWriter {
-	storageDB, _ := sqlite.New(dir)
-	ss := storage.NewStorageStore(storageDB, logger)
-	return ss
 }
 
 func NewMockCommiter(logger log.Logger, actors ...string) storev2.Committer {
@@ -36,8 +27,8 @@ func NewMockCommiter(logger log.Logger, actors ...string) storev2.Committer {
 	return sc
 }
 
-func NewMockStore(ss storev2.VersionedWriter, sc storev2.Committer) *MockStore {
-	return &MockStore{Storage: ss, Committer: sc}
+func NewMockStore(sc storev2.Committer) *MockStore {
+	return &MockStore{Committer: sc}
 }
 
 func (s *MockStore) GetLatestVersion() (uint64, error) {
@@ -59,19 +50,12 @@ func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
 }
 
 func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, error) {
-	v, _, _ := s.StateLatest()
-	err := s.Storage.ApplyChangeset(v, changeset)
+	err := s.Committer.WriteChangeset(changeset)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	err = s.Committer.WriteChangeset(changeset)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	commitInfo, err := s.Committer.Commit(v + 1)
-	fmt.Println("commitInfo", commitInfo, err)
+	_, err = s.Committer.Commit(changeset.Version)
 	return []byte{}, err
 }
 
@@ -81,10 +65,6 @@ func (s *MockStore) StateAt(version uint64) (corestore.ReaderMap, error) {
 		return nil, fmt.Errorf("failed to get commit info for version %d: %w", version, err)
 	}
 	return NewMockReaderMap(version, s), nil
-}
-
-func (s *MockStore) GetStateStorage() storev2.VersionedWriter {
-	return s.Storage
 }
 
 func (s *MockStore) GetStateCommitment() storev2.Committer {
@@ -126,18 +106,4 @@ func (s *MockStore) LastCommitID() (proof.CommitID, error) {
 
 func (s *MockStore) SetInitialVersion(v uint64) error {
 	return s.Committer.SetInitialVersion(v)
-}
-
-func (s *MockStore) WorkingHash(changeset *corestore.Changeset) (corestore.Hash, error) {
-	v, _, _ := s.StateLatest()
-	err := s.Storage.ApplyChangeset(v, changeset)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	err = s.Committer.WriteChangeset(changeset)
-	if err != nil {
-		return []byte{}, err
-	}
-	return []byte{}, nil
 }

@@ -4,14 +4,12 @@ package bls12_381
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/bls12381"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-
-	bls12381 "github.com/cosmos/crypto/curves/bls12381"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -32,20 +30,20 @@ var (
 
 // NewPrivateKeyFromBytes build a new key from the given bytes.
 func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
-	secretKey, err := bls12381.SecretKeyFromBytes(bz)
+	secretKey, err := bls12381.NewPrivateKeyFromBytes(bz)
 	if err != nil {
 		return PrivKey{}, err
 	}
 	return PrivKey{
-		Key: secretKey.Marshal(),
+		Key: secretKey.Bytes(),
 	}, nil
 }
 
 // GenPrivKey generates a new key.
 func GenPrivKey() (PrivKey, error) {
-	secretKey, err := bls12381.RandKey()
+	secretKey, err := bls12381.GenPrivKey()
 	return PrivKey{
-		Key: secretKey.Marshal(),
+		Key: secretKey.Bytes(),
 	}, err
 }
 
@@ -57,13 +55,13 @@ func (privKey PrivKey) Bytes() []byte {
 // PubKey returns the private key's public key. If the privkey is not valid
 // it returns a nil value.
 func (privKey PrivKey) PubKey() cryptotypes.PubKey {
-	secretKey, err := bls12381.SecretKeyFromBytes(privKey.Key)
+	secretKey, err := bls12381.NewPrivateKeyFromBytes(privKey.Key)
 	if err != nil {
 		return nil
 	}
 
 	return &PubKey{
-		Key: secretKey.PublicKey().Marshal(),
+		Key: secretKey.PubKey().Bytes(),
 	}
 }
 
@@ -74,24 +72,18 @@ func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 
 // Type returns the type.
 func (PrivKey) Type() string {
-	return KeyType
+	return bls12381.KeyType
 }
 
 // Sign signs the given byte array. If msg is larger than
 // MaxMsgLen, SHA256 sum will be signed instead of the raw bytes.
 func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
-	secretKey, err := bls12381.SecretKeyFromBytes(privKey.Key)
+	secretKey, err := bls12381.NewPrivateKeyFromBytes(privKey.Key)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(msg) > MaxMsgLen {
-		hash := sha256.Sum256(msg)
-		sig := secretKey.Sign(hash[:])
-		return sig.Marshal(), nil
-	}
-	sig := secretKey.Sign(msg)
-	return sig.Marshal(), nil
+	return secretKey.Sign(msg)
 }
 
 // MarshalAmino overrides Amino binary marshaling.
@@ -101,7 +93,7 @@ func (privKey PrivKey) MarshalAmino() ([]byte, error) {
 
 // UnmarshalAmino overrides Amino binary marshaling.
 func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
-	if len(bz) != PrivKeySize {
+	if len(bz) != bls12381.PrivKeySize {
 		return errors.New("invalid privkey size")
 	}
 	privKey.Key = bz
@@ -135,8 +127,8 @@ var _ cryptotypes.PubKey = &PubKey{}
 //
 // The function will panic if the public key is invalid.
 func (pubKey PubKey) Address() crypto.Address {
-	pk, _ := bls12381.PublicKeyFromBytes(pubKey.Key)
-	if len(pk.Marshal()) != PubKeySize {
+	pk, _ := bls12381.NewPublicKeyFromBytes(pubKey.Key)
+	if len(pk.Bytes()) != bls12381.PubKeySize {
 		panic("pubkey is incorrect size")
 	}
 	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
@@ -144,26 +136,16 @@ func (pubKey PubKey) Address() crypto.Address {
 
 // VerifySignature verifies the given signature.
 func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
-	if len(sig) != SignatureLength {
+	if len(sig) != bls12381.SignatureLength {
 		return false
 	}
 
-	pubK, err := bls12381.PublicKeyFromBytes(pubKey.Key)
+	pubK, err := bls12381.NewPublicKeyFromBytes(pubKey.Key)
 	if err != nil { // invalid pubkey
 		return false
 	}
 
-	if len(msg) > MaxMsgLen {
-		hash := sha256.Sum256(msg)
-		msg = hash[:]
-	}
-
-	ok, err := bls12381.VerifySignature(sig, [MaxMsgLen]byte(msg[:MaxMsgLen]), pubK)
-	if err != nil { // bad signature
-		return false
-	}
-
-	return ok
+	return pubK.VerifySignature(msg, sig)
 }
 
 // Bytes returns the byte format.
@@ -173,7 +155,7 @@ func (pubKey PubKey) Bytes() []byte {
 
 // Type returns the key's type.
 func (PubKey) Type() string {
-	return KeyType
+	return bls12381.KeyType
 }
 
 // Equals returns true if the other's type is the same and their bytes are deeply equal.

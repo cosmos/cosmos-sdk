@@ -46,17 +46,9 @@ type sdkBuildInfo struct {
 	cometServerVersion string
 }
 
-func getSDKBuildInfo() sdkBuildInfo {
-	buildInfo := sdkBuildInfo{
-		sdkVersion: "unable to read deps",
-	}
-
-	deps, ok := debug.ReadBuildInfo()
-	if !ok {
-		return buildInfo
-	}
-
-	for _, dep := range deps.Deps {
+func getSDKBuildInfo(debugBuildInfo *debug.BuildInfo) sdkBuildInfo {
+	var buildInfo sdkBuildInfo
+	for _, dep := range debugBuildInfo.Deps {
 		switch dep.Path {
 		case "github.com/cosmos/cosmos-sdk":
 			buildInfo.sdkVersion = extractBuildInfo(dep)
@@ -100,20 +92,27 @@ type Info struct {
 }
 
 func NewInfo() Info {
-	buildInfo := getSDKBuildInfo()
-	return Info{
-		Name:               Name,
-		AppName:            AppName,
-		Version:            Version,
-		GitCommit:          Commit,
-		BuildTags:          BuildTags,
-		GoVersion:          fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
-		BuildDeps:          depsFromBuildInfo(),
-		CosmosSdkVersion:   buildInfo.sdkVersion,
-		RuntimeVersion:     buildInfo.runtimeVersion,
-		StfVersion:         buildInfo.stfVersion,
-		CometServerVersion: buildInfo.cometServerVersion,
+	info := Info{
+		Name:             Name,
+		AppName:          AppName,
+		Version:          Version,
+		GitCommit:        Commit,
+		BuildTags:        BuildTags,
+		GoVersion:        fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
+		CosmosSdkVersion: "unable to read deps",
 	}
+
+	debugBuildInfo, ok := debug.ReadBuildInfo()
+	if ok {
+		info.BuildDeps = depsFromBuildInfo(debugBuildInfo)
+		sdkBuildInfo := getSDKBuildInfo(debugBuildInfo)
+		info.CometServerVersion = sdkBuildInfo.sdkVersion
+		info.RuntimeVersion = sdkBuildInfo.runtimeVersion
+		info.StfVersion = sdkBuildInfo.stfVersion
+		info.CometServerVersion = sdkBuildInfo.cometServerVersion
+	}
+
+	return info
 }
 
 func (vi Info) String() string {
@@ -125,13 +124,8 @@ build tags: %s
 	)
 }
 
-func depsFromBuildInfo() (deps []buildDep) {
-	buildInfo, ok := debug.ReadBuildInfo()
-	if !ok {
-		return nil
-	}
-
-	for _, dep := range buildInfo.Deps {
+func depsFromBuildInfo(debugBuildInfo *debug.BuildInfo) (deps []buildDep) {
+	for _, dep := range debugBuildInfo.Deps {
 		deps = append(deps, buildDep{dep})
 	}
 

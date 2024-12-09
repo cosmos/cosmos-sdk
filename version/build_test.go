@@ -116,7 +116,7 @@ func Test_extractVersionFromBuildInfo(t *testing.T) {
 }
 
 func Test_depsFromBuildInfo(t *testing.T) {
-	var modules = []*debug.Module{
+	modules := []*debug.Module{
 		{
 			Path:    "github.com/cosmos/cosmos-sdk",
 			Version: "v2.0.0",

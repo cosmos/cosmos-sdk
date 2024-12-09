@@ -212,6 +212,21 @@ func TestAuthzAuthorizations(t *testing.T) {
 			},
 		},
 		{
+			"delegate: testing empty denyList and allowList",
+			[]sdk.ValAddress{},
+			[]sdk.ValAddress{},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+			nil,
+			stakingtypes.NewMsgDelegate(accAddressToString(t, delAddr), valAddressToString(t, val2), coin100),
+			false,
+			false,
+			&stakingtypes.StakeAuthorization{
+				Validators: &stakingtypes.StakeAuthorization_DenyList{
+					DenyList: &stakingtypes.StakeAuthorization_Validators{Address: []string{}},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+			},
+		},
+		{
 			"undelegate: expect 0 remaining coins",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},

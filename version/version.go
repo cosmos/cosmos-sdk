@@ -107,7 +107,7 @@ func NewInfo() Info {
 	if ok {
 		info.BuildDeps = depsFromBuildInfo(debugBuildInfo)
 		sdkBuildInfo := getSDKBuildInfo(debugBuildInfo)
-		info.CometServerVersion = sdkBuildInfo.sdkVersion
+		info.CosmosSdkVersion = sdkBuildInfo.sdkVersion
 		info.RuntimeVersion = sdkBuildInfo.runtimeVersion
 		info.StfVersion = sdkBuildInfo.stfVersion
 		info.CometServerVersion = sdkBuildInfo.cometServerVersion

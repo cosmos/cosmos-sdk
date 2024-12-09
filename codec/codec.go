@@ -41,7 +41,7 @@ type (
 
 		// mustEmbedCodec requires that all implementations of Codec embed an official implementation from the codec
 		// package. This allows new methods to be added to the Codec interface without breaking backwards compatibility.
-		mustEmbedCodec()
+		// mustEmbedCodec()
 	}
 
 	BinaryCodec interface {

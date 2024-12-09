@@ -13,5 +13,8 @@ import (
 func MigrateStore(ctx context.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	store.Delete(ValidatorUpdatesKey)
 	store.Delete(HistoricalInfoKey)
+	store.Delete(UnbondingIDKey)
+	store.Delete(UnbondingIndexKey)
+	store.Delete(UnbondingTypeKey)
 	return nil
 }

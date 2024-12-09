@@ -100,7 +100,6 @@ func TestAppImportExport(t *testing.T) {
 		skipPrefixes := map[string][][]byte{
 			stakingtypes.StoreKey: {
 				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
-				stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey,
 			},
 			authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
 			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},

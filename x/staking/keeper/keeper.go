@@ -70,17 +70,12 @@ type Keeper struct {
 	LastTotalPower collections.Item[math.Int]
 	// DelegationsByValidator key: valAddr+delAddr | value: none used (index key for delegations by validator index)
 	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
-	UnbondingID            collections.Sequence
 	// ValidatorByConsensusAddress key: consAddr | value: valAddr
 	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
-	// UnbondingType key: unbondingID | value: index of UnbondingType
-	UnbondingType collections.Map[uint64, uint64]
 	// Redelegations key: AccAddr+SrcValAddr+DstValAddr | value: Redelegation
 	Redelegations collections.Map[collections.Triple[[]byte, []byte, []byte], types.Redelegation]
 	// Delegations key: AccAddr+valAddr | value: Delegation
 	Delegations collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.Delegation]
-	// UnbondingIndex key:UnbondingID | value: ubdKey (ubdKey = [UnbondingDelegationKey(Prefix)+len(delAddr)+delAddr+len(valAddr)+valAddr])
-	UnbondingIndex collections.Map[uint64, []byte]
 	// UnbondingQueue key: Timestamp | value: DVPairs [delAddr+valAddr]
 	UnbondingQueue collections.Map[time.Time, types.DVPairs]
 	// Validators key: valAddr | value: Validator
@@ -178,14 +173,12 @@ func NewKeeper(
 			),
 			collections.BytesValue,
 		),
-		UnbondingID: collections.NewSequence(sb, types.UnbondingIDKey, "unbonding_id"),
 		ValidatorByConsensusAddress: collections.NewMap(
 			sb, types.ValidatorsByConsAddrKey,
 			"validator_by_cons_addr",
 			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey).WithName("cons_address"), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
-		UnbondingType: collections.NewMap(sb, types.UnbondingTypeKey, "unbonding_type", collections.Uint64Key.WithName("unbonding_id"), collections.Uint64Value),
 		// key format is: 52 | lengthPrefixedBytes(AccAddr) | lengthPrefixedBytes(SrcValAddr) | lengthPrefixedBytes(DstValAddr)
 		Redelegations: collections.NewMap(
 			sb, types.RedelegationKey,
@@ -200,7 +193,6 @@ func NewKeeper(
 			),
 			codec.CollValue[types.Redelegation](cdc),
 		),
-		UnbondingIndex: collections.NewMap(sb, types.UnbondingIndexKey, "unbonding_index", collections.Uint64Key.WithName("index"), collections.BytesValue.WithName("ubd_key")),
 		UnbondingDelegationByValIndex: collections.NewMap(
 			sb, types.UnbondingDelegationByValIndexKey,
 			"unbonding_delegation_by_val_index",

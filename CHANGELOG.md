@@ -37,6 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.47.15](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.15) - 2024-12-12
+
+* Bump `cosmossdk.io/math` to v1.4.
+* 
+
 ## [v0.47.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.14) - 2024-09-20
 
 ### Improvements

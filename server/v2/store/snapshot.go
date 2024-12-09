@@ -375,10 +375,11 @@ func createSnapshotsManager(
 	}
 
 	sm := snapshots.NewManager(
-		snapshotStore, snapshots.NewSnapshotOptions(interval, uint32(keepRecent)),
+		snapshotStore,
+		snapshots.NewSnapshotOptions(interval, uint32(keepRecent)),
 		store.GetStateCommitment().(snapshots.CommitSnapshotter),
-		store.GetStateStorage().(snapshots.StorageSnapshotter),
-		nil, logger)
+		nil,
+		logger)
 	return sm, nil
 }
 

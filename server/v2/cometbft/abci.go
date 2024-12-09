@@ -62,9 +62,9 @@ type consensus[T transaction.Tx] struct {
 	streamingManager streaming.Manager
 	mempool          mempool.Mempool[T]
 
-	cfg           Config
-	chainID       string
-	indexedEvents map[string]struct{}
+	cfg               Config
+	chainID           string
+	indexedABCIEvents map[string]struct{}
 
 	initialHeight uint64
 	// this is only available after this node has committed a block (in FinalizeBlock),
@@ -105,9 +105,16 @@ func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 			return nil, err
 		}
 
-		events, err := intoABCIEvents(resp.Events, c.indexedEvents)
-		if err != nil {
-			return nil, err
+		events := make([]abci.Event, 0)
+		if !c.cfg.AppTomlConfig.DisableABCIEvents {
+			events, err = intoABCIEvents(
+				resp.Events,
+				c.indexedABCIEvents,
+				c.cfg.AppTomlConfig.DisableIndexABCIEvents,
+			)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		cometResp := &abciproto.CheckTxResponse{
@@ -116,6 +123,7 @@ func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 			GasUsed:   uint64ToInt64(resp.GasUsed),
 			Events:    events,
 		}
+
 		if resp.Error != nil {
 			space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
 			cometResp.Code = code
@@ -180,7 +188,7 @@ func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	// it must be an app/p2p/store query
 	path := splitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.AppTomlConfig.Trace), nil
+		return queryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.AppTomlConfig.Trace), nil
 	}
 
 	switch path[0] {
@@ -194,11 +202,11 @@ func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		resp, err = c.handleQueryP2P(path)
 
 	default:
-		resp = QueryResult(errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query path %s", req.Path), c.cfg.AppTomlConfig.Trace)
+		resp = queryResult(errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query path %s", req.Path), c.cfg.AppTomlConfig.Trace)
 	}
 
 	if err != nil {
-		return QueryResult(err, c.cfg.AppTomlConfig.Trace), nil
+		return queryResult(err, c.cfg.AppTomlConfig.Trace), nil
 	}
 
 	return resp, nil
@@ -283,11 +291,12 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 	if err != nil {
 		return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
 	}
+
 	res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 	if err != nil {
-		resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
+		resp := gRPCErrorToSDKError(err)
 		resp.Height = req.Height
-		return resp, true, err
+		return resp, true, nil
 	}
 
 	resp, err = queryResponse(res, req.Height)
@@ -557,7 +566,13 @@ func (c *consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents, c.cfg.AppTomlConfig.Trace)
+	return finalizeBlockResponse(
+		resp,
+		cp,
+		appHash,
+		c.indexedABCIEvents,
+		c.cfg.AppTomlConfig,
+	)
 }
 
 func (c *consensus[T]) internalFinalizeBlock(

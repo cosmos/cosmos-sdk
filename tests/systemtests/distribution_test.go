@@ -129,10 +129,10 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 
 	paramsTestCases := []systest.RestTestCase{
 		{
-			"gRPC request params",
-			paramsURL,
-			http.StatusOK,
-			`{"params":{"community_tax":"0.020000000000000000","base_proposer_reward":"0.000000000000000000","bonus_proposer_reward":"0.000000000000000000","withdraw_addr_enabled":true}}`,
+			Name:    "gRPC request params",
+			Url:     paramsURL,
+			ExpCode: http.StatusOK,
+			ExpOut:  `{"params":{"community_tax":"0.020000000000000000","base_proposer_reward":"0.000000000000000000","bonus_proposer_reward":"0.000000000000000000","withdraw_addr_enabled":true}}`,
 		},
 	}
 	systest.RunRestQueries(t, paramsTestCases...)
@@ -143,39 +143,39 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 
 	validatorsTestCases := []systest.RestTestCase{
 		{
-			"gRPC request validator with valid validator address",
-			fmt.Sprintf(validatorsURL, valOperAddr),
-			http.StatusOK,
-			validatorsOutput,
+			Name:    "gRPC request validator with valid validator address",
+			Url:     fmt.Sprintf(validatorsURL, valOperAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  validatorsOutput,
 		},
 	}
-	systest.TestRestQueryIgnoreNumbers(t, validatorsTestCases...)
+	systest.RunRestQueriesIgnoreNumbers(t, validatorsTestCases...)
 
 	// test outstanding rewards grpc endpoint
 	outstandingRewardsURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards`
 
 	rewardsTestCases := []systest.RestTestCase{
 		{
-			"gRPC request outstanding rewards with valid validator address",
-			fmt.Sprintf(outstandingRewardsURL, valOperAddr),
-			http.StatusOK,
-			fmt.Sprintf(`{"rewards":{"rewards":[%s]}}`, expectedAmountOutput),
+			Name:    "gRPC request outstanding rewards with valid validator address",
+			Url:     fmt.Sprintf(outstandingRewardsURL, valOperAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"rewards":{"rewards":[%s]}}`, expectedAmountOutput),
 		},
 	}
-	systest.TestRestQueryIgnoreNumbers(t, rewardsTestCases...)
+	systest.RunRestQueriesIgnoreNumbers(t, rewardsTestCases...)
 
 	// test validator commission grpc endpoint
 	commissionURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/commission`
 
 	commissionTestCases := []systest.RestTestCase{
 		{
-			"gRPC request commission with valid validator address",
-			fmt.Sprintf(commissionURL, valOperAddr),
-			http.StatusOK,
-			fmt.Sprintf(`{"commission":{"commission":[%s]}}`, expectedAmountOutput),
+			Name:    "gRPC request commission with valid validator address",
+			Url:     fmt.Sprintf(commissionURL, valOperAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"commission":{"commission":[%s]}}`, expectedAmountOutput),
 		},
 	}
-	systest.TestRestQueryIgnoreNumbers(t, commissionTestCases...)
+	systest.RunRestQueriesIgnoreNumbers(t, commissionTestCases...)
 
 	// test validator slashes grpc endpoint
 	slashURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/slashes`
@@ -183,25 +183,25 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 
 	slashTestCases := []systest.RestTestCase{
 		{
-			"invalid start height",
-			fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "-3", "3"),
-			http.StatusBadRequest,
-			invalidHeightOutput,
+			Name:    "invalid start height",
+			Url:     fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "-3", "3"),
+			ExpCode: http.StatusBadRequest,
+			ExpOut:  invalidHeightOutput,
 		},
 		{
-			"invalid end height",
-			fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "1", "-3"),
-			http.StatusBadRequest,
-			invalidHeightOutput,
+			Name:    "invalid end height",
+			Url:     fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "1", "-3"),
+			ExpCode: http.StatusBadRequest,
+			ExpOut:  invalidHeightOutput,
 		},
 		{
-			"valid request get slashes",
-			fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "1", "3"),
-			http.StatusOK,
-			`{"slashes":[],"pagination":{"next_key":null,"total":"0"}}`,
+			Name:    "valid request get slashes",
+			Url:     fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "1", "3"),
+			ExpCode: http.StatusOK,
+			ExpOut:  `{"slashes":[],"pagination":{"next_key":null,"total":"0"}}`,
 		},
 	}
-	systest.RunRestQueries(t, slashTestCases...)
+	systest.RunRestQueriesIgnoreNumbers(t, slashTestCases...)
 }
 
 func TestDistrDelegatorGRPCQueries(t *testing.T) {
@@ -257,28 +257,28 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 
 	delegatorRewardsTestCases := []systest.RestTestCase{
 		{
-			"valid rewards request with valid delegator address",
-			fmt.Sprintf(delegatorRewardsURL, delAddr),
-			http.StatusOK,
-			rewardsOutput,
+			Name:    "valid rewards request with valid delegator address",
+			Url:     fmt.Sprintf(delegatorRewardsURL, delAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  rewardsOutput,
 		},
 		{
-			"valid request(specific validator rewards)",
-			fmt.Sprintf(delegatorRewardsURL+`/%s`, delAddr, valOperAddr),
-			http.StatusOK,
-			fmt.Sprintf(`{"rewards":[%s]}`, expectedAmountOutput),
+			Name:    "valid request(specific validator rewards)",
+			Url:     fmt.Sprintf(delegatorRewardsURL+`/%s`, delAddr, valOperAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"rewards":[%s]}`, expectedAmountOutput),
 		},
 	}
-	systest.TestRestQueryIgnoreNumbers(t, delegatorRewardsTestCases...)
+	systest.RunRestQueriesIgnoreNumbers(t, delegatorRewardsTestCases...)
 
 	// test delegator validators grpc endpoint
 	delegatorValsURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/validators`
 	valsTestCases := []systest.RestTestCase{
 		{
-			"gRPC request delegator validators with valid delegator address",
-			fmt.Sprintf(delegatorValsURL, delAddr),
-			http.StatusOK,
-			fmt.Sprintf(`{"validators":["%s"]}`, valOperAddr),
+			Name:    "gRPC request delegator validators with valid delegator address",
+			Url:     fmt.Sprintf(delegatorValsURL, delAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"validators":["%s"]}`, valOperAddr),
 		},
 	}
 	systest.RunRestQueries(t, valsTestCases...)
@@ -287,10 +287,10 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 	withdrawAddrURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/withdraw_address`
 	withdrawAddrTestCases := []systest.RestTestCase{
 		{
-			"gRPC request withdraw address with valid delegator address",
-			fmt.Sprintf(withdrawAddrURL, delAddr),
-			http.StatusOK,
-			fmt.Sprintf(`{"withdraw_address":"%s"}`, delAddr),
+			Name:    "gRPC request withdraw address with valid delegator address",
+			Url:     fmt.Sprintf(withdrawAddrURL, delAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"withdraw_address":"%s"}`, delAddr),
 		},
 	}
 	systest.RunRestQueries(t, withdrawAddrTestCases...)

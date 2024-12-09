@@ -48,22 +48,12 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
-ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
-endif
-
 ifeq (v2,$(findstring v2,$(COSMOS_BUILD_OPTIONS)))
   SIMAPP = simapp/v2
   APPNAME = simdv2
 endif
 
 # DB backend selection
-ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += gcc
-endif
-ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += badgerdb
-endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1

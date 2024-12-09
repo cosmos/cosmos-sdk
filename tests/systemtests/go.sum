@@ -18,8 +18,13 @@ cosmossdk.io/store v1.1.0 h1:LnKwgYMc9BInn9PhpTFEQVbL9UK475G2H911CGGnWHk=
 cosmossdk.io/store v1.1.0/go.mod h1:oZfW/4Fc/zYqu3JmQcQdUJ3fqu5vnYTn3LZFFy8P8ng=
 cosmossdk.io/systemtests v1.0.0-rc.3 h1:W1ZdfHtWxbzRCiBwcMb1nMKkmUNyAcHapJOrfh1lX20=
 cosmossdk.io/systemtests v1.0.0-rc.3/go.mod h1:B3RY1tY/iwLjQ9MUTz+GsiXV9gEdS8mfUvSQtWUwaAo=
+<<<<<<< HEAD
 cosmossdk.io/x/tx v1.0.0-alpha.2 h1:UW80FMm7B0fiAMsrfe5+HabSJ3XBg+tQa6/GK9prqWk=
 cosmossdk.io/x/tx v1.0.0-alpha.2/go.mod h1:r4yTKSJ7ZCCR95YbBfY3nfvbgNw6m9F6f25efWYYQWo=
+=======
+cosmossdk.io/x/tx v0.13.3-0.20240419091757-db5906b1e894 h1:kHEvzVqpNv/9pnaEPBsgE/FMc+cVmWjSsInRufkZkpQ=
+cosmossdk.io/x/tx v0.13.3-0.20240419091757-db5906b1e894/go.mod h1:Tb6/tpONmtL5qFdOMdv1pdvrtJNxcazZBoz04HB71ss=
+>>>>>>> 34f407d63 (test(systemtests): fix export v2 (#22799))
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=

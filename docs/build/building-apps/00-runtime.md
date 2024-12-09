@@ -9,7 +9,7 @@ It is a layer of abstraction between `baseapp` and the application modules that 
 
 ## Modules wiring
 
-Runtime is reponsible for wiring the modules together. It uses `depinject` to inject the dependencies of the modules.
+Runtime is responsible for wiring the modules together. It uses `depinject` to inject the dependencies of the modules.
 
 ## App wiring
 

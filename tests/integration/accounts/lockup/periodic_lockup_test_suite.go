@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 				Length: time.Minute,
 			},
 		},
-	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1500))})
+	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1500))}, nil)
 	require.NoError(t, err)
 
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)

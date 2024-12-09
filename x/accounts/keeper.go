@@ -148,6 +148,7 @@ func (k Keeper) Init(
 	creator []byte,
 	initRequest transaction.Msg,
 	funds sdk.Coins,
+	addressSeed []byte,
 ) (transaction.Msg, []byte, error) {
 	// get the next account number
 	num, err := k.AccountNumber.Next(ctx)
@@ -155,7 +156,7 @@ func (k Keeper) Init(
 		return nil, nil, err
 	}
 	// create address
-	accountAddr, err := k.makeAddress(num)
+	accountAddr, err := k.makeAddress(creator, num, addressSeed)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -180,7 +181,7 @@ func (k Keeper) initFromMsg(ctx context.Context, initMsg *v1.MsgInit) (transacti
 	}
 
 	// run account creation logic
-	return k.Init(ctx, initMsg.AccountType, creator, msg, initMsg.Funds)
+	return k.Init(ctx, initMsg.AccountType, creator, msg, initMsg.Funds, initMsg.AddressSeed)
 }
 
 // init initializes the account, given the type, the creator the newly created account number, its address and the
@@ -199,8 +200,17 @@ func (k Keeper) init(
 		return nil, fmt.Errorf("%w: not found %s", errAccountTypeNotFound, accountType)
 	}
 
+	// check if account exists
+	alreadyExists, err := k.AccountsByType.Has(ctx, accountAddr)
+	if err != nil {
+		return nil, err
+	}
+	if alreadyExists {
+		return nil, ErrAccountAlreadyExists
+	}
+
 	// send funds, if provided
-	err := k.maybeSendFunds(ctx, creator, accountAddr, funds)
+	err = k.maybeSendFunds(ctx, creator, accountAddr, funds)
 	if err != nil {
 		return nil, fmt.Errorf("unable to transfer funds: %w", err)
 	}
@@ -307,9 +317,26 @@ func (k Keeper) getImplementation(ctx context.Context, addr []byte) (implementat
 	return impl, nil
 }
 
-func (k Keeper) makeAddress(accNum uint64) ([]byte, error) {
-	// TODO: better address scheme, ref: https://github.com/cosmos/cosmos-sdk/issues/17516
-	addr := sha256.Sum256(append([]byte("x/accounts"), binary.BigEndian.AppendUint64(nil, accNum)...))
+// makeAddress creates an address for the given account.
+// It uses the creator address to ensure address squatting cannot happen, for example
+// assuming creator sends funds to a new account X nobody can front-run that address instantiation
+// unless the creator itself sends the tx.
+// AddressSeed can be used to create predictable addresses, security guarantees of the above are retained.
+// If address seed is not provided, the address is created using the creator and account number.
+func (k Keeper) makeAddress(creator []byte, accNum uint64, addressSeed []byte) ([]byte, error) {
+	// in case an address seed is provided, we use it to create the address.
+	var seed []byte
+	if len(addressSeed) > 0 {
+		seed = append(creator, addressSeed...)
+	} else {
+		// otherwise we use the creator and account number to create the address.
+		seed = append(creator, binary.BigEndian.AppendUint64(nil, accNum)...)
+	}
+
+	moduleAndSeed := append([]byte(ModuleName), seed...)
+
+	addr := sha256.Sum256(moduleAndSeed)
+
 	return addr[:], nil
 }
 

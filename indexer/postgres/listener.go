@@ -117,10 +117,7 @@ func txListener(i *indexerImpl) func(data appdata.TxData) error {
 func eventListener(i *indexerImpl) func(data appdata.EventData) error {
 	return func(data appdata.EventData) error {
 		for _, e := range data.Events {
-			var (
-				jsonData       json.RawMessage
-				jsonAttributes json.RawMessage
-			)
+			var jsonData json.RawMessage
 
 			if e.Data != nil {
 				var err error
@@ -128,9 +125,7 @@ func eventListener(i *indexerImpl) func(data appdata.EventData) error {
 				if err != nil {
 					return fmt.Errorf("failed to get event data: %w", err)
 				}
-			}
-
-			if e.Attributes != nil {
+			} else if e.Attributes != nil {
 				attrs, err := e.Attributes()
 				if err != nil {
 					return fmt.Errorf("failed to get event attributes: %w", err)
@@ -141,14 +136,14 @@ func eventListener(i *indexerImpl) func(data appdata.EventData) error {
 					attrsMap[attr.Key] = attr.Value
 				}
 
-				jsonAttributes, err = json.Marshal(attrsMap)
+				jsonData, err = json.Marshal(attrsMap)
 				if err != nil {
 					return fmt.Errorf("failed to marshal event attributes: %w", err)
 				}
 			}
 
-			_, err := i.tx.Exec("INSERT INTO event (block_number, block_stage, tx_index, msg_index, event_index, type, data, attributes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-				e.BlockNumber, e.BlockStage, e.TxIndex, e.MsgIndex, e.EventIndex, e.Type, jsonData, jsonAttributes)
+			_, err := i.tx.Exec("INSERT INTO event (block_number, block_stage, tx_index, msg_index, event_index, type, data) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+				e.BlockNumber, e.BlockStage, e.TxIndex, e.MsgIndex, e.EventIndex, e.Type, jsonData)
 			if err != nil {
 				return fmt.Errorf("failed to index event: %w", err)
 			}

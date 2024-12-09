@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS event
     msg_index    BIGINT NOT NULL,
     event_index  BIGINT NOT NULL,
     type         TEXT   NULL,
-    data         JSONB  NULL,
-    attributes   JSONB  NULL
+    data         JSONB  NULL
 );
 `

@@ -121,6 +121,7 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 		}
 
 		sort.Sort(abcitypes.ValidatorUpdates(req.Validators))
+		sort.Sort(abcitypes.ValidatorUpdates(res.Validators))
 
 		for i := range res.Validators {
 			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
@@ -641,6 +642,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 			ChainID: app.chainID,
 			Height:  req.Height,
 			Hash:    req.Hash,
+			Time:    req.Time,
 		})
 
 	// add a deferred recover handler in case extendVote panics
@@ -1331,6 +1333,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  height,
+			Time:    header.Time,
 		}).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)

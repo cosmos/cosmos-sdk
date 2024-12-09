@@ -33,8 +33,21 @@ func RejectUnknownFieldsStrict(bz []byte, msg protoreflect.MessageDescriptor, re
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
 // An AnyResolver must be provided for traversing inside google.protobuf.Any's.
 func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUnknownNonCriticals bool, resolver protodesc.Resolver) (hasUnknownNonCriticals bool, err error) {
+	return doRejectUnknownFields(bz, desc, allowUnknownNonCriticals, resolver, 1_000)
+}
+
+func doRejectUnknownFields(
+	bz []byte,
+	desc protoreflect.MessageDescriptor,
+	allowUnknownNonCriticals bool,
+	resolver protodesc.Resolver,
+	recursionLimit int,
+) (hasUnknownNonCriticals bool, err error) {
 	if len(bz) == 0 {
 		return hasUnknownNonCriticals, nil
+	}
+	if recursionLimit == 0 {
+		return false, errors.New("recursion limit reached")
 	}
 
 	fields := desc.Fields()
@@ -111,7 +124,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 
 		if fieldMessage.FullName() == anyFullName {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, anyDesc, allowUnknownNonCriticals, resolver)
+			hasUnknownNonCriticalsChild, err := doRejectUnknownFields(fieldBytes, anyDesc, allowUnknownNonCriticals, resolver, recursionLimit-1)
 			hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
 			if err != nil {
 				return hasUnknownNonCriticals, err
@@ -131,7 +144,7 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 			fieldBytes = a.Value
 		}
 
-		hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, fieldMessage, allowUnknownNonCriticals, resolver)
+		hasUnknownNonCriticalsChild, err := doRejectUnknownFields(fieldBytes, fieldMessage, allowUnknownNonCriticals, resolver, recursionLimit-1)
 		hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
 		if err != nil {
 			return hasUnknownNonCriticals, err

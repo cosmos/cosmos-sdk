@@ -32,7 +32,7 @@ func TestBaseAccount(t *testing.T) {
 
 	_, baseAccountAddr, err := ak.Init(ctx, "base", accCreator, &baseaccountv1.MsgInit{
 		PubKey: toAnyPb(t, privKey.PubKey()),
-	}, nil)
+	}, nil, nil)
 	require.NoError(t, err)
 
 	// fund base account! this will also cause an auth base account to be created

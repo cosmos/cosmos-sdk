@@ -3,10 +3,11 @@ package db_test
 import (
 	"testing"
 
-	"cosmossdk.io/store/db"
-	"cosmossdk.io/store/mock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"cosmossdk.io/store/db"
+	"cosmossdk.io/store/mock"
 )
 
 func TestPrefixDB(t *testing.T) {

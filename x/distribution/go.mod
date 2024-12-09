@@ -4,13 +4,13 @@ go 1.23.2
 
 require (
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // main
+	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/schema v0.3.1-0.20241209183624-332d0b106d1b
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

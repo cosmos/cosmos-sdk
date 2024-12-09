@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // main
+	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
@@ -25,7 +25,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/schema v0.3.1-0.20241209183624-332d0b106d1b // indirect
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

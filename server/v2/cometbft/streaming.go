@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"encoding/json"
 
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
@@ -16,6 +17,7 @@ func (c *consensus[T]) streamDeliverBlockChanges(
 	ctx context.Context,
 	height int64,
 	txs [][]byte,
+	decodedTxs []T,
 	txResults []server.TxResult,
 	events []event.Event,
 	stateChanges []store.StateChanges,
@@ -76,9 +78,12 @@ func (c *consensus[T]) streamDeliverBlockChanges(
 	if c.listener.OnTx != nil {
 		for i, tx := range txs {
 			if err := c.listener.OnTx(appdata.TxData{
-				TxIndex: int32(i),
-				Bytes:   func() ([]byte, error) { return tx, nil },
-				JSON:    nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+				BlockNumber: uint64(height),
+				TxIndex:     int32(i),
+				Bytes:       func() ([]byte, error) { return tx, nil },
+				JSON: func() (json.RawMessage, error) {
+					return json.Marshal(decodedTxs[i])
+				},
 			}); err != nil {
 				return err
 			}

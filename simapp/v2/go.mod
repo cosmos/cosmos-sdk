@@ -8,6 +8,7 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0 // indirect; main
 	cosmossdk.io/depinject v1.1.0
+	cosmossdk.io/indexer/postgres v0.0.0-20241209183624-332d0b106d1b
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241204100030-c47fb8ab2dcb // main
@@ -38,6 +39,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/jackc/pgx/v5 v5.7.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
@@ -54,10 +56,10 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // indirect; main
+	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/schema v0.3.1-0.20241209183624-332d0b106d1b // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241204101618-7fa2356c07aa // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
@@ -153,6 +155,9 @@ require (
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect

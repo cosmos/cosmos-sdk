@@ -53,6 +53,10 @@ func getSDKVersion() string {
 				sdkVersion = dep.Version
 			}
 		}
+
+		switch dep.Path {
+
+		}
 	}
 
 	return sdkVersion
@@ -71,6 +75,9 @@ type Info struct {
 	GoVersion        string     `json:"go" yaml:"go"`
 	BuildDeps        []buildDep `json:"build_deps" yaml:"build_deps"`
 	CosmosSdkVersion string     `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
+	RuntimeVersion   string     `json:"runtime_version,omitempty" yaml:"runtime_version,omitempty"`
+	StfVersion       string     `json:"stf_version,omitempty" yaml:"stf_version,omitempty"`
+	ServerVersion    string     `json:"server_version,omitempty" yaml:"server_version,omitempty"`
 	ExtraInfo        ExtraInfo  `json:"extra_info,omitempty" yaml:"extra_info,omitempty"`
 }
 

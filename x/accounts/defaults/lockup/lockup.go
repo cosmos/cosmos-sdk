@@ -150,7 +150,7 @@ func (bva *BaseLockup) Delegate(
 	}
 
 	// refresh ubd entries to make sure delegation locking amount is up to date
-	err = bva.CheckUbdEntriesMature(ctx)
+	err = bva.checkUnbondingEntriesMature(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -211,29 +211,25 @@ func (bva *BaseLockup) Undelegate(
 	}
 
 	isNewEntry := true
-	skipEntriesIteration := false
 	entries, err := bva.UnbondEntries.Get(ctx, msg.ValidatorAddress)
 	if err != nil {
 		if errorsmod.IsOf(err, collections.ErrNotFound) {
 			entries = lockuptypes.UnbondingEntries{
 				Entries: []*lockuptypes.UnbondingEntry{},
 			}
-			skipEntriesIteration = true
 		} else {
 			return nil, err
 		}
 	}
 
-	if !skipEntriesIteration {
-		for i, entry := range entries.Entries {
-			if entry.CreationHeight == header.Height && entry.EndTime.Equal(msgUndelegateResp.CompletionTime) {
-				entry.Amount = entry.Amount.Add(msg.Amount)
+	for i, entry := range entries.Entries {
+		if entry.CreationHeight == header.Height && entry.EndTime.Equal(msgUndelegateResp.CompletionTime) {
+			entry.Amount = entry.Amount.Add(msg.Amount)
 
-				// update the entry
-				entries.Entries[i] = entry
-				isNewEntry = false
-				break
-			}
+			// update the entry
+			entries.Entries[i] = entry
+			isNewEntry = false
+			break
 		}
 	}
 
@@ -360,8 +356,8 @@ func getStakingDenom(ctx context.Context) (string, error) {
 	return resp.Params.BondDenom, nil
 }
 
-// iterates through all the unbonding entries and check if any of the entries are matured and handled.
-func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
+// checkUnbondingEntriesMature iterates through all the unbonding entries and check if any of the entries are matured and handled.
+func (bva *BaseLockup) checkUnbondingEntriesMature(ctx context.Context) error {
 	whoami := accountstd.Whoami(ctx)
 	delAddr, err := bva.addressCodec.BytesToString(whoami)
 	if err != nil {
@@ -379,30 +375,26 @@ func (bva *BaseLockup) CheckUbdEntriesMature(ctx context.Context) error {
 				return false, nil
 			}
 
-			skipIteration := false
-			entries, err := bva.getUbdEntries(ctx, delAddr, key)
+			stakingUnbonding, err := bva.getUnbondingEntries(ctx, delAddr, key)
 			if err != nil {
 				// if ubd delegation is empty then skip the next iteration check
 				if !errorsmod.IsOf(err, stakingtypes.ErrNoUnbondingDelegation) {
 					return true, err
 				}
 
-				skipIteration = true
 			}
 
 			found := false
 			// check if the entry is still exist in the unbonding entries
-			if !skipIteration {
-				for _, e := range entries {
-					if e.CompletionTime.Equal(entry.EndTime) && entry.CreationHeight == entry.CreationHeight {
-						found = true
-						break
-					}
+			for _, e := range stakingUnbonding {
+				if e.CompletionTime.Equal(entry.EndTime) && entry.CreationHeight == entry.CreationHeight {
+					found = true
+					break
 				}
 			}
 
 			// if not found or ubd delegation is empty then assume ubd entry is being handled
-			if !found || skipIteration {
+			if !found {
 				err = bva.TrackUndelegation(ctx, sdk.NewCoins(entry.Amount))
 				if err != nil {
 					return true, err
@@ -565,17 +557,7 @@ func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sd
 	return resp.Balance, nil
 }
 
-func (bva BaseLockup) getBalances(ctx context.Context, sender string) (sdk.Coins, error) {
-	// Query account balance for the sent denom
-	resp, err := accountstd.QueryModule[*banktypes.QueryAllBalancesResponse](ctx, &banktypes.QueryAllBalancesRequest{Address: sender})
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Balances, nil
-}
-
-func (bva BaseLockup) getUbdEntries(ctx context.Context, delAddr, valAddr string) ([]stakingtypes.UnbondingDelegationEntry, error) {
+func (bva BaseLockup) getUnbondingEntries(ctx context.Context, delAddr, valAddr string) ([]stakingtypes.UnbondingDelegationEntry, error) {
 	resp, err := accountstd.QueryModule[*stakingtypes.QueryUnbondingDelegationResponse](
 		ctx, &stakingtypes.QueryUnbondingDelegationRequest{DelegatorAddr: delAddr, ValidatorAddr: valAddr},
 	)
@@ -638,7 +620,7 @@ func (bva BaseLockup) IterateCoinEntries(
 // for a lockup account. If the coin by the provided denom are not locked, an coin with zero amount is returned.
 func (bva BaseLockup) GetNotBondedLockedCoin(ctx context.Context, lockedCoin sdk.Coin, denom string) (sdk.Coin, error) {
 	// refresh the unbonding entries
-	err := bva.CheckUbdEntriesMature(ctx)
+	err := bva.checkUnbondingEntriesMature(ctx)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -746,13 +728,13 @@ func (bva BaseLockup) QuerySpendableTokens(ctx context.Context, lockedCoins sdk.
 		return nil, err
 	}
 
-	balances, err := bva.getBalances(ctx, accAddr)
-	if err != nil {
-		return nil, err
-	}
-
 	spendables := sdk.Coins{}
-	for _, balance := range balances {
+	for _, denom := range lockedCoins.Denoms() {
+		balance, err := bva.getBalance(ctx, accAddr, denom)
+		if err != nil {
+			return nil, err
+		}
+
 		lockedAmt := lockedCoins.AmountOf(balance.Denom)
 
 		// get lockedCoin from that are not bonded for the sent denom
@@ -761,7 +743,7 @@ func (bva BaseLockup) QuerySpendableTokens(ctx context.Context, lockedCoins sdk.
 			return nil, err
 		}
 
-		spendable, hasNeg := sdk.Coins{balance}.SafeSub(notBondedLockedCoin)
+		spendable, hasNeg := sdk.Coins{*balance}.SafeSub(notBondedLockedCoin)
 		if hasNeg {
 			spendable = sdk.Coins{sdk.NewCoin(balance.Denom, math.ZeroInt())}
 		}

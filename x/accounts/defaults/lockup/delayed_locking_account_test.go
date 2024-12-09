@@ -107,7 +107,7 @@ func TestDelayedAccountUndelegate(t *testing.T) {
 	require.True(t, entries.Entries[0].Amount.Amount.Equal(math.NewInt(1)))
 	require.True(t, entries.Entries[0].ValidatorAddress == "val_address")
 
-	err = acc.CheckUbdEntriesMature(sdkCtx)
+	err = acc.checkUnbondingEntriesMature(sdkCtx)
 	require.NoError(t, err)
 
 	_, err = acc.UnbondEntries.Get(sdkCtx, "val_address")

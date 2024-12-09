@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -68,16 +67,10 @@ func TestExportCmd_WithHeight(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		res := cli.RunCommandWithArgs(tc.args...)
-		// PebbleDB logs are printed directly to stderr.
-		// Cosmos-DB and Store/v2 do not provide a way to override the logger.
-		// This isn't problematic in a real-world scenario, but it makes it hard to test the output.
-		// https://github.com/cockroachdb/pebble/blob/v1.1.2/internal/base/logger.go#L26-L40
-		// We trim the output to get the JSON part only
-		if i := strings.Index(res, "{"); i > 0 {
-			res = res[i:]
-		}
-
+		res := cli.
+			WithRunErrorsIgnored().
+			WithRunSingleOutput(). // pebbledb prints logs to stderr, we cannot override the logger in store/v2 and cosmos-db. This isn't problematic in a real-world scenario, but it makes it hard to test the output
+			RunCommandWithArgs(tc.args...)
 		height := gjson.Get(res, "initial_height").Int()
 		if tc.expZeroHeight {
 			require.Equal(t, height, int64(0))

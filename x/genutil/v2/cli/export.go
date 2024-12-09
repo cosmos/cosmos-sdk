@@ -111,7 +111,7 @@ func ExportCmd(app ExportableApp) *cobra.Command {
 	cmd.Flags().
 		String(flags.FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
 	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero. Equivalent to --height=0")
-	cmd.Flags().MarkDeprecated(flagForZeroHeight, "use --height=0 instead")
+	_ = cmd.Flags().MarkDeprecated(flagForZeroHeight, "use --height=0 instead")
 
 	return cmd
 }

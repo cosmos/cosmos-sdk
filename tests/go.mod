@@ -285,9 +285,9 @@ replace (
 
 // Below are the long-lived replace for tests.
 replace (
+	cosmossdk.io/schema => ../schema
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
-	cosmossdk.io/schema => ../schema
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

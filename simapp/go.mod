@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.1.1
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/x/accounts v0.0.0-20241127063259-f296a5005ce8
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
@@ -65,6 +65,7 @@ require (
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/x/accounts/defaults/asset v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -282,6 +283,7 @@ replace (
 
 // Below are the long-lived replace of the SimApp
 replace (
+	cosmossdk.io/x/accounts/defaults/asset => ../x/accounts/defaults/asset
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

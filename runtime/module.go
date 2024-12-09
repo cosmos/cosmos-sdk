@@ -96,6 +96,7 @@ func init() {
 			codec.ProvideProtoCodec,
 			codec.ProvideAddressCodec,
 			ProvideKVStoreKey,
+			ProvideKVStoreFactory,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideGenesisTxHandler,
@@ -295,4 +296,12 @@ func ProvideTransientStoreService(
 
 func ProvideCometService() comet.Service {
 	return NewContextAwareCometInfoService()
+}
+
+func ProvideKVStoreFactory(app *AppBuilder) store.KVStoreServiceFactory {
+	return func(key []byte) store.KVStoreService {
+		sk := storetypes.NewKVStoreKey(string(key))
+		registerStoreKey(app, sk)
+		return kvStoreService{key: sk}
+	}
 }

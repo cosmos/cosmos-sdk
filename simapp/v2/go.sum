@@ -194,8 +194,8 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/api v0.7.3-0.20241119134933-d697a3de0f95 h1:nkbou1MO8ho3i+MJ+yehGTqaxGCC/L+sc+7sEAzBy0Y=
 cosmossdk.io/api v0.7.3-0.20241119134933-d697a3de0f95/go.mod h1:9XEDkRZgZGm1XxHL7Sj2DMXZurCk1pY4x06eR5wyfM0=
-cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b h1:MgU4EDOo/pXgepHCUFQFnIfUCxk/JO0AJGDTUQhhEhg=
-cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b/go.mod h1:uf12i1yKvzEIHt2ok7poNqFDQTb71O00RQLitSynmrg=
+cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b h1:smupoVhpdK+5pztIylyIGkCc+0QaAaGLEvnM7Wnrq18=
+cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b/go.mod h1:uf12i1yKvzEIHt2ok7poNqFDQTb71O00RQLitSynmrg=
 cosmossdk.io/core v1.0.0-alpha.6 h1:5ukC4JcQKmemLQXcAgu/QoOvJI50hpBkIIg4ZT2EN8E=
 cosmossdk.io/core v1.0.0-alpha.6/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
 cosmossdk.io/core/testing v0.0.0-20241119134933-d697a3de0f95 h1:2WlnVICuVVx8AY70ueEHyfHJ8ctjFU9RnJsz4U263Fw=
@@ -206,15 +206,17 @@ cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=
 cosmossdk.io/errors v1.0.1/go.mod h1:MeelVSZThMi4bEakzhhhE/CKqVv3nOJDA25bIqRDu/U=
 cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 h1:IQNdY2kB+k+1OM2DvqFG1+UgeU1JzZrWtwuWzI3ZfwA=
 cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5/go.mod h1:0CuYKkFHxc1vw2JC+t21THBCALJVROrWVR/3PQ1urpc=
+cosmossdk.io/indexer/postgres v0.0.0-20241209183624-332d0b106d1b h1:U8cHDZ6Eg0itEqZizeQFdhxCkQCCezjhJwhrTN58+jc=
+cosmossdk.io/indexer/postgres v0.0.0-20241209183624-332d0b106d1b/go.mod h1:vb5uiIC3rDjz+V7UaSLNA3g5TpbRygWi652qtMugWHA=
 cosmossdk.io/log v1.5.0 h1:dVdzPJW9kMrnAYyMf1duqacoidB9uZIl+7c6z0mnq0g=
 cosmossdk.io/log v1.5.0/go.mod h1:Tr46PUJjiUthlwQ+hxYtUtPn4D/oCZXAkYevBeh5+FI=
 cosmossdk.io/math v1.4.0 h1:XbgExXFnXmF/CccPPEto40gOO7FpWu9yWNAZPN3nkNQ=
 cosmossdk.io/math v1.4.0/go.mod h1:O5PkD4apz2jZs4zqFdTr16e1dcaQCc5z6lkEnrrppuk=
-<<<<<<< HEAD
 cosmossdk.io/runtime/v2 v2.0.0-20241204100030-c47fb8ab2dcb h1:tsdNkxdlG5g5AWOxFpLfX5/eCU6LGN7hV1VAULCY2Lk=
 cosmossdk.io/runtime/v2 v2.0.0-20241204100030-c47fb8ab2dcb/go.mod h1:7DCLOq3Xzyq+DA0WoMD5HcZUuflShDmq6g2qgh2yVdI=
-cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b h1:svpFdulZRrYz+RTHu2u9CeKkMKrIHx5354vjiHerovo=
-cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+cosmossdk.io/schema v0.3.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+cosmossdk.io/schema v0.3.1-0.20241209183624-332d0b106d1b h1:ymo4PrM7Q4tPpEtce6IdH/kurphOAE6DmzHux1tniNY=
+cosmossdk.io/schema v0.3.1-0.20241209183624-332d0b106d1b/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
 cosmossdk.io/server/v2 v2.0.0-20241209145349-34f407d6367a h1:qkO+rB9yD6+bTGgQpaf+oyvgEdkPs5TUaFK3OEYh3AI=
 cosmossdk.io/server/v2 v2.0.0-20241209145349-34f407d6367a/go.mod h1:sb6WEIMHAT+8z7iM6IbBeSf+62wSkss2q+coDxmOi/o=
 cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 h1:0mtB8fSvDjD835WwWF4rGk9qy5TjVjk2jsW14L37v0E=
@@ -227,8 +229,6 @@ cosmossdk.io/store/v2 v2.0.0-20241209145349-34f407d6367a h1:v300rqUJV1QuNhCcMlhz
 cosmossdk.io/store/v2 v2.0.0-20241209145349-34f407d6367a/go.mod h1:PhM9eXfKti+Bl7/DE71dJm0CsZPYDVj3AruSfDIapfI=
 cosmossdk.io/x/tx v1.0.0-alpha.2 h1:UW80FMm7B0fiAMsrfe5+HabSJ3XBg+tQa6/GK9prqWk=
 cosmossdk.io/x/tx v1.0.0-alpha.2/go.mod h1:r4yTKSJ7ZCCR95YbBfY3nfvbgNw6m9F6f25efWYYQWo=
-=======
->>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=

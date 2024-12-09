@@ -46,17 +46,6 @@ require (
 )
 
 require (
-<<<<<<< HEAD
-=======
-	cosmossdk.io/indexer/postgres v0.0.0-20241204160609-556102cfa046
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
-	github.com/jackc/pgx/v5 v5.7.1
-)
-
-require (
->>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
 	cloud.google.com/go v0.115.0 // indirect
@@ -65,10 +54,10 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // indirect; main
+	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/schema v0.3.1-0.20241209183624-332d0b106d1b // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241204101618-7fa2356c07aa // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
@@ -254,6 +243,11 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require (
+	cosmossdk.io/indexer/postgres v0.0.0-20241209183624-332d0b106d1b
+	github.com/jackc/pgx/v5 v5.7.1
+)
+
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 // replace (
@@ -307,21 +301,3 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-<<<<<<< HEAD
-=======
-
-// server v2 integration
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/indexer/postgres => ../../indexer/postgres
-	cosmossdk.io/runtime/v2 => ../../runtime/v2
-	cosmossdk.io/schema => ../../schema
-	cosmossdk.io/server/v2 => ../../server/v2
-	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
-	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
-	cosmossdk.io/server/v2/stf => ../../server/v2/stf
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/store/v2 => ../../store/v2
-)
->>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))

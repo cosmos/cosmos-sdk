@@ -35,6 +35,9 @@ import (
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
 
+	addresscodec "cosmossdk.io/core/address"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,8 +89,9 @@ type consensus[T transaction.Tx] struct {
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
-	queryHandlersMap map[string]appmodulev2.Handler
-	getProtoRegistry func() (*protoregistry.Files, error)
+	queryHandlersMap      map[string]appmodulev2.Handler
+	getProtoRegistry      func() (*protoregistry.Files, error)
+	consensusAddressCodec addresscodec.Codec
 }
 
 // CheckTx implements types.Application.
@@ -184,6 +188,15 @@ func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		return resp, err
 	}
 
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		lastestVersion, err := c.store.GetLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+		req.Height = int64(lastestVersion)
+	}
+
 	// this error most probably means that we can't handle it with a proto message, so
 	// it must be an app/p2p/store query
 	path := splitABCIQueryPath(req.Path)
@@ -236,6 +249,40 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		handlerFullName = string(desc.FullName())
 	} else {
 		handlerFullName = string(md.Input().FullName())
+	}
+
+	// Handle comet service
+	if strings.Contains(req.Path, "/cosmos.base.tendermint.v1beta1.Service") {
+		rpcClient, _ := rpchttp.New(c.cfg.AppTomlConfig.Address)
+		cometQServer := cmtservice.NewQueryServer(rpcClient, c.Query, c.consensusAddressCodec)
+		paths := strings.Split(req.Path, "/")
+
+		var resp transaction.Msg
+		var err error
+		switch paths[2] {
+		case "GetNodeInfo":
+			resp, err = handleCometService(ctx, req, cometQServer.GetNodeInfo)
+		case "GetSyncing":
+			resp, err = handleCometService(ctx, req, cometQServer.GetSyncing)
+		case "GetLatestBlock":
+			resp, err = handleCometService(ctx, req, cometQServer.GetLatestBlock)
+		case "GetBlockByHeight":
+			resp, err = handleCometService(ctx, req, cometQServer.GetBlockByHeight)
+		case "GetLatestValidatorSet":
+			resp, err = handleCometService(ctx, req, cometQServer.GetLatestValidatorSet)
+		case "GetValidatorSetByHeight":
+			resp, err = handleCometService(ctx, req, cometQServer.GetValidatorSetByHeight)
+		case "ABCIQuery":
+			resp, err = handleCometService(ctx, req, cometQServer.ABCIQuery)
+		}
+
+		if err != nil {
+			return nil, true, err
+		}
+
+		res, err := queryResponse(resp, req.Height)
+		return res, true, err
+
 	}
 
 	// special case for simulation as it is an external gRPC registered on the grpc server component
@@ -301,6 +348,30 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 	resp, err = queryResponse(res, req.Height)
 	return resp, true, err
+}
+
+func handleCometService[T any, PT interface {
+	*T
+	gogoproto.Message
+},
+	U any, UT interface {
+		*U
+		gogoproto.Message
+	}](
+	ctx context.Context,
+	rawReq *abciproto.QueryRequest,
+	handler func(ctx context.Context, msg PT) (UT, error),
+) (transaction.Msg, error) {
+	req := PT(new(T))
+	err := gogoproto.Unmarshal(rawReq.Data, req)
+	if err != nil {
+		return nil, err
+	}
+	typedResp, err := handler(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return typedResp, nil
 }
 
 // InitChain implements types.Application.

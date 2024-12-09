@@ -46,6 +46,17 @@ require (
 )
 
 require (
+<<<<<<< HEAD
+=======
+	cosmossdk.io/indexer/postgres v0.0.0-20241204160609-556102cfa046
+	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+	github.com/jackc/pgx/v5 v5.7.1
+)
+
+require (
+>>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
 	cloud.google.com/go v0.115.0 // indirect
@@ -153,6 +164,9 @@ require (
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
@@ -293,3 +307,21 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
+<<<<<<< HEAD
+=======
+
+// server v2 integration
+replace (
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/core/testing => ../../core/testing
+	cosmossdk.io/indexer/postgres => ../../indexer/postgres
+	cosmossdk.io/runtime/v2 => ../../runtime/v2
+	cosmossdk.io/schema => ../../schema
+	cosmossdk.io/server/v2 => ../../server/v2
+	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
+	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
+	cosmossdk.io/server/v2/stf => ../../server/v2/stf
+	cosmossdk.io/store => ../../store
+	cosmossdk.io/store/v2 => ../../store/v2
+)
+>>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))

@@ -39,8 +39,13 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.4.0
+<<<<<<< HEAD
 	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
+=======
+	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
+>>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -177,10 +182,16 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
+=======
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/schema => ../../schema
+	cosmossdk.io/store => ../../store
+>>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking
 )

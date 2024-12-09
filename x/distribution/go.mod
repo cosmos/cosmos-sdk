@@ -174,10 +174,16 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
+=======
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/schema => ../../schema
+	cosmossdk.io/store => ../../store
+>>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/staking => ../staking

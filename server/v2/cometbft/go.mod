@@ -3,10 +3,21 @@ module cosmossdk.io/server/v2/cometbft
 go 1.23.2
 
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
+=======
+	cosmossdk.io/api => ../../../api
+	cosmossdk.io/core/testing => ../../../core/testing
+	cosmossdk.io/schema => ../../../schema
+	cosmossdk.io/server/v2 => ../
+	cosmossdk.io/server/v2/appmanager => ../appmanager
+	cosmossdk.io/server/v2/stf => ../stf
+	cosmossdk.io/store => ../../../store
+	cosmossdk.io/store/v2 => ../../../store/v2
+>>>>>>> 332d0b106 (feat(indexer/postgres)!: add basic support for header, txs and events (#22695))
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking

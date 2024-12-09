@@ -21,7 +21,6 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
 	"cosmossdk.io/schema/appdata"
@@ -36,6 +35,8 @@ import (
 	consensustypes "cosmossdk.io/x/consensus/types"
 
 	addresscodec "cosmossdk.io/core/address"
+	coreserver "cosmossdk.io/core/server"
+	"cosmossdk.io/core/transaction"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -92,6 +93,7 @@ type consensus[T transaction.Tx] struct {
 	queryHandlersMap      map[string]appmodulev2.Handler
 	getProtoRegistry      func() (*protoregistry.Files, error)
 	consensusAddressCodec addresscodec.Codec
+	cfgMap                coreserver.ConfigMap
 }
 
 // CheckTx implements types.Application.
@@ -282,7 +284,28 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 		res, err := queryResponse(resp, req.Height)
 		return res, true, err
+	}
 
+	// Handle node service
+	if strings.Contains(req.Path, "/cosmos.base.node.v1beta1.Service") {
+		nodeQService := nodeServer[transaction.Tx]{c.cfgMap, c.cfg.AppTomlConfig, c}
+		paths := strings.Split(req.Path, "/")
+
+		var resp transaction.Msg
+		var err error
+		switch paths[2] {
+		case "Config":
+			resp, err = handleCometService(ctx, req, nodeQService.Config)
+		case "Status":
+			resp, err = handleCometService(ctx, req, nodeQService.Status)
+		}
+
+		if err != nil {
+			return nil, true, err
+		}
+
+		res, err := queryResponse(resp, req.Height)
+		return res, true, err
 	}
 
 	// special case for simulation as it is an external gRPC registered on the grpc server component

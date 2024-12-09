@@ -107,4 +107,5 @@ func (plva PermanentLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 
 func (plva PermanentLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, plva.QueryLockupAccountInfo)
+	plva.BaseLockup.RegisterQueryHandlers(builder)
 }

@@ -111,6 +111,7 @@ func InitRootCmd[T transaction.Tx](
 	// consensus component
 	if deps.ConsensusServer == nil {
 		deps.ConsensusServer, err = cometbft.New(
+			deps.ClientContext.ConsensusAddressCodec,
 			logger,
 			simApp.Name(),
 			simApp.Store(),

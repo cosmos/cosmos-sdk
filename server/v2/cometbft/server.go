@@ -38,6 +38,7 @@ import (
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
+	addresscodec "cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -66,6 +67,7 @@ type CometBFTServer[T transaction.Tx] struct {
 }
 
 func New[T transaction.Tx](
+	consensusAddressCodec addresscodec.Codec,
 	logger log.Logger,
 	appName string,
 	store types.Store,
@@ -189,6 +191,7 @@ func New[T transaction.Tx](
 		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
 		addrPeerFilter:         srv.serverOptions.AddrPeerFilter,
 		idPeerFilter:           srv.serverOptions.IdPeerFilter,
+		cfgMap:                 cfg,
 	}
 
 	c.optimisticExec = oe.NewOptimisticExecution(

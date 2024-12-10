@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	storeserver "cosmossdk.io/server/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,6 +25,8 @@ import (
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -46,7 +49,7 @@ func gRPCServiceRegistrar[T transaction.Tx](
 ) func(srv *grpc.Server) error {
 	return func(srv *grpc.Server) error {
 		cmtservice.RegisterServiceServer(srv, cmtservice.NewQueryServer(clientCtx.Client, consensus.Query, clientCtx.ConsensusAddressCodec))
-		txtypes.RegisterServiceServer(srv, txServer[T]{clientCtx, txCodec, app})
+		txtypes.RegisterServiceServer(srv, txServer[T]{clientCtx, txCodec, app, consensus})
 		nodeservice.RegisterServiceServer(srv, nodeServer[T]{cfg, cometBFTAppConfig, consensus})
 
 		return nil
@@ -57,6 +60,7 @@ type txServer[T transaction.Tx] struct {
 	clientCtx client.Context
 	txCodec   transaction.Codec[T]
 	app       appSimulator[T]
+	consensus abci.Application
 }
 
 // BroadcastTx implements tx.ServiceServer.
@@ -65,8 +69,84 @@ func (t txServer[T]) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRe
 }
 
 // GetBlockWithTxs implements tx.ServiceServer.
-func (t txServer[T]) GetBlockWithTxs(context.Context, *txtypes.GetBlockWithTxsRequest) (*txtypes.GetBlockWithTxsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (t txServer[T]) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWithTxsRequest) (*txtypes.GetBlockWithTxsResponse, error) {
+	logger := log.NewNopLogger()
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+	
+	resp, err := t.consensus.Info(ctx, &abci.InfoRequest{})
+	if err != nil {
+		return nil, err
+	}
+	currentHeight := resp.LastBlockHeight
+
+	if req.Height < 1 || req.Height > currentHeight {
+		return nil, sdkerrors.ErrInvalidHeight.Wrapf("requested height %d but height must not be less than 1 "+
+			"or greater than the current height %d", req.Height, currentHeight)
+	}
+
+	node, err := t.clientCtx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	blockID, block, err := cmtservice.GetProtoBlock(ctx, node, &req.Height)
+	if err != nil {
+		return nil, err
+	}
+
+	var offset, limit uint64
+	if req.Pagination != nil {
+		offset = req.Pagination.Offset
+		limit = req.Pagination.Limit
+	} else {
+		offset = 0
+		limit = query.DefaultLimit
+	}
+
+	blockTxs := block.Data.Txs
+	blockTxsLn := uint64(len(blockTxs))
+	txs := make([]*txtypes.Tx, 0, limit)
+	if offset >= blockTxsLn && blockTxsLn != 0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("out of range: cannot paginate %d txs with offset %d and limit %d", blockTxsLn, offset, limit)
+	}
+	decodeTxAt := func(i uint64) error {
+		tx := blockTxs[i]
+		txb, err := t.clientCtx.TxConfig.TxDecoder()(tx)
+		fmt.Println("TxDecoder", txb, err)
+		if err != nil {
+			return err
+		}
+		p, err := txb.(interface{ AsTx() (*txtypes.Tx, error) }).AsTx()
+		if err != nil {
+			return err
+		}
+		txs = append(txs, p)
+		return nil
+	}
+	if req.Pagination != nil && req.Pagination.Reverse {
+		for i, count := offset, uint64(0); i > 0 && count != limit; i, count = i-1, count+1 {
+			if err = decodeTxAt(i); err != nil {
+				logger.Error("failed to decode tx", "error", err)
+			}
+		}
+	} else {
+		for i, count := offset, uint64(0); i < blockTxsLn && count != limit; i, count = i+1, count+1 {
+			if err = decodeTxAt(i); err != nil {
+				logger.Error("failed to decode tx", "error", err)
+			}
+		}
+	}
+
+	return &txtypes.GetBlockWithTxsResponse{
+		Txs:     txs,
+		BlockId: &blockID,
+		Block:   block,
+		Pagination: &query.PageResponse{
+			Total: blockTxsLn,
+		},
+	}, nil
 }
 
 // GetTx implements tx.ServiceServer.
@@ -100,8 +180,33 @@ func (t txServer[T]) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txt
 }
 
 // GetTxsEvent implements tx.ServiceServer.
-func (t txServer[T]) GetTxsEvent(context.Context, *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (t txServer[T]) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	orderBy := parseOrderBy(req.OrderBy)
+
+	result, err := authtx.QueryTxsByEvents(t.clientCtx, int(req.Page), int(req.Limit), req.Query, orderBy)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	txsList := make([]*txtypes.Tx, len(result.Txs))
+	for i, tx := range result.Txs {
+		protoTx, ok := tx.Tx.GetCachedValue().(*txtypes.Tx)
+		if !ok {
+			return nil, status.Errorf(codes.Internal, "getting cached value failed expected %T, got %T", txtypes.Tx{}, tx.Tx.GetCachedValue())
+		}
+
+		txsList[i] = protoTx
+	}
+
+	return &txtypes.GetTxsEventResponse{
+		Txs:         txsList,
+		TxResponses: result.Txs,
+		Total:       result.TotalCount,
+	}, nil
 }
 
 // Simulate implements tx.ServiceServer.
@@ -159,8 +264,23 @@ func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest)
 }
 
 // TxDecode implements tx.ServiceServer.
-func (t txServer[T]) TxDecode(context.Context, *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+func (t txServer[T]) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+	if req.TxBytes == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	txb, err := t.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := txb.(interface{ AsTx() (*txtypes.Tx, error) }).AsTx() // TODO: maybe we can break the Tx interface to add this also
+	if err != nil {
+		return nil, err
+	}
+	return &txtypes.TxDecodeResponse{
+		Tx: tx,
+	}, nil
 }
 
 // TxDecodeAmino implements tx.ServiceServer.
@@ -324,4 +444,15 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 			Skip:      true,
 		},
 	},
+}
+
+func parseOrderBy(orderBy txtypes.OrderBy) string {
+	switch orderBy {
+	case txtypes.OrderBy_ORDER_BY_ASC:
+		return "asc"
+	case txtypes.OrderBy_ORDER_BY_DESC:
+		return "desc"
+	default:
+		return "" // Defaults to CometBFT's default, which is `asc` now.
+	}
 }

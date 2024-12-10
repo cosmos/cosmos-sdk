@@ -54,9 +54,6 @@ type Store struct {
 	chDone chan struct{}
 	// isMigrating reflects whether the store is currently migrating
 	isMigrating bool
-
-	preCommit        sync.RWMutex
-	preCommitVersion uint64
 }
 
 // New creates a new root Store instance.
@@ -124,18 +121,16 @@ func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
 }
 
 func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
-	s.preCommit.RLock()
-	v := s.preCommitVersion
-	s.preCommit.RUnlock()
-	if v == 0 {
-		var err error
-		v, err = s.GetLatestVersion()
-		if err != nil {
-			return 0, nil, err
-		}
+	v, err := s.GetLatestVersion()
+	if err != nil {
+		return 0, nil, err
+	}
+	vReader, err := s.getVersionedReader(v)
+	if err != nil {
+		return 0, nil, err
 	}
 
-	return v, NewReaderMap(v, s.stateCommitment), nil
+	return v, NewReaderMap(v, vReader), nil
 }
 
 func (s *Store) GetStateCommitment() store.Committer {
@@ -313,28 +308,17 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	s.pruningManager.PausePruning()
 
 	st := time.Now()
-	s.preCommit.Lock()
 	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
-		s.preCommit.Unlock()
 		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
-	lastVersion := s.preCommitVersion
-	s.preCommitVersion = cs.Version
-	s.preCommit.Unlock()
 
 	cInfo, err := s.stateCommitment.Commit(cs.Version)
 	if err != nil {
-		s.preCommit.Lock()
-		s.preCommitVersion = lastVersion
-		s.preCommit.Unlock()
 		return nil, fmt.Errorf("failed to commit SC store: %w", err)
 	}
 	s.logger.Warn(fmt.Sprintf("sc commit version %d took %s", cs.Version, time.Since(st)))
 
 	if cInfo.Version != cs.Version {
-		s.preCommit.Lock()
-		s.preCommitVersion = lastVersion
-		s.preCommit.Unlock()
 		return nil, fmt.Errorf("commit version mismatch: got %d, expected %d", cInfo.Version, cs.Version)
 	}
 	s.lastCommitInfo = cInfo

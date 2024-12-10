@@ -103,7 +103,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 				dir := fmt.Sprintf("%s/data/iavl-v2/%s", opts.RootDir, key)
 				// TODO load from config YAML or at least simapp
 				iavlOpts := iavl_v2.DefaultTreeOptions()
-				iavlOpts.EvictionDepth = 18
+				iavlOpts.EvictionDepth = 22
 				iavlOpts.HeightFilter = 1
 				iavlOpts.CheckpointInterval = 55
 				return iavlv2.NewTree(iavlOpts, iavl_v2.SqliteDbOptions{Path: dir}, opts.Logger)

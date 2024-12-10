@@ -1,7 +1,6 @@
 package iavlv2
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/log"
@@ -101,52 +100,28 @@ func (t *Tree) Get(version uint64, key []byte) ([]byte, error) {
 	if err := isHighBitSet(version); err != nil {
 		return nil, err
 	}
-	h := t.tree.Version()
 	v := int64(version)
-	switch {
-	// TODO permit h+1 read only if the tree is dirty (i.e. has uncommitted changes from WriteChangeset)
-	case v == h || v == h+1:
-		return t.tree.Get(key)
-	case v > h:
+	h := t.tree.Version()
+	if v > h {
 		return nil, fmt.Errorf("get: cannot read future version %d; h: %d path=%s", v, h, t.path)
-	case v < h:
-		cloned, err := t.tree.ReadonlyClone()
-		if err != nil {
-			return nil, err
-		}
-		if err = cloned.LoadVersion(int64(version)); err != nil {
-			return nil, err
-		}
-		return cloned.Get(key)
-	default:
-		return nil, fmt.Errorf("unexpected version comparison: tree version: %d, requested: %d", h, v)
 	}
+	versionFound, val, err := t.tree.GetRecent(v, key)
+	if versionFound {
+		return val, err
+	}
+	cloned, err := t.tree.ReadonlyClone()
+	if err != nil {
+		return nil, err
+	}
+	if err = cloned.LoadVersion(int64(version)); err != nil {
+		return nil, err
+	}
+	return cloned.Get(key)
 }
 
 func (t *Tree) Has(version uint64, key []byte) (bool, error) {
-	if err := isHighBitSet(version); err != nil {
-		return false, err
-	}
-	h := t.tree.Version()
-	v := int64(version)
-	switch {
-	// TODO permit h+1 read only if the tree is dirty (i.e. has uncommitted changes from WriteChangeset)
-	case v == h || v == h+1:
-		return t.tree.Has(key)
-	case v > h:
-		return false, fmt.Errorf("has: cannot read future version %d; h: %d", v, h)
-	case v < h:
-		cloned, err := t.tree.ReadonlyClone()
-		if err != nil {
-			return false, err
-		}
-		if err = cloned.LoadVersion(int64(version)); err != nil {
-			return false, err
-		}
-		return cloned.Has(key)
-	default:
-		return false, fmt.Errorf("unexpected version comparison: tree version: %d, requested: %d", h, v)
-	}
+	res, err := t.Get(version, key)
+	return res != nil, err
 }
 
 func (t *Tree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
@@ -155,45 +130,49 @@ func (t *Tree) Iterator(version uint64, start, end []byte, ascending bool) (core
 	}
 	h := t.tree.Version()
 	v := int64(version)
-
-	switch {
-	// TODO permit h+1 read only if the tree is dirty (i.e. has uncommitted changes from WriteChangeset)
-	case v == h || v == h+1:
-		if ascending {
-			// inclusive = false is IAVL v1's default behavior.
-			// the read expectations of certain modules (like x/staking) will cause a panic if this is changed.
-			return t.tree.Iterator(start, end, false)
-		} else {
-			return t.tree.ReverseIterator(start, end)
-		}
-	case v > h:
-		return nil, fmt.Errorf("has: cannot read future version %d; h: %d", v, h)
-	case v < h:
-		cloned, err := t.tree.ReadonlyClone()
-		if err != nil {
-			return nil, err
-		}
-		if err = cloned.LoadVersion(int64(version)); err != nil {
-			return nil, err
-		}
-		if ascending {
-			// inclusive = false is IAVL v1's default behavior.
-			// the read expectations of certain modules (like x/staking) will cause a panic if this is changed.
-			return t.tree.Iterator(start, end, false)
-		} else {
-			return t.tree.ReverseIterator(start, end)
-		}
-	default:
-		return nil, fmt.Errorf("unexpected version comparison: tree version: %d, requested: %d", h, v)
+	if v > h {
+		return nil, fmt.Errorf("iterator: cannot read future version %d; h: %d", v, h)
+	}
+	ok, itr := t.tree.IterateRecent(v, start, end, ascending)
+	if ok {
+		return itr, nil
+	}
+	cloned, err := t.tree.ReadonlyClone()
+	if err != nil {
+		return nil, err
+	}
+	if err = cloned.LoadVersion(int64(version)); err != nil {
+		return nil, err
+	}
+	if ascending {
+		// inclusive = false is IAVL v1's default behavior.
+		// the read expectations of certain modules (like x/staking) will cause a panic if this is changed.
+		return t.tree.Iterator(start, end, false)
+	} else {
+		return t.tree.ReverseIterator(start, end)
 	}
 }
 
 func (t *Tree) Export(version uint64) (commitment.Exporter, error) {
-	return nil, errors.New("snapshot import/export not yet supported")
+	if err := isHighBitSet(version); err != nil {
+		return nil, err
+	}
+	e, err := t.tree.Export(int64(version), iavl.PostOrder)
+	if err != nil {
+		return nil, err
+	}
+	return &Exporter{e}, nil
 }
 
 func (t *Tree) Import(version uint64) (commitment.Importer, error) {
-	return nil, errors.New("snapshot import/export not yet supported")
+	if err := isHighBitSet(version); err != nil {
+		return nil, err
+	}
+	importer, err := t.tree.Import(int64(version))
+	if err != nil {
+		return nil, err
+	}
+	return &Importer{importer}, nil
 }
 
 func (t *Tree) Close() error {

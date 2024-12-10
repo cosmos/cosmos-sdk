@@ -305,7 +305,7 @@ var (
 					GenesisParams: &benchmarkmodulev1.GeneratorParams{
 						Seed:         34,
 						BucketCount:  3,
-						GenesisCount: 10_000_000,
+						GenesisCount: 1_000_000,
 						KeyMean:      64,
 						KeyStdDev:    12,
 						ValueMean:    1024,

@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+* [#22493](https://github.com/cosmos/cosmos-sdk/pull/22493) Refactored `client/v2` package to remove v1 context dependencies, while introducing new packages for client configuration, context management, and formatted output with improved transaction handling and flag support.
 
 ### Bug Fixes
 
@@ -65,6 +66,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
+
+## [v2.0.0-beta.4] - 2024-07-16
 
 ### Bug Fixes
 

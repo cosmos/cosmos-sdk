@@ -16,15 +16,19 @@ import (
 	"cosmossdk.io/log"
 )
 
-// ServerComponent is a server module that can be started and stopped.
+// ServerComponent is a server component that can be started and stopped.
 type ServerComponent[T transaction.Tx] interface {
+	// Name returns the name of the server component.
 	Name() string
 
+	// Start starts the server component.
 	Start(context.Context) error
+	// Stop stops the server component.
+	// Once Stop has been called on a server component, it may not be reused.
 	Stop(context.Context) error
 }
 
-// HasStartFlags is a server module that has start flags.
+// HasStartFlags is a server component that has start flags.
 type HasStartFlags interface {
 	// StartCmdFlags returns server start flags.
 	// Those flags should be prefixed with the server name.
@@ -32,29 +36,29 @@ type HasStartFlags interface {
 	StartCmdFlags() *pflag.FlagSet
 }
 
-// HasConfig is a server module that has a config.
+// HasConfig is a server component that has a config.
 type HasConfig interface {
 	Config() any
 }
 
-// ConfigWriter is a server module that can write its config to a file.
+// ConfigWriter is a server component that can write its config to a file.
 type ConfigWriter interface {
 	WriteConfig(path string) error
 }
 
-// HasCLICommands is a server module that has CLI commands.
+// HasCLICommands is a server component that has CLI commands.
 type HasCLICommands interface {
 	CLICommands() CLIConfig
 }
 
-// CLIConfig defines the CLI configuration for a module server.
+// CLIConfig defines the CLI configuration for a component server.
 type CLIConfig struct {
-	// Commands defines the main command of a module server.
+	// Commands defines the main command of a server component.
 	Commands []*cobra.Command
-	// Queries defines the query commands of a module server.
+	// Queries defines the query commands of a server component.
 	// Those commands are meant to be added in the root query command.
 	Queries []*cobra.Command
-	// Txs defines the tx commands of a module server.
+	// Txs defines the tx commands of a server component.
 	// Those commands are meant to be added in the root tx command.
 	Txs []*cobra.Command
 }

@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/indexer/postgres v0.0.0-00010101000000-000000000000
-	cosmossdk.io/schema v0.3.0
+	cosmossdk.io/schema v0.4.0
 	cosmossdk.io/schema/testing v0.0.0
 	github.com/fergusstrange/embedded-postgres v1.29.0
 	github.com/hashicorp/consul/sdk v0.16.1

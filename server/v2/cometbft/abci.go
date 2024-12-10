@@ -10,7 +10,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -37,11 +36,7 @@ import (
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/std"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (
@@ -256,127 +251,12 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 	// special case for non-module services as they are external gRPC registered on the grpc server component
 	// and not on the app itself, so it won't pass the router afterwards.
 
-	// Handle comet service
-	if strings.Contains(req.Path, "/cosmos.base.tendermint.v1beta1.Service") {
-		rpcClient, _ := rpchttp.New(c.cfg.AppTomlConfig.Address)
-		cometQServer := cmtservice.NewQueryServer(rpcClient, c.Query, c.consensusAddressCodec)
-		paths := strings.Split(req.Path, "/")
-		if len(paths) <= 2 {
-			return nil, false, fmt.Errorf("invalid request path: %s", req.Path)
-		}
-
-		var resp transaction.Msg
-		var err error
-		switch paths[2] {
-		case "GetNodeInfo":
-			resp, err = handleExternalService(ctx, req, cometQServer.GetNodeInfo)
-		case "GetSyncing":
-			resp, err = handleExternalService(ctx, req, cometQServer.GetSyncing)
-		case "GetLatestBlock":
-			resp, err = handleExternalService(ctx, req, cometQServer.GetLatestBlock)
-		case "GetBlockByHeight":
-			resp, err = handleExternalService(ctx, req, cometQServer.GetBlockByHeight)
-		case "GetLatestValidatorSet":
-			resp, err = handleExternalService(ctx, req, cometQServer.GetLatestValidatorSet)
-		case "GetValidatorSetByHeight":
-			resp, err = handleExternalService(ctx, req, cometQServer.GetValidatorSetByHeight)
-		case "ABCIQuery":
-			resp, err = handleExternalService(ctx, req, cometQServer.ABCIQuery)
-		}
-
-		if err != nil {
-			return nil, true, err
-		}
-
-		res, err := queryResponse(resp, req.Height)
-		return res, true, err
-	}
-
-	// Handle node service
-	if strings.Contains(req.Path, "/cosmos.base.node.v1beta1.Service") {
-		nodeQService := nodeServer[T]{c.cfgMap, c.cfg.AppTomlConfig, c}
-		paths := strings.Split(req.Path, "/")
-		if len(paths) <= 2 {
-			return nil, false, fmt.Errorf("invalid request path: %s", req.Path)
-		}
-
-		var resp transaction.Msg
-		var err error
-		switch paths[2] {
-		case "Config":
-			resp, err = handleExternalService(ctx, req, nodeQService.Config)
-		case "Status":
-			resp, err = handleExternalService(ctx, req, nodeQService.Status)
-		}
-
-		if err != nil {
-			return nil, true, err
-		}
-
-		res, err := queryResponse(resp, req.Height)
-		return res, true, err
-	}
-
-	// Handle tx service
-	if strings.Contains(req.Path, "/cosmos.tx.v1beta1.Service") {
-		// init simple client context
-		amino := codec.NewLegacyAmino()
-		std.RegisterLegacyAminoCodec(amino)
-		txConfig := authtx.NewTxConfig(
-			c.appCodec,
-			c.appCodec.InterfaceRegistry().SigningContext().AddressCodec(),
-			c.appCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
-			authtx.DefaultSignModes,
-		)
-		rpcClient, _ := client.NewClientFromNode(c.cfg.AppTomlConfig.Address)
-
-		clientCtx := client.Context{}.
-			WithLegacyAmino(amino).
-			WithCodec(c.appCodec).
-			WithTxConfig(txConfig).
-			WithNodeURI(c.cfg.AppTomlConfig.Address).
-			WithClient(rpcClient)
-
-		txService := txServer[T]{
-			clientCtx: clientCtx,
-			txCodec:   c.txCodec,
-			app:       c.app,
-			consensus: c,
-		}
-		paths := strings.Split(req.Path, "/")
-		if len(paths) <= 2 {
-			return nil, false, fmt.Errorf("invalid request path: %s", req.Path)
-		}
-
-		var resp transaction.Msg
-		var err error
-		switch paths[2] {
-		case "Simulate":
-			resp, err = handleExternalService(ctx, req, txService.Simulate)
-		case "GetTx":
-			resp, err = handleExternalService(ctx, req, txService.GetTx)
-		case "BroadcastTx":
-			return nil, true, errors.New("can't route a broadcast tx message")
-		case "GetTxsEvent":
-			resp, err = handleExternalService(ctx, req, txService.GetTxsEvent)
-		case "GetBlockWithTxs":
-			resp, err = handleExternalService(ctx, req, txService.GetBlockWithTxs)
-		case "TxDecode":
-			resp, err = handleExternalService(ctx, req, txService.TxDecode)
-		case "TxEncode":
-			resp, err = handleExternalService(ctx, req, txService.TxEncode)
-		case "TxEncodeAmino":
-			resp, err = handleExternalService(ctx, req, txService.TxEncodeAmino)
-		case "TxDecodeAmino":
-			resp, err = handleExternalService(ctx, req, txService.Simulate)
-		}
-
-		if err != nil {
-			return nil, true, err
-		}
-
-		res, err := queryResponse(resp, req.Height)
-		return res, true, err
+	externalResp, err := c.maybeHandleExternalServices(ctx, req)
+	if err != nil {
+		return nil, true, err
+	} else if externalResp != nil {
+		resp, err = queryResponse(externalResp, req.Height)
+		return resp, true, err
 	}
 
 	handler, found := c.queryHandlersMap[handlerFullName]

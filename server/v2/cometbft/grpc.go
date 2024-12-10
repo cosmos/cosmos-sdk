@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -20,10 +21,13 @@ import (
 	"cosmossdk.io/log"
 	storeserver "cosmossdk.io/server/v2/store"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -455,6 +459,118 @@ func parseOrderBy(orderBy txtypes.OrderBy) string {
 	default:
 		return "" // Defaults to CometBFT's default, which is `asc` now.
 	}
+}
+
+func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abci.QueryRequest) (transaction.Msg, error) {
+	// Handle comet service
+	if strings.Contains(req.Path, "/cosmos.base.tendermint.v1beta1.Service") {
+		rpcClient, _ := rpchttp.New(c.cfg.AppTomlConfig.Address)
+		cometQServer := cmtservice.NewQueryServer(rpcClient, c.Query, c.consensusAddressCodec)
+		paths := strings.Split(req.Path, "/")
+		if len(paths) <= 2 {
+			return nil, fmt.Errorf("invalid request path: %s", req.Path)
+		}
+
+		var resp transaction.Msg
+		var err error
+		switch paths[2] {
+		case "GetNodeInfo":
+			resp, err = handleExternalService(ctx, req, cometQServer.GetNodeInfo)
+		case "GetSyncing":
+			resp, err = handleExternalService(ctx, req, cometQServer.GetSyncing)
+		case "GetLatestBlock":
+			resp, err = handleExternalService(ctx, req, cometQServer.GetLatestBlock)
+		case "GetBlockByHeight":
+			resp, err = handleExternalService(ctx, req, cometQServer.GetBlockByHeight)
+		case "GetLatestValidatorSet":
+			resp, err = handleExternalService(ctx, req, cometQServer.GetLatestValidatorSet)
+		case "GetValidatorSetByHeight":
+			resp, err = handleExternalService(ctx, req, cometQServer.GetValidatorSetByHeight)
+		case "ABCIQuery":
+			resp, err = handleExternalService(ctx, req, cometQServer.ABCIQuery)
+		}
+
+		return resp, err
+	}
+
+	// Handle node service
+	if strings.Contains(req.Path, "/cosmos.base.node.v1beta1.Service") {
+		nodeQService := nodeServer[T]{c.cfgMap, c.cfg.AppTomlConfig, c}
+		paths := strings.Split(req.Path, "/")
+		if len(paths) <= 2 {
+			return nil, fmt.Errorf("invalid request path: %s", req.Path)
+		}
+
+		var resp transaction.Msg
+		var err error
+		switch paths[2] {
+		case "Config":
+			resp, err = handleExternalService(ctx, req, nodeQService.Config)
+		case "Status":
+			resp, err = handleExternalService(ctx, req, nodeQService.Status)
+		}
+
+		return resp, err
+	}
+
+	// Handle tx service
+	if strings.Contains(req.Path, "/cosmos.tx.v1beta1.Service") {
+		// init simple client context
+		amino := codec.NewLegacyAmino()
+		std.RegisterLegacyAminoCodec(amino)
+		txConfig := authtx.NewTxConfig(
+			c.appCodec,
+			c.appCodec.InterfaceRegistry().SigningContext().AddressCodec(),
+			c.appCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
+			authtx.DefaultSignModes,
+		)
+		rpcClient, _ := client.NewClientFromNode(c.cfg.AppTomlConfig.Address)
+
+		clientCtx := client.Context{}.
+			WithLegacyAmino(amino).
+			WithCodec(c.appCodec).
+			WithTxConfig(txConfig).
+			WithNodeURI(c.cfg.AppTomlConfig.Address).
+			WithClient(rpcClient)
+
+		txService := txServer[T]{
+			clientCtx: clientCtx,
+			txCodec:   c.txCodec,
+			app:       c.app,
+			consensus: c,
+		}
+		paths := strings.Split(req.Path, "/")
+		if len(paths) <= 2 {
+			return nil, fmt.Errorf("invalid request path: %s", req.Path)
+		}
+
+		var resp transaction.Msg
+		var err error
+		switch paths[2] {
+		case "Simulate":
+			resp, err = handleExternalService(ctx, req, txService.Simulate)
+		case "GetTx":
+			resp, err = handleExternalService(ctx, req, txService.GetTx)
+		case "BroadcastTx":
+			return nil, errors.New("can't route a broadcast tx message")
+		case "GetTxsEvent":
+			resp, err = handleExternalService(ctx, req, txService.GetTxsEvent)
+		case "GetBlockWithTxs":
+			resp, err = handleExternalService(ctx, req, txService.GetBlockWithTxs)
+		case "TxDecode":
+			resp, err = handleExternalService(ctx, req, txService.TxDecode)
+		case "TxEncode":
+			resp, err = handleExternalService(ctx, req, txService.TxEncode)
+		case "TxEncodeAmino":
+			resp, err = handleExternalService(ctx, req, txService.TxEncodeAmino)
+		case "TxDecodeAmino":
+			resp, err = handleExternalService(ctx, req, txService.Simulate)
+		}
+
+		return resp, err
+	}
+
+	return nil, nil
 }
 
 func handleExternalService[T any, PT interface {

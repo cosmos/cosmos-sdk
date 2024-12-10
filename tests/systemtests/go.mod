@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/systemtests v1.0.0-rc.2.0.20241205143753-9e94ea87f6e4
+	cosmossdk.io/systemtests v1.0.0-rc.3
 	github.com/cosmos/cosmos-sdk v0.50.6
 )
 
@@ -102,7 +102,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/linxGnu/grocksdb v1.9.3 // indirect
-	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/magiconair/properties v1.8.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect

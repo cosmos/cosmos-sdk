@@ -36,6 +36,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+## [v1.0.0-rc.4] - 2024-12-10
+
+* [#22810](https://github.com/cosmos/cosmos-sdk/pull/22810) Avoid HTTP server conflicts on port 8080
+
 ## [v1.0.0-rc.3] - 2024-12-05
 
 * [#22774](https://github.com/cosmos/cosmos-sdk/pull/22774) Add greater than or equal support in Rest test suite

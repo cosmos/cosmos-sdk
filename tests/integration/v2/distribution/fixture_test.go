@@ -156,5 +156,4 @@ func (s *fixture) registerMsgRouterService(router *integration.RouterService) {
 
 func (s *fixture) registerQueryRouterService(router *integration.RouterService) {
 	// register custom router service
-
 }

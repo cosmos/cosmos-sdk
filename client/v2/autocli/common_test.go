@@ -32,6 +32,10 @@ type fixture struct {
 	conn      *testClientConn
 	b         *Builder
 	clientCtx client.Context
+
+	home     string
+	chainID  string
+	kBackend string
 }
 
 func initFixture(t *testing.T) *fixture {
@@ -85,7 +89,8 @@ func initFixture(t *testing.T) *fixture {
 			return conn, nil
 		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    flags.AddTxFlagsToCmd,
+		AddTxConnFlags:    addTxAndGlobalFlagsToCmd,
+		Cdc:               encodingConfig.Codec,
 	}
 	assert.NilError(t, b.ValidateAndComplete())
 
@@ -93,7 +98,17 @@ func initFixture(t *testing.T) *fixture {
 		conn:      conn,
 		b:         b,
 		clientCtx: clientCtx,
+
+		home:     home,
+		chainID:  "autocli-test",
+		kBackend: sdkkeyring.BackendMemory,
 	}
+}
+
+func addTxAndGlobalFlagsToCmd(cmd *cobra.Command) {
+	f := cmd.Flags()
+	f.String("home", "", "home directory")
+	flags.AddTxFlagsToCmd(cmd)
 }
 
 func runCmd(fixture *fixture, command func(moduleName string, f *fixture) (*cobra.Command, error), args ...string) (*bytes.Buffer, error) {

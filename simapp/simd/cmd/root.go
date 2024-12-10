@@ -121,7 +121,10 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	autoCliOpts := tempApp.AutoCliOpts()
-	autoCliOpts.ClientCtx = initClientCtx
+	autoCliOpts.AddressCodec = initClientCtx.AddressCodec
+	autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
+	autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec
+	autoCliOpts.Cdc = initClientCtx.Codec
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()

@@ -52,22 +52,18 @@ func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTeleme
 		return nil, fmt.Errorf("failed to initialize metrics: %w", err)
 	}
 	srv.metrics = metrics
-	srv.init()
-	return srv, nil
-}
-
-func (s *Server[T]) init() {
 	mux := http.NewServeMux()
 	// /metrics is the default standard path for Prometheus metrics.
-	mux.HandleFunc("/metrics", s.metricsHandler)
+	mux.HandleFunc("/metrics", srv.metricsHandler)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/metrics", http.StatusMovedPermanently)
 	})
 
-	s.server = &http.Server{
-		Addr:    s.config.Address,
+	srv.server = &http.Server{
+		Addr:    srv.config.Address,
 		Handler: mux,
 	}
+	return srv, nil
 }
 
 // Name returns the server name.
@@ -102,7 +98,6 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 		return nil
 	}
 
-	defer s.init()
 	s.logger.Info("stopping telemetry server...", "address", s.config.Address)
 	return s.server.Shutdown(ctx)
 }

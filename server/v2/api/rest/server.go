@@ -46,7 +46,10 @@ func New[T transaction.Tx](
 		}
 	}
 	srv.config = serverCfg
-	srv.init()
+	srv.httpServer = &http.Server{
+		Addr:    srv.config.Address,
+		Handler: srv.router,
+	}
 	return srv, nil
 }
 
@@ -56,13 +59,6 @@ func New[T transaction.Tx](
 func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
 	return &Server[T]{
 		cfgOptions: opts,
-	}
-}
-
-func (s *Server[T]) init() {
-	s.httpServer = &http.Server{
-		Addr:    s.config.Address,
-		Handler: s.router,
 	}
 }
 
@@ -91,7 +87,6 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping HTTP server")
-	defer s.init()
 	return s.httpServer.Shutdown(ctx)
 }
 

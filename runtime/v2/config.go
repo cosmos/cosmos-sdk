@@ -34,7 +34,7 @@ func ProvideModuleConfigMaps(
 			m := globalConfig
 			fetchFlag := flag
 			// splitting on "." is required to handle nested flags which are defined
-			// in other modules that are not the current component
+			// in other modules that are not the current module
 			// for example: "server.minimum-gas-prices" is defined in the server component
 			// but required by x/validate
 			for _, part := range strings.Split(flag, ".") {

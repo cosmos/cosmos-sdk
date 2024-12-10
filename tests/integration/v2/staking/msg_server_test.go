@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,7 +25,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	assert.NilError(t, err)
@@ -56,7 +58,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	unbondingAmount := sdk.NewInt64Coin(bondDenom, 5)
 	ubd := types.NewUnbondingDelegation(
 		delegatorAddr, validatorAddr, 10,
-		ctx.HeaderInfo().Time.Add(time.Minute*10),
+		integration.HeaderInfoFromContext(ctx).Time.Add(time.Minute*10),
 		unbondingAmount.Amount,
 		0,
 		address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"),
@@ -181,7 +183,7 @@ func TestRotateConsPubKey(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	stakingKeeper := f.stakingKeeper
 	bankKeeper := f.bankKeeper
 	accountKeeper := f.accountKeeper
@@ -213,7 +215,8 @@ func TestRotateConsPubKey(t *testing.T) {
 	}
 
 	// call endblocker to update the validator state
-	_, err = stakingKeeper.EndBlocker(ctx.WithBlockHeight(ctx.BlockHeader().Height + 1))
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Height: int64(f.app.LastBlockHeight()) + 1})
+	_, err = stakingKeeper.EndBlocker(ctx)
 	assert.NilError(t, err)
 
 	params, err = stakingKeeper.Params.Get(ctx)
@@ -225,7 +228,7 @@ func TestRotateConsPubKey(t *testing.T) {
 
 	testCases := []struct {
 		name           string
-		malleate       func() sdk.Context
+		malleate       func() context.Context
 		pass           bool
 		validator      string
 		newPubKey      cryptotypes.PubKey
@@ -235,7 +238,7 @@ func TestRotateConsPubKey(t *testing.T) {
 	}{
 		{
 			name: "successful consensus pubkey rotation",
-			malleate: func() sdk.Context {
+			malleate: func() context.Context {
 				return ctx
 			},
 			validator:      validators[0].GetOperator(),
@@ -246,7 +249,7 @@ func TestRotateConsPubKey(t *testing.T) {
 		},
 		{
 			name: "non existing validator check",
-			malleate: func() sdk.Context {
+			malleate: func() context.Context {
 				return ctx
 			},
 			validator: sdk.ValAddress("non_existing_val").String(),
@@ -256,7 +259,7 @@ func TestRotateConsPubKey(t *testing.T) {
 		},
 		{
 			name: "pubkey already associated with another validator",
-			malleate: func() sdk.Context {
+			malleate: func() context.Context {
 				return ctx
 			},
 			validator: validators[0].GetOperator(),
@@ -266,7 +269,7 @@ func TestRotateConsPubKey(t *testing.T) {
 		},
 		{
 			name: "consensus pubkey rotation limit check",
-			malleate: func() sdk.Context {
+			malleate: func() context.Context {
 				params, err := stakingKeeper.Params.Get(ctx)
 				assert.NilError(t, err)
 
@@ -291,7 +294,7 @@ func TestRotateConsPubKey(t *testing.T) {
 		},
 		{
 			name: "limit reached, but should rotate after the unbonding period",
-			malleate: func() sdk.Context {
+			malleate: func() context.Context {
 				params, err := stakingKeeper.Params.Get(ctx)
 				assert.NilError(t, err)
 
@@ -307,7 +310,8 @@ func TestRotateConsPubKey(t *testing.T) {
 				assert.NilError(t, err)
 				_, err = msgServer.RotateConsPubKey(ctx, msg)
 				assert.NilError(t, err)
-				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+				newHeight := integration.HeaderInfoFromContext(ctx).Height + 1
+				ctx = integration.SetHeaderInfo(ctx, header.Info{Height: newHeight})
 
 				// this shouldn't remove the existing keys from waiting queue since unbonding time isn't reached
 				_, err = stakingKeeper.EndBlocker(ctx)
@@ -322,9 +326,9 @@ func TestRotateConsPubKey(t *testing.T) {
 				_, err = msgServer.RotateConsPubKey(ctx, msg)
 				assert.Error(t, err, "exceeding maximum consensus pubkey rotations within unbonding period")
 
-				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+				newHeight = integration.HeaderInfoFromContext(ctx).Height + 1
+				newCtx := integration.SetHeaderInfo(ctx, header.Info{Height: newHeight + 1})
 
-				newCtx := ctx.WithHeaderInfo(header.Info{Height: ctx.BlockHeight() + 1, Time: ctx.HeaderInfo().Time.Add(params.UnbondingTime)}).WithBlockHeight(ctx.BlockHeight() + 1)
 				// this should remove keys from waiting queue since unbonding time is reached
 				_, err = stakingKeeper.EndBlocker(newCtx)
 				assert.NilError(t, err)

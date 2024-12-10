@@ -34,8 +34,7 @@ func TestGRPCQueryValidators(t *testing.T) {
 
 	_, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	var req *types.QueryValidatorsRequest
 	testCases := []struct {
@@ -116,11 +115,10 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	addrs, _ := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	params, err := f.stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
@@ -188,8 +186,7 @@ func TestGRPCQueryDelegatorValidator(t *testing.T) {
 
 	addrs, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	addr := addrs[1]
 	addrVal, addrVal1 := vals[0].OperatorAddress, vals[1].OperatorAddress
@@ -273,11 +270,10 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal := vals[0].OperatorAddress
@@ -342,11 +338,10 @@ func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	addrAcc := addrs[0]
 	addrVal1 := vals[0].OperatorAddress
@@ -420,11 +415,10 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	addrAcc := addrs[0]
 	addrVal1 := vals[1].OperatorAddress
@@ -502,11 +496,10 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	addrAcc2 := addrs[1]
 	addrVal2 := vals[1].OperatorAddress
@@ -605,11 +598,10 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal, addrVal2 := vals[0].OperatorAddress, vals[1].OperatorAddress
@@ -692,10 +684,9 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	bondDenom := sdk.DefaultBondDenom
 
@@ -719,11 +710,10 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
@@ -841,11 +831,10 @@ func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
 
-	qr := f.app.QueryHelper()
-	queryClient := types.NewQueryClient(qr)
+	queryClient := f.queryClient
 
 	addrAcc1, _ := addrs[0], addrs[1]
 	val1 := vals[0]

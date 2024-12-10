@@ -30,7 +30,7 @@ func bootstrapGenesisTest(t *testing.T, numAddrs int) (*fixture, []sdk.AccAddres
 func TestInitGenesis(t *testing.T) {
 	f, addrs := bootstrapGenesisTest(t, 10)
 
-	valTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 1)
+	valTokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 1)
 
 	pk0, err := codectypes.NewAnyWithValue(PKs[0])
 	assert.NilError(t, err)
@@ -43,15 +43,16 @@ func TestInitGenesis(t *testing.T) {
 		DelegatorShares: math.LegacyNewDecFromInt(valTokens),
 		Description:     types.NewDescription("hoop", "", "", "", "", &types.Metadata{}),
 	}
-	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, bondedVal))
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.ctx, bondedVal))
 
-	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.ctx)
 	assert.NilError(t, err)
 
-	validators, err := f.stakingKeeper.GetAllValidators(f.sdkCtx)
+	validators, err := f.stakingKeeper.GetAllValidators(f.ctx)
 	assert.NilError(t, err)
 
-	assert.Assert(t, len(validators) == 1)
+	// check validators count including init validator
+	assert.Assert(t, len(validators) == 2)
 	var delegations []types.Delegation
 
 	pk1, err := codectypes.NewAnyWithValue(PKs[1])
@@ -85,7 +86,7 @@ func TestInitGenesis(t *testing.T) {
 	i2 := len(validators)
 	assert.NilError(t,
 		banktestutil.FundModuleAccount(
-			f.sdkCtx,
+			f.ctx,
 			f.bankKeeper,
 			types.BondedPoolName,
 			sdk.NewCoins(
@@ -94,25 +95,25 @@ func TestInitGenesis(t *testing.T) {
 		),
 	)
 
-	genesisDelegations, err := f.stakingKeeper.GetAllDelegations(f.sdkCtx)
+	genesisDelegations, err := f.stakingKeeper.GetAllDelegations(f.ctx)
 	assert.NilError(t, err)
 	delegations = append(delegations, genesisDelegations...)
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
-	vals, err := (f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState))
+	vals, err := (f.stakingKeeper.InitGenesis(f.ctx, genesisState))
 	assert.NilError(t, err)
 
-	actualGenesis, err := (f.stakingKeeper.ExportGenesis(f.sdkCtx))
+	actualGenesis, err := (f.stakingKeeper.ExportGenesis(f.ctx))
 	assert.NilError(t, err)
 	assert.DeepEqual(t, genesisState.Params, actualGenesis.Params)
 	assert.DeepEqual(t, genesisState.Delegations, actualGenesis.Delegations)
 
-	allvals, err := f.stakingKeeper.GetAllValidators(f.sdkCtx)
+	allvals, err := f.stakingKeeper.GetAllValidators(f.ctx)
 	assert.NilError(t, err)
 	assert.DeepEqual(t, allvals, actualGenesis.Validators)
 
 	// Ensure validators have addresses.
-	vals2, err := staking.WriteValidators(f.sdkCtx, (f.stakingKeeper))
+	vals2, err := staking.WriteValidators(f.ctx, (f.stakingKeeper))
 	assert.NilError(t, err)
 
 	for _, val := range vals2 {
@@ -120,17 +121,17 @@ func TestInitGenesis(t *testing.T) {
 	}
 
 	// now make sure the validators are bonded and intra-tx counters are correct
-	resVal, found := (f.stakingKeeper.GetValidator(f.sdkCtx, sdk.ValAddress(addrs[1])))
+	resVal, found := (f.stakingKeeper.GetValidator(f.ctx, sdk.ValAddress(addrs[1])))
 	assert.Assert(t, found)
 	assert.Equal(t, types.Bonded, resVal.Status)
 
-	resVal, found = (f.stakingKeeper.GetValidator(f.sdkCtx, sdk.ValAddress(addrs[2])))
+	resVal, found = (f.stakingKeeper.GetValidator(f.ctx, sdk.ValAddress(addrs[2])))
 	assert.Assert(t, found)
 	assert.Equal(t, types.Bonded, resVal.Status)
 
 	validatorUpdates := make([]appmodule.ValidatorUpdate, len(vals))
 	for i, val := range validators {
-		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
+		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.ctx))
 	}
 	assert.DeepEqual(t, validatorUpdates, vals)
 }
@@ -160,7 +161,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	// setting validator status to bonded so the balance counts towards bonded pool
 	validator.Status = types.Bonded
-	_, err = f.stakingKeeper.InitGenesis(f.sdkCtx, &types.GenesisState{
+	_, err = f.stakingKeeper.InitGenesis(f.ctx, &types.GenesisState{
 		Params:     params,
 		Validators: []types.Validator{validator},
 	})
@@ -169,7 +170,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	// setting validator status to unbonded so the balance counts towards not bonded pool
 	validator.Status = types.Unbonded
-	_, err = f.stakingKeeper.InitGenesis(f.sdkCtx, &types.GenesisState{
+	_, err = f.stakingKeeper.InitGenesis(f.ctx, &types.GenesisState{
 		Params:     params,
 		Validators: []types.Validator{validator},
 	})
@@ -182,10 +183,10 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	assert.Assert(t, size > 100)
 
 	f, addrs := bootstrapGenesisTest(t, 200)
-	genesisValidators, err := f.stakingKeeper.GetAllValidators(f.sdkCtx)
+	genesisValidators, err := f.stakingKeeper.GetAllValidators(f.ctx)
 	assert.NilError(t, err)
 
-	params, err := f.stakingKeeper.Params.Get(f.sdkCtx)
+	params, err := f.stakingKeeper.Params.Get(f.ctx)
 	assert.NilError(t, err)
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
@@ -200,9 +201,9 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		assert.NilError(t, err)
 		validators[i].Status = types.Bonded
 
-		tokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 1)
+		tokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 1)
 		if i < 100 {
-			tokens = f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 2)
+			tokens = f.stakingKeeper.TokensFromConsensusPower(f.ctx, 2)
 		}
 
 		validators[i].Tokens = tokens
@@ -218,19 +219,19 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	// mint coins in the bonded pool representing the validators coins
 	assert.NilError(t,
 		banktestutil.FundModuleAccount(
-			f.sdkCtx,
+			f.ctx,
 			f.bankKeeper,
 			types.BondedPoolName,
 			sdk.NewCoins(sdk.NewCoin(params.BondDenom, bondedPoolAmt)),
 		),
 	)
 
-	vals, err := f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState)
+	vals, err := f.stakingKeeper.InitGenesis(f.ctx, genesisState)
 	assert.NilError(t, err)
 
 	validatorUpdates := make([]module.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {
-		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
+		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.ctx))
 	}
 	// remove genesis validator
 	vals = vals[:100]

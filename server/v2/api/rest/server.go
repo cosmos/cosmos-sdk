@@ -87,6 +87,12 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping HTTP server")
+	defer func() {
+		s.httpServer = &http.Server{
+			Addr:    s.config.Address,
+			Handler: s.router,
+		}
+	}()
 	return s.httpServer.Shutdown(ctx)
 }
 

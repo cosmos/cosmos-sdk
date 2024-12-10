@@ -43,8 +43,8 @@ require (
 )
 
 require (
-	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
 	cosmossdk.io/indexer/postgres v0.0.0-20241204160609-556102cfa046
+	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000

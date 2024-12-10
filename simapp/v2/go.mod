@@ -59,7 +59,7 @@ require (
 	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241209183624-332d0b106d1b // indirect
+	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241204101618-7fa2356c07aa // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main

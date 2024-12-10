@@ -8,7 +8,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-
 	"cosmossdk.io/client/v2/internal/coins"
 )
 

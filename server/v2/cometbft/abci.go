@@ -547,7 +547,7 @@ func (c *consensus[T]) FinalizeBlock(
 	events = append(events, resp.EndBlockEvents...)
 
 	// listen to state streaming changes in accordance with the block
-	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, resp.TxResults, events, stateChanges)
+	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, decodedTxs, resp.TxResults, events, stateChanges)
 	if err != nil {
 		return nil, err
 	}
@@ -590,7 +590,7 @@ func (c *consensus[T]) internalFinalizeBlock(
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
 	// have a tx that fails decoding.
-	decodedTxs, err := decodeTxs(req.Txs, c.txCodec)
+	decodedTxs, err := decodeTxs(c.logger, req.Txs, c.txCodec)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -723,12 +723,13 @@ func (c *consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 	return resp, err
 }
 
-func decodeTxs[T transaction.Tx](rawTxs [][]byte, codec transaction.Codec[T]) ([]T, error) {
+func decodeTxs[T transaction.Tx](logger log.Logger, rawTxs [][]byte, codec transaction.Codec[T]) ([]T, error) {
 	txs := make([]T, len(rawTxs))
 	for i, rawTx := range rawTxs {
 		tx, err := codec.Decode(rawTx)
 		if err != nil {
-			return nil, fmt.Errorf("unable to decode tx: %d: %w", i, err)
+			// do not return an error here, as we want to deliver the block even if some txs are invalid
+			logger.Debug("failed to decode tx", "err", err)
 		}
 		txs[i] = tx
 	}

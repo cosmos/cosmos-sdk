@@ -31,6 +31,9 @@ type StartBlockData struct {
 
 // TxData represents the raw transaction data that is passed to a listener.
 type TxData struct {
+	// BlockNumber is the block number to which this event is associated.
+	BlockNumber uint64
+
 	// TxIndex is the index of the transaction in the block.
 	TxIndex int32
 
@@ -52,6 +55,9 @@ type Event struct {
 	// BlockStage represents the stage of the block at which this event is associated.
 	// If the block stage is unknown, it should be set to UnknownBlockStage.
 	BlockStage BlockStage
+
+	// BlockNumber is the block number to which this event is associated.
+	BlockNumber uint64
 
 	// TxIndex is the 1-based index of the transaction in the block to which this event is associated.
 	// If TxIndex is zero, it means that we do not know the transaction index.

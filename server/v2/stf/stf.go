@@ -204,6 +204,7 @@ func (s STF[T]) deliverTx(
 	events := make([]event.Event, 0)
 	// set the event indexes, set MsgIndex to 0 in validation events
 	for i, e := range validationEvents {
+		e.BlockNumber = uint64(hi.Height)
 		e.BlockStage = appdata.TxProcessingStage
 		e.TxIndex = txIndex
 		e.MsgIndex = 0
@@ -214,6 +215,7 @@ func (s STF[T]) deliverTx(
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
 	// set the TxIndex in the exec events
 	for _, e := range execEvents {
+		e.BlockNumber = uint64(hi.Height)
 		e.BlockStage = appdata.TxProcessingStage
 		e.TxIndex = txIndex
 		events = append(events, e)
@@ -373,6 +375,7 @@ func (s STF[T]) preBlock(
 	}
 
 	for i := range ctx.events {
+		ctx.events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		ctx.events[i].BlockStage = appdata.PreBlockStage
 		ctx.events[i].EventIndex = int32(i + 1)
 	}
@@ -390,6 +393,7 @@ func (s STF[T]) beginBlock(
 	}
 
 	for i := range ctx.events {
+		ctx.events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		ctx.events[i].BlockStage = appdata.BeginBlockStage
 		ctx.events[i].EventIndex = int32(i + 1)
 	}
@@ -413,6 +417,7 @@ func (s STF[T]) endBlock(
 	}
 	events = append(events, ctx.events...)
 	for i := range events {
+		events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		events[i].BlockStage = appdata.EndBlockStage
 		events[i].EventIndex = int32(i + 1)
 	}

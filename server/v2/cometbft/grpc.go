@@ -30,6 +30,7 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 type appSimulator[T transaction.Tx] interface {
@@ -455,4 +456,28 @@ func parseOrderBy(orderBy txtypes.OrderBy) string {
 	default:
 		return "" // Defaults to CometBFT's default, which is `asc` now.
 	}
+}
+
+func handleExternalService[T any, PT interface {
+	*T
+	gogoproto.Message
+},
+	U any, UT interface {
+		*U
+		gogoproto.Message
+	}](
+	ctx context.Context,
+	rawReq *abciproto.QueryRequest,
+	handler func(ctx context.Context, msg PT) (UT, error),
+) (transaction.Msg, error) {
+	req := PT(new(T))
+	err := gogoproto.Unmarshal(rawReq.Data, req)
+	if err != nil {
+		return nil, err
+	}
+	typedResp, err := handler(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return typedResp, nil
 }

@@ -191,12 +191,13 @@ func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	}
 
 	// when a client did not provide a query height, manually inject the latest
+	// for modules queries, AppManager does it automatically
 	if req.Height == 0 {
-		lastestVersion, err := c.store.GetLatestVersion()
+		latestVersion, err := c.store.GetLatestVersion()
 		if err != nil {
 			return nil, err
 		}
-		req.Height = int64(lastestVersion)
+		req.Height = int64(latestVersion)
 	}
 
 	// this error most probably means that we can't handle it with a proto message, so
@@ -261,24 +262,27 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		rpcClient, _ := rpchttp.New(c.cfg.AppTomlConfig.Address)
 		cometQServer := cmtservice.NewQueryServer(rpcClient, c.Query, c.consensusAddressCodec)
 		paths := strings.Split(req.Path, "/")
+		if len(paths) <= 2 {
+			return nil, false, fmt.Errorf("invalid request path: %s", req.Path)
+		}
 
 		var resp transaction.Msg
 		var err error
 		switch paths[2] {
 		case "GetNodeInfo":
-			resp, err = handleCometService(ctx, req, cometQServer.GetNodeInfo)
+			resp, err = handleExternalService(ctx, req, cometQServer.GetNodeInfo)
 		case "GetSyncing":
-			resp, err = handleCometService(ctx, req, cometQServer.GetSyncing)
+			resp, err = handleExternalService(ctx, req, cometQServer.GetSyncing)
 		case "GetLatestBlock":
-			resp, err = handleCometService(ctx, req, cometQServer.GetLatestBlock)
+			resp, err = handleExternalService(ctx, req, cometQServer.GetLatestBlock)
 		case "GetBlockByHeight":
-			resp, err = handleCometService(ctx, req, cometQServer.GetBlockByHeight)
+			resp, err = handleExternalService(ctx, req, cometQServer.GetBlockByHeight)
 		case "GetLatestValidatorSet":
-			resp, err = handleCometService(ctx, req, cometQServer.GetLatestValidatorSet)
+			resp, err = handleExternalService(ctx, req, cometQServer.GetLatestValidatorSet)
 		case "GetValidatorSetByHeight":
-			resp, err = handleCometService(ctx, req, cometQServer.GetValidatorSetByHeight)
+			resp, err = handleExternalService(ctx, req, cometQServer.GetValidatorSetByHeight)
 		case "ABCIQuery":
-			resp, err = handleCometService(ctx, req, cometQServer.ABCIQuery)
+			resp, err = handleExternalService(ctx, req, cometQServer.ABCIQuery)
 		}
 
 		if err != nil {
@@ -293,14 +297,17 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 	if strings.Contains(req.Path, "/cosmos.base.node.v1beta1.Service") {
 		nodeQService := nodeServer[T]{c.cfgMap, c.cfg.AppTomlConfig, c}
 		paths := strings.Split(req.Path, "/")
+		if len(paths) <= 2 {
+			return nil, false, fmt.Errorf("invalid request path: %s", req.Path)
+		}
 
 		var resp transaction.Msg
 		var err error
 		switch paths[2] {
 		case "Config":
-			resp, err = handleCometService(ctx, req, nodeQService.Config)
+			resp, err = handleExternalService(ctx, req, nodeQService.Config)
 		case "Status":
-			resp, err = handleCometService(ctx, req, nodeQService.Status)
+			resp, err = handleExternalService(ctx, req, nodeQService.Status)
 		}
 
 		if err != nil {
@@ -338,28 +345,31 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 			consensus: c,
 		}
 		paths := strings.Split(req.Path, "/")
+		if len(paths) <= 2 {
+			return nil, false, fmt.Errorf("invalid request path: %s", req.Path)
+		}
 
 		var resp transaction.Msg
 		var err error
 		switch paths[2] {
 		case "Simulate":
-			resp, err = handleCometService(ctx, req, txService.Simulate)
+			resp, err = handleExternalService(ctx, req, txService.Simulate)
 		case "GetTx":
-			resp, err = handleCometService(ctx, req, txService.GetTx)
+			resp, err = handleExternalService(ctx, req, txService.GetTx)
 		case "BroadcastTx":
 			return nil, true, errors.New("can't route a broadcast tx message")
 		case "GetTxsEvent":
-			resp, err = handleCometService(ctx, req, txService.GetTxsEvent)
+			resp, err = handleExternalService(ctx, req, txService.GetTxsEvent)
 		case "GetBlockWithTxs":
-			resp, err = handleCometService(ctx, req, txService.GetBlockWithTxs)
+			resp, err = handleExternalService(ctx, req, txService.GetBlockWithTxs)
 		case "TxDecode":
-			resp, err = handleCometService(ctx, req, txService.TxDecode)
+			resp, err = handleExternalService(ctx, req, txService.TxDecode)
 		case "TxEncode":
-			resp, err = handleCometService(ctx, req, txService.TxEncode)
+			resp, err = handleExternalService(ctx, req, txService.TxEncode)
 		case "TxEncodeAmino":
-			resp, err = handleCometService(ctx, req, txService.TxEncodeAmino)
+			resp, err = handleExternalService(ctx, req, txService.TxEncodeAmino)
 		case "TxDecodeAmino":
-			resp, err = handleCometService(ctx, req, txService.Simulate)
+			resp, err = handleExternalService(ctx, req, txService.Simulate)
 		}
 
 		if err != nil {
@@ -389,30 +399,6 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 	resp, err = queryResponse(res, req.Height)
 	return resp, true, err
-}
-
-func handleCometService[T any, PT interface {
-	*T
-	gogoproto.Message
-},
-	U any, UT interface {
-		*U
-		gogoproto.Message
-	}](
-	ctx context.Context,
-	rawReq *abciproto.QueryRequest,
-	handler func(ctx context.Context, msg PT) (UT, error),
-) (transaction.Msg, error) {
-	req := PT(new(T))
-	err := gogoproto.Unmarshal(rawReq.Data, req)
-	if err != nil {
-		return nil, err
-	}
-	typedResp, err := handler(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return typedResp, nil
 }
 
 // InitChain implements types.Application.

@@ -33,3 +33,24 @@ func ParseCoin(input string) (*basev1beta1.Coin, error) {
 		Denom:  matches[3],
 	}, nil
 }
+
+// ParseDecCoin parses a decCoin from a string. The string must be in the format
+// <amount><denom>, where <amount> is a number and <denom> is a valid denom.
+func ParseDecCoin(input string) (*basev1beta1.DecCoin, error) {
+	input = strings.TrimSpace(input)
+
+	if input == "" {
+		return nil, errors.New("empty input when parsing coin")
+	}
+
+	matches := coinRegex.FindStringSubmatch(input)
+
+	if len(matches) == 0 {
+		return nil, errors.New("invalid input format")
+	}
+
+	return &basev1beta1.DecCoin{
+		Amount: matches[1],
+		Denom:  matches[3],
+	}, nil
+}

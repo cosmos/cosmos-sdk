@@ -42,6 +42,14 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
+<<<<<<< HEAD
+=======
+* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+* (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
+* (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
+* (client) [#22807](https://github.com/cosmos/cosmos-sdk/pull/22807) Return v2 server information in the `version` command.
+
+>>>>>>> 6a7ecd89e (feat(version): update version command to return v2 info (#22807))
 ### Improvements
 
 * RocksDB libraries have been upgraded to support RockDB v9 instead of v8.

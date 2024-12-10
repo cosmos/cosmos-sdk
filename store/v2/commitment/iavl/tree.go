@@ -21,6 +21,8 @@ var (
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
 	tree *iavl.MutableTree
+	// it is only used for new store key during the migration process.
+	initialVersion uint64
 }
 
 // NewIavlTree creates a new IavlTree instance.
@@ -65,6 +67,17 @@ func (t *IavlTree) WorkingHash() []byte {
 
 // LoadVersion loads the state at the given version.
 func (t *IavlTree) LoadVersion(version uint64) error {
+	if t.initialVersion > 0 {
+		// If the initial version is set and the tree is empty,
+		// we don't need to load the version.
+		latestVersion, err := t.tree.GetLatestVersion()
+		if err != nil {
+			return err
+		}
+		if latestVersion == 0 {
+			return nil
+		}
+	}
 	_, err := t.tree.LoadVersion(int64(version))
 	return err
 }
@@ -150,6 +163,7 @@ func (t *IavlTree) GetLatestVersion() (uint64, error) {
 // SetInitialVersion sets the initial version of the database.
 func (t *IavlTree) SetInitialVersion(version uint64) error {
 	t.tree.SetInitialVersion(version)
+	t.initialVersion = version
 	return nil
 }
 
@@ -169,6 +183,9 @@ func (t *IavlTree) PausePruning(pause bool) {
 
 // Export exports the tree exporter at the given version.
 func (t *IavlTree) Export(version uint64) (commitment.Exporter, error) {
+	if version < t.initialVersion {
+		return &EmptyExporter{}, nil
+	}
 	tree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
 		return nil, err

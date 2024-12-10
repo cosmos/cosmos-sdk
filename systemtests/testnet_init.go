@@ -118,13 +118,6 @@ func NewModifyConfigYamlInitializer(exec string, s *SystemUnderTest) *ModifyConf
 	}
 }
 
-const (
-	rpcPortStart  = 26657
-	apiPortStart  = 1317
-	grpcPortStart = 9090
-	p2pPortStart  = 16656
-)
-
 func (s ModifyConfigYamlInitializer) Initialize() {
 	// init with legacy testnet command
 	args := []string{
@@ -154,7 +147,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 	for i := 0; i < s.initialNodesCount; i++ {
 		nodeDir := filepath.Join(WorkDir, NodePath(i, s.outputDir, s.projectName), "config")
 		id := string(mustV(p2p.LoadNodeKey(filepath.Join(nodeDir, "node_key.json"))).ID())
-		nodeAddresses[i] = fmt.Sprintf("%s@127.0.0.1:%d", id, p2pPortStart+i)
+		nodeAddresses[i] = fmt.Sprintf("%s@127.0.0.1:%d", id, DefaultP2PPort+i)
 	}
 
 	// then update configs
@@ -162,8 +155,8 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		nodeDir := filepath.Join(WorkDir, NodePath(i, s.outputDir, s.projectName), "config")
 		nodeNumber := i
 		EditToml(filepath.Join(nodeDir, "config.toml"), func(doc *tomledit.Document) {
-			UpdatePort(doc, rpcPortStart+i, "rpc", "laddr")
-			UpdatePort(doc, p2pPortStart+i, "p2p", "laddr")
+			UpdatePort(doc, DefaultRpcPort+i, "rpc", "laddr")
+			UpdatePort(doc, DefaultP2PPort+i, "p2p", "laddr")
 			SetBool(doc, false, "p2p", "addr_book_strict")
 			SetBool(doc, false, "p2p", "pex")
 			SetBool(doc, true, "p2p", "allow_duplicate_ip")
@@ -174,8 +167,8 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 			SetValue(doc, s.commitTimeout.String(), "consensus", "timeout_commit")
 		})
 		EditToml(filepath.Join(nodeDir, "app.toml"), func(doc *tomledit.Document) {
-			UpdatePort(doc, apiPortStart+i, "api", "address")
-			UpdatePort(doc, grpcPortStart+i, "grpc", "address")
+			UpdatePort(doc, DefaultApiPort+i, "api", "address")
+			UpdatePort(doc, DefaultGrpcPort+i, "grpc", "address")
 		})
 	}
 }

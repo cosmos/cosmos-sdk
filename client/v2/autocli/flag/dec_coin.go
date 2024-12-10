@@ -33,6 +33,10 @@ func (c *decCoinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 }
 
 func (c *decCoinValue) String() string {
+	if c.value == nil {
+		return ""
+	}
+
 	return c.value.String()
 }
 

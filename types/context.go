@@ -30,14 +30,12 @@ const (
 	ExecModeFinalize
 )
 
-/*
-Context is an immutable object contains all information needed to
-process a request.
-
-It contains a context.Context object inside if you want to use that,
-but please do not over-use it. We try to keep all data structured
-and standard additions here would be better just to add to the Context struct
-*/
+// Context is an immutable object contains all information needed to
+// process a request.
+//
+// It contains a context.Context object inside if you want to use that,
+// but please do not over-use it. We try to keep all data structured
+// and standard additions here would be better just to add to the Context struct
 type Context struct {
 	baseCtx              context.Context
 	ms                   storetypes.MultiStore

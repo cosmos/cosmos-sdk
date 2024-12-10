@@ -260,11 +260,9 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	}
 }
 
-/*
- The following tests are here to check the precedence of each
- of the configuration sources. A common setup functionality is used
- to avoid duplication of code between tests.
-*/
+// The following tests are here to check the precedence of each
+// of the configuration sources. A common setup functionality is used
+// to avoid duplication of code between tests.
 
 var (
 	TestAddrExpected    = "tcp://127.126.125.124:12345" // expected to be used in test

@@ -14,10 +14,8 @@ var (
 	ErrEmptyKeyInData = errors.New("data contains empty key")
 )
 
-/*
-CreateMembershipProof will produce a CommitmentProof that the given key (and queries value) exists in the map.
-If the key doesn't exist in the tree, this will return an error.
-*/
+// CreateMembershipProof will produce a CommitmentProof that the given key (and queries value) exists in the map.
+// If the key doesn't exist in the tree, this will return an error.
 func CreateMembershipProof(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error) {
 	if len(key) == 0 {
 		return nil, ErrEmptyKey
@@ -34,10 +32,8 @@ func CreateMembershipProof(data map[string][]byte, key []byte) (*ics23.Commitmen
 	return proof, nil
 }
 
-/*
-CreateNonMembershipProof will produce a CommitmentProof that the given key doesn't exist in the map.
-If the key exists in the tree, this will return an error.
-*/
+// CreateNonMembershipProof will produce a CommitmentProof that the given key doesn't exist in the map.
+// If the key exists in the tree, this will return an error.
 func CreateNonMembershipProof(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error) {
 	if len(key) == 0 {
 		return nil, ErrEmptyKey

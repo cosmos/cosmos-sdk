@@ -86,12 +86,11 @@ func TestCLI(t *testing.T) {
 		info.GoVersion = ""
 
 		want := version.Info{
-			Name:             testName,
-			AppName:          testAppName,
-			Version:          testVersion,
-			GitCommit:        testCommit,
-			BuildTags:        testBuildTags,
-			CosmosSdkVersion: "unable to read deps",
+			Name:      testName,
+			AppName:   testAppName,
+			Version:   testVersion,
+			GitCommit: testCommit,
+			BuildTags: testBuildTags,
 		}
 		require.Equal(t, want, info)
 

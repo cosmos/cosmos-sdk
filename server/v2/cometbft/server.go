@@ -67,13 +67,13 @@ type CometBFTServer[T transaction.Tx] struct {
 }
 
 func New[T transaction.Tx](
-	consensusAddressCodec addresscodec.Codec,
 	logger log.Logger,
 	appName string,
 	store types.Store,
 	app appmanager.AppManager[T],
 	appCodec codec.Codec,
 	txCodec transaction.Codec[T],
+	consensusAddressCodec addresscodec.Codec,
 	queryHandlers map[string]appmodulev2.Handler,
 	decoderResolver decoding.DecoderResolver,
 	serverOptions ServerOptions[T],

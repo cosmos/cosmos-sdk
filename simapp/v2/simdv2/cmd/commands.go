@@ -111,13 +111,13 @@ func InitRootCmd[T transaction.Tx](
 	// consensus component
 	if deps.ConsensusServer == nil {
 		deps.ConsensusServer, err = cometbft.New(
-			deps.ClientContext.ConsensusAddressCodec,
 			logger,
 			simApp.Name(),
 			simApp.Store(),
 			simApp.App.AppManager,
 			simApp.AppCodec(),
 			&client.DefaultTxDecoder[T]{TxConfig: deps.TxConfig},
+			deps.ClientContext.ConsensusAddressCodec,
 			simApp.App.QueryHandlers(),
 			simApp.App.SchemaDecoderResolver(),
 			initCometOptions[T](),

@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/accounts v0.0.0-20241127063259-f296a5005ce8
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000

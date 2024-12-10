@@ -31,4 +31,6 @@ var (
 	DenomAddressPrefix = collections.NewPrefix(4)
 
 	SupplyKey = collections.NewPrefix(5)
+
+	AssetAccountKey = collections.NewPrefix(6)
 )

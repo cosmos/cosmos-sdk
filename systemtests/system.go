@@ -40,8 +40,10 @@ var (
 	MaxGas = 10_000_000
 	// DefaultApiPort is the port for the node to interact with
 	DefaultApiPort  = 1317
+	DefaultRpcPort  = 26657
 	DefaultRestPort = 8080
 	DefaultGrpcPort = 9090
+	DefaultP2PPort  = 16656
 )
 
 type TestnetInitializer interface {

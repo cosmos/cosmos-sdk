@@ -50,5 +50,5 @@ func (c *decCoinValue) Set(stringValue string) error {
 }
 
 func (c *decCoinValue) Type() string {
-	return "cosmos.base.v1beta1.Coin"
+	return "cosmos.base.v1beta1.DecCoin"
 }

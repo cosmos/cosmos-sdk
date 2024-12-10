@@ -171,7 +171,15 @@ func NewSimApp[T transaction.Tx](
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()
-
+	/****  Store Metrics ****/
+	/*
+		// In order to set store metrics uncomment the below
+		storeMetrics, err := metrics.NewMetrics([][]string{{"module", "store"}})
+		if err != nil {
+			return nil, err
+		}
+		app.store.SetMetrics(storeMetrics)
+	*/
 	if err = app.LoadLatest(); err != nil {
 		return nil, err
 	}

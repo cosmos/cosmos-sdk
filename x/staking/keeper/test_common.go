@@ -61,10 +61,10 @@ func TestingUpdateValidator(keeper *Keeper, ctx context.Context, validator types
 		panic(err)
 	}
 
-	// if !apply {
-	// 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// 	ctx, _ = sdkCtx.CacheContext()
-	// }
+	if !apply {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		ctx, _ = sdkCtx.CacheContext()
+	}
 	_, err = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
 		panic(err)

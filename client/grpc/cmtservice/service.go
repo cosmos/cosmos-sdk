@@ -227,14 +227,17 @@ func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*G
 	resp := GetNodeInfoResponse{
 		DefaultNodeInfo: protoNodeInfo,
 		ApplicationVersion: &VersionInfo{
-			AppName:          nodeInfo.AppName,
-			Name:             nodeInfo.Name,
-			GitCommit:        nodeInfo.GitCommit,
-			GoVersion:        nodeInfo.GoVersion,
-			Version:          nodeInfo.Version,
-			BuildTags:        nodeInfo.BuildTags,
-			BuildDeps:        deps,
-			CosmosSdkVersion: nodeInfo.CosmosSdkVersion,
+			AppName:            nodeInfo.AppName,
+			Name:               nodeInfo.Name,
+			GitCommit:          nodeInfo.GitCommit,
+			GoVersion:          nodeInfo.GoVersion,
+			Version:            nodeInfo.Version,
+			BuildTags:          nodeInfo.BuildTags,
+			BuildDeps:          deps,
+			CosmosSdkVersion:   nodeInfo.CosmosSdkVersion,
+			RuntimeVersion:     nodeInfo.RuntimeVersion,
+			CometServerVersion: nodeInfo.CometServerVersion,
+			StfVersion:         nodeInfo.StfVersion,
 		},
 	}
 	return &resp, nil

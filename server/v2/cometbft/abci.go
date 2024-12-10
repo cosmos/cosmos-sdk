@@ -10,17 +10,20 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/collections"
+	addresscodec "cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
 	"cosmossdk.io/schema/appdata"
@@ -34,10 +37,6 @@ import (
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
 
-	addresscodec "cosmossdk.io/core/address"
-	coreserver "cosmossdk.io/core/server"
-	"cosmossdk.io/core/transaction"
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -93,7 +92,7 @@ type consensus[T transaction.Tx] struct {
 	queryHandlersMap      map[string]appmodulev2.Handler
 	getProtoRegistry      func() (*protoregistry.Files, error)
 	consensusAddressCodec addresscodec.Codec
-	cfgMap                coreserver.ConfigMap
+	cfgMap                server.ConfigMap
 }
 
 // CheckTx implements types.Application.

@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 
+	addresscodec "cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
@@ -38,7 +39,6 @@ import (
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
-	addresscodec "cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"

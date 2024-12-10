@@ -38,11 +38,14 @@ import (
 	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (
@@ -288,7 +291,7 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 	// Handle node service
 	if strings.Contains(req.Path, "/cosmos.base.node.v1beta1.Service") {
-		nodeQService := nodeServer[transaction.Tx]{c.cfgMap, c.cfg.AppTomlConfig, c}
+		nodeQService := nodeServer[T]{c.cfgMap, c.cfg.AppTomlConfig, c}
 		paths := strings.Split(req.Path, "/")
 
 		var resp transaction.Msg
@@ -298,6 +301,64 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 			resp, err = handleCometService(ctx, req, nodeQService.Config)
 		case "Status":
 			resp, err = handleCometService(ctx, req, nodeQService.Status)
+		}
+
+		if err != nil {
+			return nil, true, err
+		}
+
+		res, err := queryResponse(resp, req.Height)
+		return res, true, err
+	}
+
+	// Handle tx service
+	if strings.Contains(req.Path, "/cosmos.tx.v1beta1.Service") {
+		// init simple client context
+		amino := codec.NewLegacyAmino()
+		std.RegisterLegacyAminoCodec(amino)
+		txConfig := authtx.NewTxConfig(
+			c.appCodec,
+			c.appCodec.InterfaceRegistry().SigningContext().AddressCodec(),
+			c.appCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
+			authtx.DefaultSignModes,
+		)
+		rpcClient, _ := client.NewClientFromNode(c.cfg.AppTomlConfig.Address)
+
+		clientCtx := client.Context{}.
+			WithLegacyAmino(amino).
+			WithCodec(c.appCodec).
+			WithTxConfig(txConfig).
+			WithNodeURI(c.cfg.AppTomlConfig.Address).
+			WithClient(rpcClient)
+
+		txService := txServer[T]{
+			clientCtx: clientCtx,
+			txCodec:   c.txCodec,
+			app:       c.app,
+		}
+		paths := strings.Split(req.Path, "/")
+
+		var resp transaction.Msg
+		var err error
+		switch paths[2] {
+		case "Simulate":
+			resp, err = handleCometService(ctx, req, txService.Simulate)
+		case "GetTx":
+			resp, err = handleCometService(ctx, req, txService.GetTx)
+		case "BroadcastTx":
+			resp, err = handleCometService(ctx, req, txService.BroadcastTx)
+		case "GetTxsEvent":
+			resp, err = handleCometService(ctx, req, txService.GetTxsEvent)
+		case "GetBlockWithTxs":
+			resp, err = handleCometService(ctx, req, txService.GetBlockWithTxs)
+		case "TxDecode":
+			resp, err = handleCometService(ctx, req, txService.TxDecode)
+		case "TxEncode":
+			resp, err = handleCometService(ctx, req, txService.TxEncode)
+		case "TxEncodeAmino":
+			resp, err = handleCometService(ctx, req, txService.TxEncodeAmino)
+		case "TxDecodeAmino":
+			resp, err = handleCometService(ctx, req, txService.Simulate)
 		}
 
 		if err != nil {

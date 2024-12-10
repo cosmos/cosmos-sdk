@@ -256,6 +256,9 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		handlerFullName = string(md.Input().FullName())
 	}
 
+	// special case for non-module services as they are external gRPC registered on the grpc server component
+	// and not on the app itself, so it won't pass the router afterwards.
+
 	// Handle comet service
 	if strings.Contains(req.Path, "/cosmos.base.tendermint.v1beta1.Service") {
 		rpcClient, _ := rpchttp.New(c.cfg.AppTomlConfig.Address)
@@ -335,6 +338,7 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 			clientCtx: clientCtx,
 			txCodec:   c.txCodec,
 			app:       c.app,
+			consensus: c,
 		}
 		paths := strings.Split(req.Path, "/")
 
@@ -346,7 +350,7 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		case "GetTx":
 			resp, err = handleCometService(ctx, req, txService.GetTx)
 		case "BroadcastTx":
-			resp, err = handleCometService(ctx, req, txService.BroadcastTx)
+			return nil, true, errors.New("can't route a broadcast tx message")
 		case "GetTxsEvent":
 			resp, err = handleCometService(ctx, req, txService.GetTxsEvent)
 		case "GetBlockWithTxs":
@@ -363,50 +367,6 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 		if err != nil {
 			return nil, true, err
-		}
-
-		res, err := queryResponse(resp, req.Height)
-		return res, true, err
-	}
-
-	// special case for simulation as it is an external gRPC registered on the grpc server component
-	// and not on the app itself, so it won't pass the router afterwards.
-	if req.Path == "/cosmos.tx.v1beta1.Service/Simulate" {
-		simulateRequest := &txtypes.SimulateRequest{}
-		err = gogoproto.Unmarshal(req.Data, simulateRequest)
-		if err != nil {
-			return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
-		}
-
-		tx, err := c.txCodec.Decode(simulateRequest.TxBytes)
-		if err != nil {
-			return nil, true, fmt.Errorf("failed to decode tx: %w", err)
-		}
-
-		txResult, _, err := c.app.Simulate(ctx, tx)
-		if err != nil {
-			return nil, true, fmt.Errorf("failed with gas used: '%d': %w", txResult.GasUsed, err)
-		}
-
-		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))
-		// pack the messages into Any
-		for _, msg := range txResult.Resp {
-			anyMsg, err := codectypes.NewAnyWithValue(msg)
-			if err != nil {
-				return nil, true, fmt.Errorf("failed to pack message response: %w", err)
-			}
-
-			msgResponses = append(msgResponses, anyMsg)
-		}
-
-		resp := &txtypes.SimulateResponse{
-			GasInfo: &sdk.GasInfo{
-				GasUsed:   txResult.GasUsed,
-				GasWanted: txResult.GasWanted,
-			},
-			Result: &sdk.Result{
-				MsgResponses: msgResponses,
-			},
 		}
 
 		res, err := queryResponse(resp, req.Height)

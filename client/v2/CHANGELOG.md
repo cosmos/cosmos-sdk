@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v2.0.0-beta.7] - 2024-12-10
+
+### Bug Fixes
+
+* [#22817](https://github.com/cosmos/cosmos-sdk/pull/22817) Add DecCoin support in autocli flag builder.
+
 ## [v2.0.0-beta.6] - 2024-11-21
 
 ### Improvements

@@ -185,7 +185,7 @@ func initFixture(t *testing.T, f func(ctx context.Context, msg *account_abstract
 	banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
 
 	// init account
-	_, addr, err := accountsKeeper.Init(integrationApp.Context(), "mock", []byte("system"), &gogotypes.Empty{}, nil)
+	_, addr, err := accountsKeeper.Init(integrationApp.Context(), "mock", []byte("system"), &gogotypes.Empty{}, nil, nil)
 	require.NoError(t, err)
 
 	fixture := &fixture{

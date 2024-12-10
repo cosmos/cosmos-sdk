@@ -1,9 +1,7 @@
 # Pruning Manager
 
 The `pruning` package defines the `PruningManager` struct which is responsible for
-pruning the state storage (SS) and the state commitment (SC) based on the current
-height of the chain. The `PruningOption` struct defines the configuration for pruning
-and is passed to the `PruningManager` during initialization.
+pruning the state commitment (SC) based on the current height of the chain. The `PruningOption` struct defines the configuration for pruning and is passed to the `PruningManager` during initialization.
 
 ## Prune Options
 
@@ -29,24 +27,17 @@ sequenceDiagram
     participant A as RootStore
     participant B as PruningManager
     participant C as CommitmentStore
-    participant D as StorageStore
 
     loop Commit
         A->>B: SignalCommit(true, height)
         alt SC is PausablePruner
             B->>C: PausePruning(true)
-        else SS is PausablePruner
-            B->>D: PausePruing(true)
         end
         A->>C: Commit Changeset
-        A->>D: Write Changeset
         A->>B: SignalCommit(false, height)
         alt SC is PausablePruner
             B->>C: PausePruning(false)
-        else SS is PausablePruner
-            B->>D: PausePruing(false)
         end
         B->>C: Prune(height)
-        B->>D: Prune(height)
     end
 ```

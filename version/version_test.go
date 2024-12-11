@@ -40,42 +40,6 @@ go version go1.14 linux/amd64`
 	require.Equal(t, want, info.String())
 }
 
-const (
-	testName      = "testchain-app"
-	testAppName   = "testchaind"
-	testVersion   = "3.14"
-	testCommit    = "abc123"
-	testBuildTags = "mybuildtag"
-)
-
-// setVersionPackageVars temporarily overrides the package variables in the version package
-// so that we can assert meaningful output.
-func setVersionPackageVars(t *testing.T) {
-	t.Helper()
-
-	var (
-		origName      = version.Name
-		origAppName   = version.AppName
-		origVersion   = version.Version
-		origCommit    = version.Commit
-		origBuildTags = version.BuildTags
-	)
-
-	t.Cleanup(func() {
-		version.Name = origName
-		version.AppName = origAppName
-		version.Version = origVersion
-		version.Commit = origCommit
-		version.BuildTags = origBuildTags
-	})
-
-	version.Name = testName
-	version.AppName = testAppName
-	version.Version = testVersion
-	version.Commit = testCommit
-	version.BuildTags = testBuildTags
-}
-
 func Test_runVersionCmd(t *testing.T) {
 	cmd := version.NewVersionCommand()
 	_, mockOut := testutil.ApplyMockIO(cmd)

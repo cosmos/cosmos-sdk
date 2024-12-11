@@ -19,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestAccountRetriever(t *testing.T) {
@@ -48,7 +47,7 @@ func TestAccountRetriever(t *testing.T) {
 	pubkeys := simtestutil.CreateTestPubKeys(1)
 	addr := sdk.AccAddress(pubkeys[0].Address())
 
-	newAcc := authtypes.BaseAccount{
+	newAcc := types.BaseAccount{
 		Address:       addr.String(),
 		PubKey:        nil,
 		AccountNumber: 2,

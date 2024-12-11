@@ -17,7 +17,6 @@ const ModuleName = "benchmark"
 const maxStoreKeyGenIterations = 100
 
 func init() {
-	// TODO try depinject gogo API
 	appconfig.RegisterModule(
 		&modulev1.Module{},
 		appconfig.Provide(

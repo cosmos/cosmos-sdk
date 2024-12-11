@@ -3,8 +3,6 @@ package module
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -67,8 +65,7 @@ func (a *AppModule) InitGenesis(ctx context.Context, _ json.RawMessage) error {
 	for kv := range g.GenesisSet() {
 		i++
 		if i%100_000 == 0 {
-			fmt.Printf("init genesis: %d/%d\n", i, a.genesisParams.GenesisCount)
-			a.log.Warn("init genesis", "progress", i, "total", a.genesisParams.GenesisCount)
+			a.log.Warn("benchmark: init genesis", "progress", i, "total", a.genesisParams.GenesisCount)
 		}
 		sk := a.storeKeys[kv.StoreKey]
 		key := gen.Bytes(kv.Key.Seed(), kv.Key.Length())

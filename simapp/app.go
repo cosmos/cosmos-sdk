@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/registry"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
@@ -96,7 +97,7 @@ func init() {
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
-		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		appconfig.Compose(appConfig), // Alternatively use appconfig.LoadYAML(AppConfigYAML)
 		depinject.Provide(
 			ProvideExampleMintFn, // optional: override the mint module's mint function with epoched minting
 		),

@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/tools/benchmark"
 )
 
+// Options is the configuration for the generator.
 type Options struct {
 	*module.GeneratorParams
 	// HomeDir is for reading/writing state
@@ -27,6 +28,8 @@ type Options struct {
 	DeleteWeight float64
 }
 
+// State is the state of the generator.
+// It can be marshaled and unmarshaled to/from a binary format.
 type State struct {
 	Src interface {
 		rand.Source
@@ -36,6 +39,7 @@ type State struct {
 	Keys [][]Payload
 }
 
+// Marshal writes the state to w.
 func (s *State) Marshal(w io.Writer) error {
 	srcBz, err := s.Src.MarshalBinary()
 	if err != nil {
@@ -65,6 +69,7 @@ func (s *State) Marshal(w io.Writer) error {
 	return nil
 }
 
+// Unmarshal reads the state from r.
 func (s *State) Unmarshal(r io.Reader) error {
 	srcBz := make([]byte, 20)
 	if _, err := r.Read(srcBz); err != nil {
@@ -95,6 +100,9 @@ func (s *State) Unmarshal(r io.Reader) error {
 	return nil
 }
 
+// Generator generates operations for a benchmark transaction.
+// The generator is stateful, keeping track of which keys have been inserted
+// so that meaningful gets and deletes can be generated.
 type Generator struct {
 	Options
 
@@ -104,6 +112,7 @@ type Generator struct {
 
 type opt func(*Generator)
 
+// NewGenerator creates a new generator with the given options.
 func NewGenerator(opts Options, f ...opt) *Generator {
 	g := &Generator{
 		Options: opts,
@@ -118,6 +127,9 @@ func NewGenerator(opts Options, f ...opt) *Generator {
 	return g
 }
 
+// WithGenesis sets the generator state to the genesis seed.
+// When the generator is created, it will sync to genesis state.
+// The benchmark client needs to do this so that it can generate meaningful tx operations.
 func WithGenesis() func(*Generator) {
 	return func(g *Generator) {
 		// sync state to genesis seed
@@ -130,6 +142,7 @@ func WithGenesis() func(*Generator) {
 	}
 }
 
+// WithSeed sets the seed for the generator.
 func WithSeed(seed uint64) func(*Generator) {
 	return func(g *Generator) {
 		g.state.Src = rand.NewPCG(seed, seed>>32)
@@ -137,6 +150,7 @@ func WithSeed(seed uint64) func(*Generator) {
 	}
 }
 
+// Load loads the generator state from disk.
 func (g *Generator) Load() error {
 	f := fmt.Sprintf("%s/data/generator_state.bin", g.HomeDir)
 	r, err := os.Open(f)
@@ -149,16 +163,22 @@ func (g *Generator) Load() error {
 	return g.state.Unmarshal(r)
 }
 
+// Payload is a 2-tuple of seed and length.
+// A seed is uint64 which is used to generate a byte slice of size length.
 type Payload [2]uint64
 
+// Seed returns the seed in the payload.
 func (p Payload) Seed() uint64 {
 	return p[0]
 }
 
+// Length returns the length in the payload.
 func (p Payload) Length() uint64 {
 	return p[1]
 }
 
+// Bytes returns the byte slice generated from the seed and length.
+// The underlying byte slice is deterministically generated using the (very fast) xxhash algorithm.
 func (p Payload) Bytes() []byte {
 	return Bytes(p.Seed(), p.Length())
 }
@@ -171,6 +191,7 @@ func NewPayload(seed, length uint64) Payload {
 	return Payload{seed, length}
 }
 
+// KV is a key-value pair with a store key.
 type KV struct {
 	StoreKey uint64
 	Key      Payload
@@ -194,6 +215,9 @@ func (g *Generator) setKey(bucket uint64, payload Payload) {
 	g.state.Keys[bucket] = append(g.state.Keys[bucket], payload)
 }
 
+// GenesisSet returns a sequence of key-value pairs for the genesis state.
+// It is called by the server during InitGenesis to generate and set the initial state.
+// The client uses WithGenesis to sync to the genesis state.
 func (g *Generator) GenesisSet() iter.Seq[*KV] {
 	return func(yield func(*KV) bool) {
 		for range g.GenesisCount {
@@ -209,9 +233,12 @@ func (g *Generator) GenesisSet() iter.Seq[*KV] {
 	}
 }
 
+// Next generates the next benchmark operation.
+// The operation is one of insert, update, get, or delete.
+// The tx client calls this function to deterministically generate the next operation.
 func (g *Generator) Next() (uint64, *benchmark.Op, error) {
 	if g.InsertWeight+g.UpdateWeight+g.GetWeight+g.DeleteWeight != 1 {
-		return 0, nil, fmt.Errorf("probabilities must sum to 1")
+		return 0, nil, fmt.Errorf("weights must sum to 1")
 	}
 
 	var (
@@ -265,6 +292,7 @@ func (g *Generator) Next() (uint64, *benchmark.Op, error) {
 	return bucket, op, nil
 }
 
+// NormUint64 returns a random uint64 with a normal distribution.
 func (g *Generator) NormUint64(mean, stdDev uint64) uint64 {
 	return uint64(g.rand.NormFloat64()*float64(stdDev) + float64(mean))
 }
@@ -277,6 +305,7 @@ func (g *Generator) getLength(mean, stdDev uint64) uint64 {
 	return length
 }
 
+// UintN returns a random uint64 in the range [0, n).
 func (g *Generator) UintN(n uint64) uint64 {
 	return g.rand.Uint64N(n)
 }
@@ -305,6 +334,7 @@ func encodeUint64(x uint64) []byte {
 
 const maxStoreKeyGenIterations = 100
 
+// StoreKeys deterministically generates a set of unique store keys from seed.
 func StoreKeys(prefix string, seed, count uint64) ([]string, error) {
 	r := rand.New(rand.NewPCG(seed, seed>>32))
 	keys := make([]string, count)
@@ -323,10 +353,13 @@ func StoreKeys(prefix string, seed, count uint64) ([]string, error) {
 		keys[i] = sk
 		seen[sk] = struct{}{}
 		i++
+		j++
 	}
 	return keys, nil
 }
 
+// Bytes generates a byte slice of length length from seed.
+// The byte slice is deterministically generated using the (very fast) xxhash algorithm.
 func Bytes(seed, length uint64) []byte {
 	b := make([]byte, length)
 	rounds := length / 8

@@ -12,7 +12,6 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	benchmarkmodulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
@@ -32,7 +31,6 @@ import (
 	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
-	benchmark "cosmossdk.io/tools/benchmark/module"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
@@ -109,7 +107,7 @@ var (
 	}
 
 	// ModuleConfig is the application module configuration used by depinject
-	ModuleConfig = appconfig.Compose(&appv1alpha1.Config{
+	ModuleConfig = &appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
 				Name: runtime.ModuleName,
@@ -175,7 +173,6 @@ var (
 						circuittypes.ModuleName,
 						pooltypes.ModuleName,
 						epochstypes.ModuleName,
-						benchmark.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
@@ -304,20 +301,6 @@ var (
 				Name:   bankv2types.ModuleName,
 				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
-			{
-				Name: benchmark.ModuleName,
-				Config: appconfig.WrapAny(&benchmarkmodulev1.Module{
-					GenesisParams: &benchmarkmodulev1.GeneratorParams{
-						Seed:         34,
-						BucketCount:  3,
-						GenesisCount: 10_000_000,
-						KeyMean:      64,
-						KeyStdDev:    12,
-						ValueMean:    1024,
-						ValueStdDev:  256,
-					},
-				}),
-			},
 		},
-	})
+	}
 )

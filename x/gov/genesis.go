@@ -81,7 +81,7 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 
 	// check if the module account can cover the total deposits
 	if !balance.IsAllGTE(totalDeposits) {
-		return fmt.Errorf("expected module to hold at least %s, but it holds %s", totalDeposits, balance)
+		return fmt.Errorf("expected gov module to hold at least %s, but it holds %s", totalDeposits, balance)
 	}
 	return nil
 }

@@ -463,8 +463,9 @@ func parseOrderBy(orderBy txtypes.OrderBy) string {
 
 func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abci.QueryRequest) (transaction.Msg, error) {
 	// Handle comet service
-	if strings.Contains(req.Path, "/cosmos.base.tendermint.v1beta1.Service") {
+	if strings.HasPrefix(req.Path, "/cosmos.base.tendermint.v1beta1.Service") {
 		rpcClient, _ := rpchttp.New(c.cfg.AppTomlConfig.Address)
+
 		cometQServer := cmtservice.NewQueryServer(rpcClient, c.Query, c.consensusAddressCodec)
 		paths := strings.Split(req.Path, "/")
 		if len(paths) <= 2 {
@@ -494,7 +495,7 @@ func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abc
 	}
 
 	// Handle node service
-	if strings.Contains(req.Path, "/cosmos.base.node.v1beta1.Service") {
+	if strings.HasPrefix(req.Path, "/cosmos.base.node.v1beta1.Service") {
 		nodeQService := nodeServer[T]{c.cfgMap, c.cfg.AppTomlConfig, c}
 		paths := strings.Split(req.Path, "/")
 		if len(paths) <= 2 {
@@ -514,7 +515,7 @@ func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abc
 	}
 
 	// Handle tx service
-	if strings.Contains(req.Path, "/cosmos.tx.v1beta1.Service") {
+	if strings.HasPrefix(req.Path, "/cosmos.tx.v1beta1.Service") {
 		// init simple client context
 		amino := codec.NewLegacyAmino()
 		std.RegisterLegacyAminoCodec(amino)

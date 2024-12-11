@@ -192,6 +192,7 @@ func New[T transaction.Tx](
 		addrPeerFilter:         srv.serverOptions.AddrPeerFilter,
 		idPeerFilter:           srv.serverOptions.IdPeerFilter,
 		cfgMap:                 cfg,
+		consensusAddressCodec:  consensusAddressCodec,
 	}
 
 	c.optimisticExec = oe.NewOptimisticExecution(

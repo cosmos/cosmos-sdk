@@ -80,8 +80,6 @@ func Test_runVersionCmd(t *testing.T) {
 	cmd := version.NewVersionCommand()
 	_, mockOut := testutil.ApplyMockIO(cmd)
 
-	cmd.SetErr(cmd.OutOrStderr())
-	cmd.SetOut(cmd.OutOrStdout())
 	cmd.SetArgs([]string{
 		fmt.Sprintf("--%s=''", flags.FlagOutput),
 		"--long=false",

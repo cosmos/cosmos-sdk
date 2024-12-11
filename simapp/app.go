@@ -1,13 +1,8 @@
-<<<<<<< HEAD
 //go:build app_v1
-=======
-//go:build !app_v1
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 
 package simapp
 
 import (
-<<<<<<< HEAD
 	"encoding/json"
 	"fmt"
 	"io"
@@ -98,48 +93,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
-=======
-	_ "embed"
-	"fmt"
-	"io"
-
-	_ "github.com/jackc/pgx/v5/stdlib" // Import and register pgx driver
-
-	clienthelpers "cosmossdk.io/client/v2/helpers"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/registry"
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
-	"cosmossdk.io/log"
-	"cosmossdk.io/x/accounts"
-	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
-	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
-	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
-	"cosmossdk.io/x/accounts/testing/account_abstraction"
-	"cosmossdk.io/x/accounts/testing/counter"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	consensuskeeper "cosmossdk.io/x/consensus/keeper"
-	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	_ "cosmossdk.io/x/protocolpool"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/std"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -183,20 +140,6 @@ var (
 		nft.ModuleName:                     nil,
 	}
 )
-=======
-	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-)
-
-// DefaultNodeHome default home directories for the application daemon
-var DefaultNodeHome string
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 
 var (
 	_ runtime.AppI            = (*SimApp)(nil)
@@ -207,7 +150,6 @@ var (
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
 type SimApp struct {
-<<<<<<< HEAD
 	*baseapp.BaseApp
 	logger            log.Logger
 	legacyAmino       *codec.LegacyAmino
@@ -245,29 +187,6 @@ type SimApp struct {
 
 	// module configurator
 	configurator module.Configurator //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
-=======
-	*runtime.App
-	legacyAmino       registry.AminoRegistrar
-	appCodec          codec.Codec
-	txConfig          client.TxConfig
-	interfaceRegistry codectypes.InterfaceRegistry
-
-	// required keepers during wiring
-	// others keepers are all in the app
-	AccountsKeeper        accounts.Keeper
-	AuthKeeper            authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.Keeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	ConsensusParamsKeeper consensuskeeper.Keeper
-	CircuitBreakerKeeper  circuitkeeper.Keeper
-
-	// simulation manager
-	sm *module.SimulationManager
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 }
 
 func init() {
@@ -278,19 +197,6 @@ func init() {
 	}
 }
 
-<<<<<<< HEAD
-=======
-// AppConfig returns the default app config.
-func AppConfig() depinject.Config {
-	return depinject.Configs(
-		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
-		depinject.Provide(
-			ProvideExampleMintFn, // optional: override the mint module's mint function with epoched minting
-		),
-	)
-}
-
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
@@ -300,7 +206,6 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-<<<<<<< HEAD
 	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: signing.Options{
@@ -331,109 +236,6 @@ func NewSimApp(
 
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
-=======
-	var (
-		app        = &SimApp{}
-		appBuilder *runtime.AppBuilder
-
-		// merge the AppConfig and other configuration in one config
-		appConfig = depinject.Configs(
-			AppConfig(),
-			depinject.Supply(
-				// supply the application options
-				appOpts,
-				// supply the logger
-				logger,
-
-				// ADVANCED CONFIGURATION
-
-				//
-				// AUTH
-				//
-				// For providing a custom function required in auth to generate custom account types
-				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
-				//
-				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
-				//
-				// For providing a custom a base account type add it below.
-				// By default the auth module uses authtypes.ProtoBaseAccount().
-				//
-				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
-				//
-				// For providing a different address codec, add it below.
-				// By default the auth module uses a Bech32 address codec,
-				// with the prefix defined in the auth module configuration.
-				//
-				// func() address.Codec { return <- custom address codec type -> }
-
-				//
-				// STAKING
-				//
-				// For provinding a different validator and consensus address codec, add it below.
-				// By default the staking module uses the bech32 prefix provided in the auth config,
-				// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
-				// When providing a custom address codec in auth, custom address codecs must be provided here as well.
-				//
-				// func() runtime.ValidatorAddressCodec { return <- custom validator address codec type -> }
-				// func() runtime.ConsensusAddressCodec { return <- custom consensus address codec type -> }
-
-				//
-				// MINT
-				//
-
-				// For providing a custom inflation function for x/mint add here your
-				// custom function that implements the minttypes.MintFn interface.
-			),
-			depinject.Provide(
-				// inject desired account types:
-				multisigdepinject.ProvideAccount,
-				basedepinject.ProvideAccount,
-				lockupdepinject.ProvideAllLockupAccounts,
-
-				// provide base account options
-				basedepinject.ProvideSecp256K1PubKey,
-				// if you want to provide a custom public key you
-				// can do it from here.
-				// Example:
-				// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
-				//
-				// You can also provide a custom public key with a custom validation function:
-				//
-				// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
-				//			if len(pub.Key) != 64 {
-				//				return fmt.Errorf("invalid pub key size")
-				//			}
-				// 		})
-
-				// TESTING: do not add below account types
-				counter.ProvideAccount,
-				account_abstraction.ProvideAccount,
-			),
-		)
-	)
-
-	var appModules map[string]appmodule.AppModule
-	if err := depinject.Inject(appConfig,
-		&appBuilder,
-		&appModules,
-		&app.appCodec,
-		&app.legacyAmino,
-		&app.txConfig,
-		&app.interfaceRegistry,
-		&app.AuthKeeper,
-		&app.AccountsKeeper,
-		&app.BankKeeper,
-		&app.StakingKeeper,
-		&app.SlashingKeeper,
-		&app.DistrKeeper,
-		&app.UpgradeKeeper,
-		&app.FeeGrantKeeper,
-		&app.ConsensusParamsKeeper,
-		&app.CircuitBreakerKeeper,
-	); err != nil {
-		panic(err)
-	}
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 
 	// Below we could construct and set an application specific mempool and
 	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are
@@ -442,7 +244,6 @@ func NewSimApp(
 	//
 	// Example:
 	//
-<<<<<<< HEAD
 	// bApp := baseapp.NewBaseApp(...)
 	// nonceMempool := mempool.NewSenderNonceMempool()
 	// abciPropHandler := NewDefaultProposalHandler(nonceMempool, bApp)
@@ -453,18 +254,6 @@ func NewSimApp(
 	//
 	// Alternatively, you can construct BaseApp options, append those to
 	// baseAppOptions and pass them to NewBaseApp.
-=======
-	// app.App = appBuilder.Build(...)
-	// nonceMempool := mempool.NewSenderNonceMempool()
-	// abciPropHandler := NewDefaultProposalHandler(nonceMempool, app.App.BaseApp)
-	//
-	// app.App.BaseApp.SetMempool(nonceMempool)
-	// app.App.BaseApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
-	// app.App.BaseApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
-	//
-	// Alternatively, you can construct BaseApp options, append those to
-	// baseAppOptions and pass them to the appBuilder.
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 	//
 	// Example:
 	//
@@ -481,7 +270,6 @@ func NewSimApp(
 	}
 	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
 
-<<<<<<< HEAD
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
@@ -783,15 +571,6 @@ func NewSimApp(
 	}
 	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
-=======
-	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
-
-	/****  Module Options ****/
-
-	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	app.RegisterUpgradeHandlers()
-
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata_pulsar.RegisterQueryServer(app.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
 
@@ -800,7 +579,6 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-<<<<<<< HEAD
 		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, app.AccountsKeeper, authsims.RandomGenesisAccounts, nil),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
@@ -820,35 +598,10 @@ func NewSimApp(
 			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
 		)
 		if err != nil {
-=======
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, &app.AccountsKeeper, authsims.RandomGenesisAccounts, nil),
-	}
-	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
-
-	app.sm.RegisterStoreDecoders()
-
-	// A custom InitChainer can be set if extra pre-init-genesis logic is required.
-	// By default, when using app wiring enabled module, this is not required.
-	// For instance, the upgrade module will set automatically the module version map in its init genesis thanks to app wiring.
-	// However, when registering a module manually (i.e. that does not support app wiring), the module version map
-	// must be set manually as follow. The upgrade module will de-duplicate the module version map.
-	//
-	// app.SetInitChainer(func(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
-	// 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
-	// 	return app.App.InitChainer(ctx, req)
-	// })
-
-	// register custom snapshot extensions (if any)
-	if manager := app.SnapshotManager(); manager != nil {
-		if err := manager.RegisterExtensions(
-			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-		); err != nil {
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
 		}
 	}
 
-<<<<<<< HEAD
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
@@ -894,19 +647,10 @@ func NewSimApp(
 			panic(fmt.Errorf("error loading last version: %w", err))
 		}
 	}
-=======
-	// set custom ante handlers
-	app.setCustomAnteHandler()
-
-	if err := app.Load(loadLatest); err != nil {
-		panic(err)
-	}
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 
 	return app
 }
 
-<<<<<<< HEAD
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
@@ -922,25 +666,6 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 				UnorderedTxManager:       app.UnorderedTxManager,
 			},
 			&app.CircuitKeeper,
-=======
-// setCustomAnteHandler overwrites default ante handlers with custom ante handlers
-// set SkipAnteHandler to true in app config and set custom ante handler on baseapp
-func (app *SimApp) setCustomAnteHandler() {
-	anteHandler, err := NewAnteHandler(
-		HandlerOptions{
-			ante.HandlerOptions{
-				AccountKeeper:            app.AuthKeeper,
-				BankKeeper:               app.BankKeeper,
-				ConsensusKeeper:          app.ConsensusParamsKeeper,
-				SignModeHandler:          app.txConfig.SignModeHandler(),
-				FeegrantKeeper:           app.FeeGrantKeeper,
-				SigGasConsumer:           ante.DefaultSigVerificationGasConsumer,
-				UnorderedTxManager:       app.UnorderedTxManager,
-				Environment:              app.AuthKeeper.Environment,
-				AccountAbstractionKeeper: app.AccountsKeeper,
-			},
-			&app.CircuitBreakerKeeper,
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 		},
 	)
 	if err != nil {
@@ -951,7 +676,6 @@ func (app *SimApp) setCustomAnteHandler() {
 	app.SetAnteHandler(anteHandler)
 }
 
-<<<<<<< HEAD
 func (app *SimApp) setPostHandler() {
 	postHandler, err := posthandler.NewPostHandler(
 		posthandler.HandlerOptions{},
@@ -1015,23 +739,12 @@ func (app *SimApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
-=======
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 // LegacyAmino returns SimApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
-<<<<<<< HEAD
 	return app.legacyAmino
-=======
-	switch cdc := app.legacyAmino.(type) {
-	case *codec.LegacyAmino:
-		return cdc
-	default:
-		panic("unexpected codec type")
-	}
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 }
 
 // AppCodec returns SimApp's app codec.
@@ -1042,13 +755,8 @@ func (app *SimApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-<<<<<<< HEAD
 // InterfaceRegistry returns SimApp's InterfaceRegistry
 func (app *SimApp) InterfaceRegistry() types.InterfaceRegistry {
-=======
-// InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 	return app.interfaceRegistry
 }
 
@@ -1057,7 +765,6 @@ func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
-<<<<<<< HEAD
 // AutoCliOpts returns the autocli options for the app.
 func (app *SimApp) AutoCliOpts() autocli.AppOptions {
 	return autocli.AppOptions{
@@ -1088,8 +795,6 @@ func (app *SimApp) GetStoreKeys() []storetypes.StoreKey {
 	return keys
 }
 
-=======
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 // SimulationManager implements the SimulationApp interface
 func (app *SimApp) SimulationManager() *module.SimulationManager {
 	return app.sm
@@ -1098,7 +803,6 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
 func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
-<<<<<<< HEAD
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -1113,16 +817,11 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 	app.ModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
-=======
-	app.App.RegisterAPIRoutes(apiSvr, apiConfig)
-	// register swagger API in app.go so that other applications can override easily
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
 		panic(err)
 	}
 }
 
-<<<<<<< HEAD
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *SimApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
@@ -1151,13 +850,10 @@ func (app *SimApp) ValidatorKeyProvider() runtime.KeyGenF {
 	}
 }
 
-=======
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 // GetMaccPerms returns a copy of the module account permissions
 //
 // NOTE: This is solely to be used for testing purposes.
 func GetMaccPerms() map[string][]string {
-<<<<<<< HEAD
 	return maps.Clone(maccPerms)
 }
 
@@ -1180,31 +876,4 @@ func BlockedAddresses(ac coreaddress.Codec) (map[string]bool, error) {
 	delete(modAccAddrs, addr)
 
 	return modAccAddrs, nil
-=======
-	dup := make(map[string][]string)
-	for _, perms := range moduleAccPerms {
-		dup[perms.Account] = perms.Permissions
-	}
-
-	return dup
-}
-
-// BlockedAddresses returns all the app's blocked account addresses.
-// This function takes an address.Codec parameter to maintain compatibility
-// with the signature of the same function in appV1.
-func BlockedAddresses(_ address.Codec) (map[string]bool, error) {
-	result := make(map[string]bool)
-
-	if len(blockAccAddrs) > 0 {
-		for _, addr := range blockAccAddrs {
-			result[addr] = true
-		}
-	} else {
-		for addr := range GetMaccPerms() {
-			result[addr] = true
-		}
-	}
-
-	return result, nil
->>>>>>> aa8266e70 (docs: runtime docs (#22816))
 }

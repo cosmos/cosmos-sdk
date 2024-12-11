@@ -22,6 +22,25 @@ import (
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 )
 
+<<<<<<< HEAD
+=======
+func TestQueryStatus(t *testing.T) {
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	systest.Sut.StartChain(t)
+
+	var resp string
+	if systest.IsV2() {
+		resp = cli.CustomQuery("comet", "status")
+	} else {
+		resp = cli.CustomQuery("status")
+	}
+
+	// make sure the output has the validator moniker.
+	assert.Contains(t, resp, "\"moniker\":\"node0\"")
+}
+
+>>>>>>> f2663280c (test(systemtest): fix cometbft client (#22835))
 func TestQueryNodeInfo(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
@@ -213,7 +232,7 @@ func TestValidatorSetByHeight(t *testing.T) {
 	}
 }
 
-func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
+func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
 
@@ -247,7 +266,9 @@ func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
 }
 
 func TestABCIQuery(t *testing.T) {
+	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
+	_ = systest.Sut.AwaitNextBlock(t, time.Second*3)
 
 	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())

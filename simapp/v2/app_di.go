@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
@@ -49,7 +50,7 @@ type SimApp[T transaction.Tx] struct {
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
-		ModuleConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		appconfig.Compose(ModuleConfig), // Alternatively use appconfig.LoadYAML(AppConfigYAML)
 		runtime.DefaultServiceBindings(),
 		codec.DefaultProviders,
 		depinject.Provide(

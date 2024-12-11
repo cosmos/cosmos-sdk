@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
@@ -222,16 +223,22 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		// pulsar does not support marshaling a math.Dec as anything except a string.  Therefore, we cannot unmarshal
 		// a pulsar encoded Math.dec (the string representation of a Decimal) into a gogo Math.dec (expecting an int64).
 		protoUnmarshalFails bool
+
+		// sort JSON bytes before comparision.  for certain types (like ModuleAccount) x/tx is not able to provide an
+		// unsorted version.  note that the legacy amino signer always sorted JSON bytes by round tripping them to/from
+		// JSON before signing over them.
+		sortJSON bool
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
 		"auth/module_account": {
 			gogo: &authtypes.ModuleAccount{
-				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: []string{},
+				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1),
 			},
 			pulsar: &authapi.ModuleAccount{
-				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{},
+				BaseAccount: &authapi.BaseAccount{Address: addr1.String()},
 			},
 			roundTripUnequal: true,
+			sortJSON:         true,
 		},
 		"auth/base_account": {
 			gogo:   &authtypes.BaseAccount{Address: addr1.String(), PubKey: pubkeyAny},
@@ -282,13 +289,17 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &secp256k1types.PubKey{Key: []byte("key")},
 			pulsar: &secp256k1.PubKey{Key: []byte("key")},
 		},
-		"crypto/legacy_amino_pubkey": {
-			gogo:   &multisig.LegacyAminoPubKey{PubKeys: []*codectypes.Any{pubkeyAny}},
-			pulsar: &multisigapi.LegacyAminoPubKey{PublicKeys: []*anypb.Any{pubkeyAnyPulsar}},
+		"crypto/legacy_amino_pubkey/filled": {
+			gogo:             &multisig.LegacyAminoPubKey{PubKeys: []*codectypes.Any{pubkeyAny}},
+			pulsar:           &multisigapi.LegacyAminoPubKey{PublicKeys: []*anypb.Any{pubkeyAnyPulsar}},
+			sortJSON:         true,
+			roundTripUnequal: true,
 		},
 		"crypto/legacy_amino_pubkey/empty": {
-			gogo:   &multisig.LegacyAminoPubKey{},
-			pulsar: &multisigapi.LegacyAminoPubKey{},
+			gogo:             &multisig.LegacyAminoPubKey{},
+			pulsar:           &multisigapi.LegacyAminoPubKey{},
+			sortJSON:         true,
+			roundTripUnequal: true,
 		},
 		"consensus/evidence_params/duration": {
 			gogo:   &gov_v1beta1_types.VotingParams{VotingPeriod: 1e9 + 7},
@@ -415,6 +426,13 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			gogoBytes, err := encCfg.Amino.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
+			if tc.sortJSON {
+				var c interface{}
+				err = json.Unmarshal(gogoBytes, &c)
+				require.NoError(t, err)
+				gogoBytes, err = json.Marshal(c)
+				require.NoError(t, err)
+			}
 
 			pulsarBytes, err := aj.Marshal(tc.pulsar)
 			if tc.pulsarMarshalFails {

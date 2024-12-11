@@ -117,6 +117,7 @@ func InitRootCmd[T transaction.Tx](
 			simApp.App.AppManager,
 			simApp.AppCodec(),
 			&client.DefaultTxDecoder[T]{TxConfig: deps.TxConfig},
+			deps.ClientContext.ConsensusAddressCodec,
 			simApp.App.QueryHandlers(),
 			simApp.App.SchemaDecoderResolver(),
 			initCometOptions[T](),

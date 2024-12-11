@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/tools/benchmark"
 	gen "cosmossdk.io/tools/benchmark/generator"
@@ -15,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/spf13/cobra"
 )
 
 func NewTxCmd(params *modulev1.GeneratorParams) *cobra.Command {
@@ -109,7 +110,6 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 				}
 			}()
 
-			i := 0
 			begin := time.Now()
 			ops := make([]*benchmark.Op, numOps)
 			for {
@@ -170,7 +170,6 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 					accSeq++
 					successCount++
 				}
-				i++
 				if pause > 0 {
 					time.Sleep(time.Duration(pause) * time.Millisecond)
 				}

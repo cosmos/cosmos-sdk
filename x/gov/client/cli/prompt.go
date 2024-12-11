@@ -4,18 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect" // #nosec
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 
+	"cosmossdk.io/core/address"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/prompt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -53,8 +59,8 @@ var suggestedProposalTypes = []proposalType{
 // Prompt prompts the user for all values of the given type.
 // data is the struct to be filled
 // namePrefix is the name to be displayed as "Enter <namePrefix> <field>"
-// TODO: when bringing this in autocli, use proto message instead
-// this will simplify the get address logic
+// Deprecated: This is not used anymore anywhere thanks to client/v2 proto prompt.
+// It will be removed in a future release.
 func Prompt[T any](data T, namePrefix string) (T, error) {
 	v := reflect.ValueOf(&data).Elem()
 	if v.Kind() == reflect.Interface {
@@ -149,7 +155,7 @@ type proposalType struct {
 }
 
 // Prompt the proposal type values and return the proposal and its metadata
-func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*proposal, types.ProposalMetadata, error) {
+func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec, validatorAddressCodec, consensusAddressCodec address.Codec) (*proposal, types.ProposalMetadata, error) {
 	metadata, err := PromptMetadata(skipMetadata)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
@@ -162,11 +168,7 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*proposal, ty
 	}
 
 	// set deposit
-	depositPrompt := promptui.Prompt{
-		Label:    "Enter proposal deposit",
-		Validate: client.ValidatePromptCoins,
-	}
-	proposal.Deposit, err = depositPrompt.Run()
+	proposal.Deposit, err = prompt.PromptString("Enter proposal deposit", ValidatePromptCoins)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal deposit: %w", err)
 	}
@@ -176,12 +178,35 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*proposal, ty
 	}
 
 	// set messages field
-	result, err := Prompt(p.Msg, "msg")
+	msg, err := protoregistry.GlobalTypes.FindMessageByURL(p.MsgType)
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to find proposal msg: %w", err)
+	}
+	newMsg := msg.New()
+	govAddr := sdkaddress.Module(types.ModuleName)
+	govAddrStr, err := addressCodec.BytesToString(govAddr)
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to convert gov address to string: %w", err)
+	}
+
+	prompt.SetDefaults(newMsg, map[string]interface{}{"authority": govAddrStr})
+	result, err := prompt.PromptMessage(addressCodec, validatorAddressCodec, consensusAddressCodec, "msg", newMsg)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal message: %w", err)
 	}
 
-	message, err := cdc.MarshalInterfaceJSON(result)
+	// message must be converted to gogoproto so @type is not lost
+	resultBytes, err := proto.Marshal(result.Interface())
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
+	}
+
+	err = gogoproto.Unmarshal(resultBytes, p.Msg)
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to unmarshal proposal message: %w", err)
+	}
+
+	message, err := cdc.MarshalInterfaceJSON(p.Msg)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
 	}
@@ -202,31 +227,20 @@ func getProposalSuggestions() []string {
 // PromptMetadata prompts for proposal metadata or only title and summary if skip is true
 func PromptMetadata(skip bool) (types.ProposalMetadata, error) {
 	if !skip {
-		metadata, err := Prompt(types.ProposalMetadata{}, "proposal")
+		metadata, err := prompt.PromptStruct("proposal", types.ProposalMetadata{})
 		if err != nil {
-			return metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
+			return types.ProposalMetadata{}, err
 		}
 
 		return metadata, nil
 	}
 
-	// prompt for title and summary
-	titlePrompt := promptui.Prompt{
-		Label:    "Enter proposal title",
-		Validate: client.ValidatePromptNotEmpty,
-	}
-
-	title, err := titlePrompt.Run()
+	title, err := prompt.PromptString("Enter proposal title", ValidatePromptNotEmpty)
 	if err != nil {
 		return types.ProposalMetadata{}, fmt.Errorf("failed to set proposal title: %w", err)
 	}
 
-	summaryPrompt := promptui.Prompt{
-		Label:    "Enter proposal summary",
-		Validate: client.ValidatePromptNotEmpty,
-	}
-
-	summary, err := summaryPrompt.Run()
+	summary, err := prompt.PromptString("Enter proposal summary", ValidatePromptNotEmpty)
 	if err != nil {
 		return types.ProposalMetadata{}, fmt.Errorf("failed to set proposal summary: %w", err)
 	}
@@ -248,17 +262,10 @@ func NewCmdDraftProposal() *cobra.Command {
 				return err
 			}
 
-			// prompt proposal type
-			proposalTypesPrompt := promptui.Select{
-				Label: "Select proposal type",
-				Items: getProposalSuggestions(),
-			}
-
-			_, selectedProposalType, err := proposalTypesPrompt.Run()
+			selectedProposalType, err := prompt.Select("Select proposal type", getProposalSuggestions())
 			if err != nil {
 				return fmt.Errorf("failed to prompt proposal types: %w", err)
 			}
-
 			var proposal proposalType
 			for _, p := range suggestedProposalTypes {
 				if strings.EqualFold(p.Name, selectedProposalType) {
@@ -269,17 +276,10 @@ func NewCmdDraftProposal() *cobra.Command {
 
 			// create any proposal type
 			if proposal.Name == proposalOther {
-				// prompt proposal type
-				msgPrompt := promptui.Select{
-					Label: "Select proposal message type:",
-					Items: func() []string {
-						msgs := clientCtx.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName)
-						sort.Strings(msgs)
-						return msgs
-					}(),
-				}
+				msgs := clientCtx.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName)
+				sort.Strings(msgs)
 
-				_, result, err := msgPrompt.Run()
+				result, err := prompt.Select("Select proposal message type:", msgs)
 				if err != nil {
 					return fmt.Errorf("failed to prompt proposal types: %w", err)
 				}
@@ -297,7 +297,7 @@ func NewCmdDraftProposal() *cobra.Command {
 
 			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
 
-			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt)
+			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt, clientCtx.AddressCodec, clientCtx.ValidatorAddressCodec, clientCtx.ConsensusAddressCodec)
 			if err != nil {
 				return err
 			}

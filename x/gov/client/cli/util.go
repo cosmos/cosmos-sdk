@@ -185,3 +185,21 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
 	return ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
 }
+
+// ValidatePromptCoins validates that the input contains valid sdk.Coins
+func ValidatePromptCoins(input string) error {
+	if _, err := sdk.ParseCoinsNormalized(input); err != nil {
+		return fmt.Errorf("invalid coins: %w", err)
+	}
+
+	return nil
+}
+
+// ValidatePromptNotEmpty validates that the input is not empty.
+func ValidatePromptNotEmpty(input string) error {
+	if input == "" {
+		return errors.New("input cannot be empty")
+	}
+
+	return nil
+}

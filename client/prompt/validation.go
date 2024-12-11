@@ -1,14 +1,18 @@
-package client
+package prompt
 
 import (
 	"fmt"
 	"net/url"
 	"unicode"
 
+	"cosmossdk.io/core/address"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ValidatePromptNotEmpty validates that the input is not empty.
+// Deprecated: Not required anymore, thanks to proto prompt.
+// It will be removed in a future release.
 func ValidatePromptNotEmpty(input string) error {
 	if input == "" {
 		return fmt.Errorf("input cannot be empty")
@@ -17,7 +21,22 @@ func ValidatePromptNotEmpty(input string) error {
 	return nil
 }
 
+// ValidateAddress returns a validation function that checks if a string is a valid address for the given address codec.
+// Deprecated: Not required anymore, thanks to proto prompt.
+// It will be removed in a future release.
+func ValidateAddress(ac address.Codec) func(string) error {
+	return func(i string) error {
+		if _, err := ac.StringToBytes(i); err != nil {
+			return fmt.Errorf("invalid address")
+		}
+
+		return nil
+	}
+}
+
 // ValidatePromptURL validates that the input is a valid URL.
+// Deprecated: Not required anymore, thanks to proto prompt.
+// It will be removed in a future release.
 func ValidatePromptURL(input string) error {
 	_, err := url.ParseRequestURI(input)
 	if err != nil {
@@ -28,6 +47,8 @@ func ValidatePromptURL(input string) error {
 }
 
 // ValidatePromptAddress validates that the input is a valid Bech32 address.
+// Deprecated: Not required anymore, thanks to proto prompt.
+// It will be removed in a future release.
 func ValidatePromptAddress(input string) error {
 	_, err := sdk.AccAddressFromBech32(input)
 	if err == nil {
@@ -48,6 +69,8 @@ func ValidatePromptAddress(input string) error {
 }
 
 // ValidatePromptCoins validates that the input contains valid sdk.Coins
+// Deprecated: Not required anymore, thanks to proto prompt.
+// It will be removed in a future release.
 func ValidatePromptCoins(input string) error {
 	if _, err := sdk.ParseCoinsNormalized(input); err != nil {
 		return fmt.Errorf("invalid coins: %w", err)

@@ -22,8 +22,6 @@ import (
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 )
 
-<<<<<<< HEAD
-=======
 func TestQueryStatus(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -40,7 +38,6 @@ func TestQueryStatus(t *testing.T) {
 	assert.Contains(t, resp, "\"moniker\":\"node0\"")
 }
 
->>>>>>> f2663280c (test(systemtest): fix cometbft client (#22835))
 func TestQueryNodeInfo(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)

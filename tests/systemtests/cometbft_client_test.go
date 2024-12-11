@@ -23,9 +23,9 @@ import (
 )
 
 func TestQueryStatus(t *testing.T) {
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	systest.Sut.StartChain(t)
 
 	resp := cli.CustomQuery("status")
 

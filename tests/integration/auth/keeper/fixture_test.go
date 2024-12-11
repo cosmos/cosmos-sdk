@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
@@ -35,7 +37,9 @@ import (
 type fixture struct {
 	app *integration.App
 
-	cdc codec.Codec
+	cdc         codec.Codec
+	ctx         sdk.Context
+	encodingCfg moduletestutil.TestEncodingConfig
 
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
@@ -126,11 +130,24 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 
 	banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
 
+	// commit and finalize block
+	defer func() {
+		_, err := integrationApp.Commit()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	height := integrationApp.LastBlockHeight() + 1
+	_, err = integrationApp.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}})
+	require.NoError(t, err)
+
 	return &fixture{
 		app:            integrationApp,
 		cdc:            cdc,
+		ctx:            sdk.UnwrapSDKContext(integrationApp.Context()),
 		accountsKeeper: accountsKeeper,
 		authKeeper:     authKeeper,
 		bankKeeper:     bankKeeper,
+		encodingCfg:    encodingCfg,
 	}
 }

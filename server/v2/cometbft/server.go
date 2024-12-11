@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 
+	addresscodec "cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
@@ -72,6 +73,7 @@ func New[T transaction.Tx](
 	app appmanager.AppManager[T],
 	appCodec codec.Codec,
 	txCodec transaction.Codec[T],
+	consensusAddressCodec addresscodec.Codec,
 	queryHandlers map[string]appmodulev2.Handler,
 	decoderResolver decoding.DecoderResolver,
 	serverOptions ServerOptions[T],
@@ -189,6 +191,8 @@ func New[T transaction.Tx](
 		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
 		addrPeerFilter:         srv.serverOptions.AddrPeerFilter,
 		idPeerFilter:           srv.serverOptions.IdPeerFilter,
+		cfgMap:                 cfg,
+		consensusAddressCodec:  consensusAddressCodec,
 	}
 
 	c.optimisticExec = oe.NewOptimisticExecution(

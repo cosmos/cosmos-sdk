@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/collections"
+	addresscodec "cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
@@ -36,9 +37,6 @@ import (
 	consensustypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 const (
@@ -86,8 +84,10 @@ type consensus[T transaction.Tx] struct {
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
-	queryHandlersMap map[string]appmodulev2.Handler
-	getProtoRegistry func() (*protoregistry.Files, error)
+	queryHandlersMap      map[string]appmodulev2.Handler
+	getProtoRegistry      func() (*protoregistry.Files, error)
+	consensusAddressCodec addresscodec.Codec
+	cfgMap                server.ConfigMap
 }
 
 // CheckTx implements types.Application.
@@ -184,6 +184,16 @@ func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		return resp, err
 	}
 
+	// when a client did not provide a query height, manually inject the latest
+	// for modules queries, AppManager does it automatically
+	if req.Height == 0 {
+		latestVersion, err := c.store.GetLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+		req.Height = int64(latestVersion)
+	}
+
 	// this error most probably means that we can't handle it with a proto message, so
 	// it must be an app/p2p/store query
 	path := splitABCIQueryPath(req.Path)
@@ -238,48 +248,15 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		handlerFullName = string(md.Input().FullName())
 	}
 
-	// special case for simulation as it is an external gRPC registered on the grpc server component
+	// special case for non-module services as they are external gRPC registered on the grpc server component
 	// and not on the app itself, so it won't pass the router afterwards.
-	if req.Path == "/cosmos.tx.v1beta1.Service/Simulate" {
-		simulateRequest := &txtypes.SimulateRequest{}
-		err = gogoproto.Unmarshal(req.Data, simulateRequest)
-		if err != nil {
-			return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
-		}
 
-		tx, err := c.txCodec.Decode(simulateRequest.TxBytes)
-		if err != nil {
-			return nil, true, fmt.Errorf("failed to decode tx: %w", err)
-		}
-
-		txResult, _, err := c.app.Simulate(ctx, tx)
-		if err != nil {
-			return nil, true, fmt.Errorf("failed with gas used: '%d': %w", txResult.GasUsed, err)
-		}
-
-		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))
-		// pack the messages into Any
-		for _, msg := range txResult.Resp {
-			anyMsg, err := codectypes.NewAnyWithValue(msg)
-			if err != nil {
-				return nil, true, fmt.Errorf("failed to pack message response: %w", err)
-			}
-
-			msgResponses = append(msgResponses, anyMsg)
-		}
-
-		resp := &txtypes.SimulateResponse{
-			GasInfo: &sdk.GasInfo{
-				GasUsed:   txResult.GasUsed,
-				GasWanted: txResult.GasWanted,
-			},
-			Result: &sdk.Result{
-				MsgResponses: msgResponses,
-			},
-		}
-
-		res, err := queryResponse(resp, req.Height)
-		return res, true, err
+	externalResp, err := c.maybeHandleExternalServices(ctx, req)
+	if err != nil {
+		return nil, true, err
+	} else if externalResp != nil {
+		resp, err = queryResponse(externalResp, req.Height)
+		return resp, true, err
 	}
 
 	handler, found := c.queryHandlersMap[handlerFullName]

@@ -361,45 +361,50 @@ func (s STF[T]) runTxMsgs(
 			events = append(events, e)
 		}
 
-		// create message event (including message.action and message.module)
-		events = append(events, event.Event{
-			MsgIndex:   int32(i + 1),
-			EventIndex: int32(len(execCtx.events) + 1),
-			Type:       "message",
-			Attributes: func() ([]appdata.EventAttribute, error) {
-				typeURL := msgTypeURL(msg)
-				return []appdata.EventAttribute{
-					{Key: "message.action", Value: "/" + typeURL},
-					{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
-				}, nil
-			},
-			Data: func() (json.RawMessage, error) {
-				typeURL := msgTypeURL(msg)
-				attrs := []appdata.EventAttribute{
-					{Key: "message.action", Value: "/" + typeURL},
-					{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
-				}
-
-				return json.Marshal(attrs)
-			},
-		})
-
+		// add message event
+		events = append(events, createMessageEvent(msg, int32(i+1), int32(len(execCtx.events)+1)))
 	}
 
 	consumed := execCtx.meter.Limit() - execCtx.meter.Remaining()
 	return msgResps, consumed, events, nil
 }
 
-// Assumes that module name is the second element of the msg type URL
-// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
-// It returns an empty string if the input is not a valid type URL
-func getModuleNameFromTypeURL(input string) string {
-	moduleName := strings.Split(input, ".")
-	if len(moduleName) > 1 {
-		return moduleName[1]
+// Create a message event, with two kv: action, the type url of the message
+// and module, the module of the message.
+func createMessageEvent(msg transaction.Msg, msgIndex, eventIndex int32) event.Event {
+	// Assumes that module name is the second element of the msg type URL
+	// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
+	// It returns an empty string if the input is not a valid type URL
+	getModuleNameFromTypeURL := func(input string) string {
+		moduleName := strings.Split(input, ".")
+		if len(moduleName) > 1 {
+			return moduleName[1]
+		}
+
+		return ""
 	}
 
-	return ""
+	return event.Event{
+		MsgIndex:   msgIndex,
+		EventIndex: eventIndex,
+		Type:       "message",
+		Attributes: func() ([]appdata.EventAttribute, error) {
+			typeURL := msgTypeURL(msg)
+			return []appdata.EventAttribute{
+				{Key: "message.action", Value: "/" + typeURL},
+				{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
+			}, nil
+		},
+		Data: func() (json.RawMessage, error) {
+			typeURL := msgTypeURL(msg)
+			attrs := []appdata.EventAttribute{
+				{Key: "message.action", Value: "/" + typeURL},
+				{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
+			}
+
+			return json.Marshal(attrs)
+		},
+	}
 }
 
 // preBlock executes the pre block logic.

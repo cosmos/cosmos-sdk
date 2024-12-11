@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241204100030-c47fb8ab2dcb // main
-	cosmossdk.io/server/v2 v2.0.0-20241209145349-34f407d6367a // main
+	cosmossdk.io/server/v2 v2.0.0-20241211154953-a38a6a2c8bc8 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20241209145349-34f407d6367a // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000

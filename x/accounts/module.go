@@ -7,9 +7,10 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/schema"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
@@ -62,25 +63,6 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// RegisterQueryHandlers registers the query handlers for the accounts module.
-func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
-	queryServer := NewQueryServer(am.k)
-
-	appmodulev2.RegisterMsgHandler(router, queryServer.AccountNumber)
-	appmodulev2.RegisterMsgHandler(router, queryServer.AccountQuery)
-	appmodulev2.RegisterMsgHandler(router, queryServer.AccountType)
-	appmodulev2.RegisterMsgHandler(router, queryServer.Schema)
-}
-
-// RegisterMsgHandlers registers the message handlers for the accounts module.
-func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
-	msgServer := NewMsgServer(am.k)
-
-	appmodulev2.RegisterMsgHandler(router, msgServer.Execute)
-	appmodulev2.RegisterMsgHandler(router, msgServer.ExecuteBundle)
-	appmodulev2.RegisterMsgHandler(router, msgServer.Init)
-}
-
 // App module genesis
 
 func (am AppModule) DefaultGenesis() json.RawMessage {
@@ -125,3 +107,9 @@ func (AppModule) GetQueryCmd() *cobra.Command {
 }
 
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+// ModuleCodec implements `schema.HasModuleCodec` interface.
+// It allows the indexer to decode the module's KVPairUpdate.
+func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
+	return am.k.Schema.ModuleCodec(collections.IndexingOptions{})
+}

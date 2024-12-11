@@ -85,7 +85,7 @@ func (s *IntegrationTestSuite) initAccount(ctx context.Context, sender []byte, m
 				Revote:         false,
 				EarlyExecution: true,
 			},
-		}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+		}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))}, nil)
 	s.NoError(err)
 
 	accountAddrStr, err := s.app.AuthKeeper.AddressCodec().BytesToString(accountAddr)

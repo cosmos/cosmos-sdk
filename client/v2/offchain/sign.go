@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
+
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	clientcontext "cosmossdk.io/client/v2/context"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/client/v2/internal/offchain"
 	clitx "cosmossdk.io/client/v2/tx"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -29,20 +30,20 @@ var enabledSignModes = []apisigning.SignMode{
 }
 
 // Sign signs given bytes using the specified encoder and SignMode.
-func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, signMode, output string) (string, error) {
+func Sign(
+	ctx clientcontext.Context,
+	rawBytes []byte,
+	conn gogogrpc.ClientConn,
+	fromName, encoding, signMode, output string,
+) (string, error) {
 	digest, err := encodeDigest(encoding, rawBytes)
-	if err != nil {
-		return "", err
-	}
-
-	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
 	if err != nil {
 		return "", err
 	}
 
 	txConfig, err := clitx.NewTxConfig(clitx.ConfigOptions{
 		AddressCodec:          ctx.AddressCodec,
-		Cdc:                   ctx.Codec,
+		Cdc:                   ctx.Cdc,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
 		EnabledSignModes:      enabledSignModes,
 	})
@@ -50,7 +51,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, signMode, out
 		return "", err
 	}
 
-	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
+	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, conn, ctx.Cdc.InterfaceRegistry())
 
 	sm, err := getSignMode(signMode)
 	if err != nil {
@@ -66,12 +67,12 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, signMode, out
 		},
 	}
 
-	txf, err := clitx.NewFactory(keybase, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx, params)
+	txf, err := clitx.NewFactory(ctx.Keyring, ctx.Cdc, accRetriever, txConfig, ctx.AddressCodec, conn, params)
 	if err != nil {
 		return "", err
 	}
 
-	pubKey, err := keybase.GetPubKey(fromName)
+	pubKey, err := ctx.Keyring.GetPubKey(fromName)
 	if err != nil {
 		return "", err
 	}

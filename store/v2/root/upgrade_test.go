@@ -14,8 +14,6 @@ import (
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/pruning"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/pebbledb"
 )
 
 type UpgradeStoreTestSuite struct {
@@ -43,14 +41,10 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 		multiTrees[storeKey], _ = newTreeFn(storeKey)
 	}
 
-	// create storage and commitment stores
-	pebbleDB, err := pebbledb.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(pebbleDB, testLog)
 	sc, err := commitment.NewCommitStore(multiTrees, nil, s.commitDB, testLog)
 	s.Require().NoError(err)
-	pm := pruning.NewManager(sc, ss, nil, nil)
-	s.rootStore, err = New(s.commitDB, testLog, ss, sc, pm, nil, nil)
+	pm := pruning.NewManager(sc, nil)
+	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	// commit changeset
@@ -91,8 +85,8 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 
 	sc, err := commitment.NewCommitStore(multiTrees, oldTrees, s.commitDB, testLog)
 	s.Require().NoError(err)
-	pm := pruning.NewManager(sc, s.rootStore.GetStateStorage().(store.Pruner), nil, nil)
-	s.rootStore, err = New(s.commitDB, testLog, s.rootStore.GetStateStorage(), sc, pm, nil, nil)
+	pm := pruning.NewManager(sc, nil)
+	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 }
 
@@ -112,7 +106,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 
 	keyCount := 10
 	// check old store keys are queryable
-	oldStoreKeys := []string{"store1", "store3"}
+	oldStoreKeys := []string{"store1", "store2", "store3"}
 	for _, storeKey := range oldStoreKeys {
 		for version := uint64(1); version <= v; version++ {
 			for i := 0; i < keyCount; i++ {

@@ -48,10 +48,6 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
-ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
-endif
-
 ifeq (v2,$(findstring v2,$(COSMOS_BUILD_OPTIONS)))
   SIMAPP = simapp/v2
   APPNAME = simdv2

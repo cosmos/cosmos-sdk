@@ -224,7 +224,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		// a pulsar encoded Math.dec (the string representation of a Decimal) into a gogo Math.dec (expecting an int64).
 		protoUnmarshalFails bool
 
-		// sort JSON bytes before comparision.  for certain types (like ModuleAccount) x/tx is not able to provide an
+		// sort JSON bytes before comparison.  for certain types (like ModuleAccount) x/tx is not able to provide an
 		// unsorted version.  note that the legacy amino signer always sorted JSON bytes by round tripping them to/from
 		// JSON before signing over them.
 		sortJSON bool

@@ -9,17 +9,12 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
-<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
-	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
-=======
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
->>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -43,16 +38,9 @@ require (
 	cloud.google.com/go/auth v0.5.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
-<<<<<<< HEAD
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // indirect
-=======
-	cloud.google.com/go/iam v1.1.13 // indirect
-	cloud.google.com/go/storage v1.43.0 // indirect
-	cosmossdk.io/client/v2 v2.0.0-beta.6 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // indirect
->>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/math v1.4.0 // indirect
 	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
@@ -211,6 +199,7 @@ require (
 )
 
 require (
+	cosmossdk.io/client/v2 v2.0.0-20241211102823-5b124267e6e7 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
@@ -220,16 +209,10 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
-=======
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/store => ../../store
->>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking

@@ -3,19 +3,11 @@ module cosmossdk.io/simapp
 go 1.23.3
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
+	cosmossdk.io/client/v2 v2.0.0-20241211102823-5b124267e6e7
 	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
-=======
-	cosmossdk.io/api v0.7.6
-	cosmossdk.io/client/v2 v2.0.0-beta.6
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
-	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
->>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/log v1.5.0
@@ -46,7 +38,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/mock v1.6.0
 	github.com/jackc/pgx/v5 v5.7.1

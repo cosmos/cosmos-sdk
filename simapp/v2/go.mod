@@ -3,16 +3,10 @@ module cosmossdk.io/simapp/v2
 go 1.23.3
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/client/v2 v2.0.0-20241211102823-5b124267e6e7
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0 // indirect; main
-=======
-	cosmossdk.io/api v0.7.6
-	cosmossdk.io/client/v2 v2.0.0-beta.6
-	cosmossdk.io/core v1.0.0-alpha.6
->>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.0.0-20241209183624-332d0b106d1b
 	cosmossdk.io/log v1.5.0
@@ -44,7 +38,7 @@ require (
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5

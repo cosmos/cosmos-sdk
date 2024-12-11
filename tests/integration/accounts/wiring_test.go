@@ -28,7 +28,7 @@ func TestDependencies(t *testing.T) {
 
 	_, counterAddr, err := ak.Init(ctx, "counter", accCreator, &counterv1.MsgInit{
 		InitialValue: 0,
-	}, nil)
+	}, nil, nil)
 	require.NoError(t, err)
 	// test dependencies
 	creatorInitFunds := sdk.NewCoins(sdk.NewInt64Coin("stake", 100_000))

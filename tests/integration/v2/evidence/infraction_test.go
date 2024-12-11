@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"fmt"
 	"testing"
 	"time"
 
@@ -25,7 +24,6 @@ import (
 	_ "cosmossdk.io/x/evidence" // import as blank for app wiring
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
-	evidencetypes "cosmossdk.io/x/evidence/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/slashing" // import as blank for app wiring
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
@@ -251,6 +249,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	require.NotNil(t, f.consensusKeeper.ParamsStore)
 	require.NoError(t, f.consensusKeeper.ParamsStore.Set(ctx, *simtestutil.DefaultConsensusParams))
 	cp, err := f.consensusKeeper.ParamsStore.Get(ctx)
+	require.NoError(t, err)
 
 	ctx = integration.SetCometInfo(ctx, nci)
 	ctx = integration.SetHeaderInfo(ctx, header.Info{
@@ -411,22 +410,4 @@ func newPubKey(pk string) (res cryptotypes.PubKey) {
 	pubkey := &ed25519.PubKey{Key: pkBytes}
 
 	return pubkey
-}
-
-func testEquivocationHandler(_ interface{}) evidencetypes.Handler {
-	return func(ctx context.Context, e exported.Evidence) error {
-		if err := e.ValidateBasic(); err != nil {
-			return err
-		}
-
-		ee, ok := e.(*evidencetypes.Equivocation)
-		if !ok {
-			return fmt.Errorf("unexpected evidence type: %T", e)
-		}
-		if ee.Height%2 == 0 {
-			return fmt.Errorf("unexpected even evidence height: %d", ee.Height)
-		}
-
-		return nil
-	}
 }

@@ -36,6 +36,9 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+* [#11783](https://github.com/cosmos/cosmos-sdk/issues/11783) feat(math): Upstream GDA based decimal type
+
+
 ## [math/v1.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.4.0) - 2024-01-20
 
 ### Features

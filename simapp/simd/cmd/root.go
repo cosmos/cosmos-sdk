@@ -1,5 +1,3 @@
-//go:build app_v1
-
 package cmd
 
 import (
@@ -7,52 +5,58 @@ import (
 
 	"github.com/spf13/cobra"
 
-	coretesting "cosmossdk.io/core/testing"
+	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/registry"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/params"
-	txsigning "cosmossdk.io/x/tx/signing"
+	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
+	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
+	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// NewRootCmd creates a new root command for simd. It is called once in the
-// main function.
+// NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
-	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	// note, this is not necessary when using app wiring, as depinject can be directly used (see root_v2.go)
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), coretesting.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
-	encodingConfig := params.EncodingConfig{
-		InterfaceRegistry: tempApp.InterfaceRegistry(),
-		Codec:             tempApp.AppCodec(),
-		TxConfig:          tempApp.TxConfig(),
-		Amino:             tempApp.LegacyAmino(),
-	}
+	var (
+		autoCliOpts   autocli.AppOptions
+		moduleManager *module.Manager
+		clientCtx     client.Context
+	)
 
-	initClientCtx := client.Context{}.
-		WithCodec(encodingConfig.Codec).
-		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-		WithTxConfig(encodingConfig.TxConfig).
-		WithLegacyAmino(encodingConfig.Amino).
-		WithInput(os.Stdin).
-		WithAccountRetriever(types.AccountRetriever{}).
-		WithAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix())).
-		WithHomeDir(simapp.DefaultNodeHome).
-		WithViper(""). // uses by default the binary name as prefix
-		WithAddressPrefix(sdk.GetConfig().GetBech32AccountAddrPrefix()).
-		WithValidatorPrefix(sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+	if err := depinject.Inject(
+		depinject.Configs(simapp.AppConfig(),
+			depinject.Supply(log.NewNopLogger()),
+			depinject.Provide(
+				ProvideClientContext,
+				multisigdepinject.ProvideAccount,
+				basedepinject.ProvideAccount,
+				lockupdepinject.ProvideAllLockupAccounts,
+
+				// provide base account options
+				basedepinject.ProvideSecp256K1PubKey,
+			),
+		),
+		&autoCliOpts,
+		&moduleManager,
+		&clientCtx,
+	); err != nil {
+		panic(err)
+	}
 
 	rootCmd := &cobra.Command{
 		Use:           "simd",
@@ -63,43 +67,19 @@ func NewRootCmd() *cobra.Command {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			initClientCtx = initClientCtx.WithCmdContext(cmd.Context())
-			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+			clientCtx = clientCtx.WithCmdContext(cmd.Context()).WithViper("")
+			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
 			customClientTemplate, customClientConfig := initClientConfig()
-			initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+			clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
 
-			// This needs to go after CreateClientConfig, as that function
-			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
-			// is only available if the client is online.
-			if !initClientCtx.Offline {
-				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-				txConfigOpts := tx.ConfigOptions{
-					EnabledSignModes:           enabledSignModes,
-					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
-					SigningOptions: &txsigning.Options{
-						AddressCodec:          initClientCtx.InterfaceRegistry.SigningContext().AddressCodec(),
-						ValidatorAddressCodec: initClientCtx.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
-					},
-				}
-				txConfig, err := tx.NewTxConfigWithOptions(
-					initClientCtx.Codec,
-					txConfigOpts,
-				)
-				if err != nil {
-					return err
-				}
-
-				initClientCtx = initClientCtx.WithTxConfig(txConfig)
-			}
-
-			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
 			}
 
@@ -110,23 +90,10 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, tempApp.ModuleManager)
-
-	// autocli opts
-	customClientTemplate, customClientConfig := initClientConfig()
-	var err error
-	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
-	if err != nil {
-		panic(err)
-	}
-
-	autoCliOpts := tempApp.AutoCliOpts()
-	autoCliOpts.AddressCodec = initClientCtx.AddressCodec
-	autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
-	autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec
-	autoCliOpts.Cdc = initClientCtx.Codec
+	initRootCmd(rootCmd, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
+	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
 	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
@@ -134,4 +101,54 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	return rootCmd
+}
+
+func ProvideClientContext(
+	appCodec codec.Codec,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	txConfigOpts tx.ConfigOptions,
+	legacyAmino registry.AminoRegistrar,
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	consensusAddressCodec address.ConsensusAddressCodec,
+	authConfig *authv1.Module,
+	stakingConfig *stakingv1.Module,
+) client.Context {
+	var err error
+
+	amino, ok := legacyAmino.(*codec.LegacyAmino)
+	if !ok {
+		panic("ProvideClientContext requires a *codec.LegacyAmino instance")
+	}
+
+	clientCtx := client.Context{}.
+		WithCodec(appCodec).
+		WithInterfaceRegistry(interfaceRegistry).
+		WithLegacyAmino(amino).
+		WithInput(os.Stdin).
+		WithAccountRetriever(types.AccountRetriever{}).
+		WithAddressCodec(addressCodec).
+		WithValidatorAddressCodec(validatorAddressCodec).
+		WithConsensusAddressCodec(consensusAddressCodec).
+		WithHomeDir(simapp.DefaultNodeHome).
+		WithViper(""). // uses by default the binary name as prefix
+		WithAddressPrefix(authConfig.Bech32Prefix).
+		WithValidatorPrefix(stakingConfig.Bech32PrefixValidator)
+
+	// Read the config to overwrite the default values with the values from the config file
+	customClientTemplate, customClientConfig := initClientConfig()
+	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
+	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
+	txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
+	if err != nil {
+		panic(err)
+	}
+	clientCtx = clientCtx.WithTxConfig(txConfig)
+
+	return clientCtx
 }

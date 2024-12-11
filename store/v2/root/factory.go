@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
+	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/pruning"
 )
 
@@ -136,5 +137,5 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 
 	pm := pruning.NewManager(sc, storeOpts.SCPruningOption)
-	return New(opts.SCRawDB, opts.Logger, sc, pm, nil, nil)
+	return New(opts.SCRawDB, opts.Logger, sc, pm, nil, metrics.NoOpMetrics{})
 }

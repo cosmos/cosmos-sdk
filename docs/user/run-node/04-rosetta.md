@@ -54,7 +54,7 @@ An implementation example can be found in `simapp` package.
 
 To run Rosetta in your application CLI, use the following command:
 
-> **Note:** if using the native approach, add your node name before any rosetta comand.
+> **Note:** if using the native approach, add your node name before any rosetta command.
 
 ```shell
 rosetta --help
@@ -74,7 +74,7 @@ rosetta
 
 ## Plugins - Multi chain connections
 
-Rosetta will try to reflect the node types trough reflection over the node gRPC endpoints, there may be cases were this approach is not enough. It is possible to extend or implement the required types easily trough plugins.
+Rosetta will try to reflect the node types through reflection over the node gRPC endpoints, there may be cases were this approach is not enough. It is possible to extend or implement the required types easily through plugins.
 
 To use Rosetta over any chain, it is required to set up prefixes and registering zone specific interfaces through plugins.
 

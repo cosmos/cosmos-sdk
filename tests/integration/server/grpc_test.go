@@ -3,11 +3,15 @@ package grpc_test
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/jhump/protoreflect/grpcreflect"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -15,21 +19,25 @@ import (
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	storetypes "cosmossdk.io/store/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -38,19 +46,20 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-type IntegrationTestOutOfGasSuite struct {
+type IntegrationTestSuite struct {
 	suite.Suite
 
+	codec   codec.Codec
 	conn    *grpc.ClientConn
 	address sdk.AccAddress
 }
 
-func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
+func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{})
-	cdc := encodingCfg.Codec
+	s.codec = encodingCfg.Codec
 
 	logger := log.NewTestLogger(s.T())
 	authority := authtypes.NewModuleAddress("gov")
@@ -67,7 +76,7 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
-		cdc,
+		s.codec,
 		authtypes.ProtoBaseAccount,
 		acctsModKeeper,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
@@ -81,16 +90,16 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
-		cdc,
+		s.codec,
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
+	authModule := auth.NewAppModule(s.codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
+	bankModule := bank.NewAppModule(s.codec, bankKeeper, accountKeeper)
 
-	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(logger, keys, s.codec,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
@@ -160,12 +169,12 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestOutOfGasSuite) TearDownSuite() {
+func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.conn.Close()
 }
 
-func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
+func (s *IntegrationTestSuite) TestGRPCServer_TestService() {
 	// gRPC query to test service should work
 	testClient := testdata.NewQueryClient(s.conn)
 	testRes, err := testClient.Echo(
@@ -175,7 +184,7 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
 	s.Require().Equal("hello", testRes.Message)
 }
 
-func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
+func (s *IntegrationTestSuite) TestGRPCServer_BankBalance_OutOfGas() {
 	// gRPC query to bank service should work
 	bankClient := banktypes.NewQueryClient(s.conn)
 
@@ -188,6 +197,106 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
 	s.Require().ErrorContains(err, sdkerrors.ErrOutOfGas.Error())
 }
 
-func TestIntegrationTestOutOfGasSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestOutOfGasSuite))
+// Test and enforce that we upfront reject any connections to baseapp containing
+// invalid initial x-cosmos-block-height that aren't positive  and in the range [0, max(int64)]
+// See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
+func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
+	t := s.T()
+
+	// We should reject connections with invalid block heights off the bat.
+	invalidHeightStrs := []struct {
+		value   string
+		wantErr string
+	}{
+		{"-1", "height < 0"},
+		{"9223372036854775808", "value out of range"}, // > max(int64) by 1
+		{"-10", "height < 0"},
+		{"18446744073709551615", "value out of range"}, // max uint64, which is  > max(int64)
+		{"-9223372036854775809", "value out of range"}, // Out of the range of for negative int64
+	}
+	for _, tt := range invalidHeightStrs {
+		t.Run(tt.value, func(t *testing.T) {
+			testClient := testdata.NewQueryClient(s.conn)
+			ctx := metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, tt.value)
+			testRes, err := testClient.Echo(ctx, &testdata.EchoRequest{Message: "hello"})
+			require.Error(t, err)
+			require.Nil(t, testRes)
+			require.Contains(t, err.Error(), tt.wantErr)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
+	// Test server reflection
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	// NOTE(fdymylja): we use grpcreflect because it solves imports too
+	// so that we can always assert that given a reflection server it is
+	// possible to fully query all the methods, without having any context
+	// on the proto registry
+	rc := grpcreflect.NewClientAuto(ctx, s.conn)
+
+	services, err := rc.ListServices()
+	s.Require().NoError(err)
+	s.Require().Greater(len(services), 0)
+
+	for _, svc := range services {
+		file, err := rc.FileContainingSymbol(svc)
+		s.Require().NoError(err)
+		sd := file.FindSymbol(svc)
+		s.Require().NotNil(sd)
+	}
+}
+
+func (s *IntegrationTestSuite) TestGRPCServer_InterfaceReflection() {
+	// this tests the application reflection capabilities and compatibility between v1 and v2
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	clientV2 := reflectionv2.NewReflectionServiceClient(s.conn)
+	clientV1 := reflectionv1.NewReflectionServiceClient(s.conn)
+	codecDesc, err := clientV2.GetCodecDescriptor(ctx, nil)
+	s.Require().NoError(err)
+
+	interfaces, err := clientV1.ListAllInterfaces(ctx, nil)
+	s.Require().NoError(err)
+	s.Require().Equal(len(codecDesc.Codec.Interfaces), len(interfaces.InterfaceNames))
+	s.Require().Equal(len(s.codec.InterfaceRegistry().ListAllInterfaces()), len(codecDesc.Codec.Interfaces))
+
+	for _, iface := range interfaces.InterfaceNames {
+		impls, err := clientV1.ListImplementations(ctx, &reflectionv1.ListImplementationsRequest{InterfaceName: iface})
+		s.Require().NoError(err)
+
+		s.Require().ElementsMatch(impls.ImplementationMessageNames, s.codec.InterfaceRegistry().ListImplementations(iface))
+	}
+}
+
+// TestGRPCUnpacker - tests the grpc endpoint for Validator and using the interface registry unpack and extract the
+// ConsAddr. (ref: https://github.com/cosmos/cosmos-sdk/issues/8045)
+func (s *IntegrationTestSuite) TestGRPCUnpacker() {
+	queryClient := stakingtypes.NewQueryClient(s.conn)
+	validators, err := queryClient.Validators(context.Background(), &stakingtypes.QueryValidatorsRequest{})
+	require.NoError(s.T(), err)
+
+	validator, err := queryClient.Validator(
+		context.Background(),
+		&stakingtypes.QueryValidatorRequest{ValidatorAddr: validators.Validators[0].OperatorAddress},
+	)
+	require.NoError(s.T(), err)
+
+	// no unpacked interfaces yet, so ConsAddr will be nil
+	nilAddr, err := validator.Validator.GetConsAddr()
+	require.Error(s.T(), err)
+	require.Nil(s.T(), nilAddr)
+
+	// unpack the interfaces and now ConsAddr is not nil
+	err = validator.Validator.UnpackInterfaces(s.codec.InterfaceRegistry())
+	require.NoError(s.T(), err)
+	addr, err := validator.Validator.GetConsAddr()
+	require.NotNil(s.T(), addr)
+	require.NoError(s.T(), err)
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

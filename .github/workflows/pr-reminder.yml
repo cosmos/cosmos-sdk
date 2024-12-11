@@ -19,14 +19,14 @@ jobs:
         id: pr-list
         with:
           script: |
-            const { data: pull requests } = await github.rest.pulls.list({
+            const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
             });
 
             let table = '';
-            pull requests.forEach(pr => {
+            pullRequests.forEach(pr => {
               const assignees = pr.assignees.length > 0 ? `Assignees: ${pr.assignees.map(assignee => assignee.login).join(', ')}` : 'No assignees';
               table += pr.draft ? '' : `
                       Title: ${pr.title}

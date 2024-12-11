@@ -48,6 +48,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (testutil/integration) [#22616](https://github.com/cosmos/cosmos-sdk/pull/22616) Remove double context in integration tests v1.
     * Use `integrationApp.Context()` instead of creating a context prior.
 * (version) [#22807](https://github.com/cosmos/cosmos-sdk/pull/22807) Return server/v2 information in the `version` functions and commands.
+* [#22826](https://github.com/cosmos/cosmos-sdk/pull/22826) Simplify testing frameworks by removing `testutil/cmdtest`.
 
 ### Bug Fixes
 

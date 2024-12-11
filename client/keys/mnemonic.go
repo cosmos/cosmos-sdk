@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
@@ -69,7 +68,7 @@ func MnemonicKeyCommand() *cobra.Command {
 			}
 			indiscreet, _ := cmd.Flags().GetBool(flagIndiscreet)
 			if !indiscreet {
-				return printDiscreetly(client.GetClientContextFromCmd(cmd), cmd.ErrOrStderr(), "**Important** write this mnemonic phrase in a safe place. Do not share it to anyone.", mnemonic)
+				return printDiscreetly(cmd.ErrOrStderr(), "**Important** write this mnemonic phrase in a safe place. Do not share it to anyone.", mnemonic)
 			}
 			cmd.Println(mnemonic)
 			return nil

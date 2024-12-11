@@ -20,7 +20,7 @@ require (
 	google.golang.org/grpc v1.68.1
 )
 
-require cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+require cosmossdk.io/schema v0.4.0
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect

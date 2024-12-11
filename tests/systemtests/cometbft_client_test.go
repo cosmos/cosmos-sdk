@@ -22,6 +22,17 @@ import (
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 )
 
+func TestQueryStatus(t *testing.T) {
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	systest.Sut.StartChain(t)
+
+	resp := cli.CustomQuery("status")
+
+	// make sure the output has the validator moniker.
+	assert.Contains(t, resp, "\"moniker\":\"node0\"")
+}
+
 func TestQueryNodeInfo(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)

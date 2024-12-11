@@ -256,6 +256,11 @@ func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest)
 		msgResponses = append(msgResponses, anyMsg)
 	}
 
+	event, err := intoABCIEvents(txResult.Events, map[string]struct{}{}, false)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "failed to convert events: %v", err)
+	}
+
 	return &txtypes.SimulateResponse{
 		GasInfo: &sdk.GasInfo{
 			GasUsed:   txResult.GasUsed,
@@ -263,6 +268,7 @@ func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest)
 		},
 		Result: &sdk.Result{
 			MsgResponses: msgResponses,
+			Events:       event,
 		},
 	}, nil
 }

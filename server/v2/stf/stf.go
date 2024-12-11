@@ -2,8 +2,10 @@ package stf
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
@@ -358,10 +360,45 @@ func (s STF[T]) runTxMsgs(
 			e.EventIndex = int32(j + 1)
 			events = append(events, e)
 		}
+
+		// add static event (message.action and message.module)
+		events = append(events, event.Event{
+			MsgIndex:   int32(i + 1),
+			EventIndex: int32(len(execCtx.events) + 1),
+			Attributes: func() ([]appdata.EventAttribute, error) {
+				typeURL := msgTypeURL(msg)
+				return []appdata.EventAttribute{
+					{Key: "message.action", Value: typeURL},
+					{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
+				}, nil
+			},
+			Data: func() (json.RawMessage, error) {
+				typeURL := msgTypeURL(msg)
+				attrs := []appdata.EventAttribute{
+					{Key: "message.action", Value: typeURL},
+					{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
+				}
+
+				return json.Marshal(attrs)
+			},
+		})
+
 	}
 
 	consumed := execCtx.meter.Limit() - execCtx.meter.Remaining()
 	return msgResps, consumed, events, nil
+}
+
+// Assumes that module name is the second element of the msg type URL
+// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
+// It returns an empty string if the input is not a valid type URL
+func getModuleNameFromTypeURL(input string) string {
+	moduleName := strings.Split(input, ".")
+	if len(moduleName) > 1 {
+		return moduleName[1]
+	}
+
+	return ""
 }
 
 // preBlock executes the pre block logic.

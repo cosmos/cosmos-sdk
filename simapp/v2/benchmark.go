@@ -3,10 +3,12 @@
 package simapp
 
 import (
+	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	benchmarkmodulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	benchmark "cosmossdk.io/tools/benchmark/module"
+	"fmt"
 )
 
 func init() {
@@ -27,4 +29,11 @@ func init() {
 			},
 		}),
 	})
+	runtimeConfig := &runtimev2.Module{}
+	err := ModuleConfig.Modules[0].Config.UnmarshalTo(runtimeConfig)
+	if err != nil {
+		panic(fmt.Errorf("benchmark init: failed to unmarshal runtime module config: %w", err))
+	}
+	runtimeConfig.InitGenesis = append(runtimeConfig.InitGenesis, benchmark.ModuleName)
+	ModuleConfig.Modules[0].Config = appconfig.WrapAny(runtimeConfig)
 }

@@ -2,8 +2,6 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -15,21 +13,16 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	pruningtypes "cosmossdk.io/store/pruning/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -224,37 +217,5 @@ func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coi
 	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
 	if err != nil {
 		panic(err)
-	}
-}
-
-// NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
-func NewTestNetworkFixture() network.TestFixture {
-	dir, err := os.MkdirTemp("", "simapp")
-	if err != nil {
-		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
-	}
-	defer os.RemoveAll(dir)
-
-	app := NewSimApp(log.NewNopLogger(), coretesting.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
-
-	appCtr := func(val network.ValidatorI) servertypes.Application {
-		return NewSimApp(
-			val.GetLogger(), coretesting.NewMemDB(), nil, true,
-			simtestutil.NewAppOptionsWithFlagHome(client.GetConfigFromViper(val.GetViper()).RootDir),
-			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
-			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
-			bam.SetChainID(val.GetViper().GetString(flags.FlagChainID)),
-		)
-	}
-
-	return network.TestFixture{
-		AppConstructor: appCtr,
-		GenesisState:   app.DefaultGenesis(),
-		EncodingConfig: testutil.TestEncodingConfig{
-			InterfaceRegistry: app.InterfaceRegistry(),
-			Codec:             app.AppCodec(),
-			TxConfig:          app.TxConfig(),
-			Amino:             app.LegacyAmino(),
-		},
 	}
 }

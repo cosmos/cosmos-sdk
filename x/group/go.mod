@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -175,7 +175,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require cosmossdk.io/client/v2 v2.0.0-20241211102823-5b124267e6e7
+require cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7
 
 require (
 	github.com/cloudwego/base64x v0.1.4 // indirect

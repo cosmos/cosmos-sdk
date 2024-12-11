@@ -14,7 +14,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -199,7 +199,7 @@ require (
 )
 
 require (
-	cosmossdk.io/client/v2 v2.0.0-20241211102823-5b124267e6e7 // indirect
+	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

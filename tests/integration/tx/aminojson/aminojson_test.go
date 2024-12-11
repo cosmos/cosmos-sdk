@@ -98,7 +98,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
 		desc := tt.Pulsar.ProtoReflect().Descriptor()
@@ -132,6 +132,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 
 				legacyAminoJSON, err := encCfg.Amino.MarshalJSON(gogo)
 				require.NoError(t, err)
+				legacyAminoJSON = sortJSON(t, legacyAminoJSON)
 				aminoJSON, err := aj.Marshal(msg)
 				require.NoError(t, err)
 				require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
@@ -220,10 +221,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		// represent the array as nil, and a subsequent marshal to JSON represent the array as null instead of empty.
 		roundTripUnequal bool
 
-		// pulsar does not support marshaling a math.Dec as anything except a string.  Therefore, we cannot unmarshal
-		// a pulsar encoded Math.dec (the string representation of a Decimal) into a gogo Math.dec (expecting an int64).
-		protoUnmarshalFails bool
-
 		// sort JSON bytes before comparison.  for certain types (like ModuleAccount) x/tx is not able to provide an
 		// unsorted version.  note that the legacy amino signer always sorted JSON bytes by round tripping them to/from
 		// JSON before signing over them.
@@ -265,9 +262,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &distapi.DelegatorStartingInfo{},
 		},
 		"distribution/delegator_starting_info/non_zero_dec": {
-			gogo:                &disttypes.DelegatorStartingInfo{Stake: math.LegacyNewDec(10)},
-			pulsar:              &distapi.DelegatorStartingInfo{Stake: string(dec10bz)},
-			protoUnmarshalFails: true,
+			gogo:   &disttypes.DelegatorStartingInfo{Stake: math.LegacyNewDec(10)},
+			pulsar: &distapi.DelegatorStartingInfo{Stake: string(dec10bz)},
 		},
 		"distribution/delegation_delegator_reward": {
 			gogo:   &disttypes.DelegationDelegatorReward{},
@@ -427,11 +423,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogoBytes, err := encCfg.Amino.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
 			if tc.sortJSON {
-				var c interface{}
-				err = json.Unmarshal(gogoBytes, &c)
-				require.NoError(t, err)
-				gogoBytes, err = json.Marshal(c)
-				require.NoError(t, err)
+				gogoBytes = sortJSON(t, gogoBytes)
 			}
 
 			pulsarBytes, err := aj.Marshal(tc.pulsar)
@@ -452,10 +444,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			newGogo := reflect.New(gogoType).Interface().(gogoproto.Message)
 
 			err = encCfg.Codec.Unmarshal(pulsarProtoBytes, newGogo)
-			if tc.protoUnmarshalFails {
-				require.Error(t, err)
-				return
-			}
 			require.NoError(t, err)
 
 			newGogoBytes, err := encCfg.Amino.MarshalJSON(newGogo)
@@ -598,4 +586,13 @@ func postFixPulsarMessage(msg proto.Message) {
 			m.Permissions = nil
 		}
 	}
+}
+
+func sortJSON(t require.TestingT, bz []byte) []byte {
+	var c interface{}
+	err := json.Unmarshal(bz, &c)
+	require.NoError(t, err)
+	bz, err = json.Marshal(c)
+	require.NoError(t, err)
+	return bz
 }

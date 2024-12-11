@@ -565,7 +565,7 @@ func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abc
 		case "TxEncodeAmino":
 			resp, err = handleExternalService(ctx, req, txService.TxEncodeAmino)
 		case "TxDecodeAmino":
-			resp, err = handleExternalService(ctx, req, txService.Simulate)
+			resp, err = handleExternalService(ctx, req, txService.TxDecodeAmino)
 		}
 
 		return resp, err

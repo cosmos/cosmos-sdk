@@ -50,6 +50,12 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 	require.NotEqual(t, granterAddr, grantee5Addr)
 	grantee6Addr := cli.AddKey("grantee6")
 	require.NotEqual(t, granterAddr, grantee6Addr)
+	grantee7Addr := cli.AddKey("grantee7")
+	require.NotEqual(t, granterAddr, grantee7Addr)
+	grantee8Addr := cli.AddKey("grantee8")
+	require.NotEqual(t, granterAddr, grantee8Addr)
+	grantee9Addr := cli.AddKey("grantee9")
+	require.NotEqual(t, granterAddr, grantee9Addr)
 
 	systest.Sut.StartChain(t)
 
@@ -90,13 +96,6 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			true,
 		},
 		{
-			"delegate authorization without allow or deny list",
-			grantee1Addr,
-			[]string{"delegate"},
-			"both allowed & deny list cannot be empty",
-			false,
-		},
-		{
 			"delegate authorization with invalid allowed validator address",
 			grantee1Addr,
 			[]string{"delegate", "--allowed-validators=invalid"},
@@ -111,13 +110,6 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			false,
 		},
 		{
-			"unbond authorization without allow or deny list",
-			grantee1Addr,
-			[]string{"unbond"},
-			"both allowed & deny list cannot be empty",
-			false,
-		},
-		{
 			"unbond authorization with invalid allowed validator address",
 			grantee1Addr,
 			[]string{"unbond", "--allowed-validators=invalid"},
@@ -129,13 +121,6 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			grantee1Addr,
 			[]string{"unbond", "--deny-validators=invalid"},
 			"decoding bech32 failed",
-			false,
-		},
-		{
-			"redelegate authorization without allow or deny list",
-			grantee1Addr,
-			[]string{"redelegate"},
-			"both allowed & deny list cannot be empty",
 			false,
 		},
 		{
@@ -181,16 +166,37 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			false,
 		},
 		{
-			"valid unbond authorization",
+			"valid delegate authorization without allow or deny list",
 			grantee5Addr,
+			[]string{"delegate", "--spend-limit=1000" + testDenom},
+			"",
+			false,
+		},
+		{
+			"valid unbond authorization",
+			grantee6Addr,
 			[]string{"unbond", "--deny-validators=" + valOperAddr},
 			"",
 			false,
 		},
 		{
+			"valid unbond authorization without allow or deny list",
+			grantee7Addr,
+			[]string{"unbond", "--spend-limit=1000" + testDenom},
+			"",
+			false,
+		},
+		{
 			"valid redelegate authorization",
-			grantee6Addr,
+			grantee8Addr,
 			[]string{"redelegate", "--allowed-validators=" + valOperAddr},
+			"",
+			false,
+		},
+		{
+			"valid redelegate authorization without allow or deny list",
+			grantee9Addr,
+			[]string{"redelegate", "--spend-limit=1000" + testDenom},
 			"",
 			false,
 		},

@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/math"
-	minttypes "cosmossdk.io/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"cosmossdk.io/math"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

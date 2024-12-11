@@ -69,7 +69,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
+	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b // indirect

@@ -31,6 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#22832](https://github.com/cosmos/cosmos-sdk/pull/22832) Ensure the distribution module has at least as many tokens as outstanding rewards at genesis import
 * [#20790](https://github.com/cosmos/cosmos-sdk/pull/20790) `x/distribution` does not depend on `x/protocolpool` anymore, now `x/distribution` only does token transfers and `x/protocolpool` does the rest.
 
 ### API Breaking Changes

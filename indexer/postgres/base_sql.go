@@ -17,17 +17,19 @@ CREATE TABLE IF NOT EXISTS tx
     id             BIGSERIAL PRIMARY KEY,
     block_number   BIGINT NOT NULL REFERENCES block (number),
     index_in_block BIGINT NOT NULL,
-    data           JSONB  NOT NULL
+    data           JSONB NULL,
+    bytes          BYTEA NULL 
 );
 
 CREATE TABLE IF NOT EXISTS event
 (
     id           BIGSERIAL PRIMARY KEY,
     block_number BIGINT NOT NULL REFERENCES block (number),
-    tx_id        BIGINT NULL REFERENCES tx (id),
-    msg_index    BIGINT NULL,
-    event_index  BIGINT NULL,
-    type         TEXT   NOT NULL,
-    data         JSONB  NOT NULL
+    block_stage  INTEGER NOT NULL,
+    tx_index     BIGINT NOT NULL,
+    msg_index    BIGINT NOT NULL,
+    event_index  BIGINT NOT NULL,
+    type         TEXT   NULL,
+    data         JSONB  NULL
 );
 `

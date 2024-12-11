@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
@@ -43,9 +43,11 @@ require (
 )
 
 require (
+	cosmossdk.io/indexer/postgres v0.0.0-20241204160609-556102cfa046
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+	github.com/jackc/pgx/v5 v5.7.1
 )
 
 require (
@@ -61,7 +63,7 @@ require (
 	cosmossdk.io/core/testing v0.0.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1 // indirect
 	cosmossdk.io/store v1.1.1 // indirect
@@ -156,6 +158,9 @@ require (
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
@@ -294,6 +299,7 @@ replace (
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core/testing => ../../core/testing
+	cosmossdk.io/indexer/postgres => ../../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager

@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/schema v0.4.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

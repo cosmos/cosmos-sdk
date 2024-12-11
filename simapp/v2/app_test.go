@@ -153,13 +153,13 @@ func TestSimAppExportAndBlockedAddrs_WithOneBlockProduced(t *testing.T) {
 
 	MoveNextBlock(t, app, ctx)
 
-	_, err := app.ExportAppStateAndValidators(nil)
+	_, err := app.ExportAppStateAndValidators(false, nil)
 	require.NoError(t, err)
 }
 
 func TestSimAppExportAndBlockedAddrs_NoBlocksProduced(t *testing.T) {
 	app, _ := NewTestApp(t)
 
-	_, err := app.ExportAppStateAndValidators(nil)
+	_, err := app.ExportAppStateAndValidators(false, nil)
 	require.NoError(t, err)
 }

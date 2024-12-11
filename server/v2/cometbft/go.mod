@@ -24,7 +24,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.5.0
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/schema v0.4.0
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d
 	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1

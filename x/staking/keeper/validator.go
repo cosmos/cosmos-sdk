@@ -558,6 +558,10 @@ func (k Keeper) unbondMatureValidators(
 				return err
 			}
 		}
+		// remove validator from queue
+		if err = k.DeleteValidatorQueue(ctx, val); err != nil {
+			return err
+		}
 	}
 	return nil
 }

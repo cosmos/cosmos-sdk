@@ -266,7 +266,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		},
 		"distribution/delegator_starting_info/non_zero_dec": {
 			gogo:                &disttypes.DelegatorStartingInfo{Stake: math.LegacyNewDec(10)},
-			pulsar:              &distapi.DelegatorStartingInfo{Stake: "10.000000000000000000"},
+			pulsar:              &distapi.DelegatorStartingInfo{Stake: string(dec10bz)},
 			protoUnmarshalFails: true,
 		},
 		"distribution/delegation_delegator_reward": {

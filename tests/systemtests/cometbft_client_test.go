@@ -22,6 +22,22 @@ import (
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 )
 
+func TestQueryStatus(t *testing.T) {
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	systest.Sut.StartChain(t)
+
+	var resp string
+	if systest.IsV2() {
+		resp = cli.CustomQuery("comet", "status")
+	} else {
+		resp = cli.CustomQuery("status")
+	}
+
+	// make sure the output has the validator moniker.
+	assert.Contains(t, resp, "\"moniker\":\"node0\"")
+}
+
 func TestQueryNodeInfo(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
@@ -176,7 +192,6 @@ func TestLatestValidatorSet_GRPCGateway(t *testing.T) {
 			}
 			rsp := systest.GetRequest(t, baseurl+tc.url)
 			assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
-
 		})
 	}
 }
@@ -213,7 +228,7 @@ func TestValidatorSetByHeight(t *testing.T) {
 	}
 }
 
-func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
+func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
 
@@ -239,15 +254,17 @@ func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
 			if tc.expErr {
 				errMsg := gjson.GetBytes(rsp, "message").String()
 				assert.Contains(t, errMsg, tc.expErrMsg)
-			} else {
-				assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
+				return
 			}
+			assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
 		})
 	}
 }
 
 func TestABCIQuery(t *testing.T) {
+	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
+	_ = systest.Sut.AwaitNextBlock(t, time.Second*3)
 
 	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())

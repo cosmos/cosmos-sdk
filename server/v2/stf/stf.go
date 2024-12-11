@@ -361,21 +361,22 @@ func (s STF[T]) runTxMsgs(
 			events = append(events, e)
 		}
 
-		// add static event (message.action and message.module)
+		// create message event (including message.action and message.module)
 		events = append(events, event.Event{
 			MsgIndex:   int32(i + 1),
 			EventIndex: int32(len(execCtx.events) + 1),
+			Type:       "message",
 			Attributes: func() ([]appdata.EventAttribute, error) {
 				typeURL := msgTypeURL(msg)
 				return []appdata.EventAttribute{
-					{Key: "message.action", Value: typeURL},
+					{Key: "message.action", Value: "/" + typeURL},
 					{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
 				}, nil
 			},
 			Data: func() (json.RawMessage, error) {
 				typeURL := msgTypeURL(msg)
 				attrs := []appdata.EventAttribute{
-					{Key: "message.action", Value: typeURL},
+					{Key: "message.action", Value: "/" + typeURL},
 					{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
 				}
 

@@ -54,11 +54,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+* [#22493](https://github.com/cosmos/cosmos-sdk/pull/22493) Refactored `client/v2` package to remove v1 context dependencies, while introducing new packages for client configuration, context management, and formatted output with improved transaction handling and flag support.
 
 ### Bug Fixes
 
 * [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
 * [#22576](https://github.com/cosmos/cosmos-sdk/pull/22576) Fix duplicate command addition in `autocli` when custom enhanced command has a different name than module name
+* [#22817](https://github.com/cosmos/cosmos-sdk/pull/22817) Add DecCoin support in autocli flag builder.
 
 ## [v2.0.0-beta.5] - 2024-09-18
 

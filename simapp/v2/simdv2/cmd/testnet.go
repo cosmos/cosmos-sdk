@@ -20,6 +20,8 @@ import (
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/grpcgateway"
+	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/store"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -184,6 +186,7 @@ func initTestnetFiles[T transaction.Tx](
 		rpcPort  = 26657
 		apiPort  = 1317
 		grpcPort = 9090
+		restPort = 8080
 	)
 	p2pPortStart := 26656
 
@@ -192,6 +195,9 @@ func initTestnetFiles[T transaction.Tx](
 	for i := 0; i < args.numValidators; i++ {
 		var portOffset int
 		grpcConfig := grpc.DefaultConfig()
+		grpcgatewayConfig := grpcgateway.DefaultConfig()
+		restConfig := rest.DefaultConfig()
+
 		if args.singleMachine {
 			portOffset = i
 			p2pPortStart = 16656 // use different start point to not conflict with rpc port
@@ -204,6 +210,16 @@ func initTestnetFiles[T transaction.Tx](
 				Address:        fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset),
 				MaxRecvMsgSize: grpc.DefaultConfig().MaxRecvMsgSize,
 				MaxSendMsgSize: grpc.DefaultConfig().MaxSendMsgSize,
+			}
+
+			grpcgatewayConfig = &grpcgateway.Config{
+				Enable:  true,
+				Address: fmt.Sprintf("127.0.0.1:%d", apiPort+portOffset),
+			}
+
+			restConfig = &rest.Config{
+				Enable:  true,
+				Address: fmt.Sprintf("127.0.0.1:%d", restPort+portOffset),
 			}
 		}
 
@@ -295,7 +311,7 @@ func initTestnetFiles[T transaction.Tx](
 			valStr,
 			valPubKeys[i],
 			sdk.NewCoin(args.bondTokenDenom, valTokens),
-			stakingtypes.NewDescription(nodeDirName, "", "", "", "", stakingtypes.Metadata{}),
+			stakingtypes.NewDescription(nodeDirName, "", "", "", "", &stakingtypes.Metadata{}),
 			stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec()),
 			math.OneInt(),
 		)
@@ -338,7 +354,9 @@ func initTestnetFiles[T transaction.Tx](
 		cometServer := cometbft.NewWithConfigOptions[T](cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig))
 		storeServer := &store.Server[T]{}
 		grpcServer := grpc.NewWithConfigOptions[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer)
+		grpcgatewayServer := grpcgateway.NewWithConfigOptions[T](grpcgateway.OverwriteDefaultConfig(grpcgatewayConfig))
+		restServer := rest.NewWithConfigOptions[T](rest.OverwriteDefaultConfig(restConfig))
+		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer, grpcgatewayServer, restServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

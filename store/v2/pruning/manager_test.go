@@ -14,8 +14,6 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
 var storeKeys = []string{"store1", "store2", "store3"}
@@ -25,7 +23,6 @@ type PruningManagerTestSuite struct {
 
 	manager *Manager
 	sc      *commitment.CommitStore
-	ss      *storage.StorageStore
 }
 
 func TestPruningManagerTestSuite(t *testing.T) {
@@ -45,12 +42,8 @@ func (s *PruningManagerTestSuite) SetupTest() {
 	s.sc, err = commitment.NewCommitStore(multiTrees, nil, mdb, nopLog)
 	s.Require().NoError(err)
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-	s.ss = storage.NewStorageStore(sqliteDB, nopLog)
-	scPruningOption := store.NewPruningOptionWithCustom(0, 1)  // prune all
-	ssPruningOption := store.NewPruningOptionWithCustom(5, 10) // prune some
-	s.manager = NewManager(s.sc, s.ss, scPruningOption, ssPruningOption)
+	scPruningOption := store.NewPruningOptionWithCustom(0, 1) // prune all
+	s.manager = NewManager(s.sc, scPruningOption)
 }
 
 func (s *PruningManagerTestSuite) TestPrune() {
@@ -68,8 +61,6 @@ func (s *PruningManagerTestSuite) TestPrune() {
 		_, err := s.sc.Commit(version)
 		s.Require().NoError(err)
 
-		s.Require().NoError(s.ss.ApplyChangeset(cs))
-
 		s.Require().NoError(s.manager.Prune(version))
 	}
 
@@ -86,24 +77,6 @@ func (s *PruningManagerTestSuite) TestPrune() {
 		return count == len(storeKeys)
 	}
 	s.Require().Eventually(checkSCPrune, 10*time.Second, 1*time.Second)
-
-	// check the storage store
-	_, pruneVersion := s.manager.ssPruningOption.ShouldPrune(toVersion)
-	for version := uint64(1); version <= toVersion; version++ {
-		for _, storeKey := range storeKeys {
-			for i := 0; i < keyCount; i++ {
-				key := []byte(fmt.Sprintf("key-%d-%d", version, i))
-				value, err := s.ss.Get([]byte(storeKey), version, key)
-				if version <= pruneVersion {
-					s.Require().Nil(value)
-					s.Require().Error(err)
-				} else {
-					s.Require().NoError(err)
-					s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), value)
-				}
-			}
-		}
-	}
 }
 
 func TestPruningOption(t *testing.T) {
@@ -164,8 +137,6 @@ func (s *PruningManagerTestSuite) TestSignalCommit() {
 	_, err := s.sc.Commit(1)
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.ss.ApplyChangeset(cs))
-
 	// commit version 2
 	for _, storeKey := range storeKeys {
 		cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", 2, 0)), []byte(fmt.Sprintf("value-%d-%d", 2, 0)), false)
@@ -178,8 +149,6 @@ func (s *PruningManagerTestSuite) TestSignalCommit() {
 	s.Require().NoError(s.sc.WriteChangeset(cs))
 	_, err = s.sc.Commit(2)
 	s.Require().NoError(err)
-
-	s.Require().NoError(s.ss.ApplyChangeset(cs))
 
 	// try prune before signaling commit has finished
 	s.Require().NoError(s.manager.Prune(2))
@@ -238,7 +207,6 @@ func (s *PruningManagerTestSuite) TestSignalCommit() {
 		_, err := s.sc.Commit(version)
 		s.Require().NoError(err)
 
-		s.Require().NoError(s.ss.ApplyChangeset(cs))
 		err = s.manager.ResumePruning(version)
 		s.Require().NoError(err)
 	}

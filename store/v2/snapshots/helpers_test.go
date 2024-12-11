@@ -14,7 +14,6 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 
-	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
@@ -109,7 +108,7 @@ type mockCommitSnapshotter struct {
 }
 
 func (m *mockCommitSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges,
+	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshotstypes.SnapshotItem, error) {
 	if format == 0 {
 		return snapshotstypes.SnapshotItem{}, snapshotstypes.ErrUnknownFormat
@@ -120,7 +119,6 @@ func (m *mockCommitSnapshotter) Restore(
 
 	var item snapshotstypes.SnapshotItem
 	m.items = [][]byte{}
-	keyCount := 0
 	for {
 		item.Reset()
 		err := protoReader.ReadMsg(&item)
@@ -134,19 +132,6 @@ func (m *mockCommitSnapshotter) Restore(
 			break
 		}
 		m.items = append(m.items, payload.Payload)
-		// mock feeding chStorage to check if the loop closed properly
-		//
-		// ref: https://github.com/cosmos/cosmos-sdk/pull/21106
-		chStorage <- &corestore.StateChanges{
-			Actor: []byte("actor"),
-			StateChanges: []corestore.KVPair{
-				{
-					Key:   []byte(fmt.Sprintf("key-%d", keyCount)),
-					Value: payload.Payload,
-				},
-			},
-		}
-		keyCount++
 	}
 
 	return item, nil
@@ -169,22 +154,6 @@ func (m *mockCommitSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{snapshotstypes.CurrentFormat}
 }
 
-type mockStorageSnapshotter struct {
-	items map[string][]byte
-}
-
-func (m *mockStorageSnapshotter) Restore(version uint64, chStorage <-chan *corestore.StateChanges) error {
-	// mock consuming chStorage to check if the loop closed properly
-	//
-	// ref: https://github.com/cosmos/cosmos-sdk/pull/21106
-	for change := range chStorage {
-		for _, kv := range change.StateChanges {
-			m.items[string(kv.Key)] = kv.Value
-		}
-	}
-	return nil
-}
-
 type mockErrorCommitSnapshotter struct{}
 
 var _ snapshots.CommitSnapshotter = (*mockErrorCommitSnapshotter)(nil)
@@ -194,7 +163,7 @@ func (m *mockErrorCommitSnapshotter) Snapshot(height uint64, protoWriter protoio
 }
 
 func (m *mockErrorCommitSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges,
+	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshotstypes.SnapshotItem, error) {
 	return snapshotstypes.SnapshotItem{}, errors.New("mock restore error")
 }
@@ -214,7 +183,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	store, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 	hung := newHungCommitSnapshotter()
-	mgr := snapshots.NewManager(store, opts, hung, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
+	mgr := snapshots.NewManager(store, opts, hung, nil, coretesting.NewNopLogger())
 
 	// Channel to ensure the test doesn't finish until the goroutine is done.
 	// Without this, there are intermittent test failures about
@@ -258,7 +227,7 @@ func (m *hungCommitSnapshotter) Snapshot(height uint64, protoWriter protoio.Writ
 }
 
 func (m *hungCommitSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges,
+	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshotstypes.SnapshotItem, error) {
 	panic("not implemented")
 }

@@ -30,6 +30,10 @@ type RootStore interface {
 	// LoadVersion loads the RootStore to the given version.
 	LoadVersion(version uint64) error
 
+	// LoadVersionForOverwriting loads the state at the given version.
+	// Any versions greater than targetVersion will be deleted.
+	LoadVersionForOverwriting(version uint64) error
+
 	// LoadLatestVersion behaves identically to LoadVersion except it loads the
 	// latest version implicitly.
 	LoadLatestVersion() error
@@ -57,9 +61,6 @@ type RootStore interface {
 
 // Backend defines the interface for the RootStore backends.
 type Backend interface {
-	// GetStateStorage returns the SS backend.
-	GetStateStorage() VersionedWriter
-
 	// GetStateCommitment returns the SC backend.
 	GetStateCommitment() Committer
 }

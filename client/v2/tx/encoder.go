@@ -19,9 +19,10 @@ var (
 
 	// jsonMarshalOptions configures JSON marshaling for protobuf messages.
 	jsonMarshalOptions = protojson.MarshalOptions{
-		Indent:         "",
-		UseProtoNames:  true,
-		UseEnumNumbers: false,
+		Indent:          "",
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
 	}
 
 	// textMarshalOptions

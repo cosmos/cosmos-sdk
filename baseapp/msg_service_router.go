@@ -14,7 +14,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/internal/protocompat"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,14 +26,14 @@ type MessageRouter interface {
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 
 	ResponseNameByMsgName(msgName string) string
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
+	HandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
 }
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
-	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
+	handlers          map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
 	responseByMsgName map[string]string
 	circuitBreaker    CircuitBreaker
 }
@@ -45,7 +44,7 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes:            map[string]MsgServiceHandler{},
-		hybridHandlers:    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		handlers:          map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
 		responseByMsgName: map[string]string{},
 	}
 }
@@ -89,8 +88,8 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 	}
 }
 
-func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
-	return msr.hybridHandlers[msgName]
+func (msr *MsgServiceRouter) HandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	return msr.handlers[msgName]
 }
 
 func (msr *MsgServiceRouter) ResponseNameByMsgName(msgName string) string {
@@ -106,8 +105,7 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 	if err != nil {
 		return err
 	}
-	cdc := codec.NewProtoCodec(msr.interfaceRegistry)
-	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, method, handler)
+	hybridHandler, err := protocompat.MakeHandler(sd, method, handler)
 	if err != nil {
 		return err
 	}
@@ -115,7 +113,7 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 	msr.responseByMsgName[string(inputName)] = string(outputName)
 	// if circuit breaker is not nil, then we decorate the hybrid handler with the circuit breaker
 	if msr.circuitBreaker == nil {
-		msr.hybridHandlers[string(inputName)] = hybridHandler
+		msr.handlers[string(inputName)] = hybridHandler
 		return nil
 	}
 	// decorate the hybrid handler with the circuit breaker
@@ -130,7 +128,7 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 		}
 		return hybridHandler(ctx, req, resp)
 	}
-	msr.hybridHandlers[string(inputName)] = circuitBreakerHybridHandler
+	msr.handlers[string(inputName)] = circuitBreakerHybridHandler
 	return nil
 }
 

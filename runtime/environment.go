@@ -81,7 +81,7 @@ func (failingMsgRouter) ResponseNameByMsgName(msgName string) string {
 	panic("message router not set")
 }
 
-func (failingMsgRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (failingMsgRouter) HandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	panic("message router not set")
 }
 
@@ -91,7 +91,7 @@ type failingQueryRouter struct {
 	baseapp.QueryRouter
 }
 
-func (failingQueryRouter) HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (failingQueryRouter) HandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	panic("query router not set")
 }
 

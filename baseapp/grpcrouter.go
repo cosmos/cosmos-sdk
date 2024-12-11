@@ -18,7 +18,7 @@ import (
 )
 
 type QueryRouter interface {
-	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error
+	HandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error
 	RegisterService(sd *grpc.ServiceDesc, handler interface{})
 	ResponseNameByRequestName(requestName string) string
 	Route(path string) GRPCQueryHandler
@@ -29,9 +29,10 @@ type QueryRouter interface {
 type GRPCQueryRouter struct {
 	// routes maps query handlers used in ABCIQuery.
 	routes map[string]GRPCQueryHandler
-	// hybridHandlers maps the request name to the handler. It is a hybrid handler which seamlessly
-	// handles both gogo and protov2 messages.
-	hybridHandlers map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error
+	// handlers maps the request name to the handler. This is the same as routes
+	// but it handles everything in a non ABCI oriented fashion but more generic
+	// to the consensus layer.
+	handlers map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error
 	// responseByRequestName maps the request name to the response name.
 	responseByRequestName map[string]string
 	// binaryCodec is used to encode/decode binary protobuf messages.
@@ -57,7 +58,7 @@ var (
 func NewGRPCQueryRouter() *GRPCQueryRouter {
 	return &GRPCQueryRouter{
 		routes:                map[string]GRPCQueryHandler{},
-		hybridHandlers:        map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		handlers:              map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
 		responseByRequestName: map[string]string{},
 	}
 }
@@ -88,7 +89,7 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 		if err != nil {
 			panic(err)
 		}
-		err = qrt.registerHybridHandler(sd, method, handler)
+		err = qrt.registerHandler(sd, method, handler)
 		if err != nil {
 			panic(err)
 		}
@@ -143,15 +144,15 @@ func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, metho
 	return nil
 }
 
-func (qrt *GRPCQueryRouter) HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error {
-	return qrt.hybridHandlers[name]
+func (qrt *GRPCQueryRouter) HandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	return qrt.handlers[name]
 }
 
 func (qrt *GRPCQueryRouter) ResponseNameByRequestName(requestName string) string {
 	return qrt.responseByRequestName[requestName]
 }
 
-func (qrt *GRPCQueryRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
+func (qrt *GRPCQueryRouter) registerHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
 	// extract message name from method descriptor
 	inputName, err := protocompat.RequestFullNameFromMethodDesc(sd, method)
 	if err != nil {
@@ -161,13 +162,13 @@ func (qrt *GRPCQueryRouter) registerHybridHandler(sd *grpc.ServiceDesc, method g
 	if err != nil {
 		return err
 	}
-	methodHandler, err := protocompat.MakeHybridHandler(qrt.binaryCodec, sd, method, handler)
+	methodHandler, err := protocompat.MakeHandler(sd, method, handler)
 	if err != nil {
 		return err
 	}
 	// map input name to output name
 	qrt.responseByRequestName[string(inputName)] = string(outputName)
-	qrt.hybridHandlers[string(inputName)] = append(qrt.hybridHandlers[string(inputName)], methodHandler)
+	qrt.handlers[string(inputName)] = append(qrt.handlers[string(inputName)], methodHandler)
 	return nil
 }
 

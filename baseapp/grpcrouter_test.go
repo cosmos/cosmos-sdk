@@ -56,7 +56,7 @@ func TestGRPCQueryRouter(t *testing.T) {
 func TestGRPCRouterHybridHandlers(t *testing.T) {
 	assertRouterBehaviour := func(helper *baseapp.QueryServiceTestHelper) {
 		// test getting the handler by name
-		handlers := helper.GRPCQueryRouter.HybridHandlerByRequestName("testpb.EchoRequest")
+		handlers := helper.GRPCQueryRouter.HandlerByRequestName("testpb.EchoRequest")
 		require.NotNil(t, handlers)
 		require.Len(t, handlers, 1)
 		handler := handlers[0]

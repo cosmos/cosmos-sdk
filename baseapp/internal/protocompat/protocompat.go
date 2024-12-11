@@ -6,27 +6,22 @@ import (
 	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/golang/protobuf/proto" //nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
 	"google.golang.org/grpc"
 	proto2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (
-	gogoType           = reflect.TypeOf((*gogoproto.Message)(nil)).Elem()
-	protov2Type        = reflect.TypeOf((*proto2.Message)(nil)).Elem()
-	protov2MarshalOpts = proto2.MarshalOptions{Deterministic: true}
+	gogoType    = reflect.TypeOf((*gogoproto.Message)(nil)).Elem()
+	protov2Type = reflect.TypeOf((*proto2.Message)(nil)).Elem()
 )
 
 type Handler = func(ctx context.Context, request, response protoiface.MessageV1) error
 
-// MakeHybridHandler returns a handler that can handle both gogo and protov2 messages, no matter
+// MakeHandler returns a handler that can handle both gogo and protov2 messages, no matter
 // if the handler is a gogo or protov2 handler.
-func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
+func MakeHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
 	if err != nil {
@@ -42,150 +37,36 @@ func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.
 		return nil, err
 	}
 	if isProtov2Handler {
-		return makeProtoV2HybridHandler(methodDesc, cdc, method, handler)
+		return nil, fmt.Errorf("protov2 handlers are not allowed %s", methodFullName)
 	}
-	return makeGogoHybridHandler(methodDesc, cdc, method, handler)
+	return makeGogoHandler(methodDesc, method, handler)
 }
 
-// makeProtoV2HybridHandler returns a handler that can handle both gogo and protov2 messages.
-func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.BinaryCodec, method grpc.MethodDesc, handler any) (Handler, error) {
-	// it's a protov2 handler, if a gogo counterparty is not found we cannot handle gogo messages.
-	gogoExists := gogoproto.MessageType(string(prefMethod.Output().FullName())) != nil
-	if !gogoExists {
-		return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
-			protov2Request, ok := inReq.(proto2.Message)
-			if !ok {
-				return fmt.Errorf("invalid request type %T, method %s does not accept gogoproto messages", inReq, prefMethod.FullName())
-			}
-			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				proto2.Merge(msg.(proto2.Message), protov2Request)
-				return nil
-			}, nil)
-			if err != nil {
-				return err
-			}
-			// merge on the resp
-			proto2.Merge(outResp.(proto2.Message), resp.(proto2.Message))
-			return nil
-		}, nil
-	}
+func makeGogoHandler(prefMethod protoreflect.MethodDescriptor, method grpc.MethodDesc, handler any) (Handler, error) {
 	return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
-		// we check if the request is a protov2 message.
-		switch m := inReq.(type) {
-		case proto2.Message:
-			// we can just call the handler after making a copy of the message, for safety reasons.
-			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				proto2.Merge(msg.(proto2.Message), m)
-				return nil
-			}, nil)
-			if err != nil {
-				return err
-			}
-			// merge on the resp
-			proto2.Merge(outResp.(proto2.Message), resp.(proto2.Message))
-			return nil
-		case gogoproto.Message:
-			// we need to marshal and unmarshal the request.
-			requestBytes, err := cdc.Marshal(m)
-			if err != nil {
-				return err
-			}
-			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				// unmarshal request into the message.
-				return proto2.Unmarshal(requestBytes, msg.(proto2.Message))
-			}, nil)
-			if err != nil {
-				return err
-			}
-			// the response is a protov2 message, so we cannot just return it.
-			// since the request came as gogoproto, we expect the response
-			// to also be gogoproto.
-			respBytes, err := protov2MarshalOpts.Marshal(resp.(proto2.Message))
-			if err != nil {
-				return err
-			}
-
-			// unmarshal response into a gogo message.
-			return cdc.Unmarshal(respBytes, outResp.(gogoproto.Message))
-		default:
-			panic("unreachable")
+		// we do not handle protov2
+		_, ok := inReq.(proto2.Message)
+		if ok {
+			return fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", inReq, prefMethod.FullName())
 		}
-	}, nil
-}
 
-func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.BinaryCodec, method grpc.MethodDesc, handler any) (Handler, error) {
-	// it's a gogo handler, we check if the existing protov2 counterparty exists.
-	_, err := protoregistry.GlobalTypes.FindMessageByName(prefMethod.Output().FullName())
-	if err != nil {
-		// this can only be a gogo message.
-		return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
-			_, ok := inReq.(proto2.Message)
-			if ok {
-				return fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", inReq, prefMethod.FullName())
-			}
-			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				// merge! ref: https://github.com/cosmos/cosmos-sdk/issues/18003
-				// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
-				// using proto.Merge with gogo messages seems to work fine.
-				proto.Merge(msg.(gogoproto.Message), inReq)
-				return nil
-			}, nil)
-			if err != nil {
-				return err
-			}
-			// merge resp, ref: https://github.com/cosmos/cosmos-sdk/issues/18003
-			// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
-			// using proto.Merge with gogo messages seems to work fine.
-			proto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
+		resp, err := method.Handler(handler, ctx, func(msg any) error {
+			// reflection to copy from inReq to msg
+			dstVal := reflect.ValueOf(msg).Elem()
+			srcVal := reflect.ValueOf(inReq).Elem()
+			dstVal.Set(srcVal)
 			return nil
-		}, nil
-	}
-	// this is a gogo handler, and we have a protov2 counterparty.
-	return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
-		switch m := inReq.(type) {
-		case proto2.Message:
-			// we need to marshal and unmarshal the request.
-			requestBytes, err := protov2MarshalOpts.Marshal(m)
-			if err != nil {
-				return err
-			}
-			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				// unmarshal request into the message.
-				return cdc.Unmarshal(requestBytes, msg.(gogoproto.Message))
-			}, nil)
-			if err != nil {
-				return err
-			}
-			// the response is a gogo message, so we cannot just return it.
-			// since the request came as protov2, we expect the response
-			// to also be protov2.
-			respBytes, err := cdc.Marshal(resp.(gogoproto.Message))
-			if err != nil {
-				return err
-			}
-			// now we unmarshal back into a protov2 message.
-			return proto2.Unmarshal(respBytes, outResp.(proto2.Message))
-		case gogoproto.Message:
-			// we can just call the handler after making a copy of the message, for safety reasons.
-			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				// ref: https://github.com/cosmos/cosmos-sdk/issues/18003
-				asGogoProto := msg.(gogoproto.Message)
-				// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
-				// using proto.Merge with gogo messages seems to work fine.
-				proto.Merge(asGogoProto, m)
-				return nil
-			}, nil)
-			if err != nil {
-				return err
-			}
-			// merge on the resp, ref: https://github.com/cosmos/cosmos-sdk/issues/18003
-			// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
-			// using proto.Merge with gogo messages seems to work fine.
-			proto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
-			return nil
-		default:
-			panic("unreachable")
+		}, nil)
+		if err != nil {
+			return err
 		}
+
+		// reflection to copy from resp to outResp
+		dstVal := reflect.ValueOf(outResp).Elem()
+		srcVal := reflect.ValueOf(resp).Elem()
+		dstVal.Set(srcVal)
+
+		return nil
 	}, nil
 }
 

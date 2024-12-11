@@ -37,7 +37,7 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
 
-	handler := m.router.HybridHandlerByMsgName(typeURL)
+	handler := m.router.HandlerByMsgName(typeURL)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", typeURL)
 	}
@@ -63,7 +63,7 @@ func (m *msgRouterService) Invoke(ctx context.Context, msg gogoproto.Message) (g
 		return nil, fmt.Errorf("could not create response message %s", respName)
 	}
 
-	handler := m.router.HybridHandlerByMsgName(messageName)
+	handler := m.router.HandlerByMsgName(messageName)
 	if handler == nil {
 		return nil, fmt.Errorf("unknown message: %s", messageName)
 	}
@@ -96,7 +96,7 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
 
-	handlers := m.router.HybridHandlerByRequestName(typeURL)
+	handlers := m.router.HandlerByRequestName(typeURL)
 	if len(handlers) == 0 {
 		return fmt.Errorf("unknown request: %s", typeURL)
 	} else if len(handlers) > 1 {
@@ -124,7 +124,7 @@ func (m *queryRouterService) Invoke(ctx context.Context, req gogoproto.Message) 
 		return nil, fmt.Errorf("could not create response request %s", respName)
 	}
 
-	handlers := m.router.HybridHandlerByRequestName(reqName)
+	handlers := m.router.HandlerByRequestName(reqName)
 	if len(handlers) == 0 {
 		return nil, fmt.Errorf("unknown request: %s", reqName)
 	} else if len(handlers) > 1 {

@@ -464,7 +464,7 @@ func parseOrderBy(orderBy txtypes.OrderBy) string {
 func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abci.QueryRequest) (transaction.Msg, error) {
 	// Handle comet service
 	if strings.HasPrefix(req.Path, "/cosmos.base.tendermint.v1beta1.Service") {
-		rpcClient, _ := rpchttp.New(c.cfg.AppTomlConfig.Address)
+		rpcClient, _ := rpchttp.New(c.cfg.ConfigTomlConfig.RPC.ListenAddress)
 
 		cometQServer := cmtservice.NewQueryServer(rpcClient, c.Query, c.consensusAddressCodec)
 		paths := strings.Split(req.Path, "/")

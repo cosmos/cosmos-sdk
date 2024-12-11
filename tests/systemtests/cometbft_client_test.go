@@ -27,7 +27,12 @@ func TestQueryStatus(t *testing.T) {
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	systest.Sut.StartChain(t)
 
-	resp := cli.CustomQuery("status")
+	var resp string
+	if systest.IsV2() {
+		resp = cli.CustomQuery("comet", "status")
+	} else {
+		resp = cli.CustomQuery("status")
+	}
 
 	// make sure the output has the validator moniker.
 	assert.Contains(t, resp, "\"moniker\":\"node0\"")
@@ -223,7 +228,7 @@ func TestValidatorSetByHeight(t *testing.T) {
 	}
 }
 
-func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
+func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
 
@@ -257,7 +262,9 @@ func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
 }
 
 func TestABCIQuery(t *testing.T) {
+	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
+	_ = systest.Sut.AwaitNextBlock(t, time.Second*3)
 
 	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())

@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math"
@@ -441,4 +442,34 @@ func uint64ToInt64(u uint64) int64 {
 		return math.MaxInt64
 	}
 	return int64(u)
+}
+
+// RawTx allows access to the raw bytes of a transaction even if it failed
+// to decode.
+func RawTx(tx []byte) transaction.Tx {
+	return InjectedTx(tx)
+}
+
+type InjectedTx []byte
+
+var _ transaction.Tx = InjectedTx{}
+
+func (tx InjectedTx) Bytes() []byte {
+	return tx
+}
+
+func (tx InjectedTx) Hash() [32]byte {
+	return sha256.Sum256(tx)
+}
+
+func (tx InjectedTx) GetGasLimit() (uint64, error) {
+	return 0, nil
+}
+
+func (tx InjectedTx) GetMessages() ([]transaction.Msg, error) {
+	return nil, nil
+}
+
+func (tx InjectedTx) GetSenders() ([]transaction.Identity, error) {
+	return [][]byte{[]byte("cometbft")}, nil
 }

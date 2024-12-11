@@ -730,6 +730,8 @@ func decodeTxs[T transaction.Tx](logger log.Logger, rawTxs [][]byte, codec trans
 		if err != nil {
 			// do not return an error here, as we want to deliver the block even if some txs are invalid
 			logger.Debug("failed to decode tx", "err", err)
+			txs[i] = RawTx(rawTx).(T) // allows getting the raw bytes down the line
+			continue
 		}
 		txs[i] = tx
 	}

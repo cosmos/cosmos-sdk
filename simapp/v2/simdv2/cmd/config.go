@@ -1,14 +1,19 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"strings"
 	"time"
 
+	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtcfg "github.com/cometbft/cometbft/config"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/cometbft/handlers"
 
 	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -92,6 +97,8 @@ func initCometConfig() cometbft.CfgOption {
 
 func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
 	serverOptions := cometbft.DefaultServerOptions[T]()
+	serverOptions.PrepareProposalHandler = CustomPrepareProposal[T]()
+	serverOptions.ExtendVoteHandler = CustomExtendVoteHandler[T]()
 
 	// overwrite app mempool, using max-txs option
 	// serverOptions.Mempool = func(cfg map[string]any) mempool.Mempool[T] {
@@ -105,4 +112,38 @@ func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
 	// }
 
 	return serverOptions
+}
+
+func CustomExtendVoteHandler[T transaction.Tx]() handlers.ExtendVoteHandler {
+	return func(ctx context.Context, rm store.ReaderMap, evr *v1.ExtendVoteRequest) (*v1.ExtendVoteResponse, error) {
+		return &v1.ExtendVoteResponse{
+			VoteExtension: []byte("BTC=1234567.89;height=" + fmt.Sprint(evr.Height)),
+		}, nil
+	}
+}
+
+func CustomPrepareProposal[T transaction.Tx]() handlers.PrepareHandler[T] {
+	return func(ctx context.Context, app handlers.AppManager[T], codec transaction.Codec[T], req *v1.PrepareProposalRequest) ([]T, error) {
+		var txs []T
+		for _, tx := range req.Txs {
+			decTx, err := codec.Decode(tx)
+			if err != nil {
+				continue
+			}
+
+			txs = append(txs, decTx)
+		}
+
+		// Process vote extensions
+		injectedTx := []byte{}
+		for _, vote := range req.LocalLastCommit.Votes {
+			// TODO: add signature verification
+			injectedTx = append(injectedTx, vote.VoteExtension...)
+		}
+
+		// put the injected tx into the first position
+		txs = append([]T{cometbft.RawTx(injectedTx).(T)}, txs...)
+
+		return txs, nil
+	}
 }

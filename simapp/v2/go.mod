@@ -279,6 +279,7 @@ replace (
 	cosmossdk.io/x/slashing => ../../x/slashing
 	cosmossdk.io/x/staking => ../../x/staking
 	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/x/auth => ../../x/auth
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 )
 
@@ -299,6 +300,7 @@ replace (
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core/testing => ../../core/testing
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/indexer/postgres => ../../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/schema => ../../schema

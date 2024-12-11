@@ -30,6 +30,7 @@ type AppBuilder[T transaction.Tx] struct {
 	branch      func(state store.ReaderMap) store.WriterMap
 	txValidator func(ctx context.Context, tx T) error
 	postTxExec  func(ctx context.Context, tx T, success bool) error
+	preblocker  func(ctx context.Context, txs []T) error
 }
 
 // RegisterModules registers the provided modules with the module manager.
@@ -95,11 +96,23 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
+	preblockerFn := func(ctx context.Context, txs []T) error {
+		if err := a.app.moduleManager.PreBlocker()(ctx, txs); err != nil {
+			return err
+		}
+
+		if a.preblocker != nil {
+			return a.preblocker(ctx, txs)
+		}
+
+		return nil
+	}
+
 	stf, err := stf.New[T](
 		a.app.logger.With("module", "stf"),
 		a.app.msgRouterBuilder,
 		a.app.queryRouterBuilder,
-		a.app.moduleManager.PreBlocker(),
+		preblockerFn,
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,
 		a.txValidator,
@@ -217,5 +230,15 @@ func AppBuilderWithPostTxExec[T transaction.Tx](
 ) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
+	}
+}
+
+func AppBuilderWithPreblocker[T transaction.Tx](
+	preblocker func(
+		ctx context.Context, txs []T,
+	) error,
+) AppBuilderOption[T] {
+	return func(a *AppBuilder[T]) {
+		a.preblocker = preblocker
 	}
 }

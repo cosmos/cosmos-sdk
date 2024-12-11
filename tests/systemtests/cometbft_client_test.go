@@ -192,7 +192,6 @@ func TestLatestValidatorSet_GRPCGateway(t *testing.T) {
 			}
 			rsp := systest.GetRequest(t, baseurl+tc.url)
 			assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
-
 		})
 	}
 }
@@ -255,9 +254,9 @@ func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
 			if tc.expErr {
 				errMsg := gjson.GetBytes(rsp, "message").String()
 				assert.Contains(t, errMsg, tc.expErrMsg)
-			} else {
-				assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
+				return
 			}
+			assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
 		})
 	}
 }

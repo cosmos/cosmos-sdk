@@ -49,12 +49,6 @@ func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *lockuptype
 	return dva.BaseLockup.SendCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
 }
 
-func (dva *DelayedLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
-	*lockuptypes.MsgWithdrawResponse, error,
-) {
-	return dva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, dva.GetLockedCoinsWithDenoms)
-}
-
 // GetLockCoinsInfo returns the total number of unlocked and locked coins.
 func (dva DelayedLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (sdk.Coins, sdk.Coins, error) {
 	endTime, err := dva.EndTime.Get(ctx)
@@ -135,6 +129,23 @@ func (dva DelayedLockingAccount) QueryVestingAccountInfo(ctx context.Context, re
 	return resp, nil
 }
 
+func (dva DelayedLockingAccount) QuerySpendableTokens(ctx context.Context, req *lockuptypes.QuerySpendableAmountRequest) (
+	*lockuptypes.QuerySpendableAmountResponse, error,
+) {
+	hs := dva.headerService.HeaderInfo(ctx)
+	_, lockedCoins, err := dva.GetLockCoinsInfo(ctx, hs.Time)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := dva.BaseLockup.QuerySpendableTokens(ctx, lockedCoins)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 // Implement smart account interface
 func (dva DelayedLockingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, dva.Init)
@@ -143,10 +154,11 @@ func (dva DelayedLockingAccount) RegisterInitHandler(builder *accountstd.InitBui
 func (dva DelayedLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, dva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, dva.SendCoins)
-	accountstd.RegisterExecuteHandler(builder, dva.WithdrawUnlockedCoins)
 	dva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (dva DelayedLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, dva.QueryVestingAccountInfo)
+	accountstd.RegisterQueryHandler(builder, dva.QuerySpendableTokens)
+	dva.BaseLockup.RegisterQueryHandlers(builder)
 }

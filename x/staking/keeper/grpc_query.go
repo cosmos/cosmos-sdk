@@ -302,10 +302,10 @@ func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbond
 
 	unbond, err := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if err != nil {
-		return nil, status.Errorf(
+		return nil, errorsmod.Wrap(err, status.Errorf(
 			codes.NotFound,
 			"unbonding delegation with delegator %s not found for validator %s",
-			req.DelegatorAddr, req.ValidatorAddr)
+			req.DelegatorAddr, req.ValidatorAddr).Error())
 	}
 
 	return &types.QueryUnbondingDelegationResponse{Unbond: unbond}, nil

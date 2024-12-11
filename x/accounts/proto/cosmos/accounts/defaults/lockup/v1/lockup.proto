@@ -4,7 +4,9 @@ package cosmos.accounts.defaults.lockup.v1;
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "cosmossdk.io/x/accounts/defaults/lockup/v1";
 
@@ -19,4 +21,20 @@ message Period {
     (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+}
+
+message UnbondingEntries {
+  repeated UnbondingEntry entries = 1;
+}
+
+// UnbondingEntry defines an entry tracking the lockup account unbonding operation.
+message UnbondingEntry {
+  int64 creation_height = 1;
+  // end time of entry
+  google.protobuf.Timestamp end_time = 2
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+  // unbond amount
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // validator address
+  string validator_address = 4 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }

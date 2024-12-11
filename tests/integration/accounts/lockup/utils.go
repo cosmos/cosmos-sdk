@@ -2,6 +2,7 @@ package lockup
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -69,4 +70,28 @@ func (s *IntegrationTestSuite) queryLockupAccInfo(ctx sdk.Context, app *simapp.S
 	require.True(s.T(), ok)
 
 	return lockupAccountInfoResponse
+}
+
+func (s *IntegrationTestSuite) queryUnbondingEntries(ctx sdk.Context, app *simapp.SimApp, accAddr []byte, valAddr string) *types.QueryUnbondingEntriesResponse {
+	req := &types.QueryUnbondingEntriesRequest{
+		ValidatorAddress: valAddr,
+	}
+	resp, err := s.queryAcc(ctx, req, app, accAddr)
+	require.NoError(s.T(), err)
+	require.NotNil(s.T(), resp)
+
+	unbondingEntriesResponse, ok := resp.(*types.QueryUnbondingEntriesResponse)
+	require.True(s.T(), ok)
+
+	return unbondingEntriesResponse
+}
+
+func (s *IntegrationTestSuite) setupStakingParams(ctx sdk.Context, app *simapp.SimApp) {
+	params, err := app.StakingKeeper.Params.Get(ctx)
+	require.NoError(s.T(), err)
+
+	// update unbonding time
+	params.UnbondingTime = time.Duration(time.Second * 10)
+	err = app.StakingKeeper.Params.Set(ctx, params)
+	require.NoError(s.T(), err)
 }

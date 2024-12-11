@@ -61,6 +61,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### API Breaking Changes
 
+* (client) [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Removed client prompt validations.
+
 ### Deprecated
 
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX

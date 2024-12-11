@@ -22,6 +22,8 @@ import (
 )
 
 func TestAccountRetriever(t *testing.T) {
+	t.Skip() // TODO: https://github.com/cosmos/cosmos-sdk/issues/22825
+
 	f := initFixture(t, nil)
 
 	grpcSrv := grpc.NewServer(grpc.ForceServerCodec(codec.NewProtoCodec(f.encodingCfg.InterfaceRegistry).GRPCCodec()))

@@ -52,6 +52,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * RocksDB libraries have been upgraded to support RockDB v9 instead of v8.
 * (testutil/integration) [#22616](https://github.com/cosmos/cosmos-sdk/pull/22616) Remove double context in integration tests v1.
     * Use integrationApp.Context() instead of creating a context prior.
+* []() Simplify testing frameworks by removing `testutil/cmdtest`.
 
 ### Bug Fixes
 

@@ -57,6 +57,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### API Breaking Changes
 
+<<<<<<< HEAD
+=======
+* (client) [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Removed client prompt validations.
+
+### Deprecated
+
+>>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.

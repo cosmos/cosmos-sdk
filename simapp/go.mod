@@ -3,11 +3,19 @@ module cosmossdk.io/simapp
 go 1.23.3
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
+=======
+	cosmossdk.io/api v0.7.6
+	cosmossdk.io/client/v2 v2.0.0-beta.6
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/core v1.0.0-alpha.6
+	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
+>>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b // main
 	cosmossdk.io/log v1.5.0

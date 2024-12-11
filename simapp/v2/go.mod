@@ -3,10 +3,16 @@ module cosmossdk.io/simapp/v2
 go 1.23.3
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0 // indirect; main
+=======
+	cosmossdk.io/api v0.7.6
+	cosmossdk.io/client/v2 v2.0.0-beta.6
+	cosmossdk.io/core v1.0.0-alpha.6
+>>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.0.0-20241209183624-332d0b106d1b
 	cosmossdk.io/log v1.5.0

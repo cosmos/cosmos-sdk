@@ -3,8 +3,15 @@ module cosmossdk.io/x/group
 go 1.23.3
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
+=======
+	cosmossdk.io/api v0.7.6
+	cosmossdk.io/client/v2 v2.0.0-beta.6
+	cosmossdk.io/core v1.0.0-alpha.6
+	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
+>>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
@@ -14,7 +21,7 @@ require (
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v2 v2.0.2
@@ -24,7 +31,6 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/manifoldco/promptui v0.9.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
@@ -118,6 +124,7 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/linxGnu/grocksdb v1.9.3 // indirect
 	github.com/magiconair/properties v1.8.9 // indirect
+	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
@@ -186,10 +193,16 @@ replace github.com/cosmos/cosmos-sdk => ../../
 
 // TODO remove post spinning out all modules
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
+=======
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/client/v2 => ../../client/v2
+	cosmossdk.io/store => ../../store
+>>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/accounts/defaults/base => ../accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../accounts/defaults/lockup

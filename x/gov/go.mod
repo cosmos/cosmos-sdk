@@ -3,10 +3,18 @@ module cosmossdk.io/x/gov
 go 1.23.3
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
+=======
+	cosmossdk.io/api v0.7.6
+	cosmossdk.io/client/v2 v2.0.0-beta.6
+	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/core v1.0.0-alpha.6
+	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
+>>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
@@ -15,7 +23,7 @@ require (
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	github.com/chzyer/readline v1.5.1
+	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -23,7 +31,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/manifoldco/promptui v0.9.0
+	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.10.0
@@ -181,10 +189,16 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
+=======
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/client/v2 => ../../client/v2
+	cosmossdk.io/store => ../../store
+>>>>>>> 5b124267e (feat(client/v2)!: dynamic prompt (#22775))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/staking => ../staking

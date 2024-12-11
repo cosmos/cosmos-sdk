@@ -21,7 +21,7 @@ func ValidatorByPowerIndexExists(ctx context.Context, keeper *Keeper, power []by
 }
 
 // TestingUpdateValidator updates a validator for testing
-func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
+func TestingUpdateValidator(keeper *Keeper, ctx context.Context, validator types.Validator, apply bool) types.Validator {
 	err := keeper.SetValidator(ctx, validator)
 	if err != nil {
 		panic(err)
@@ -62,7 +62,8 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	}
 
 	if !apply {
-		ctx, _ = ctx.CacheContext()
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		ctx, _ = sdkCtx.CacheContext()
 	}
 	_, err = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {

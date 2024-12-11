@@ -74,7 +74,7 @@ func printTextRecords(w io.Writer, kos []KeyOutput) error {
 }
 
 // printDiscreetly Print a secret string to an alternate screen, so the string isn't printed to the terminal.
-func printDiscreetly(clientCtx client.Context, w io.Writer, promptMsg, secretMsg string) error {
+func printDiscreetly(w io.Writer, promptMsg, secretMsg string) error {
 	output := termenv.NewOutput(w)
 	output.AltScreen()
 	defer output.ExitAltScreen()

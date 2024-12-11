@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/cmdtest"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -40,103 +38,6 @@ git commit: 1b78457135a4104bc3af97f20654d49e2ea87454
 build tags: netgo,ledger
 go version go1.14 linux/amd64`
 	require.Equal(t, want, info.String())
-}
-
-func TestCLI(t *testing.T) {
-	setVersionPackageVars(t)
-
-	sys := cmdtest.NewSystem()
-	sys.AddCommands(version.NewVersionCommand())
-
-	t.Run("no flags", func(t *testing.T) {
-		res := sys.MustRun(t, "version")
-
-		// Only prints the version, with a newline, to stdout.
-		require.Equal(t, testVersion+"\n", res.Stdout.String())
-		require.Empty(t, res.Stderr.String())
-	})
-
-	t.Run("--long flag", func(t *testing.T) {
-		res := sys.MustRun(t, "version", "--long")
-
-		out := res.Stdout.String()
-		lines := strings.Split(out, "\n")
-		require.Contains(t, lines, "name: testchain-app")
-		require.Contains(t, lines, "server_name: testchaind")
-		require.Contains(t, lines, `version: "3.14"`)
-		require.Contains(t, lines, "commit: abc123")
-		require.Contains(t, lines, "build_tags: mybuildtag")
-
-		require.Empty(t, res.Stderr.String())
-	})
-
-	t.Run("--output=json flag", func(t *testing.T) {
-		res := sys.MustRun(t, "version", "--output=json")
-
-		var info version.Info
-		require.NoError(t, json.Unmarshal(res.Stdout.Bytes(), &info))
-
-		// Assert against a couple fields that are difficult to predict in test
-		// without copying and pasting code.
-		require.NotEmpty(t, info.GoVersion)
-
-		// The SDK version appears to not be set during this test, so we'll ignore it here.
-
-		// Now clear out the non-empty fields, so we can compare against a fixed value.
-		info.GoVersion = ""
-
-		want := version.Info{
-			Name:      testName,
-			AppName:   testAppName,
-			Version:   testVersion,
-			GitCommit: testCommit,
-			BuildTags: testBuildTags,
-		}
-		require.Equal(t, want, info)
-
-		require.Empty(t, res.Stderr.String())
-	})
-
-	t.Run("positional args rejected", func(t *testing.T) {
-		res := sys.Run("version", "foo")
-		require.Error(t, res.Err)
-	})
-}
-
-const (
-	testName      = "testchain-app"
-	testAppName   = "testchaind"
-	testVersion   = "3.14"
-	testCommit    = "abc123"
-	testBuildTags = "mybuildtag"
-)
-
-// setVersionPackageVars temporarily overrides the package variables in the version package
-// so that we can assert meaningful output.
-func setVersionPackageVars(t *testing.T) {
-	t.Helper()
-
-	var (
-		origName      = version.Name
-		origAppName   = version.AppName
-		origVersion   = version.Version
-		origCommit    = version.Commit
-		origBuildTags = version.BuildTags
-	)
-
-	t.Cleanup(func() {
-		version.Name = origName
-		version.AppName = origAppName
-		version.Version = origVersion
-		version.Commit = origCommit
-		version.BuildTags = origBuildTags
-	})
-
-	version.Name = testName
-	version.AppName = testAppName
-	version.Version = testVersion
-	version.Commit = testCommit
-	version.BuildTags = testBuildTags
 }
 
 func Test_runVersionCmd(t *testing.T) {

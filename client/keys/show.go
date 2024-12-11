@@ -143,9 +143,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			qrterminal.GenerateHalfBlock(out, qrterminal.H, cmd.OutOrStdout())
 		}
 
-		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {
-			return err
-		}
+		cmd.Println(out)
 	default:
 		if err := printKeyringRecord(cmd.OutOrStdout(), ko, outputFormat); err != nil {
 			return err

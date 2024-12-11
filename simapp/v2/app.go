@@ -167,11 +167,19 @@ func NewSimApp[T transaction.Tx](
 		return nil, fmt.Errorf("store builder did not return a db")
 	}
 
+	/****  Store Metrics ****/
+	/*
+		// In order to set store metrics uncomment the below
+		storeMetrics, err := metrics.NewMetrics([][]string{{"module", "store"}})
+		if err != nil {
+			return nil, err
+		}
+		app.store.SetMetrics(storeMetrics)
+	*/
 	/****  Module Options ****/
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()
-
 	if err = app.LoadLatest(); err != nil {
 		return nil, err
 	}

@@ -28,7 +28,6 @@ import (
 	_ "cosmossdk.io/x/accounts"     // import as blank for app wiring
 	_ "cosmossdk.io/x/bank"         // import as blank for app wiring
 	_ "cosmossdk.io/x/consensus"    // import as blank for app wiring
-	_ "cosmossdk.io/x/distribution" // import as blank for app wiring
 	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
 	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
 	_ "cosmossdk.io/x/slashing"     // import as blank for app wiring
@@ -39,7 +38,11 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 )
 
-var PKs = simtestutil.CreateTestPubKeys(500)
+var (
+	PKs = simtestutil.CreateTestPubKeys(500)
+
+	mockStakingHook = types.StakingHooksWrapper{}
+)
 
 type fixture struct {
 	app *integration.App
@@ -112,7 +115,11 @@ func createValidators(
 	return addrs, valAddrs, vals
 }
 
-func initFixture(tb testing.TB) *fixture {
+func ProvideMockStakingHook() types.StakingHooksWrapper {
+	return mockStakingHook
+}
+
+func initFixture(tb testing.TB, stakingHooks ...types.StakingHooksWrapper) *fixture {
 	tb.Helper()
 
 	res := fixture{}
@@ -128,8 +135,20 @@ func initFixture(tb testing.TB) *fixture {
 		configurator.ConsensusModule(),
 		configurator.GenutilModule(),
 		configurator.MintModule(),
-		configurator.DistributionModule(),
 		configurator.ProtocolPoolModule(),
+	}
+
+	configs := []depinject.Config{
+		configurator.NewAppV2Config(moduleConfigs...),
+		depinject.Supply(log.NewNopLogger()),
+	}
+
+	// add mock staking hooks if given
+	if len(stakingHooks) != 0 {
+		mockStakingHook = stakingHooks[0]
+		configs = append(configs, depinject.ProvideInModule(
+			"mock", ProvideMockStakingHook,
+		))
 	}
 
 	var err error
@@ -139,7 +158,7 @@ func initFixture(tb testing.TB) *fixture {
 	startupCfg.HeaderService = &integration.HeaderService{}
 
 	res.app, err = integration.NewApp(
-		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
+		depinject.Configs(configs...),
 		startupCfg,
 		&res.bankKeeper, &res.accountKeeper, &res.stakingKeeper,
 		&res.slashKeeper, &res.consensusKeeper, &res.cdc)

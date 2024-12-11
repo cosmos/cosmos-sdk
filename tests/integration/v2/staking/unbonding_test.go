@@ -20,19 +20,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SetupUnbondingTests creates two validators and setup mocked staking hooks for testing unbonding
-func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uint64) (bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress) {
-	t.Helper()
+var testStakingKeeper = &stakingkeeper.Keeper{}
+
+func mockHooks(t *testing.T, hookCalled *bool, ubdeID *uint64) *testutil.MockStakingHooks {
 	// setup hooks
 	mockCtrl := gomock.NewController(t)
 	mockStackingHooks := testutil.NewMockStakingHooks(mockCtrl)
 	mockStackingHooks.EXPECT().AfterDelegationModified(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	mockStackingHooks.EXPECT().AfterUnbondingInitiated(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx sdk.Context, id uint64) error {
+	mockStackingHooks.EXPECT().AfterUnbondingInitiated(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id uint64) error {
 		*hookCalled = true
 		// save id
 		*ubdeID = id
 		// call back to stop unbonding
-		err := f.stakingKeeper.PutUnbondingOnHold(f.ctx, id)
+		err := testStakingKeeper.PutUnbondingOnHold(ctx, id)
 		assert.NilError(t, err)
 
 		return nil
@@ -47,8 +47,12 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 	mockStackingHooks.EXPECT().BeforeValidatorModified(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockStackingHooks.EXPECT().BeforeValidatorSlashed(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockStackingHooks.EXPECT().AfterConsensusPubKeyUpdate(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	f.stakingKeeper.SetHooks(types.NewMultiStakingHooks(mockStackingHooks))
+	return mockStackingHooks
+}
 
+// SetupUnbondingTests creates two validators and setup mocked staking hooks for testing unbonding
+func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uint64) (bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress) {
+	t.Helper()
 	addrDels = simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 2, math.NewInt(10000))
 	addrVals = simtestutil.ConvertAddrsToValAddrs(addrDels)
 
@@ -178,13 +182,14 @@ func doValidatorUnbonding(
 }
 
 func TestValidatorUnbondingOnHold1(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
 	var (
 		hookCalled bool
 		ubdeID     uint64
 	)
+
+	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	// set global staking keeper value which will be used in mock hooks
+	testStakingKeeper = f.stakingKeeper
 
 	_, _, addrVals := SetupUnbondingTests(t, f, &hookCalled, &ubdeID)
 
@@ -227,14 +232,15 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 }
 
 func TestValidatorUnbondingOnHold2(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
 	var (
 		hookCalled bool
 		ubdeID     uint64
 		ubdeIDs    []uint64
 	)
+
+	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	// set global staking keeper value which will be used in mock hooks
+	testStakingKeeper = f.stakingKeeper
 
 	_, _, addrVals := SetupUnbondingTests(t, f, &hookCalled, &ubdeID)
 
@@ -314,15 +320,15 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 }
 
 func TestRedelegationOnHold1(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
 	var (
 		hookCalled bool
 		ubdeID     uint64
 	)
 
-	// _, app, ctx := createTestInput(t)
+	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	// set global staking keeper value which will be used in mock hooks
+	testStakingKeeper = f.stakingKeeper
+
 	_, addrDels, addrVals := SetupUnbondingTests(t, f, &hookCalled, &ubdeID)
 	completionTime := doRedelegation(t, f.stakingKeeper, f.ctx, addrDels, addrVals, &hookCalled)
 
@@ -347,13 +353,14 @@ func TestRedelegationOnHold1(t *testing.T) {
 }
 
 func TestRedelegationOnHold2(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
 	var (
 		hookCalled bool
 		ubdeID     uint64
 	)
+
+	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	// set global staking keeper value which will be used in mock hooks
+	testStakingKeeper = f.stakingKeeper
 
 	// _, app, ctx := createTestInput(t)
 	_, addrDels, addrVals := SetupUnbondingTests(t, f, &hookCalled, &ubdeID)
@@ -380,15 +387,15 @@ func TestRedelegationOnHold2(t *testing.T) {
 }
 
 func TestUnbondingDelegationOnHold1(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
 	var (
 		hookCalled bool
 		ubdeID     uint64
 	)
 
-	// _, app, ctx := createTestInput(t)
+	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	// set global staking keeper value which will be used in mock hooks
+	testStakingKeeper = f.stakingKeeper
+
 	bondDenom, addrDels, addrVals := SetupUnbondingTests(t, f, &hookCalled, &ubdeID)
 	for _, addr := range addrDels {
 		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, addr)
@@ -423,15 +430,15 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 }
 
 func TestUnbondingDelegationOnHold2(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
 	var (
 		hookCalled bool
 		ubdeID     uint64
 	)
 
-	// _, app, ctx := createTestInput(t)
+	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	// set global staking keeper value which will be used in mock hooks
+	testStakingKeeper = f.stakingKeeper
+
 	bondDenom, addrDels, addrVals := SetupUnbondingTests(t, f, &hookCalled, &ubdeID)
 	for _, addr := range addrDels {
 		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, addr)

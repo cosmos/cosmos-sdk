@@ -239,7 +239,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 
 	_, found := f.stakingKeeper.GetValidatorByConsAddr(f.ctx, consAddr)
 	assert.Assert(t, found)
-	_, err = f.stakingKeeper.Slash(f.ctx, consAddr, int64(f.app.LastBlockHeight())+1, 10, fraction)
+	_, err = f.stakingKeeper.Slash(f.ctx, consAddr, int64(f.app.LastBlockHeight()), 10, fraction)
 	assert.NilError(t, err)
 
 	// read updated state
@@ -633,7 +633,7 @@ func TestSlashAmount(t *testing.T) {
 	f, _, _ := bootstrapSlashTest(t, 10)
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := math.LegacyNewDecWithPrec(5, 1)
-	burnedCoins, err := f.stakingKeeper.Slash(f.ctx, consAddr, int64(f.app.LastBlockHeight())+1, 10, fraction)
+	burnedCoins, err := f.stakingKeeper.Slash(f.ctx, consAddr, int64(f.app.LastBlockHeight()), 10, fraction)
 	assert.NilError(t, err)
 	assert.Assert(t, burnedCoins.GT(math.ZeroInt()))
 

@@ -21,15 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
-// binary and JSON encoding.
-// Deprecated: Use Codec instead.
-type ProtoCodecMarshaler interface {
-	Codec
-}
-
-// ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON
-// encoding.
+// ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON encoding.
 type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
 }

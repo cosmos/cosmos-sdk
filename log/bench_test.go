@@ -63,6 +63,10 @@ func BenchmarkLoggers(b *testing.B) {
 			name:    "eight values",
 			keyVals: []any{"one", 1, "two", 2, "three", 3, "four", 4, "five", 5, "six", 6, "seven", 7, "eight", 8},
 		},
+		{
+			name:    "eight values",
+			keyVals: []any{"one", 1, "two", 2, "three", 3, "four", 4, "five", 5, "six", 6, "seven", 7, "eight", 8},
+		},
 	}...)
 
 	// If running with "go test -v", print out the log messages as a sanity check.

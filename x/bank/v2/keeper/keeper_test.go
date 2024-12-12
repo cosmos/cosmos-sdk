@@ -211,6 +211,13 @@ func (suite *KeeperTestSuite) TestMintCoins() {
 	// Check gov balance
 	govBarBalance := suite.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress("gov"), barDenom)
 	require.Equal(govBarBalance.Amount, math.NewInt(1))
+
+	fooSupply := suite.bankKeeper.GetSupply(ctx, fooDenom)
+	require.Equal(fooSupply.Amount, math.NewInt(110))
+	barSupply := suite.bankKeeper.GetSupply(ctx, barDenom)
+	require.Equal(barSupply.Amount, math.NewInt(110))
+	stakeSupply := suite.bankKeeper.GetSupply(ctx, stakeDenom)
+	require.Equal(stakeSupply.Amount, math.NewInt(10))
 }
 
 func (suite *KeeperTestSuite) TestBurnCoins() {
@@ -236,6 +243,14 @@ func (suite *KeeperTestSuite) TestBurnCoins() {
 	require.Equal(acc1BarBalance.Amount, math.NewInt(91))
 	acc1StakeBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], stakeDenom)
 	require.Equal(acc1StakeBalance.Amount, math.NewInt(90))
+
+	// Check denoms supply
+	fooSupply := suite.bankKeeper.GetSupply(ctx, fooDenom)
+	require.Equal(fooSupply.Amount, math.NewInt(90))
+	barSupply := suite.bankKeeper.GetSupply(ctx, barDenom)
+	require.Equal(barSupply.Amount, math.NewInt(91))
+	stakeSupply := suite.bankKeeper.GetSupply(ctx, stakeDenom)
+	require.Equal(stakeSupply.Amount, math.NewInt(90))
 }
 
 // func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {

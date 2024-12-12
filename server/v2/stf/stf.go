@@ -391,15 +391,15 @@ func createMessageEvent(msg transaction.Msg, msgIndex, eventIndex int32) event.E
 		Attributes: func() ([]appdata.EventAttribute, error) {
 			typeURL := msgTypeURL(msg)
 			return []appdata.EventAttribute{
-				{Key: "message.action", Value: "/" + typeURL},
-				{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
+				{Key: "action", Value: "/" + typeURL},
+				{Key: "module", Value: getModuleNameFromTypeURL(typeURL)},
 			}, nil
 		},
 		Data: func() (json.RawMessage, error) {
 			typeURL := msgTypeURL(msg)
 			attrs := []appdata.EventAttribute{
-				{Key: "message.action", Value: "/" + typeURL},
-				{Key: "message.module", Value: getModuleNameFromTypeURL(typeURL)},
+				{Key: "action", Value: "/" + typeURL},
+				{Key: "module", Value: getModuleNameFromTypeURL(typeURL)},
 			}
 
 			return json.Marshal(attrs)

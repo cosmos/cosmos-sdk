@@ -23,7 +23,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/stretchr/testify v1.10.0
@@ -73,12 +73,8 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b // indirect
 	cosmossdk.io/schema v0.4.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241107153845-4e240908dd60 // indirect
-=======
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000 // indirect
->>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -227,7 +223,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.27.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
@@ -256,24 +252,13 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
+	cosmossdk.io/api => cosmossdk.io/api v0.8.0-rc.2 // main
 	cosmossdk.io/client/v2 => ../client/v2
-<<<<<<< HEAD
 	cosmossdk.io/core/testing => cosmossdk.io/core/testing v0.0.0-20241107153845-4e240908dd60
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08
-=======
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/core/testing => ../core/testing
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
-	cosmossdk.io/runtime/v2 => ../runtime/v2
-	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
-	cosmossdk.io/server/v2/stf => ../server/v2/stf
-	cosmossdk.io/store => ../store
-	cosmossdk.io/store/v2 => ../store/v2
 	cosmossdk.io/tools/benchmark => ../tools/benchmark
->>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

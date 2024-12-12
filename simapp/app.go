@@ -22,12 +22,6 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	coreaddress "cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"
-<<<<<<< HEAD
-=======
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appconfig"
-	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
->>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
@@ -203,19 +197,6 @@ func init() {
 	}
 }
 
-<<<<<<< HEAD
-=======
-// AppConfig returns the default app config.
-func AppConfig() depinject.Config {
-	return depinject.Configs(
-		appconfig.Compose(appConfig), // Alternatively use appconfig.LoadYAML(AppConfigYAML)
-		depinject.Provide(
-			ProvideExampleMintFn, // optional: override the mint module's mint function with epoched minting
-		),
-	)
-}
-
->>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,

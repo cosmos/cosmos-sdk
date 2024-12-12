@@ -7,11 +7,7 @@ use (
 	./tests
 	./tests/systemtests
 	./tools/confix
-<<<<<<< HEAD
-=======
-	./tools/hubl
 	./tools/benchmark
->>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 	./x/accounts
 	./x/accounts/defaults/base
 	./x/accounts/defaults/lockup

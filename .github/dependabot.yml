@@ -314,8 +314,6 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
-<<<<<<< HEAD
-=======
   - package-ecosystem: gomod
     directory: "/x/bank"
     schedule:
@@ -334,7 +332,6 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
->>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 
   # Dependencies should be up to date on release branch
   - package-ecosystem: gomod

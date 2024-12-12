@@ -119,7 +119,7 @@ func ProvideMockStakingHook() types.StakingHooksWrapper {
 	return mockStakingHook
 }
 
-func initFixture(tb testing.TB, stakingHooks ...types.StakingHooksWrapper) *fixture {
+func initFixture(tb testing.TB, isGenesisSkip bool, stakingHooks ...types.StakingHooksWrapper) *fixture {
 	tb.Helper()
 
 	res := fixture{}
@@ -156,6 +156,9 @@ func initFixture(tb testing.TB, stakingHooks ...types.StakingHooksWrapper) *fixt
 
 	startupCfg.BranchService = &integration.BranchService{}
 	startupCfg.HeaderService = &integration.HeaderService{}
+	if isGenesisSkip {
+		startupCfg.GenesisBehavior = integration.Genesis_SKIP
+	}
 
 	res.app, err = integration.NewApp(
 		depinject.Configs(configs...),

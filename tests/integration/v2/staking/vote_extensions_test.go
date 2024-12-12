@@ -32,7 +32,7 @@ const chainID = "chain-id-123"
 // and validates the vote extensions using the baseapp.ValidateVoteExtensions function.
 func TestValidateVoteExtensions(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, false)
 
 	// enable vote extensions
 	cp := simtestutil.DefaultConsensusParams

@@ -30,7 +30,7 @@ func newMonikerValidator(tb testing.TB, operator sdk.ValAddress, pubKey cryptoty
 
 func bootstrapValidatorTest(tb testing.TB, power int64, numAddrs int) (*fixture, []sdk.AccAddress, []sdk.ValAddress) {
 	tb.Helper()
-	f := initFixture(tb)
+	f := initFixture(tb, true)
 
 	addrDels, addrVals := generateAddresses(f, numAddrs)
 

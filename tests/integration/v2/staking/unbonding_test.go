@@ -187,7 +187,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 		ubdeID     uint64
 	)
 
-	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	f := initFixture(t, false, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
 	// set global staking keeper value which will be used in mock hooks
 	testStakingKeeper = f.stakingKeeper
 
@@ -238,7 +238,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 		ubdeIDs    []uint64
 	)
 
-	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	f := initFixture(t, false, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
 	// set global staking keeper value which will be used in mock hooks
 	testStakingKeeper = f.stakingKeeper
 
@@ -325,7 +325,7 @@ func TestRedelegationOnHold1(t *testing.T) {
 		ubdeID     uint64
 	)
 
-	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	f := initFixture(t, false, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
 	// set global staking keeper value which will be used in mock hooks
 	testStakingKeeper = f.stakingKeeper
 
@@ -358,7 +358,7 @@ func TestRedelegationOnHold2(t *testing.T) {
 		ubdeID     uint64
 	)
 
-	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	f := initFixture(t, false, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
 	// set global staking keeper value which will be used in mock hooks
 	testStakingKeeper = f.stakingKeeper
 
@@ -392,7 +392,7 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 		ubdeID     uint64
 	)
 
-	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	f := initFixture(t, false, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
 	// set global staking keeper value which will be used in mock hooks
 	testStakingKeeper = f.stakingKeeper
 
@@ -435,7 +435,7 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 		ubdeID     uint64
 	)
 
-	f := initFixture(t, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
+	f := initFixture(t, false, types.StakingHooksWrapper{StakingHooks: mockHooks(t, &hookCalled, &ubdeID)})
 	// set global staking keeper value which will be used in mock hooks
 	testStakingKeeper = f.stakingKeeper
 

@@ -11,7 +11,7 @@ import (
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
-	f := initFixture(t)
+	f := initFixture(t, false)
 	acc := f.accountKeeper.GetAccount(f.ctx, authtypes.NewModuleAddress(types.BondedPoolName))
 	require.NotNil(t, acc)
 

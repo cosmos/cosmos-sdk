@@ -74,7 +74,7 @@ func queryFnFactory[RequestT, ResponseT proto.Message](
 
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	t.Helper()
-	f := initFixture(t)
+	f := initFixture(t, false)
 	ctx := f.ctx
 
 	// set pools
@@ -326,17 +326,12 @@ func fundAccountAndDelegate(
 	return shares, err
 }
 
-func assertZeroGas(t *testing.T, gasUsed gas.Gas) {
-	t.Helper()
-	assert.Check(t, gasUsed == 0)
-}
-
 func assertNonZeroGas(t *testing.T, gasUsed gas.Gas) {
 	t.Helper()
 	assert.Check(t, gasUsed != 0)
 }
 
-func TestGRPCValidator(t *testing.T) {
+func TestValidator(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -352,6 +347,9 @@ func TestGRPCValidator(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryValidatorRequest, *stakingtypes.QueryValidatorResponse](f)
+
 	val := getStaticValidator(t, f)
 	req := &stakingtypes.QueryValidatorRequest{
 		ValidatorAddr: val.OperatorAddress,
@@ -360,7 +358,7 @@ func TestGRPCValidator(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCValidators(t *testing.T) {
+func TestValidators(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -382,13 +380,16 @@ func TestGRPCValidators(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryValidatorsRequest, *stakingtypes.QueryValidatorsResponse](f)
+
 	getStaticValidator(t, f)
 	getStaticValidator2(t, f)
 
 	testdata.DeterministicIterationsV2(t, &stakingtypes.QueryValidatorsRequest{}, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCValidatorDelegations(t *testing.T) {
+func TestValidatorDelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -415,6 +416,8 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryValidatorDelegationsRequest, *stakingtypes.QueryValidatorDelegationsResponse](f)
 
 	validator := getStaticValidator(t, f)
 
@@ -432,10 +435,10 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertZeroGas, nil)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
+func TestValidatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -466,6 +469,8 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryValidatorUnbondingDelegationsRequest, *stakingtypes.QueryValidatorUnbondingDelegationsResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -491,7 +496,7 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegation(t *testing.T) {
+func TestDelegation(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -515,6 +520,8 @@ func TestGRPCDelegation(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegationRequest, *stakingtypes.QueryDelegationResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -530,7 +537,7 @@ func TestGRPCDelegation(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCUnbondingDelegation(t *testing.T) {
+func TestUnbondingDelegation(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -558,6 +565,9 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryUnbondingDelegationRequest, *stakingtypes.QueryUnbondingDelegationResponse](f)
+
 	validator := getStaticValidator(t, f)
 
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -576,7 +586,7 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegatorDelegations(t *testing.T) {
+func TestDelegatorDelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -603,6 +613,8 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegatorDelegationsRequest, *stakingtypes.QueryDelegatorDelegationsResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -617,7 +629,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegatorValidator(t *testing.T) {
+func TestDelegatorValidator(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -641,6 +653,8 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegatorValidatorRequest, *stakingtypes.QueryDelegatorValidatorResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -657,7 +671,7 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
+func TestDelegatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -688,6 +702,8 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegatorUnbondingDelegationsRequest, *stakingtypes.QueryDelegatorUnbondingDelegationsResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -705,7 +721,7 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegatorValidators(t *testing.T) {
+func TestDelegatorValidators(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -732,6 +748,8 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegatorValidatorsRequest, *stakingtypes.QueryDelegatorValidatorsResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -743,7 +761,7 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCPool(t *testing.T) {
+func TestPool(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -756,11 +774,13 @@ func TestGRPCPool(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryPoolRequest, *stakingtypes.QueryPoolResponse](f)
 	getStaticValidator(t, f)
 	testdata.DeterministicIterationsV2(t, &stakingtypes.QueryPoolRequest{}, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCRedelegations(t *testing.T) {
+func TestRedelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	gasMeterFactory := integration.GasMeterFactory(f.ctx)
@@ -811,6 +831,9 @@ func TestGRPCRedelegations(t *testing.T) {
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryRedelegationsRequest, *stakingtypes.QueryRedelegationsResponse](f)
+
 	validator := getStaticValidator(t, f)
 	_ = getStaticValidator2(t, f)
 
@@ -831,7 +854,7 @@ func TestGRPCRedelegations(t *testing.T) {
 	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCParams(t *testing.T) {
+func TestParams(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	coinDenomRegex := `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`

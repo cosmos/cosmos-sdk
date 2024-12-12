@@ -23,7 +23,7 @@ import (
 
 func TestCancelUnbondingDelegation(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, false)
 
 	ctx := f.ctx
 	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
@@ -181,7 +181,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 
 func TestRotateConsPubKey(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, false)
 
 	ctx := f.ctx
 	stakingKeeper := f.stakingKeeper
@@ -326,8 +326,9 @@ func TestRotateConsPubKey(t *testing.T) {
 				_, err = msgServer.RotateConsPubKey(ctx, msg)
 				assert.Error(t, err, "exceeding maximum consensus pubkey rotations within unbonding period")
 
-				newHeight = integration.HeaderInfoFromContext(ctx).Height + 1
-				newCtx := integration.SetHeaderInfo(ctx, header.Info{Height: newHeight + 1})
+				ctxHeader := integration.HeaderInfoFromContext(ctx)
+				newHeight = ctxHeader.Height + 1
+				newCtx := integration.SetHeaderInfo(ctx, header.Info{Height: newHeight + 1, Time: ctxHeader.Time.Add(params.UnbondingTime)})
 
 				// this should remove keys from waiting queue since unbonding time is reached
 				_, err = stakingKeeper.EndBlocker(newCtx)

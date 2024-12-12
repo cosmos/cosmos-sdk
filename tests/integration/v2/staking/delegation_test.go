@@ -19,7 +19,7 @@ import (
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, false)
 
 	ctx := f.ctx
 

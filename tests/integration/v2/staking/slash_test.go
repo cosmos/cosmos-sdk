@@ -32,7 +32,7 @@ import (
 func bootstrapSlashTest(t *testing.T, power int64) (*fixture, []sdk.AccAddress, []sdk.ValAddress) {
 	t.Helper()
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, false)
 
 	addrDels, addrVals := generateAddresses(f, 100)
 
@@ -647,7 +647,7 @@ func TestSlashAmount(t *testing.T) {
 // TestFixAvoidFullSlashPenalty fixes the following issue: https://github.com/cosmos/cosmos-sdk/issues/20641
 func TestFixAvoidFullSlashPenalty(t *testing.T) {
 	// setup
-	f := initFixture(t)
+	f := initFixture(t, false)
 	ctx := f.ctx
 
 	stakingMsgServer := keeper.NewMsgServerImpl(f.stakingKeeper)

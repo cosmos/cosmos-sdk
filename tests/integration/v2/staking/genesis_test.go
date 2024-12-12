@@ -21,7 +21,7 @@ import (
 func bootstrapGenesisTest(t *testing.T, numAddrs int) (*fixture, []sdk.AccAddress) {
 	t.Helper()
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	addrDels, _ := generateAddresses(f, numAddrs)
 	return f, addrDels
@@ -51,8 +51,7 @@ func TestInitGenesis(t *testing.T) {
 	validators, err := f.stakingKeeper.GetAllValidators(f.ctx)
 	assert.NilError(t, err)
 
-	// check validators count including init validator
-	assert.Assert(t, len(validators) == 2)
+	assert.Assert(t, len(validators) == 1)
 	var delegations []types.Delegation
 
 	pk1, err := codectypes.NewAnyWithValue(PKs[1])
@@ -82,7 +81,7 @@ func TestInitGenesis(t *testing.T) {
 	// append new bonded validators to the list
 	validators = append(validators, bondedVal1, bondedVal2)
 
-	// mint coins in the bonded pool representing the validators coins
+	// mint coins in the bonded pool representing the validators coins, ignore genesis validator
 	i2 := len(validators)
 	assert.NilError(t,
 		banktestutil.FundModuleAccount(
@@ -100,7 +99,7 @@ func TestInitGenesis(t *testing.T) {
 	delegations = append(delegations, genesisDelegations...)
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
-	vals, err := (f.stakingKeeper.InitGenesis(f.ctx, genesisState))
+	vals, err := f.stakingKeeper.InitGenesis(f.ctx, genesisState)
 	assert.NilError(t, err)
 
 	actualGenesis, err := (f.stakingKeeper.ExportGenesis(f.ctx))
@@ -138,7 +137,7 @@ func TestInitGenesis(t *testing.T) {
 
 func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	consPub, err := codectypes.NewAnyWithValue(PKs[0])
 	assert.NilError(t, err)

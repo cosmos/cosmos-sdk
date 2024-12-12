@@ -1,7 +1,6 @@
 package staking
 
 import (
-	gocontext "context"
 	"fmt"
 	"testing"
 
@@ -30,7 +29,7 @@ func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Va
 
 func TestGRPCQueryValidators(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	_, vals := createValidatorAccs(t, f)
 
@@ -92,7 +91,7 @@ func TestGRPCQueryValidators(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			valsResp, err := queryClient.Validators(gocontext.Background(), req)
+			valsResp, err := queryClient.Validators(f.ctx, req)
 			if tc.expPass {
 				assert.NilError(t, err)
 				assert.Assert(t, valsResp != nil)
@@ -113,7 +112,7 @@ func TestGRPCQueryValidators(t *testing.T) {
 
 func TestGRPCQueryDelegatorValidators(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 	addrs, _ := createValidatorAccs(t, f)
@@ -166,7 +165,7 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.DelegatorValidators(gocontext.Background(), req)
+			res, err := queryClient.DelegatorValidators(f.ctx, req)
 			if tc.expPass {
 				assert.NilError(t, err)
 				assert.Equal(t, 1, len(res.Validators))
@@ -182,7 +181,7 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 
 func TestGRPCQueryDelegatorValidator(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	addrs, vals := createValidatorAccs(t, f)
 
@@ -254,7 +253,7 @@ func TestGRPCQueryDelegatorValidator(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.DelegatorValidator(gocontext.Background(), req)
+			res, err := queryClient.DelegatorValidator(f.ctx, req)
 			if tc.expPass {
 				assert.NilError(t, err)
 				assert.Equal(t, addrVal1, res.Validator.OperatorAddress)
@@ -268,7 +267,7 @@ func TestGRPCQueryDelegatorValidator(t *testing.T) {
 
 func TestGRPCQueryDelegation(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
@@ -321,7 +320,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.Delegation(gocontext.Background(), req)
+			res, err := queryClient.Delegation(f.ctx, req)
 			if tc.expPass {
 				assert.Equal(t, delegation.ValidatorAddress, res.DelegationResponse.Delegation.ValidatorAddress)
 				assert.Equal(t, delegation.DelegatorAddress, res.DelegationResponse.Delegation.DelegatorAddress)
@@ -336,7 +335,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 
 func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
@@ -400,7 +399,7 @@ func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.DelegatorDelegations(gocontext.Background(), req)
+			res, err := queryClient.DelegatorDelegations(f.ctx, req)
 			if tc.expErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
@@ -413,7 +412,7 @@ func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 
 func TestGRPCQueryValidatorDelegations(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
@@ -472,7 +471,7 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.ValidatorDelegations(gocontext.Background(), req)
+			res, err := queryClient.ValidatorDelegations(f.ctx, req)
 			switch {
 			case tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
@@ -483,7 +482,7 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 				assert.DeepEqual(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
 			case !tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
-				assert.Assert(t, res.DelegationResponses == nil)
+				assert.Assert(t, len(res.DelegationResponses) == 0)
 			default:
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)
@@ -494,7 +493,7 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 
 func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
@@ -582,7 +581,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.UnbondingDelegation(gocontext.Background(), req)
+			res, err := queryClient.UnbondingDelegation(f.ctx, req)
 			if tc.expPass {
 				assert.Assert(t, res != nil)
 				assert.DeepEqual(t, unbond, res.Unbond)
@@ -596,7 +595,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 
 func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
@@ -661,7 +660,7 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), req)
+			res, err := queryClient.DelegatorUnbondingDelegations(f.ctx, req)
 			switch {
 			case tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
@@ -682,7 +681,7 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 
 func TestGRPCQueryPoolParameters(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 
@@ -691,7 +690,7 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	bondDenom := sdk.DefaultBondDenom
 
 	// Query pool
-	res, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{})
+	res, err := queryClient.Pool(f.ctx, &types.QueryPoolRequest{})
 	assert.NilError(t, err)
 	bondedPool := f.stakingKeeper.GetBondedPool(ctx)
 	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
@@ -699,7 +698,7 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	assert.DeepEqual(t, f.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, res.Pool.BondedTokens)
 
 	// Query Params
-	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	resp, err := queryClient.Params(f.ctx, &types.QueryParamsRequest{})
 	assert.NilError(t, err)
 	params, err := f.stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
@@ -708,7 +707,7 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 
 func TestGRPCQueryRedelegations(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
@@ -807,7 +806,7 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.Redelegations(gocontext.Background(), req)
+			res, err := queryClient.Redelegations(f.ctx, req)
 			switch {
 			case tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
@@ -818,7 +817,7 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 				assert.Assert(t, len(redel.Entries) == len(res.RedelegationResponses[0].Entries))
 			case !tc.expPass && !tc.expErr:
 				assert.NilError(t, err)
-				assert.Assert(t, res.RedelegationResponses == nil)
+				assert.Assert(t, len(res.RedelegationResponses) == 0)
 			default:
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, res == nil)
@@ -829,7 +828,7 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 
 func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, true)
 
 	ctx := f.ctx
 	addrs, vals := createValidatorAccs(t, f)
@@ -889,7 +888,7 @@ func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
-			res, err := queryClient.ValidatorUnbondingDelegations(gocontext.Background(), req)
+			res, err := queryClient.ValidatorUnbondingDelegations(f.ctx, req)
 			if tc.expPass {
 				assert.NilError(t, err)
 				assert.Equal(t, uint64(1), res.Pagination.Total)

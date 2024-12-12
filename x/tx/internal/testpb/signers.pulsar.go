@@ -3,6 +3,7 @@ package testpb
 
 import (
 	_ "cosmossdk.io/api/cosmos/msg/v1"
+	"errors"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -115,7 +116,7 @@ func (x *fastReflection_SimpleSigner) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.Signer != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: SimpleSigner"))
+			panic(errors.New("proto3 declared messages do not support extensions: SimpleSigner"))
 		}
 		panic(fmt.Errorf("message SimpleSigner does not contain field %s", fd.FullName()))
 	}

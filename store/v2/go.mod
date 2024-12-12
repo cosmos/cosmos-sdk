@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.3.0 // indirect
+	cosmossdk.io/schema v0.4.0 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

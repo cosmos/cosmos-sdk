@@ -34,11 +34,6 @@ import (
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 const (
@@ -54,13 +49,12 @@ type consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              appmanager.AppManager[T]
-	appCodec         codec.Codec
-	txCodec          transaction.Codec[T]
 	store            types.Store
 	listener         *appdata.Listener
 	snapshotManager  *snapshots.Manager
 	streamingManager streaming.Manager
 	mempool          mempool.Mempool[T]
+	appCodecs        AppCodecs[T]
 
 	cfg               Config
 	chainID           string
@@ -88,12 +82,13 @@ type consensus[T transaction.Tx] struct {
 
 	queryHandlersMap map[string]appmodulev2.Handler
 	getProtoRegistry func() (*protoregistry.Files, error)
+	cfgMap           server.ConfigMap
 }
 
 // CheckTx implements types.Application.
 // It is called by cometbft to verify transaction validity
 func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxRequest) (*abciproto.CheckTxResponse, error) {
-	decodedTx, err := c.txCodec.Decode(req.Tx)
+	decodedTx, err := c.appCodecs.TxCodec.Decode(req.Tx)
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +179,16 @@ func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		return resp, err
 	}
 
+	// when a client did not provide a query height, manually inject the latest
+	// for modules queries, AppManager does it automatically
+	if req.Height == 0 {
+		latestVersion, err := c.store.GetLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+		req.Height = int64(latestVersion)
+	}
+
 	// this error most probably means that we can't handle it with a proto message, so
 	// it must be an app/p2p/store query
 	path := splitABCIQueryPath(req.Path)
@@ -238,48 +243,15 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		handlerFullName = string(md.Input().FullName())
 	}
 
-	// special case for simulation as it is an external gRPC registered on the grpc server component
+	// special case for non-module services as they are external gRPC registered on the grpc server component
 	// and not on the app itself, so it won't pass the router afterwards.
-	if req.Path == "/cosmos.tx.v1beta1.Service/Simulate" {
-		simulateRequest := &txtypes.SimulateRequest{}
-		err = gogoproto.Unmarshal(req.Data, simulateRequest)
-		if err != nil {
-			return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
-		}
 
-		tx, err := c.txCodec.Decode(simulateRequest.TxBytes)
-		if err != nil {
-			return nil, true, fmt.Errorf("failed to decode tx: %w", err)
-		}
-
-		txResult, _, err := c.app.Simulate(ctx, tx)
-		if err != nil {
-			return nil, true, fmt.Errorf("failed with gas used: '%d': %w", txResult.GasUsed, err)
-		}
-
-		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))
-		// pack the messages into Any
-		for _, msg := range txResult.Resp {
-			anyMsg, err := codectypes.NewAnyWithValue(msg)
-			if err != nil {
-				return nil, true, fmt.Errorf("failed to pack message response: %w", err)
-			}
-
-			msgResponses = append(msgResponses, anyMsg)
-		}
-
-		resp := &txtypes.SimulateResponse{
-			GasInfo: &sdk.GasInfo{
-				GasUsed:   txResult.GasUsed,
-				GasWanted: txResult.GasWanted,
-			},
-			Result: &sdk.Result{
-				MsgResponses: msgResponses,
-			},
-		}
-
-		res, err := queryResponse(resp, req.Height)
-		return res, true, err
+	externalResp, err := c.maybeHandleExternalServices(ctx, req)
+	if err != nil {
+		return nil, true, err
+	} else if externalResp != nil {
+		resp, err = queryResponse(externalResp, req.Height)
+		return resp, true, err
 	}
 
 	handler, found := c.queryHandlersMap[handlerFullName]
@@ -348,7 +320,7 @@ func (c *consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		ctx,
 		br,
 		req.AppStateBytes,
-		c.txCodec)
+		c.appCodecs.TxCodec)
 	if err != nil {
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
@@ -415,7 +387,7 @@ func (c *consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req)
+	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.appCodecs.TxCodec, req)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +433,7 @@ func (c *consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req)
+	err := c.processProposalHandler(ciCtx, c.app, c.appCodecs.TxCodec, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{
@@ -547,7 +519,7 @@ func (c *consensus[T]) FinalizeBlock(
 	events = append(events, resp.EndBlockEvents...)
 
 	// listen to state streaming changes in accordance with the block
-	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, resp.TxResults, events, stateChanges)
+	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, decodedTxs, resp.TxResults, events, stateChanges)
 	if err != nil {
 		return nil, err
 	}
@@ -590,7 +562,7 @@ func (c *consensus[T]) internalFinalizeBlock(
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
 	// have a tx that fails decoding.
-	decodedTxs, err := decodeTxs(req.Txs, c.txCodec)
+	decodedTxs, err := decodeTxs(c.logger, req.Txs, c.appCodecs.TxCodec)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -723,12 +695,13 @@ func (c *consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 	return resp, err
 }
 
-func decodeTxs[T transaction.Tx](rawTxs [][]byte, codec transaction.Codec[T]) ([]T, error) {
+func decodeTxs[T transaction.Tx](logger log.Logger, rawTxs [][]byte, codec transaction.Codec[T]) ([]T, error) {
 	txs := make([]T, len(rawTxs))
 	for i, rawTx := range rawTxs {
 		tx, err := codec.Decode(rawTx)
 		if err != nil {
-			return nil, fmt.Errorf("unable to decode tx: %d: %w", i, err)
+			// do not return an error here, as we want to deliver the block even if some txs are invalid
+			logger.Debug("failed to decode tx", "err", err)
 		}
 		txs[i] = tx
 	}

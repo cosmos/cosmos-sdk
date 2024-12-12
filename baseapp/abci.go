@@ -999,6 +999,10 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
 				if app.streamingManager.StopNodeOnErr {
 					err = fmt.Errorf("Commit listening hook failed: %w", err)
+					if blockHeight == 1 {
+						// can't rollback to height 0, so just return the error
+						return nil, fmt.Errorf("failed to commit block 1, can't automatically rollback: %w", err)
+					}
 					rollbackErr := app.cms.RollbackToVersion(blockHeight - 1)
 					if rollbackErr != nil {
 						return nil, errors.Join(err, rollbackErr)

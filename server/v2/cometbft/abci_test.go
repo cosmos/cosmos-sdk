@@ -886,13 +886,15 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	}
 
 	return &consensus[mock.Tx]{
-		logger:           log.NewNopLogger(),
-		appName:          "testing-app",
-		app:              am,
-		mempool:          mempool,
-		store:            mockStore,
-		cfg:              Config{AppTomlConfig: DefaultAppTomlConfig()},
-		txCodec:          mock.TxCodec{},
+		logger:  log.NewNopLogger(),
+		appName: "testing-app",
+		app:     am,
+		mempool: mempool,
+		store:   mockStore,
+		cfg:     Config{AppTomlConfig: DefaultAppTomlConfig()},
+		appCodecs: AppCodecs[mock.Tx]{
+			TxCodec: mock.TxCodec{},
+		},
 		chainID:          "test",
 		getProtoRegistry: sync.OnceValues(gogoproto.MergedRegistry),
 		queryHandlersMap: queryHandler,

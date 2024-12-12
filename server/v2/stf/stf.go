@@ -2,8 +2,10 @@ package stf
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
@@ -204,6 +206,7 @@ func (s STF[T]) deliverTx(
 	events := make([]event.Event, 0)
 	// set the event indexes, set MsgIndex to 0 in validation events
 	for i, e := range validationEvents {
+		e.BlockNumber = uint64(hi.Height)
 		e.BlockStage = appdata.TxProcessingStage
 		e.TxIndex = txIndex
 		e.MsgIndex = 0
@@ -214,6 +217,7 @@ func (s STF[T]) deliverTx(
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
 	// set the TxIndex in the exec events
 	for _, e := range execEvents {
+		e.BlockNumber = uint64(hi.Height)
 		e.BlockStage = appdata.TxProcessingStage
 		e.TxIndex = txIndex
 		events = append(events, e)
@@ -356,10 +360,51 @@ func (s STF[T]) runTxMsgs(
 			e.EventIndex = int32(j + 1)
 			events = append(events, e)
 		}
+
+		// add message event
+		events = append(events, createMessageEvent(msg, int32(i+1), int32(len(execCtx.events)+1)))
 	}
 
 	consumed := execCtx.meter.Limit() - execCtx.meter.Remaining()
 	return msgResps, consumed, events, nil
+}
+
+// Create a message event, with two kv: action, the type url of the message
+// and module, the module of the message.
+func createMessageEvent(msg transaction.Msg, msgIndex, eventIndex int32) event.Event {
+	// Assumes that module name is the second element of the msg type URL
+	// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
+	// It returns an empty string if the input is not a valid type URL
+	getModuleNameFromTypeURL := func(input string) string {
+		moduleName := strings.Split(input, ".")
+		if len(moduleName) > 1 {
+			return moduleName[1]
+		}
+
+		return ""
+	}
+
+	return event.Event{
+		MsgIndex:   msgIndex,
+		EventIndex: eventIndex,
+		Type:       "message",
+		Attributes: func() ([]appdata.EventAttribute, error) {
+			typeURL := msgTypeURL(msg)
+			return []appdata.EventAttribute{
+				{Key: "action", Value: "/" + typeURL},
+				{Key: "module", Value: getModuleNameFromTypeURL(typeURL)},
+			}, nil
+		},
+		Data: func() (json.RawMessage, error) {
+			typeURL := msgTypeURL(msg)
+			attrs := []appdata.EventAttribute{
+				{Key: "action", Value: "/" + typeURL},
+				{Key: "module", Value: getModuleNameFromTypeURL(typeURL)},
+			}
+
+			return json.Marshal(attrs)
+		},
+	}
 }
 
 // preBlock executes the pre block logic.
@@ -373,6 +418,7 @@ func (s STF[T]) preBlock(
 	}
 
 	for i := range ctx.events {
+		ctx.events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		ctx.events[i].BlockStage = appdata.PreBlockStage
 		ctx.events[i].EventIndex = int32(i + 1)
 	}
@@ -390,6 +436,7 @@ func (s STF[T]) beginBlock(
 	}
 
 	for i := range ctx.events {
+		ctx.events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		ctx.events[i].BlockStage = appdata.BeginBlockStage
 		ctx.events[i].EventIndex = int32(i + 1)
 	}
@@ -413,6 +460,7 @@ func (s STF[T]) endBlock(
 	}
 	events = append(events, ctx.events...)
 	for i := range events {
+		events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		events[i].BlockStage = appdata.EndBlockStage
 		events[i].EventIndex = int32(i + 1)
 	}

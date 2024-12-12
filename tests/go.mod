@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.0-rc.1
+	cosmossdk.io/api v0.8.0-rc.2
 	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/depinject v1.1.0
@@ -249,7 +249,6 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core/testing => ../core/testing

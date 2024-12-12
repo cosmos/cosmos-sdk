@@ -3,7 +3,7 @@ module cosmossdk.io/x/gov
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.0-rc.1
+	cosmossdk.io/api v0.8.0-rc.2
 	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6

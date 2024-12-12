@@ -107,7 +107,7 @@ var (
 	}
 
 	// application configuration (used by depinject)
-	appConfig = appconfig.Compose(&appv1alpha1.Config{
+	appConfig = &appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
 				Name: runtime.ModuleName,
@@ -297,5 +297,5 @@ var (
 				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
 		},
-	})
+	}
 )

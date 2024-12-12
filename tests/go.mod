@@ -73,6 +73,7 @@ require (
 	cosmossdk.io/indexer/postgres v0.1.0 // indirect
 	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -82,11 +83,13 @@ require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/aws/aws-sdk-go v1.55.5 // indirect
+	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/bufbuild/protocompile v0.14.1 // indirect
+	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
 	github.com/bytedance/sonic v1.12.4 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -105,6 +108,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.3.2 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-20241128205019-1b18c0edbbd9 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
@@ -166,6 +170,7 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/kocubinski/costor-api v1.1.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -258,6 +263,7 @@ replace (
 	cosmossdk.io/server/v2/stf => ../server/v2/stf
 	cosmossdk.io/store => ../store
 	cosmossdk.io/store/v2 => ../store/v2
+	cosmossdk.io/tools/benchmark => ../tools/benchmark
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

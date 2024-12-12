@@ -8,6 +8,8 @@ import (
 	"cosmossdk.io/store/v2/proof"
 )
 
+var MaxWriteParallelism = 8
+
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 type RootStore interface {

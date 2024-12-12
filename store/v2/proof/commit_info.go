@@ -14,7 +14,7 @@ type (
 	// a version/height.
 	CommitInfo struct {
 		Version    uint64
-		StoreInfos []StoreInfo
+		StoreInfos []*StoreInfo
 		Timestamp  time.Time
 		CommitHash []byte
 	}
@@ -23,7 +23,7 @@ type (
 	// between a store name/key and the commit ID.
 	StoreInfo struct {
 		Name      []byte
-		CommitID  CommitID
+		CommitID  *CommitID
 		Structure string
 	}
 
@@ -55,13 +55,13 @@ func (ci *CommitInfo) Hash() []byte {
 }
 
 // GetStoreCommitID returns the CommitID for the given store key.
-func (ci *CommitInfo) GetStoreCommitID(storeKey []byte) CommitID {
+func (ci *CommitInfo) GetStoreCommitID(storeKey []byte) *CommitID {
 	for _, si := range ci.StoreInfos {
 		if bytes.Equal(si.Name, storeKey) {
 			return si.CommitID
 		}
 	}
-	return CommitID{}
+	return &CommitID{}
 }
 
 // GetStoreProof takes in a storeKey and returns a proof of the store key in addition
@@ -106,6 +106,9 @@ func (ci *CommitInfo) encodedSize() int {
 	size += encoding.EncodeUvarintSize(uint64(len(ci.StoreInfos)))
 	for _, storeInfo := range ci.StoreInfos {
 		size += encoding.EncodeBytesSize(storeInfo.Name)
+		if storeInfo.CommitID == nil {
+			panic("zomg")
+		}
 		size += encoding.EncodeBytesSize(storeInfo.CommitID.Hash)
 		size += encoding.EncodeBytesSize([]byte(storeInfo.Structure))
 	}
@@ -171,8 +174,9 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 		return err
 	}
 	buf = buf[n:]
-	ci.StoreInfos = make([]StoreInfo, storeInfosLen)
+	ci.StoreInfos = make([]*StoreInfo, storeInfosLen)
 	for i := 0; i < int(storeInfosLen); i++ {
+		ci.StoreInfos[i] = &StoreInfo{}
 		// Name
 		name, n, err := encoding.DecodeBytes(buf)
 		if err != nil {
@@ -194,7 +198,7 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 		buf = buf[n:]
 		ci.StoreInfos[i].Structure = string(structure)
 
-		ci.StoreInfos[i].CommitID = CommitID{
+		ci.StoreInfos[i].CommitID = &CommitID{
 			Hash:    hash,
 			Version: ci.Version,
 		}
@@ -203,24 +207,24 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 	return nil
 }
 
-func (ci *CommitInfo) CommitID() CommitID {
-	return CommitID{
+func (ci *CommitInfo) CommitID() *CommitID {
+	return &CommitID{
 		Version: ci.Version,
 		Hash:    ci.Hash(),
 	}
 }
 
-func (m *CommitInfo) GetVersion() uint64 {
-	if m != nil {
-		return m.Version
+func (ci *CommitInfo) GetVersion() uint64 {
+	if ci != nil {
+		return ci.Version
 	}
 	return 0
 }
 
-func (cid CommitID) String() string {
+func (cid *CommitID) String() string {
 	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
 }
 
-func (cid CommitID) IsZero() bool {
+func (cid *CommitID) IsZero() bool {
 	return cid.Version == 0 && len(cid.Hash) == 0
 }

@@ -18,6 +18,13 @@ type VersionedReader interface {
 	ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
 }
 
+type LatestReader interface {
+	Has(storeKey, key []byte) (bool, error)
+	Get(storeKey, key []byte) ([]byte, error)
+	Iterator(storeKey, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey, start, end []byte) (corestore.Iterator, error)
+}
+
 // UpgradableDatabase defines an API for a versioned database that allows pruning
 // deleted storeKeys
 type UpgradableDatabase interface {

@@ -17,6 +17,7 @@ import (
 	corebranch "cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
@@ -99,6 +100,8 @@ type StartupConfig struct {
 	RouterServiceBuilder runtime.RouterServiceBuilder
 	// HeaderService defines the custom header service to be used in the app.
 	HeaderService header.Service
+
+	GasService gas.Service
 }
 
 func DefaultStartUpConfig(t *testing.T) StartupConfig {
@@ -129,6 +132,7 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 			stf.NewMsgRouterService, stf.NewQueryRouterService(),
 		),
 		HeaderService: services.NewGenesisHeaderService(stf.HeaderService{}),
+		GasService:    stf.NewGasMeterService(),
 	}
 }
 
@@ -193,9 +197,11 @@ func NewApp(
 				startupConfig.BranchService,
 				startupConfig.RouterServiceBuilder,
 				startupConfig.HeaderService,
+				startupConfig.GasService,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
+				std.RegisterLegacyAminoCodec,
 			),
 		),
 		append(extraOutputs, &appBuilder, &cdc, &txConfigOptions, &txConfig, &storeBuilder)...); err != nil {
@@ -336,10 +342,11 @@ func (a *App) Deliver(
 	require.NoError(t, err)
 	a.lastHeight++
 
-	// update block height if integration context is present
+	// update block height and block time if integration context is present
 	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
 	if ok {
 		iCtx.header.Height = int64(a.lastHeight)
+		iCtx.header.Time = time.Now()
 	}
 	return resp, state
 }

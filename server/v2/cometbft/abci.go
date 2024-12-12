@@ -15,7 +15,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/collections"
-	addresscodec "cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
@@ -35,8 +34,6 @@ import (
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 const (
@@ -52,13 +49,12 @@ type consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              appmanager.AppManager[T]
-	appCodec         codec.Codec
-	txCodec          transaction.Codec[T]
 	store            types.Store
 	listener         *appdata.Listener
 	snapshotManager  *snapshots.Manager
 	streamingManager streaming.Manager
 	mempool          mempool.Mempool[T]
+	appCodecs        AppCodecs[T]
 
 	cfg               Config
 	chainID           string
@@ -84,16 +80,15 @@ type consensus[T transaction.Tx] struct {
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
-	queryHandlersMap      map[string]appmodulev2.Handler
-	getProtoRegistry      func() (*protoregistry.Files, error)
-	consensusAddressCodec addresscodec.Codec
-	cfgMap                server.ConfigMap
+	queryHandlersMap map[string]appmodulev2.Handler
+	getProtoRegistry func() (*protoregistry.Files, error)
+	cfgMap           server.ConfigMap
 }
 
 // CheckTx implements types.Application.
 // It is called by cometbft to verify transaction validity
 func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxRequest) (*abciproto.CheckTxResponse, error) {
-	decodedTx, err := c.txCodec.Decode(req.Tx)
+	decodedTx, err := c.appCodecs.TxCodec.Decode(req.Tx)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +320,7 @@ func (c *consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		ctx,
 		br,
 		req.AppStateBytes,
-		c.txCodec)
+		c.appCodecs.TxCodec)
 	if err != nil {
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
@@ -392,7 +387,7 @@ func (c *consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req)
+	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.appCodecs.TxCodec, req)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +433,7 @@ func (c *consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req)
+	err := c.processProposalHandler(ciCtx, c.app, c.appCodecs.TxCodec, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{
@@ -567,7 +562,7 @@ func (c *consensus[T]) internalFinalizeBlock(
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
 	// have a tx that fails decoding.
-	decodedTxs, err := decodeTxs(c.logger, req.Txs, c.txCodec)
+	decodedTxs, err := decodeTxs(c.logger, req.Txs, c.appCodecs.TxCodec)
 	if err != nil {
 		return nil, nil, nil, err
 	}

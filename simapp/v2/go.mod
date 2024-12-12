@@ -3,7 +3,7 @@ module cosmossdk.io/simapp/v2
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.7.6
+	cosmossdk.io/api v0.8.0-rc.1
 	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/depinject v1.1.0
@@ -67,7 +67,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1 // indirect
 	cosmossdk.io/store v1.1.1 // indirect
-	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
+	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -278,7 +278,6 @@ replace (
 	cosmossdk.io/x/protocolpool => ../../x/protocolpool
 	cosmossdk.io/x/slashing => ../../x/slashing
 	cosmossdk.io/x/staking => ../../x/staking
-	cosmossdk.io/x/tx => ../../x/tx
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 )
 
@@ -297,7 +296,6 @@ replace (
 
 // server v2 integration
 replace (
-	cosmossdk.io/api => ../../api
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/indexer/postgres => ../../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../../runtime/v2

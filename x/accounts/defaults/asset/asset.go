@@ -24,16 +24,16 @@ var (
 	Type          = "asset-account"
 )
 
-// newBaseLockup creates a new BaseLockup object.
+// NewAssetAccount creates a new AssetAccount object.
 func NewAssetAccount(d accountstd.Dependencies) (*AssetAccount, error) {
 	AssetAccount := &AssetAccount{
 		Owner:        collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		Denom:        collections.NewItem(d.SchemaBuilder, DenomPrefix, "denom", collections.StringValue),
 		Balance:      collections.NewMap(d.SchemaBuilder, BalancePrefix, "balance", collections.BytesKey, sdk.IntValue),
 		Supply:       collections.NewItem(d.SchemaBuilder, SupplyPrefix, "supply", sdk.IntValue),
-		transferFunc: make(map[string]func(ctx context.Context, from, to []byte, amount math.Int) ([][]byte, error)),
-		mintFunc:     make(map[string]func(ctx context.Context, to []byte, amount math.Int) ([][]byte, error)),
-		burnFunc:     make(map[string]func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error)),
+		transferFunc: make(map[string]assettypes.SendFunc),
+		mintFunc:     make(map[string]assettypes.MintFunc),
+		burnFunc:     make(map[string]assettypes.BurnFunc),
 
 		addressCodec:  d.AddressCodec,
 		headerService: d.Environment.HeaderService,
@@ -54,6 +54,8 @@ type AssetAccount struct {
 	burnFunc      map[string]func(ctx context.Context, from []byte, amount math.Int) ([][]byte, error)
 }
 
+// Init inits the AssetAccount for denom
+// with balances, supply and custom logics
 func (aa *AssetAccount) Init(ctx context.Context, msg *assettypes.MsgInitAssetAccountWrapper) (
 	*assettypes.MsgInitAssetAccountResponse, error,
 ) {
@@ -92,6 +94,7 @@ func (aa *AssetAccount) Init(ctx context.Context, msg *assettypes.MsgInitAssetAc
 	return &assettypes.MsgInitAssetAccountResponse{}, nil
 }
 
+// GetDenom returns denom of account
 func (aa *AssetAccount) GetDenom(ctx context.Context) (
 	string, error,
 ) {
@@ -102,6 +105,7 @@ func (aa *AssetAccount) GetDenom(ctx context.Context) (
 	return denom, nil
 }
 
+// GetOwner returns owner of denom
 func (aa *AssetAccount) GetOwner(ctx context.Context) (
 	[]byte, error,
 ) {
@@ -112,6 +116,7 @@ func (aa *AssetAccount) GetOwner(ctx context.Context) (
 	return owner, nil
 }
 
+// GetBalance returns balance of an address
 func (aa *AssetAccount) GetBalance(ctx context.Context, addr []byte) math.Int {
 	balance, err := aa.Balance.Get(ctx, addr)
 	if err != nil {
@@ -120,10 +125,12 @@ func (aa *AssetAccount) GetBalance(ctx context.Context, addr []byte) math.Int {
 	return balance
 }
 
+// SetBalance set balance for an address
 func (aa *AssetAccount) SetBalance(ctx context.Context, addr []byte, amt math.Int) error {
 	return aa.Balance.Set(ctx, addr, amt)
 }
 
+// GetSupply returns supply of denom
 func (aa *AssetAccount) GetSupply(ctx context.Context) math.Int {
 	supply, err := aa.Supply.Get(ctx)
 	if err != nil {
@@ -132,10 +139,13 @@ func (aa *AssetAccount) GetSupply(ctx context.Context) math.Int {
 	return supply
 }
 
+// SetSupply set supply for account denom
 func (aa *AssetAccount) SetSupply(ctx context.Context, supply math.Int) error {
 	return aa.Supply.Set(ctx, supply)
 }
 
+// Transfer transfers amt coins from a sending account to a receiving account.
+// Using transfer logic provided for this denom.
 func (aa *AssetAccount) Transfer(ctx context.Context, msg *assettypes.MsgTransfer) (*assettypes.MsgTransferResponse, error) {
 	if msg == nil {
 		return nil, errors.New("empty msg")
@@ -160,6 +170,8 @@ func (aa *AssetAccount) Transfer(ctx context.Context, msg *assettypes.MsgTransfe
 	return resp, nil
 }
 
+// MintCoins creates new coins from thin air and adds it to the receiver account.
+// Using mint logic provided for this denom.
 func (aa *AssetAccount) Mint(ctx context.Context, msg *assettypes.MsgMint) (*assettypes.MsgMintResponse, error) {
 	if msg == nil {
 		return nil, errors.New("empty msg")
@@ -184,6 +196,8 @@ func (aa *AssetAccount) Mint(ctx context.Context, msg *assettypes.MsgMint) (*ass
 	return resp, nil
 }
 
+// BurnCoins burns coins deletes coins from the balance of an account.
+// Using burn logic provided for this denom.
 func (aa *AssetAccount) Burn(ctx context.Context, msg *assettypes.MsgBurn) (*assettypes.MsgBurnResponse, error) {
 	if msg == nil {
 		return nil, errors.New("empty msg")
@@ -210,6 +224,7 @@ func (aa *AssetAccount) Burn(ctx context.Context, msg *assettypes.MsgBurn) (*ass
 	return resp, nil
 }
 
+// QueryOwner is query handler return owner of denom
 func (aa *AssetAccount) QueryOwner(ctx context.Context, msg *assettypes.QueryOwnerRequest) (*assettypes.QueryOwnerResponse, error) {
 	if msg == nil {
 		return nil, errors.New("empty msg")
@@ -224,6 +239,8 @@ func (aa *AssetAccount) QueryOwner(ctx context.Context, msg *assettypes.QueryOwn
 	}, nil
 }
 
+// SubUnlockedCoins removes the unlocked amt of the given account.
+// An error is returned if the resulting balance is negative.
 func (aa *AssetAccount) SubUnlockedCoins(ctx context.Context, addr []byte, amt math.Int) error {
 	denom, err := aa.GetDenom(ctx)
 	if err != nil {
@@ -245,6 +262,7 @@ func (aa *AssetAccount) SubUnlockedCoins(ctx context.Context, addr []byte, amt m
 	return aa.SetBalance(ctx, addr, newBalance)
 }
 
+// AddCoins increases the balance of the given address by the specified amount.
 func (aa *AssetAccount) AddCoins(ctx context.Context, addr []byte, amt math.Int) error {
 	balance := aa.GetBalance(ctx, addr)
 

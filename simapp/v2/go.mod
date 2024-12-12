@@ -48,6 +48,18 @@ require (
 )
 
 require (
+<<<<<<< HEAD
+=======
+	cosmossdk.io/indexer/postgres v0.0.0-20241204160609-556102cfa046
+	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+	github.com/jackc/pgx/v5 v5.7.1
+)
+
+require (
+>>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
 	cloud.google.com/go v0.115.0 // indirect
@@ -256,12 +268,16 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241119134933-d697a3de0f95 // main
 	cosmossdk.io/client/v2 => ../../client/v2
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing => cosmossdk.io/core/testing v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
+=======
+	cosmossdk.io/tools/benchmark => ../../tools/benchmark
+>>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base

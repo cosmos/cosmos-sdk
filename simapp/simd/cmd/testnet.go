@@ -584,8 +584,41 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 		return err
 	}
 
+<<<<<<< HEAD
 	if _, err := testnet.WaitForHeight(1); err != nil {
 		return err
+=======
+	// slice to keep track of validator processes
+	var processes []*exec.Cmd
+
+	// channel to signal shutdown
+	shutdownCh := make(chan struct{})
+
+	fmt.Println("Starting test network...")
+	// Start each validator in a separate process
+	for i := 0; i < args.numValidators; i++ {
+		_, nodeDir := getNodeDir(args, i)
+
+		// run start command
+		binName := cmd.Root().Use
+		cmdArgs := []string{"start", fmt.Sprintf("--%s=%s", flags.FlagHome, nodeDir)}
+		runCmd := exec.Command(binName, cmdArgs...) // spawn new process
+
+		// Set stdout and stderr based on enableLogging flag
+		if args.enableLogging {
+			runCmd.Stdout = os.Stdout
+			runCmd.Stderr = os.Stderr
+		} else {
+			runCmd.Stdout = io.Discard // discard output when logging is disabled
+			runCmd.Stderr = io.Discard
+		}
+
+		if err := runCmd.Start(); err != nil {
+			return fmt.Errorf("failed to start validator %d: %w", i, err)
+		}
+		fmt.Printf("Started Validator %d\n", i+1)
+		processes = append(processes, runCmd) // add to processes slice
+>>>>>>> 14c841c86 (feat(tools/benchmark): introduce benchmark module (#22778))
 	}
 	cmd.Println("press the Enter Key to terminate")
 	if _, err := fmt.Scanln(); err != nil { // wait for Enter Key

@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/evidence v0.1.1
 	cosmossdk.io/x/feegrant v0.1.1
 	cosmossdk.io/x/nft v0.1.1 // indirect
-	cosmossdk.io/x/tx v0.13.6-0.20241003112805-ff8789a02871
+	cosmossdk.io/x/tx v0.13.6
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/cometbft/cometbft v0.38.12
 	github.com/cosmos/cosmos-db v1.1.0
@@ -202,7 +202,6 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace cosmossdk.io/x/tx => ../x/tx
 
 // Below are the long-lived replace for tests.
 replace (

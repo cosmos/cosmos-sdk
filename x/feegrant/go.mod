@@ -187,7 +187,7 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/gov => ../gov
+	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/staking => ../staking
 )

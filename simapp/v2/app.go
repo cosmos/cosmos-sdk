@@ -4,10 +4,13 @@ import (
 	_ "embed"
 	"fmt"
 
+	_ "github.com/jackc/pgx/v5/stdlib" // Import and register pgx driver
+
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	serverstore "cosmossdk.io/server/v2/store"
@@ -164,11 +167,19 @@ func NewSimApp[T transaction.Tx](
 		return nil, fmt.Errorf("store builder did not return a db")
 	}
 
+	/****  Store Metrics ****/
+	/*
+		// In order to set store metrics uncomment the below
+		storeMetrics, err := metrics.NewMetrics([][]string{{"module", "store"}})
+		if err != nil {
+			return nil, err
+		}
+		app.store.SetMetrics(storeMetrics)
+	*/
 	/****  Module Options ****/
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()
-
 	if err = app.LoadLatest(); err != nil {
 		return nil, err
 	}

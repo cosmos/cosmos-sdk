@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/systemtests v1.0.0-rc.2.0.20241205143753-9e94ea87f6e4
+	cosmossdk.io/systemtests v1.0.0-rc.3
 	github.com/cosmos/cosmos-sdk v0.50.6
 )
 
@@ -148,7 +148,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect

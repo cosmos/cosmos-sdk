@@ -131,7 +131,7 @@ require (
 	gitlab.com/yawning/tuplehash v0.0.0-20230713102510-df83abbf9a02 // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
@@ -158,7 +158,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 )
 
-require cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
+require cosmossdk.io/schema v0.4.0
 
 require (
 	github.com/bytedance/sonic v1.12.4 // indirect

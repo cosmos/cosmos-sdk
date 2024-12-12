@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	iavl_v2 "github.com/cosmos/iavl/v2"
+	memiavl_lib "github.com/crypto-org-chain/cronos/memiavl/v2"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -13,6 +14,7 @@ import (
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/commitment/iavlv2"
 	"cosmossdk.io/store/v2/commitment/mem"
+	"cosmossdk.io/store/v2/commitment/memiavl"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/metrics"
@@ -24,8 +26,9 @@ type (
 )
 
 const (
-	SCTypeIavl   SCType = "iavl"
-	SCTypeIavlV2 SCType = "iavl-v2"
+	SCTypeIavl    SCType = "iavl"
+	SCTypeIavlV2  SCType = "iavl-v2"
+	SCTypeMemIAVL SCType = "memiavl"
 )
 
 // Options are the options for creating a root store.
@@ -34,6 +37,7 @@ type Options struct {
 	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
 	IavlV2Config    iavl_v2.TreeOptions
+	MemIAVLConfig   memiavl_lib.Options
 }
 
 // FactoryOptions are the options for creating a root store.
@@ -65,12 +69,26 @@ func DefaultStoreOptions() Options {
 // store directly by calling root.New, so this function is not
 // necessary, but demonstrates the required steps and configuration to create a root store.
 func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
-	var (
-		sc  *commitment.CommitStore
-		err error
-	)
+	sc, err := createCommitStore(opts)
+	if err != nil {
+		return nil, err
+	}
 
+	var pm *pruning.Manager
+	if pruner, ok := sc.(store.Pruner); ok {
+		pm = pruning.NewManager(pruner, opts.Options.SCPruningOption)
+	}
+
+	return New(opts.SCRawDB, opts.Logger, sc, pm, nil, metrics.NoOpMetrics{})
+}
+
+func createCommitStore(opts *FactoryOptions) (store.Committer, error) {
 	storeOpts := opts.Options
+
+	if storeOpts.SCType == SCTypeMemIAVL {
+		dir := fmt.Sprintf("%s/data/memiavl.db", opts.RootDir)
+		return memiavl.NewCommitStore(dir, opts.StoreKeys, opts.Logger, storeOpts.MemIAVLConfig), nil
+	}
 
 	metadata := commitment.NewMetadataStore(opts.SCRawDB)
 	latestVersion, err := metadata.GetLatestVersion()
@@ -127,11 +145,5 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		oldTrees[string(key)] = tree
 	}
 
-	sc, err = commitment.NewCommitStore(trees, oldTrees, opts.SCRawDB, opts.Logger)
-	if err != nil {
-		return nil, err
-	}
-
-	pm := pruning.NewManager(sc, storeOpts.SCPruningOption)
-	return New(opts.SCRawDB, opts.Logger, sc, pm, nil, metrics.NoOpMetrics{})
+	return commitment.NewCommitStore(trees, oldTrees, opts.SCRawDB, opts.Logger)
 }

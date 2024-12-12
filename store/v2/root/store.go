@@ -41,7 +41,8 @@ type Store struct {
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
 	telemetry metrics.StoreMetrics
 
-	// pruningManager reflects the pruning manager used to prune state of the SS and SC backends
+	// pruningManager reflects the pruning manager used to prune state of the SS and SC backends,
+	// it's nil for memiavl which handles pruning internally.
 	pruningManager *pruning.Manager
 
 	// Migration related fields
@@ -298,7 +299,9 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	// signal to the pruning manager that a new version is about to be committed
 	// this may be required if the SS and SC backends implementation have the
 	// background pruning process (iavl v1 for example) which must be paused during the commit
-	s.pruningManager.PausePruning()
+	if s.pruningManager != nil {
+		s.pruningManager.PausePruning()
+	}
 
 	st := time.Now()
 	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
@@ -318,8 +321,10 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	s.lastCommitInfo = cInfo
 
 	// signal to the pruning manager that the commit is done
-	if err := s.pruningManager.ResumePruning(s.lastCommitInfo.Version); err != nil {
-		s.logger.Error("failed to signal commit done to pruning manager", "err", err)
+	if s.pruningManager != nil {
+		if err := s.pruningManager.ResumePruning(s.lastCommitInfo.Version); err != nil {
+			s.logger.Error("failed to signal commit done to pruning manager", "err", err)
+		}
 	}
 
 	return s.lastCommitInfo.Hash(), nil
@@ -383,5 +388,9 @@ func (s *Store) handleMigration(cs *corestore.Changeset) error {
 }
 
 func (s *Store) Prune(version uint64) error {
-	return s.pruningManager.Prune(version)
+	if s.pruningManager != nil {
+		return s.pruningManager.Prune(version)
+	}
+
+	return nil
 }

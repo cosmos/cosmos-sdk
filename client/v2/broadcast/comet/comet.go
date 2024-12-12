@@ -66,11 +66,11 @@ var _ broadcast.Broadcaster = &CometBFTBroadcaster{}
 type CometBFTBroadcaster struct {
 	rpcClient CometRPC
 	mode      string
-	cdc       codec.JSONCodec
+	cdc       codec.Codec
 }
 
 // NewCometBFTBroadcaster creates a new CometBFTBroadcaster.
-func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.JSONCodec) (*CometBFTBroadcaster, error) {
+func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.Codec) (*CometBFTBroadcaster, error) {
 	if cdc == nil {
 		return nil, errors.New("codec can't be nil")
 	}
@@ -126,12 +126,24 @@ func (c *CometBFTBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]
 func (c *CometBFTBroadcaster) broadcast(ctx context.Context, txBytes []byte,
 	fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error),
 ) (*apiacbci.TxResponse, error) {
-	bResult, err := fn(ctx, txBytes)
+	res, err := fn(ctx, txBytes)
 	if errRes := checkCometError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}
 
-	return newResponseFormatBroadcastTx(bResult), err
+	if res == nil {
+		return nil, err
+	}
+
+	parsedLogs, _ := parseABCILogs(res.Log)
+	return &apiacbci.TxResponse{
+		Code:      res.Code,
+		Codespace: res.Codespace,
+		Data:      res.Data.String(),
+		RawLog:    res.Log,
+		Logs:      parsedLogs,
+		Txhash:    res.Hash.String(),
+	}, err
 }
 
 // checkCometError checks for errors returned by the CometBFT network and returns an appropriate TxResponse.
@@ -145,7 +157,8 @@ func checkCometError(err error, tx cmttypes.Tx) *apiacbci.TxResponse {
 	txHash := fmt.Sprintf("%X", tx.Hash())
 
 	switch {
-	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())):
+	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())) ||
+		strings.Contains(errStr, strings.ToLower(sdkerrors.ErrTxInMempoolCache.Error())):
 		return &apiacbci.TxResponse{
 			Code:      sdkerrors.ErrTxInMempoolCache.ABCICode(),
 			Codespace: sdkerrors.ErrTxInMempoolCache.Codespace(),
@@ -166,26 +179,15 @@ func checkCometError(err error, tx cmttypes.Tx) *apiacbci.TxResponse {
 			Txhash:    txHash,
 		}
 
+	case strings.Contains(errStr, "no signatures supplied"):
+		return &apiacbci.TxResponse{
+			Code:      sdkerrors.ErrNoSignatures.ABCICode(),
+			Codespace: sdkerrors.ErrNoSignatures.Codespace(),
+			Txhash:    txHash,
+		}
+
 	default:
 		return nil
-	}
-}
-
-// newResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from cometbft
-func newResponseFormatBroadcastTx(res *coretypes.ResultBroadcastTx) *apiacbci.TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	parsedLogs, _ := parseABCILogs(res.Log)
-
-	return &apiacbci.TxResponse{
-		Code:      res.Code,
-		Codespace: res.Codespace,
-		Data:      res.Data.String(),
-		RawLog:    res.Log,
-		Logs:      parsedLogs,
-		Txhash:    res.Hash.String(),
 	}
 }
 

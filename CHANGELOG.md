@@ -44,15 +44,23 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* RocksDB libraries have been upgraded to support RockDB v9 instead of v8.
 * (testutil/integration) [#22616](https://github.com/cosmos/cosmos-sdk/pull/22616) Remove double context in integration tests v1.
     * Use `integrationApp.Context()` instead of creating a context prior.
+* (version) [#22807](https://github.com/cosmos/cosmos-sdk/pull/22807) Return server/v2 information in the `version` functions and commands.
+* [#22826](https://github.com/cosmos/cosmos-sdk/pull/22826) Simplify testing frameworks by removing `testutil/cmdtest`.
 
 ### Bug Fixes
 
 * (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
 * (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+* (cli) [#22656](https://github.com/cosmos/cosmos-sdk/pull/22656) Prune cmd should disable async pruning.
 
 ### API Breaking Changes
+
+* (client) [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Removed client prompt validations.
+
+### Deprecated
 
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 
@@ -133,7 +141,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
 * (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Move `upgradetypes.StoreLoader` to runtime and alias it in upgrade for backward compatibility.
 * (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
-* (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unecessary overhead.
+* (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unnecessary overhead.
 * (crypto/ledger) [#22116](https://github.com/cosmos/cosmos-sdk/pull/22116) Improve error message when deriving paths using index >100
 
 ### Bug Fixes

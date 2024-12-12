@@ -698,8 +698,9 @@ func startTestnet(
 		_, nodeDir := getNodeDir(args, i)
 
 		// run start command
+		binName := cmd.Root().Use
 		cmdArgs := []string{"start", fmt.Sprintf("--%s=%s", flags.FlagHome, nodeDir)}
-		runCmd := exec.Command(os.Args[0], cmdArgs...) // spawn new process
+		runCmd := exec.Command(binName, cmdArgs...) // spawn new process
 
 		// Set stdout and stderr based on enableLogging flag
 		if args.enableLogging {

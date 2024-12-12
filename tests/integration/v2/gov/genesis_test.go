@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/server"
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	sdkmath "cosmossdk.io/math"
 	_ "cosmossdk.io/x/accounts"
@@ -34,14 +33,11 @@ import (
 func TestImportExportQueues(t *testing.T) {
 	var err error
 
-	s1 := createTestSuite(t)
+	s1 := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := s1.ctx
 
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
-	_, state := s1.app.Deliver(t, ctx, nil)
-	_, err = s1.app.Commit(state)
-	require.NoError(t, err)
 	// Create two proposals, put the second into the voting period
 	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	assert.NilError(t, err)
@@ -72,7 +68,9 @@ func TestImportExportQueues(t *testing.T) {
 	require.NoError(t, err)
 
 	// export the state and import it into a new app
-	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)
+	govGenState, err := gov.ExportGenesis(ctx, s1.GovKeeper)
+	require.NoError(t, err)
+
 	genesisState := s1.app.DefaultGenesis()
 
 	genesisState[authtypes.ModuleName] = s1.cdc.MustMarshalJSON(authGenState)
@@ -83,7 +81,7 @@ func TestImportExportQueues(t *testing.T) {
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)
 
-	s2 := createTestSuite(t)
+	s2 := createTestSuite(t, integration.Genesis_SKIP)
 
 	emptyHash := sha256.Sum256(nil)
 	_, newstate, err := s2.app.InitGenesis(
@@ -135,24 +133,8 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal2.Status == v1.StatusRejected)
 }
 
-func clearDB(t *testing.T, db corestore.KVStoreWithBatch) {
-	t.Helper()
-	iter, err := db.Iterator(nil, nil)
-	assert.NilError(t, err)
-	defer iter.Close()
-
-	var keys [][]byte
-	for ; iter.Valid(); iter.Next() {
-		keys = append(keys, iter.Key())
-	}
-
-	for _, k := range keys {
-		assert.NilError(t, db.Delete(k))
-	}
-}
-
 func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
-	suite := createTestSuite(t)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := suite.ctx
 
 	params := v1.DefaultParams()

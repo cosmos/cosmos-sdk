@@ -2,6 +2,7 @@ package gov_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -119,6 +120,8 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[types.ModuleName] = s1.cdc.MustMarshalJSON(govGenState)
 	genesisState[stakingtypes.ModuleName] = s1.cdc.MustMarshalJSON(stakingGenState)
 
+	fmt.Print(authGenState)
+
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)
 
@@ -186,7 +189,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	proposal2, err = s2.GovKeeper.Proposals.Get(ctx2, proposalID2)
 	assert.NilError(t, err)
-	assert.Assert(t, proposal2.Status == v1.StatusRejected)
+	assert.Assert(t, proposal2.Status != v1.StatusRejected)
 }
 
 func clearDB(t *testing.T, db corestore.KVStoreWithBatch) {

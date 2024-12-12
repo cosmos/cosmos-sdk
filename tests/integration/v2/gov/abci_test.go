@@ -24,7 +24,7 @@ import (
 )
 
 func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
-	suite := createTestSuite(t)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 	addr0Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[0])
@@ -52,7 +52,7 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 }
 
 func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
-	suite := createTestSuite(t)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 	addr0Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[0])
@@ -83,7 +83,7 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 }
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	suite := createTestSuite(t)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
@@ -118,7 +118,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	suite := createTestSuite(t)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
@@ -171,7 +171,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	suite := createTestSuite(t)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
@@ -207,7 +207,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestProposalDepositRefundFailEndBlocker(t *testing.T) {
-	suite := createTestSuite(t)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
@@ -274,7 +274,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			suite := createTestSuite(t)
+			suite := createTestSuite(t, integration.Genesis_COMMIT)
 			ctx := suite.ctx
 			depositMultiplier := getDepositMultiplier(tc.proposalType)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
@@ -352,7 +352,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			suite := createTestSuite(t)
+			suite := createTestSuite(t, integration.Genesis_COMMIT)
 			ctx := suite.ctx
 			depositMultiplier := getDepositMultiplier(tc.proposalType)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
@@ -410,7 +410,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
-	suite := createTestSuite(t)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
 	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 1, valTokens)
 
@@ -495,7 +495,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			suite := createTestSuite(t)
+			suite := createTestSuite(t, integration.Genesis_COMMIT)
 			ctx := suite.ctx
 			depositMultiplier := getDepositMultiplier(v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))

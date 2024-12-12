@@ -126,7 +126,7 @@ type suite struct {
 	txConfigOptions tx.ConfigOptions
 }
 
-func createTestSuite(t *testing.T) suite {
+func createTestSuite(t *testing.T, genesisBehavior int) suite {
 	t.Helper()
 	res := suite{}
 
@@ -159,6 +159,7 @@ func createTestSuite(t *testing.T) suite {
 	startupCfg.RouterServiceBuilder = serviceBuilder
 	startupCfg.HeaderService = &integration.HeaderService{}
 	startupCfg.GasService = &integration.GasService{}
+	startupCfg.GenesisBehavior = genesisBehavior
 
 	app, err := integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(sdklog.NewNopLogger())),

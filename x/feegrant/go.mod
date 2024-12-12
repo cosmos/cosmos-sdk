@@ -186,5 +186,6 @@ replace (
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
+	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/staking => ../staking
 )

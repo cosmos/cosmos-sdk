@@ -44,6 +44,7 @@ require (
 
 require (
 	cosmossdk.io/indexer/postgres v0.0.0-20241204160609-556102cfa046
+	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
@@ -256,7 +257,9 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
+	cosmossdk.io/api => ../../api
 	cosmossdk.io/client/v2 => ../../client/v2
+	cosmossdk.io/tools/benchmark => ../../tools/benchmark
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base

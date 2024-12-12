@@ -154,7 +154,7 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				res, err := clientCtx.BroadcastTxSync(txBytes)
+				res, err := clientCtx.BroadcastTxAsync(txBytes)
 				if err != nil {
 					return err
 				}

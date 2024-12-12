@@ -82,6 +82,13 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		if fieldMessage == nil {
 			continue
 		}
+		if fieldMessage.IsPlaceholder() {
+			innerDesc, err := resolver.FindDescriptorByName(fieldMessage.FullName())
+			if err != nil {
+				return hasUnknownNonCriticals, err
+			}
+			fieldMessage = innerDesc.(protoreflect.MessageDescriptor)
+		}
 
 		// consume length prefix of nested message
 		_, o := protowire.ConsumeVarint(fieldBytes)

@@ -27,6 +27,7 @@ use (
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl
+	./tools/benchmark
 	./x/accounts
 	./x/accounts/defaults/base
 	./x/accounts/defaults/lockup

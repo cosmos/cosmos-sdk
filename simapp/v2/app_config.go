@@ -107,7 +107,7 @@ var (
 	}
 
 	// ModuleConfig is the application module configuration used by depinject
-	ModuleConfig = appconfig.Compose(&appv1alpha1.Config{
+	ModuleConfig = &appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
 				Name: runtime.ModuleName,
@@ -181,7 +181,7 @@ var (
 					// OrderMigrations: []string{},
 					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
 					GasConfig: &runtimev2.GasConfig{
-						ValidateTxGasLimit: 100_000,
+						ValidateTxGasLimit: 10_000_000,
 						QueryGasLimit:      100_000,
 						SimulationGasLimit: 100_000,
 					},
@@ -302,5 +302,5 @@ var (
 				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
 		},
-	})
+	}
 )

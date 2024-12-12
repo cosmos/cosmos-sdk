@@ -23,7 +23,7 @@ require (
 	cosmossdk.io/schema v0.4.0 //main
 	cosmossdk.io/server/v2 v2.0.0-20241211154953-a38a6a2c8bc8 // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // main
-	cosmossdk.io/server/v2/stf v0.0.0-20241204101618-7fa2356c07aa // main
+	cosmossdk.io/server/v2/stf v0.0.0-20241212104257-e6948eeda877 // main
 	cosmossdk.io/store/v2 v2.0.0-20241209145349-34f407d6367a // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9

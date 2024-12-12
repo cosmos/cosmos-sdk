@@ -82,12 +82,15 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 		if fieldMessage == nil {
 			continue
 		}
+		// if a message descriptor is a placeholder, resolve it. this could happen when descriptor has been registered in
+		// the "google.golang.org/protobuf" resgistry  but not in "github.com/cosmos/gogoproto".
+		// fixes: https://github.com/cosmos/cosmos-sdk/issues/22574
 		if fieldMessage.IsPlaceholder() {
-			innerDesc, err := resolver.FindDescriptorByName(fieldMessage.FullName())
+			gogoDesc, err := resolver.FindDescriptorByName(fieldMessage.FullName())
 			if err != nil {
-				return hasUnknownNonCriticals, err
+				return hasUnknownNonCriticals, fmt.Errorf("could not resolve placeholder descriptor: %v: %w", fieldMessage, err)
 			}
-			fieldMessage = innerDesc.(protoreflect.MessageDescriptor)
+			fieldMessage = gogoDesc.(protoreflect.MessageDescriptor)
 		}
 
 		// consume length prefix of nested message

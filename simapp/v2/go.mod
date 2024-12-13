@@ -63,7 +63,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241212104257-e6948eeda877 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
-	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect; main
+	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

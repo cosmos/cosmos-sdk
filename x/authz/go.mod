@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v1.0.0-alpha.2
+	cosmossdk.io/x/tx v1.0.0-alpha.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0

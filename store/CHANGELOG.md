@@ -25,6 +25,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v1.5.0 (December 13, 2024)
+
 ### Improvements
 
 * (store) [#22305](https://github.com/cosmos/cosmos-sdk/pull/22305) Add `LatestVersion` to the `Committer` interface to get the latest version of the store.

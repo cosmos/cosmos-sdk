@@ -3,16 +3,14 @@ module cosmossdk.io/server/v2
 go 1.23
 
 replace (
-	cosmossdk.io/api => ../../api
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/stf => ./stf
 	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/store/v2/db => ../../store/v2/db
-	cosmossdk.io/x/tx => ../../x/tx
 )
 
 require (
-	cosmossdk.io/api v0.7.6
+	cosmossdk.io/api v0.8.0-rc.1
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
 	cosmossdk.io/log v1.5.0

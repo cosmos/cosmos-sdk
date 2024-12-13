@@ -2,6 +2,8 @@ buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e
 buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1/go.mod h1:wqOtclGXqh+7m/L6fn0SatBJ+m9E5muF/41a3LgIPVI=
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 h1:FYhA+EOS18QBdffLVpisUjBGsCtUljMx4bFOsZT81ZM=
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1/go.mod h1:17Ax38yd8pg56din4ecwSDBRCSX0qLcif5Cdf8ayto4=
+cosmossdk.io/api v0.8.0-rc.1 h1:j5oNt5D9gsXtcI9ITYDKjxLXYysgzQIGIbXe381fXNE=
+cosmossdk.io/api v0.8.0-rc.1/go.mod h1:edvI8tMINqCH75EgkOEMnCZEQ3iKJgOlZ+ZxOu4gmXU=
 cosmossdk.io/core v1.0.0-alpha.6 h1:5ukC4JcQKmemLQXcAgu/QoOvJI50hpBkIIg4ZT2EN8E=
 cosmossdk.io/core v1.0.0-alpha.6/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
 cosmossdk.io/depinject v1.1.0 h1:wLan7LG35VM7Yo6ov0jId3RHWCGRhe8E8bsuARorl5E=
@@ -12,6 +14,8 @@ cosmossdk.io/log v1.5.0 h1:dVdzPJW9kMrnAYyMf1duqacoidB9uZIl+7c6z0mnq0g=
 cosmossdk.io/log v1.5.0/go.mod h1:Tr46PUJjiUthlwQ+hxYtUtPn4D/oCZXAkYevBeh5+FI=
 cosmossdk.io/schema v0.4.0 h1:TrBs5BUnGqniAwEBVsjiisrAk3h3DK/zHLU1O8fRnO0=
 cosmossdk.io/schema v0.4.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+cosmossdk.io/x/tx v1.0.0-alpha.2 h1:UW80FMm7B0fiAMsrfe5+HabSJ3XBg+tQa6/GK9prqWk=
+cosmossdk.io/x/tx v1.0.0-alpha.2/go.mod h1:r4yTKSJ7ZCCR95YbBfY3nfvbgNw6m9F6f25efWYYQWo=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.5.5 h1:oWf5W7GtOLgp6bciQYDmhHHjdhYkALu6S/5Ni9ZgSvQ=
 github.com/DataDog/zstd v1.5.5/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=

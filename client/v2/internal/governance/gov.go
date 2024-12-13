@@ -69,7 +69,7 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 		return nil, fmt.Errorf("could not read expedited: %w", err)
 	}
 	if expedited {
-		rv.Expedited = true //nolint:staticcheck // We set it in case the message is made for an ealier version of the SDK
+		rv.Expedited = true //nolint:staticcheck // We set it in case the message is made for an earlier version of the SDK
 		rv.ProposalType = govv1.ProposalType_PROPOSAL_TYPE_EXPEDITED
 	}
 

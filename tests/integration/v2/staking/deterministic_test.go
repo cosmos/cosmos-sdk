@@ -7,26 +7,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	minttypes "cosmossdk.io/x/mint/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 var (
@@ -43,9 +41,7 @@ var (
 type deterministicFixture struct {
 	app *integration.App
 
-	ctx  context.Context
-	cdc  codec.Codec
-	keys map[string]*storetypes.KVStoreKey
+	ctx context.Context
 
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
@@ -94,7 +90,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	df := deterministicFixture{
 		app:           f.app,
 		ctx:           ctx,
-		cdc:           f.cdc,
 		accountKeeper: f.accountKeeper,
 		bankKeeper:    f.bankKeeper,
 		stakingKeeper: f.stakingKeeper,

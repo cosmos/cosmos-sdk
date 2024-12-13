@@ -11,9 +11,16 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
+	_ "cosmossdk.io/x/bank"     // import as blank for app wiring
 	bankkeeper "cosmossdk.io/x/bank/keeper"
+	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
+	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
+	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
+	_ "cosmossdk.io/x/slashing"     // import as blank for app wiring
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
+	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
@@ -23,17 +30,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-
-	_ "cosmossdk.io/x/accounts"     // import as blank for app wiring
-	_ "cosmossdk.io/x/bank"         // import as blank for app wiring
-	_ "cosmossdk.io/x/consensus"    // import as blank for app wiring
-	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
-	_ "cosmossdk.io/x/protocolpool" // import as blank for app wiring
-	_ "cosmossdk.io/x/slashing"     // import as blank for app wiring
-	_ "cosmossdk.io/x/staking"      // import as blank for app wiring
-
-	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 )

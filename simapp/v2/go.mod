@@ -60,17 +60,10 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.4.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241212104257-e6948eeda877 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
-=======
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1 // indirect
-	cosmossdk.io/store v1.1.1 // indirect
-	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
->>>>>>> 256ec4f90 (refactor(client/v2): remove gov dependency (#22867))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

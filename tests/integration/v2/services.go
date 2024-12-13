@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/gogo/protobuf/jsonpb"
 
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"

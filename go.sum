@@ -4,8 +4,8 @@ buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88e
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1/go.mod h1:17Ax38yd8pg56din4ecwSDBRCSX0qLcif5Cdf8ayto4=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cosmossdk.io/api v0.7.3-0.20241127063259-f296a5005ce8 h1:KCi0Wq5M0JST0I01HebEDHt7//tZMx2bW4tmlc4IRnI=
-cosmossdk.io/api v0.7.3-0.20241127063259-f296a5005ce8/go.mod h1:vZy0Ev95gwANXt5ssiDui4L5nlMYO5bzqR77hCjIz9s=
+cosmossdk.io/api v0.8.0-rc.2 h1:7DQjVnYz7sTy47bZMzahfOANbhxLmPtgQvvru9kA2R0=
+cosmossdk.io/api v0.8.0-rc.2/go.mod h1:edvI8tMINqCH75EgkOEMnCZEQ3iKJgOlZ+ZxOu4gmXU=
 cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b h1:smupoVhpdK+5pztIylyIGkCc+0QaAaGLEvnM7Wnrq18=
 cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b/go.mod h1:uf12i1yKvzEIHt2ok7poNqFDQTb71O00RQLitSynmrg=
 cosmossdk.io/core v1.0.0-alpha.6 h1:5ukC4JcQKmemLQXcAgu/QoOvJI50hpBkIIg4ZT2EN8E=

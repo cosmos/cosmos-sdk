@@ -3,7 +3,7 @@ module cosmossdk.io/tools/benchmark
 go 1.23.2
 
 require (
-	cosmossdk.io/api v0.7.6
+	cosmossdk.io/api v0.8.0-rc.2
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
@@ -25,7 +25,7 @@ require (
 	cosmossdk.io/math v1.4.0 // indirect
 	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
-	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
+	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -150,7 +150,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/api => ../../api
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../../x/bank
 	cosmossdk.io/x/staking => ../../x/staking

@@ -75,7 +75,13 @@ func New[T transaction.Tx](
 
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
+	mux := http.NewServeMux()
+	mux.Handle("/", s.GRPCGatewayRouter)
 
+	s.server = &http.Server{
+		Addr:    s.config.Address,
+		Handler: mux,
+	}
 	return s, nil
 }
 
@@ -108,14 +114,6 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
-	}
-
-	mux := http.NewServeMux()
-	mux.Handle("/", s.GRPCGatewayRouter)
-
-	s.server = &http.Server{
-		Addr:    s.config.Address,
-		Handler: mux,
 	}
 
 	s.logger.Info("starting gRPC-Gateway server...", "address", s.config.Address)

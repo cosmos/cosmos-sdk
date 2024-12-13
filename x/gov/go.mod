@@ -4,6 +4,7 @@ go 1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6
+	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
@@ -15,14 +16,14 @@ require (
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	github.com/chzyer/readline v1.5.1
+	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/manifoldco/promptui v0.9.0
+	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.10.0
@@ -35,7 +36,7 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -107,7 +108,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/linxGnu/grocksdb v1.9.3 // indirect
-	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/magiconair/properties v1.8.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
@@ -147,7 +148,7 @@ require (
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
@@ -181,6 +182,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/protocolpool => ../protocolpool

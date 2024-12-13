@@ -4,9 +4,9 @@ go 1.23
 
 require (
 	cosmossdk.io/indexer/postgres v0.0.0-00010101000000-000000000000
-	cosmossdk.io/schema v0.3.0
+	cosmossdk.io/schema v0.4.0
 	cosmossdk.io/schema/testing v0.0.0
-	github.com/fergusstrange/embedded-postgres v1.29.0
+	github.com/fergusstrange/embedded-postgres v1.30.0
 	github.com/hashicorp/consul/sdk v0.16.1
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/stretchr/testify v1.10.0
@@ -20,16 +20,15 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	golang.org/x/crypto v0.29.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )

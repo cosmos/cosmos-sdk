@@ -15,7 +15,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cosmos/gogoproto/proto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
@@ -65,11 +64,11 @@ var (
 
 func getQueryRouterBuilder[T any, PT interface {
 	*T
-	proto.Message
+	gogoproto.Message
 },
 	U any, UT interface {
 		*U
-		proto.Message
+		gogoproto.Message
 	}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
@@ -77,7 +76,7 @@ func getQueryRouterBuilder[T any, PT interface {
 	t.Helper()
 	queryRouterBuilder := stf.NewMsgRouterBuilder()
 	err := queryRouterBuilder.RegisterHandler(
-		proto.MessageName(PT(new(T))),
+		gogoproto.MessageName(PT(new(T))),
 		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
@@ -107,7 +106,7 @@ func getMsgRouterBuilder[T any, PT interface {
 	t.Helper()
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	err := msgRouterBuilder.RegisterHandler(
-		proto.MessageName(PT(new(T))),
+		gogoproto.MessageName(PT(new(T))),
 		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
@@ -821,18 +820,18 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		return typedResp, nil
 	}
 
-	queryRouterBuilder.RegisterHandler(
-		proto.MessageName(&testdata.SayHelloRequest{}),
+	_ = queryRouterBuilder.RegisterHandler(
+		gogoproto.MessageName(&testdata.SayHelloRequest{}),
 		helloFooHandler,
 	)
 
-	queryHandler[proto.MessageName(&testdata.SayHelloRequest{})] = appmodulev2.Handler{
+	queryHandler[gogoproto.MessageName(&testdata.SayHelloRequest{})] = appmodulev2.Handler{
 		Func: helloFooHandler,
 		MakeMsg: func() transaction.Msg {
-			return reflect.New(gogoproto.MessageType(proto.MessageName(&testdata.SayHelloRequest{})).Elem()).Interface().(transaction.Msg)
+			return reflect.New(gogoproto.MessageType(gogoproto.MessageName(&testdata.SayHelloRequest{})).Elem()).Interface().(transaction.Msg)
 		},
 		MakeMsgResp: func() transaction.Msg {
-			return reflect.New(gogoproto.MessageType(proto.MessageName(&testdata.SayHelloResponse{})).Elem()).Interface().(transaction.Msg)
+			return reflect.New(gogoproto.MessageType(gogoproto.MessageName(&testdata.SayHelloResponse{})).Elem()).Interface().(transaction.Msg)
 		},
 	}
 
@@ -887,15 +886,17 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	}
 
 	return &consensus[mock.Tx]{
-		logger:           log.NewNopLogger(),
-		appName:          "testing-app",
-		app:              am,
-		mempool:          mempool,
-		store:            mockStore,
-		cfg:              Config{AppTomlConfig: DefaultAppTomlConfig()},
-		txCodec:          mock.TxCodec{},
+		logger:  log.NewNopLogger(),
+		appName: "testing-app",
+		app:     am,
+		mempool: mempool,
+		store:   mockStore,
+		cfg:     Config{AppTomlConfig: DefaultAppTomlConfig()},
+		appCodecs: AppCodecs[mock.Tx]{
+			TxCodec: mock.TxCodec{},
+		},
 		chainID:          "test",
-		getProtoRegistry: sync.OnceValues(proto.MergedRegistry),
+		getProtoRegistry: sync.OnceValues(gogoproto.MergedRegistry),
 		queryHandlersMap: queryHandler,
 		addrPeerFilter:   addrPeerFilter,
 		idPeerFilter:     idPeerFilter,

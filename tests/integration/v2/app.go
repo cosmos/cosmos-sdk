@@ -445,6 +445,8 @@ func (a *App) SignCheckDeliver(
 // It required the context to have the integration context.
 // a new state is committed if the option WithAutomaticCommit is set in options.
 func (app *App) RunMsg(t *testing.T, ctx context.Context, handler handler, option ...Option) (resp transaction.Msg, err error) {
+	t.Helper()
+
 	// set options
 	cfg := &RunMsgConfig{}
 	for _, opt := range option {

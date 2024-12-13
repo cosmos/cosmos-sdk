@@ -29,7 +29,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // indirect
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -103,7 +103,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/linxGnu/grocksdb v1.9.3 // indirect
-	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/magiconair/properties v1.8.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -144,7 +144,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect

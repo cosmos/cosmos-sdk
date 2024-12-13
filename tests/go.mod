@@ -54,7 +54,6 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/jhump/protoreflect v1.17.0
-	github.com/rs/zerolog v1.33.0
 	github.com/spf13/viper v1.19.0
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 )
@@ -68,12 +67,13 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.13 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
+	cosmossdk.io/client/v2 v2.0.0-beta.6 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/indexer/postgres v0.1.0 // indirect
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b // indirect
+	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -171,7 +171,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/linxGnu/grocksdb v1.9.3 // indirect
-	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/magiconair/properties v1.8.9 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -194,6 +194,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/cors v1.11.1 // indirect
+	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
@@ -220,7 +221,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
@@ -258,6 +259,7 @@ replace (
 	cosmossdk.io/server/v2/stf => ../server/v2/stf
 	cosmossdk.io/store => ../store
 	cosmossdk.io/store/v2 => ../store/v2
+	cosmossdk.io/tools/benchmark => ../tools/benchmark
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

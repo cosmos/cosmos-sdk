@@ -81,7 +81,7 @@ func TestInitGenesis(t *testing.T) {
 	// append new bonded validators to the list
 	validators = append(validators, bondedVal1, bondedVal2)
 
-	// mint coins in the bonded pool representing the validators coins, ignore genesis validator
+	// mint coins in the bonded pool representing the validators coins
 	i2 := len(validators)
 	assert.NilError(t,
 		banktestutil.FundModuleAccount(

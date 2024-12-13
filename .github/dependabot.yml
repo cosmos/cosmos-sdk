@@ -314,6 +314,24 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
+  - package-ecosystem: gomod
+    directory: "/x/bank"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "03:20"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/tools/benchmark"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "03:25"
+    labels:
+      - "A:automerge"
+      - dependencies
 
   # Dependencies should be up to date on release branch
   - package-ecosystem: gomod

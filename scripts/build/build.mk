@@ -74,6 +74,11 @@ ifeq (bls12381,$(findstring bls12381,$(COSMOS_BUILD_OPTIONS)))
   build_tags += bls12381
 endif
 
+# benchmark module
+ifeq (benchmark,$(findstring benchmark,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += benchmark
+endif
+
 whitespace :=
 whitespace += $(whitespace)
 comma := ,

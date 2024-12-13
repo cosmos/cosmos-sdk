@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
@@ -49,7 +50,7 @@ type SimApp[T transaction.Tx] struct {
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
-		ModuleConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		appconfig.Compose(ModuleConfig), // Alternatively use appconfig.LoadYAML(AppConfigYAML)
 		runtime.DefaultServiceBindings(),
 		codec.DefaultProviders,
 		depinject.Provide(
@@ -167,11 +168,19 @@ func NewSimApp[T transaction.Tx](
 		return nil, fmt.Errorf("store builder did not return a db")
 	}
 
+	/****  Store Metrics ****/
+	/*
+		// In order to set store metrics uncomment the below
+		storeMetrics, err := metrics.NewMetrics([][]string{{"module", "store"}})
+		if err != nil {
+			return nil, err
+		}
+		app.store.SetMetrics(storeMetrics)
+	*/
 	/****  Module Options ****/
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()
-
 	if err = app.LoadLatest(); err != nil {
 		return nil, err
 	}

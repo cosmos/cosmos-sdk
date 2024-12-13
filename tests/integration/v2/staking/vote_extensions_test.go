@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
@@ -98,14 +99,12 @@ func TestValidateVoteExtensions(t *testing.T) {
 		votes = append(votes, ve)
 	}
 
-	_, ci := extendedCommitToLastCommit(abci.ExtendedCommitInfo{Round: 0, Votes: votes})
+	eci, ci := extendedCommitToLastCommit(abci.ExtendedCommitInfo{Round: 0, Votes: votes})
 	f.ctx = integration.SetCometInfo(f.ctx, ci)
 
-	t.Skip("cannot use integration app context in ValidateVoteExtensions")
-
-	// TODO: uncomment below code once ValidateVoteExtensions supports app context
-	// err := baseapp.ValidateVoteExtensions(f.ctx, f.stakingKeeper, eci)
-	// assert.NilError(t, err)
+	err := baseapp.ValidateVoteExtensionsWithParams(f.ctx, *cp,
+		integration.HeaderInfoFromContext(f.ctx), ci, f.stakingKeeper, eci)
+	assert.NilError(t, err)
 }
 
 func mashalVoteExt(msg proto.Message) ([]byte, error) {

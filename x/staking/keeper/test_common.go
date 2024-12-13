@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // ValidatorByPowerIndexExists does a certain by-power index record exist
@@ -80,7 +79,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 }
 
 // TestingUpdateValidatorV2 updates a validator in v2 for testing
-func TestingUpdateValidatorV2(keeper *Keeper, ctx context.Context, validator types.Validator, apply bool) (types.Validator, []module.ValidatorUpdate) {
+func TestingUpdateValidatorV2(keeper *Keeper, ctx context.Context, validator types.Validator, apply bool) (types.Validator, []appmodulev2.ValidatorUpdate) {
 	err := keeper.SetValidator(ctx, validator)
 	if err != nil {
 		panic(err)

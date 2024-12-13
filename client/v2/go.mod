@@ -7,8 +7,12 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
+<<<<<<< HEAD
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // main
+=======
+	cosmossdk.io/x/tx v1.0.0-alpha.3
+>>>>>>> 256ec4f90 (refactor(client/v2): remove gov dependency (#22867))
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/spf13/cobra v1.8.1
@@ -184,6 +188,5 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/bank => ./../../x/bank
-	cosmossdk.io/x/gov => ./../../x/gov
 	cosmossdk.io/x/staking => ./../../x/staking
 )

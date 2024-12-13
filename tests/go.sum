@@ -217,6 +217,7 @@ cosmossdk.io/runtime/v2 v2.0.0-20241107153845-4e240908dd60/go.mod h1:zXxA8bHeShG
 cosmossdk.io/schema v0.3.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
 cosmossdk.io/schema v0.4.0 h1:TrBs5BUnGqniAwEBVsjiisrAk3h3DK/zHLU1O8fRnO0=
 cosmossdk.io/schema v0.4.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+<<<<<<< HEAD
 cosmossdk.io/server/v2/appmanager v0.0.0-20241107153845-4e240908dd60 h1:M26/YrNRru59kzRkW/Mm7bnpEEsnR9rIFdNFGTXicGQ=
 cosmossdk.io/server/v2/appmanager v0.0.0-20241107153845-4e240908dd60/go.mod h1:mONOF8GRbxs5R04zMscuQQI1gx/XHTY7imKjcwLI5uo=
 cosmossdk.io/server/v2/stf v0.0.0-20241107153845-4e240908dd60 h1:+PYG1Wjsu8ZX5vvINPu7UjRxzT9m9sJ9SlS8MVApmOU=
@@ -225,6 +226,8 @@ cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d h1:KQM4Q6kjwlM4HuDZ
 cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d/go.mod h1:oZBBY4BrkYnghr6MFL0MP5mGqpkPedHcWkXwXddd6tU=
 cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08 h1:7dIhcS/VhEM/vnZWDVtDKqCF/OGaq8Gx+5ekD9GT71k=
 cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08/go.mod h1:A2aW375561viy3GcD8GhUwUWnow+R2Du6yCSpAGwsgY=
+=======
+>>>>>>> 256ec4f90 (refactor(client/v2): remove gov dependency (#22867))
 cosmossdk.io/x/tx v1.0.0-alpha.3 h1:+55/JFH5QRqnFhOI2heH3DKsaNL0RpXcJOQNzUvHiaQ=
 cosmossdk.io/x/tx v1.0.0-alpha.3/go.mod h1:h4pQ/j6Gfu8goB1R3Jbl4qY4RjYVNAsoylcleTXdSRg=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

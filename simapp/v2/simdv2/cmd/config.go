@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -14,6 +15,10 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/cometbft/handlers"
+	"cosmossdk.io/simapp/v2"
+	staking "cosmossdk.io/x/staking/types"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -95,9 +100,10 @@ func initCometConfig() cometbft.CfgOption {
 	return cometbft.OverwriteDefaultConfigTomlConfig(cfg)
 }
 
-func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
+func initCometOptions[T transaction.Tx](simapp *simapp.SimApp[T]) cometbft.ServerOptions[T] {
 	serverOptions := cometbft.DefaultServerOptions[T]()
 	serverOptions.PrepareProposalHandler = CustomPrepareProposal[T]()
+	serverOptions.ProcessProposalHandler = CustomProcessProposalHandler[T](simapp)
 	serverOptions.ExtendVoteHandler = CustomExtendVoteHandler[T]()
 
 	// overwrite app mempool, using max-txs option
@@ -123,7 +129,7 @@ func CustomExtendVoteHandler[T transaction.Tx]() handlers.ExtendVoteHandler {
 }
 
 func CustomPrepareProposal[T transaction.Tx]() handlers.PrepareHandler[T] {
-	return func(ctx context.Context, app handlers.AppManager[T], codec transaction.Codec[T], req *v1.PrepareProposalRequest) ([]T, error) {
+	return func(ctx context.Context, app handlers.AppManager[T], codec transaction.Codec[T], req *v1.PrepareProposalRequest, chainID string) ([]T, error) {
 		var txs []T
 		for _, tx := range req.Txs {
 			decTx, err := codec.Decode(tx)
@@ -134,16 +140,77 @@ func CustomPrepareProposal[T transaction.Tx]() handlers.PrepareHandler[T] {
 			txs = append(txs, decTx)
 		}
 
-		// Process vote extensions
+		// "Process" vote extensions (we'll just inject all votes)
 		injectedTx := []byte{}
-		for _, vote := range req.LocalLastCommit.Votes {
-			// TODO: add signature verification
-			injectedTx = append(injectedTx, vote.VoteExtension...)
+		injectedTx, err := json.Marshal(req.LocalLastCommit)
+		if err != nil {
+			return nil, err
 		}
 
 		// put the injected tx into the first position
 		txs = append([]T{cometbft.RawTx(injectedTx).(T)}, txs...)
 
 		return txs, nil
+	}
+}
+
+func CustomProcessProposalHandler[T transaction.Tx](simapp *simapp.SimApp[T]) handlers.ProcessHandler[T] {
+	return func(ctx context.Context, am handlers.AppManager[T], c transaction.Codec[T], req *v1.ProcessProposalRequest, chainID string) error {
+		// Get all vote extensions from the first tx
+
+		injectedTx := req.Txs[0]
+		var voteExts v1.ExtendedCommitInfo
+		if err := json.Unmarshal(injectedTx, &voteExts); err != nil {
+			return err
+		}
+
+		// Get validators from the staking module
+		res, err := am.Query(
+			ctx,
+			0,
+			&staking.QueryValidatorsRequest{},
+		)
+		if err != nil {
+			return err
+		}
+
+		validatorsResponse := res.(*staking.QueryValidatorsResponse)
+		consAddrToPubkey := map[string]cryptotypes.PubKey{}
+
+		for _, val := range validatorsResponse.GetValidators() {
+			cv := val.ConsensusPubkey.GetCachedValue()
+			if cv == nil {
+				return fmt.Errorf("public key cached value is nil")
+			}
+
+			cpk, ok := cv.(cryptotypes.PubKey)
+			if ok {
+				consAddrToPubkey[string(cpk.Address().Bytes())] = cpk
+			} else {
+				return fmt.Errorf("invalid public key type")
+			}
+		}
+
+		// First verify that the vote extensions injected by the proposer are correct
+		if err := cometbft.ValidateVoteExtensions(
+			ctx,
+			am,
+			chainID,
+			func(ctx context.Context, b []byte) (cryptotypes.PubKey, error) {
+				if _, ok := consAddrToPubkey[string(b)]; !ok {
+					return nil, fmt.Errorf("validator not found")
+				}
+				return consAddrToPubkey[string(b)], nil
+			},
+			voteExts,
+			req.Height,
+			&req.ProposedLastCommit,
+		); err != nil {
+			return err
+		}
+
+		// TODO: do something with the vote extensions
+
+		return nil
 	}
 }

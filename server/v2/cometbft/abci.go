@@ -147,7 +147,7 @@ func (c *consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	// if height is 0, we dont know the consensus params
 	var appVersion uint64 = 0
 	if version > 0 {
-		cp, err := c.GetConsensusParams(ctx)
+		cp, err := GetConsensusParams(ctx, c.app)
 		// if the consensus params are not found, we set the app version to 0
 		// in the case that the start version is > 0
 		if cp == nil || errors.Is(err, collections.ErrNotFound) {
@@ -415,7 +415,7 @@ func (c *consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req)
+	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req, c.chainID)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +461,7 @@ func (c *consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req)
+	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req, c.chainID)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{
@@ -561,7 +561,7 @@ func (c *consensus[T]) FinalizeBlock(
 
 	c.lastCommittedHeight.Store(req.Height)
 
-	cp, err := c.GetConsensusParams(ctx) // we get the consensus params from the latest state because we committed state above
+	cp, err := GetConsensusParams(ctx, c.app) // we get the consensus params from the latest state because we committed state above
 	if err != nil {
 		return nil, err
 	}
@@ -628,7 +628,7 @@ func (c *consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (
 
 	c.snapshotManager.SnapshotIfApplicable(lastCommittedHeight)
 
-	cp, err := c.GetConsensusParams(ctx)
+	cp, err := GetConsensusParams(ctx, c.app)
 	if err != nil {
 		return nil, err
 	}
@@ -647,7 +647,7 @@ func (c *consensus[T]) VerifyVoteExtension(
 ) (*abciproto.VerifyVoteExtensionResponse, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
-	cp, err := c.GetConsensusParams(ctx)
+	cp, err := GetConsensusParams(ctx, c.app)
 	if err != nil {
 		return nil, err
 	}
@@ -686,7 +686,7 @@ func (c *consensus[T]) VerifyVoteExtension(
 func (c *consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVoteRequest) (*abciproto.ExtendVoteResponse, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
-	cp, err := c.GetConsensusParams(ctx)
+	cp, err := GetConsensusParams(ctx, c.app)
 	if err != nil {
 		return nil, err
 	}

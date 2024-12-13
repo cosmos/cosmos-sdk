@@ -163,7 +163,7 @@ func AuthModule() ModuleOption {
 				Bech32Prefix: "cosmos",
 				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
 					{Account: "fee_collector"},
-					{Account: testutil.DistributionModuleName},
+					{Account: testutil.DistributionModuleName, Permissions: []string{"minter"}},
 					{Account: testutil.MintModuleName, Permissions: []string{"minter"}},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", testutil.StakingModuleName}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", testutil.StakingModuleName}},

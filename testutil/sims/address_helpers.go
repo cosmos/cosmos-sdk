@@ -21,7 +21,7 @@ const mintModuleName = "mint"
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
 // AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
-func AddTestAddrsFromPubKeys(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
+func AddTestAddrsFromPubKeys(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx context.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	if err != nil {
 		panic(err)
@@ -40,7 +40,7 @@ func AddTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx contex
 }
 
 // AddTestAddrsIncremental constructs and returns accNum amount of accounts with an initial balance of accAmt in random order
-func AddTestAddrsIncremental(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx context.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateIncrementalAccounts)
 }
 

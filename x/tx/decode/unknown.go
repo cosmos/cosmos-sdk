@@ -33,7 +33,8 @@ func RejectUnknownFieldsStrict(bz []byte, msg protoreflect.MessageDescriptor, re
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
 // An AnyResolver must be provided for traversing inside google.protobuf.Any's.
 func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUnknownNonCriticals bool, resolver protodesc.Resolver) (hasUnknownNonCriticals bool, err error) {
-	return doRejectUnknownFields(bz, desc, allowUnknownNonCriticals, resolver, 1_000)
+	// recursion limit with same default as https://github.com/protocolbuffers/protobuf-go/blob/v1.35.2/encoding/protowire/wire.go#L28
+	return doRejectUnknownFields(bz, desc, allowUnknownNonCriticals, resolver, 10_000)
 }
 
 func doRejectUnknownFields(

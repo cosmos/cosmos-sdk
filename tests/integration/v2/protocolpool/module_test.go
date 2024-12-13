@@ -59,8 +59,6 @@ type fixture struct {
 // TestWithdrawAnytime tests if withdrawing funds many times vs withdrawing funds once
 // yield the same end balance.
 func TestWithdrawAnytime(t *testing.T) {
-	t.Helper()
-
 	res := fixture{}
 
 	startupCfg := integration.DefaultStartUpConfig(t)
@@ -128,8 +126,6 @@ func TestWithdrawAnytime(t *testing.T) {
 // TestExpireInTheMiddle tests if a continuous fund that expires without anyone
 // calling the withdraw function, the funds are still distributed correctly.
 func TestExpireInTheMiddle(t *testing.T) {
-	t.Helper()
-
 	res := fixture{}
 
 	startupCfg := integration.DefaultStartUpConfig(t)

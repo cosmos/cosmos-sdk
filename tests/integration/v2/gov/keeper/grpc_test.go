@@ -1,7 +1,6 @@
-package keeper_test
+package keeper
 
 import (
-	gocontext "context"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 	t.Parallel()
 
 	f := initFixture(t)
-	ctx, queryClient := f.ctx, f.legacyQueryClient
+	ctx, queryServer := f.ctx, f.legacyQueryServer
 	addrs, _ := createValidators(t, f, []int64{5, 5, 5})
 
 	var (
@@ -62,7 +61,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 		t.Run(fmt.Sprintf("Case %s", testCase.msg), func(t *testing.T) {
 			testCase.malleate()
 
-			tally, err := queryClient.TallyResult(gocontext.Background(), req)
+			tally, err := queryServer.TallyResult(f.ctx, req)
 
 			if testCase.expPass {
 				assert.NilError(t, err)

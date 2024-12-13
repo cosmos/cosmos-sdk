@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/router"
@@ -214,6 +215,7 @@ func ProvideEnvironment(
 	kvService store.KVStoreService,
 	memKvService store.MemoryStoreService,
 	headerService header.Service,
+	gasService gas.Service,
 	eventService event.Service,
 	branchService branch.Service,
 	routerBuilder RouterServiceBuilder,
@@ -222,7 +224,7 @@ func ProvideEnvironment(
 		Logger:             logger,
 		BranchService:      branchService,
 		EventService:       eventService,
-		GasService:         stf.NewGasMeterService(),
+		GasService:         gasService,
 		HeaderService:      headerService,
 		QueryRouterService: routerBuilder.BuildQueryRouter(),
 		MsgRouterService:   routerBuilder.BuildMsgRouter([]byte(key.Name())),
@@ -296,6 +298,7 @@ func DefaultServiceBindings() depinject.Config {
 		eventService                = services.NewGenesisEventService(stf.NewEventService())
 		storeBuilder                = root.NewBuilder()
 		branchService               = stf.BranchService{}
+		gasService                  = stf.NewGasMeterService()
 	)
 	return depinject.Supply(
 		kvServiceFactory,
@@ -305,5 +308,6 @@ func DefaultServiceBindings() depinject.Config {
 		eventService,
 		storeBuilder,
 		branchService,
+		gasService,
 	)
 }

@@ -1,7 +1,6 @@
 package protocolpool
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -51,8 +50,6 @@ var moduleConfigs = []configurator.ModuleOption{
 }
 
 type fixture struct {
-	ctx context.Context
-
 	accountKeeper      authkeeper.AccountKeeper
 	protocolpoolKeeper protocolpoolkeeper.Keeper
 	bankKeeper         bankkeeper.Keeper
@@ -95,9 +92,12 @@ func TestWithdrawAnytime(t *testing.T) {
 
 	// increase the community pool by a bunch
 	for i := 0; i < 30; i++ {
+		_, state := app.Deliver(t, ctx, nil)
+		_, err = app.Commit(state)
+		require.NoError(t, err)
+
 		headerInfo := integration.HeaderInfoFromContext(ctx)
 		headerInfo.Time = headerInfo.Time.Add(time.Minute)
-		headerInfo.Height++
 		ctx = integration.SetHeaderInfo(ctx, headerInfo)
 
 		// withdraw funds randomly, but it must always land on the same end balance
@@ -140,21 +140,21 @@ func TestExpireInTheMiddle(t *testing.T) {
 		startupCfg, &res.accountKeeper, &res.protocolpoolKeeper, &res.bankKeeper, &res.stakingKeeper)
 	require.NoError(t, err)
 
-	res.ctx = app.StateLatestContext(t)
+	ctx := app.StateLatestContext(t)
 
-	acc := res.accountKeeper.GetAccount(res.ctx, authtypes.NewModuleAddress(types.ModuleName))
+	acc := res.accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	require.NotNil(t, acc)
 
-	testAddrs := simtestutil.AddTestAddrs(res.bankKeeper, res.stakingKeeper, res.ctx, 5, math.NewInt(1))
+	testAddrs := simtestutil.AddTestAddrs(res.bankKeeper, res.stakingKeeper, ctx, 5, math.NewInt(1))
 	testAddr0Str, err := res.accountKeeper.AddressCodec().BytesToString(testAddrs[0])
 	require.NoError(t, err)
 
 	msgServer := protocolpoolkeeper.NewMsgServerImpl(res.protocolpoolKeeper)
 
-	headerInfo := integration.HeaderInfoFromContext(res.ctx)
+	headerInfo := integration.HeaderInfoFromContext(ctx)
 	expirationTime := headerInfo.Time.Add(time.Minute * 2)
 	_, err = msgServer.CreateContinuousFund(
-		res.ctx,
+		ctx,
 		&protocolpooltypes.MsgCreateContinuousFund{
 			Authority:  res.protocolpoolKeeper.GetAuthority(),
 			Recipient:  testAddr0Str,
@@ -166,18 +166,21 @@ func TestExpireInTheMiddle(t *testing.T) {
 
 	// increase the community pool by a bunch
 	for i := 0; i < 30; i++ {
-		headerInfo := integration.HeaderInfoFromContext(res.ctx)
+		_, state := app.Deliver(t, ctx, nil)
+		_, err = app.Commit(state)
+		require.NoError(t, err)
+
+		headerInfo := integration.HeaderInfoFromContext(ctx)
 		headerInfo.Time = headerInfo.Time.Add(time.Minute)
-		headerInfo.Height++
-		res.ctx = integration.SetHeaderInfo(res.ctx, headerInfo)
+		ctx = integration.SetHeaderInfo(ctx, headerInfo)
 		require.NoError(t, err)
 	}
 
-	_, err = msgServer.WithdrawContinuousFund(res.ctx, &protocolpooltypes.MsgWithdrawContinuousFund{
+	_, err = msgServer.WithdrawContinuousFund(ctx, &protocolpooltypes.MsgWithdrawContinuousFund{
 		RecipientAddress: testAddr0Str,
 	})
 	require.NoError(t, err)
 
-	endBalance := res.bankKeeper.GetBalance(res.ctx, testAddrs[0], sdk.DefaultBondDenom)
+	endBalance := res.bankKeeper.GetBalance(ctx, testAddrs[0], sdk.DefaultBondDenom)
 	require.Equal(t, "237661stake", endBalance.String())
 }

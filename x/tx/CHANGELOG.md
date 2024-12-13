@@ -33,6 +33,12 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.3) - 2024-12-12
+
+### Bug Fixes
+
+* [#22852](https://github.com/cosmos/cosmos-sdk/pull/22852) Fallback to injected resolver for placeholder descriptors.
+
 ## [v1.0.0-alpha.2](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.2) - 2024-11-01
 
 * [#22311](https://github.com/cosmos/cosmos-sdk/pull/22311) Fix add feePayer as signer.

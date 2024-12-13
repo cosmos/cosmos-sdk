@@ -199,7 +199,7 @@ func TestRotateConsPubKey(t *testing.T) {
 	err = stakingKeeper.Params.Set(ctx, params)
 	assert.NilError(t, err)
 
-	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 100))
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 1000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 
 	// create 5 validators

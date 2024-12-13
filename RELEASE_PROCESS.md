@@ -246,7 +246,9 @@ The Cosmos SDK uses a monorepo structure with multiple Go modules. Some componen
 
 Here's the strategy for managing this structure:
 
-All modules that do not depend on the Cosmos SDK and tagged from main in a release branch must be removed from the release branch.
+All modules that do not depend on the Cosmos SDK and tagged from main in a release branch **must be removed from the release branch**.
+
+There is two exception to this rule, due to the stabilization of core v1: `cosmossdk.io/x/tx` and `cosmossdk.io/store` are still tagged from the `release/v0.50.x` branch for `v0.50.x` releases.
 
 ### Rationale
 

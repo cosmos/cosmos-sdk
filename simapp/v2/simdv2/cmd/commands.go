@@ -119,7 +119,7 @@ func InitRootCmd[T transaction.Tx](
 			&client.DefaultTxDecoder[T]{TxConfig: deps.TxConfig},
 			simApp.App.QueryHandlers(),
 			simApp.App.SchemaDecoderResolver(),
-			initCometOptions[T](simApp),
+			initCometOptions[T](),
 			deps.GlobalConfig,
 		)
 		if err != nil {

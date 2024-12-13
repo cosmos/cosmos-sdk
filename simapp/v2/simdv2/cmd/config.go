@@ -15,7 +15,6 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/cometbft/handlers"
-	"cosmossdk.io/simapp/v2"
 	staking "cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -100,10 +99,10 @@ func initCometConfig() cometbft.CfgOption {
 	return cometbft.OverwriteDefaultConfigTomlConfig(cfg)
 }
 
-func initCometOptions[T transaction.Tx](simapp *simapp.SimApp[T]) cometbft.ServerOptions[T] {
+func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
 	serverOptions := cometbft.DefaultServerOptions[T]()
 	serverOptions.PrepareProposalHandler = CustomPrepareProposal[T]()
-	serverOptions.ProcessProposalHandler = CustomProcessProposalHandler[T](simapp)
+	serverOptions.ProcessProposalHandler = CustomProcessProposalHandler[T]()
 	serverOptions.ExtendVoteHandler = CustomExtendVoteHandler[T]()
 
 	// overwrite app mempool, using max-txs option
@@ -154,7 +153,7 @@ func CustomPrepareProposal[T transaction.Tx]() handlers.PrepareHandler[T] {
 	}
 }
 
-func CustomProcessProposalHandler[T transaction.Tx](simapp *simapp.SimApp[T]) handlers.ProcessHandler[T] {
+func CustomProcessProposalHandler[T transaction.Tx]() handlers.ProcessHandler[T] {
 	return func(ctx context.Context, am handlers.AppManager[T], c transaction.Codec[T], req *v1.ProcessProposalRequest, chainID string) error {
 		// Get all vote extensions from the first tx
 

@@ -178,6 +178,18 @@ func AuthModule() ModuleOption {
 	}
 }
 
+func AuthModuleWithMaccPerms(maccPerms []*authmodulev1.ModuleAccountPermission) ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.AuthModuleName] = &appv1alpha1.ModuleConfig{
+			Name: testutil.AuthModuleName,
+			Config: appconfig.WrapAny(&authmodulev1.Module{
+				Bech32Prefix:             "cosmos",
+				ModuleAccountPermissions: maccPerms,
+			}),
+		}
+	}
+}
+
 func ParamsModule() ModuleOption {
 	return func(config *Config) {
 		config.ModuleConfigs[testutil.ParamsModuleName] = &appv1alpha1.ModuleConfig{

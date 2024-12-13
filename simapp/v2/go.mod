@@ -3,7 +3,7 @@ module cosmossdk.io/simapp/v2
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.0 // main
+	cosmossdk.io/api v0.8.0-rc.2 // main
 	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0 // indirect; main
@@ -63,7 +63,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241212104257-e6948eeda877 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
-	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect; main
+	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -255,8 +255,6 @@ require cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.8.0-rc.2 // main
 	cosmossdk.io/client/v2 => ../../client/v2
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main

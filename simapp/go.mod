@@ -3,7 +3,7 @@ module cosmossdk.io/simapp
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.0 // main
+	cosmossdk.io/api v0.8.0-rc.2 // main
 	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7
 	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
@@ -33,7 +33,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/tx v1.0.0-alpha.2 // main
+	cosmossdk.io/x/tx v1.0.0-alpha.3 // main
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2
@@ -248,8 +248,6 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.8.0-rc.2 // main
 	cosmossdk.io/client/v2 => ../client/v2
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main

@@ -3,7 +3,7 @@ module cosmossdk.io/x/upgrade
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.0
+	cosmossdk.io/api v0.8.0-rc.2 // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
 	cosmossdk.io/depinject v1.1.0
@@ -45,7 +45,7 @@ require (
 	cosmossdk.io/schema v0.4.0 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect; main
+	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -177,7 +177,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/otel/trace v1.27.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
@@ -209,8 +209,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
-	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
+	cosmossdk.io/client/v2 => ../../client/v2
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/bank => ../bank

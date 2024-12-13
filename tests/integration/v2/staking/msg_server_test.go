@@ -219,16 +219,15 @@ func TestRotateConsPubKey(t *testing.T) {
 	_, err = stakingKeeper.EndBlocker(ctx)
 	assert.NilError(t, err)
 
-	_, state := f.app.Deliver(t, ctx, nil)
-	_, err = f.app.Commit(state)
-	assert.NilError(t, err)
-
 	params, err = stakingKeeper.Params.Get(ctx)
 	assert.NilError(t, err)
 
 	validators, err := stakingKeeper.GetAllValidators(ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, len(validators) >= 5, true)
+
+	// ignore genesis validator
+	validators = validators[1:]
 
 	testCases := []struct {
 		name           string

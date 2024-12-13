@@ -1,4 +1,4 @@
-package keeper_test
+package keeper
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
+	_ "cosmossdk.io/x/gov"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	stakingtypes "cosmossdk.io/x/staking/types"
 

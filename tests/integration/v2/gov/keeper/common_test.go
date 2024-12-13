@@ -1,4 +1,4 @@
-package keeper_test
+package keeper
 
 import (
 	"testing"
@@ -59,7 +59,7 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	assert.NilError(t, f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val3))
 
 	for _, addr := range addrs {
-		f.accountKeeper.SetAccount(f.ctx, f.accountKeeper.NewAccountWithAddress(f.ctx, addr))
+		f.authKeeper.SetAccount(f.ctx, f.authKeeper.NewAccountWithAddress(f.ctx, addr))
 	}
 
 	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[0]), stakingtypes.Unbonded, val1, true)

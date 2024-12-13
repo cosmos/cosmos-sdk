@@ -1,6 +1,7 @@
-package gov_test
+package gov
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -16,20 +17,21 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
-	suite := createTestSuite(t)
-	ctx := suite.app.BaseApp.NewContext(false)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
+	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
-	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
 
 	// manually set proposal in store
-	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
+	startTime, endTime := time.Now().Add(-4*time.Hour), time.Now()
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
 	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addr0Str, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
@@ -50,13 +52,14 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 }
 
 func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
-	suite := createTestSuite(t)
-	ctx := suite.app.BaseApp.NewContext(false)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
+	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
-	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
 	// manually set proposal in store
-	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
+	header := integration.HeaderInfoFromContext(ctx)
+	startTime, endTime := time.Now().Add(-4*time.Hour), header.Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
 	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addr0Str, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
@@ -80,9 +83,8 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 }
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	suite := createTestSuite(t)
-	app := suite.app
-	ctx := app.BaseApp.NewContext(false)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
+	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
@@ -102,23 +104,22 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	newHeader := ctx.HeaderInfo()
-	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithHeaderInfo(newHeader)
+	newHeader := integration.HeaderInfoFromContext(ctx)
+	newHeader.Time = newHeader.Time.Add(time.Duration(1) * time.Second)
+	ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader = ctx.HeaderInfo()
-	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod)
-	ctx = ctx.WithHeaderInfo(newHeader)
+	newHeader = integration.HeaderInfoFromContext(ctx)
+	newHeader.Time = newHeader.Time.Add(*params.MaxDepositPeriod)
+	ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	suite := createTestSuite(t)
-	app := suite.app
-	ctx := app.BaseApp.NewContext(false)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
+	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
@@ -137,9 +138,9 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	newHeader := ctx.HeaderInfo()
-	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(2) * time.Second)
-	ctx = ctx.WithHeaderInfo(newHeader)
+	newHeader := integration.HeaderInfoFromContext(ctx)
+	newHeader.Time = newHeader.Time.Add(time.Duration(2) * time.Second)
+	ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 	newProposalMsg2, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{mkTestLegacyContent(t)},
@@ -156,23 +157,22 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	newHeader = ctx.HeaderInfo()
+	newHeader = integration.HeaderInfoFromContext(ctx)
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
-	ctx = ctx.WithHeaderInfo(newHeader)
+	newHeader.Time = newHeader.Time.Add(*params.MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
+	ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 	require.NoError(t, suite.GovKeeper.EndBlocker(ctx))
 
-	newHeader = ctx.HeaderInfo()
-	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(5) * time.Second)
-	ctx = ctx.WithHeaderInfo(newHeader)
+	newHeader = integration.HeaderInfoFromContext(ctx)
+	newHeader.Time = newHeader.Time.Add(time.Duration(5) * time.Second)
+	ctx = integration.SetHeaderInfo(ctx, newHeader)
 	require.NoError(t, suite.GovKeeper.EndBlocker(ctx))
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	suite := createTestSuite(t)
-	app := suite.app
-	ctx := app.BaseApp.NewContext(false)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
+	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
@@ -193,11 +193,11 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	proposalID := res.ProposalId
 
-	newHeader := ctx.HeaderInfo()
-	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithHeaderInfo(newHeader)
+	newHeader := integration.HeaderInfoFromContext(ctx)
+	newHeader.Time = newHeader.Time.Add(time.Duration(1) * time.Second)
+	ctx = integration.SetHeaderInfo(ctx, newHeader)
 
-	addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+	addr1Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[1])
 	require.NoError(t, err)
 	newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)})
 
@@ -207,9 +207,8 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestProposalDepositRefundFailEndBlocker(t *testing.T) {
-	suite := createTestSuite(t)
-	app := suite.app
-	ctx := app.BaseApp.NewContext(false)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
+	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
@@ -246,15 +245,15 @@ func TestProposalDepositRefundFailEndBlocker(t *testing.T) {
 	require.NoError(t, err)
 
 	// fast forward to the end of the voting period
-	newHeader := ctx.HeaderInfo()
+	newHeader := integration.HeaderInfoFromContext(ctx)
 	newHeader.Time = proposal.VotingEndTime.Add(time.Duration(100) * time.Second)
-	ctx = ctx.WithHeaderInfo(newHeader)
+	ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err) // no error, means does not halt the chain
 
-	events := ctx.EventManager().Events()
-	attr, ok := events.GetAttributes(types.AttributeKeyProposalDepositError)
+	events := integration.EventsFromContext(ctx)
+	attr, ok := integration.GetAttributes(events, types.AttributeKeyProposalDepositError)
 	require.True(t, ok)
 	require.Contains(t, attr[0].Value, "failed to refund or burn deposits")
 }
@@ -275,9 +274,8 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			suite := createTestSuite(t)
-			app := suite.app
-			ctx := app.BaseApp.NewContext(false)
+			suite := createTestSuite(t, integration.Genesis_COMMIT)
+			ctx := suite.ctx
 			depositMultiplier := getDepositMultiplier(tc.proposalType)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
@@ -294,11 +292,11 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			proposalID := res.ProposalId
 
-			newHeader := ctx.HeaderInfo()
-			newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
-			ctx = ctx.WithHeaderInfo(newHeader)
+			newHeader := integration.HeaderInfoFromContext(ctx)
+			newHeader.Time = newHeader.Time.Add(time.Duration(1) * time.Second)
+			ctx = integration.SetHeaderInfo(ctx, newHeader)
 
-			addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+			addr1Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[1])
 			require.NoError(t, err)
 			newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, proposalCoins)
 
@@ -312,9 +310,9 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 				votingPeriod = params.ExpeditedVotingPeriod
 			}
 
-			newHeader = ctx.HeaderInfo()
-			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*votingPeriod)
-			ctx = ctx.WithHeaderInfo(newHeader)
+			newHeader = integration.HeaderInfoFromContext(ctx)
+			newHeader.Time = newHeader.Time.Add(*params.MaxDepositPeriod).Add(*votingPeriod)
+			ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 			proposal, err := suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.NoError(t, err)
@@ -354,9 +352,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			suite := createTestSuite(t)
-			app := suite.app
-			ctx := app.BaseApp.NewContext(false)
+			suite := createTestSuite(t, integration.Genesis_COMMIT)
+			ctx := suite.ctx
 			depositMultiplier := getDepositMultiplier(tc.proposalType)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens.Mul(math.NewInt(depositMultiplier)))
 
@@ -366,8 +363,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
-			acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
-			suite.AccountKeeper.SetAccount(ctx, acc)
+			acc := suite.AuthKeeper.NewAccountWithAddress(ctx, addrs[0])
+			suite.AuthKeeper.SetAccount(ctx, acc)
 
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err := suite.StakingKeeper.EndBlocker(ctx)
@@ -380,7 +377,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NoError(t, err)
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10*depositMultiplier))}
-			addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+			addr0Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[0])
 			require.NoError(t, err)
 			newDepositMsg := v1.NewMsgDeposit(addr0Str, proposal.Id, proposalCoins)
 
@@ -398,10 +395,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 			require.NoError(t, err)
 
-			newHeader := ctx.HeaderInfo()
+			newHeader := integration.HeaderInfoFromContext(ctx)
 			params, _ := suite.GovKeeper.Params.Get(ctx)
-			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
-			ctx = ctx.WithHeaderInfo(newHeader)
+			newHeader.Time = newHeader.Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
+			ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
@@ -413,9 +410,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
-	suite := createTestSuite(t)
-	app := suite.app
-	ctx := app.BaseApp.NewContext(false)
+	suite := createTestSuite(t, integration.Genesis_COMMIT)
+	ctx := suite.ctx
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 1, valTokens)
 
 	SortAddresses(addrs)
@@ -431,8 +427,8 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	toAddrStr, err := ac.BytesToString(addrs[0])
 	require.NoError(t, err)
 
-	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
-	suite.AccountKeeper.SetAccount(ctx, acc)
+	acc := suite.AuthKeeper.NewAccountWithAddress(ctx, addrs[0])
+	suite.AuthKeeper.SetAccount(ctx, acc)
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	_, err = suite.StakingKeeper.EndBlocker(ctx)
@@ -442,7 +438,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
-	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
 	newDepositMsg := v1.NewMsgDeposit(addr0Str, proposal.Id, proposalCoins)
 
@@ -455,16 +451,16 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	params, _ := suite.GovKeeper.Params.Get(ctx)
-	newHeader := ctx.HeaderInfo()
-	newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
-	ctx = ctx.WithHeaderInfo(newHeader)
+	newHeader := integration.HeaderInfoFromContext(ctx)
+	newHeader.Time = newHeader.Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
+	ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 	// validate that the proposal fails/has been rejected
 	err = suite.GovKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 	// check proposal events
-	events := ctx.EventManager().Events()
-	attr, eventOk := events.GetAttributes(types.AttributeKeyProposalLog)
+	events := integration.EventsFromContext(ctx)
+	attr, eventOk := integration.GetAttributes(events, types.AttributeKeyProposalLog)
 	require.True(t, eventOk)
 	require.Contains(t, attr[0].Value, "failed on execution")
 
@@ -499,9 +495,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			suite := createTestSuite(t)
-			app := suite.app
-			ctx := app.BaseApp.NewContext(false)
+			suite := createTestSuite(t, integration.Genesis_COMMIT)
+			ctx := suite.ctx
 			depositMultiplier := getDepositMultiplier(v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
 			params, err := suite.GovKeeper.Params.Get(ctx)
@@ -514,8 +509,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 
-			acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addrs[0])
-			suite.AccountKeeper.SetAccount(ctx, acc)
+			acc := suite.AuthKeeper.NewAccountWithAddress(ctx, addrs[0])
+			suite.AuthKeeper.SetAccount(ctx, acc)
 			// Create a validator so that able to vote on proposal.
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err = suite.StakingKeeper.EndBlocker(ctx)
@@ -538,11 +533,11 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 			proposalID := res.ProposalId
 
-			newHeader := ctx.HeaderInfo()
-			newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
-			ctx = ctx.WithHeaderInfo(newHeader)
+			newHeader := integration.HeaderInfoFromContext(ctx)
+			newHeader.Time = newHeader.Time.Add(time.Duration(1) * time.Second)
+			ctx = integration.SetHeaderInfo(ctx, newHeader)
 
-			addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+			addr1Str, err := suite.AuthKeeper.AddressCodec().BytesToString(addrs[1])
 			require.NoError(t, err)
 			newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, proposalCoins)
 
@@ -550,9 +545,9 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, res1)
 
-			newHeader = ctx.HeaderInfo()
-			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.ExpeditedVotingPeriod)
-			ctx = ctx.WithHeaderInfo(newHeader)
+			newHeader = integration.HeaderInfoFromContext(ctx)
+			newHeader.Time = newHeader.Time.Add(*params.MaxDepositPeriod).Add(*params.ExpeditedVotingPeriod)
+			ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 			proposal, err := suite.GovKeeper.Proposals.Get(ctx, res.ProposalId)
 			require.Nil(t, err)
@@ -604,8 +599,9 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.Equal(t, expectedIntermediateMofuleAccCoings, intermediateModuleAccCoins)
 
 			// block header time at the voting period
-			newHeader.Time = ctx.HeaderInfo().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
-			ctx = ctx.WithHeaderInfo(newHeader)
+			newHeader = integration.HeaderInfoFromContext(ctx)
+			newHeader.Time = newHeader.Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
+			ctx = integration.SetHeaderInfo(ctx, newHeader)
 
 			if tc.regularEventuallyPassing {
 				// Validator votes YES, letting the converted regular proposal pass.
@@ -646,7 +642,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 	}
 }
 
-func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
+func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx context.Context, addrs []sdk.ValAddress, powerAmt []int64) {
 	t.Helper()
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 

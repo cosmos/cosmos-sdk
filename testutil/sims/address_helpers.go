@@ -2,6 +2,7 @@ package sims
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -34,7 +35,7 @@ func AddTestAddrsFromPubKeys(bankKeeper BankKeeper, stakingKeeper StakingKeeper,
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+func AddTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx context.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateRandomAccounts)
 }
 
@@ -43,7 +44,7 @@ func AddTestAddrsIncremental(bankKeeper BankKeeper, stakingKeeper StakingKeeper,
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateIncrementalAccounts)
 }
 
-func addTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx context.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	if err != nil {
@@ -58,7 +59,7 @@ func addTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Co
 	return testAddrs
 }
 
-func initAccountWithCoins(bankKeeper BankKeeper, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func initAccountWithCoins(bankKeeper BankKeeper, ctx context.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	if err := bankKeeper.MintCoins(ctx, mintModuleName, coins); err != nil {
 		panic(err)
 	}

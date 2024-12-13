@@ -199,7 +199,7 @@ func TestRotateConsPubKey(t *testing.T) {
 	err = stakingKeeper.Params.Set(ctx, params)
 	assert.NilError(t, err)
 
-	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 1000))
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, stakingKeeper.TokensFromConsensusPower(ctx, 100))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 
 	// create 5 validators
@@ -217,6 +217,10 @@ func TestRotateConsPubKey(t *testing.T) {
 	// call endblocker to update the validator state
 	ctx = integration.SetHeaderInfo(ctx, header.Info{Height: int64(f.app.LastBlockHeight()) + 1})
 	_, err = stakingKeeper.EndBlocker(ctx)
+	assert.NilError(t, err)
+
+	_, state := f.app.Deliver(t, ctx, nil)
+	_, err = f.app.Commit(state)
 	assert.NilError(t, err)
 
 	params, err = stakingKeeper.Params.Get(ctx)

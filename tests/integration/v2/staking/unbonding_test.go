@@ -71,7 +71,7 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 	validator1, issuedShares1 := validator1.AddTokensFromDel(valTokens)
 	assert.DeepEqual(t, valTokens, issuedShares1.RoundInt())
 
-	validator1 = stakingkeeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validator1, true)
+	validator1, _ = stakingkeeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validator1, true)
 	assert.Assert(math.IntEq(t, valTokens, validator1.BondedTokens()))
 	assert.Assert(t, validator1.IsBonded())
 
@@ -84,7 +84,7 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 	validator2, issuedShares2 := validator2.AddTokensFromDel(valTokens)
 	assert.DeepEqual(t, valTokens, issuedShares2.RoundInt())
 
-	validator2 = stakingkeeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validator2, true)
+	validator2, _ = stakingkeeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validator2, true)
 	assert.Equal(t, types.Bonded, validator2.Status)
 	assert.Assert(t, validator2.IsBonded())
 

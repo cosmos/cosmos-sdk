@@ -49,7 +49,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	validator, issuedShares := validator.AddTokensFromDel(startTokens)
 	assert.DeepEqual(t, startTokens, issuedShares.RoundInt())
 
-	validator = keeper.TestingUpdateValidator(f.stakingKeeper, ctx, validator, true)
+	validator, _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, ctx, validator, true)
 	assert.Assert(math.IntEq(t, startTokens, validator.BondedTokens()))
 	assert.Assert(t, validator.IsBonded())
 

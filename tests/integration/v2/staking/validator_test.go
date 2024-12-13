@@ -97,7 +97,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 		delTokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, int64((i+1)*10))
 		val, _ = val.AddTokensFromDel(delTokens)
 
-		val = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, val, true)
+		val, _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, val, true)
 		validators[i] = val
 	}
 
@@ -108,7 +108,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.DeleteValidatorByPowerIndex(f.ctx, nextCliffVal))
 	shares := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 21)
 	nextCliffVal, _ = nextCliffVal.RemoveDelShares(math.LegacyNewDecFromInt(shares))
-	_ = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, nextCliffVal, true)
+	_, _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, nextCliffVal, true)
 
 	expectedValStatus := map[int]sdk.BondStatus{
 		9: sdk.Bonded, 8: sdk.Bonded, 7: sdk.Bonded, 5: sdk.Bonded, 4: sdk.Bonded,
@@ -148,7 +148,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	assert.Equal(t, types.Unbonded, validator.Status)
 	assert.DeepEqual(t, valTokens, validator.Tokens)
 	assert.NilError(t, f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator))
-	validator = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validator, true)
+	validator, _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validator, true)
 	assert.DeepEqual(t, valTokens, validator.Tokens)
 
 	// slash the validator by 100%
@@ -180,7 +180,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 		validators[i].Status = types.Bonded
 		validators[i].Tokens = amt
 		validators[i].DelegatorShares = math.LegacyNewDecFromInt(amt)
-		keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[i], true)
+		keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[i], true)
 	}
 
 	// first make sure everything made it in to the gotValidator group
@@ -200,7 +200,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 
 	// test a basic increase in voting power
 	validators[3].Tokens = math.NewInt(500).Mul(f.stakingKeeper.PowerReduction(f.ctx))
-	keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[3], true)
+	keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[3], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, len(resValidators), n)
@@ -208,7 +208,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 
 	// test a decrease in voting power
 	validators[3].Tokens = math.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.ctx))
-	keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[3], true)
+	keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[3], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, len(resValidators), n)
@@ -218,7 +218,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	// test equal voting power, different age
 	validators[3].Tokens = math.NewInt(200).Mul(f.stakingKeeper.PowerReduction(f.ctx))
 	f.ctx = integration.SetHeaderInfo(f.ctx, header.Info{Height: 10})
-	keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[3], true)
+	keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[3], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, len(resValidators), n)
@@ -227,7 +227,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 
 	// no change in voting power - no change in sort
 	f.ctx = integration.SetHeaderInfo(f.ctx, header.Info{Height: 20})
-	keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[4], true)
+	keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[4], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, len(resValidators), n)
@@ -237,12 +237,12 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	// change in voting power of both validators, both still in v-set, no age change
 	validators[3].Tokens = math.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.ctx))
 	validators[4].Tokens = math.NewInt(300).Mul(f.stakingKeeper.PowerReduction(f.ctx))
-	keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[3], true)
+	keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[3], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, len(resValidators), n)
 	f.ctx = integration.SetHeaderInfo(f.ctx, header.Info{Height: 30})
-	keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[4], true)
+	keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[4], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, len(resValidators), n, "%v", resValidators)
@@ -285,7 +285,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 		validators[i].DelegatorShares = math.LegacyNewDecFromInt(amt)
 		validators[i].Status = types.Bonded
 		validators[i].Tokens = amt
-		keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[i], true)
+		keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[i], true)
 	}
 
 	val0, found := f.stakingKeeper.GetValidator(f.ctx, sdk.ValAddress(addrs[0]))
@@ -338,7 +338,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 		notBondedPool := f.stakingKeeper.GetNotBondedPool(f.ctx)
 		assert.NilError(t, banktestutil.FundModuleAccount(f.ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, tokens))))
 		f.accountKeeper.SetModuleAccount(f.ctx, notBondedPool)
-		validators[i] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[i], true)
+		validators[i], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[i], true)
 	}
 
 	// ensure that the first two bonded validators are the largest validators
@@ -362,7 +362,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	// test that the two largest validators are
 	//   a) validator 0 with 500 tokens
 	//   b) validator 2 with 400 tokens (delegated before validator 3)
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], true)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, nMax, uint32(len(resValidators)))
@@ -394,7 +394,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	assert.NilError(t, banktestutil.FundModuleAccount(f.ctx, f.bankKeeper, notBondedPool.GetName(), newTokens))
 	f.accountKeeper.SetModuleAccount(f.ctx, notBondedPool)
 
-	validators[3] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[3], true)
+	validators[3], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[3], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, nMax, uint32(len(resValidators)))
@@ -410,7 +410,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	assert.NilError(t, banktestutil.FundModuleAccount(f.ctx, f.bankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, rmTokens))))
 	f.accountKeeper.SetModuleAccount(f.ctx, bondedPool)
 
-	validators[3] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[3], true)
+	validators[3], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[3], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, nMax, uint32(len(resValidators)))
@@ -425,7 +425,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	assert.NilError(t, banktestutil.FundModuleAccount(f.ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, math.NewInt(200)))))
 	f.accountKeeper.SetModuleAccount(f.ctx, notBondedPool)
 
-	validators[3] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[3], true)
+	validators[3], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[3], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, nMax, uint32(len(resValidators)))
@@ -456,13 +456,13 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[1], _ = validators[1].AddTokensFromDel(tokens1)
 	validators[2], _ = validators[2].AddTokensFromDel(tokens2)
 
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], true)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], true)
 
 	////////////////////////////////////////
 	// If two validators both increase to the same voting power in the same block,
 	// the one with the first transaction should become bonded
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], true)
-	validators[2] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[2], true)
+	validators[1], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], true)
+	validators[2], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[2], true)
 
 	resValidators, err := f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
@@ -475,11 +475,11 @@ func TestValidatorBondHeight(t *testing.T) {
 	delTokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 50)
 	validators[1], _ = validators[1].AddTokensFromDel(delTokens)
 	validators[2], _ = validators[2].AddTokensFromDel(delTokens)
-	validators[2] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[2], true)
+	validators[2], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[2], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, params.MaxValidators, uint32(len(resValidators)))
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], true)
+	validators[1], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], true)
 	assert.Assert(ValEq(t, validators[0], resValidators[0]))
 	assert.Assert(ValEq(t, validators[2], resValidators[1]))
 }
@@ -499,7 +499,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 		validators[i] = testutil.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
 		tokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, power)
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
-		keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[i], true)
+		keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[i], true)
 	}
 	for i := range powers {
 		valbz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[i].GetOperator())
@@ -523,7 +523,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 
 	tokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 600)
 	validators[0], _ = validators[0].AddTokensFromDel(tokens)
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], true)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], true)
 	resValidators, err = f.stakingKeeper.GetBondedValidatorsByPower(f.ctx)
 	assert.NilError(t, err)
 	assert.Equal(t, max, len(resValidators))
@@ -576,14 +576,14 @@ func TestApplyAndReturnValidatorSetUpdatesIdentical(t *testing.T) {
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 
 	}
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], false)
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], false)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], false)
+	validators[1], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], false)
 	applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 2)
 
 	// test identical,
 	//  tendermintUpdate set: {} -> {}
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], false)
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], false)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], false)
+	validators[1], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], false)
 	applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 0)
 }
 
@@ -599,15 +599,15 @@ func TestApplyAndReturnValidatorSetUpdatesSingleValueChange(t *testing.T) {
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 
 	}
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], false)
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], false)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], false)
+	validators[1], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], false)
 	applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 2)
 
 	// test single value change
 	//  tendermintUpdate set: {} -> {c1'}
 	validators[0].Status = types.Bonded
 	validators[0].Tokens = f.stakingKeeper.TokensFromConsensusPower(f.ctx, 600)
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], false)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], false)
 
 	updates := applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 1)
 	assert.DeepEqual(t, validators[0].ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.ctx)), updates[0])
@@ -618,8 +618,8 @@ func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
 	// TODO: use it in other places
 	f, _, _, validators := initValidators(t, 1000, 20, powers)
 
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], false)
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], false)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], false)
+	validators[1], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], false)
 	applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 2)
 
 	// test multiple value change
@@ -628,10 +628,20 @@ func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
 	delTokens2 := f.stakingKeeper.TokensFromConsensusPower(f.ctx, 80)
 	validators[0], _ = validators[0].AddTokensFromDel(delTokens1)
 	validators[1], _ = validators[1].AddTokensFromDel(delTokens2)
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], false)
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], false)
 
-	updates := applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 2)
+	updates := []module.ValidatorUpdate{}
+	val1, val1Updates := keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], true)
+	assert.Equal(t, 1, len(val1Updates))
+	validators[0] = val1
+	updates = append(updates, val1Updates...)
+
+	val2, val2Updates := keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], true)
+	assert.Equal(t, 1, len(val2Updates))
+	validators[1] = val2
+	updates = append(updates, val2Updates...)
+
+	assert.Equal(t, 2, len(updates))
+
 	assert.DeepEqual(t, validators[0].ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.ctx)), updates[0])
 	assert.DeepEqual(t, validators[1].ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.ctx)), updates[1])
 }
@@ -640,8 +650,8 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	powers := []int64{10, 20, 5, 15, 25}
 	f, _, _, validators := initValidators(t, 1000, 20, powers)
 
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], false)
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], false)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], false)
+	validators[1], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], false)
 	applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 2)
 
 	// test validator added at the beginning
@@ -688,13 +698,13 @@ func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
 		tokens := f.stakingKeeper.TokensFromConsensusPower(f.ctx, power)
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 	}
-	validators[0] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[0], false)
-	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[1], false)
+	validators[0], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[0], false)
+	validators[1], _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[1], false)
 	applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 2)
 
 	// test validator added at the end but not inserted in the valset
 	//  tendermintUpdate set: {} -> {}
-	keeper.TestingUpdateValidator(f.stakingKeeper, f.ctx, validators[2], false)
+	keeper.TestingUpdateValidatorV2(f.stakingKeeper, f.ctx, validators[2], false)
 	applyValidatorSetUpdates(t, f.ctx, f.stakingKeeper, 0)
 
 	// test validator change its power and become a gotValidator (pushing out an existing)

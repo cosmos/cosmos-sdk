@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -14,16 +13,13 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/flags"
+	"cosmossdk.io/client/v2/internal/governance"
 	"cosmossdk.io/client/v2/internal/print"
 	"cosmossdk.io/client/v2/internal/util"
 	v2tx "cosmossdk.io/client/v2/tx"
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 
-	// the following will be extracted to a separate module
-	// https://github.com/cosmos/cosmos-sdk/issues/14403
-	govcli "cosmossdk.io/x/gov/client/cli"
-	govtypes "cosmossdk.io/x/gov/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -188,7 +184,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 	// set gov proposal flags if command is a gov proposal
 	if options.GovProposal {
-		govcli.AddGovPropFlagsToCmd(cmd)
+		governance.AddGovPropFlagsToCmd(cmd)
 		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a normal transaction")
 	}
 
@@ -203,7 +199,7 @@ func (b *Builder) handleGovProposal(
 	addressCodec addresscodec.Codec,
 	fd protoreflect.FieldDescriptor,
 ) error {
-	govAuthority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	govAuthority := authtypes.NewModuleAddress(governance.ModuleName)
 	authority, err := addressCodec.BytesToString(govAuthority.Bytes())
 	if err != nil {
 		return fmt.Errorf("failed to convert gov authority: %w", err)
@@ -216,7 +212,7 @@ func (b *Builder) handleGovProposal(
 		return fmt.Errorf("failed to set signer on message, got %q: %w", signerFromFlag, err)
 	}
 
-	proposal, err := govcli.ReadGovPropCmdFlags(signer, cmd.Flags())
+	proposal, err := governance.ReadGovPropCmdFlags(signer, cmd.Flags())
 	if err != nil {
 		return err
 	}
@@ -227,7 +223,7 @@ func (b *Builder) handleGovProposal(
 	msg := dynamicpb.NewMessage(input.Descriptor())
 	proto.Merge(msg, input.Interface())
 
-	if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
+	if err := governance.SetGovMsgs(proposal, msg); err != nil {
 		return fmt.Errorf("failed to set msg in proposal %w", err)
 	}
 

@@ -24,7 +24,6 @@ import (
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
-	t.Helper()
 	var accountKeeper authkeeper.AccountKeeper
 
 	moduleConfigs := []configurator.ModuleOption{

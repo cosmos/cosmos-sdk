@@ -1,7 +1,6 @@
 package protocolpool
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -106,9 +105,6 @@ func TestWithdrawAnytime(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
-
-	headerInfo := integration.HeaderInfoFromContext(ctx)
-	fmt.Println(headerInfo)
 
 	pool, err := res.protocolpoolKeeper.GetCommunityPool(ctx)
 	require.NoError(t, err)

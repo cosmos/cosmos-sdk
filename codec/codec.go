@@ -88,7 +88,7 @@ type (
 		// MarshalInterfaceJSON is a helper method which will wrap `i` into `Any` for correct
 		// JSON interface (de)serialization.
 		MarshalInterfaceJSON(i proto.Message) ([]byte, error)
-		// UnmarshalInterfaceJSON is a helper method which will parse JSON enoded data
+		// UnmarshalInterfaceJSON is a helper method which will parse JSON encoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
 		UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error

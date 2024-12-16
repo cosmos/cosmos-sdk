@@ -109,7 +109,6 @@ type fieldBinding struct {
 	field    protoreflect.FieldDescriptor
 }
 
-// TODO: how to bind inner messages
 func (f fieldBinding) bind(msg protoreflect.Message) error {
 	field := f.field
 	val, err := f.hasValue.Get(msg.NewField(field))

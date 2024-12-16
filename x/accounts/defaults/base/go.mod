@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0-rc.2
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/collections v1.0.0-rc.1
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
@@ -19,12 +19,12 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // indirect
+	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
-	cosmossdk.io/schema v0.4.0 // indirect
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
+	cosmossdk.io/store v1.10.0-rc-1 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -173,7 +173,6 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../../../.
 
 replace (
-	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/staking => ../../../staking

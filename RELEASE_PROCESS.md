@@ -233,6 +233,37 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 * When a module is supposed to be used in an app (e.g `x/` modules), due to the dependency on the SDK, tagging a new version of a module must be done from a Cosmos SDK release branch. A compatibility matrix must be provided in the `README.md` of that module with the corresponding versions.
 * Modules that import the SDK but do not need to be imported in an app (`e.g. cosmovisor`) must be released from the `main` branch and follow the process defined below.
 
+> [!IMPORTANT]  
+> A module depending on a non stabilized version of `github.com/cosmos/cosmos-sdk` (any version prior to the removal of baseapp, runtime, server) SHOULD NOT be tagged following semver.
+> For instance, modules are still using 0ver until the main `github.com/cosmos/cosmos-sdk` has stabilized.
+
 ### Modules that do not depend on the Cosmos SDK
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
+
+## Go Monorepo Branching Strategy
+
+The Cosmos SDK uses a monorepo structure with multiple Go modules. Some components are tagged from the main branch, while others are tagged from release branches, as described above.
+
+Here's the strategy for managing this structure:
+
+All modules that do not depend on the Cosmos SDK and tagged from main in a release branch **must be removed from the release branch**.
+
+There are two exceptions to this rule, due to the stabilization of core v1: `cosmossdk.io/x/tx` and `cosmossdk.io/store` are still tagged from the `release/v0.50.x` branch for `v0.50.x` releases.
+
+### Rationale
+
+This strategy provides several benefits:
+
+1. Clean separation: Release branches only contain components that are actually released from those branches.
+2. Avoid confusion: Prevents having outdated versions of standalone go modules in release branches.
+3. Accurate representation: The release branch accurately represents what's being released from that branch.
+4. Consistency: Aligns with the tagging strategy - components tagged from main aren't in release branches, and vice versa.
+
+### Additional Considerations
+
+* When backporting changes, be aware that standalone go modules changes will not be present in release branches.
+* To reference the full state of the SDK at the time of branching, consider creating a separate tag on main at the point where each release branch is created.
+* Ensure thorough testing of the release branch structure to avoid any integration issues.
+
+This branching strategy helps maintain a clear separation between components tagged from main and those tagged from release branches, while ensuring that release branches accurately represent the state of components that depend on the SDK.

@@ -455,6 +455,16 @@ This change was made to allow legacy proposals to be compatible with server/v2.
 If you wish to migrate to server/v2, you should update your proposal handler to take in a `context.Context` and use services.
 On the other hand, if you wish to keep using baseapp, simply unwrap the sdk context in your proposal handler.
 
+#### `x/mint`
+
+The `x/mint` module has been updated to work with a mint function [`MintFn`](https://docs.cosmos.network/v0.52/build/modules/mint#mintfn).
+
+When using the default inflation calculation function and runtime, no change is required. The depinject configuration of mint automatically sets it if none is provided. However, when not using runtime, the mint function must be set in on the mint keeper:
+
+```diff
++ mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, mintKeeper))
+```
+
 #### `x/protocolpool`
 
 Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.52.x.
@@ -488,3 +498,7 @@ storetypes.StoreUpgrades{
 
 Introducing `x/validate` a module that is solely used for registering default ante/post handlers and global tx validators when using runtime and runtime/v2. If you wish to set your custom ante/post handlers, no need to use this module.
 You can however always extend them by adding extra tx validators (see `x/validate` documentation).
+
+#### `tools/benchmark`
+
+Introducing [`tools/benchmark`](https://github.com/cosmos/cosmos-sdk/tree/main/tools/benchmark) a Cosmos SDK module for benchmarking your chain. It is a standalone module that can be added to your chain to stress test it. This module should NOT be added in a production environment.

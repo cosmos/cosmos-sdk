@@ -402,7 +402,7 @@ func protoCol(f protoreflect.FieldDescriptor) schema.Field {
 		case protoreflect.EnumKind:
 			// TODO: support enums
 			col.Kind = schema.EnumKind
-			// use the full name to avoid collissions
+			// use the full name to avoid collisions
 			col.ReferencedType = string(f.Enum().FullName())
 			col.ReferencedType = strings.ReplaceAll(col.ReferencedType, ".", "_")
 		case protoreflect.MessageKind:

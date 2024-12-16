@@ -374,7 +374,7 @@ func (c *consensus[T]) PrepareProposal(
 
 	// Abort any running OE so it cannot overlap with `PrepareProposal`. This could happen if optimistic
 	// `internalFinalizeBlock` from previous round takes a long time, but consensus has moved on to next round.
-	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProoposal` could share access to
+	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProposal` could share access to
 	// in-memory structs depending on application implementation.
 	// No-op if OE is not enabled.
 	// Similar call to Abort() is done in `ProcessProposal`.

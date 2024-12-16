@@ -75,6 +75,7 @@ func (s *TestSuite) SetupTest() {
 	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
+	s.bankKeeper.EXPECT().Send(gomock.Any(), gomock.Any()).Return(&banktypes.MsgSendResponse{}, nil).AnyTimes()
 	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
 

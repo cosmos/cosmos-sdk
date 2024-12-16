@@ -4,8 +4,9 @@
 
 ## 🚀 Highlights
 
-For this last patch release of the v0.47.x line, only the dependency on `cosmossdk.io/math` has been bumped.
-This release is mainly here to disclose the end-of-life of the `v0.47.x` line.
+This release fixes [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm). Check the advisory for more information.
+
+Additionally, this release is mainly here to disclose the incoming end-of-life of the `v0.47.x` line.
 
 Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.15/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.14...v0.47.15) from last release.
 

@@ -11,7 +11,6 @@ require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
-	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
@@ -188,10 +187,12 @@ replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/accounts => ../accounts
+<<<<<<< HEAD
 	cosmossdk.io/x/authz => ../authz
+=======
+>>>>>>> 8ff9f48bb (chore: package release prep + update UPGRADING.md (#22864))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
-	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/epochs => ../epochs
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/mint => ../mint

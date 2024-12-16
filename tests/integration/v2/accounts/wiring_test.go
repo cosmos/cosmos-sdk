@@ -6,10 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	storetypes "cosmossdk.io/store/types"
+	stfgas "cosmossdk.io/server/v2/stf/gas"
 	counterv1 "cosmossdk.io/x/accounts/testing/counter/v1"
 	"cosmossdk.io/x/bank/testutil"
 
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,21 +22,21 @@ import (
 // - gas service
 // - funds
 func TestDependencies(t *testing.T) {
-	app := setupApp(t)
-	ak := app.AccountsKeeper
-	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger()).WithHeaderInfo(header.Info{ChainID: "chain-id"})
-	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(500_000))
+	f := initFixture(t, nil)
+	ctx := f.ctx
+	ctx = integration.SetHeaderInfo(ctx, header.Info{ChainID: "chain-id"})
+	ctx = integration.SetGasMeter(ctx, stfgas.DefaultGasMeter(500_000))
 
-	_, counterAddr, err := ak.Init(ctx, "counter", accCreator, &counterv1.MsgInit{
+	_, counterAddr, err := f.accountsKeeper.Init(ctx, "counter", accCreator, &counterv1.MsgInit{
 		InitialValue: 0,
 	}, nil, nil)
 	require.NoError(t, err)
 	// test dependencies
 	creatorInitFunds := sdk.NewCoins(sdk.NewInt64Coin("stake", 100_000))
-	err = testutil.FundAccount(ctx, app.BankKeeper, accCreator, creatorInitFunds)
+	err = testutil.FundAccount(ctx, f.bankKeeper, accCreator, creatorInitFunds)
 	require.NoError(t, err)
 	sentFunds := sdk.NewCoins(sdk.NewInt64Coin("stake", 50_000))
-	r, err := ak.Execute(
+	r, err := f.accountsKeeper.Execute(
 		ctx,
 		counterAddr,
 		accCreator,
@@ -50,18 +51,19 @@ func TestDependencies(t *testing.T) {
 	require.NotZero(t, res.AfterGas)
 	require.Equal(t, int(uint64(10)), int(res.AfterGas-res.BeforeGas))
 
+	headerInfo := integration.HeaderInfoFromContext(ctx)
 	// test header service
-	require.Equal(t, ctx.HeaderInfo().ChainID, res.ChainId)
+	require.Equal(t, headerInfo.ChainID, res.ChainId)
 
 	// test address codec
-	wantAddr, err := app.AuthKeeper.AddressCodec().BytesToString(counterAddr)
+	wantAddr, err := f.authKeeper.AddressCodec().BytesToString(counterAddr)
 	require.NoError(t, err)
 	require.Equal(t, wantAddr, res.Address)
 
 	// test funds
-	creatorFunds := app.BankKeeper.GetAllBalances(ctx, accCreator)
+	creatorFunds := f.bankKeeper.GetAllBalances(ctx, accCreator)
 	require.Equal(t, creatorInitFunds.Sub(sentFunds...), creatorFunds)
 
-	accFunds := app.BankKeeper.GetAllBalances(ctx, counterAddr)
+	accFunds := f.bankKeeper.GetAllBalances(ctx, counterAddr)
 	require.Equal(t, sentFunds, accFunds)
 }

@@ -16,11 +16,14 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
+	counteraccount "cosmossdk.io/x/accounts/testing/counter"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	minttypes "cosmossdk.io/x/mint/types"
+	_ "cosmossdk.io/x/staking" // import as blank for app wirings
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -30,6 +33,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring``
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"   // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 )
 
 var _ accountstd.Interface = (*mockAccount)(nil)
@@ -153,6 +159,7 @@ func initFixture(t *testing.T, f authentiacteFunc) *fixture {
 	startupCfg.BranchService = &integration.BranchService{}
 	startupCfg.RouterServiceBuilder = serviceBuilder
 	startupCfg.HeaderService = &integration.HeaderService{}
+	startupCfg.GasService = &integration.GasService{}
 
 	fixture.app, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Provide(
@@ -163,6 +170,7 @@ func initFixture(t *testing.T, f authentiacteFunc) *fixture {
 			basedepinject.ProvideSecp256K1PubKey,
 
 			ProvideMockAccount,
+			counteraccount.ProvideAccount,
 		), depinject.Supply(log.NewNopLogger(), f)),
 		startupCfg,
 		&fixture.bankKeeper, &fixture.accountsKeeper, &fixture.authKeeper, &fixture.cdc)

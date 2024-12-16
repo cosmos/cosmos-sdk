@@ -140,6 +140,15 @@ func GasMeterFactory(ctx context.Context) func() gas.Meter {
 	}
 }
 
+func SetGasMeter(ctx context.Context, meter gas.Meter) context.Context {
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if !ok {
+		return ctx
+	}
+	iCtx.gasMeter = meter
+	return context.WithValue(ctx, contextKey, iCtx)
+}
+
 func (s storeService) OpenKVStore(ctx context.Context) corestore.KVStore {
 	const gasLimit = 100_000
 	iCtx, ok := ctx.Value(contextKey).(*integrationContext)

@@ -57,8 +57,10 @@ func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		}
 	}
 
-	if err := a.feeTxValidator.ValidateTx(ctx, tx); err != nil {
-		return err
+	if a.feeTxValidator != nil {
+		if err := a.feeTxValidator.ValidateTx(ctx, tx); err != nil {
+			return err
+		}
 	}
 
 	if a.unorderTxValidator != nil {

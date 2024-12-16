@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
+	"cosmossdk.io/orm/encoding/ormfield"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"cosmossdk.io/orm/encoding/ormfield"
 )
 
 // MockReader implements the Reader interface for testing

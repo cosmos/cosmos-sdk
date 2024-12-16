@@ -3,7 +3,7 @@ go 1.23.2
 module github.com/cosmos/cosmos-sdk
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1
 	cosmossdk.io/api v0.8.0-rc.2 // main
 	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
 	cosmossdk.io/core v1.0.0-alpha.6

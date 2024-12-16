@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
+	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
@@ -36,9 +36,9 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7
-	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // indirect; main
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
-	cosmossdk.io/schema v0.4.0 // indirect
+	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
+	cosmossdk.io/core/testing v0.0.1 // main
+	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -183,9 +183,7 @@ replace github.com/cosmos/cosmos-sdk => ../../
 
 // TODO remove post spinning out all modules
 replace (
-	// pseudo version lower than the latest tag
 	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus

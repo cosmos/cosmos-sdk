@@ -19,12 +19,12 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // indirect
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // indirect
+	cosmossdk.io/collections v1.0.0-rc.1 // indirect
+	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
-	cosmossdk.io/schema v0.4.0 // indirect
-	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
+	cosmossdk.io/store v1.10.0-rc.1 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -150,7 +150,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/bank => ../../x/bank
 	cosmossdk.io/x/staking => ../../x/staking
 	github.com/cosmos/cosmos-sdk => ../../

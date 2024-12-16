@@ -6,15 +6,15 @@ require (
 	cosmossdk.io/api v0.8.0-rc.2 // main
 	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7
 	cosmossdk.io/core v1.0.0 // main
-	cosmossdk.io/core/testing v0.0.0 // indirect; main
+	cosmossdk.io/core/testing v0.0.1 // indirect; main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.0.0-20241209183624-332d0b106d1b
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241204100030-c47fb8ab2dcb // main
-	cosmossdk.io/server/v2 v2.0.0-20241211154953-a38a6a2c8bc8 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
+	cosmossdk.io/server/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20241209145349-34f407d6367a // main
+	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
@@ -56,13 +56,13 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // indirect; main
+	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.4.0 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20241212104257-e6948eeda877 // indirect; main
-	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
+	cosmossdk.io/schema v1.0.0 // indirect
+	cosmossdk.io/server/v2/appmanager v0.0.0-20241216193553-ee5da1a70d7a // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20241216193553-ee5da1a70d7a // indirect; main
+	cosmossdk.io/store v1.10.0-rc.1 // indirect; main
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -258,10 +258,7 @@ replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main
-	cosmossdk.io/core/testing => cosmossdk.io/core/testing v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
-	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/tools/benchmark => ../../tools/benchmark
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts

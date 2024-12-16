@@ -13,7 +13,6 @@ require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
-	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
@@ -187,13 +186,8 @@ replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/accounts => ../accounts
-	cosmossdk.io/x/accounts/defaults/base => ../accounts/defaults/base
-	cosmossdk.io/x/accounts/defaults/lockup => ../accounts/defaults/lockup
-	cosmossdk.io/x/accounts/defaults/multisig => ../accounts/defaults/multisig
-	cosmossdk.io/x/authz => ../authz
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
-	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/epochs => ../epochs
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/mint => ../mint

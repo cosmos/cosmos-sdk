@@ -140,7 +140,6 @@ func CustomPrepareProposal[T transaction.Tx]() handlers.PrepareHandler[T] {
 		}
 
 		// "Process" vote extensions (we'll just inject all votes)
-		injectedTx := []byte{}
 		injectedTx, err := json.Marshal(req.LocalLastCommit)
 		if err != nil {
 			return nil, err

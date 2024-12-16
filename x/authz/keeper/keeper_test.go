@@ -72,6 +72,7 @@ func (s *TestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
+	s.bankKeeper.EXPECT().Send(gomock.Any(), gomock.Any()).Return(&banktypes.MsgSendResponse{}, nil).AnyTimes()
 	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
 

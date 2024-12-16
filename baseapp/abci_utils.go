@@ -64,6 +64,11 @@ func ValidateVoteExtensions(
 	if !extsEnabled {
 		extsEnabled = cp.Abci != nil && currentHeight > cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 	}
+
+	if !extsEnabled {
+		return nil
+	}
+
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
 		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {

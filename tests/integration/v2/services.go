@@ -1,10 +1,13 @@
 package integration
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/branch"
@@ -17,6 +20,7 @@ import (
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/stf"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
@@ -72,6 +76,7 @@ type integrationContext struct {
 	state    corestore.WriterMap
 	gasMeter gas.Meter
 	header   header.Info
+	events   []event.Event
 }
 
 func SetHeaderInfo(ctx context.Context, h header.Info) context.Context {
@@ -93,6 +98,31 @@ func HeaderInfoFromContext(ctx context.Context) header.Info {
 
 func SetCometInfo(ctx context.Context, c comet.Info) context.Context {
 	return context.WithValue(ctx, corecontext.CometInfoKey, c)
+}
+
+func EventsFromContext(ctx context.Context) []event.Event {
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if !ok {
+		return nil
+	}
+	return iCtx.events
+}
+
+func GetAttributes(e []event.Event, key string) ([]event.Attribute, bool) {
+	attrs := make([]event.Attribute, 0)
+	for _, event := range e {
+		attributes, err := event.Attributes()
+		if err != nil {
+			return nil, false
+		}
+		for _, attr := range attributes {
+			if attr.Key == key {
+				attrs = append(attrs, attr)
+			}
+		}
+	}
+
+	return attrs, len(attrs) > 0
 }
 
 func GasMeterFromContext(ctx context.Context) gas.Meter {
@@ -130,22 +160,63 @@ var (
 	_ event.Manager = &eventManager{}
 )
 
-type eventService struct{}
-
-// EventManager implements event.Service.
-func (e *eventService) EventManager(context.Context) event.Manager {
-	return &eventManager{}
+type eventService struct {
 }
 
-type eventManager struct{}
+// EventManager implements event.Service.
+func (e *eventService) EventManager(ctx context.Context) event.Manager {
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if !ok {
+		panic("context is not an integration context")
+	}
+
+	return &eventManager{ctx: iCtx}
+}
+
+type eventManager struct {
+	ctx *integrationContext
+}
 
 // Emit implements event.Manager.
-func (e *eventManager) Emit(event transaction.Msg) error {
+func (e *eventManager) Emit(tev transaction.Msg) error {
+	ev := event.Event{
+		Type: gogoproto.MessageName(tev),
+		Attributes: func() ([]event.Attribute, error) {
+			outerEvent, err := stf.TypedEventToEvent(tev)
+			if err != nil {
+				return nil, err
+			}
+
+			return outerEvent.Attributes()
+		},
+		Data: func() (json.RawMessage, error) {
+			buf := new(bytes.Buffer)
+			jm := &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
+			if err := jm.Marshal(buf, tev); err != nil {
+				return nil, err
+			}
+
+			return buf.Bytes(), nil
+		},
+	}
+
+	e.ctx.events = append(e.ctx.events, ev)
 	return nil
 }
 
 // EmitKV implements event.Manager.
 func (e *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error {
+	ev := event.Event{
+		Type: eventType,
+		Attributes: func() ([]event.Attribute, error) {
+			return attrs, nil
+		},
+		Data: func() (json.RawMessage, error) {
+			return json.Marshal(attrs)
+		},
+	}
+
+	e.ctx.events = append(e.ctx.events, ev)
 	return nil
 }
 
@@ -231,4 +302,16 @@ func (h *HeaderService) HeaderInfo(ctx context.Context) header.Info {
 		return header.Info{}
 	}
 	return iCtx.header
+}
+
+var _ gas.Service = &GasService{}
+
+type GasService struct{}
+
+func (g *GasService) GasMeter(ctx context.Context) gas.Meter {
+	return GasMeterFromContext(ctx)
+}
+
+func (g *GasService) GasConfig(ctx context.Context) gas.GasConfig {
+	return gas.GasConfig{}
 }

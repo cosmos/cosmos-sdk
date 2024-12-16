@@ -939,7 +939,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	require.NoError(err)
 	require.Equal(del, resDel)
 
-	ubd := types.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.HeaderInfo().Time.Add(time.Minute*10), shares.RoundInt(), 0, keeper.ValidatorAddressCodec(), ak.AddressCodec())
+	ubd := types.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.HeaderInfo().Time.Add(time.Minute*10), shares.RoundInt(), keeper.ValidatorAddressCodec(), ak.AddressCodec())
 	require.NoError(keeper.SetUnbondingDelegation(ctx, ubd))
 	resUnbond, err := keeper.GetUnbondingDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)

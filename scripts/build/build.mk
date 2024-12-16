@@ -48,10 +48,6 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
-ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
-endif
-
 ifeq (v2,$(findstring v2,$(COSMOS_BUILD_OPTIONS)))
   SIMAPP = simapp/v2
   APPNAME = simdv2
@@ -72,6 +68,11 @@ endif
 ifeq (bls12381,$(findstring bls12381,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
   build_tags += bls12381
+endif
+
+# benchmark module
+ifeq (benchmark,$(findstring benchmark,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += benchmark
 endif
 
 whitespace :=

@@ -58,6 +58,15 @@ While there are no definitive guidelines for writing modules, here are some impo
 * **Specialization**: A direct consequence of the **composability** feature is that modules should be **specialized**. Developers should carefully establish the scope of their module and not batch multiple functionalities into the same module. This separation of concerns enables modules to be re-used in other projects and improves the upgradability of the application. **Specialization** also plays an important role in the [object-capabilities model](https://docs.cosmos.network/main/learn/advanced/ocap#ocaps-in-practice) of the Cosmos SDK.
 * **Capabilities**: Most modules need to read and/or write to the store(s) of other modules. However, in an open-source environment, it is possible for some modules to be malicious. That is why module developers need to carefully think not only about how their module interacts with other modules, but also about how to give access to the module's store(s). The Cosmos SDK takes a capabilities-oriented approach to inter-module security. This means that each store defined by a module is accessed by a `key`, which is held by the module's [`keeper`](./06-keeper.md). This `keeper` defines how to access the store(s) and under what conditions. Access to the module's store(s) is done by passing a reference to the module's `keeper`.
 
+## Core APIs for Modules
+
+The SDK provides a set of APIs that a module can implement, and a set of services that a module can use.
+Those APIs are defined in the `cosmossdk.io/core/appmodule` package, and are used to defined the module capabilities, which is used by `runtime` during the wiring of the application. 
+
+Whenever possible, a module should strive to use only the core APIs (`cosmossdk.io/core`) and not import the `github.com/cosmos/cosmos-sdk` module. This makes modules reusable across SDK versions and reduces the risk of breaking changes.
+
+Learn more about the core APIs for modules [here](../../learn/advanced/02-core.md).
+
 ## Main Components of Cosmos SDK Modules
 
 Modules are by convention defined in the `./x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:

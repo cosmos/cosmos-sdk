@@ -45,19 +45,24 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
 * (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
 * (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
+* (client) [#22807](https://github.com/cosmos/cosmos-sdk/pull/22807) Return v2 server information in the `version` command.
 
 ### Improvements
 
 * RocksDB libraries have been upgraded to support RockDB v9 instead of v8.
 * (testutil/integration) [#22616](https://github.com/cosmos/cosmos-sdk/pull/22616) Remove double context in integration tests v1.
     * Use integrationApp.Context() instead of creating a context prior.
+* [#22826](https://github.com/cosmos/cosmos-sdk/pull/22826) Simplify testing frameworks by removing `testutil/cmdtest`.
 
 ### Bug Fixes
-
 * (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
 * (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+* (cli) [#22656](https://github.com/cosmos/cosmos-sdk/pull/22656) Prune cmd should disable async pruning.
 
 ### API Breaking Changes
+
+* (testutil) [#22392](https://github.com/cosmos/cosmos-sdk/pull/22392) Remove `testutil/network` package. Use the integration framework or systemtests framework instead.
+* (client) [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Removed client prompt validations.
 
 ### Deprecated
 
@@ -141,7 +146,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
 * (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Move `upgradetypes.StoreLoader` to runtime and alias it in upgrade for backward compatibility.
 * (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
-* (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unecessary overhead.
+* (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unnecessary overhead.
 * (crypto/ledger) [#22116](https://github.com/cosmos/cosmos-sdk/pull/22116) Improve error message when deriving paths using index >100
 
 ### Bug Fixes

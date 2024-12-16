@@ -1,8 +1,6 @@
 [comet]
 # min-retain-blocks defines the minimum block height offset from the current block being committed, such that all blocks past this offset are pruned from CometBFT. A value of 0 indicates that no blocks should be pruned.
 min-retain-blocks = 0
-# index-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed.
-index-events = []
 # halt-height contains a non-zero block height at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing.
 halt-height = 0
 # halt-time contains a non-zero minimum block time (in Unix seconds) at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing.
@@ -15,6 +13,12 @@ transport = 'socket'
 trace = false
 # standalone starts the application without the CometBFT node. The node should be started separately.
 standalone = false
+# index-abci-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed.
+index-abci-events = []
+# disable-index-abci-events disables the ABCI event indexing done by CometBFT. Useful when relying on the SDK indexer for event indexing, but still want events to be included in FinalizeBlockResponse.
+disable-index-abci-events = false
+# disable-abci-events disables all ABCI events. Useful when relying on the SDK indexer for event indexing.
+disable-abci-events = false
 
 # mempool defines the configuration for the SDK built-in app-side mempool implementations.
 [comet.mempool]

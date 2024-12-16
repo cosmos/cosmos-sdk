@@ -4,9 +4,15 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"net/url"
 	"os"
+	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	cmtconfig "github.com/cometbft/cometbft/config"
@@ -16,7 +22,6 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
-	"cosmossdk.io/simapp"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -29,7 +34,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -53,6 +57,15 @@ var (
 	flagStakingDenom      = "staking-denom"
 	flagCommitTimeout     = "commit-timeout"
 	flagSingleHost        = "single-host"
+
+	// default values
+	defaultRPCPort           = 26657
+	defaultAPIPort           = 1317
+	defaultGRPCPort          = 9090
+	defaultListenIPAddress   = "127.0.0.1"
+	defaultStartingIPAddress = "192.168.0.1"
+	defaultNodeDirPrefix     = "node"
+	defaultNodeDaemonHome    = "simd"
 )
 
 type initArgs struct {
@@ -68,20 +81,15 @@ type initArgs struct {
 	listenIPAddress   string
 	singleMachine     bool
 	bondTokenDenom    string
-}
 
-type startArgs struct {
-	algo          string
-	apiAddress    string
-	chainID       string
-	enableLogging bool
-	grpcAddress   string
-	minGasPrices  string
-	numValidators int
-	outputDir     string
-	printMnemonic bool
-	rpcAddress    string
-	timeoutCommit time.Duration
+	// start command arguments
+	apiListenAddress  string
+	grpcListenAddress string
+	rpcPort           int
+	apiPort           int
+	grpcPort          int
+	enableLogging     bool
+	printMnemonic     bool
 }
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
@@ -112,7 +120,7 @@ func NewTestnetCmd(mm *module.Manager) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	testnetCmd.AddCommand(testnetStartCmd())
+	testnetCmd.AddCommand(testnetStartCmd(mm))
 	testnetCmd.AddCommand(testnetInitFilesCmd(mm))
 
 	return testnetCmd
@@ -142,7 +150,13 @@ Example:
 
 			config := client.GetConfigFromCmd(cmd)
 
-			args := initArgs{}
+			args := initArgs{
+				rpcPort:           defaultRPCPort,
+				apiPort:           defaultAPIPort,
+				grpcPort:          defaultGRPCPort,
+				apiListenAddress:  defaultListenIPAddress,
+				grpcListenAddress: defaultListenIPAddress,
+			}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
 			args.keyringBackend, _ = cmd.Flags().GetString(flags.FlagKeyringBackend)
 			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
@@ -160,15 +174,19 @@ Example:
 				return err
 			}
 
+			if args.chainID == "" {
+				args.chainID = "chain-" + unsafe.Str(6)
+			}
+
 			return initTestnetFiles(clientCtx, cmd, config, mm, args)
 		},
 	}
 
 	addTestnetFlagsToCmd(cmd)
-	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix for the name of per-validator subdirectories (to be number-suffixed like node0, node1, ...)")
-	cmd.Flags().String(flagNodeDaemonHome, "simd", "Home directory of the node's daemon configuration")
-	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
-	cmd.Flags().String(flagListenIPAddress, "127.0.0.1", "TCP or UNIX socket IP address for the RPC server to listen on")
+	cmd.Flags().String(flagNodeDirPrefix, defaultNodeDirPrefix, "Prefix for the name of per-validator subdirectories (to be number-suffixed like node0, node1, ...)")
+	cmd.Flags().String(flagNodeDaemonHome, defaultNodeDaemonHome, "Home directory of the node's daemon configuration")
+	cmd.Flags().String(flagStartingIPAddress, defaultStartingIPAddress, "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
+	cmd.Flags().String(flagListenIPAddress, defaultListenIPAddress, "TCP or UNIX socket IP address for the RPC server to listen on")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().Duration(flagCommitTimeout, 5*time.Second, "Time to wait after a block commit before starting on the new height")
 	cmd.Flags().Bool(flagSingleHost, false, "Cluster runs on a single host machine with different ports")
@@ -178,7 +196,7 @@ Example:
 }
 
 // testnetStartCmd returns a cmd to start multi validator in-process testnet
-func testnetStartCmd() *cobra.Command {
+func testnetStartCmd(mm *module.Manager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Launch an in-process multi-validator testnet",
@@ -190,19 +208,56 @@ Example:
 	%s testnet --validator-count4 --output-dir ./.testnets
 	`, version.AppName),
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-			args := startArgs{}
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			config := client.GetConfigFromCmd(cmd)
+
+			args := initArgs{
+				singleMachine:  true,
+				bondTokenDenom: sdk.DefaultBondDenom,
+				nodeDaemonHome: defaultNodeDaemonHome,
+				nodeDirPrefix:  defaultNodeDirPrefix,
+				keyringBackend: keyring.BackendTest,
+			}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
 			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
 			args.minGasPrices, _ = cmd.Flags().GetString(server.FlagMinGasPrices)
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 			args.enableLogging, _ = cmd.Flags().GetBool(flagEnableLogging)
-			args.rpcAddress, _ = cmd.Flags().GetString(flagRPCAddress)
-			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
-			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
+
+			rpcAddress, _ := cmd.Flags().GetString(flagRPCAddress)
+			args.listenIPAddress, args.rpcPort, err = parseURL(rpcAddress)
+			if err != nil {
+				return fmt.Errorf("invalid rpc address: %w", err)
+			}
+
+			apiAddress, _ := cmd.Flags().GetString(flagAPIAddress)
+			args.apiListenAddress, args.apiPort, err = parseURL(apiAddress)
+			if err != nil {
+				return fmt.Errorf("invalid api address: %w", err)
+			}
+
+			grpcAddress, _ := cmd.Flags().GetString(flagGRPCAddress)
+			// add scheme to avoid issues with parsing
+			if !strings.Contains(grpcAddress, "://") {
+				grpcAddress = "tcp://" + grpcAddress
+			}
+			args.grpcListenAddress, args.grpcPort, err = parseURL(grpcAddress)
+			if err != nil {
+				return fmt.Errorf("invalid grpc address: %w", err)
+			}
+
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
 
-			return startTestnet(cmd, args)
+			if args.chainID == "" {
+				args.chainID = "chain-" + unsafe.Str(6)
+			}
+
+			return startTestnet(clientCtx, cmd, config, mm, args)
 		},
 	}
 
@@ -215,6 +270,18 @@ Example:
 	return cmd
 }
 
+func parseURL(str string) (host string, port int, err error) {
+	u, err := url.Parse(str)
+	if err != nil {
+		return
+	}
+
+	host = u.Hostname()
+
+	port, err = strconv.Atoi(u.Port())
+	return
+}
+
 const nodeDirPerm = 0o755
 
 // initTestnetFiles initializes testnet files for a testnet to be run in a separate process
@@ -225,15 +292,13 @@ func initTestnetFiles(
 	mm *module.Manager,
 	args initArgs,
 ) error {
-	if args.chainID == "" {
-		args.chainID = "chain-" + unsafe.Str(6)
-	}
 	nodeIDs := make([]string, args.numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, args.numValidators)
 
 	appConfig := srvconfig.DefaultConfig()
 	appConfig.MinGasPrices = args.minGasPrices
 	appConfig.API.Enable = true
+	appConfig.GRPC.Enable = true
 	appConfig.Telemetry.Enabled = true
 	appConfig.Telemetry.PrometheusRetentionTime = 60
 	appConfig.Telemetry.EnableHostnameLabel = false
@@ -244,10 +309,10 @@ func initTestnetFiles(
 		genBalances []banktypes.Balance
 		genFiles    []string
 	)
-	const (
-		rpcPort  = 26657
-		apiPort  = 1317
-		grpcPort = 9090
+	var (
+		rpcPort  = args.rpcPort
+		apiPort  = args.apiPort
+		grpcPort = args.grpcPort
 	)
 	p2pPortStart := 26656
 
@@ -261,12 +326,11 @@ func initTestnetFiles(
 			nodeConfig.P2P.AddrBookStrict = false
 			nodeConfig.P2P.PexReactor = false
 			nodeConfig.P2P.AllowDuplicateIP = true
-			appConfig.API.Address = fmt.Sprintf("tcp://127.0.0.1:%d", apiPort+portOffset)
-			appConfig.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset)
+			appConfig.API.Address = fmt.Sprintf("tcp://%s:%d", args.apiListenAddress, apiPort+portOffset)
+			appConfig.GRPC.Address = fmt.Sprintf("%s:%d", args.grpcListenAddress, grpcPort+portOffset)
 		}
 
-		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)
-		nodeDir := filepath.Join(args.outputDir, nodeDirName, args.nodeDaemonHome)
+		nodeDirName, nodeDir := getNodeDir(args, i)
 		gentxsDir := filepath.Join(args.outputDir, "gentxs")
 
 		nodeConfig.SetRoot(nodeDir)
@@ -315,6 +379,12 @@ func initTestnetFiles(
 		if err != nil {
 			_ = os.RemoveAll(args.outputDir)
 			return err
+		}
+
+		// if PrintMnemonic is set to true, we print the first validator node's secret to the network's logger
+		// for debugging and manual testing
+		if args.printMnemonic && i == 0 {
+			printMnemonic(secret)
 		}
 
 		info := map[string]string{"secret": secret}
@@ -552,46 +622,133 @@ func writeFile(name, dir string, contents []byte) error {
 	return os.WriteFile(file, contents, 0o600)
 }
 
+// printMnemonic prints a provided mnemonic seed phrase on a network logger
+// for debugging and manual testing
+func printMnemonic(secret string) {
+	lines := []string{
+		"THIS MNEMONIC IS FOR TESTING PURPOSES ONLY",
+		"DO NOT USE IN PRODUCTION",
+		"",
+		strings.Join(strings.Fields(secret)[0:8], " "),
+		strings.Join(strings.Fields(secret)[8:16], " "),
+		strings.Join(strings.Fields(secret)[16:24], " "),
+	}
+
+	lineLengths := make([]int, len(lines))
+	for i, line := range lines {
+		lineLengths[i] = len(line)
+	}
+
+	maxLineLength := 0
+	for _, lineLen := range lineLengths {
+		if lineLen > maxLineLength {
+			maxLineLength = lineLen
+		}
+	}
+
+	fmt.Printf("\n\n")
+	fmt.Println(strings.Repeat("+", maxLineLength+8))
+	for _, line := range lines {
+		fmt.Printf("++  %s  ++\n", centerText(line, maxLineLength))
+	}
+	fmt.Println(strings.Repeat("+", maxLineLength+8))
+	fmt.Printf("\n\n")
+}
+
+// centerText centers text across a fixed width, filling either side with whitespace buffers
+func centerText(text string, width int) string {
+	textLen := len(text)
+	leftBuffer := strings.Repeat(" ", (width-textLen)/2)
+	rightBuffer := strings.Repeat(" ", (width-textLen)/2+(width-textLen)%2)
+
+	return fmt.Sprintf("%s%s%s", leftBuffer, text, rightBuffer)
+}
+
+func getNodeDir(args initArgs, nodeID int) (nodeDirName, nodeDir string) {
+	nodeDirName = fmt.Sprintf("%s%d", args.nodeDirPrefix, nodeID)
+	nodeDir = filepath.Join(args.outputDir, nodeDirName, args.nodeDaemonHome)
+	return
+}
+
 // startTestnet starts an in-process testnet
-func startTestnet(cmd *cobra.Command, args startArgs) error {
-	networkConfig := network.DefaultConfig(simapp.NewTestNetworkFixture)
+func startTestnet(
+	clientCtx client.Context,
+	cmd *cobra.Command,
+	nodeConfig *cmtconfig.Config,
+	mm *module.Manager,
+	args initArgs,
+) error {
+	fmt.Printf(`Preparing test network with chain-id "%s"`, args.chainID)
 
-	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
-	// is non-empty
-	if args.chainID != "" {
-		networkConfig.ChainID = args.chainID
-	}
-	networkConfig.SigningAlgo = args.algo
-	networkConfig.MinGasPrices = args.minGasPrices
-	networkConfig.NumValidators = args.numValidators
-	networkConfig.EnableLogging = args.enableLogging
-	networkConfig.RPCAddress = args.rpcAddress
-	networkConfig.APIAddress = args.apiAddress
-	networkConfig.GRPCAddress = args.grpcAddress
-	networkConfig.PrintMnemonic = args.printMnemonic
-	networkConfig.TimeoutCommit = args.timeoutCommit
-	networkLogger := network.NewCLILogger(cmd)
-
-	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)
-	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
-		return fmt.Errorf(
-			"testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
-			networkConfig.ChainID, baseDir)
-	}
-
-	testnet, err := network.New(networkLogger, baseDir, networkConfig)
+	args.outputDir = fmt.Sprintf("%s/%s", args.outputDir, args.chainID)
+	err := initTestnetFiles(clientCtx, cmd, nodeConfig, mm, args)
 	if err != nil {
 		return err
 	}
 
-	if _, err := testnet.WaitForHeight(1); err != nil {
-		return err
+	// slice to keep track of validator processes
+	var processes []*exec.Cmd
+
+	// channel to signal shutdown
+	shutdownCh := make(chan struct{})
+
+	fmt.Println("Starting test network...")
+	// Start each validator in a separate process
+	for i := 0; i < args.numValidators; i++ {
+		_, nodeDir := getNodeDir(args, i)
+
+		// run start command
+		binName := cmd.Root().Use
+		cmdArgs := []string{"start", fmt.Sprintf("--%s=%s", flags.FlagHome, nodeDir)}
+		runCmd := exec.Command(binName, cmdArgs...) // spawn new process
+
+		// Set stdout and stderr based on enableLogging flag
+		if args.enableLogging {
+			runCmd.Stdout = os.Stdout
+			runCmd.Stderr = os.Stderr
+		} else {
+			runCmd.Stdout = io.Discard // discard output when logging is disabled
+			runCmd.Stderr = io.Discard
+		}
+
+		if err := runCmd.Start(); err != nil {
+			return fmt.Errorf("failed to start validator %d: %w", i, err)
+		}
+		fmt.Printf("Started Validator %d\n", i+1)
+		processes = append(processes, runCmd) // add to processes slice
 	}
-	cmd.Println("press the Enter Key to terminate")
-	if _, err := fmt.Scanln(); err != nil { // wait for Enter Key
-		return err
+
+	// goroutine to listen for Enter key press
+	go func() {
+		fmt.Println("Press the Enter Key to terminate all validator processes")
+		if _, err := fmt.Scanln(); err == nil {
+			close(shutdownCh) // Signal shutdown
+		}
+	}()
+
+	// goroutine to listen for Ctrl+C (SIGINT)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt)
+	go func() {
+		<-sigCh // Wait for Ctrl+C
+		fmt.Println("\nCtrl+C detected, terminating validator processes...")
+		close(shutdownCh) // Signal shutdown
+	}()
+
+	// block until shutdown signal is received
+	<-shutdownCh
+
+	// terminate all validator processes
+	fmt.Println("Shutting down validator processes...")
+	for i, p := range processes {
+		if err := p.Process.Kill(); err != nil {
+			fmt.Printf("Failed to terminate validator %d process: %v\n", i+1, err)
+		} else {
+			fmt.Printf("Validator %d terminated\n", i+1)
+		}
 	}
-	testnet.Cleanup()
+	_ = os.RemoveAll(args.outputDir) // Clean up the output directory
+	fmt.Println("Finished cleaning up test network")
 
 	return nil
 }

@@ -308,7 +308,7 @@ func ExampleDec_MulExact() {
 	// 2.50
 	// exponent out of range: invalid decimal
 	// unexpected rounding
-	// 0.00000000000000000000000000000000000
+	// 0E-35
 	// 0
 }
 

@@ -3,19 +3,19 @@ go 1.23.2
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.7.6
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/api v0.8.0-rc.2
+	cosmossdk.io/collections v1.0.0-rc.1
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
+	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/schema v0.3.1-0.20241128094659-bd76b47e1d8b
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
+	cosmossdk.io/schema v1.0.0
+	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v1.0.0-alpha.1
+	cosmossdk.io/x/tx v1.0.0-alpha.3
 	github.com/99designs/keyring v1.2.2
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
@@ -38,12 +38,12 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/hdevalence/ed25519consensus v0.2.0
 	github.com/huandu/skiplist v1.2.1
-	github.com/magiconair/properties v1.8.7
+	github.com/magiconair/properties v1.8.9
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/muesli/termenv v0.15.2
 	github.com/prometheus/client_golang v1.20.5
-	github.com/prometheus/common v0.60.1
+	github.com/prometheus/common v0.61.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cast v1.7.0
 	github.com/spf13/cobra v1.8.1
@@ -53,10 +53,10 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 	go.uber.org/mock v0.5.0
-	golang.org/x/crypto v0.29.0
-	golang.org/x/sync v0.9.0
+	golang.org/x/crypto v0.31.0
+	golang.org/x/sync v0.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
-	google.golang.org/grpc v1.68.0
+	google.golang.org/grpc v1.68.1
 	google.golang.org/protobuf v1.35.2
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
@@ -165,13 +165,13 @@ require (
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/net v0.31.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/term v0.26.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/term v0.27.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/tools v0.27.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	rsc.io/qr v0.2.0 // indirect
@@ -185,11 +185,8 @@ require (
 
 // TODO remove after all modules have their own go.mods
 replace (
-	cosmossdk.io/api => ./api
-	cosmossdk.io/store => ./store
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking
-	cosmossdk.io/x/tx => ./x/tx
 )
 
 // Below are the long-lived replace of the Cosmos SDK

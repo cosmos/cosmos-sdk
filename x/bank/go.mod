@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/store v1.10.0-rc-1
+	cosmossdk.io/store v1.10.0-rc.1
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -176,6 +176,4 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
-replace (
-	cosmossdk.io/x/staking => ../staking
-)
+replace cosmossdk.io/x/staking => ../staking

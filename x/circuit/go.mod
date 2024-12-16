@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/schema v1.0.0
-	cosmossdk.io/store v1.10.0-rc-1
+	cosmossdk.io/store v1.10.0-rc.1
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/protobuf v1.5.4

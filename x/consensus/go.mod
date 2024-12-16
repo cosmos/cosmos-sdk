@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/schema v1.0.0
-	cosmossdk.io/store v1.10.0-rc-1
+	cosmossdk.io/store v1.10.0-rc.1
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

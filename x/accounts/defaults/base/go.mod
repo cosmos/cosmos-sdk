@@ -24,7 +24,7 @@ require (
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/store v1.10.0-rc-1 // indirect
+	cosmossdk.io/store v1.10.0-rc.1 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func setupContinousAccount(t *testing.T, ctx context.Context, ss store.KVStoreService) *ContinuousLockingAccount {
+func setupContinuousAccount(t *testing.T, ctx context.Context, ss store.KVStoreService) *ContinuousLockingAccount {
 	t.Helper()
 	deps := makeMockDependencies(ss)
 	owner := "owner" //nolint:goconst // adding constants for this would impede readability
@@ -33,13 +33,13 @@ func setupContinousAccount(t *testing.T, ctx context.Context, ss store.KVStoreSe
 	return acc
 }
 
-func TestContinousAccountDelegate(t *testing.T) {
+func TestContinuousAccountDelegate(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 
-	acc := setupContinousAccount(t, sdkCtx, ss)
+	acc := setupContinuousAccount(t, sdkCtx, ss)
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
 		Sender:           "owner",
 		ValidatorAddress: "val_address",
@@ -75,13 +75,13 @@ func TestContinousAccountDelegate(t *testing.T) {
 	require.True(t, delFree.Equal(math.NewInt(1)))
 }
 
-func TestContinousAccountUndelegate(t *testing.T) {
+func TestContinuousAccountUndelegate(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 
-	acc := setupContinousAccount(t, sdkCtx, ss)
+	acc := setupContinuousAccount(t, sdkCtx, ss)
 	// Delegate first
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
 		Sender:           "owner",
@@ -146,13 +146,13 @@ func TestContinousAccountUndelegate(t *testing.T) {
 	require.True(t, delFree.Equal(math.ZeroInt()))
 }
 
-func TestContinousAccountSendCoins(t *testing.T) {
+func TestContinuousAccountSendCoins(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 
-	acc := setupContinousAccount(t, sdkCtx, ss)
+	acc := setupContinuousAccount(t, sdkCtx, ss)
 	_, err := acc.SendCoins(sdkCtx, &lockuptypes.MsgSend{
 		Sender:    "owner",
 		ToAddress: "receiver",
@@ -176,13 +176,13 @@ func TestContinousAccountSendCoins(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestContinousAccountWithdrawUnlockedCoins(t *testing.T) {
+func TestContinuousAccountWithdrawUnlockedCoins(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 
-	acc := setupContinousAccount(t, sdkCtx, ss)
+	acc := setupContinuousAccount(t, sdkCtx, ss)
 	_, err := acc.WithdrawUnlockedCoins(sdkCtx, &lockuptypes.MsgWithdraw{
 		Withdrawer: "owner",
 		ToAddress:  "receiver",
@@ -206,13 +206,13 @@ func TestContinousAccountWithdrawUnlockedCoins(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestContinousAccountGetLockCoinInfo(t *testing.T) {
+func TestContinuousAccountGetLockCoinInfo(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 
-	acc := setupContinousAccount(t, sdkCtx, ss)
+	acc := setupContinuousAccount(t, sdkCtx, ss)
 
 	unlocked, locked, err := acc.GetLockCoinsInfo(sdkCtx, time.Now())
 	require.NoError(t, err)

@@ -351,7 +351,7 @@ func (c Context) TransientStore(key storetypes.StoreKey) storetypes.KVStore {
 }
 
 // ObjectStore fetches an object store from the MultiStore,
-func (c Context) OjectStore(key storetypes.StoreKey) storetypes.ObjKVStore {
+func (c Context) ObjectStore(key storetypes.StoreKey) storetypes.ObjKVStore {
 	return gaskv.NewObjStore(c.ms.GetObjKVStore(key), c.gasMeter, c.transientKVGasConfig)
 }
 

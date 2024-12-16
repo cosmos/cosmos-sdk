@@ -974,7 +974,6 @@ func prepareStoreMap() (map[types.StoreKey]types.CommitStore, error) {
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
-	store.MountStoreWithDB(types.NewMemoryStoreKey("mem1"), types.StoreTypeMemory, nil)
 	store.MountStoreWithDB(types.NewObjectStoreKey("obj1"), types.StoreTypeObject, nil)
 	if err := store.LoadLatestVersion(); err != nil {
 		return nil, err

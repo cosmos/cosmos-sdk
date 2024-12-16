@@ -63,7 +63,7 @@ func (gs *GStore[V]) GetStoreType() types.StoreType {
 	return gs.parent.GetStoreType()
 }
 
-// Get implements types.KVStore.
+// Get implements KVStore.
 func (gs *GStore[V]) Get(key []byte) (value V) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)

@@ -15,7 +15,7 @@ var (
 	_ types.ObjKVStore = (*ObjStore)(nil)
 )
 
-// Store is a wrapper for a MemDB with Commiter implementation
+// Store is a wrapper for a MemDB with Committer implementation
 type GStore[V any] struct {
 	internal.BTreeStore[V]
 }
@@ -84,9 +84,4 @@ func (ts *GStore[V]) LatestVersion() int64 {
 
 func (ts *GStore[V]) WorkingHash() []byte {
 	return []byte{}
-}
-
-// GetStoreType implements Store.
-func (ts *GStore[V]) GetStoreType() types.StoreType {
-	return types.StoreTypeTransient
 }

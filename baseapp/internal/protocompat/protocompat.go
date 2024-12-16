@@ -123,14 +123,13 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 				return fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", inReq, prefMethod.FullName())
 			}
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				setPointer(msg, inReq)
-				return nil
+				return setPointer(msg, inReq)
 			}, nil)
 			if err != nil {
 				return err
 			}
-			setPointer(outResp, resp)
-			return nil
+
+			return setPointer(outResp, resp)
 		}, nil
 	}
 	// this is a gogo handler, and we have a protov2 counterparty.
@@ -161,14 +160,13 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 		case gogoproto.Message:
 			// we can just call the handler after making a copy of the message, for safety reasons.
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				setPointer(msg, m)
-				return nil
+				return setPointer(msg, m)
 			}, nil)
 			if err != nil {
 				return err
 			}
-			setPointer(outResp, resp)
-			return nil
+
+			return setPointer(outResp, resp)
 		default:
 			panic("unreachable")
 		}
@@ -235,6 +233,20 @@ func ResponseFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc
 
 // since proto.Merge breaks due to the custom cosmos sdk any, we are forced to do this ugly setPointer hack.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/22779
-func setPointer(dst, src any) {
-	reflect.ValueOf(dst).Elem().Set(reflect.ValueOf(src).Elem())
+func setPointer(dst, src any) error {
+	dstValue := reflect.ValueOf(dst)
+	srcValue := reflect.ValueOf(src)
+	if !dstValue.IsValid() || !srcValue.IsValid() {
+		return fmt.Errorf("dst and src must be valid")
+	}
+	if dstValue.IsNil() || srcValue.IsNil() {
+		return fmt.Errorf("dst and src must be non-nil")
+	}
+	dstElem := dstValue.Elem()
+	srcElem := srcValue.Elem()
+	if dstElem.Type() != srcElem.Type() {
+		return fmt.Errorf("dst and src must have the same type")
+	}
+	dstElem.Set(srcElem)
+	return nil
 }

@@ -85,7 +85,6 @@ func (k Keeper) executeBundledTx(ctx context.Context, bundler string, txBytes []
 	authGasUsed, err := k.BranchService.ExecuteWithGasLimit(ctx, xt.AuthenticationGasLimit, func(ctx context.Context) error {
 		return k.AuthenticateAccount(ctx, signer, bundler, protov2TxRawToProtoV1(bundledTx.TxRaw), protoV2TxToProtoV1(bundledTx.Tx), 0)
 	})
-
 	resp.AuthenticationGasUsed = authGasUsed // set independently of outcome
 	if err != nil {
 		return resp, fmt.Errorf("%w: %w", ErrAuthentication, err)

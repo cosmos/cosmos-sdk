@@ -162,38 +162,42 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 			messageBinder.hasOptional = true
 		}
 
-		field := fields.ByName(protoreflect.Name(arg.ProtoField))
-		if field == nil {
-			return nil, fmt.Errorf("can't find field %s on %s", arg.ProtoField, messageType.Descriptor().FullName())
+		if arg.FlattenFields {
+			msgFields := messageType.Descriptor().Fields()
+			for j := range msgFields.Len() { // todo: this loop can be removed if msgFields.ByName(arg.protoField)
+				field := msgFields.Get(j)
+				if arg.ProtoField == string(field.Name()) {
+					msgType := messageType.New().Get(field).Message()
+					innerFields := msgType.Descriptor().Fields()
+					for k := range innerFields.Len() {
+						err := b.addFieldBindingToArgs(ctx, messageBinder, k, innerFields)
+						if err != nil {
+							return nil, err
+						}
+					}
+					break
+				}
+			}
+			continue
 		}
 
-		_, hasValue, err := b.addFieldFlag(
-			ctx,
-			messageBinder.positionalFlagSet,
-			field,
-			&autocliv1.FlagOptions{Name: fmt.Sprintf("%d", i)},
-			namingOptions{},
-		)
+		err := b.addFieldBindingToArgs(ctx, messageBinder, i, fields)
 		if err != nil {
 			return nil, err
 		}
-
-		messageBinder.positionalArgs = append(messageBinder.positionalArgs, fieldBinding{
-			field:    field,
-			hasValue: hasValue,
-		})
 	}
 
+	totalArgs := len(messageBinder.positionalArgs)
 	switch {
 	case messageBinder.hasVarargs:
-		messageBinder.CobraArgs = cobra.MinimumNArgs(positionalArgsLen - 1)
-		messageBinder.mandatoryArgUntil = positionalArgsLen - 1
+		messageBinder.CobraArgs = cobra.MinimumNArgs(totalArgs - 1)
+		messageBinder.mandatoryArgUntil = totalArgs - 1
 	case messageBinder.hasOptional:
-		messageBinder.CobraArgs = cobra.RangeArgs(positionalArgsLen-1, positionalArgsLen)
-		messageBinder.mandatoryArgUntil = positionalArgsLen - 1
+		messageBinder.CobraArgs = cobra.RangeArgs(totalArgs-1, totalArgs)
+		messageBinder.mandatoryArgUntil = totalArgs - 1
 	default:
-		messageBinder.CobraArgs = cobra.ExactArgs(positionalArgsLen)
-		messageBinder.mandatoryArgUntil = positionalArgsLen
+		messageBinder.CobraArgs = cobra.ExactArgs(totalArgs)
+		messageBinder.mandatoryArgUntil = totalArgs
 	}
 
 	// validate flag options
@@ -271,6 +275,34 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	})
 
 	return messageBinder, nil
+}
+
+// addFieldBindingToArgs adds a fieldBinding for a positional argument to the message binder.
+// The fieldBinding is appended to the positional arguments list in the message binder.
+func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, i int, fields protoreflect.FieldDescriptors) error {
+	field := fields.Get(i)
+	if field == nil {
+		return errors.New("can't find filed of inner message") // TODO: this should show names
+		//return fmt.Errorf("can't find field %s on %s", arg.ProtoField, messageType.Descriptor().FullName())
+	}
+
+	_, hasValue, err := b.addFieldFlag(
+		ctx,
+		messageBinder.positionalFlagSet,
+		field,
+		&autocliv1.FlagOptions{Name: fmt.Sprintf("%d", len(messageBinder.positionalArgs))},
+		namingOptions{},
+	)
+	if err != nil {
+		return err
+	}
+
+	messageBinder.positionalArgs = append(messageBinder.positionalArgs, fieldBinding{
+		field:    field,
+		hasValue: hasValue,
+	})
+
+	return nil
 }
 
 // bindPageRequest create a flag for pagination

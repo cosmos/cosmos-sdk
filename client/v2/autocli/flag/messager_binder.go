@@ -2,6 +2,7 @@ package flag
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -65,10 +66,25 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 		}
 	}
 
+	msgName := msg.Descriptor().Name()
 	// bind positional arg values to the message
-	for _, arg := range m.positionalArgs {
-		if err := arg.bind(msg); err != nil {
-			return err
+	for i := 0; i < len(m.positionalArgs); i++ {
+		arg := m.positionalArgs[i]
+		if msgName == arg.field.Parent().Name() {
+			if err := arg.bind(msg); err != nil {
+				return err
+			}
+		} else {
+			name := protoreflect.Name(strings.ToLower(string(arg.field.Parent().Name())))
+			innerMsg := msg.New().Get(msg.Descriptor().Fields().ByName(name)).Message().New()
+			for j := 0; j < innerMsg.Descriptor().Fields().Len(); j++ {
+				arg = m.positionalArgs[j+i]
+				if err := arg.bind(innerMsg); err != nil {
+					return err
+				}
+			}
+			msg.Set(msg.Descriptor().Fields().ByName(name), protoreflect.ValueOfMessage(innerMsg))
+			i += innerMsg.Descriptor().Fields().Len()
 		}
 	}
 
@@ -93,6 +109,7 @@ type fieldBinding struct {
 	field    protoreflect.FieldDescriptor
 }
 
+// TODO: how to bind inner messages
 func (f fieldBinding) bind(msg protoreflect.Message) error {
 	field := f.field
 	val, err := f.hasValue.Get(msg.NewField(field))

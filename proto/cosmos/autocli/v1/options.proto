@@ -140,4 +140,7 @@ message PositionalArgDescriptor {
   // optional makes the last positional parameter optional.
   // Note: It is mutually exclusive with varargs.
   bool optional = 3;
+
+  // TODO: doc
+  bool flatten_fields = 14;
 }

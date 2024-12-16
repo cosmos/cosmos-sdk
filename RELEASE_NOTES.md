@@ -9,8 +9,8 @@ The last two months, next to ramping up on v0.52 and v2, we added a few bug fixe
 
 Notable changes:
 
+* Fix [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm).
 * New Linux-only backend that adds Linux kernel's `keyctl` support
-* Fix fallback genesis path in server
 * Skip sims test when running dry on validators
 
 ## 📝 Changelog

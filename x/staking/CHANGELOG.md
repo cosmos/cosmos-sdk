@@ -96,11 +96,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"cosmossdk.io/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
 * [#20295](https://github.com/cosmos/cosmos-sdk/pull/20295) `GetValidatorByConsAddr` now returns the Cosmos SDK `cryptotypes.Pubkey` instead of `cometcrypto.Publickey`. The caller is responsible to translate the returned value to the expected type. 
     * Remove `CmtConsPublicKey()` and `TmConsPublicKey()` from `Validator` interface and as methods on the `Validator` struct.
+<<<<<<< HEAD
 * [#21480](https://github.com/cosmos/cosmos-sdk/pull/21480) ConsensusKeeper is required to be passed to the keeper. 
 
+=======
+* [#21480](https://github.com/cosmos/cosmos-sdk/pull/21480) ConsensusKeeper is required to be passed to the keeper.
+* [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
+    * New field `Metadata` introduced in `types`: `Description`.
+    * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) `NewUnbondingDelegationEntry`, `NewUnbondingDelegation`, `AddEntry`, `NewRedelegationEntry`, `NewRedelegation` and `NewRedelegationEntryResponse` no longer take an ID in there function signatures.
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) AfterUnbondingInitiated hook has been removed as it is no longer required by ICS.
+  
+>>>>>>> 234cdc45f (refactor(x/staking)!: removing unbonding queue index  (#22795))
 ### State Breaking changes
 
 * [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In a undelegation or redelegation if the shares being left delegated correspond to less than 1 token (in base denom) the entire delegation gets removed.
 * [#18142](https://github.com/cosmos/cosmos-sdk/pull/18142) Introduce `key_rotation_fee` param to calculate fees while rotating the keys
 * [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 * [#20845](https://github.com/cosmoc/cosmos-sdk/pull/20845) Remove HistoricalInfo from the staking modules storage
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) Keys `stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey` have been removed as they are no longer required by ICS.

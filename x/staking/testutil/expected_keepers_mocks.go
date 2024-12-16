@@ -601,6 +601,7 @@ func (mr *MockStakingHooksMockRecorder) AfterDelegationModified(ctx, delAddr, va
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDelegationModified", reflect.TypeOf((*MockStakingHooks)(nil).AfterDelegationModified), ctx, delAddr, valAddr)
 }
 
+<<<<<<< HEAD
 // AfterUnbondingInitiated mocks base method.
 func (m *MockStakingHooks) AfterUnbondingInitiated(ctx context.Context, id uint64) error {
 	m.ctrl.T.Helper()
@@ -615,6 +616,8 @@ func (mr *MockStakingHooksMockRecorder) AfterUnbondingInitiated(ctx, id interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterUnbondingInitiated", reflect.TypeOf((*MockStakingHooks)(nil).AfterUnbondingInitiated), ctx, id)
 }
 
+=======
+>>>>>>> 234cdc45f (refactor(x/staking)!: removing unbonding queue index  (#22795))
 // AfterValidatorBeginUnbonding mocks base method.
 func (m *MockStakingHooks) AfterValidatorBeginUnbonding(ctx context.Context, consAddr types1.ConsAddress, valAddr types1.ValAddress) error {
 	m.ctrl.T.Helper()

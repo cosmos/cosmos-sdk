@@ -203,7 +203,7 @@ The metadata merkle tree is a crucial component of the `SIGN_MODE_UNIFIED` desig
 
 2. **Sort the leaves**: The leaves are sorted to ensure the tree root is deterministic.
 
-3. **Build the tree**: The tree is built from the bottom up, combining pairs of hashes to form parent nodes until a single root hash is obtained.
+3. **Build the tree**: The tree is built from the bottom up, combining pairs of hashes to form parent nodes until a single root hash is obtained. 
 
 4. **Handle empty trees**: If there are no nodes left in the list (i.e., the initial data set was empty), an all-zeros hash `[32]byte{0}` is used to represent the empty tree.
 
@@ -231,12 +231,12 @@ The resulting `merkleTreeRoot` is the last node left in the list of nodes, repre
 
 The signing process steps are the following:
 
-1. The transaction is built, including the root hash and transaction data.
-2. The signer receives the transaction and starts receiving the corresponding chunks of the CBOR encoded metadata file (types and proofs).
-3. The signer verifies the integrity of the received chunks by computing the root hash of the merkle tree from the chunks and comparing it against the tree root hash in the metadata digest.
-4. The signer decodes the transaction fields using the received chunks and displays them to the user.
-5. The user reviews the transaction and signs it.
-6. Once the transaction is broadcasted, the validator compares the metadata hash included in the signed transaction against the one locally stored in the node to verify that all the messages were signed with the consensual metadata structure.
+ 1. The transaction is built, including the root hash and transaction data.
+ 2. The signer receives the transaction and starts receiving the corresponding chunks of the CBOR encoded metadata file (types and proofs).
+ 3. The signer verifies the integrity of the received chunks by computing the root hash of the merkle tree from the chunks and comparing it against the tree root hash in the metadata digest.
+ 4. The signer decodes the transaction fields using the received chunks and displays them to the user.
+ 5. The user reviews the transaction and signs it.
+ 6. Once the transaction is broadcasted, the validator compares the metadata hash included in the signed transaction against the one locally stored in the node to verify that all the messages were signed with the consensual metadata structure.
 
 
 
@@ -279,37 +279,59 @@ We will implement `SIGN_MODE_UNIFIED` as a new sign mode for the Cosmos SDK. Thi
 * The transaction verification process will be modified to validate the metadata hash against the locally stored metadata on validator nodes.
 * Comprehensive documentation for `SIGN_MODE_UNIFIED` will be created, including guides for wallet developers and chain developers on how to implement and use the new sign mode.
 * A migration strategy will be implemented to allow for a (progressive) smooth transition from existing sign modes to `SIGN_MODE_UNIFIED`.
-* Finally, all legacy sign modes will be deprecated and removed from the SDK.
+* Finally, all legacy sign modes (`SIGN_MODE_LEGACY_AMINO`, `SIGN_MODE_DIRECT`, `SIGN_MODE_TEXTUAL`) will be deprecated and removed from the SDK.
+
+## Alternatives
+
+### Encoding options
+
+We've chosen CBOR (Concise Binary Object Representation) as our encoding format primarily because it provides deterministic encoding, allowing us to build a merkle tree with consistent root hashes across different signer implementations. 
+
+An alternative approach that prioritizes human readability would be to use plain JSON along with a specification defining "canonical" JSON encoding rules. This would achieve deterministic encoding across different signer implementations while maintaining readability. However, this approach would require all wallet implementations of this sign mode to ensure their JSON encoder complies with the canonical encoding rules, otherwise transactions would be rejected by validators. A complete suite for testing canonical JSON would be needed.
+
+Below is a table comparing the two options:
+
+| Feature                     | CBOR                              | JSON + SPEC                                    |
+| --------------------------- | --------------------------------- | --------------------------------------------- |
+| **Data Size**               | Compact binary format             | Larger but optimized with canonical encoding  |
+| **Parsing Speed**           | Faster due to binary encoding     | Slower due to text processing                 |
+| **Storage Requirements**    | Lower                             | Higher but manageable with optimized structure|
+| **Human Readability**       | Not human-readable                | Human-readable                                |
+| **Ecosystem Support**       | Requires specific libraries/tools | Widely supported with standardization efforts |
+| **Security**                | Less prone to injection attacks   | Prevents injection with strict canonical rules|
+| **Interoperability**        | Standardized for consistent use   | High due to canonical JSON specification      |
+
+
 
 ## Consequences
 
 ### Backwards Compatibility
 
 **Preservation of Existing Sign Modes:**
-* Existing sign modes remain supported to ensure that legacy wallets and clients continue to function without interruption.
+    * Existing sign modes remain supported to ensure that legacy wallets and clients continue to function without interruption.
 
 ### Positive
 
 * **Enhanced User Experience:**
     * `SIGN_MODE_UNIFIED` provides a more intuitive and secure signing experience for users, especially on hardware wallets, by enabling the display of human-readable transaction details.
-
+  
 * **Improved Security:**
     * Reduces the risk of blind signing by allowing users to verify transaction contents before signing.
-
+  
 * **Consistency Across Platforms:**
     * Standardizes the signing process across different wallets and platforms, ensuring uniform behavior and reducing inconsistencies.
-
+  
 * **Reduced Maintenance Overhead:**
     * Consolidates multiple sign modes into a unified approach, decreasing the complexity and maintenance efforts on the codebase.
-
+  
 * **Versioned Metadata:**
     * The metadata will be versioned, allowing for better control and management of changes over time.
 
 ### Negative
-
+    
 * **Development Effort:**
     * Requires significant development effort to implement the new sign mode, including updates to multiple components such as transaction builders, signers, and validators and HW wallet apps.
-
+  
 * **Tooling and Documentation Updates:**
     * Requires updates to existing tools, documentation, and developer guides to accommodate the new sign mode, which may involve additional resources and time.
 
@@ -320,7 +342,7 @@ We will implement `SIGN_MODE_UNIFIED` as a new sign mode for the Cosmos SDK. Thi
 
 * **New HW wallets apps:**
     * The new HW wallets apps will need to be updated to support the new sign mode.
-
+  
 
 ## References
 

@@ -71,13 +71,6 @@ Core dependencies are the core libraries that an application may depend on.
 Core dependencies not mentioned here as compatible across all maintained SDK versions.
 See an exhaustive list of core dependencies at [cosmossdk.io](https://cosmossdk.io).
 
-<<<<<<< HEAD
-| Cosmos SDK | cosmossdk.io/core | cosmossdk.io/api | cosmossdk.io/x/tx |
-| ---------- | ----------------- | ---------------- | ----------------- |
-| 0.52.z     | 1.y.z             | 0.8.z            | 0.14.z            |
-| 0.50.z     | 0.11.z            | 0.7.z            | 0.13.z            |
-| 0.47.z     | 0.5.z             | 0.3.z            | N/A               |
-=======
 | Version                  | v2    | 0.52.z    | 0.50.z         | 0.47.z  |
 | ------------------------ | ----- | --------- | -------------- | ------- |
 | cosmossdk.io/core        | 1.y.z | 1.y.z     | 0.11.z         | 0.5.z   |
@@ -86,7 +79,6 @@ See an exhaustive list of core dependencies at [cosmossdk.io](https://cosmossdk.
 | cosmossdk.io/store       | N/A   | >= 1.10.z | 1.0.0 >= 1.9.z | N/A     |
 | cosmossdk.io/store/v2    | 2.y.z | N/A       | N/A            | N/A     |
 | cosmossdk.io/collections | 1.y.z | 1.y.z     | < 1.y.z        | < 1.y.z |
->>>>>>> 8ff9f48bb (chore: package release prep + update UPGRADING.md (#22864))
 
 #### Module Dependencies
 

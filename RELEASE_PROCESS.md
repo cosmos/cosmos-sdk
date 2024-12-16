@@ -240,8 +240,6 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 ### Modules that do not depend on the Cosmos SDK
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
-<<<<<<< HEAD
-=======
 
 ## Go Monorepo Branching Strategy
 
@@ -269,4 +267,3 @@ This strategy provides several benefits:
 * Ensure thorough testing of the release branch structure to avoid any integration issues.
 
 This branching strategy helps maintain a clear separation between components tagged from main and those tagged from release branches, while ensuring that release branches accurately represent the state of components that depend on the SDK.
->>>>>>> 8ff9f48bb (chore: package release prep + update UPGRADING.md (#22864))

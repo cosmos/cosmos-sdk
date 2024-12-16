@@ -187,10 +187,6 @@ replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/accounts => ../accounts
-<<<<<<< HEAD
-	cosmossdk.io/x/authz => ../authz
-=======
->>>>>>> 8ff9f48bb (chore: package release prep + update UPGRADING.md (#22864))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/epochs => ../epochs

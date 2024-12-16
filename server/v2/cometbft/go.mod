@@ -3,8 +3,6 @@ module cosmossdk.io/server/v2/cometbft
 go 1.23.2
 
 replace (
-	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
@@ -13,16 +11,16 @@ replace (
 
 require (
 	cosmossdk.io/api v0.8.0-rc.2 // main
-	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
+	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.5.0
-	cosmossdk.io/schema v0.4.0 //main
-	cosmossdk.io/server/v2 v2.0.0-20241211154953-a38a6a2c8bc8 // main
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241203212527-7d117425d880 // main
-	cosmossdk.io/server/v2/stf v0.0.0-20241212104257-e6948eeda877 // main
-	cosmossdk.io/store/v2 v2.0.0-20241209145349-34f407d6367a // main
+	cosmossdk.io/schema v1.0.0 //main
+	cosmossdk.io/server/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20241216193553-ee5da1a70d7a // main
+	cosmossdk.io/server/v2/stf v0.0.0-20241216193553-ee5da1a70d7a // main
+	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
 	github.com/cometbft/cometbft/api v1.0.0-rc2
@@ -39,10 +37,10 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // indirect
+	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
-	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
+	cosmossdk.io/store v1.10.0-rc.1 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main

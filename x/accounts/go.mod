@@ -4,9 +4,9 @@ go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0-rc.2 // main
-	cosmossdk.io/collections v0.4.1-0.20241209183624-332d0b106d1b // main
+	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // main
+	cosmossdk.io/core/testing v0.0.1 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // main
@@ -39,8 +39,8 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/schema v0.4.0
-	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
+	cosmossdk.io/schema v1.0.0
+	cosmossdk.io/store v1.10.0-rc.1 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -177,8 +177,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
-	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241204123127-eb3bf8b0469d // main
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/staking => ../staking
 )

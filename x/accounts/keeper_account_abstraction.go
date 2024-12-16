@@ -82,9 +82,12 @@ func (k Keeper) executeBundledTx(ctx context.Context, bundler string, txBytes []
 	resp := new(v1.BundledTxResponse)
 	// to execute a bundled tx the first step is authentication.
 	signer := bundledTx.Signers[0]
+	fmt.Println(xt.AuthenticationGasLimit)
 	authGasUsed, err := k.BranchService.ExecuteWithGasLimit(ctx, xt.AuthenticationGasLimit, func(ctx context.Context) error {
 		return k.AuthenticateAccount(ctx, signer, bundler, protov2TxRawToProtoV1(bundledTx.TxRaw), protoV2TxToProtoV1(bundledTx.Tx), 0)
 	})
+
+	fmt.Println(authGasUsed)
 	resp.AuthenticationGasUsed = authGasUsed // set independently of outcome
 	if err != nil {
 		return resp, fmt.Errorf("%w: %w", ErrAuthentication, err)

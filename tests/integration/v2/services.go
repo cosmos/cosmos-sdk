@@ -21,6 +21,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf"
+	stfbranch "cosmossdk.io/server/v2/stf/branch"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
@@ -244,13 +245,53 @@ func (bs *BranchService) ExecuteWithGasLimit(
 		return 0, errors.New("context is not an integration context")
 	}
 
+	originalGasMeter := iCtx.gasMeter
+
+	iCtx.gasMeter = stfgas.DefaultGasMeter(gasLimit)
+
 	// execute branched, with predefined gas limit.
-	err = f(ctx)
+	err = bs.execute(ctx, iCtx, f)
+
 	// restore original context
 	gasUsed = iCtx.gasMeter.Limit() - iCtx.gasMeter.Remaining()
-	_ = iCtx.gasMeter.Consume(gasUsed, "execute-with-gas-limit")
+	_ = originalGasMeter.Consume(gasUsed, "execute-with-gas-limit")
+	iCtx.gasMeter = stfgas.DefaultGasMeter(originalGasMeter.Remaining())
 
 	return gasUsed, err
+}
+
+func (bs BranchService) execute(ctx context.Context, ictx *integrationContext, f func(ctx context.Context) error) error {
+	branchedState := stfbranch.DefaultNewWriterMap(ictx.state)
+	meteredBranchedState := stfgas.DefaultWrapWithGasMeter(ictx.gasMeter, branchedState)
+
+	branchedCtx := &integrationContext{
+		state:    meteredBranchedState,
+		gasMeter: ictx.gasMeter,
+		header:   ictx.header,
+		events:   ictx.events,
+	}
+
+	newCtx := context.WithValue(ctx, contextKey, branchedCtx)
+
+	err := f(newCtx)
+	if err != nil {
+		return err
+	}
+
+	err = applyStateChanges(ictx.state, branchedCtx.state)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func applyStateChanges(dst, src corestore.WriterMap) error {
+	changes, err := src.GetStateChanges()
+	if err != nil {
+		return err
+	}
+	return dst.ApplyStateChanges(changes)
 }
 
 // msgTypeURL returns the TypeURL of a proto message.

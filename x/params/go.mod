@@ -3,7 +3,7 @@ module cosmossdk.io/x/params
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.0-rc.2
+	cosmossdk.io/api v0.8.0-rc.3
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0

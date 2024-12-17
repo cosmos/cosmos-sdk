@@ -3,7 +3,7 @@ go 1.23.2
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.8.0-rc.2
+	cosmossdk.io/api v0.8.0-rc.3
 	cosmossdk.io/collections v1.0.0-rc.1
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.1

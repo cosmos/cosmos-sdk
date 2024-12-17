@@ -254,6 +254,7 @@ replace (
 	cosmossdk.io/runtime/v2 => ../runtime/v2
 	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
 	cosmossdk.io/server/v2/stf => ../server/v2/stf
+	cosmossdk.io/store => ../store
 	cosmossdk.io/store/v2 => ../store/v2
 	cosmossdk.io/tools/benchmark => ../tools/benchmark
 	cosmossdk.io/x/accounts => ../x/accounts

@@ -161,7 +161,6 @@ func NewSimApp[T transaction.Tx](
 	var err error
 	app.App, err = appBuilder.Build(runtime.AppBuilderWithPreblocker(
 		func(ctx context.Context, txs []T) error {
-			fmt.Println("Preblocker!!!", txs)
 			return nil
 		},
 	))

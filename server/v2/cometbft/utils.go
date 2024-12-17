@@ -14,8 +14,6 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -32,6 +30,8 @@ import (
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/x/consensus/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -512,6 +512,10 @@ func ValidateVoteExtensions[T transaction.Tx](
 	if !extsEnabled {
 		extsEnabled = cp.Abci != nil && currentHeight > cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
 	}
+	if !extsEnabled {
+		return nil
+	}
+
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
 		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {

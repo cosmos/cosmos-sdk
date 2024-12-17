@@ -17,10 +17,9 @@ import (
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	staking "cosmossdk.io/x/staking/types"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // initAppConfig helps to override default client config template and configs.

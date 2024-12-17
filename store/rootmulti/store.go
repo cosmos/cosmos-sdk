@@ -65,17 +65,18 @@ type Store struct {
 	iavlDisableFastNode bool
 	iavlSyncPruning     bool
 	storesParams        map[types.StoreKey]storeParams
-	stores              map[types.StoreKey]types.CommitKVStore
-	keysByName          map[string]types.StoreKey
-	initialVersion      int64
-	removalMap          map[types.StoreKey]bool
-	traceWriter         io.Writer
-	traceContext        types.TraceContext
-	traceContextMutex   sync.Mutex
-	interBlockCache     types.MultiStorePersistentCache
-	listeners           map[types.StoreKey]*types.MemoryListener
-	metrics             metrics.StoreMetrics
-	commitHeader        cmtproto.Header
+	// CommitStore is a common interface to unify generic CommitKVStore of different value types
+	stores            map[types.StoreKey]types.CommitStore
+	keysByName        map[string]types.StoreKey
+	initialVersion    int64
+	removalMap        map[types.StoreKey]bool
+	traceWriter       io.Writer
+	traceContext      types.TraceContext
+	traceContextMutex sync.Mutex
+	interBlockCache   types.MultiStorePersistentCache
+	listeners         map[types.StoreKey]*types.MemoryListener
+	metrics           metrics.StoreMetrics
+	commitHeader      cmtproto.Header
 }
 
 var (
@@ -94,7 +95,7 @@ func NewStore(db corestore.KVStoreWithBatch, logger iavltree.Logger, metricGathe
 		iavlCacheSize:       iavl.DefaultIAVLCacheSize,
 		iavlDisableFastNode: iavlDisablefastNodeDefault,
 		storesParams:        make(map[types.StoreKey]storeParams),
-		stores:              make(map[types.StoreKey]types.CommitKVStore),
+		stores:              make(map[types.StoreKey]types.CommitStore),
 		keysByName:          make(map[string]types.StoreKey),
 		listeners:           make(map[types.StoreKey]*types.MemoryListener),
 		removalMap:          make(map[types.StoreKey]bool),
@@ -161,12 +162,6 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db co
 // GetCommitStore returns a mounted CommitStore for a given StoreKey. If the
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
-	return rs.GetCommitKVStore(key)
-}
-
-// GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
-// store is wrapped in an inter-block cache, it will be unwrapped before returning.
-func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	// If the Store has an inter-block cache, first attempt to lookup and unwrap
 	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
 	// the main mapping of CommitKVStores.
@@ -177,6 +172,17 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	}
 
 	return rs.stores[key]
+}
+
+// GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
+func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
+	store, ok := rs.GetCommitStore(key).(types.CommitKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not CommitKVStore", key))
+	}
+
+	return store
 }
 
 // StoreKeysByName returns mapping storeNames -> StoreKeys
@@ -227,7 +233,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	}
 
 	// load each Store (note this doesn't panic on unmounted keys now)
-	newStores := make(map[types.StoreKey]types.CommitKVStore)
+	newStores := make(map[types.StoreKey]types.CommitStore)
 
 	storesKeys := make([]types.StoreKey, 0, len(rs.storesParams))
 
@@ -581,11 +587,13 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
-		store := types.KVStore(v)
-		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
-		// set same listeners on cache store will observe duplicated writes.
-		if rs.ListeningEnabled(k) {
-			store = listenkv.NewStore(store, k, rs.listeners[k])
+		store := types.CacheWrapper(v)
+		if kv, ok := store.(types.KVStore); ok {
+			// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+			// set same listeners on cache store will observe duplicated writes.
+			if rs.ListeningEnabled(k) {
+				store = listenkv.NewStore(kv, k, rs.listeners[k])
+			}
 		}
 		stores[k] = store
 	}
@@ -601,7 +609,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 	var commitInfo *types.CommitInfo
 	storeInfos := map[string]bool{}
 	for key, store := range rs.stores {
-		var cacheStore types.KVStore
+		var cacheStore types.CacheWrapper
 		switch store.GetStoreType() {
 		case types.StoreTypeIAVL:
 			// If the store is wrapped with an inter-block cache, we must first unwrap
@@ -644,10 +652,12 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			cacheStore = store
 		}
 
-		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
-		// set same listeners on cache store will observe duplicated writes.
-		if rs.ListeningEnabled(key) {
-			cacheStore = listenkv.NewStore(cacheStore, key, rs.listeners[key])
+		if kv, ok := cacheStore.(types.KVStore); ok {
+			// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+			// set same listeners on cache store will observe duplicated writes.
+			if rs.ListeningEnabled(key) {
+				cacheStore = listenkv.NewStore(kv, key, rs.listeners[key])
+			}
 		}
 
 		cachedStores[key] = cacheStore
@@ -663,7 +673,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 // TODO: This isn't used directly upstream. Consider returning the Store as-is
 // instead of unwrapping.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.GetCommitKVStore(key)
+	store := rs.GetCommitStore(key)
 	if store == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
@@ -682,13 +692,30 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	if s == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
-	store := types.KVStore(s)
+	store, ok := s.(types.KVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not KVStore", key))
+	}
 
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
 	}
 	if rs.ListeningEnabled(key) {
 		store = listenkv.NewStore(store, key, rs.listeners[key])
+	}
+
+	return store
+}
+
+// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
+func (rs *Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
+	s := rs.stores[key]
+	if s == nil {
+		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
+	}
+	store, ok := s.(types.ObjKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not ObjKVStore", key))
 	}
 
 	return store
@@ -745,7 +772,7 @@ func (rs *Store) GetStoreByName(name string) types.Store {
 		return nil
 	}
 
-	return rs.GetCommitKVStore(key)
+	return rs.GetCommitStore(key)
 }
 
 // Query calls substore.Query with the same `req` where `req.Path` is
@@ -860,7 +887,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	stores := []namedStore{}
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
-		switch store := rs.GetCommitKVStore(key).(type) {
+		switch store := rs.GetCommitStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store:
@@ -1023,7 +1050,7 @@ loop:
 	return snapshotItem, rs.LoadLatestVersion()
 }
 
-func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {
+func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitStore, error) {
 	var db corestore.KVStoreWithBatch
 
 	if params.db != nil {
@@ -1056,19 +1083,25 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		return commitDBStoreAdapter{Store: dbadapter.Store{DB: db}}, nil
 
 	case types.StoreTypeTransient:
-		_, ok := key.(*types.TransientStoreKey)
-		if !ok {
-			return nil, fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
+		if _, ok := key.(*types.TransientStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a TransientStoreKey; got: %s, %T", key.String(), key)
 		}
 
 		return transient.NewStore(), nil
 
 	case types.StoreTypeMemory:
 		if _, ok := key.(*types.MemoryStoreKey); !ok {
-			return nil, fmt.Errorf("unexpected key type for a MemoryStoreKey; got: %s", key.String())
+			return nil, fmt.Errorf("unexpected key type for a MemoryStoreKey; got: %s, %T", key.String(), key)
 		}
 
 		return mem.NewStore(), nil
+
+	case types.StoreTypeObject:
+		if _, ok := key.(*types.ObjectStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey; got: %s, %T", key.String(), key)
+		}
+
+		return transient.NewObjStore(), nil
 
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
@@ -1081,7 +1114,7 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 	for _, key := range keys {
 		store := rs.stores[key]
 		storeType := store.GetStoreType()
-		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
+		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory || storeType == types.StoreTypeObject {
 			continue
 		}
 		storeInfos = append(storeInfos, types.StoreInfo{
@@ -1201,7 +1234,7 @@ func GetLatestVersion(db corestore.KVStoreWithBatch) int64 {
 }
 
 // Commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
+func commitStores(version int64, storeMap map[types.StoreKey]types.CommitStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 	storeKeys := keysFromStoreKeyMap(storeMap)
 
@@ -1221,7 +1254,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 		}
 
 		storeType := store.GetStoreType()
-		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
+		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory || storeType == types.StoreTypeObject {
 			continue
 		}
 

@@ -33,6 +33,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## v1.10.0 (December 13, 2024)
 
+### Features
+
+* [#22893](https://github.com/cosmos/cosmos-sdk/pull/22893) Support mount object store in baseapp, add `ObjectStore` api in context.
+
 ### Improvements
 
 * [#22305](https://github.com/cosmos/cosmos-sdk/pull/22305) Add `LatestVersion` to the `Committer` interface to get the latest version of the store.

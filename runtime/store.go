@@ -163,7 +163,7 @@ func (s kvStoreAdapter) Set(key, value []byte) {
 	}
 }
 
-func (s kvStoreAdapter) Iterator(start, end []byte) store.Iterator {
+func (s kvStoreAdapter) Iterator(start, end []byte) storetypes.Iterator {
 	it, err := s.store.Iterator(start, end)
 	if err != nil {
 		panic(err)
@@ -171,7 +171,7 @@ func (s kvStoreAdapter) Iterator(start, end []byte) store.Iterator {
 	return it
 }
 
-func (s kvStoreAdapter) ReverseIterator(start, end []byte) store.Iterator {
+func (s kvStoreAdapter) ReverseIterator(start, end []byte) storetypes.Iterator {
 	it, err := s.store.ReverseIterator(start, end)
 	if err != nil {
 		panic(err)

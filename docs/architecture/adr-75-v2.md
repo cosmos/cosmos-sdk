@@ -62,6 +62,7 @@ These components will be broken into separate go.mods. The modules consist of th
 
 * Consensus
 * STF  (State Transition Function)
+* Application Manager
 * Server/v2
 * Store/v2
 * Runtime/v2
@@ -77,7 +78,8 @@ graph TD
         Consensus
         API[API]
     end
-Server <--> B["STF(State Transition Function)"]
+Server <--> AM[Application Manager]
+AM <--> B["STF(State Transition Function)"]
 B <--> C[Bank]
 B <--> D[Auth]
 B <--> G[Staking]
@@ -152,6 +154,25 @@ Consensus <-->|ABCI| A[CometBFT]
 :::Note
 ABCI, Vote Extensions, and Prepare & Process Proposal are primitives of cometbft, V2 is not tied to these features, teams do not have to adhere to them if they implement their own consensus engine.
 :::
+
+### Application Manager
+
+The application manager is responsible for handling genesis state (init_genesis and export geneeis). It is a light wrapper around the state transition function.
+
+```mermaid
+sequenceDiagram
+    participant R as Runtime
+    participant ST as Storage
+    participant AM as AppManager
+    participant STF as State Transition Function
+    participant M as Module
+    R ->> AM: Call Init Genesis
+    AM ->> STF: Execute inital genesis
+    STF ->> M: Call Init Genesis
+    M -->> STF: Return Change sets
+    STF -->> AM: Return Change sets
+    AM -->> ST: Commit changesets
+```
 
 ### State Transition Function
 

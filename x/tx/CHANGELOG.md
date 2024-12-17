@@ -33,7 +33,7 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
-## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.3) - 2024-12-12
+## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.3) - 2024-12-16
 
 ### Bug Fixes
 

@@ -104,6 +104,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
     * New field `Metadata` introduced in `types`: `Description`.
     * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) `NewUnbondingDelegationEntry`, `NewUnbondingDelegation`, `AddEntry`, `NewRedelegationEntry`, `NewRedelegation` and `NewRedelegationEntryResponse` no longer take an ID in there function signatures.
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) AfterUnbondingInitiated hook has been removed as it is no longer required by ICS.
   
 ### State Breaking changes
 
@@ -111,3 +113,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18142](https://github.com/cosmos/cosmos-sdk/pull/18142) Introduce `key_rotation_fee` param to calculate fees while rotating the keys
 * [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 * [#20845](https://github.com/cosmoc/cosmos-sdk/pull/20845) Remove HistoricalInfo from the staking modules storage
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) Keys `stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey` have been removed as they are no longer required by ICS.

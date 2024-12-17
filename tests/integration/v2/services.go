@@ -126,6 +126,20 @@ func GetAttributes(e []event.Event, key string) ([]event.Attribute, bool) {
 	return attrs, len(attrs) > 0
 }
 
+func GetAttribute(e event.Event, key string) (event.Attribute, bool) {
+	attributes, err := e.Attributes()
+	if err != nil {
+		return event.Attribute{}, false
+	}
+	for _, attr := range attributes {
+		if attr.Key == key {
+			return attr, true
+		}
+	}
+
+	return event.Attribute{}, false
+}
+
 func GasMeterFromContext(ctx context.Context) gas.Meter {
 	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
 	if !ok {

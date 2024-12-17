@@ -50,7 +50,7 @@ require (
 )
 
 require (
-	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b
+	cosmossdk.io/indexer/postgres v0.1.0
 	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
 	github.com/jackc/pgx/v5 v5.7.1
 )
@@ -251,7 +251,6 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/tools/benchmark => ../tools/benchmark
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts

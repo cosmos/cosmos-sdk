@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
@@ -294,6 +295,44 @@ func (k BaseKeeper) SendCoinsFromAccountToModule(
 	}
 
 	return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+}
+
+// MockSendCoinsFromAccountToModule mocks the transfer of coins to simulate the gas consumed on a proper transaciton.
+// This function is only used for simulation purposes.
+// An error is returned if the module account does not exist.
+func (k BaseKeeper) MockSendCoinsFromAccountToModule(
+	ctx context.Context, senderAddr sdk.AccAddress, recipientModule string,
+) error {
+	// check if the transaction is in simulate mode
+	execMode := k.Environment.TransactionService.ExecMode(ctx)
+	if execMode != transaction.ExecModeSimulate {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "cannot send coins from account to module in non-simulate mode")
+	}
+
+	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
+	if recipientAcc == nil {
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule)
+	}
+
+	gasMeter := k.Environment.GasService.GasMeter(ctx)
+	gasConfig := k.Environment.GasService.GasConfig(ctx)
+	// safeSub conducts one get and one set of the balance
+	if err := gasMeter.Consume(gasConfig.ReadCostFlat, "GetBalance"); err != nil {
+		return err
+	}
+	if err := gasMeter.Consume(gasConfig.WriteCostFlat, "SetBalance"); err != nil {
+		return err
+	}
+
+	// add conducts one get and one set of the balance
+	if err := gasMeter.Consume(gasConfig.ReadCostFlat, "GetBalance"); err != nil {
+		return err
+	}
+	if err := gasMeter.Consume(gasConfig.WriteCostFlat, "SetBalance"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // DelegateCoinsFromAccountToModule delegates coins and transfers them from a

@@ -88,7 +88,7 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transacti
 		}
 	}
 
-	if err := dfd.checkDeductFee(ctx, feeTx, fee); err != nil {
+	if err := dfd.checkDeductFee(ctx, feeTx, fee, execMode); err != nil {
 		return 0, err
 	}
 
@@ -102,7 +102,7 @@ func (dfd *DeductFeeDecorator) ValidateTx(ctx context.Context, tx transaction.Tx
 	return err
 }
 
-func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.FeeTx, fee sdk.Coins) error {
+func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.FeeTx, fee sdk.Coins, execMode transaction.ExecMode) error {
 	addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName)
 	if len(addr) == 0 {
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
@@ -135,7 +135,11 @@ func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.Fee
 	}
 
 	// deduct the fees
-	if !fee.IsZero() {
+	if !fee.IsZero() && execMode == transaction.ExecModeSimulate {
+		if err := dfd.bankKeeper.MockSendCoinsFromAccountToModule(ctx, deductFeesFrom, types.FeeCollectorName); err != nil {
+			return err
+		}
+	} else if !fee.IsZero() {
 		if err := DeductFees(dfd.bankKeeper, ctx, deductFeesFrom, fee); err != nil {
 			return err
 		}

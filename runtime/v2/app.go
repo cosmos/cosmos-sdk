@@ -21,7 +21,7 @@ import (
 //
 // App can be used to create a hybrid app.go setup where some configuration is
 // done declaratively with an app config and the rest of it is done the old way.
-// See simapp/app_v2.go for an example of this setup.
+// See simapp/v2/app.go for an example of this setup.
 type App[T transaction.Tx] struct {
 	appmanager.AppManager[T]
 
@@ -94,6 +94,11 @@ func (a *App[T]) SchemaDecoderResolver() decoding.DecoderResolver {
 	for moduleName, module := range a.moduleManager.Modules() {
 		moduleSet[moduleName] = module
 	}
+
+	for _, overrideKey := range a.config.OverrideStoreKeys {
+		moduleSet[overrideKey.KvStoreKey] = moduleSet[overrideKey.ModuleName]
+	}
+
 	return decoding.ModuleSetDecoderResolver(moduleSet)
 }
 

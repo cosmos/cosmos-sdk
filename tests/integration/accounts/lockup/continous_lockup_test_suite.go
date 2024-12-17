@@ -34,7 +34,7 @@ func (s *IntegrationTestSuite) TestContinuousLockingAccount() {
 		StartTime: currentTime,
 		// end time in 1 minutes
 		EndTime: currentTime.Add(time.Minute),
-	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))}, nil)
 	require.NoError(t, err)
 
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)

@@ -31,7 +31,7 @@ func (s *IntegrationTestSuite) TestPermanentLockingAccount() {
 
 	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.PERMANENT_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
 		Owner: ownerAddrStr,
-	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
+	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))}, nil)
 	require.NoError(t, err)
 
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)

@@ -310,17 +310,11 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int,
 ) (types.UnbondingDelegation, error) {
-	id, err := k.IncrementUnbondingID(ctx)
-	if err != nil {
-		return types.UnbondingDelegation{}, err
-	}
-
-	isNewUbdEntry := true
 	ubd, err := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	if err == nil {
-		isNewUbdEntry = ubd.AddEntry(creationHeight, minTime, balance, id)
+		ubd.AddEntry(creationHeight, minTime, balance)
 	} else if errors.Is(err, types.ErrNoUnbondingDelegation) {
-		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id, k.validatorAddressCodec, k.authKeeper.AddressCodec())
+		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, k.validatorAddressCodec, k.authKeeper.AddressCodec())
 	} else {
 		return ubd, err
 	}
@@ -329,18 +323,6 @@ func (k Keeper) SetUnbondingDelegationEntry(
 		return ubd, err
 	}
 
-	// only call the hook for new entries since
-	// calls to AfterUnbondingInitiated are not idempotent
-	if isNewUbdEntry {
-		// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
-		if err = k.SetUnbondingDelegationByUnbondingID(ctx, ubd, id); err != nil {
-			return ubd, err
-		}
-
-		if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-			return ubd, fmt.Errorf("failed to call after unbonding initiated hook: %w", err)
-		}
-	}
 	return ubd, nil
 }
 
@@ -528,32 +510,18 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 	minTime time.Time, balance math.Int,
 	sharesSrc, sharesDst math.LegacyDec,
 ) (types.Redelegation, error) {
-	id, err := k.IncrementUnbondingID(ctx)
-	if err != nil {
-		return types.Redelegation{}, err
-	}
-
 	red, err := k.Redelegations.Get(ctx, collections.Join3(delegatorAddr.Bytes(), validatorSrcAddr.Bytes(), validatorDstAddr.Bytes()))
 	if err == nil {
-		red.AddEntry(creationHeight, minTime, balance, sharesDst, id)
+		red.AddEntry(creationHeight, minTime, balance, sharesDst)
 	} else if errors.Is(err, collections.ErrNotFound) {
 		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,
-			validatorDstAddr, creationHeight, minTime, balance, sharesDst, id, k.validatorAddressCodec, k.authKeeper.AddressCodec())
+			validatorDstAddr, creationHeight, minTime, balance, sharesDst, k.validatorAddressCodec, k.authKeeper.AddressCodec())
 	} else {
 		return types.Redelegation{}, err
 	}
 
 	if err = k.SetRedelegation(ctx, red); err != nil {
 		return types.Redelegation{}, err
-	}
-
-	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
-	if err = k.SetRedelegationByUnbondingID(ctx, red, id); err != nil {
-		return types.Redelegation{}, err
-	}
-
-	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
-		return types.Redelegation{}, fmt.Errorf("failed to call after unbonding initiated hook: %w", err)
 	}
 
 	return red, nil
@@ -996,12 +964,9 @@ func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, v
 	// loop through all the entries and complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
 		entry := ubd.Entries[i]
-		if entry.IsMature(ctxTime) && !entry.OnHold() {
+		if entry.IsMature(ctxTime) {
 			ubd.RemoveEntry(int64(i))
 			i--
-			if err = k.DeleteUnbondingIndex(ctx, entry.UnbondingId); err != nil {
-				return nil, err
-			}
 
 			// track undelegation only when remaining or truncated shares are non-zero
 			if !entry.Balance.IsZero() {
@@ -1136,12 +1101,9 @@ func (k Keeper) CompleteRedelegation(
 	// loop through all the entries and complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {
 		entry := red.Entries[i]
-		if entry.IsMature(ctxTime) && !entry.OnHold() {
+		if entry.IsMature(ctxTime) {
 			red.RemoveEntry(int64(i))
 			i--
-			if err = k.DeleteUnbondingIndex(ctx, entry.UnbondingId); err != nil {
-				return nil, err
-			}
 
 			if !entry.InitialBalance.IsZero() {
 				balances = balances.Add(sdk.NewCoin(bondDenom, entry.InitialBalance))

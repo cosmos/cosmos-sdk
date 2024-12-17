@@ -122,7 +122,7 @@ func TestSimulateTx_GRPC(t *testing.T) {
 				require.NoError(t, err)
 				// Check the result and gas used are correct.
 				//
-				// The 12 events are:
+				// The 10 events are:
 				// - Sending Fee to the pool: coin_spent, coin_received and transfer
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
 				// - Sending Amount to recipient: coin_spent, coin_received and transfer

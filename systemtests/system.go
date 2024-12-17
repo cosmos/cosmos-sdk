@@ -22,6 +22,7 @@ import (
 	client "github.com/cometbft/cometbft/rpc/client/http"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/creachadair/tomledit"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
 
@@ -38,7 +39,11 @@ var (
 
 	MaxGas = 10_000_000
 	// DefaultApiPort is the port for the node to interact with
-	DefaultApiPort = 1317
+	DefaultApiPort  = 1317
+	DefaultRpcPort  = 26657
+	DefaultRestPort = 8080
+	DefaultGrpcPort = 9090
+	DefaultP2PPort  = 16656
 )
 
 type TestnetInitializer interface {
@@ -719,15 +724,22 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 
 	configPath := filepath.Join(WorkDir, nodePath, "config")
 
+	// start node
+	allNodes := s.AllNodes(t)
+	node := allNodes[len(allNodes)-1]
 	// quick hack: copy config and overwrite by start params
 	for _, tomlFile := range []string{"config.toml", "app.toml"} {
 		configFile := filepath.Join(configPath, tomlFile)
 		_ = os.Remove(configFile)
 		_ = MustCopyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
+		if tomlFile == "app.toml" && IsV2() {
+			file := filepath.Join(WorkDir, s.nodePath(nodeNumber), "config", tomlFile)
+			EditToml(file, func(doc *tomledit.Document) {
+				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultApiPort+nodeNumber), "grpc-gateway", "address")
+				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultRestPort+nodeNumber), "rest", "address")
+			})
+		}
 	}
-	// start node
-	allNodes := s.AllNodes(t)
-	node := allNodes[len(allNodes)-1]
 	peers := make([]string, len(allNodes)-1)
 	for i, n := range allNodes[0 : len(allNodes)-1] {
 		peers[i] = n.PeerAddr()
@@ -740,7 +752,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		"--p2p.persistent_peers=" + strings.Join(peers, ","),
 		fmt.Sprintf("--p2p.laddr=tcp://localhost:%d", node.P2PPort),
 		fmt.Sprintf("--rpc.laddr=tcp://localhost:%d", node.RPCPort),
-		fmt.Sprintf("--grpc.address=localhost:%d", 9090+nodeNumber),
+		fmt.Sprintf("--grpc.address=localhost:%d", DefaultGrpcPort+nodeNumber),
 		"--p2p.pex=false",
 		"--moniker=" + moniker,
 		"--log_level=info",

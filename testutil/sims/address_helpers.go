@@ -35,7 +35,7 @@ func AddTestAddrsFromPubKeys(bankKeeper BankKeeper, stakingKeeper StakingKeeper,
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+func AddTestAddrs(bankKeeper BankKeeper, stakingKeeper StakingKeeper, ctx context.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateRandomAccounts)
 }
 

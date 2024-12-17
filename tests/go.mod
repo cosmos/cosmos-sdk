@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 )

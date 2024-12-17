@@ -139,9 +139,4 @@ message PositionalArgDescriptor {
   // optional makes the last positional parameter optional.
   // Note: It is mutually exclusive with varargs.
   bool optional = 3;
-
-  // flatten_fields indicates that if this positional argument refers to a message type,
-  // the fields of that message should be flattened into separate positional arguments
-  // rather than accepting a single JSON string argument.
-  bool flatten_fields = 4;
 }

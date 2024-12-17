@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
-
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -13,6 +11,8 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"strconv"
+	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
@@ -162,28 +162,33 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 			messageBinder.hasOptional = true
 		}
 
-		if arg.FlattenFields {
-			msgFields := messageType.Descriptor().Fields()
-			for j := range msgFields.Len() { // todo: this loop can be removed if msgFields.ByName(arg.protoField)
-				field := msgFields.Get(j)
-				if arg.ProtoField == string(field.Name()) {
-					msgType := messageType.New().Get(field).Message()
-					innerFields := msgType.Descriptor().Fields()
-					for k := range innerFields.Len() {
-						err := b.addFieldBindingToArgs(ctx, messageBinder, k, innerFields)
-						if err != nil {
-							return nil, err
-						}
-					}
-					break
-				}
+		//msgFields := messageType.Descriptor().Fields()
+		//for j := range msgFields.Len() { // todo: this loop can be removed if msgFields.ByName(arg.protoField)
+		//	field := msgFields.Get(j)
+		//	if arg.ProtoField == string(field.Name()) {
+		//		msgType := messageType.New().Get(field).Message()
+		//		innerFields := msgType.Descriptor().Fields()
+		//		for k := range innerFields.Len() {
+		//			err := b.addFieldBindingToArgs(ctx, messageBinder, k, innerFields)
+		//			if err != nil {
+		//				return nil, err
+		//			}
+		//		}
+		//		break
+		//	}
+		//}
+		//continue
+		s := strings.Split(arg.ProtoField, ".")
+		if len(s) == 1 {
+			err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(arg.ProtoField), fields)
+			if err != nil {
+				return nil, err
 			}
-			continue
-		}
-
-		err := b.addFieldBindingToArgs(ctx, messageBinder, i, fields)
-		if err != nil {
-			return nil, err
+		} else {
+			err := b.addFlattenFieldBindingToArgs(ctx, s, messageType, messageBinder)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -277,13 +282,22 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	return messageBinder, nil
 }
 
+// TODO: godoc
+func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, s []string, msg protoreflect.MessageType, messageBinder *MessageBinder) error {
+	fields := msg.Descriptor().Fields()
+	if len(s) == 1 {
+		return b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(s[0]), fields)
+	}
+	innerMsg := msg.New().Get(fields.ByName(protoreflect.Name(s[0]))).Message().Type()
+	return b.addFlattenFieldBindingToArgs(ctx, s[1:], innerMsg, messageBinder)
+}
+
 // addFieldBindingToArgs adds a fieldBinding for a positional argument to the message binder.
 // The fieldBinding is appended to the positional arguments list in the message binder.
-func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, i int, fields protoreflect.FieldDescriptors) error {
-	field := fields.Get(i)
+func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) error {
+	field := fields.ByName(name)
 	if field == nil {
-		return errors.New("can't find filed of inner message") // TODO: this should show names
-		//return fmt.Errorf("can't find field %s on %s", arg.ProtoField, messageType.Descriptor().FullName())
+		return fmt.Errorf("can't find field %s", name) // TODO: it will improve error if msg.FullName() was included.`
 	}
 
 	_, hasValue, err := b.addFieldFlag(

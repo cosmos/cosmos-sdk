@@ -75,16 +75,6 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 				return err
 			}
 		} else {
-			//name := protoreflect.Name(strings.ToLower(string(arg.field.Parent().Name())))
-			//innerMsg := msg.New().Get(msg.Descriptor().Fields().ByName(name)).Message().New()
-			//for j := 0; j < innerMsg.Descriptor().Fields().Len(); j++ {
-			//	arg = m.positionalArgs[j+i]
-			//	if err := arg.bind(innerMsg); err != nil {
-			//		return err
-			//	}
-			//}
-			//msg.Set(msg.Descriptor().Fields().ByName(name), protoreflect.ValueOfMessage(innerMsg))
-			//i += innerMsg.Descriptor().Fields().Len()
 			if err := m.bindNestedField(msg, arg); err != nil {
 				return err
 			}
@@ -101,19 +91,21 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 	return nil
 }
 
-// TODO: godoc
+// bindNestedField binds a field value to a nested message field. It handles cases where the field
+// belongs to a nested message type by recursively traversing the message structure.
 func (m *MessageBinder) bindNestedField(msg protoreflect.Message, arg fieldBinding) error {
 	name := protoreflect.Name(strings.ToLower(string(arg.field.Parent().Name())))
 	innerMsgValue := msg.Get(msg.Descriptor().Fields().ByName(name))
-
 	if !innerMsgValue.Message().IsValid() {
 		msg.Set(msg.Descriptor().Fields().ByName(name), protoreflect.ValueOfMessage(innerMsgValue.Message().New()))
 	}
+
 	innerMsg := msg.Get(msg.Descriptor().Fields().ByName(name)).Message()
 	argField := innerMsg.Descriptor().Fields().ByName(arg.field.Name())
 	if argField.Kind() == protoreflect.MessageKind {
 		return m.bindNestedField(innerMsg, arg)
 	}
+
 	return arg.bind(innerMsg)
 }
 

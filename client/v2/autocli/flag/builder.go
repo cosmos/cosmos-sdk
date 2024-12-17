@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -11,8 +14,6 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"strconv"
-	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
@@ -162,22 +163,6 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 			messageBinder.hasOptional = true
 		}
 
-		//msgFields := messageType.Descriptor().Fields()
-		//for j := range msgFields.Len() { // todo: this loop can be removed if msgFields.ByName(arg.protoField)
-		//	field := msgFields.Get(j)
-		//	if arg.ProtoField == string(field.Name()) {
-		//		msgType := messageType.New().Get(field).Message()
-		//		innerFields := msgType.Descriptor().Fields()
-		//		for k := range innerFields.Len() {
-		//			err := b.addFieldBindingToArgs(ctx, messageBinder, k, innerFields)
-		//			if err != nil {
-		//				return nil, err
-		//			}
-		//		}
-		//		break
-		//	}
-		//}
-		//continue
 		s := strings.Split(arg.ProtoField, ".")
 		if len(s) == 1 {
 			err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(arg.ProtoField), fields)

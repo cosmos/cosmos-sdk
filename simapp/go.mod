@@ -250,7 +250,6 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/tools/benchmark => ../tools/benchmark

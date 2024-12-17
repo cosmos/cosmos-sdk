@@ -68,8 +68,7 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 
 	msgName := msg.Descriptor().Name()
 	// bind positional arg values to the message
-	for i := 0; i < len(m.positionalArgs); i++ {
-		arg := m.positionalArgs[i]
+	for _, arg := range m.positionalArgs {
 		if msgName == arg.field.Parent().Name() {
 			if err := arg.bind(msg); err != nil {
 				return err

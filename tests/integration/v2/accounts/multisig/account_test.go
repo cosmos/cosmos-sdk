@@ -71,9 +71,9 @@ func (s *IntegrationTestSuite) TestSimpleSendProposal() {
 
 	foundPropResult := false
 	events := integration.EventsFromContext(ctx)
-	foundPropResult = true
 	for _, e := range events {
 		if e.Type == "proposal_tally" {
+			foundPropResult = true
 			attr, found := integration.GetAttribute(e, "status")
 			s.True(found)
 			s.Equal(v1.ProposalStatus_PROPOSAL_STATUS_PASSED.String(), attr.Value)

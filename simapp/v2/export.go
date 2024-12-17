@@ -13,7 +13,9 @@ import (
 // file.
 // This is a demonstation of how to export a genesis file. Export may need extended at
 // the user discretion for cleaning the genesis state at the end provided with jailAllowedAddrs
+// Same applies for forZeroHeight preprocessing.
 func (app *SimApp[T]) ExportAppStateAndValidators(
+	forZeroHeight bool,
 	jailAllowedAddrs []string,
 ) (v2.ExportedApp, error) {
 	ctx := context.Background()
@@ -44,5 +46,9 @@ func (app *SimApp[T]) ExportAppStateAndValidators(
 
 	exportedApp.AppState = genesis
 	exportedApp.Height = int64(latestHeight)
+	if forZeroHeight {
+		exportedApp.Height = 0
+	}
+
 	return exportedApp, nil
 }

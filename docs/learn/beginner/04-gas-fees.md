@@ -26,7 +26,7 @@ In the Cosmos SDK, `gas` is a special unit that is used to track the consumption
 In the Cosmos SDK, `gas` is a simple alias for `uint64`, and is managed by an object called a _gas meter_. Gas meters implement the `GasMeter` interface
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/types/gas.go#L40-L51
+https://github.com/cosmos/cosmos-sdk/blob/b795646/store/types/gas.go#L40-L51
 ```
 
 where:
@@ -40,17 +40,21 @@ where:
 * `IsPastLimit()` returns `true` if the amount of gas consumed by the gas meter instance is strictly above the limit, `false` otherwise.
 * `IsOutOfGas()` returns `true` if the amount of gas consumed by the gas meter instance is above or equal to the limit, `false` otherwise.
 
-The gas meter is generally held in [`ctx`](../advanced/02-context.md), and consuming gas is done with the following pattern:
+The gas meter is held under the `GasMeterService` in [`Environment`](../advanced/02-core.md), and consuming gas is done with the following pattern:
+
+:::note
+The gas.Service does not give access to all the methods of the gas meter.
+:::
 
 ```go
-ctx.GasMeter().ConsumeGas(amount, "description")
+environment.GasMeter(ctx).Consume(amount, "description")
 ```
 
 By default, the Cosmos SDK makes use of two different gas meters, the [main gas meter](#main-gas-meter) and the [block gas meter](#block-gas-meter).
 
 ### Main Gas Meter
 
-`ctx.GasMeter()` is the main gas meter of the application. The main gas meter is initialized in `FinalizeBlock` via `setFinalizeBlockState`, and then tracks gas consumption during execution sequences that lead to state-transitions, i.e. those originally triggered by [`FinalizeBlock`](../advanced/00-baseapp.md#finalizeblock). At the beginning of each transaction execution, the main gas meter **must be set to 0** in the [`AnteHandler`](#antehandler), so that it can track gas consumption per-transaction.
+The main gas meter is initialized in `FinalizeBlock` via `setFinalizeBlockState`, and then tracks gas consumption during execution sequences that lead to state-transitions, i.e. those originally triggered by [`FinalizeBlock`](../advanced/00-baseapp.md#finalizeblock). At the beginning of each transaction execution, the main gas meter **must be set to 0** in the [`AnteHandler`](#antehandler), so that it can track gas consumption per-transaction.
 
 Gas consumption can be done manually, generally by the module developer in the [`BeginBlocker`, `EndBlocker`](../../build/building-modules/06-preblock-beginblock-endblock.md) or [`Msg` service](../../build/building-modules/03-msg-services.md), but most of the time it is done automatically whenever there is a read or write to the store. This automatic gas consumption logic is implemented in a special store called [`GasKv`](../advanced/04-store.md#gaskv-store).
 

@@ -101,7 +101,7 @@ mechanism. If those tokens are unbonded then the dCERT member must be
 automatically kicked from the group.  
 
 Slashing of a particular dCERT member due to soft-contract breach should be
-performed by governance on a per member basis based on the magnitude of the
+performed by governance on a per-member basis based on the magnitude of the
 breach.  The process flow is anticipated to be that a dCERT member is suspended
 by the dCERT group prior to being slashed by governance.  
 

@@ -30,9 +30,9 @@ type AccountKeeper interface {
 
 // BankKeeper extends bank `MsgServer` to mock `Send` and to register handlers in MsgServiceRouter
 type BankKeeper interface {
-	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	bank.MsgServer
 
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins

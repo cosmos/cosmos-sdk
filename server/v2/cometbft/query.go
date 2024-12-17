@@ -51,7 +51,7 @@ func (c *consensus[T]) handleQueryApp(ctx context.Context, path []string, req *a
 
 	switch path[1] {
 	case "simulate":
-		tx, err := c.txCodec.Decode(req.Data)
+		tx, err := c.appCodecs.TxCodec.Decode(req.Data)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to decode tx")
 		}
@@ -61,7 +61,11 @@ func (c *consensus[T]) handleQueryApp(ctx context.Context, path []string, req *a
 			return nil, errorsmod.Wrap(err, "failed to simulate tx")
 		}
 
-		bz, err := intoABCISimulationResponse(txResult, c.indexedEvents)
+		bz, err := intoABCISimulationResponse(
+			txResult,
+			c.indexedABCIEvents,
+			c.cfg.AppTomlConfig.DisableIndexABCIEvents,
+		)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to marshal txResult")
 		}

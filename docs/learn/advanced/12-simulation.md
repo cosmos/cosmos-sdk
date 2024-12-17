@@ -7,7 +7,7 @@ sidebar_position: 1
 The Cosmos SDK offers a full fledged simulation framework to [fuzz test](https://en.wikipedia.org/wiki/Fuzzing) every
 message defined by a module.
 
-On the Cosmos SDK, this functionality is provided by [`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_v2.go), which is a `Baseapp` application that is used for running the [`simulation`](https://github.com/cosmos/cosmos-sdk/blob/23cf89cce1882ba9c8280e64735ae200504bfdce/simsx/README.md#L1) package. This package defines all the simulation logic as well as the operations for randomized parameters like accounts, balances etc.
+On the Cosmos SDK, this functionality is provided by [`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/simapp/app_di.go), which is a `Baseapp` application that is used for running the [`simulation`](https://github.com/cosmos/cosmos-sdk/blob/23cf89cce1882ba9c8280e64735ae200504bfdce/simsx/README.md#L1) package. This package defines all the simulation logic as well as the operations for randomized parameters like accounts, balances etc.
 
 ## Goals
 

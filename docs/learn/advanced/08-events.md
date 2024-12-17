@@ -77,10 +77,11 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/events.go#L62-L86
 ```
 
 Module developers should handle Event emission via the `EventManager#EmitTypedEvent` or `EventManager#EmitEvent` in each
-message `Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via
-the [`Context`](./02-context.md), where Event should be already registered, and emitted like this:
+message `Handler` and in each `BeginBlock`/`EndBlock` handler. 
+The `EventManager` is accessible via the event service, present in the `Environment` struct.
+This event service is a [core service](./02-core.md) available to all modules.
 
-Note: it is preferred to use `EmitTypedEvent` over `EmitEvent` as the latter has been deprecated.
+Events can be emitted like this using the `EventService`:
 
 **Typed events:**
 
@@ -90,18 +91,28 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/group/keeper/msg_serv
 
 **Legacy events:**
 
-```go
-ctx.EventManager().EmitEvent(
-    sdk.NewEvent(eventType, sdk.NewAttribute(attributeKey, attributeValue)),
-)
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/gov/keeper/vote.go#L91-L95
 ```
-
-Where the `EventManager` is accessed via the [`Context`](./02-context.md).
 
 See the [`Msg` services](../../build/building-modules/03-msg-services.md) concept doc for a more detailed
 view on how to typically implement Events and use the `EventManager` in modules.
 
-## Subscribing to Events
+## Default Events
+
+There are a few events that are automatically emitted for all messages, directly from `baseapp`.
+
+* `message.action`: The name of the message type.
+* `message.sender`: The address of the message signer.
+* `message.module`: The name of the module that emitted the message.
+
+:::tip
+The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
+In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
+`Baseapp` only emits that event if the module have not already done so.
+:::
+
+## Subscribing to CometBFT Events
 
 You can use CometBFT's [Websocket](https://docs.cometbft.com/v1.0/explanation/core/subscription) to subscribe to Events by calling the `subscribe` RPC method:
 
@@ -143,17 +154,3 @@ Subscribing to this Event would be done like so:
 where `ownerAddress` is an address following the [`AccAddress`](../beginner/03-accounts.md#addresses) format.
 
 The same way can be used to subscribe to [legacy events](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/types/events.go).
-
-## Default Events
-
-There are a few events that are automatically emitted for all messages, directly from `baseapp`.
-
-* `message.action`: The name of the message type.
-* `message.sender`: The address of the message signer.
-* `message.module`: The name of the module that emitted the message.
-
-:::tip
-The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
-In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
-`Baseapp` only emits that event if the module have not already done so.
-:::

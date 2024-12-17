@@ -2,7 +2,6 @@ package testutil
 
 import (
 	_ "cosmossdk.io/x/accounts"     // import as blank for app wiring
-	_ "cosmossdk.io/x/authz"        // import as blank for app wiring
 	_ "cosmossdk.io/x/bank"         // import as blank for app wiring
 	_ "cosmossdk.io/x/consensus"    // import as blank for app wiring
 	_ "cosmossdk.io/x/group/module" // import as blank for app wiring

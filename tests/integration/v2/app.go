@@ -17,6 +17,8 @@ import (
 	corebranch "cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -96,6 +98,10 @@ type StartupConfig struct {
 	// RouterServiceBuilder defines the custom builder
 	// for msg router and query router service to be used in the app.
 	RouterServiceBuilder runtime.RouterServiceBuilder
+	// HeaderService defines the custom header service to be used in the app.
+	HeaderService header.Service
+
+	GasService gas.Service
 }
 
 func DefaultStartUpConfig(t *testing.T) StartupConfig {
@@ -125,6 +131,8 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 		RouterServiceBuilder: runtime.NewRouterBuilder(
 			stf.NewMsgRouterService, stf.NewQueryRouterService(),
 		),
+		HeaderService: services.NewGenesisHeaderService(stf.HeaderService{}),
+		GasService:    stf.NewGasMeterService(),
 	}
 }
 
@@ -182,16 +190,18 @@ func NewApp(
 						"minimum-gas-prices": "0stake",
 					},
 				},
-				services.NewGenesisHeaderService(stf.HeaderService{}),
 				cometService,
 				kvFactory,
 				&eventService{},
 				storeBuilder,
 				startupConfig.BranchService,
 				startupConfig.RouterServiceBuilder,
+				startupConfig.HeaderService,
+				startupConfig.GasService,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
+				std.RegisterLegacyAminoCodec,
 			),
 		),
 		append(extraOutputs, &appBuilder, &cdc, &txConfigOptions, &txConfig, &storeBuilder)...); err != nil {
@@ -313,6 +323,10 @@ type App struct {
 	txConfig   client.TxConfig
 }
 
+func (a App) LastBlockHeight() uint64 {
+	return a.lastHeight
+}
+
 // Deliver delivers a block with the given transactions and returns the resulting state.
 func (a *App) Deliver(
 	t *testing.T, ctx context.Context, txs []stateMachineTx,
@@ -327,6 +341,12 @@ func (a *App) Deliver(
 	resp, state, err := a.DeliverBlock(ctx, req)
 	require.NoError(t, err)
 	a.lastHeight++
+
+	// update block height and block time if integration context is present
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if ok {
+		iCtx.header.Height = int64(a.lastHeight)
+	}
 	return resp, state
 }
 
@@ -431,6 +451,8 @@ func (a *App) SignCheckDeliver(
 // It required the context to have the integration context.
 // a new state is committed if the option WithAutomaticCommit is set in options.
 func (app *App) RunMsg(t *testing.T, ctx context.Context, handler handler, option ...Option) (resp transaction.Msg, err error) {
+	t.Helper()
+
 	// set options
 	cfg := &RunMsgConfig{}
 	for _, opt := range option {

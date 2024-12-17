@@ -43,21 +43,24 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
-* (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
 * (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
+* (client) [#22807](https://github.com/cosmos/cosmos-sdk/pull/22807) Return v2 server information in the `version` command.
 
 ### Improvements
 
 * RocksDB libraries have been upgraded to support RockDB v9 instead of v8.
 * (testutil/integration) [#22616](https://github.com/cosmos/cosmos-sdk/pull/22616) Remove double context in integration tests v1.
     * Use integrationApp.Context() instead of creating a context prior.
+* [#22826](https://github.com/cosmos/cosmos-sdk/pull/22826) Simplify testing frameworks by removing `testutil/cmdtest`.
 
 ### Bug Fixes
 
-* (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
-* (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+* (cli) [#22656](https://github.com/cosmos/cosmos-sdk/pull/22656) Prune cmd should disable async pruning.
 
 ### API Breaking Changes
+
+* (testutil) [#22392](https://github.com/cosmos/cosmos-sdk/pull/22392) Remove `testutil/network` package. Use the integration framework or systemtests framework instead.
+* (client) [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Removed client prompt validations.
 
 ### Deprecated
 
@@ -141,7 +144,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
 * (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Move `upgradetypes.StoreLoader` to runtime and alias it in upgrade for backward compatibility.
 * (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
-* (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unecessary overhead.
+* (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unnecessary overhead.
 * (crypto/ledger) [#22116](https://github.com/cosmos/cosmos-sdk/pull/22116) Improve error message when deriving paths using index >100
 
 ### Bug Fixes
@@ -250,6 +253,25 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 * (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
 * (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
+
+## [v0.50.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.11) - 2024-12-16
+
+### Features
+
+* (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
+
+### Improvements
+
+* (server) [#21941](https://github.com/cosmos/cosmos-sdk/pull/21941) Regenerate addrbook.json for in place testnet.
+
+### Bug Fixes
+
+* Fix [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm) Limit recursion depth for unknown field detection and unpack any
+* (server) [#22564](https://github.com/cosmos/cosmos-sdk/pull/22564) Fix fallback genesis path in server
+* (x/group) [#22425](https://github.com/cosmos/cosmos-sdk/pull/22425) Proper address rendering in error
+* (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
+* (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+* (x/group) [#22229](https://github.com/cosmos/cosmos-sdk/pull/22229) Accept `1` and `try` in CLI for group proposal exec.
 
 ## [v0.50.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10) - 2024-09-20
 
@@ -780,6 +802,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#16980](https://github.com/cosmos/cosmos-sdk/pull/16980) Deprecate `IntProto` and `DecProto`. Instead, `math.Int` and `math.LegacyDec` should be used respectively. Both types support `Marshal` and `Unmarshal` for binary serialization.
 * (x/staking) [#14567](https://github.com/cosmos/cosmos-sdk/pull/14567) The `delegator_address` field of `MsgCreateValidator` has been deprecated.
    The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
+
+## [v0.47.15](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.15) - 2024-12-16
+
+### Bug Fixes
+
+* Bump `cosmossdk.io/math` to v1.4.
+* Fix [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm) Limit recursion depth for unknown field detection and unpack any
 
 ## [v0.47.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.14) - 2024-09-20
 

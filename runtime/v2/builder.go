@@ -128,34 +128,37 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 }
 
 // initGenesis returns the app initialization genesis for modules
-func (a *AppBuilder[T]) initGenesis(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+func (a *AppBuilder[T]) initGenesis(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, []appmodule.ValidatorUpdate, error) {
 	// this implementation assumes that the state is a JSON object
 	bz, err := io.ReadAll(src)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read import state: %w", err)
+		return nil, nil, fmt.Errorf("failed to read import state: %w", err)
 	}
+
 	var genesisJSON map[string]json.RawMessage
 	if err = json.Unmarshal(bz, &genesisJSON); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	v, zeroState, err := a.app.db.StateLatest()
 	if err != nil {
-		return nil, fmt.Errorf("unable to get latest state: %w", err)
+		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
 	}
 	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
-		return nil, errors.New("cannot init genesis on non-zero state")
+		return nil, nil, errors.New("cannot init genesis on non-zero state")
 	}
 	genesisCtx := services.NewGenesisContext(a.branch(zeroState))
+	var valUpdates []appmodulev2.ValidatorUpdate
 	genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
-		err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
+		valUpdates, err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
 		if err != nil {
 			return fmt.Errorf("failed to init genesis: %w", err)
 		}
+
 		return nil
 	})
 
-	return genesisState, err
+	return genesisState, valUpdates, err
 }
 
 // exportGenesis returns the app export genesis logic for modules

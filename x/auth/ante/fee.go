@@ -77,6 +77,10 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transacti
 	}
 
 	fee := feeTx.GetFee()
+	// if fee.IsZero() && execMode == transaction.ExecModeSimulate {
+	// 	// Simulate mode doesn't check fees, so we need to set a default fee
+	// 	fee = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1)))
+	// }
 	if execMode != transaction.ExecModeSimulate {
 		fee, priority, err = dfd.txFeeChecker(ctx, tx)
 		if err != nil {

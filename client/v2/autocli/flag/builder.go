@@ -267,12 +267,16 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	return messageBinder, nil
 }
 
-// TODO: godoc
+// addFlattenFieldBindingToArgs recursively adds field bindings for nested message fields to the message binder.
+// It takes a slice of field names representing the path to the target field, where each element is a field name
+// in the nested message structure. For example, ["foo", "bar", "baz"] would bind the "baz" field inside the "bar"
+// message which is inside the "foo" message.
 func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, s []string, msg protoreflect.MessageType, messageBinder *MessageBinder) error {
 	fields := msg.Descriptor().Fields()
 	if len(s) == 1 {
 		return b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(s[0]), fields)
 	}
+
 	innerMsg := msg.New().Get(fields.ByName(protoreflect.Name(s[0]))).Message().Type()
 	return b.addFlattenFieldBindingToArgs(ctx, s[1:], innerMsg, messageBinder)
 }

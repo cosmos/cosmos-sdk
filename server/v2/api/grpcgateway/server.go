@@ -76,7 +76,7 @@ func New[T transaction.Tx](
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 	mux := http.NewServeMux()
-	mux.Handle("/", s.GRPCGatewayRouter)
+	mux.Handle("/", NewTunnel[T](s.GRPCGatewayRouter))
 
 	s.server = &http.Server{
 		Addr:    s.config.Address,

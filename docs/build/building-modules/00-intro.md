@@ -63,7 +63,7 @@ While there are no definitive guidelines for writing modules, here are some impo
 The SDK provides a set of APIs that a module can implement, and a set of services that a module can use.
 Those APIs are defined in the `cosmossdk.io/core/appmodule` package, and are used to defined the module capabilities, which is used by `runtime` during the wiring of the application. 
 
-Whenever possible, a module should strive to use only the core APIs (`cosmossdk.io/core`) and not import the `github.com/cosmos/cosmos-sdk` module. This makes modules reusable accross SDK versions and reduces the risk of breaking changes.
+Whenever possible, a module should strive to use only the core APIs (`cosmossdk.io/core`) and not import the `github.com/cosmos/cosmos-sdk` module. This makes modules reusable across SDK versions and reduces the risk of breaking changes.
 
 Learn more about the core APIs for modules [here](../../learn/advanced/02-core.md).
 

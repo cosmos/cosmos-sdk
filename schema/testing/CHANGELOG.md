@@ -35,3 +35,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+> Testing suite for the schema module. Should stay in 0ver. 
+
+## [v0.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/schema/testing%2Fv0.0.1)
+
+* Initial tag.

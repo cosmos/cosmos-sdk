@@ -4,13 +4,13 @@ go 1.23.3
 
 require (
 	cosmossdk.io/api v0.8.0-rc.2
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/collections v1.0.0-rc.1
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
-	cosmossdk.io/store v1.1.1
+	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
@@ -32,7 +32,7 @@ require (
 )
 
 require (
-	cosmossdk.io/core/testing v0.0.0
+	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
@@ -72,7 +72,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/indexer/postgres v0.1.0 // indirect
-	cosmossdk.io/schema v0.4.0 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
@@ -250,13 +250,10 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/core/testing => ../core/testing
 	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../runtime/v2
 	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
 	cosmossdk.io/server/v2/stf => ../server/v2/stf
-	cosmossdk.io/store => ../store
 	cosmossdk.io/store/v2 => ../store/v2
 	cosmossdk.io/tools/benchmark => ../tools/benchmark
 	cosmossdk.io/x/accounts => ../x/accounts

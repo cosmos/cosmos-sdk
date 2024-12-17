@@ -74,7 +74,8 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 				return err
 			}
 		} else {
-			if err := m.bindNestedField(msg, arg); err != nil {
+			s := strings.Split(arg.path, ".")
+			if err := m.bindNestedField(msg, arg, s); err != nil {
 				return err
 			}
 		}
@@ -92,20 +93,35 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 
 // bindNestedField binds a field value to a nested message field. It handles cases where the field
 // belongs to a nested message type by recursively traversing the message structure.
-func (m *MessageBinder) bindNestedField(msg protoreflect.Message, arg fieldBinding) error {
-	name := protoreflect.Name(strings.ToLower(string(arg.field.Parent().Name())))
-	innerMsgValue := msg.Get(msg.Descriptor().Fields().ByName(name))
-	if !innerMsgValue.Message().IsValid() {
-		msg.Set(msg.Descriptor().Fields().ByName(name), protoreflect.ValueOfMessage(innerMsgValue.Message().New()))
+func (m *MessageBinder) bindNestedField(msg protoreflect.Message, arg fieldBinding, path []string) error {
+	if len(path) == 1 {
+		return arg.bind(msg)
 	}
 
-	innerMsg := msg.Get(msg.Descriptor().Fields().ByName(name)).Message()
-	argField := innerMsg.Descriptor().Fields().ByName(arg.field.Name())
-	if argField.Kind() == protoreflect.MessageKind {
-		return m.bindNestedField(innerMsg, arg)
+	name := protoreflect.Name(path[0])
+	fd := msg.Descriptor().Fields().ByName(name)
+	if fd == nil {
+		return fmt.Errorf("field %q not found", path[0])
 	}
 
-	return arg.bind(innerMsg)
+	var innerMsg protoreflect.Message
+	if fd.IsList() {
+		if msg.Get(fd).List().Len() == 0 {
+			l := msg.Mutable(fd).List()
+			elem := l.NewElement().Message().New()
+			l.Append(protoreflect.ValueOfMessage(elem))
+			msg.Set(msg.Descriptor().Fields().ByName(name), protoreflect.ValueOfList(l))
+		}
+		innerMsg = msg.Get(fd).List().Get(0).Message()
+	} else {
+		innerMsgValue := msg.Get(fd)
+		if !innerMsgValue.Message().IsValid() {
+			msg.Set(msg.Descriptor().Fields().ByName(name), protoreflect.ValueOfMessage(innerMsgValue.Message().New()))
+		}
+		innerMsg = msg.Get(msg.Descriptor().Fields().ByName(name)).Message()
+	}
+
+	return m.bindNestedField(innerMsg, arg, path[1:])
 }
 
 // Get calls BuildMessage and wraps the result in a protoreflect.Value.
@@ -117,6 +133,7 @@ func (m MessageBinder) Get(protoreflect.Value) (protoreflect.Value, error) {
 type fieldBinding struct {
 	hasValue HasValue
 	field    protoreflect.FieldDescriptor
+	path     string
 }
 
 func (f fieldBinding) bind(msg protoreflect.Message) error {

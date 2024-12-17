@@ -165,12 +165,13 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 
 		s := strings.Split(arg.ProtoField, ".")
 		if len(s) == 1 {
-			err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(arg.ProtoField), fields)
+			f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(arg.ProtoField), fields)
 			if err != nil {
 				return nil, err
 			}
+			messageBinder.positionalArgs = append(messageBinder.positionalArgs, f)
 		} else {
-			err := b.addFlattenFieldBindingToArgs(ctx, s, messageType, messageBinder)
+			err := b.addFlattenFieldBindingToArgs(ctx, arg.ProtoField, s, messageType, messageBinder)
 			if err != nil {
 				return nil, err
 			}
@@ -271,22 +272,33 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 // It takes a slice of field names representing the path to the target field, where each element is a field name
 // in the nested message structure. For example, ["foo", "bar", "baz"] would bind the "baz" field inside the "bar"
 // message which is inside the "foo" message.
-func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, s []string, msg protoreflect.MessageType, messageBinder *MessageBinder) error {
+func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, path string, s []string, msg protoreflect.MessageType, messageBinder *MessageBinder) error {
 	fields := msg.Descriptor().Fields()
 	if len(s) == 1 {
-		return b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(s[0]), fields)
+		f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(s[0]), fields)
+		if err != nil {
+			return err
+		}
+		f.path = path
+		messageBinder.positionalArgs = append(messageBinder.positionalArgs, f)
+		return nil
 	}
-
-	innerMsg := msg.New().Get(fields.ByName(protoreflect.Name(s[0]))).Message().Type()
-	return b.addFlattenFieldBindingToArgs(ctx, s[1:], innerMsg, messageBinder)
+	fd := fields.ByName(protoreflect.Name(s[0]))
+	var innerMsg protoreflect.MessageType
+	if fd.IsList() {
+		innerMsg = msg.New().Get(fd).List().NewElement().Message().Type()
+	} else {
+		innerMsg = msg.New().Get(fd).Message().Type()
+	}
+	return b.addFlattenFieldBindingToArgs(ctx, path, s[1:], innerMsg, messageBinder)
 }
 
 // addFieldBindingToArgs adds a fieldBinding for a positional argument to the message binder.
 // The fieldBinding is appended to the positional arguments list in the message binder.
-func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) error {
+func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) (fieldBinding, error) {
 	field := fields.ByName(name)
 	if field == nil {
-		return fmt.Errorf("can't find field %s", name) // TODO: it will improve error if msg.FullName() was included.`
+		return fieldBinding{}, fmt.Errorf("can't find field %s", name) // TODO: it will improve error if msg.FullName() was included.`
 	}
 
 	_, hasValue, err := b.addFieldFlag(
@@ -297,15 +309,13 @@ func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *Mes
 		namingOptions{},
 	)
 	if err != nil {
-		return err
+		return fieldBinding{}, err
 	}
 
-	messageBinder.positionalArgs = append(messageBinder.positionalArgs, fieldBinding{
+	return fieldBinding{
 		field:    field,
 		hasValue: hasValue,
-	})
-
-	return nil
+	}, nil
 }
 
 // bindPageRequest create a flag for pagination

@@ -61,6 +61,7 @@ func (b *Builder) init() {
 		b.messageFlagTypes["google.protobuf.Timestamp"] = timestampType{}
 		b.messageFlagTypes["google.protobuf.Duration"] = durationType{}
 		b.messageFlagTypes["cosmos.base.v1beta1.Coin"] = coinType{}
+		b.messageFlagTypes["cosmos.base.v1beta1.DecCoin"] = decCoinType{}
 	}
 
 	if b.scalarFlagTypes == nil {

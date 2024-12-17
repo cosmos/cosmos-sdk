@@ -209,7 +209,7 @@ func NewSimApp(
 	legacyAmino := codec.NewLegacyAmino()
 	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
 
-	if err := txConfig.SigningContext().Validate(); err != nil {
+	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
 		panic(err)
 	}
 

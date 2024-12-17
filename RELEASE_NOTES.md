@@ -1,20 +1,26 @@
-# Cosmos SDK v0.50.10 Release Notes
+# Cosmos SDK v0.50.11 Release Notes
 
 💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/58)
 
 ## 🚀 Highlights
 
-For this month patch release of the v0.50.x line, some bugs were fixed.
+We are back on schedule for our monthly v0.50.x patch releases.
+The last two months, next to ramping up on v0.52 and v2, we added a few bug fixes and (UX) improvements.
 
-Notably, we fixed the following:
+Notable changes:
 
-* Add the root command `module-hash-by-height` to query and retrieve module hashes at a specific height
-* `PreBlock` events (mainly `x/upgrade`) are now emitted (this time, for real)
-* A fix in runtime baseapp option ordering, giving issue when other modules were having options
+* Fix [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm).
+* New Linux-only backend that adds Linux kernel's `keyctl` support
+* Skip sims test when running dry on validators
 
 ## 📝 Changelog
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.10/CHANGELOG.md) for an exhaustive list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.50.9...v0.50.10) from the last release.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.11/CHANGELOG.md) for an exhaustive list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.50.10...v0.50.11) from the last release.
 
-Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/UPGRADING.md) when migrating from `v0.47.x` to `v0.50.1`.
-Note, that the next SDK release, v0.52, will not include `x/params` migration, when migrating from < v0.47, v0.50.x **or** v0.47.x, is a mandatory migration.
+## Maintenance Policy
+
+Cosmos SDK Olympus (v0.52) final release is approaching really soon. That means the Eden line (v0.50.x) will soon only be supported for bug fixes only, as per our release policy. Earlier versions are not maintained.  
+
+Note, that the next SDK release, v0.52, does not include `x/params` migration, when migrating from < v0.47, v0.50.x **or** v0.47.x, is a mandatory migration.
+
+Start integrating with [Cosmos SDK Eden (v0.52)](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#v052x) and enjoy and the new features and performance improvements.

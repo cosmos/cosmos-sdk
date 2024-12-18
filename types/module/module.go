@@ -390,6 +390,7 @@ func (m *Manager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 }
 
 // RegisterInvariants registers all module invariants
+// Deprecated: this function is no longer to be used as invariants are deprecated.
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	for _, module := range m.Modules {
 		if module, ok := module.(HasInvariants); ok {

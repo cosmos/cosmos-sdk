@@ -1,4 +1,4 @@
-// module_test inconsistenctly import appmodulev2 & appmodulev1 due to limitation in mockgen
+// module_test inconsistently imports appmodulev2 & appmodulev1 due to limitation in mockgen
 // eventually, when we change mocking library, we should be consistent in our appmodule imports
 package module_test
 

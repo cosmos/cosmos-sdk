@@ -10,7 +10,7 @@ replace (
 )
 
 require (
-	cosmossdk.io/api v0.8.0-rc.1
+	cosmossdk.io/api v0.8.0-rc.3
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/log v1.5.0
@@ -34,7 +34,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 )
 
 require (

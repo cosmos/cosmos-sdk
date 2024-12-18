@@ -381,7 +381,6 @@ func (bva *BaseLockup) checkUnbondingEntriesMature(ctx context.Context) error {
 				if !errorsmod.IsOf(err, stakingtypes.ErrNoUnbondingDelegation) {
 					return true, err
 				}
-
 			}
 
 			found := false

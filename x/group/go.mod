@@ -10,12 +10,8 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
-	cosmossdk.io/x/accounts v0.0.0-20241218110910-47409028a73d
 	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/consensus v0.0.0-20241218110910-47409028a73d
 	cosmossdk.io/x/gov v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/mint v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d
 	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -26,6 +22,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
+	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.68.1
 	google.golang.org/protobuf v1.36.0
@@ -39,7 +36,7 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/core/testing v0.0.1 // main
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/x/epochs v0.0.0-20241218110910-47409028a73d // indirect
+	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

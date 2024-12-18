@@ -1094,6 +1094,9 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
+	// use node 1 as granter
+	granter := cli.GetKeyAddr("node1")
+
 	require.NotEmpty(t, valAddr)
 
 	// add new key
@@ -1103,7 +1106,14 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 
 	baseURL := systest.Sut.APIAddress()
 
-	txlen := 3
+	// node1 grant to node0
+	grantCmdArgs := []string{"tx", "feegrant", "grant", granter, valAddr, "--chain-id=" + cli.ChainID()}
+	rsp := cli.Run(grantCmdArgs...)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	systest.RequireTxSuccess(t, txResult)
+
+	txlen := 1
 	gasSimulated := make([]int64, txlen)
 	gasAdjustment := make([]float64, txlen)
 	// Create 10 txs
@@ -1142,7 +1152,8 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 		for shouldRerun {
 			gasAdjustment[i] = gasAdjustment[i] + 0.01
 			gasUse := int64(gasAdjustment[i] * float64(gasSimulated[i]))
-			rsp := cli.Run(append(bankSendCmdArgs2, fmt.Sprintf("--gas=%d", gasUse))...)
+			// add fee granter
+			rsp := cli.Run(append(bankSendCmdArgs2, fmt.Sprintf("--gas=%d", gasUse), fmt.Sprintf("--fee-granter=%s", granter))...)
 			// rerun if tx err and increase gas-adjustment by 1%
 			shouldRerun = strings.Contains(gjson.Get(rsp, "raw_log").String(), "out of gas") || gjson.Get(rsp, "gas_used").Int() == int64(0) || gjson.Get(rsp, "code").Int() != 0
 			fmt.Println("gasAdjustment", i, gasAdjustment[i])

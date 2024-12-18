@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
+	cosmossdk.io/errors/v2 v2.0.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000

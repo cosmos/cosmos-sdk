@@ -5,10 +5,10 @@ go 1.23.4
 require (
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
-	cosmossdk.io/x/accounts v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/distribution v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/accounts v0.2.0-rc.1
+	cosmossdk.io/x/bank v0.2.0-rc.1
+	cosmossdk.io/x/distribution v0.2.0-rc.1
+	cosmossdk.io/x/staking v0.2.0-rc.1
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
 )

@@ -14,8 +14,8 @@ require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/schema v1.0.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
-	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/bank v0.2.0-rc.1
+	cosmossdk.io/x/staking v0.2.0-rc.1
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // main
 	github.com/99designs/keyring v1.2.2
 	github.com/bgentry/speakeasy v0.2.0

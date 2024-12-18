@@ -16,7 +16,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241218084712-ca559989da43 // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241218084712-ca559989da43 // main
 	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
-	cosmossdk.io/x/consensus v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/consensus v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -36,8 +36,8 @@ require (
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
-	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d // indirect
-	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d // indirect
+	cosmossdk.io/x/bank v0.2.0-rc.1 // indirect
+	cosmossdk.io/x/staking v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

@@ -566,7 +566,6 @@ For example, given the following `genesis.json` file:
 ```
 
 The accounts module will run the lockup account initialization message.
-<<<<<<< HEAD
 
 ## Bundling
 
@@ -694,5 +693,3 @@ func NewApp(...) {
 	
 	app.AccountsKeeper.DisableBundling() // <- add this line
 ```
-=======
->>>>>>> f6d7a9277 (refactor(x/mint): remove staking as a required module (#21858))

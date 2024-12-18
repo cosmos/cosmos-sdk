@@ -9,14 +9,9 @@ import (
 )
 
 // BeginBlocker mints new tokens for the previous block.
-<<<<<<< HEAD
-func (k Keeper) BeginBlocker(ctx context.Context, mintFn types.MintFn) error {
+func (k Keeper) BeginBlocker(ctx context.Context) error {
 	start := telemetry.Now()
 	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
-=======
-func (k Keeper) BeginBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
->>>>>>> f6d7a9277 (refactor(x/mint): remove staking as a required module (#21858))
 
 	// fetch stored minter & params
 	minter, err := k.Minter.Get(ctx)

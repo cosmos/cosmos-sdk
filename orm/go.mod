@@ -3,7 +3,7 @@ module cosmossdk.io/orm
 go 1.23
 
 require (
-	cosmossdk.io/api v0.7.6
+	cosmossdk.io/api v0.8.0-rc.3
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/depinject v1.1.0
@@ -17,12 +17,14 @@ require (
 	go.uber.org/mock v0.5.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 )
 
 require (
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/schema v0.4.0 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

@@ -87,6 +87,10 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 
 		txf = txf.WithGas(adjusted)
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
+	} else {
+		// If not simulate, calculate gas_limit by gas * gas_adjustment
+		gasUse := uint64(float64(txf.Gas()) * txf.GasAdjustment())
+		txf = txf.WithGas(gasUse)
 	}
 
 	if clientCtx.Simulate {

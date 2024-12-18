@@ -25,10 +25,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Bug Fixes
-
-* [#20688](https://github.com/cosmos/cosmos-sdk/pull/20688) Avoid overslashing unbonding delegations after a redelegation.
-* [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/staking/v0.2.0-rc.1) - 2024-12-18
 
 ### Features
 
@@ -43,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `IterateBondedValidatorsByPower`, `GetDelegatorBonded`, `Delegate`, `Unbond`, `Slash`, `Jail`, `SlashRedelegation`, `ApplyAndReturnValidatorSetUpdates` methods no longer panics on any kind of errors but instead returns appropriate errors.
 * [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
 
+### Bug Fixes
+
+* [#20688](https://github.com/cosmos/cosmos-sdk/pull/20688) Avoid overslashing unbonding delegations after a redelegation.
+* [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
 
 ### API Breaking Changes
 

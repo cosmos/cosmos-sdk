@@ -25,7 +25,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Api Breaking Changes
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.2.0-rc.1) - 2024-12-18
+
+### API Breaking Changes
 
 * [#20238](https://github.com/cosmos/cosmos-sdk/pull/20238) `NewAppModule` now takes in a `core/comet.Service` an argument.  `BeginBlocker` now takes in a `core/comet.Service`.
 * [#20016](https://github.com/cosmos/cosmos-sdk/pull/20016) `NewMsgSubmitEvidence` now takes a string as argument instead of an `AccAddress`.

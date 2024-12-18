@@ -1,11 +1,13 @@
 module cosmossdk.io/systemtests
 
-go 1.23
+go 1.23.1
+
+toolchain go1.23.4
 
 require (
 	cosmossdk.io/math v1.4.0
 	github.com/cometbft/cometbft v0.38.15
-	github.com/cometbft/cometbft/api v1.0.0-rc.1
+	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/creachadair/tomledit v0.0.26
 	github.com/stretchr/testify v1.10.0

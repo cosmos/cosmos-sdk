@@ -32,9 +32,8 @@ func newWrapperFromDecodedTx(
 	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
 ) (*gogoTxWrapper, error) {
 	var (
-		fees = make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
-		// fees = sdk.Coins{} // decodedTx.Tx.AuthInfo.Fee.Amount might be nil
-		err error
+		fees = sdk.Coins{} // decodedTx.Tx.AuthInfo.Fee.Amount might be nil
+		err  error
 	)
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
 		amtInt, ok := math.NewIntFromString(fee.Amount)
@@ -44,11 +43,11 @@ func newWrapperFromDecodedTx(
 		if err = sdk.ValidateDenom(fee.Denom); err != nil {
 			return nil, fmt.Errorf("invalid fee coin denom at index %d: %w", i, err)
 		}
-		fees[i] = sdk.Coin{
+
+		fees = fees.Add(sdk.Coin{
 			Denom:  fee.Denom,
 			Amount: amtInt,
-		}
-		// fees.Add(sdk.NewCoin(fee.Denom, amtInt))
+		})
 	}
 	if !fees.IsSorted() {
 		return nil, fmt.Errorf("invalid not sorted tx fees: %s", fees.String())

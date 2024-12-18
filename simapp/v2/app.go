@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
 
@@ -159,11 +158,7 @@ func NewSimApp[T transaction.Tx](
 	}
 
 	var err error
-	app.App, err = appBuilder.Build(runtime.AppBuilderWithPreblocker(
-		func(ctx context.Context, txs []T) error {
-			return nil
-		},
-	))
+	app.App, err = appBuilder.Build()
 	if err != nil {
 		return nil, err
 	}

@@ -1,25 +1,17 @@
 package cmd
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
-	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtcfg "github.com/cometbft/cometbft/config"
 
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/cometbft"
-	"cosmossdk.io/server/v2/cometbft/handlers"
-	staking "cosmossdk.io/x/staking/types"
 
 	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // initAppConfig helps to override default client config template and configs.
@@ -100,9 +92,10 @@ func initCometConfig() cometbft.CfgOption {
 
 func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
 	serverOptions := cometbft.DefaultServerOptions[T]()
-	serverOptions.PrepareProposalHandler = CustomPrepareProposal[T]()
-	serverOptions.ProcessProposalHandler = CustomProcessProposalHandler[T]()
-	serverOptions.ExtendVoteHandler = CustomExtendVoteHandler[T]()
+	// Implement custom handlers (e.g. for Vote Extensions)
+	// serverOptions.PrepareProposalHandler = CustomPrepareProposal[T]()
+	// serverOptions.ProcessProposalHandler = CustomProcessProposalHandler[T]()
+	// serverOptions.ExtendVoteHandler = CustomExtendVoteHandler[T]()
 
 	// overwrite app mempool, using max-txs option
 	// serverOptions.Mempool = func(cfg map[string]any) mempool.Mempool[T] {
@@ -116,98 +109,4 @@ func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
 	// }
 
 	return serverOptions
-}
-
-func CustomExtendVoteHandler[T transaction.Tx]() handlers.ExtendVoteHandler {
-	return func(ctx context.Context, rm store.ReaderMap, evr *v1.ExtendVoteRequest) (*v1.ExtendVoteResponse, error) {
-		return &v1.ExtendVoteResponse{
-			VoteExtension: []byte("BTC=1234567.89;height=" + fmt.Sprint(evr.Height)),
-		}, nil
-	}
-}
-
-func CustomPrepareProposal[T transaction.Tx]() handlers.PrepareHandler[T] {
-	return func(ctx context.Context, app handlers.AppManager[T], codec transaction.Codec[T], req *v1.PrepareProposalRequest, chainID string) ([]T, error) {
-		var txs []T
-		for _, tx := range req.Txs {
-			decTx, err := codec.Decode(tx)
-			if err != nil {
-				continue
-			}
-
-			txs = append(txs, decTx)
-		}
-
-		// "Process" vote extensions (we'll just inject all votes)
-		injectedTx, err := json.Marshal(req.LocalLastCommit)
-		if err != nil {
-			return nil, err
-		}
-
-		// put the injected tx into the first position
-		txs = append([]T{cometbft.RawTx(injectedTx).(T)}, txs...)
-
-		return txs, nil
-	}
-}
-
-func CustomProcessProposalHandler[T transaction.Tx]() handlers.ProcessHandler[T] {
-	return func(ctx context.Context, am handlers.AppManager[T], c transaction.Codec[T], req *v1.ProcessProposalRequest, chainID string) error {
-		// Get all vote extensions from the first tx
-
-		injectedTx := req.Txs[0]
-		var voteExts v1.ExtendedCommitInfo
-		if err := json.Unmarshal(injectedTx, &voteExts); err != nil {
-			return err
-		}
-
-		// Get validators from the staking module
-		res, err := am.Query(
-			ctx,
-			0,
-			&staking.QueryValidatorsRequest{},
-		)
-		if err != nil {
-			return err
-		}
-
-		validatorsResponse := res.(*staking.QueryValidatorsResponse)
-		consAddrToPubkey := map[string]cryptotypes.PubKey{}
-
-		for _, val := range validatorsResponse.GetValidators() {
-			cv := val.ConsensusPubkey.GetCachedValue()
-			if cv == nil {
-				return fmt.Errorf("public key cached value is nil")
-			}
-
-			cpk, ok := cv.(cryptotypes.PubKey)
-			if ok {
-				consAddrToPubkey[string(cpk.Address().Bytes())] = cpk
-			} else {
-				return fmt.Errorf("invalid public key type")
-			}
-		}
-
-		// First verify that the vote extensions injected by the proposer are correct
-		if err := cometbft.ValidateVoteExtensions(
-			ctx,
-			am,
-			chainID,
-			func(ctx context.Context, b []byte) (cryptotypes.PubKey, error) {
-				if _, ok := consAddrToPubkey[string(b)]; !ok {
-					return nil, fmt.Errorf("validator not found")
-				}
-				return consAddrToPubkey[string(b)], nil
-			},
-			voteExts,
-			req.Height,
-			&req.ProposedLastCommit,
-		); err != nil {
-			return err
-		}
-
-		// TODO: do something with the vote extensions
-
-		return nil
-	}
 }

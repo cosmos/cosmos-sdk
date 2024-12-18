@@ -15,7 +15,6 @@ import (
 
 	registry "cosmossdk.io/core/registry"
 	client "github.com/cosmos/cosmos-sdk/client"
-	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	gomock "go.uber.org/mock/gomock"
@@ -202,42 +201,6 @@ func (m *MockHasGRPCGateway) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1
 func (mr *MockHasGRPCGatewayMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockHasGRPCGateway)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
-}
-
-// MockHasInvariants is a mock of HasInvariants interface.
-type MockHasInvariants struct {
-	ctrl     *gomock.Controller
-	recorder *MockHasInvariantsMockRecorder
-	isgomock struct{}
-}
-
-// MockHasInvariantsMockRecorder is the mock recorder for MockHasInvariants.
-type MockHasInvariantsMockRecorder struct {
-	mock *MockHasInvariants
-}
-
-// NewMockHasInvariants creates a new mock instance.
-func NewMockHasInvariants(ctrl *gomock.Controller) *MockHasInvariants {
-	mock := &MockHasInvariants{ctrl: ctrl}
-	mock.recorder = &MockHasInvariantsMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockHasInvariants) EXPECT() *MockHasInvariantsMockRecorder {
-	return m.recorder
-}
-
-// RegisterInvariants mocks base method.
-func (m *MockHasInvariants) RegisterInvariants(arg0 types.InvariantRegistry) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterInvariants", arg0)
-}
-
-// RegisterInvariants indicates an expected call of RegisterInvariants.
-func (mr *MockHasInvariantsMockRecorder) RegisterInvariants(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockHasInvariants)(nil).RegisterInvariants), arg0)
 }
 
 // MockHasServices is a mock of HasServices interface.

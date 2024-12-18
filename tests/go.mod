@@ -40,14 +40,14 @@ require (
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/distribution v0.0.0-20240227221813-a248d05f70f4
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-db v1.1.0 // indirect
 	github.com/google/go-cmp v0.6.0

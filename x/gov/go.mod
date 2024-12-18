@@ -13,9 +13,9 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
-	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cometbft/cometbft v1.0.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -178,10 +178,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
-	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.8.0-rc.2
 	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/protocolpool => ../protocolpool
-	cosmossdk.io/x/staking => ../staking
 )

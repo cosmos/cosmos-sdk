@@ -149,8 +149,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace (
-	cosmossdk.io/x/bank => ../../x/bank
-	cosmossdk.io/x/staking => ../../x/staking
-	github.com/cosmos/cosmos-sdk => ../../
-)
+replace github.com/cosmos/cosmos-sdk => ../../

@@ -21,7 +21,7 @@ require (
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
@@ -34,7 +34,7 @@ require (
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

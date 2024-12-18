@@ -65,14 +65,18 @@ func (s *TestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
 	var err error
+
 	for i := range s.addrs {
 		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[i])).AnyTimes()
 		s.addrsStr[i], err = s.addressCodec.BytesToString(s.addrs[i])
 		s.Require().NoError(err)
 	}
 	s.accountKeeper.EXPECT().AddressCodec().Return(s.addressCodec).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
+	s.bankKeeper.EXPECT().MintCoins(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	bApp := baseapp.NewBaseApp(
 		"group",
@@ -86,6 +90,7 @@ func (s *TestSuite) SetupTest() {
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, s.accountKeeper, config)
+
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 

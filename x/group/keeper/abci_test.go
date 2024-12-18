@@ -8,12 +8,14 @@ import (
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
+	"go.uber.org/mock/gomock"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *TestSuite) TestEndBlockerPruning() {
 	ctx := s.sdkCtx
+	s.bankKeeper.EXPECT().Send(gomock.Any(), gomock.Any()).Return(&banktypes.MsgSendResponse{}, nil).AnyTimes()
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
@@ -48,6 +50,9 @@ func (s *TestSuite) TestEndBlockerPruning() {
 
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
+
+	s.setNextAccount()
+
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(ctx, policyReq)
 	s.Require().NoError(err)
 
@@ -64,6 +69,9 @@ func (s *TestSuite) TestEndBlockerPruning() {
 
 	err = policyReq2.SetDecisionPolicy(policy2)
 	s.Require().NoError(err)
+
+	s.setNextAccount()
+
 	policyRes2, err := s.groupKeeper.CreateGroupPolicy(ctx, policyReq2)
 	s.Require().NoError(err)
 
@@ -305,6 +313,7 @@ func (s *TestSuite) TestEndBlockerPruning() {
 
 func (s *TestSuite) TestEndBlockerTallying() {
 	ctx := s.sdkCtx
+	s.bankKeeper.EXPECT().Send(gomock.Any(), gomock.Any()).Return(&banktypes.MsgSendResponse{}, nil).AnyTimes()
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
@@ -332,6 +341,9 @@ func (s *TestSuite) TestEndBlockerTallying() {
 
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
+
+	s.setNextAccount()
+
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(ctx, policyReq)
 	s.Require().NoError(err)
 

@@ -182,7 +182,6 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-// TODO remove after all modules have their own go.mods
 replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/x/bank => ./x/bank

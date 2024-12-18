@@ -25,25 +25,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/epochs/v0.2.0-rc.1) - 2024-12-18
+
 ### Features
 
 * [#19697](https://github.com/cosmos/cosmos-sdk/pull/19697) Upstream from Osmosis
-
-
-### API Breaking Changes
-
-
-### Improvements
-
-
-### CLI Breaking Changes
-
-
-### State Machine Breaking
-
-
-### Client Breaking Changes
-
-
-### Bug Fixes
-

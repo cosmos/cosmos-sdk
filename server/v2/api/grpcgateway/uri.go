@@ -13,10 +13,10 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-const MaxBodySize = 1 << 20 // 1 MB
+const maxBodySize = 1 << 20 // 1 MB
 
-// URIMatch contains information related to a URI match.
-type URIMatch struct {
+// uriMatch contains information related to a URI match.
+type uriMatch struct {
 	// QueryInputName is the fully qualified name of the proto input type of the query rpc method.
 	QueryInputName string
 
@@ -26,19 +26,19 @@ type URIMatch struct {
 	Params map[string]string
 }
 
-// HasParams reports whether the URIMatch has any params.
-func (uri URIMatch) HasParams() bool {
+// HasParams reports whether the uriMatch has any params.
+func (uri uriMatch) HasParams() bool {
 	return len(uri.Params) > 0
 }
 
 // matchURI attempts to find a match for the given URI.
 // NOTE: if no match is found, nil is returned.
-func matchURI(uri string, getPatternToQueryInputName map[string]string) *URIMatch {
+func matchURI(uri string, getPatternToQueryInputName map[string]string) *uriMatch {
 	uri = strings.TrimRight(uri, "/")
 
 	// for simple cases where there are no wildcards, we can just do a map lookup.
 	if inputName, ok := getPatternToQueryInputName[uri]; ok {
-		return &URIMatch{
+		return &uriMatch{
 			QueryInputName: inputName,
 		}
 	}
@@ -59,7 +59,7 @@ func matchURI(uri string, getPatternToQueryInputName map[string]string) *URIMatc
 				params[name] = matches[i+1]
 			}
 
-			return &URIMatch{
+			return &uriMatch{
 				QueryInputName: queryInputName,
 				Params:         params,
 			}
@@ -96,8 +96,8 @@ func patternToRegex(pattern string) (string, []string) {
 	return "^" + escaped + "$", wildcardNames
 }
 
-// createMessageFromJSON creates a message from the URIMatch given the JSON body in the http request.
-func createMessageFromJSON(match *URIMatch, r *http.Request) (gogoproto.Message, error) {
+// createMessageFromJSON creates a message from the uriMatch given the JSON body in the http request.
+func createMessageFromJSON(match *uriMatch, r *http.Request) (gogoproto.Message, error) {
 	requestType := gogoproto.MessageType(match.QueryInputName)
 	if requestType == nil {
 		return nil, fmt.Errorf("unknown request type")
@@ -109,7 +109,7 @@ func createMessageFromJSON(match *URIMatch, r *http.Request) (gogoproto.Message,
 	}
 
 	defer r.Body.Close()
-	limitedReader := io.LimitReader(r.Body, MaxBodySize)
+	limitedReader := io.LimitReader(r.Body, maxBodySize)
 	err := jsonpb.Unmarshal(limitedReader, msg)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing body: %w", err)
@@ -119,9 +119,9 @@ func createMessageFromJSON(match *URIMatch, r *http.Request) (gogoproto.Message,
 
 }
 
-// createMessage creates a message from the given URIMatch. If the match has params, the message will be populated
+// createMessage creates a message from the given uriMatch. If the match has params, the message will be populated
 // with the value of those params. Otherwise, an empty message is returned.
-func createMessage(match *URIMatch) (gogoproto.Message, error) {
+func createMessage(match *uriMatch) (gogoproto.Message, error) {
 	requestType := gogoproto.MessageType(match.QueryInputName)
 	if requestType == nil {
 		return nil, fmt.Errorf("unknown request type")

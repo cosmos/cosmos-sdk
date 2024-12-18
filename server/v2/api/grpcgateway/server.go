@@ -78,7 +78,7 @@ func New[T transaction.Tx](
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 	mux := http.NewServeMux()
-	interceptor, err := NewGatewayInterceptor[T](s.GRPCGatewayRouter, appManager)
+	interceptor, err := newGatewayInterceptor[T](s.GRPCGatewayRouter, appManager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc-gateway interceptor: %w", err)
 	}

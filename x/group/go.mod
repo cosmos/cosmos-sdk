@@ -10,11 +10,11 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
-	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/x/accounts v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
-	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/consensus v0.0.0-20241218094223-182dc41cb08c
+	cosmossdk.io/x/gov v0.0.0-20241218094223-182dc41cb08c
+	cosmossdk.io/x/mint v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -35,7 +35,7 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7
+	cosmossdk.io/client/v2 v2.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/core/testing v0.0.1 // main
 	cosmossdk.io/schema v1.0.0 // indirect
@@ -180,15 +180,3 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../
-
-// TODO remove post spinning out all modules
-replace (
-	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/x/accounts => ../accounts
-	cosmossdk.io/x/consensus => ../consensus
-	cosmossdk.io/x/epochs => ../epochs
-	cosmossdk.io/x/gov => ../gov
-	cosmossdk.io/x/mint => ../mint
-	cosmossdk.io/x/protocolpool => ../protocolpool
-	cosmossdk.io/x/slashing => ../slashing
-)

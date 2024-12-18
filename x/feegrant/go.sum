@@ -6,6 +6,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cosmossdk.io/api v0.8.0-rc.3 h1:BNVMqBO7jO20fQCLKzAYLI9RPTq9bVn30ncq9vF8SBk=
 cosmossdk.io/api v0.8.0-rc.3/go.mod h1:1hADc5N9rDJ4RTH7z3sp6+PXI+shznzk0Frf0/k3ilE=
+cosmossdk.io/client/v2 v2.0.0-20241218094223-182dc41cb08c h1:YJcGd1p0obtDVlfXLjY1hNS6O32z+58idCmIk8YL9DM=
+cosmossdk.io/client/v2 v2.0.0-20241218094223-182dc41cb08c/go.mod h1:UuigYx1z5tcciGp8kf9VS1DFj8jYP9oEecx/ilI9zCY=
 cosmossdk.io/collections v1.0.0-rc.1 h1:Mzv0YKZJ6aloy4oSnMnyl8b6PtM2dTdDlzRR/079TyM=
 cosmossdk.io/collections v1.0.0-rc.1/go.mod h1:nOgrEpyMFOWBy8QmSbq/T6Tgtm2IyOFvxDRWk+DI97k=
 cosmossdk.io/core v1.0.0-alpha.6 h1:5ukC4JcQKmemLQXcAgu/QoOvJI50hpBkIIg4ZT2EN8E=
@@ -26,6 +28,10 @@ cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 h1:glZ6MpmD+5AhwJY
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43/go.mod h1:XCWpgfueHSBY+B7Cf2Aq/CcsU+6XoFH+EmseCKglFrU=
 cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c h1:c2oMl66vQbP0WtpP8gVpxstuSZ7okqFHktlpHROKw5g=
 cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c/go.mod h1:C5yLe3vDDDHcWMSfa1lfgglczjjMGfOc4nYDmk69U2w=
+cosmossdk.io/x/gov v0.0.0-20241218094223-182dc41cb08c h1:/kd7YzkYBCDez7dPw7LYXgWoui9AzkeumHCp4EeVNco=
+cosmossdk.io/x/gov v0.0.0-20241218094223-182dc41cb08c/go.mod h1:vvU5Fl4NY0m6r35xKxctzg4aYmRuEytfQwl1UFCyrlk=
+cosmossdk.io/x/protocolpool v0.0.0-20241218094223-182dc41cb08c h1:Rd1bKT0T5kxUFtMUn14SpXGYidVVE5iDpYXyRNBKn1g=
+cosmossdk.io/x/protocolpool v0.0.0-20241218094223-182dc41cb08c/go.mod h1:hFlRrOD2/7RSqB2Fq39hi+jNYN619CucRW3Tn3CbZGs=
 cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c h1:2j74+1hCSi5lWtlpFdjXBsqQLJFCMP43cYPT4CaEKA4=
 cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c/go.mod h1:ZvgV4cHXyDsKYdDDz5srMizpi9ylVI1wuvgmj53ug18=
 cosmossdk.io/x/tx v1.0.0-alpha.3 h1:+55/JFH5QRqnFhOI2heH3DKsaNL0RpXcJOQNzUvHiaQ=

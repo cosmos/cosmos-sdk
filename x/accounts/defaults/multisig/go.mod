@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -171,5 +171,3 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../../../.
-
-replace cosmossdk.io/x/accounts => ../../.

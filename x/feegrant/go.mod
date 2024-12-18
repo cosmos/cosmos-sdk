@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
 	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
+	cosmossdk.io/x/gov v0.0.0-20241218094223-182dc41cb08c
 	github.com/cometbft/cometbft v1.0.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -31,10 +31,10 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7 // indirect
+	cosmossdk.io/client/v2 v2.0.0-20241218094223-182dc41cb08c // indirect
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
+	cosmossdk.io/x/protocolpool v0.0.0-20241218094223-182dc41cb08c // indirect
 	cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -176,10 +176,3 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
-
-// TODO remove post spinning out all modules
-replace (
-	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/x/gov => ../gov
-	cosmossdk.io/x/protocolpool => ../protocolpool
-)

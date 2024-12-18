@@ -26,6 +26,8 @@ cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 h1:glZ6MpmD+5AhwJY
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43/go.mod h1:XCWpgfueHSBY+B7Cf2Aq/CcsU+6XoFH+EmseCKglFrU=
 cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c h1:c2oMl66vQbP0WtpP8gVpxstuSZ7okqFHktlpHROKw5g=
 cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c/go.mod h1:C5yLe3vDDDHcWMSfa1lfgglczjjMGfOc4nYDmk69U2w=
+cosmossdk.io/x/epochs v0.0.0-20241218094223-182dc41cb08c h1:NXWPLzQ7hRC+HN/FB2k/CFu/f/anhJl1GdE7zEJgT1w=
+cosmossdk.io/x/epochs v0.0.0-20241218094223-182dc41cb08c/go.mod h1:F8AIIsAqDpWONRkIk6kOOtcTQ8rk/zsLCyaU34LacB8=
 cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c h1:2j74+1hCSi5lWtlpFdjXBsqQLJFCMP43cYPT4CaEKA4=
 cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c/go.mod h1:ZvgV4cHXyDsKYdDDz5srMizpi9ylVI1wuvgmj53ug18=
 cosmossdk.io/x/tx v1.0.0-alpha.3 h1:+55/JFH5QRqnFhOI2heH3DKsaNL0RpXcJOQNzUvHiaQ=

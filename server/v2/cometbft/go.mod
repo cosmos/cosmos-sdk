@@ -2,10 +2,7 @@ module cosmossdk.io/server/v2/cometbft
 
 go 1.23.4
 
-replace (
-	cosmossdk.io/x/consensus => ../../../x/consensus
-	github.com/cosmos/cosmos-sdk => ../../../
-)
+replace github.com/cosmos/cosmos-sdk => ../../../
 
 require (
 	cosmossdk.io/api v0.8.0-rc.3 // main
@@ -19,7 +16,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241218084712-ca559989da43 // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241218084712-ca559989da43 // main
 	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/consensus v0.0.0-20241218094223-182dc41cb08c
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-sdk v0.52.0

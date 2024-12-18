@@ -171,6 +171,3 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
-
-// TODO remove post spinning out all modules
-replace cosmossdk.io/x/protocolpool => ../protocolpool

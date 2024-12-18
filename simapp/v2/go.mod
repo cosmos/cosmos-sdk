@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	cosmossdk.io/api v0.8.0-rc.3 // main
-	cosmossdk.io/client/v2 v2.0.0-20241211112513-a4c34c41b4c7
+	cosmossdk.io/client/v2 v2.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // indirect; main
 	cosmossdk.io/depinject v1.1.0
@@ -16,23 +16,23 @@ require (
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/x/accounts v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337
+	cosmossdk.io/x/consensus v0.0.0-20241218094223-182dc41cb08c
+	cosmossdk.io/x/distribution v0.0.0-20241218094223-182dc41cb08c
+	cosmossdk.io/x/epochs v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
+	cosmossdk.io/x/gov v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/mint v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/protocolpool v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f

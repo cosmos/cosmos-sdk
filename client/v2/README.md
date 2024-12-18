@@ -161,6 +161,48 @@ Then the command can be used as follows, instead of having to specify the `--add
 <appd> query auth account cosmos1abcd...xyz
 ```
 
+#### Flattened Fields in Positional Arguments
+
+AutoCLI also supports flattening nested message fields as positional arguments. This means you can access nested fields
+using dot notation in the `ProtoField` parameter. This is particularly useful when you want to directly set nested
+message fields as positional arguments.
+
+For example, if you have a nested message structure like this:
+
+```protobuf
+message Permissions {
+    string level = 1;
+    repeated string limit_type_urls = 2;
+}
+
+message MsgAuthorizeCircuitBreaker {
+    string grantee = 1;
+    Permissions permissions = 2;
+}
+```
+
+You can flatten the fields in your AutoCLI configuration:
+
+```go
+{
+    RpcMethod: "AuthorizeCircuitBreaker",
+    Use:       "authorize <grantee> <level> <msg_type_urls>",
+    PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+        {ProtoField: "grantee"},
+        {ProtoField: "permissions.level"},
+        {ProtoField: "permissions.limit_type_urls"},
+    },
+}
+```
+
+This allows users to provide values for nested fields directly as positional arguments:
+
+```bash
+<appd> tx circuit authorize cosmos1... super-admin "/cosmos.bank.v1beta1.MsgSend,/cosmos.bank.v1beta1.MsgMultiSend"
+```
+
+Instead of having to provide a complex JSON structure for nested fields, flattening makes the CLI more user-friendly by allowing direct access to nested fields.
+
 #### Customising Flag Names
 
 By default, `autocli` generates flag names based on the names of the fields in your protobuf message. However, you can customise the flag names by providing a `FlagOptions`. This parameter allows you to specify custom names for flags based on the names of the message fields.

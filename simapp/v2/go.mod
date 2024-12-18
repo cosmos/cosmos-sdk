@@ -264,6 +264,7 @@ replace (
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../../x/accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../../x/accounts/defaults/multisig
+	cosmossdk.io/x/auth => ../../x/auth
 	cosmossdk.io/x/authz => ../../x/authz
 	cosmossdk.io/x/bank => ../../x/bank
 	cosmossdk.io/x/circuit => ../../x/circuit
@@ -280,7 +281,6 @@ replace (
 	cosmossdk.io/x/protocolpool => ../../x/protocolpool
 	cosmossdk.io/x/slashing => ../../x/slashing
 	cosmossdk.io/x/staking => ../../x/staking
-	cosmossdk.io/x/auth => ../../x/auth
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 )
 

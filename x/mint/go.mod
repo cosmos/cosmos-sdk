@@ -174,4 +174,4 @@ require (
 	golang.org/x/arch v0.12.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ../../.
+replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-beta.2.0.20241218143637-d2dd93535113

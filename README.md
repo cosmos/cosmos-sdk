@@ -72,7 +72,7 @@ Core dependencies not mentioned here as compatible across all maintained SDK ver
 See an exhaustive list of core dependencies at [cosmossdk.io](https://cosmossdk.io).
 
 | Version                  | v2    | 0.52.z    | 0.50.z         | 0.47.z  |
-| ------------------------ | ----- | --------- | -------------- | ------- |
+|--------------------------|-------|-----------|----------------|---------|
 | cosmossdk.io/core        | 1.y.z | 1.y.z     | 0.11.z         | 0.5.z   |
 | cosmossdk.io/api         | 0.8.z | 0.8.z     | 0.7.z          | 0.3.z   |
 | cosmossdk.io/x/tx        | 1.y.z | 1.y.z     | < 1.y.z        | N/A     |
@@ -89,7 +89,7 @@ Module Dependencies are the modules that an application may depend on and which 
 > N/A signals that the module was not available in the Cosmos SDK at that time.
 
 | Cosmos SDK                  | v2    | 0.52.z | 0.50.z |
-| --------------------------- | ----- | ------ | ------ |
+|-----------------------------|-------|--------|--------|
 | cosmossdk.io/x/accounts     | 0.2.z | 0.2.z  | N/A    |
 | cosmossdk.io/x/bank         | 0.2.z | 0.2.z  | X      |
 | cosmossdk.io/x/circuit      | 0.2.z | 0.2.z  | 0.1.z  |
@@ -106,6 +106,7 @@ Module Dependencies are the modules that an application may depend on and which 
 | cosmossdk.io/x/slashing     | 0.2.z | 0.2.z  | X      |
 | cosmossdk.io/x/staking      | 0.2.z | 0.2.z  | X      |
 | cosmossdk.io/x/upgrade      | 0.2.z | 0.2.z  | 0.1.z  |
+| cosmossdk.io/x/params       | N/A   | 0.2.z  | X      |
 
 ## Disambiguation
 

@@ -1276,7 +1276,7 @@ The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away
 Cosmos SDK modules now store their parameters directly in its respective modules.
 The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.50`.
 
-When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
+When performing a chain migration, the params table must be initialized manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
 
 #### `x/crisis`

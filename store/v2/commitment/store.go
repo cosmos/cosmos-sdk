@@ -562,10 +562,10 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 }
 
 func (c *CommitStore) Close() error {
-	// for _, tree := range c.multiTrees {
-	// 	if err := tree.Close(); err != nil {
-	// 		return err
-	// 	}
-	// }
+	for _, tree := range c.multiTrees {
+		if err := tree.Close(); err != nil {
+			return err
+		}
+	}
 	return nil
 }

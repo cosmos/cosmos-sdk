@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	cosmossdk.io/api v0.8.0-rc.3 // main
-	cosmossdk.io/client/v2 v2.0.0-20241218094223-182dc41cb08c
+	cosmossdk.io/client/v2 v2.10.0-beta.1
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // indirect; main
 	cosmossdk.io/depinject v1.1.0
@@ -15,27 +15,28 @@ require (
 	cosmossdk.io/server/v2 v2.0.0-20241218084712-ca559989da43 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
-	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/bank v0.0.0-20241218143637-d2dd93535113
-	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/consensus v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/distribution v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/epochs v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/gov v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/mint v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/protocolpool v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/tools/benchmark v0.2.0-rc.1
+	cosmossdk.io/tools/confix v0.2.0-rc.1
+	cosmossdk.io/x/accounts v0.2.0-rc.1
+	cosmossdk.io/x/accounts/defaults/base v0.2.0-rc.1
+	cosmossdk.io/x/accounts/defaults/lockup v0.2.0-rc.1
+	cosmossdk.io/x/accounts/defaults/multisig v0.2.0-rc.1
+	cosmossdk.io/x/authz v0.2.0-rc.1
+	cosmossdk.io/x/bank v0.2.0-rc.1
+	cosmossdk.io/x/circuit v0.2.0-rc.1
+	cosmossdk.io/x/consensus v0.2.0-rc.1
+	cosmossdk.io/x/distribution v0.2.0-rc.1
+	cosmossdk.io/x/epochs v0.2.0-rc.1
+	cosmossdk.io/x/evidence v0.2.0-rc.1
+	cosmossdk.io/x/feegrant v0.2.0-rc.1
+	cosmossdk.io/x/gov v0.2.0-rc.1
+	cosmossdk.io/x/group v0.2.0-rc.1
+	cosmossdk.io/x/mint v0.2.0-rc.1
+	cosmossdk.io/x/nft v0.2.0-rc.1
+	cosmossdk.io/x/protocolpool v0.2.0-rc.1
+	cosmossdk.io/x/slashing v0.2.0-rc.1
+	cosmossdk.io/x/staking v0.2.0-rc.1
+	cosmossdk.io/x/upgrade v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -82,6 +83,7 @@ require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
@@ -244,45 +246,14 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
-
-require github.com/cockroachdb/apd/v3 v3.2.1 // indirect
-
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 // replace (
 // 	<temporary replace>
 // )
-
-// SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/client/v2 => ../../client/v2
-	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
-	cosmossdk.io/tools/benchmark => ../../tools/benchmark
-	cosmossdk.io/tools/confix => ../../tools/confix
-	cosmossdk.io/x/accounts => ../../x/accounts
-	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base
-	cosmossdk.io/x/accounts/defaults/lockup => ../../x/accounts/defaults/lockup
-	cosmossdk.io/x/accounts/defaults/multisig => ../../x/accounts/defaults/multisig
-	cosmossdk.io/x/authz => ../../x/authz
-	cosmossdk.io/x/bank => ../../x/bank
-	cosmossdk.io/x/circuit => ../../x/circuit
-	cosmossdk.io/x/consensus => ../../x/consensus
-	cosmossdk.io/x/distribution => ../../x/distribution
-	cosmossdk.io/x/epochs => ../../x/epochs
-	cosmossdk.io/x/evidence => ../../x/evidence
-	cosmossdk.io/x/feegrant => ../../x/feegrant
-	cosmossdk.io/x/gov => ../../x/gov
-	cosmossdk.io/x/group => ../../x/group
-	cosmossdk.io/x/mint => ../../x/mint
-	cosmossdk.io/x/nft => ../../x/nft
-	cosmossdk.io/x/params => ../../x/params
-	cosmossdk.io/x/protocolpool => ../../x/protocolpool
-	cosmossdk.io/x/slashing => ../../x/slashing
-	cosmossdk.io/x/staking => ../../x/staking
-	cosmossdk.io/x/upgrade => ../../x/upgrade
 )
 
 // Below are the long-lived replace of the SimApp

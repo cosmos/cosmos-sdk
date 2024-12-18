@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	cosmossdk.io/api v0.8.0-rc.3 // main
-	cosmossdk.io/client/v2 v2.0.0-20241218094223-182dc41cb08c
+	cosmossdk.io/client/v2 v2.10.0-beta.1
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.1 // main
@@ -13,9 +13,9 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
-	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/protocolpool v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/bank v0.2.0-rc.1
+	cosmossdk.io/x/protocolpool v0.2.0-rc.1
+	cosmossdk.io/x/staking v0.2.0-rc.1
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cometbft/cometbft v1.0.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -174,4 +174,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-beta.2.0.20241218143637-d2dd93535113
+replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1

@@ -27,8 +27,8 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d // indirect
-	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d // indirect
+	cosmossdk.io/x/bank v0.2.0-rc.1 // indirect
+	cosmossdk.io/x/staking v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -170,4 +170,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-beta.2.0.20241218143637-d2dd93535113
+replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1

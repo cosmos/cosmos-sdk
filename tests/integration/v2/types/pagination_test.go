@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 const (
@@ -61,6 +62,8 @@ func (s *paginationTestSuite) SetupTest() {
 		configurator.AccountsModule(),
 		configurator.AuthModule(),
 		configurator.BankModule(),
+		configurator.TxModule(),
+		configurator.ValidateModule(),
 		configurator.ConsensusModule(),
 		configurator.OmitInitGenesis(),
 	}

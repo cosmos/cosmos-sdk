@@ -6,9 +6,9 @@ require (
 	cosmossdk.io/api v0.8.0-rc.3 // main
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0-alpha.6 // main
-	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
-	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/accounts v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d // indirect
+	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -171,9 +171,3 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../../../.
-
-replace (
-	cosmossdk.io/x/accounts => ../../.
-	cosmossdk.io/x/bank => ../../../bank
-	cosmossdk.io/x/staking => ../../../staking
-)

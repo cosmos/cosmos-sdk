@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 var (
@@ -37,6 +38,7 @@ func New[T transaction.Tx](
 	logger log.Logger,
 	config server.ConfigMap,
 	ir jsonpb.AnyResolver,
+	appManager appmanager.AppManager[T],
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
@@ -76,7 +78,7 @@ func New[T transaction.Tx](
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 	mux := http.NewServeMux()
-	mux.Handle("/", NewTunnel[T](s.GRPCGatewayRouter))
+	mux.Handle("/", NewGatewayInterceptor[T](s.GRPCGatewayRouter, appManager))
 
 	s.server = &http.Server{
 		Addr:    s.config.Address,

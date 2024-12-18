@@ -1,14 +1,29 @@
 package grpcgateway
 
 import (
+	"fmt"
+	"io"
+	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/mitchellh/mapstructure"
 )
+
+const MaxBodySize = 1 << 20 // 1 MB
 
 // URIMatch contains the matching results
 type URIMatch struct {
-	MethodName string
-	Params     map[string]string
+	// QueryInputName is the fully qualified name of the proto input type of the query.
+	QueryInputName string
+
+	// Params are any wildcard params found in the request.
+	//
+	// example: foo/bar/{baz} - foo/bar/qux -> {baz: qux}
+	Params map[string]string
 }
 
 func (uri URIMatch) HasParams() bool {
@@ -16,16 +31,23 @@ func (uri URIMatch) HasParams() bool {
 }
 
 // matchURI checks if a given URI matches any pattern and extracts wildcard values
-func matchURI(uri string, patterns map[string]string) *URIMatch {
+func matchURI(uri string, getPatternToQueryInputName map[string]string) *URIMatch {
 	// Remove trailing slash if present
 	uri = strings.TrimRight(uri, "/")
 
-	for pattern, methodName := range patterns {
-		// Remove trailing slash from pattern if present
-		pattern = strings.TrimRight(pattern, "/")
+	// for simple cases, where there are no wildcards, we can just do a map lookup.
+	if inputName, ok := getPatternToQueryInputName[uri]; ok {
+		return &URIMatch{
+			QueryInputName: inputName,
+		}
+	}
 
-		// Get regex pattern and param names
-		regexPattern, paramNames := patternToRegex(pattern)
+	for getPattern, queryInputName := range getPatternToQueryInputName {
+		// Remove trailing slash from getPattern if present
+		getPattern = strings.TrimRight(getPattern, "/")
+
+		// Get regex getPattern and param names
+		regexPattern, paramNames := patternToRegex(getPattern)
 
 		// Compile and match
 		regex := regexp.MustCompile(regexPattern)
@@ -39,8 +61,8 @@ func matchURI(uri string, patterns map[string]string) *URIMatch {
 			}
 
 			return &URIMatch{
-				MethodName: methodName,
-				Params:     params,
+				QueryInputName: queryInputName,
+				Params:         params,
 			}
 		}
 	}
@@ -73,4 +95,72 @@ func patternToRegex(pattern string) (string, []string) {
 	})
 
 	return "^" + escaped + "$", paramNames
+}
+
+func createMessageFromJSON(match *URIMatch, r *http.Request) (gogoproto.Message, error) {
+	requestType := gogoproto.MessageType(match.QueryInputName)
+	if requestType == nil {
+		return nil, fmt.Errorf("unknown request type")
+	}
+
+	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
+	if !ok {
+		return nil, fmt.Errorf("failed to create message instance")
+	}
+
+	defer r.Body.Close()
+	limitedReader := io.LimitReader(r.Body, MaxBodySize)
+	err := jsonpb.Unmarshal(limitedReader, msg)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing body: %w", err)
+	}
+
+	return msg, nil
+
+}
+
+func createMessage(match *URIMatch) (gogoproto.Message, error) {
+	requestType := gogoproto.MessageType(match.QueryInputName)
+	if requestType == nil {
+		return nil, fmt.Errorf("unknown request type")
+	}
+
+	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
+	if !ok {
+		return nil, fmt.Errorf("failed to create message instance")
+	}
+
+	if match.HasParams() {
+		// Create a map with the proper field names from protobuf tags
+		fieldMap := make(map[string]string)
+		v := reflect.ValueOf(msg).Elem()
+		t := v.Type()
+
+		for key, value := range match.Params {
+			// Find the corresponding struct field
+			for i := 0; i < t.NumField(); i++ {
+				field := t.Field(i)
+				tag := field.Tag.Get("protobuf")
+				if nameMatch := regexp.MustCompile(`name=(\w+)`).FindStringSubmatch(tag); len(nameMatch) > 1 {
+					if nameMatch[1] == key {
+						fieldMap[field.Name] = value // Use the actual field name
+						break
+					}
+				}
+			}
+		}
+
+		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+			Result:           msg,
+			WeaklyTypedInput: true,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create decoder: %w", err)
+		}
+
+		if err := decoder.Decode(fieldMap); err != nil {
+			return nil, fmt.Errorf("failed to decode params: %w", err)
+		}
+	}
+	return msg, nil
 }

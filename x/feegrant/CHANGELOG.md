@@ -25,6 +25,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/feegrant/v0.2.0-rc.1) - 2024-12-18
+
 ### Features
 
 * [#14649](https://github.com/cosmos/cosmos-sdk/pull/14649) The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
@@ -32,8 +34,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [#21377](https://github.com/cosmos/cosmos-sdk/pull/21377) Simulation API breaking changes:
-  * `SimulateMsgGrantAllowance` and `SimulateMsgRevokeAllowance` no longer require a `ProtoCodec` parameter.
-  * `WeightedOperations` functions no longer require `ProtoCodec`, `JSONCodec`, or `address.Codec` parameters.
+    * `SimulateMsgGrantAllowance` and `SimulateMsgRevokeAllowance` no longer require a `ProtoCodec` parameter.
+    * `WeightedOperations` functions no longer require `ProtoCodec`, `JSONCodec`, or `address.Codec` parameters.
 * [#20529](https://github.com/cosmos/cosmos-sdk/pull/20529) `Accept` on the `FeeAllowanceI` interface now expects the feegrant environment in the `context.Context`.
 * [#19450](https://github.com/cosmos/cosmos-sdk/pull/19450) Migrate module to use `appmodule.Environment` instead of passing individual services.
 

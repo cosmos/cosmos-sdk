@@ -22,6 +22,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
+	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.68.1
 	google.golang.org/protobuf v1.36.0
@@ -35,6 +36,7 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/core/testing v0.0.1 // main
 	cosmossdk.io/schema v1.0.0 // indirect
+	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -173,9 +175,5 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-require go.uber.org/mock v0.5.0
-
-require cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d // indirect
 
 replace github.com/cosmos/cosmos-sdk => ../../

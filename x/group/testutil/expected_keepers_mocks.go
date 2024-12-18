@@ -222,7 +222,7 @@ func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, sender
 }
 
 // SendCoinsFromModuleToModule indicates an expected call of SendCoinsFromModuleToModule.
-func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt any) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
 }
@@ -275,7 +275,6 @@ func (mr *MockBankKeeperMockRecorder) UpdateParams(arg0, arg1 interface{}) *gomo
 type MockStakingKeeper struct {
 	ctrl     *gomock.Controller
 	recorder *MockStakingKeeperMockRecorder
-	isgomock struct{}
 }
 
 // MockStakingKeeperMockRecorder is the mock recorder for MockStakingKeeper.
@@ -305,7 +304,7 @@ func (m *MockStakingKeeper) BondDenom(ctx context.Context) (string, error) {
 }
 
 // BondDenom indicates an expected call of BondDenom.
-func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx any) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondDenom", reflect.TypeOf((*MockStakingKeeper)(nil).BondDenom), ctx)
 }

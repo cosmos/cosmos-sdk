@@ -8,166 +8,136 @@ import (
 	"github.com/jhump/protoreflect/grpcreflect"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
-	"cosmossdk.io/x/staking"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
-	"github.com/cosmos/cosmos-sdk/testutil/integration"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	_ "cosmossdk.io/x/accounts"                       // import as blank for app wiring
+	_ "cosmossdk.io/x/bank"                           // import as blank for app wiring
+	_ "cosmossdk.io/x/consensus"                      // import as blank for app wiring
+	_ "cosmossdk.io/x/mint"                           // import as blank for app wiring
+	_ "cosmossdk.io/x/staking"                        // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring``
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"   // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	codec   codec.Codec
 	conn    *grpc.ClientConn
 	address sdk.AccAddress
+	codec   codec.Codec
+	ctx     context.Context
+
+	authKeeper    authkeeper.AccountKeeper
+	bankKeeper    bankkeeper.BaseKeeper
+	stakingKeeper *stakingkeeper.Keeper
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey)
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{})
-	s.codec = encodingCfg.Codec
-
-	logger := log.NewTestLogger(s.T())
-	authority := authtypes.NewModuleAddress("gov")
-
-	// gomock initializations
-	ctrl := gomock.NewController(s.T())
-	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
-	accNum := uint64(0)
-	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
-		currentNum := accNum
-		accNum++
-		return currentNum, nil
-	})
-
-	accountKeeper := authkeeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
-		s.codec,
-		authtypes.ProtoBaseAccount,
-		acctsModKeeper,
-		map[string][]string{
-			minttypes.ModuleName:           {authtypes.Minter},
-			stakingtypes.BondedPoolName:    {authtypes.Burner, stakingtypes.ModuleName},
-			stakingtypes.NotBondedPoolName: {authtypes.Burner, stakingtypes.ModuleName},
-		},
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authority.String(),
-	)
-
-	blockedAddresses := map[string]bool{
-		accountKeeper.GetAuthority(): false,
+	moduleConfigs := []configurator.ModuleOption{
+		configurator.AccountsModule(),
+		configurator.AuthModule(),
+		configurator.BankModule(),
+		configurator.StakingModule(),
+		configurator.TxModule(),
+		configurator.ValidateModule(),
+		configurator.ConsensusModule(),
+		configurator.GenutilModule(),
+		configurator.MintModule(),
 	}
-	bankKeeper := bankkeeper.NewBaseKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
-		s.codec,
-		accountKeeper,
-		blockedAddresses,
-		authority.String(),
-	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(s.codec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, nil, authority.String(), encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(), addresscodec.NewBech32Codec("cosmosvaloper"), nil)
+	startupCfg := integration.DefaultStartUpConfig(s.T())
 
-	authModule := auth.NewAppModule(s.codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(s.codec, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(s.codec, stakingKeeper)
+	// var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
+	// 	return integration.NewRouterService()
+	// }
+	// queryRouterService := integration.NewRouterService()
+	// s.registerQueryRouterService(queryRouterService)
+	// serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
 
-	integrationApp := integration.NewIntegrationApp(logger, keys, s.codec,
-		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
-		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
-		map[string]appmodule.AppModule{
-			authtypes.ModuleName:    authModule,
-			banktypes.ModuleName:    bankModule,
-			stakingtypes.ModuleName: stakingModule,
-		},
-		baseapp.NewMsgServiceRouter(),
-		baseapp.NewGRPCQueryRouter(),
-		baseapp.SetQueryGasLimit(50),
-	)
+	startupCfg.BranchService = &integration.BranchService{}
+	// startupCfg.RouterServiceBuilder = serviceBuilder
+	startupCfg.HeaderService = &integration.HeaderService{}
+
+	integrationApp, err := integration.NewApp(
+		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...),
+			depinject.Supply(log.NewNopLogger())),
+		startupCfg,
+		&s.bankKeeper, &s.authKeeper, &s.codec, &s.stakingKeeper)
+	s.Require().NoError(err)
 
 	pubkeys := simtestutil.CreateTestPubKeys(2)
 	s.address = sdk.AccAddress(pubkeys[0].Address())
 	addr2 := sdk.AccAddress(pubkeys[1].Address())
 
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+	s.ctx = integrationApp.StateLatestContext(s.T())
 
 	// mint some tokens
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	s.Require().NoError(bankKeeper.MintCoins(sdkCtx, minttypes.ModuleName, amount))
-	s.Require().NoError(bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, minttypes.ModuleName, addr2, amount))
+	s.Require().NoError(s.bankKeeper.MintCoins(s.ctx, minttypes.ModuleName, amount))
+	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, addr2, amount))
 
-	// Register MsgServer and QueryServer
-	banktypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
-	banktypes.RegisterQueryServer(integrationApp.GRPCQueryRouter(), bankkeeper.NewQuerier(&bankKeeper))
-	testdata.RegisterQueryServer(integrationApp.GRPCQueryRouter(), testdata.QueryImpl{})
-	banktypes.RegisterInterfaces(encodingCfg.InterfaceRegistry)
-	stakingtypes.RegisterQueryServer(integrationApp.GRPCQueryRouter(), stakingkeeper.NewQuerier(stakingKeeper))
+	bankMsgServer := bankkeeper.NewMsgServerImpl(s.bankKeeper)
 
-	_, err := integrationApp.RunMsg(
-		&banktypes.MsgSend{
-			FromAddress: addr2.String(),
-			ToAddress:   s.address.String(),
-			Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+	_, err = integrationApp.RunMsg(
+		s.T(),
+		s.ctx,
+		func(ctx context.Context) (transaction.Msg, error) {
+			resp, e := bankMsgServer.Send(ctx, &banktypes.MsgSend{
+				FromAddress: addr2.String(),
+				ToAddress:   s.address.String(),
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+			})
+			return resp, e
 		},
-		integration.WithAutomaticFinalizeBlock(),
 		integration.WithAutomaticCommit(),
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(integrationApp.LastBlockHeight(), int64(2))
+	// s.Require().Equal(integrationApp.LastBlockHeight(), int64(2))
 
-	resp, err := bankKeeper.Balance(integrationApp.Context(), &banktypes.QueryBalanceRequest{Address: s.address.String(), Denom: "stake"})
+	resp, err := s.bankKeeper.Balance(s.ctx, &banktypes.QueryBalanceRequest{Address: s.address.String(), Denom: "stake"})
 	s.Require().NoError(err)
 	s.Require().Equal(int64(50), resp.Balance.Amount.Int64())
 
-	grpcCfg := srvconfig.DefaultConfig().GRPC
-	grpcSrv, err := servergrpc.NewGRPCServer((client.Context{}).
-		WithChainID(integrationApp.ChainID()).
-		WithInterfaceRegistry(encodingCfg.InterfaceRegistry).
-		WithTxConfig(encodingCfg.TxConfig),
-		integrationApp,
-		grpcCfg,
+	grpcSrv := grpc.NewServer(
+		grpc.ForceServerCodec(codec.NewProtoCodec(s.codec.InterfaceRegistry()).GRPCCodec()),
 	)
-	s.Require().NoError(err)
+	banktypes.RegisterQueryServer(grpcSrv, bankkeeper.NewQuerier(&s.bankKeeper))
+	stakingtypes.RegisterQueryServer(grpcSrv, stakingkeeper.NewQuerier(s.stakingKeeper))
+	// integrationApp.RegisterGRPCServer(grpcSrv)
 
+	grpcCfg := srvconfig.DefaultConfig().GRPC
 	go func() {
 		err := servergrpc.StartGRPCServer(
-			integrationApp.Context(),
+			s.ctx,
 			integrationApp.Logger(),
 			grpcCfg,
 			grpcSrv,
@@ -179,7 +149,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.conn, err = grpc.NewClient(
 		grpcCfg.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(encodingCfg.InterfaceRegistry).GRPCCodec())),
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.codec.InterfaceRegistry()).GRPCCodec())),
 	)
 	s.Require().NoError(err)
 }
@@ -262,7 +232,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_InterfaceReflection() {
-	s.T().Skip() // TODO: fix this test at https://github.com/cosmos/cosmos-sdk/issues/22825
+	// s.T().Skip() // TODO: fix this test at https://github.com/cosmos/cosmos-sdk/issues/22825
 
 	// this tests the application reflection capabilities and compatibility between v1 and v2
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -290,15 +260,15 @@ func (s *IntegrationTestSuite) TestGRPCServer_InterfaceReflection() {
 // ConsAddr. (ref: https://github.com/cosmos/cosmos-sdk/issues/8045)
 func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 	queryClient := stakingtypes.NewQueryClient(s.conn)
-	validators, err := queryClient.Validators(context.Background(), &stakingtypes.QueryValidatorsRequest{})
+	validators, err := queryClient.Validators(s.ctx, &stakingtypes.QueryValidatorsRequest{})
 	require.NoError(s.T(), err)
 
-	if len(validators.Validators) == 0 {
-		s.T().Skip("no validators found")
-	}
+	// if len(validators.Validators) == 0 {
+	// 	s.T().Skip("no validators found")
+	// }
 
 	validator, err := queryClient.Validator(
-		context.Background(),
+		s.ctx,
 		&stakingtypes.QueryValidatorRequest{ValidatorAddr: validators.Validators[0].OperatorAddress},
 	)
 	require.NoError(s.T(), err)

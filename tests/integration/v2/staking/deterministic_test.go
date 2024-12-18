@@ -1,4 +1,4 @@
-package keeper_test
+package staking
 
 import (
 	"context"
@@ -7,43 +7,24 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/mock/gomock"
+	"github.com/cosmos/gogoproto/proto"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/consensus"
-	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
-	consensusparamtypes "cosmossdk.io/x/consensus/types"
-	"cosmossdk.io/x/distribution"
 	minttypes "cosmossdk.io/x/mint/types"
-	"cosmossdk.io/x/staking"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/integration"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -60,131 +41,63 @@ var (
 type deterministicFixture struct {
 	app *integration.App
 
-	ctx  sdk.Context
-	cdc  codec.Codec
-	keys map[string]*storetypes.KVStoreKey
+	ctx context.Context
 
 	accountKeeper authkeeper.AccountKeeper
-	bankKeeper    bankkeeper.BaseKeeper
+	bankKeeper    bankkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
 
-	queryClient stakingtypes.QueryClient
-	amt1        math.Int
-	amt2        math.Int
+	amt1 math.Int
+	amt2 math.Int
+}
+
+func queryFnFactory[RequestT, ResponseT proto.Message](
+	f *deterministicFixture,
+) func(RequestT) (ResponseT, error) {
+	return func(req RequestT) (ResponseT, error) {
+		var emptyResponse ResponseT
+		res, err := f.app.Query(f.ctx, 0, req)
+		if err != nil {
+			return emptyResponse, err
+		}
+		castedRes, ok := res.(ResponseT)
+		if !ok {
+			return emptyResponse, fmt.Errorf("unexpected response type: %T", res)
+		}
+		return castedRes, nil
+	}
 }
 
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	t.Helper()
-	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, consensusparamtypes.StoreKey,
-	)
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, distribution.AppModule{})
-	cdc := encodingCfg.Codec
-
-	logger := log.NewTestLogger(t)
-	authority := authtypes.NewModuleAddress("gov")
-
-	maccPerms := map[string][]string{
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.ModuleName:        {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-	}
-
-	// gomock initializations
-	ctrl := gomock.NewController(t)
-	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
-	accNum := uint64(0)
-	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
-		currentNum := accNum
-		accNum++
-		return currentNum, nil
-	})
-
-	accountKeeper := authkeeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		authtypes.ProtoBaseAccount,
-		acctsModKeeper,
-		maccPerms,
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authority.String(),
-	)
-
-	blockedAddresses := map[string]bool{
-		accountKeeper.GetAuthority(): false,
-	}
-	bankKeeper := bankkeeper.NewBaseKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		accountKeeper,
-		blockedAddresses,
-		authority.String(),
-	)
-
-	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger()), authtypes.NewModuleAddress("gov").String())
-
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
-
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
-	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
-
-	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
-		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
-		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
-		map[string]appmodule.AppModule{
-			authtypes.ModuleName:           authModule,
-			banktypes.ModuleName:           bankModule,
-			stakingtypes.ModuleName:        stakingModule,
-			consensusparamtypes.ModuleName: consensusModule,
-		},
-		baseapp.NewMsgServiceRouter(),
-		baseapp.NewGRPCQueryRouter(),
-	)
-
-	ctx := integrationApp.Context()
-
-	// Register MsgServer and QueryServer
-	stakingtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))
-	stakingtypes.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
-
-	// set default staking params
-	assert.NilError(t, stakingKeeper.Params.Set(ctx, stakingtypes.DefaultParams()))
+	f := initFixture(t, false)
+	ctx := f.ctx
 
 	// set pools
-	startTokens := stakingKeeper.TokensFromConsensusPower(ctx, 10)
-	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 10)
+	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	assert.NilError(t, err)
-	notBondedPool := stakingKeeper.GetNotBondedPool(ctx)
-	assert.NilError(t, banktestutil.FundModuleAccount(ctx, bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	accountKeeper.SetModuleAccount(ctx, notBondedPool)
-	bondedPool := stakingKeeper.GetBondedPool(ctx)
-	assert.NilError(t, banktestutil.FundModuleAccount(ctx, bankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	accountKeeper.SetModuleAccount(ctx, bondedPool)
+	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	f.accountKeeper.SetModuleAccount(ctx, notBondedPool)
+	bondedPool := f.stakingKeeper.GetBondedPool(ctx)
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, f.bankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	f.accountKeeper.SetModuleAccount(ctx, bondedPool)
 
-	qr := integrationApp.QueryHelper()
-	queryClient := stakingtypes.NewQueryClient(qr)
+	amt1 := f.stakingKeeper.TokensFromConsensusPower(ctx, 101)
+	amt2 := f.stakingKeeper.TokensFromConsensusPower(ctx, 102)
 
-	amt1 := stakingKeeper.TokensFromConsensusPower(ctx, 101)
-	amt2 := stakingKeeper.TokensFromConsensusPower(ctx, 102)
-
-	f := deterministicFixture{
-		app:           integrationApp,
-		ctx:           sdk.UnwrapSDKContext(ctx),
-		cdc:           cdc,
-		keys:          keys,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		stakingKeeper: stakingKeeper,
-		queryClient:   queryClient,
+	df := deterministicFixture{
+		app:           f.app,
+		ctx:           ctx,
+		accountKeeper: f.accountKeeper,
+		bankKeeper:    f.bankKeeper,
+		stakingKeeper: f.stakingKeeper,
 		amt1:          amt1,
 		amt2:          amt2,
 	}
 
-	return &f
+	return &df
 }
 
 func durationGenerator() *rapid.Generator[time.Duration] {
@@ -408,9 +321,16 @@ func fundAccountAndDelegate(
 	return shares, err
 }
 
-func TestGRPCValidator(t *testing.T) {
+func assertNonZeroGas(t *testing.T, gasUsed gas.Gas) {
+	t.Helper()
+	assert.Check(t, gasUsed != 0)
+}
+
+func TestValidator(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryValidatorRequest, *stakingtypes.QueryValidatorResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		val := createAndSetValidator(t, rt, f)
@@ -418,21 +338,26 @@ func TestGRPCValidator(t *testing.T) {
 			ValidatorAddr: val.OperatorAddress,
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Validator, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryValidatorRequest, *stakingtypes.QueryValidatorResponse](f)
+
 	val := getStaticValidator(t, f)
 	req := &stakingtypes.QueryValidatorRequest{
 		ValidatorAddr: val.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Validator, 1921, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCValidators(t *testing.T) {
+func TestValidators(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryValidatorsRequest, *stakingtypes.QueryValidatorsResponse](f)
 
 	validatorStatus := []string{stakingtypes.BondStatusBonded, stakingtypes.BondStatusUnbonded, stakingtypes.BondStatusUnbonding}
 	rapid.Check(t, func(rt *rapid.T) {
@@ -446,19 +371,24 @@ func TestGRPCValidators(t *testing.T) {
 			Pagination: testdata.PaginationGenerator(rt, uint64(valsCount)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Validators, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryValidatorsRequest, *stakingtypes.QueryValidatorsResponse](f)
+
 	getStaticValidator(t, f)
 	getStaticValidator2(t, f)
 
-	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 2880, false)
+	testdata.DeterministicIterationsV2(t, &stakingtypes.QueryValidatorsRequest{}, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCValidatorDelegations(t *testing.T) {
+func TestValidatorDelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryValidatorDelegationsRequest, *stakingtypes.QueryValidatorDelegationsResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
@@ -477,10 +407,12 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 			Pagination:    testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorDelegations, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryValidatorDelegationsRequest, *stakingtypes.QueryValidatorDelegationsResponse](f)
 
 	validator := getStaticValidator(t, f)
 
@@ -498,12 +430,14 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorDelegations, 14628, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
+func TestValidatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryValidatorUnbondingDelegationsRequest, *stakingtypes.QueryValidatorUnbondingDelegationsResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
@@ -526,10 +460,12 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 			Pagination:    testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorUnbondingDelegations, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryValidatorUnbondingDelegationsRequest, *stakingtypes.QueryValidatorUnbondingDelegationsResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -552,18 +488,21 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorUnbondingDelegations, 3707, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegation(t *testing.T) {
+func TestDelegation(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryDelegationRequest, *stakingtypes.QueryDelegationResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
 		acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
 		f.accountKeeper.SetAccount(f.ctx, acc)
+
 		_, err := createDelegationAndDelegate(t, rt, f, delegator, validator)
 		assert.NilError(t, err)
 
@@ -572,10 +511,12 @@ func TestGRPCDelegation(t *testing.T) {
 			DelegatorAddr: delegator.String(),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Delegation, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegationRequest, *stakingtypes.QueryDelegationResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -588,12 +529,14 @@ func TestGRPCDelegation(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Delegation, 4686, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCUnbondingDelegation(t *testing.T) {
+func TestUnbondingDelegation(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryUnbondingDelegationRequest, *stakingtypes.QueryUnbondingDelegationResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
@@ -613,10 +556,13 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 			DelegatorAddr: delegator.String(),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.UnbondingDelegation, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryUnbondingDelegationRequest, *stakingtypes.QueryUnbondingDelegationResponse](f)
+
 	validator := getStaticValidator(t, f)
 
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -632,12 +578,14 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.UnbondingDelegation, 1615, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegatorDelegations(t *testing.T) {
+func TestDelegatorDelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryDelegatorDelegationsRequest, *stakingtypes.QueryDelegatorDelegationsResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		numVals := rapid.IntRange(1, 3).Draw(rt, "num-dels")
@@ -656,10 +604,12 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 			Pagination:    testdata.PaginationGenerator(rt, uint64(numVals)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorDelegations, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegatorDelegationsRequest, *stakingtypes.QueryDelegatorDelegationsResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -671,12 +621,14 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorDelegations, 4289, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegatorValidator(t *testing.T) {
+func TestDelegatorValidator(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryDelegatorValidatorRequest, *stakingtypes.QueryDelegatorValidatorResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
@@ -692,10 +644,12 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 			ValidatorAddr: validator.OperatorAddress,
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorValidator, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegatorValidatorRequest, *stakingtypes.QueryDelegatorValidatorResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -709,12 +663,14 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorValidator, 3569, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
+func TestDelegatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryDelegatorUnbondingDelegationsRequest, *stakingtypes.QueryDelegatorUnbondingDelegationsResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
@@ -737,10 +693,12 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 			Pagination:    testdata.PaginationGenerator(rt, uint64(numVals)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorUnbondingDelegations, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegatorUnbondingDelegationsRequest, *stakingtypes.QueryDelegatorUnbondingDelegationsResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -755,12 +713,14 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorUnbondingDelegations, 1290, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCDelegatorValidators(t *testing.T) {
+func TestDelegatorValidators(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryDelegatorValidatorsRequest, *stakingtypes.QueryDelegatorValidatorsResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		numVals := rapid.IntRange(1, 3).Draw(rt, "num-dels")
@@ -779,10 +739,12 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 			Pagination:    testdata.PaginationGenerator(rt, uint64(numVals)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorValidators, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryDelegatorValidatorsRequest, *stakingtypes.QueryDelegatorValidatorsResponse](f)
 
 	validator := getStaticValidator(t, f)
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, delegatorAddr1)
@@ -791,27 +753,33 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorValidatorsRequest{DelegatorAddr: delegator1}
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorValidators, 3172, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCPool(t *testing.T) {
+func TestPool(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryPoolRequest, *stakingtypes.QueryPoolResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		createAndSetValidator(t, rt, f)
 
-		testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 0, true)
+		testdata.DeterministicIterationsV2(t, &stakingtypes.QueryPoolRequest{}, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryPoolRequest, *stakingtypes.QueryPoolResponse](f)
 	getStaticValidator(t, f)
-	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6287, false)
+	testdata.DeterministicIterationsV2(t, &stakingtypes.QueryPoolRequest{}, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCRedelegations(t *testing.T) {
+func TestRedelegations(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryRedelegationsRequest, *stakingtypes.QueryRedelegationsResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(t, rt, f, stakingtypes.Bonded)
@@ -854,10 +822,13 @@ func TestGRPCRedelegations(t *testing.T) {
 		}
 
 		req.Pagination = testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination")
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Redelegations, 0, true)
+		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	f = initDeterministicFixture(t) // reset
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+	queryFn = queryFnFactory[*stakingtypes.QueryRedelegationsRequest, *stakingtypes.QueryRedelegationsResponse](f)
+
 	validator := getStaticValidator(t, f)
 	_ = getStaticValidator2(t, f)
 
@@ -875,13 +846,15 @@ func TestGRPCRedelegations(t *testing.T) {
 		DstValidatorAddr: validator2,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Redelegations, 3920, false)
+	testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }
 
-func TestGRPCParams(t *testing.T) {
+func TestParams(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
 	coinDenomRegex := `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	queryFn := queryFnFactory[*stakingtypes.QueryParamsRequest, *stakingtypes.QueryParamsResponse](f)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		bondDenom := rapid.StringMatching(coinDenomRegex).Draw(rt, "bond-denom")
@@ -898,7 +871,7 @@ func TestGRPCParams(t *testing.T) {
 		err := f.stakingKeeper.Params.Set(f.ctx, params)
 		assert.NilError(t, err)
 
-		testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 0, true)
+		testdata.DeterministicIterationsV2(t, &stakingtypes.QueryParamsRequest{}, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
 	params := stakingtypes.Params{
@@ -914,5 +887,5 @@ func TestGRPCParams(t *testing.T) {
 	err := f.stakingKeeper.Params.Set(f.ctx, params)
 	assert.NilError(t, err)
 
-	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1162, false)
+	testdata.DeterministicIterationsV2(t, &stakingtypes.QueryParamsRequest{}, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 }

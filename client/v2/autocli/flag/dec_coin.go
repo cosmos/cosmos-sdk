@@ -11,28 +11,28 @@ import (
 	"cosmossdk.io/client/v2/internal/coins"
 )
 
-type coinType struct{}
+type decCoinType struct{}
 
-type coinValue struct {
-	value *basev1beta1.Coin
+type decCoinValue struct {
+	value *basev1beta1.DecCoin
 }
 
-func (c coinType) NewValue(*context.Context, *Builder) Value {
-	return &coinValue{}
+func (c decCoinType) NewValue(*context.Context, *Builder) Value {
+	return &decCoinValue{}
 }
 
-func (c coinType) DefaultValue() string {
+func (c decCoinType) DefaultValue() string {
 	return "zero"
 }
 
-func (c *coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
+func (c *decCoinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	if c.value == nil {
 		return protoreflect.Value{}, nil
 	}
 	return protoreflect.ValueOfMessage(c.value.ProtoReflect()), nil
 }
 
-func (c *coinValue) String() string {
+func (c *decCoinValue) String() string {
 	if c.value == nil {
 		return ""
 	}
@@ -40,12 +40,12 @@ func (c *coinValue) String() string {
 	return c.value.String()
 }
 
-func (c *coinValue) Set(stringValue string) error {
+func (c *decCoinValue) Set(stringValue string) error {
 	if strings.Contains(stringValue, ",") {
 		return errors.New("coin flag must be a single coin, specific multiple coins with multiple flags or spaces")
 	}
 
-	coin, err := coins.ParseCoin(stringValue)
+	coin, err := coins.ParseDecCoin(stringValue)
 	if err != nil {
 		return err
 	}
@@ -53,6 +53,6 @@ func (c *coinValue) Set(stringValue string) error {
 	return nil
 }
 
-func (c *coinValue) Type() string {
-	return "cosmos.base.v1beta1.Coin"
+func (c *decCoinValue) Type() string {
+	return "cosmos.base.v1beta1.DecCoin"
 }

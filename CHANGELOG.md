@@ -42,6 +42,25 @@ This is a special cosmos-sdk release with support for LSM.
 
 * [#21834](https://github.com/cosmos/cosmos-sdk/pull/21834) Backport the [v0.50.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10) changes. 
 
+## [v0.50.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.11) - 2024-12-16
+
+### Features
+
+* (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
+
+### Improvements
+
+* (server) [#21941](https://github.com/cosmos/cosmos-sdk/pull/21941) Regenerate addrbook.json for in place testnet.
+
+### Bug Fixes
+
+* Fix [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm) Limit recursion depth for unknown field detection and unpack any
+* (server) [#22564](https://github.com/cosmos/cosmos-sdk/pull/22564) Fix fallback genesis path in server
+* (x/group) [#22425](https://github.com/cosmos/cosmos-sdk/pull/22425) Proper address rendering in error
+* (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
+* (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+* (x/group) [#22229](https://github.com/cosmos/cosmos-sdk/pull/22229) Accept `1` and `try` in CLI for group proposal exec.
+
 ## [v0.50.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10) - 2024-09-20
 
 ### Features

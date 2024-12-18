@@ -16,7 +16,7 @@ We will be breaking down the steps to create a testnet from mainnet state.
   // InitSimAppForTestnet is broken down into two sections:
   // Required Changes: Changes that, if not made, will cause the testnet to halt or panic
   // Optional Changes: Changes to customize the testnet to one's liking (lower vote times, fund accounts, etc)
-  func InitSimAppForTestnet(app *simApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *simApp {
+  func InitSimAppForTestnet(app *SimApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *SimApp {
   ...
   }
 ```
@@ -152,7 +152,7 @@ It is useful to create new accounts for your testing purposes. This avoids the n
 		sdk.MustAccAddressFromBech32("cosmos1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
 
   // Fund localSimApp accounts
-	for _, account := range localsimAccounts {
+	for _, account := range localSimAppAccounts {
 		err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
 		if err != nil {
 			tmos.Exit(err.Error())
@@ -195,7 +195,7 @@ Before we can run the testnet we must plug everything together.
 in `root.go`, in the `initRootCmd` function we add:
 
 ```diff
-  server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createsimAppAndExport, addModuleInitFlags)
+  server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createSimAppAndExport, addModuleInitFlags)
 	++ server.AddTestnetCreatorCommand(rootCmd, simapp.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
 ```
 
@@ -205,7 +205,7 @@ Next we will add a newTestnetApp helper function:
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
 // for a testnet to be created from the provided app.
 func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-	// Create an app and type cast to an simApp
+	// Create an app and type cast to an SimApp
 	app := newApp(logger, db, traceStore, appOpts)
 	simApp, ok := app.(*simapp.SimApp)
 	if !ok {
@@ -230,6 +230,6 @@ func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, ap
 	}
 
 	// Make modifications to the normal SimApp required to run the network locally
-	return meriln.InitMerlinAppForTestnet(simApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
+	return simapp.InitSimAppForTestnet(simApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
 }
 ```

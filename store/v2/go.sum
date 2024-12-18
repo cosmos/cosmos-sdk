@@ -57,8 +57,8 @@ github.com/cosmos/cosmos-proto v1.0.0-beta.5 h1:eNcayDLpip+zVLRLYafhzLvQlSmyab+R
 github.com/cosmos/cosmos-proto v1.0.0-beta.5/go.mod h1:hQGLpiIUloJBMdQMMWb/4wRApmI9hjHH05nefC0Ojec=
 github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fro=
 github.com/cosmos/gogoproto v1.7.0/go.mod h1:yWChEv5IUEYURQasfyBW5ffkMHR/90hiHgbNgrtp4j0=
-github.com/cosmos/iavl v1.3.1 h1:+W1G2uSUtJMqMGpwz/fKiwZxY2DDT/9/0hyNLm6Geu0=
-github.com/cosmos/iavl v1.3.1/go.mod h1:T6SfBcyhulVIY2G/ZtAtQm/QiJvsuhIos52V4dWYk88=
+github.com/cosmos/iavl v1.3.4 h1:A0RUAms7TZ0L6EFrrBIPg4Dy7qD9vvD5lJKUxEXURLM=
+github.com/cosmos/iavl v1.3.4/go.mod h1:T6SfBcyhulVIY2G/ZtAtQm/QiJvsuhIos52V4dWYk88=
 github.com/cosmos/iavl-bench/bench v0.0.4 h1:J6zQPiBqF4CXMM3QBsLqZgQEBGY0taX85vLIZMhmAfQ=
 github.com/cosmos/iavl-bench/bench v0.0.4/go.mod h1:j2rLae77EffacWcp7mmj3Uaa4AOAmZA7ymvhsuBQKKI=
 github.com/cosmos/iavl/v2 v2.0.0-20241128205019-1b18c0edbbd9 h1:H+ttW6HTzezz2l3Fp/hFNNHWA+a+7qZgNDE5OFySTiY=

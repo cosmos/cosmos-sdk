@@ -2,7 +2,7 @@ module cosmossdk.io/server/v2/cometbft
 
 go 1.23.4
 
-replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-beta.2.0.20241218143637-d2dd93535113
+replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1
 
 require (
 	cosmossdk.io/api v0.8.0-rc.3 // main

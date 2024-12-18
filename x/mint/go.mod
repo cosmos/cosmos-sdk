@@ -165,7 +165,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
-	github.com/cometbft/cometbft/api v1.0.0-rc2 // indirect
+	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.1.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect

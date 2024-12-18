@@ -23,7 +23,7 @@ require (
 	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
-	github.com/cometbft/cometbft/api v1.0.0-rc2
+	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.8.1

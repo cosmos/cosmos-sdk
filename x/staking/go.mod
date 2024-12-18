@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/schema v1.0.0
 	cosmossdk.io/store v1.10.0-rc.1
 	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9 // indirect
-	github.com/cometbft/cometbft/api v1.0.0-rc2
+	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0

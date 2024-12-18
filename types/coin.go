@@ -955,3 +955,15 @@ func NormalizeCoins(coins []DecCoin) Coins {
 
 	return result
 }
+
+// ----------------------------------------------------------------------------
+
+// Deprecated: Use math.Int instead.
+func (ip IntProto) String() string {
+	return ip.Int.String()
+}
+
+// Deprecated: Use math.LegacyDec instead.
+func (dp DecProto) String() string {
+	return dp.Dec.String()
+}

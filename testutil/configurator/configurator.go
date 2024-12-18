@@ -165,6 +165,7 @@ func AuthModule() ModuleOption {
 					{Account: "fee_collector"},
 					{Account: testutil.DistributionModuleName, Permissions: []string{"minter"}},
 					{Account: testutil.MintModuleName, Permissions: []string{"minter"}},
+					{Account: testutil.StakingModuleName, Permissions: []string{"minter"}},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", testutil.StakingModuleName}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", testutil.StakingModuleName}},
 					{Account: testutil.GovModuleName, Permissions: []string{"burner"}},

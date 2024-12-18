@@ -1,4 +1,4 @@
-package keeper_test
+package staking
 
 import (
 	"testing"
@@ -13,14 +13,15 @@ import (
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, false)
 
-	ctx := f.sdkCtx
+	ctx := f.ctx
 
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, int64(1000))
 	assert.NilError(t, f.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
@@ -48,7 +49,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	validator, issuedShares := validator.AddTokensFromDel(startTokens)
 	assert.DeepEqual(t, startTokens, issuedShares.RoundInt())
 
-	validator = keeper.TestingUpdateValidator(f.stakingKeeper, ctx, validator, true)
+	validator, _ = keeper.TestingUpdateValidatorV2(f.stakingKeeper, ctx, validator, true)
 	assert.Assert(math.IntEq(t, startTokens, validator.BondedTokens()))
 	assert.Assert(t, validator.IsBonded())
 
@@ -66,7 +67,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	totalUnbonded := math.NewInt(0)
 	for i := int64(0); i < int64(maxEntries); i++ {
 		var err error
-		ctx = ctx.WithHeaderInfo(header.Info{Height: i})
+		ctx = integration.SetHeaderInfo(ctx, header.Info{Height: i})
 		var amount math.Int
 		completionTime, amount, err = f.stakingKeeper.Undelegate(ctx, addrDel, addrVal, math.LegacyNewDec(1))
 		assert.NilError(t, err)
@@ -94,7 +95,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	assert.Assert(math.IntEq(t, newNotBonded, oldNotBonded))
 
 	// mature unbonding delegations
-	ctx = ctx.WithHeaderInfo(header.Info{Time: completionTime})
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: completionTime})
 	acc := f.accountKeeper.NewAccountWithAddress(ctx, addrDel)
 	f.accountKeeper.SetAccount(ctx, acc)
 	_, err = f.stakingKeeper.CompleteUnbonding(ctx, addrDel, addrVal)

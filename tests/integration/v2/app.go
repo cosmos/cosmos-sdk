@@ -104,7 +104,7 @@ type StartupConfig struct {
 	GasService gas.Service
 }
 
-func DefaultStartUpConfig(t *testing.T) StartupConfig {
+func DefaultStartUpConfig(t testing.TB) StartupConfig {
 	t.Helper()
 
 	priv := secp256k1.GenPrivKey()
@@ -351,10 +351,10 @@ func (a *App) Deliver(
 }
 
 // StateLatestContext creates returns a new context from context.Background() with the latest state.
-func (a *App) StateLatestContext(t *testing.T) context.Context {
-	t.Helper()
+func (a *App) StateLatestContext(tb testing.TB) context.Context {
+	tb.Helper()
 	_, state, err := a.Store.StateLatest()
-	require.NoError(t, err)
+	require.NoError(tb, err)
 	writeableState := branch.DefaultNewWriterMap(state)
 	iCtx := &integrationContext{state: writeableState}
 	return context.WithValue(context.Background(), contextKey, iCtx)

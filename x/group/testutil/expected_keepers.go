@@ -5,7 +5,7 @@ package testutil
 import (
 	"context"
 
-	address "cosmossdk.io/core/address"
+	"cosmossdk.io/core/address"
 	bank "cosmossdk.io/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,5 +35,11 @@ type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+}
+
+// StakingKeeper defines the expected staking keeper interface for tests
+type StakingKeeper interface {
+	BondDenom(ctx context.Context) (string, error)
 }

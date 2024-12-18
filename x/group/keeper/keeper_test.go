@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -18,7 +19,6 @@ import (
 	"cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/module"
 	grouptestutil "cosmossdk.io/x/group/testutil"
-	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -46,6 +46,7 @@ type TestSuite struct {
 	policy             group.DecisionPolicy
 	groupKeeper        keeper.Keeper
 	blockTime          time.Time
+	addressCodec       coreaddress.Codec
 	bankKeeper         *grouptestutil.MockBankKeeper
 	accountKeeper      *grouptestutil.MockAccountKeeper
 }
@@ -56,7 +57,7 @@ func (s *TestSuite) SetupTest() {
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, bank.AppModule{})
-	addressCodec := address.NewBech32Codec("cosmos")
+	s.addressCodec = address.NewBech32Codec("cosmos")
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 	s.addrsStr = make([]string, len(s.addrs))
 
@@ -64,14 +65,18 @@ func (s *TestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
 	var err error
+
 	for i := range s.addrs {
 		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[i])).AnyTimes()
-		s.addrsStr[i], err = addressCodec.BytesToString(s.addrs[i])
+		s.addrsStr[i], err = s.addressCodec.BytesToString(s.addrs[i])
 		s.Require().NoError(err)
 	}
-	s.accountKeeper.EXPECT().AddressCodec().Return(addressCodec).AnyTimes()
+	s.accountKeeper.EXPECT().AddressCodec().Return(s.addressCodec).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
+	s.bankKeeper.EXPECT().MintCoins(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	bApp := baseapp.NewBaseApp(
 		"group",
@@ -85,6 +90,7 @@ func (s *TestSuite) SetupTest() {
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, s.accountKeeper, config)
+
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 
@@ -121,17 +127,17 @@ func (s *TestSuite) SetupTest() {
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
-	addrbz, err := addressCodec.StringToBytes(policyRes.Address)
+	addrbz, err := s.addressCodec.StringToBytes(policyRes.Address)
 	s.Require().NoError(err)
 	s.policy = policy
 	s.groupPolicyAddr = addrbz
-	s.groupPolicyStrAddr, err = addressCodec.BytesToString(s.groupPolicyAddr)
+	s.groupPolicyStrAddr, err = s.addressCodec.BytesToString(s.groupPolicyAddr)
 	s.Require().NoError(err)
-	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
-	err = s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
+	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, testutil.MintModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
+	err = s.bankKeeper.MintCoins(s.sdkCtx, testutil.MintModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
 	s.Require().NoError(err)
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
-	err = s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, testutil.MintModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
+	err = s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, testutil.MintModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
 	s.Require().NoError(err)
 }
 

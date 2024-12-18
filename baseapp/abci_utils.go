@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -46,11 +47,29 @@ func ValidateVoteExtensions(
 	valStore ValidatorStore,
 	extCommit abci.ExtendedCommitInfo,
 ) error {
-	// Get values from context
-	cp := ctx.ConsensusParams() //nolint:staticcheck // ignore linting error
-	currentHeight := ctx.HeaderInfo().Height
-	chainID := ctx.HeaderInfo().ChainID
-	commitInfo := ctx.CometInfo().LastCommit
+	return ValidateVoteExtensionsWithParams(
+		ctx,
+		ctx.ConsensusParams(), //nolint:staticcheck // ignore linting error
+		ctx.HeaderInfo(),
+		ctx.CometInfo(),
+		valStore,
+		extCommit,
+	)
+}
+
+// ValidateVoteExtensionsWithParams defines a helper function for verifying vote extension
+// signatures with consensus params, header info and comet info taken as input
+func ValidateVoteExtensionsWithParams(
+	ctx context.Context,
+	cp cmtproto.ConsensusParams,
+	headerInfo header.Info,
+	cometInfo comet.Info,
+	valStore ValidatorStore,
+	extCommit abci.ExtendedCommitInfo,
+) error {
+	currentHeight := headerInfo.Height
+	chainID := headerInfo.ChainID
+	commitInfo := cometInfo.LastCommit
 
 	// Check that both extCommit + commit are ordered in accordance with vp/address.
 	if err := validateExtendedCommitAgainstLastCommit(extCommit, commitInfo); err != nil {

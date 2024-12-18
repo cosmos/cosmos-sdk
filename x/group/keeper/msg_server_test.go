@@ -15,9 +15,9 @@ import (
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
 	"cosmossdk.io/x/group/keeper"
-	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -2054,8 +2054,8 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
-	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, testutil.MintModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
+	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, testutil.MintModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	req := &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
@@ -2719,7 +2719,7 @@ func (s *TestSuite) TestExecProposal() {
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(&banktypes.MsgSendResponse{}, nil)
 
 				s.Require().NoError(err)
-				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, testutil.MintModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 				return myProposalID
 			},

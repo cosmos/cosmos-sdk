@@ -101,28 +101,28 @@ func TestCircuitCommands(t *testing.T) {
 	authorizeTestCases := []struct {
 		name          string
 		address       string
-		level         int
+		level         string
 		limtTypeURLs  []string
 		expPermission string
 	}{
 		{
 			"set new super admin",
 			superAdmin2,
-			3,
+			"super-admin",
 			[]string{},
 			"LEVEL_SUPER_ADMIN",
 		},
 		{
 			"set all msgs level to address",
 			allMsgsAcc,
-			2,
+			"all-msgs",
 			[]string{},
 			"LEVEL_ALL_MSGS",
 		},
 		{
 			"set some msgs level to address",
 			someMsgsAcc,
-			1,
+			"some-msgs",
 			someMsgs,
 			"LEVEL_SOME_MSGS",
 		},
@@ -130,11 +130,7 @@ func TestCircuitCommands(t *testing.T) {
 
 	for _, tc := range authorizeTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			permissionJSON := fmt.Sprintf(`{"level":%d,"limit_type_urls":[]}`, tc.level)
-			if len(tc.limtTypeURLs) != 0 {
-				permissionJSON = fmt.Sprintf(`{"level":%d,"limit_type_urls":["%s"]}`, tc.level, strings.Join(tc.limtTypeURLs[:], `","`))
-			}
-			rsp = cli.RunAndWait("tx", "circuit", "authorize", tc.address, permissionJSON, "--from="+superAdmin)
+			rsp = cli.RunAndWait("tx", "circuit", "authorize", tc.address, tc.level, strings.Join(tc.limtTypeURLs[:], `,`), "--from="+superAdmin)
 			systest.RequireTxSuccess(t, rsp)
 
 			// query account permissions

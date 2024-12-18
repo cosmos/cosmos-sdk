@@ -7,7 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/v1"
 
@@ -229,6 +231,9 @@ func TestTrackingUnDelegation(t *testing.T) {
 
 func TestGetNotBondedLockedCoin(t *testing.T) {
 	ctx, ss := newMockContext(t)
+	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
+		Time: time.Now(),
+	})
 
 	testcases := []struct {
 		name        string
@@ -257,10 +262,10 @@ func TestGetNotBondedLockedCoin(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		baseLockup := setup(t, ctx, ss)
-		test.malaete(ctx, baseLockup)
+		baseLockup := setup(t, sdkCtx, ss)
+		test.malaete(sdkCtx, baseLockup)
 
-		lockedCoin, err := baseLockup.GetNotBondedLockedCoin(ctx, test.lockedCoin, "test")
+		lockedCoin, err := baseLockup.GetNotBondedLockedCoin(sdkCtx, test.lockedCoin, "test")
 		require.NoError(t, err)
 
 		require.True(t, test.expLockCoin.Equal(lockedCoin), test.name+" locked amount must be equal")

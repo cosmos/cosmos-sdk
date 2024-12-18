@@ -105,5 +105,4 @@ func (f *fixture) registerMsgRouterService(router *integration.RouterService) {
 }
 
 func (f *fixture) registerQueryRouterService(router *integration.RouterService) {
-
 }

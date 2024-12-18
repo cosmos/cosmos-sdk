@@ -10,12 +10,13 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
-	cosmossdk.io/x/accounts v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/consensus v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/gov v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/mint v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c
+	cosmossdk.io/x/accounts v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/consensus v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/gov v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/mint v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d
+	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -38,7 +39,7 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/core/testing v0.0.1 // main
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
+	cosmossdk.io/x/epochs v0.0.0-20241218110910-47409028a73d // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -177,7 +178,5 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-require github.com/cockroachdb/apd/v3 v3.2.1
 
 replace github.com/cosmos/cosmos-sdk => ../../

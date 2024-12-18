@@ -13,9 +13,9 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
-	cosmossdk.io/x/bank v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/protocolpool v0.0.0-20241218094223-182dc41cb08c
-	cosmossdk.io/x/staking v0.0.0-20241218094223-182dc41cb08c
+	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/protocolpool v0.0.0-20241218110910-47409028a73d
+	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cometbft/cometbft v1.0.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

@@ -109,7 +109,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   
 ### State Breaking changes
 
-* [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In a undelegation or redelegation if the shares being left delegated correspond to less than 1 token (in base denom) the entire delegation gets removed.
+* [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In an undelegation or redelegation if the shares being left delegated correspond to less than 1 token (in base denom) the entire delegation gets removed.
 * [#18142](https://github.com/cosmos/cosmos-sdk/pull/18142) Introduce `key_rotation_fee` param to calculate fees while rotating the keys
 * [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 * [#20845](https://github.com/cosmoc/cosmos-sdk/pull/20845) Remove HistoricalInfo from the staking modules storage

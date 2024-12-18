@@ -84,6 +84,7 @@ type HasGenesis = appmodulev2.HasGenesis
 type HasABCIGenesis = appmodulev2.HasABCIGenesis
 
 // HasInvariants is the interface for registering invariants.
+// Deprecated: invariants are no longer used from modules.
 type HasInvariants interface {
 	// RegisterInvariants registers module invariants.
 	RegisterInvariants(sdk.InvariantRegistry)

@@ -18,7 +18,7 @@ This ADR replaces the current BaseApp `runTx` and antehandlers design with a mid
 
 BaseApp's implementation of ABCI `{Check,Deliver}Tx()` and its own `Simulate()` method call the `runTx` method under the hood, which first runs antehandlers, then executes `Msg`s. However, the [transaction Tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [refunding unused gas](https://github.com/cosmos/cosmos-sdk/issues/2150) use cases require custom logic to be run after the `Msg`s execution. There is currently no way to achieve this.
 
-An naive solution would be to add post-`Msg` hooks to BaseApp. However, the Cosmos SDK team thinks in parallel about the bigger picture of making app wiring simpler ([#9181](https://github.com/cosmos/cosmos-sdk/discussions/9182)), which includes making BaseApp more lightweight and modular.
+A naive solution would be to add post-`Msg` hooks to BaseApp. However, the Cosmos SDK team thinks in parallel about the bigger picture of making app wiring simpler ([#9181](https://github.com/cosmos/cosmos-sdk/discussions/9182)), which includes making BaseApp more lightweight and modular.
 
 ## Decision
 

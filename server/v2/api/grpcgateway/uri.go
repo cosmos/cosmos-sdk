@@ -15,9 +15,9 @@ import (
 
 const MaxBodySize = 1 << 20 // 1 MB
 
-// URIMatch contains the matching results
+// URIMatch contains information related to a URI match.
 type URIMatch struct {
-	// QueryInputName is the fully qualified name of the proto input type of the query.
+	// QueryInputName is the fully qualified name of the proto input type of the query rpc method.
 	QueryInputName string
 
 	// Params are any wildcard params found in the request.
@@ -26,37 +26,36 @@ type URIMatch struct {
 	Params map[string]string
 }
 
+// HasParams reports whether the URIMatch has any params.
 func (uri URIMatch) HasParams() bool {
 	return len(uri.Params) > 0
 }
 
-// matchURI checks if a given URI matches any pattern and extracts wildcard values
+// matchURI attempts to find a match for the given URI.
+// NOTE: if no match is found, nil is returned.
 func matchURI(uri string, getPatternToQueryInputName map[string]string) *URIMatch {
-	// Remove trailing slash if present
 	uri = strings.TrimRight(uri, "/")
 
-	// for simple cases, where there are no wildcards, we can just do a map lookup.
+	// for simple cases where there are no wildcards, we can just do a map lookup.
 	if inputName, ok := getPatternToQueryInputName[uri]; ok {
 		return &URIMatch{
 			QueryInputName: inputName,
 		}
 	}
 
+	// attempt to find a match in the pattern map.
 	for getPattern, queryInputName := range getPatternToQueryInputName {
-		// Remove trailing slash from getPattern if present
 		getPattern = strings.TrimRight(getPattern, "/")
 
-		// Get regex getPattern and param names
-		regexPattern, paramNames := patternToRegex(getPattern)
+		regexPattern, wildcardNames := patternToRegex(getPattern)
 
-		// Compile and match
 		regex := regexp.MustCompile(regexPattern)
 		matches := regex.FindStringSubmatch(uri)
 
 		if matches != nil && len(matches) > 1 {
-			// First match is the full string, subsequent matches are capture groups
+			// first match is the full string, subsequent matches are capture groups
 			params := make(map[string]string)
-			for i, name := range paramNames {
+			for i, name := range wildcardNames {
 				params[name] = matches[i+1]
 			}
 
@@ -70,33 +69,34 @@ func matchURI(uri string, getPatternToQueryInputName map[string]string) *URIMatc
 	return nil
 }
 
-// patternToRegex converts a URI pattern with wildcards to a regex pattern
-// Returns the regex pattern and a slice of parameter names in order
+// patternToRegex converts a URI pattern with wildcards to a regex pattern.
+// Returns the regex pattern and a slice of wildcard names in order
 func patternToRegex(pattern string) (string, []string) {
 	escaped := regexp.QuoteMeta(pattern)
-	var paramNames []string
+	var wildcardNames []string
 
-	// Extract and replace {param=**} patterns
-	r1 := regexp.MustCompile(`\\\{([^}]+?)=\\\*\\\*\\\}`)
+	// extract and replace {param=**} patterns
+	r1 := regexp.MustCompile(`\\\{([^}]+?)=\\\*\\\*\\}`)
 	escaped = r1.ReplaceAllStringFunc(escaped, func(match string) string {
-		// Extract param name without the =** suffix
+		// extract wildcard name without the =** suffix
 		name := regexp.MustCompile(`\\\{(.+?)=`).FindStringSubmatch(match)[1]
-		paramNames = append(paramNames, name)
+		wildcardNames = append(wildcardNames, name)
 		return "(.+)"
 	})
 
-	// Extract and replace {param} patterns
-	r2 := regexp.MustCompile(`\\\{([^}]+)\\\}`)
+	// extract and replace {param} patterns
+	r2 := regexp.MustCompile(`\\\{([^}]+)\\}`)
 	escaped = r2.ReplaceAllStringFunc(escaped, func(match string) string {
-		// Extract param name from between { and }
-		name := regexp.MustCompile(`\\\{(.*?)\\\}`).FindStringSubmatch(match)[1]
-		paramNames = append(paramNames, name)
+		// extract wildcard name from the curl braces {}.
+		name := regexp.MustCompile(`\\\{(.*?)\\}`).FindStringSubmatch(match)[1]
+		wildcardNames = append(wildcardNames, name)
 		return "([^/]+)"
 	})
 
-	return "^" + escaped + "$", paramNames
+	return "^" + escaped + "$", wildcardNames
 }
 
+// createMessageFromJSON creates a message from the URIMatch given the JSON body in the http request.
 func createMessageFromJSON(match *URIMatch, r *http.Request) (gogoproto.Message, error) {
 	requestType := gogoproto.MessageType(match.QueryInputName)
 	if requestType == nil {
@@ -119,6 +119,8 @@ func createMessageFromJSON(match *URIMatch, r *http.Request) (gogoproto.Message,
 
 }
 
+// createMessage creates a message from the given URIMatch. If the match has params, the message will be populated
+// with the value of those params. Otherwise, an empty message is returned.
 func createMessage(match *URIMatch) (gogoproto.Message, error) {
 	requestType := gogoproto.MessageType(match.QueryInputName)
 	if requestType == nil {
@@ -130,20 +132,21 @@ func createMessage(match *URIMatch) (gogoproto.Message, error) {
 		return nil, fmt.Errorf("failed to create message instance")
 	}
 
+	// if the uri match has params, we need to populate the message with the values of those params.
 	if match.HasParams() {
-		// Create a map with the proper field names from protobuf tags
+		// create a map with the proper field names from protobuf tags
 		fieldMap := make(map[string]string)
 		v := reflect.ValueOf(msg).Elem()
 		t := v.Type()
 
 		for key, value := range match.Params {
-			// Find the corresponding struct field
+			// attempt to match wildcard name to protobuf struct tag.
 			for i := 0; i < t.NumField(); i++ {
 				field := t.Field(i)
 				tag := field.Tag.Get("protobuf")
 				if nameMatch := regexp.MustCompile(`name=(\w+)`).FindStringSubmatch(tag); len(nameMatch) > 1 {
 					if nameMatch[1] == key {
-						fieldMap[field.Name] = value // Use the actual field name
+						fieldMap[field.Name] = value
 						break
 					}
 				}
@@ -152,7 +155,7 @@ func createMessage(match *URIMatch) (gogoproto.Message, error) {
 
 		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 			Result:           msg,
-			WeaklyTypedInput: true,
+			WeaklyTypedInput: true, // TODO(technicallyty): should we put false here?
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create decoder: %w", err)

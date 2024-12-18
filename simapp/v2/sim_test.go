@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"context"
+	stakingtypes "cosmossdk.io/x/staking/types"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -52,10 +53,8 @@ type (
 )
 
 const (
-	minTimePerBlock int64 = 10000 / 2
-
-	maxTimePerBlock int64 = 10000
-
+	maxTimePerBlock   = 10_000 * time.Second
+	minTimePerBlock   = maxTimePerBlock / 2
 	timeRangePerBlock = maxTimePerBlock - minTimePerBlock
 )
 
@@ -93,7 +92,7 @@ func SetupTestInstance[T Tx](t *testing.T) TestInstance[T] {
 	v, err := serverv2.ReadConfig(configPath)
 	require.NoError(t, err)
 	v.Set("home", nodeHome)
-	// v.Set("store.app-db-backend", "memdb") // todo: I had added this new type to speed up testing. Does it make sense this way?
+	v.Set("store.app-db-backend", "memdb")
 
 	depInjCfg := depinject.Configs(
 		depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(v.AllSettings())),
@@ -128,7 +127,7 @@ func SetupTestInstance[T Tx](t *testing.T) TestInstance[T] {
 func TestSimsAppV2(t *testing.T) {
 	testInstance := SetupTestInstance[Tx](t)
 
-	tCfg := cli.NewConfigFromFlags().With(t, 1, nil)
+	tCfg := cli.NewConfigFromFlags().With(t, 4, nil)
 	t.Logf("Seed: %d\n", tCfg.Seed)
 	r := rand.New(rand.NewSource(tCfg.Seed))
 	accounts, genesisAppState, chainID, genesisTimestamp := prepareInitialGenesisState(testInstance.App, r, testInstance.BankKeeper, tCfg, testInstance.ModuleManager)
@@ -139,12 +138,16 @@ func TestSimsAppV2(t *testing.T) {
 	rootCtx, done := context.WithCancel(context.Background())
 	defer done()
 	initRsp, stateRoot := doChainInitWithGenesis(t, rootCtx, chainID, genesisTimestamp, appManager, testInstance.TxDecoder, genesisAppState, appStore)
-
 	activeValidatorSet := simsxv2.NewValSet().Update(initRsp.ValidatorUpdates)
-	valsetHistory := simsxv2.NewValSetHistory(150) // todo: configure
+	// must be lower than unboding time to match  missbehaviour window
+	// max bock time = 10_000 sec
+	// blocks per day 24 * 60 * 60/ 10_000 = 8,64
+	// (21 * 8,64) - 1 ~= 180
+	valsetHistory := simsxv2.NewValSetHistory(minBlocksInUnbondingPeriod(t, testInstance.App.AppCodec(), genesisAppState))
 	valsetHistory.Add(genesisTimestamp, activeValidatorSet)
 
 	emptySimParams := make(map[string]json.RawMessage) // todo read sims params from disk as before
+
 	modules := testInstance.ModuleManager.Modules()
 	msgFactoriesFn := prepareSimsMsgFactories(r, modules, simsx.ParamWeightSource(emptySimParams))
 
@@ -159,8 +162,7 @@ func TestSimsAppV2(t *testing.T) {
 		txConfig:           txConfig,
 	}
 	doMainLoop(t, rootCtx, cs, msgFactoriesFn, r, testInstance.AuthKeeper, testInstance.BankKeeper, accounts, testInstance.TXBuilder)
-	println("Shutting down")
-	require.NoError(t, testInstance.App.Close())
+	require.NoError(t, testInstance.App.Close(), "closing app")
 }
 
 func prepareInitialGenesisState[T Tx](
@@ -200,7 +202,7 @@ func doChainInitWithGenesis[T Tx](
 	appStore cometbfttypes.Store,
 ) (*server.BlockResponse, store.Hash) {
 	genesisReq := &server.BlockRequest[T]{
-		Height:    0, // todo: or 1?
+		Height:    0,
 		Time:      genesisTimestamp,
 		Hash:      make([]byte, 32),
 		ChainId:   chainID,
@@ -221,7 +223,6 @@ func doChainInitWithGenesis[T Tx](
 		Validator: &cmtproto.ValidatorParams{PubKeyTypes: []string{cmttypes.ABCIPubKeyTypeEd25519, cmttypes.ABCIPubKeyTypeSecp256k1}},
 	}
 	genesisCtx := context.WithValue(ctx, corecontext.CometParamsInitInfoKey, initialConsensusParams)
-
 	initRsp, genesisStateChanges, err := app.InitGenesis(genesisCtx, genesisReq, genesisAppState, txDecoder)
 	require.NoError(t, err)
 
@@ -231,7 +232,6 @@ func doChainInitWithGenesis[T Tx](
 
 	stateRoot, err := appStore.Commit(&store.Changeset{Changes: changeSet})
 	require.NoError(t, err)
-	fmt.Printf("++ genesis block, hash: %X\n", stateRoot)
 	return initRsp, stateRoot
 }
 
@@ -270,7 +270,7 @@ func doMainLoop[T Tx](
 	appStore := cs.appStore
 
 	const ( // todo: read from CLI instead
-		numBlocks     = 1   // 500 default
+		numBlocks     = 500 // 500 default
 		maxTXPerBlock = 200 // 200 default
 	)
 
@@ -286,8 +286,8 @@ func doMainLoop[T Tx](
 			t.Skipf("run out of validators in block: %d\n", i+1)
 			return
 		}
-		blockTime = blockTime.Add(time.Duration(minTimePerBlock) * time.Second)
-		blockTime = blockTime.Add(time.Duration(int64(r.Intn(int(timeRangePerBlock)))) * time.Second)
+		blockTime = blockTime.Add(minTimePerBlock)
+		blockTime = blockTime.Add(time.Duration(int64(r.Intn(int(timeRangePerBlock/time.Second)))) * time.Second)
 		valsetHistory.Add(blockTime, activeValidatorSet)
 		blockReqN := &server.BlockRequest[T]{
 			Height:  uint64(1 + i),
@@ -296,9 +296,10 @@ func doMainLoop[T Tx](
 			AppHash: stateRoot,
 			ChainId: chainID,
 		}
+
 		cometInfo := comet.Info{
-			ValidatorsHash: nil,
-			//Evidence:        valsetHistory.MissBehaviour(r), // todo: enable
+			ValidatorsHash:  nil,
+			Evidence:        valsetHistory.MissBehaviour(r),
 			ProposerAddress: activeValidatorSet[0].Address,
 			LastCommit:      activeValidatorSet.NewCommitInfo(r),
 		}
@@ -312,28 +313,27 @@ func doMainLoop[T Tx](
 				testData := simsx.NewChainDataSource(ctx, r, authKeeper, bankKeeper, addressCodec, accounts...)
 				for txPerBlockCounter < maxTXPerBlock {
 					txPerBlockCounter++
-					msgFactory := func() simsx.SimMsgFactoryX {
+					mergedMsgFactory := func() simsx.SimMsgFactoryX {
 						if pos < len(fOps) {
 							pos++
 							return fOps[pos-1]
 						}
 						return nextMsgFactory()
 					}()
-					fmt.Printf("++ msg: %T\n", msgFactory.MsgType())
-					reporter := rootReporter.WithScope(msgFactory.MsgType())
-					if fx, ok := msgFactory.(simsx.HasFutureOpsRegistry); ok {
+					reporter := rootReporter.WithScope(mergedMsgFactory.MsgType())
+					if fx, ok := mergedMsgFactory.(simsx.HasFutureOpsRegistry); ok {
 						fx.SetFutureOpsRegistry(futureOpsReg)
 						continue
 					}
 
 					// the stf context is required to access state via keepers
-					signers, msg := msgFactory.Create()(ctx, testData, reporter)
+					signers, msg := mergedMsgFactory.Create()(ctx, testData, reporter)
 					if reporter.IsSkipped() {
 						txSkippedCounter++
 						require.NoError(t, reporter.Close())
 						continue
 					}
-					resultHandlers = append(resultHandlers, msgFactory.DeliveryResultHandler())
+					resultHandlers = append(resultHandlers, mergedMsgFactory.DeliveryResultHandler())
 					reporter.Success(msg)
 					require.NoError(t, reporter.Close())
 
@@ -345,14 +345,13 @@ func doMainLoop[T Tx](
 				}
 			}
 		})
-		require.NoError(t, err)
+		require.NoError(t, err, "%d, %s", blockReqN.Height, blockReqN.Time)
 		changeSet, err := updates.GetStateChanges()
 		require.NoError(t, err)
 		stateRoot, err = appStore.Commit(&store.Changeset{
 			Version: blockReqN.Height,
 			Changes: changeSet,
 		})
-		fmt.Printf("++ block %d, hash: %X\n", blockReqN.Height, stateRoot)
 
 		require.NoError(t, err)
 		require.Equal(t, len(resultHandlers), len(blockRsp.TxResults), "txPerBlockCounter: %d, totalSkipped: %d", txPerBlockCounter, txSkippedCounter)
@@ -366,10 +365,8 @@ func doMainLoop[T Tx](
 				removed++
 			}
 		}
-		fmt.Printf("++ evidence: %d, blockRsp.ValidatorUpdates %d, removed: %d\n", len(cometInfo.Evidence), len(blockRsp.ValidatorUpdates), removed)
-
 		activeValidatorSet = activeValidatorSet.Update(blockRsp.ValidatorUpdates)
-		fmt.Printf("active validator set: %d\n", len(activeValidatorSet))
+		//fmt.Printf("active validator set after height %d: %d, %s\n", blockReqN.Height, len(activeValidatorSet), blockReqN.Time)
 	}
 	fmt.Println("+++ reporter:\n" + rootReporter.Summary().String())
 	fmt.Printf("Tx total: %d skipped: %d\n", txTotalCounter, txSkippedCounter)
@@ -416,4 +413,16 @@ func toLegacySimsModule(modules map[string]appmodule.AppModule) []module.AppModu
 		}
 	}
 	return r
+}
+
+func minBlocksInUnbondingPeriod(t testing.TB, cdc codec.Codec, state json.RawMessage) int {
+	var root map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(state, &root))
+	require.Contains(t, root, stakingtypes.ModuleName)
+	var stakingParams stakingtypes.GenesisState
+	require.NoError(t, cdc.UnmarshalJSON(root[stakingtypes.ModuleName], &stakingParams))
+
+	unbodingTime := stakingParams.Params.UnbondingTime
+	maxblocks := unbodingTime / maxTimePerBlock
+	return int(maxblocks) - 1
 }

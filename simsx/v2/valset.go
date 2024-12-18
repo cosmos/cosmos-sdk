@@ -47,7 +47,6 @@ func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) Weight
 		hash := sha256.Sum256(u.PubKey)
 		return WeightedValidator{Power: u.Power, Address: hash[:truncatedSize]}
 	})
-
 	newValset := slices.Clone(v)
 	for _, u := range valUpdates {
 		pos := slices.IndexFunc(newValset, func(val WeightedValidator) bool {
@@ -57,7 +56,7 @@ func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) Weight
 			if u.Power > 0 {
 				newValset = append(newValset, u)
 			} else {
-				fmt.Printf("Adding validator with power 0: %X\n", u.Address)
+				panic(fmt.Sprintf("Adding validator with power 0: %X\n", u.Address))
 			}
 			continue
 		}
@@ -67,7 +66,8 @@ func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) Weight
 		}
 		newValset[pos].Power = u.Power
 	}
-	slices.DeleteFunc(newValset, func(validator WeightedValidator) bool {
+
+	newValset = slices.DeleteFunc(newValset, func(validator WeightedValidator) bool {
 		return validator.Power == 0
 	})
 

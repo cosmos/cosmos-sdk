@@ -3,7 +3,6 @@ package simulation
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -46,7 +45,6 @@ func MsgUnjailFactory(k keeper.Keeper, sk types.StakingKeeper) simsx.SimMsgFacto
 			reporter.Skip("no self delegation")
 			return nil, nil, nil
 		}
-		fmt.Println("++ unjail: " + validator.OperatorAddress)
 		var handler simsx.SimDeliveryResultHandler
 		// result should fail if:
 		// - validator cannot be unjailed due to tombstone

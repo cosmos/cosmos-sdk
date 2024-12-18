@@ -44,11 +44,14 @@ require (
 
 require (
 	cosmossdk.io/indexer/postgres v0.0.0-20241204160609-556102cfa046
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d
 	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+	github.com/cometbft/cometbft/api v1.0.0-rc2
 	github.com/jackc/pgx/v5 v5.7.1
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
 )
 
 require (
@@ -65,7 +68,6 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1 // indirect
 	cosmossdk.io/store v1.10.0-rc.1 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
@@ -95,7 +97,6 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
-	github.com/cometbft/cometbft/api v1.0.0-rc2 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
@@ -226,7 +227,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
@@ -305,4 +305,6 @@ replace (
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store/v2
+	// todo: remove
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.3.4
 )

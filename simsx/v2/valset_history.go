@@ -1,8 +1,6 @@
 package v2
 
 import (
-	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/rand"
 	"slices"
 	"time"
@@ -52,12 +50,11 @@ func (h *ValSetHistory) Add(blockTime time.Time, vals WeightedValidators) {
 // Recursively checks for other misbehavior instances and combines their evidence if any.
 // Utilizes a random generator to select a validator and evidence-related attributes.
 func (h *ValSetHistory) MissBehaviour(r *rand.Rand) []comet.Evidence {
-	//if r.Intn(100) != 0 { // 1% chance
-	//	return nil
-	//}
+	if r.Intn(100) != 0 { // 1% chance
+		return nil
+	}
 	n := r.Intn(len(h.vals))
 	badVal := simsx.OneOf(r, h.vals[n].vals)
-	fmt.Printf("++ duplicate vote val: %s\n", sdk.ValAddress(badVal.Address).String())
 	evidence := comet.Evidence{
 		Type:             comet.DuplicateVote,
 		Validator:        comet.Validator{Address: badVal.Address, Power: badVal.Power},
@@ -65,8 +62,8 @@ func (h *ValSetHistory) MissBehaviour(r *rand.Rand) []comet.Evidence {
 		Time:             h.vals[n].blockTime,
 		TotalVotingPower: h.vals[n].vals.TotalPower(),
 	}
-	//if otherEvidence := h.MissBehaviour(r); otherEvidence != nil {
-	//	return append([]comet.Evidence{evidence}, otherEvidence...)
-	//}
+	if otherEvidence := h.MissBehaviour(r); otherEvidence != nil {
+		return append([]comet.Evidence{evidence}, otherEvidence...)
+	}
 	return []comet.Evidence{evidence}
 }

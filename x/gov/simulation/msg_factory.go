@@ -232,8 +232,7 @@ func submitProposalWithVotesScheduled(
 				return []simsx.SimAccount{voter}, msg
 			}
 			whenVote := now.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
-			//	fOpsReg.Add(whenVote, vF)
-			_, _ = vF, whenVote
+			fOpsReg.Add(whenVote, vF)
 		}
 	}
 	return []simsx.SimAccount{proposer}, msg

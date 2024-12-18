@@ -36,11 +36,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.50.10-lsm](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10-lsm)
+## [v0.50.11-lsm](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.11-lsm)
 
 This is a special cosmos-sdk release with support for LSM. 
 
-* [#21834](https://github.com/cosmos/cosmos-sdk/pull/21834) Backport the [v0.50.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10) changes. 
+* [#22932](https://github.com/cosmos/cosmos-sdk/pull/22932) Backport the [v0.50.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.11) changes. 
+
+## Bug Fixes
+
+_These are a series of bug fixes for issues identified by OtterSec and Zellic during their audit of the Liquid Staking Module._ 
+
+* [#22519](https://github.com/cosmos/cosmos-sdk/pull/22519) (x/staking-lsm) Fix validator bond accounting for redeeming tokens for shares when the destination delegation is a validator bond. 
+* [#22519](https://github.com/cosmos/cosmos-sdk/pull/22519) (x/staking-lsm) Add a check after the call `ValidateUnbondAmount` to ensure that shares is greater than zero.
+* [#22538](https://github.com/cosmos/cosmos-sdk/pull/22538) (x/staking-lsm) Fix LSM accounting (`ValidatorBond`, `TotalLiquidStakedTokens`, and `ValidatorLiquidShares`) in `SlashRedelegation`.  
+* [#22719](https://github.com/cosmos/cosmos-sdk/pull/22719) (x/staking-lsm) Fix LSM accounting ()`TotalLiquidStakedTokens`, and `ValidatorLiquidShares`) in `CreateValidator`.
+* [#22718](https://github.com/cosmos/cosmos-sdk/pull/22718) (x/staking-lsm) Check blocked addresses before sending tokenize shares rewards.
 
 ## [v0.50.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.11) - 2024-12-16
 
@@ -60,6 +70,12 @@ This is a special cosmos-sdk release with support for LSM.
 * (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
 * (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
 * (x/group) [#22229](https://github.com/cosmos/cosmos-sdk/pull/22229) Accept `1` and `try` in CLI for group proposal exec.
+
+## [v0.50.10-lsm](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10-lsm)
+
+This is a special cosmos-sdk release with support for LSM. 
+
+* [#21834](https://github.com/cosmos/cosmos-sdk/pull/21834) Backport the [v0.50.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10) changes. 
 
 ## [v0.50.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10) - 2024-09-20
 

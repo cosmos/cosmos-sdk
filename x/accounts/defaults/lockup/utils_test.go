@@ -125,7 +125,6 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			default:
 				return nil, errors.New("unrecognized request type")
 			}
-
 		},
 	)
 }

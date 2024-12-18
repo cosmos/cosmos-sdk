@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/mock/gomock"
+
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
-	"go.uber.org/mock/gomock"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

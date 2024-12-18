@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -20,13 +21,25 @@ func TestMatchURI(t *testing.T) {
 	}{
 		{
 			name:     "simple match, no wildcards",
-			uri:      "/foo/bar",
-			mapping:  map[string]string{"/foo/bar": "bar"},
-			expected: &uriMatch{QueryInputName: "bar"},
+			uri:      "https://localhost:8080/foo/bar",
+			mapping:  map[string]string{"/foo/bar": "query.Bank"},
+			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string]string{}},
+		},
+		{
+			name:     "match with query parameters",
+			uri:      "https://localhost:8080/foo/bar?baz=qux",
+			mapping:  map[string]string{"/foo/bar": "query.Bank"},
+			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string]string{"baz": "qux"}},
+		},
+		{
+			name:     "match with multiple query parameters",
+			uri:      "https://localhost:8080/foo/bar?baz=qux&foo=/msg.type.bank.send",
+			mapping:  map[string]string{"/foo/bar": "query.Bank"},
+			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string]string{"baz": "qux", "foo": "/msg.type.bank.send"}},
 		},
 		{
 			name:    "wildcard match at the end",
-			uri:     "/foo/bar/buzz",
+			uri:     "https://localhost:8080/foo/bar/buzz",
 			mapping: map[string]string{"/foo/bar/{baz}": "bar"},
 			expected: &uriMatch{
 				QueryInputName: "bar",
@@ -35,7 +48,7 @@ func TestMatchURI(t *testing.T) {
 		},
 		{
 			name:    "wildcard match in the middle",
-			uri:     "/foo/buzz/bar",
+			uri:     "https://localhost:8080/foo/buzz/bar",
 			mapping: map[string]string{"/foo/{baz}/bar": "bar"},
 			expected: &uriMatch{
 				QueryInputName: "bar",
@@ -44,7 +57,7 @@ func TestMatchURI(t *testing.T) {
 		},
 		{
 			name:    "multiple wild cards",
-			uri:     "/foo/bar/baz/buzz",
+			uri:     "https://localhost:8080/foo/bar/baz/buzz",
 			mapping: map[string]string{"/foo/bar/{q1}/{q2}": "bar"},
 			expected: &uriMatch{
 				QueryInputName: "bar",
@@ -53,7 +66,7 @@ func TestMatchURI(t *testing.T) {
 		},
 		{
 			name:    "catch-all wildcard",
-			uri:     "/foo/bar/ibc/token/stuff",
+			uri:     "https://localhost:8080/foo/bar/ibc/token/stuff",
 			mapping: map[string]string{"/foo/bar/{ibc_token=**}": "bar"},
 			expected: &uriMatch{
 				QueryInputName: "bar",
@@ -62,7 +75,7 @@ func TestMatchURI(t *testing.T) {
 		},
 		{
 			name:     "no match should return nil",
-			uri:      "/foo/bar",
+			uri:      "https://localhost:8080/foo/bar",
 			mapping:  map[string]string{"/bar/foo": "bar"},
 			expected: nil,
 		},
@@ -70,7 +83,9 @@ func TestMatchURI(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := matchURI(tc.uri, tc.mapping)
+			u, err := url.Parse(tc.uri)
+			require.NoError(t, err)
+			actual := matchURL(u, tc.mapping)
 			require.Equal(t, tc.expected, actual)
 		})
 	}

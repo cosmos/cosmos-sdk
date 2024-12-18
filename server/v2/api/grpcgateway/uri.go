@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
@@ -31,15 +32,27 @@ func (uri uriMatch) HasParams() bool {
 	return len(uri.Params) > 0
 }
 
-// matchURI attempts to find a match for the given URI.
+// matchURL attempts to find a match for the given URL.
 // NOTE: if no match is found, nil is returned.
-func matchURI(uri string, getPatternToQueryInputName map[string]string) *uriMatch {
-	uri = strings.TrimRight(uri, "/")
+func matchURL(u *url.URL, getPatternToQueryInputName map[string]string) *uriMatch {
+	uriPath := strings.TrimRight(u.Path, "/")
+	queryParams := u.Query()
+
+	params := make(map[string]string)
+	for key, vals := range queryParams {
+		if len(vals) > 0 {
+			// url.Values contains a slice for the values as you are able to specify a key multiple times in URL.
+			// example: https://localhost:9090/do/something?color=red&color=blue&color=green
+			// We will just take the first value in the slice.
+			params[key] = vals[0]
+		}
+	}
 
 	// for simple cases where there are no wildcards, we can just do a map lookup.
-	if inputName, ok := getPatternToQueryInputName[uri]; ok {
+	if inputName, ok := getPatternToQueryInputName[uriPath]; ok {
 		return &uriMatch{
 			QueryInputName: inputName,
+			Params:         params,
 		}
 	}
 
@@ -50,11 +63,10 @@ func matchURI(uri string, getPatternToQueryInputName map[string]string) *uriMatc
 		regexPattern, wildcardNames := patternToRegex(getPattern)
 
 		regex := regexp.MustCompile(regexPattern)
-		matches := regex.FindStringSubmatch(uri)
+		matches := regex.FindStringSubmatch(uriPath)
 
 		if matches != nil && len(matches) > 1 {
 			// first match is the full string, subsequent matches are capture groups
-			params := make(map[string]string)
 			for i, name := range wildcardNames {
 				params[name] = matches[i+1]
 			}

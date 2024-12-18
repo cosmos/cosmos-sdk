@@ -49,17 +49,16 @@ func newGatewayInterceptor[T transaction.Tx](gateway *runtime.ServeMux, am appma
 // interceptors internal mapping of http annotations to query request type names.
 // If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	uri := request.URL.RequestURI()
-	uriMatch := matchURI(uri, g.customEndpointMapping)
-	if uriMatch != nil {
+	match := matchURL(request.URL, g.customEndpointMapping)
+	if match != nil {
 		var msg gogoproto.Message
 		var err error
 
 		switch request.Method {
 		case http.MethodPost:
-			msg, err = createMessageFromJSON(uriMatch, request)
+			msg, err = createMessageFromJSON(match, request)
 		case http.MethodGet:
-			msg, err = createMessage(uriMatch)
+			msg, err = createMessage(match)
 		default:
 			http.Error(writer, "unsupported http method", http.StatusMethodNotAllowed)
 			return

@@ -43,7 +43,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf(`%s tx circuit authorize [address] super-admin "/cosmos.bank.v1beta1.MsgSend,/cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "grantee"},
-						{ProtoField: "permissions"},
 						{ProtoField: "permissions.level"},
 						{ProtoField: "permissions.limit_type_urls"},
 					},

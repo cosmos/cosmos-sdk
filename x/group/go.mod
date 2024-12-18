@@ -9,19 +9,9 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-<<<<<<< HEAD
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
-	cosmossdk.io/x/accounts v0.0.0-20241218110910-47409028a73d
 	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/consensus v0.0.0-20241218110910-47409028a73d
 	cosmossdk.io/x/gov v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/mint v0.0.0-20241218110910-47409028a73d
-	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d
-=======
-	cosmossdk.io/store v1.10.0-rc.1
-	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
->>>>>>> 4d6c991fb (refactor: simplify group dependency graph and align 0.52 and main (#22978))
 	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -45,13 +35,7 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/core/testing v0.0.1 // main
 	cosmossdk.io/schema v1.0.0 // indirect
-<<<<<<< HEAD
-	cosmossdk.io/x/epochs v0.0.0-20241218110910-47409028a73d // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
-=======
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
->>>>>>> 4d6c991fb (refactor: simplify group dependency graph and align 0.52 and main (#22978))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -190,15 +174,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ../../
-<<<<<<< HEAD
-=======
+require go.uber.org/mock v0.5.0
 
-// TODO remove post spinning out all modules
-replace (
-	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/gov => ../gov
-	cosmossdk.io/x/staking => ../staking
-)
->>>>>>> 4d6c991fb (refactor: simplify group dependency graph and align 0.52 and main (#22978))
+require cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d // indirect
+
+replace github.com/cosmos/cosmos-sdk => ../../

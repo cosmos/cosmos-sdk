@@ -24,31 +24,16 @@ cosmossdk.io/math v1.4.0 h1:XbgExXFnXmF/CccPPEto40gOO7FpWu9yWNAZPN3nkNQ=
 cosmossdk.io/math v1.4.0/go.mod h1:O5PkD4apz2jZs4zqFdTr16e1dcaQCc5z6lkEnrrppuk=
 cosmossdk.io/schema v1.0.0 h1:/diH4XJjpV1JQwuIozwr+A4uFuuwanFdnw2kKeiXwwQ=
 cosmossdk.io/schema v1.0.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-<<<<<<< HEAD
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 h1:glZ6MpmD+5AhwJYV4jzx+rn7cgUB2owHgk9o+93luz0=
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43/go.mod h1:XCWpgfueHSBY+B7Cf2Aq/CcsU+6XoFH+EmseCKglFrU=
-cosmossdk.io/x/accounts v0.0.0-20241218110910-47409028a73d h1:CKZrLb3TdsLndtgn/JW9714+yORLZUzMAStoMxO04vA=
-cosmossdk.io/x/accounts v0.0.0-20241218110910-47409028a73d/go.mod h1:S3kRYNjtI43SoV8NMWHQURagS6YF6nI/GJavmO3qkZA=
 cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d h1:8Sw9mmz+P/H0iURZkRHKmpkmr9Lm3eGM2yRZveU2GWs=
 cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d/go.mod h1:C5yLe3vDDDHcWMSfa1lfgglczjjMGfOc4nYDmk69U2w=
-cosmossdk.io/x/consensus v0.0.0-20241218110910-47409028a73d h1:QS4K8VcvPbvX830RYfhUpH+jxf4OPspf18ZGwGY2L7k=
-cosmossdk.io/x/consensus v0.0.0-20241218110910-47409028a73d/go.mod h1:cAMIG6gRzZd3paDdXYjQTCK96nEDIgZcc/JDN/0Qf6Y=
-cosmossdk.io/x/epochs v0.0.0-20241218110910-47409028a73d h1:EkjwLMsu4nD8c1lfMY7BHdgcrtB0fAI7W7CnwSeHwf4=
-cosmossdk.io/x/epochs v0.0.0-20241218110910-47409028a73d/go.mod h1:F8AIIsAqDpWONRkIk6kOOtcTQ8rk/zsLCyaU34LacB8=
 cosmossdk.io/x/gov v0.0.0-20241218110910-47409028a73d h1:CCC1PbH/Xn+QI2CDw8+ejt+bYlPisJqecSnFnV8TYKQ=
 cosmossdk.io/x/gov v0.0.0-20241218110910-47409028a73d/go.mod h1:vvU5Fl4NY0m6r35xKxctzg4aYmRuEytfQwl1UFCyrlk=
-cosmossdk.io/x/mint v0.0.0-20241218110910-47409028a73d h1:oMWZ3namACACVoUJYcHn6sXwKUFrSFGMSE/7yWiCKGs=
-cosmossdk.io/x/mint v0.0.0-20241218110910-47409028a73d/go.mod h1:i2nMfOwxslF2o5y+tdbvphNcoIW/EnmY69x9NBpWdtk=
 cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 h1:XQJj9Dv9Gtze0l2TF79BU5lkP6MkUveTUuKICmxoz+o=
 cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190/go.mod h1:7WUGupOvmlHJoIMBz1JbObQxeo6/TDiuDBxmtod8HRg=
 cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d h1:Ey5BddfuPEQACiDgeb9SqvHr533RH7rd2GDNIgV45hk=
 cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d/go.mod h1:ZvgV4cHXyDsKYdDDz5srMizpi9ylVI1wuvgmj53ug18=
-=======
-cosmossdk.io/store v1.10.0-rc.1 h1:/YVPJLre7lt/QDbl90k95TLt+IvafF1sHaU6WHd/rpc=
-cosmossdk.io/store v1.10.0-rc.1/go.mod h1:eZNgZKvZRlDUk8CE3LTDVMAcSM7zLOet2S8fByQkF3s=
-cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 h1:XQJj9Dv9Gtze0l2TF79BU5lkP6MkUveTUuKICmxoz+o=
-cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190/go.mod h1:7WUGupOvmlHJoIMBz1JbObQxeo6/TDiuDBxmtod8HRg=
->>>>>>> 4d6c991fb (refactor: simplify group dependency graph and align 0.52 and main (#22978))
 cosmossdk.io/x/tx v1.0.0-alpha.3 h1:+55/JFH5QRqnFhOI2heH3DKsaNL0RpXcJOQNzUvHiaQ=
 cosmossdk.io/x/tx v1.0.0-alpha.3/go.mod h1:h4pQ/j6Gfu8goB1R3Jbl4qY4RjYVNAsoylcleTXdSRg=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=

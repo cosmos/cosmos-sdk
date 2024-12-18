@@ -175,13 +175,3 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
-<<<<<<< HEAD
-=======
-
-// TODO remove post spinning out all modules
-replace (
-	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/epochs => ../epochs
-	cosmossdk.io/x/staking => ../staking
-)
->>>>>>> 4d6c991fb (refactor: simplify group dependency graph and align 0.52 and main (#22978))

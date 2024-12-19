@@ -37,8 +37,6 @@ issues:
   exclude-dirs:
     - testutil/testdata
   exclude-files:
-    - server/grpc/gogoreflection/fix_registration.go
-    - "fix_registration.go"
     - ".*\\.pb\\.go$"
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"

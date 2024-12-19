@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2/tx/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"

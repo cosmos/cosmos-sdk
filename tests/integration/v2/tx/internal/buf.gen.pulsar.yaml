@@ -2,7 +2,7 @@ version: v1
 managed:
   enabled: true
   go_package_prefix:
-    default: github.com/cosmos/cosmos-sdk/tests/integration/aminojson/internal/testpb/pulsar
+    default: github.com/cosmos/cosmos-sdk/tests/integration/v2/aminojson/internal/testpb/pulsar
     except:
       - buf.build/googleapis/googleapis
       - buf.build/cosmos/gogo-proto

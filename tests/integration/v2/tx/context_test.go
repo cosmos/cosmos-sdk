@@ -11,8 +11,8 @@ import (
 	"cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal"
-	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2/tx/internal"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2/tx/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )

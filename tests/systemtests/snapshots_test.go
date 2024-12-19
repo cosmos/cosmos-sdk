@@ -36,7 +36,7 @@ func TestSnapshots(t *testing.T) {
 	}
 
 	// export snapshot at height 5
-	res := cli.RunCommandWithArgs(command, "export", "--height=5", fmt.Sprintf("--home=%s", node0Dir))
+	res := cli.RunCommandWithArgs(command, "export", "--height=5", fmt.Sprintf("--home=%s", node0Dir), "--log_level=disabled")
 	require.Contains(t, res, "Snapshot created at height 5")
 	require.DirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", node0Dir))
 
@@ -44,7 +44,7 @@ func TestSnapshots(t *testing.T) {
 	res = cli.
 		WithRunErrorsIgnored().
 		WithRunSingleOutput(). // pebbledb prints logs to stderr, we cannot override the logger in store/v2 and cosmos-db. This isn't problematic in a real-world scenario, but it makes it hard to test the output.
-		RunCommandWithArgs(command, "list", fmt.Sprintf("--home=%s", node0Dir))
+		RunCommandWithArgs(command, "list", fmt.Sprintf("--home=%s", node0Dir), "--log_level=disabled")
 	require.Contains(t, res, "height: 5")
 
 	// Dump snapshot
@@ -98,6 +98,6 @@ func TestPrune(t *testing.T) {
 	} else {
 		command = []string{"prune", "everything"}
 	}
-	res := cli.RunCommandWithArgs(append(command, fmt.Sprintf("--home=%s", node0Dir))...)
+	res := cli.RunCommandWithArgs(append(command, fmt.Sprintf("--home=%s", node0Dir), "--log_level=disabled")...)
 	require.Contains(t, res, "successfully pruned the application root multi stores")
 }

@@ -170,8 +170,7 @@ var (
 	_ event.Manager = &eventManager{}
 )
 
-type eventService struct {
-}
+type eventService struct{}
 
 // EventManager implements event.Service.
 func (e *eventService) EventManager(ctx context.Context) event.Manager {

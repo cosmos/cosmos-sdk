@@ -127,7 +127,7 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
@@ -168,10 +168,6 @@ replace github.com/cosmos/cosmos-sdk => ../..
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
-	cosmossdk.io/x/mint => ../mint
-	cosmossdk.io/x/protocolpool => ../protocolpool
-	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 )

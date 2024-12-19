@@ -20,7 +20,7 @@ type ServerOptions[T transaction.Tx] struct {
 	PrepareProposalHandler     handlers.PrepareHandler[T]
 	ProcessProposalHandler     handlers.ProcessHandler[T]
 	CheckTxHandler             handlers.CheckTxHandler[T]
-	VerifyVoteExtensionHandler handlers.VerifyVoteExtensionhandler
+	VerifyVoteExtensionHandler handlers.VerifyVoteExtensionHandler
 	ExtendVoteHandler          handlers.ExtendVoteHandler
 	KeygenF                    keyGenF
 

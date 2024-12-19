@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
-// initAppConfig helps to override default client config template and configs.
+// initClientConfig helps to override default client config template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initClientConfig() (string, interface{}) {
 	type GasConfig struct {

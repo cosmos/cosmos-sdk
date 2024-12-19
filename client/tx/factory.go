@@ -25,27 +25,28 @@ import (
 // Factory defines a client transaction factory that facilitates generating and
 // signing an application-specific transaction.
 type Factory struct {
-	keybase            keyring.Keyring
-	txConfig           client.TxConfig
-	accountRetriever   client.AccountRetriever
-	accountNumber      uint64
-	sequence           uint64
-	gas                uint64
-	timeoutHeight      uint64
-	gasAdjustment      float64
-	chainID            string
-	fromName           string
-	offline            bool
-	generateOnly       bool
-	memo               string
-	fees               sdk.Coins
-	feeGranter         sdk.AccAddress
-	feePayer           sdk.AccAddress
-	gasPrices          sdk.DecCoins
-	extOptions         []*codectypes.Any
-	signMode           signing.SignMode
-	simulateAndExecute bool
-	preprocessTxHook   client.PreprocessTxFn
+	keybase               keyring.Keyring
+	txConfig              client.TxConfig
+	accountRetriever      client.AccountRetriever
+	accountNumber         uint64
+	sequence              uint64
+	gas                   uint64
+	timeoutHeight         uint64
+	gasAdjustment         float64
+	chainID               string
+	fromName              string
+	offline               bool
+	generateOnly          bool
+	memo                  string
+	fees                  sdk.Coins
+	feeGranter            sdk.AccAddress
+	feePayer              sdk.AccAddress
+	gasPrices             sdk.DecCoins
+	extOptions            []*codectypes.Any
+	nonCriticalExtOptions []*codectypes.Any
+	signMode              signing.SignMode
+	simulateAndExecute    bool
+	preprocessTxHook      client.PreprocessTxFn
 }
 
 // NewFactoryCLI creates a new Factory.
@@ -293,6 +294,11 @@ func (f Factory) WithExtensionOptions(extOpts ...*codectypes.Any) Factory {
 	return f
 }
 
+func (f Factory) WithNonCriticalExtensionOptions(extOpts ...*codectypes.Any) Factory {
+	f.nonCriticalExtOptions = extOpts
+	return f
+}
+
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
@@ -343,6 +349,10 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 
 	if etx, ok := tx.(client.ExtendedTxBuilder); ok {
 		etx.SetExtensionOptions(f.extOptions...)
+	}
+
+	if etx, ok := tx.(client.NonCriticalExtOptionsTxBuilder); ok {
+		etx.SetNonCriticalExtensionOptions(f.nonCriticalExtOptions...)
 	}
 
 	return tx, nil

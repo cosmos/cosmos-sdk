@@ -57,4 +57,10 @@ type (
 	ExtendedTxBuilder interface {
 		SetExtensionOptions(extOpts ...*codectypes.Any)
 	}
+
+	// NonCriticalExtOptionsTxBuilder extends the TxBuilder interface,
+	// which is used to set non-critical extension options to be included in a transaction.
+	NonCriticalExtOptionsTxBuilder interface {
+		SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any)
+	}
 )

@@ -49,7 +49,12 @@ require (
 	cosmossdk.io/x/slashing v0.2.0-rc.1
 	cosmossdk.io/x/staking v0.2.0-rc.1
 	github.com/cometbft/cometbft/api v1.0.0
+<<<<<<< HEAD
 	github.com/cosmos/cosmos-db v1.1.0 // indirect
+=======
+	github.com/cosmos/cosmos-db v1.1.1
+	github.com/gogo/protobuf v1.3.2 // indirect
+>>>>>>> a9c114915 (test: investigate test failure due to wal log (#22679))
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/jhump/protoreflect v1.17.0

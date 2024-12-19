@@ -14,10 +14,17 @@ cosmossdk.io/log v1.5.0 h1:dVdzPJW9kMrnAYyMf1duqacoidB9uZIl+7c6z0mnq0g=
 cosmossdk.io/log v1.5.0/go.mod h1:Tr46PUJjiUthlwQ+hxYtUtPn4D/oCZXAkYevBeh5+FI=
 cosmossdk.io/math v1.4.0 h1:XbgExXFnXmF/CccPPEto40gOO7FpWu9yWNAZPN3nkNQ=
 cosmossdk.io/math v1.4.0/go.mod h1:O5PkD4apz2jZs4zqFdTr16e1dcaQCc5z6lkEnrrppuk=
+<<<<<<< HEAD
 cosmossdk.io/store v1.1.0 h1:LnKwgYMc9BInn9PhpTFEQVbL9UK475G2H911CGGnWHk=
 cosmossdk.io/store v1.1.0/go.mod h1:oZfW/4Fc/zYqu3JmQcQdUJ3fqu5vnYTn3LZFFy8P8ng=
 cosmossdk.io/systemtests v1.0.0-rc.4 h1:AbVrPlkNFadArOsDReeCKXhVITW3Hzv6BDBcAwMIE8s=
 cosmossdk.io/systemtests v1.0.0-rc.4/go.mod h1:RfkegSDKIEx0XdMenpmubgnJm3PtaRTAYkXvV2uJGMw=
+=======
+cosmossdk.io/store v1.1.1 h1:NA3PioJtWDVU7cHHeyvdva5J/ggyLDkyH0hGHl2804Y=
+cosmossdk.io/store v1.1.1/go.mod h1:8DwVTz83/2PSI366FERGbWSH7hL6sB7HbYp8bqksNwM=
+cosmossdk.io/systemtests v1.0.0-rc.4.0.20241219115822-5bebfb028815 h1:ilHcBaGJrYhEKC2gO+DVBmWOPNt1VUWNQz3g7/9X4Ow=
+cosmossdk.io/systemtests v1.0.0-rc.4.0.20241219115822-5bebfb028815/go.mod h1:tTDdBl9wnIyP4L1Gi1/GXD1onPfaAOsscWCw7JUuJ/A=
+>>>>>>> a9c114915 (test: investigate test failure due to wal log (#22679))
 cosmossdk.io/x/tx v1.0.0-alpha.3 h1:+55/JFH5QRqnFhOI2heH3DKsaNL0RpXcJOQNzUvHiaQ=
 cosmossdk.io/x/tx v1.0.0-alpha.3/go.mod h1:h4pQ/j6Gfu8goB1R3Jbl4qY4RjYVNAsoylcleTXdSRg=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

@@ -168,6 +168,11 @@ require (
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+<<<<<<< HEAD
+=======
+	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
+	github.com/cosmos/cosmos-db v1.1.1 // indirect
+>>>>>>> a9c114915 (test: investigate test failure due to wal log (#22679))
 	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

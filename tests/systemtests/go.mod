@@ -4,6 +4,7 @@ go 1.23.1
 
 require (
 	cosmossdk.io/math v1.4.0
+<<<<<<< HEAD
 	cosmossdk.io/systemtests v1.0.0-rc.4
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/cosmos/gogogateway v1.2.0 // indirect
@@ -24,6 +25,10 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/grpc v1.68.1 // indirect
+=======
+	cosmossdk.io/systemtests v1.0.0-rc.4.0.20241219115822-5bebfb028815
+	github.com/cosmos/cosmos-sdk v0.50.11
+>>>>>>> a9c114915 (test: investigate test failure due to wal log (#22679))
 )
 
 require (

@@ -1,0 +1,42 @@
+[grpc]
+# Enable defines if the gRPC server should be enabled.
+enable = false
+# Address defines the gRPC server address to bind to.
+address = 'localhost:9090'
+# MaxRecvMsgSize defines the max message size in bytes the server can receive.
+# The default value is 10MB.
+max-recv-msg-size = 10485760
+# MaxSendMsgSize defines the max message size in bytes the server can send.
+# The default value is math.MaxInt32.
+max-send-msg-size = 2147483647
+
+[mock-server-1]
+# Mock field
+mock_field = 'default'
+# Mock field two
+mock_field_two = 1
+
+[server]
+# minimum-gas-prices defines the price which a validator is willing to accept for processing a transaction. A transaction's fees must meet the minimum of any denomination specified in this config (e.g. 0.25token1;0.0001token2).
+minimum-gas-prices = '0stake'
+
+[store]
+# The type of database for application and snapshots databases.
+app-db-backend = 'goleveldb'
+
+[store.options]
+# State commitment database type. Currently we support: "iavl" and "iavl-v2"
+sc-type = 'iavl'
+
+# Pruning options for state commitment
+[store.options.sc-pruning-option]
+# Number of recent heights to keep on disk.
+keep-recent = 2
+# Height interval at which pruned heights are removed from disk.
+interval = 100
+
+[store.options.iavl-config]
+# CacheSize set the size of the iavl tree cache.
+cache-size = 100000
+# If true, the tree will work like no fast storage and always not upgrade fast storage.
+skip-fast-storage-upgrade = true

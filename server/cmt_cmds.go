@@ -16,8 +16,6 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
-	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
@@ -370,7 +368,7 @@ func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cob
 		Example: "bootstrap-state --height 1000000",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
-			logger := log.NewLogger(cmd.OutOrStdout())
+			logger := client.GetLoggerFromCmd(cmd)
 			cfg := serverCtx.Config
 
 			height, err := cmd.Flags().GetInt64("height")

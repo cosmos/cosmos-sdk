@@ -198,6 +198,7 @@ func (s *paginationTestSuite) TestFilteredPaginate() {
 
 func execFilterPaginate(ctx context.Context, bk bankkeeper.BaseKeeper, pageReq *query.PageRequest) (balances sdk.Coins, res *query.PageResponse, err error) {
 	return query.CollectionFilteredPaginate(ctx, bk.Balances, pageReq, func(key collections.Pair[sdk.AccAddress, string], amount math.Int) (bool, error) {
+		// filter amount greater than 100
 		return amount.Int64() > int64(100), nil
 	}, func(key collections.Pair[sdk.AccAddress, string], amount math.Int) (sdk.Coin, error) {
 		balance := sdk.NewCoin(key.K2(), amount)

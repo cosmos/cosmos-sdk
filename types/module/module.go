@@ -84,6 +84,7 @@ type HasGenesis = appmodulev2.HasGenesis
 type HasABCIGenesis = appmodulev2.HasABCIGenesis
 
 // HasInvariants is the interface for registering invariants.
+// Deprecated: invariants are no longer used from modules.
 type HasInvariants interface {
 	// RegisterInvariants registers module invariants.
 	RegisterInvariants(sdk.InvariantRegistry)
@@ -389,6 +390,7 @@ func (m *Manager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 }
 
 // RegisterInvariants registers all module invariants
+// Deprecated: this function is no longer to be used as invariants are deprecated.
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	for _, module := range m.Modules {
 		if module, ok := module.(HasInvariants); ok {

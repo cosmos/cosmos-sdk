@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simsx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -33,7 +32,6 @@ var (
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasInvariants       = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
@@ -112,11 +110,6 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	}
 
 	return nil
-}
-
-// RegisterInvariants registers the bank module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank module.

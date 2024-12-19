@@ -3,40 +3,7 @@ package server
 import (
 	"errors"
 	"net"
-	"os"
-
-	cmtcfg "github.com/cometbft/cometbft/config"
-	"github.com/spf13/viper"
-
-	"cosmossdk.io/log"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// ServerContextKey defines the context key used to retrieve a server.Context from
-// a command's Context.
-const ServerContextKey = sdk.ContextKey("server.context")
-
-// Context is the server context.
-// Prefer using we use viper a it tracks track all config.
-// See core/context/server_context.go.
-type Context struct {
-	Viper  *viper.Viper
-	Config *cmtcfg.Config
-	Logger log.Logger
-}
-
-func NewDefaultContext() *Context {
-	return NewContext(
-		viper.New(),
-		cmtcfg.DefaultConfig(),
-		log.NewLogger(os.Stdout),
-	)
-}
-
-func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Context {
-	return &Context{v, config, logger}
-}
 
 // ExternalIP https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP

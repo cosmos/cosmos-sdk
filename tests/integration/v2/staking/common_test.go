@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
 	_ "cosmossdk.io/x/bank"     // import as blank for app wiring
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -45,9 +44,8 @@ var (
 type fixture struct {
 	app *integration.App
 
-	ctx  context.Context
-	cdc  codec.Codec
-	keys map[string]*storetypes.KVStoreKey
+	ctx context.Context
+	cdc codec.Codec
 
 	queryClient stakingkeeper.Querier
 

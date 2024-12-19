@@ -247,7 +247,7 @@ func (s *IntegrationTestSuite) setupStakingParams(ctx context.Context, sk *staki
 	require.NoError(s.T(), err)
 
 	// update unbonding time
-	params.UnbondingTime = time.Duration(time.Second * 10)
+	params.UnbondingTime = time.Second * 10
 	err = sk.Params.Set(ctx, params)
 	require.NoError(s.T(), err)
 }

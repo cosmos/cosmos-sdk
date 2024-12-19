@@ -15,7 +15,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/grpc/codes"
@@ -516,7 +515,7 @@ func ValidateVoteExtensions[T transaction.Tx](
 		return nil
 	}
 
-	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
+	marshalDelimitedFn := func(msg gogoproto.Message) ([]byte, error) {
 		var buf bytes.Buffer
 		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
 			return nil, err

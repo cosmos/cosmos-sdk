@@ -104,8 +104,8 @@ type StartupConfig struct {
 	GasService gas.Service
 }
 
-func DefaultStartUpConfig(t testing.TB) StartupConfig {
-	t.Helper()
+func DefaultStartUpConfig(tb testing.TB) StartupConfig {
+	tb.Helper()
 
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(
@@ -120,8 +120,8 @@ func DefaultStartUpConfig(t testing.TB) StartupConfig {
 			sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)),
 		),
 	}
-	homedir := t.TempDir()
-	t.Logf("generated integration test app config; HomeDir=%s", homedir)
+	homedir := tb.TempDir()
+	tb.Logf("generated integration test app config; HomeDir=%s", homedir)
 	return StartupConfig{
 		ValidatorSet:    CreateRandomValidatorSet,
 		GenesisBehavior: Genesis_COMMIT,

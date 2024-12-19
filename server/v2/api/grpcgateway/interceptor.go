@@ -93,15 +93,14 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 			if errors.Is(err, stf.ErrNoHandler) {
 				g.gateway.ServeHTTP(writer, request)
 				return
-			} else {
-				runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
-				return
 			}
+			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
+			return
 		}
 		runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, query)
-	} else {
-		g.gateway.ServeHTTP(writer, request)
+		return
 	}
+	g.gateway.ServeHTTP(writer, request)
 }
 
 // getHTTPGetAnnotationMapping returns a mapping of proto query input type full name to its RPC method's HTTP GET annotation.

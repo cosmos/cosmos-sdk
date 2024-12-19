@@ -21,7 +21,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-db v1.1.1-0.20241219081603-43c30c765b09
+	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
@@ -45,7 +45,7 @@ require (
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.61.0
 	github.com/rs/zerolog v1.33.0
-	github.com/spf13/cast v1.7.0
+	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0

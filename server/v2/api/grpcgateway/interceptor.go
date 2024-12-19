@@ -2,7 +2,6 @@ package grpcgateway
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 

@@ -15,7 +15,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -35,8 +34,6 @@ type (
 	// to fully bootstrap and start an application.
 	Application interface {
 		ABCI
-
-		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.

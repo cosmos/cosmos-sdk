@@ -46,7 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `IterateBondedValidatorsByPower`, `GetDelegatorBonded`, `Delegate`, `Unbond`, `Slash`, `Jail`, `SlashRedelegation`, `ApplyAndReturnValidatorSetUpdates` methods no longer panics on any kind of errors but instead returns appropriate errors.
 * [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
 * [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Add a `Validate` method to the `Description` type that validates the metadata as well as other description details.
-
+* [#22527](https://github.com/cosmos/cosmos-sdk/pull/22527) Allow delegating `StakeAuthorization` to all validators by leaving `AllowList` and `DenyList` empty.
 
 ### API Breaking Changes
 

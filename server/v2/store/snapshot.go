@@ -38,7 +38,7 @@ func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 				return err
 			}
 
-			logger := log.NewLogger(cmd.OutOrStdout())
+			logger := serverv2.GetLoggerFromCmd(cmd)
 			rootStore, _, err := createRootStore(v, logger)
 			if err != nil {
 				return err
@@ -83,6 +83,7 @@ func (s *Server[T]) RestoreSnapshotCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := serverv2.GetViperFromCmd(cmd)
+			logger := serverv2.GetLoggerFromCmd(cmd)
 
 			height, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
@@ -92,8 +93,6 @@ func (s *Server[T]) RestoreSnapshotCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			logger := log.NewLogger(cmd.OutOrStdout())
 
 			rootStore, _, err := createRootStore(v, logger)
 			if err != nil {
@@ -128,6 +127,11 @@ func (s *Server[T]) ListSnapshotsCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to list snapshots: %w", err)
 			}
+
+			if len(snapshots) == 0 {
+				cmd.Println("no snapshots found")
+			}
+
 			for _, snapshot := range snapshots {
 				cmd.Println("height:", snapshot.Height, "format:", snapshot.Format, "chunks:", snapshot.Chunks)
 			}

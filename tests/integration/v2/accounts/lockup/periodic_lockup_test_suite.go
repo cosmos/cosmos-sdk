@@ -13,23 +13,24 @@ import (
 	types "cosmossdk.io/x/accounts/defaults/lockup/v1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 	t := s.T()
-	app := setupApp(t)
 	currentTime := time.Now()
-	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger()).WithHeaderInfo(header.Info{
-		Time: currentTime,
-	})
-	s.setupStakingParams(ctx, app)
-	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
+	ctx := s.ctx
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime})
+
+	s.setupStakingParams(ctx, s.stakingKeeper)
+
+	ownerAddrStr, err := s.authKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
-	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
+	s.fundAccount(s.bankKeeper, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.PERIODIC_LOCKING_ACCOUNT, accOwner, &types.MsgInitPeriodicLockingAccount{
+	_, accountAddr, err := s.accountsKeeper.Init(ctx, lockupaccount.PERIODIC_LOCKING_ACCOUNT, accOwner, &types.MsgInitPeriodicLockingAccount{
 		Owner:     ownerAddrStr,
 		StartTime: currentTime,
 		LockingPeriods: []types.Period{
@@ -49,10 +50,10 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1500))}, nil)
 	require.NoError(t, err)
 
-	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
+	addr, err := s.authKeeper.AddressCodec().BytesToString(randAcc)
 	require.NoError(t, err)
 
-	vals, err := app.StakingKeeper.GetAllValidators(ctx)
+	vals, err := s.stakingKeeper.GetAllValidators(ctx)
 	require.NoError(t, err)
 	val := vals[0]
 
@@ -62,7 +63,7 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 			ToAddress: addr,
 			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
 		}
-		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		err := s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
 	// No token being unlocked yet
@@ -72,15 +73,13 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 			ToAddress: addr,
 			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
 		}
-		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		err := s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
 
 	// Update context time
 	// After first period 500stake should be unlock
-	ctx = ctx.WithHeaderInfo(header.Info{
-		Time: currentTime.Add(time.Minute),
-	})
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime.Add(time.Minute)})
 
 	// Check if 500 stake is sendable now
 	t.Run("ok - execute send message", func(t *testing.T) {
@@ -89,18 +88,16 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 			ToAddress: addr,
 			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(500))},
 		}
-		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		err := s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
 		require.NoError(t, err)
 
-		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
+		balance := s.bankKeeper.GetBalance(ctx, randAcc, "stake")
 		require.True(t, balance.Amount.Equal(math.NewInt(500)))
 	})
 
 	// Update context time
 	// After second period 1000stake should be unlock
-	ctx = ctx.WithHeaderInfo(header.Info{
-		Time: currentTime.Add(time.Minute * 2),
-	})
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime.Add(time.Minute * 2)})
 
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
@@ -108,20 +105,20 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 			ValidatorAddress: val.OperatorAddress,
 			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
 		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		err = s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
 		require.NoError(t, err)
 
-		valbz, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+		valbz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
 		require.NoError(t, err)
 
-		del, err := app.StakingKeeper.Delegations.Get(
+		del, err := s.stakingKeeper.Delegations.Get(
 			ctx, collections.Join(sdk.AccAddress(accountAddr), sdk.ValAddress(valbz)),
 		)
 		require.NoError(t, err)
 		require.NotNil(t, del)
 
 		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, s.accountsKeeper, accountAddr)
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(100)))
 	})
@@ -130,11 +127,11 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 			Sender:           ownerAddrStr,
 			ValidatorAddress: val.OperatorAddress,
 		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		err = s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
 		require.NoError(t, err)
 	})
 	t.Run("ok - execute undelegate message", func(t *testing.T) {
-		vals, err := app.StakingKeeper.GetAllValidators(ctx)
+		vals, err := s.stakingKeeper.GetAllValidators(ctx)
 		require.NoError(t, err)
 		val := vals[0]
 		msg := &types.MsgUndelegate{
@@ -142,19 +139,19 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 			ValidatorAddress: val.OperatorAddress,
 			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
 		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		err = s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
 		require.NoError(t, err)
-		valbz, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+		valbz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
 		require.NoError(t, err)
 
-		ubd, err := app.StakingKeeper.GetUnbondingDelegation(
+		ubd, err := s.stakingKeeper.GetUnbondingDelegation(
 			ctx, sdk.AccAddress(accountAddr), sdk.ValAddress(valbz),
 		)
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
 
 		// check if an entry is added
-		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr, val.OperatorAddress)
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, s.accountsKeeper, accountAddr, val.OperatorAddress)
 		entries := unbondingEntriesResponse.UnbondingEntries
 		require.True(t, entries[0].Amount.Amount.Equal(math.NewInt(100)))
 		require.True(t, entries[0].ValidatorAddress == val.OperatorAddress)
@@ -162,12 +159,10 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 
 	// Update context time
 	// After third period 1500stake should be unlock
-	ctx = ctx.WithHeaderInfo(header.Info{
-		Time: currentTime.Add(time.Minute * 3),
-	})
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime.Add(time.Minute * 3)})
 
 	// trigger endblock for staking to handle matured unbonding delegation
-	_, err = app.StakingKeeper.EndBlocker(ctx)
+	_, err = s.stakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 
 	t.Run("ok - execute delegate message", func(t *testing.T) {
@@ -176,20 +171,20 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 			ValidatorAddress: val.OperatorAddress,
 			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
 		}
-		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		err = s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
 		require.NoError(t, err)
 
-		valbz, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+		valbz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
 		require.NoError(t, err)
 
-		del, err := app.StakingKeeper.Delegations.Get(
+		del, err := s.stakingKeeper.Delegations.Get(
 			ctx, collections.Join(sdk.AccAddress(accountAddr), sdk.ValAddress(valbz)),
 		)
 		require.NoError(t, err)
 		require.NotNil(t, del)
 
 		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, s.accountsKeeper, accountAddr)
 		// check if matured ubd entry cleared
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
@@ -197,7 +192,7 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 		require.True(t, delFree.AmountOf("stake").Equal(math.NewInt(100)))
 
 		// check if the entry is removed
-		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr, val.OperatorAddress)
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, s.accountsKeeper, accountAddr, val.OperatorAddress)
 		entries := unbondingEntriesResponse.UnbondingEntries
 		require.Len(t, entries, 0)
 	})

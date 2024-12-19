@@ -1361,16 +1361,27 @@ type GeneratorParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Seed         uint64  `protobuf:"varint,1,opt,name=seed,proto3" json:"seed,omitempty"`
-	BucketCount  uint64  `protobuf:"varint,2,opt,name=bucket_count,json=bucketCount,proto3" json:"bucket_count,omitempty"`
-	KeyMean      uint64  `protobuf:"varint,3,opt,name=key_mean,json=keyMean,proto3" json:"key_mean,omitempty"`
-	KeyStdDev    uint64  `protobuf:"varint,4,opt,name=key_std_dev,json=keyStdDev,proto3" json:"key_std_dev,omitempty"`
-	ValueMean    uint64  `protobuf:"varint,6,opt,name=value_mean,json=valueMean,proto3" json:"value_mean,omitempty"`
-	ValueStdDev  uint64  `protobuf:"varint,7,opt,name=value_std_dev,json=valueStdDev,proto3" json:"value_std_dev,omitempty"`
-	GenesisCount uint64  `protobuf:"varint,8,opt,name=genesis_count,json=genesisCount,proto3" json:"genesis_count,omitempty"`
+	// seed is the seed for the random number generator.
+	Seed uint64 `protobuf:"varint,1,opt,name=seed,proto3" json:"seed,omitempty"`
+	// bucket_count is the number of store keys to uniformly distribute genesis_count keys across.
+	BucketCount uint64 `protobuf:"varint,2,opt,name=bucket_count,json=bucketCount,proto3" json:"bucket_count,omitempty"`
+	// key_mean is the mean size (in normal distribution) of keys in each bucket.
+	KeyMean uint64 `protobuf:"varint,3,opt,name=key_mean,json=keyMean,proto3" json:"key_mean,omitempty"`
+	// key_std_dev is the standard deviation of key sizes in each bucket.
+	KeyStdDev uint64 `protobuf:"varint,4,opt,name=key_std_dev,json=keyStdDev,proto3" json:"key_std_dev,omitempty"`
+	// value_mean is the mean size (in normal distribution) of values in each bucket.
+	ValueMean uint64 `protobuf:"varint,6,opt,name=value_mean,json=valueMean,proto3" json:"value_mean,omitempty"`
+	// value_std_dev is the standard deviation of value sizes in each bucket.
+	ValueStdDev uint64 `protobuf:"varint,7,opt,name=value_std_dev,json=valueStdDev,proto3" json:"value_std_dev,omitempty"`
+	// genesis_count is the number of keys to insert in the store, distributed across all buckets.
+	GenesisCount uint64 `protobuf:"varint,8,opt,name=genesis_count,json=genesisCount,proto3" json:"genesis_count,omitempty"`
+	// insert_weight is the weight of insert operations.
 	InsertWeight float32 `protobuf:"fixed32,9,opt,name=insert_weight,json=insertWeight,proto3" json:"insert_weight,omitempty"`
+	// update_weight is the weight of update operations.
 	UpdateWeight float32 `protobuf:"fixed32,10,opt,name=update_weight,json=updateWeight,proto3" json:"update_weight,omitempty"`
-	GetWeight    float32 `protobuf:"fixed32,12,opt,name=get_weight,json=getWeight,proto3" json:"get_weight,omitempty"`
+	// get_weight is the weight of get operations.
+	GetWeight float32 `protobuf:"fixed32,12,opt,name=get_weight,json=getWeight,proto3" json:"get_weight,omitempty"`
+	// delete_weight is the weight of delete operations.
 	DeleteWeight float32 `protobuf:"fixed32,11,opt,name=delete_weight,json=deleteWeight,proto3" json:"delete_weight,omitempty"`
 }
 

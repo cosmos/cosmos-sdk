@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<!-- ## [v2.1.0-rc.1] to be tagged after v0.51 final or in SDK agnostic version -->
+## [v2.10.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/client/v2/v2.10.0-beta.1) - 2024-12-18
 
 ### Features
 
@@ -46,8 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20623](https://github.com/cosmos/cosmos-sdk/pull/20623) Extend client/v2 keyring interface with `KeyType` and `KeyInfo`.
 * [#22282](https://github.com/cosmos/cosmos-sdk/pull/22282) Added custom broadcast logic.
 * [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Added interactive autocli prompt functionality, including message field prompting, validation helpers, and default value support.
-
-### Improvements
+* [#22890](https://github.com/cosmos/cosmos-sdk/pull/22890)  Added support for flattening inner message fields in autocli as positional arguments.
 
 ### API Breaking Changes
 

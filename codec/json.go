@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-var defaultJM = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
+var defaultJM = &jsonpb.Marshaler{OrigName: true, EmitDefaults: false, AnyResolver: nil}
 
 // ProtoMarshalJSON provides an auxiliary function to return Proto3 JSON encoded
 // bytes of a message.
@@ -18,7 +18,7 @@ func ProtoMarshalJSON(msg proto.Message, resolver jsonpb.AnyResolver) ([]byte, e
 	// EmitDefaults is also often the more expected behavior for CLI users
 	jm := defaultJM
 	if resolver != nil {
-		jm = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: resolver}
+		jm = &jsonpb.Marshaler{OrigName: true, EmitDefaults: false, AnyResolver: resolver}
 	}
 	err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm})
 	if err != nil {

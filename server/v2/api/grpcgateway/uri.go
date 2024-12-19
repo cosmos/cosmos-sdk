@@ -22,9 +22,11 @@ type uriMatch struct {
 	// QueryInputName is the fully qualified name of the proto input type of the query rpc method.
 	QueryInputName string
 
-	// Params are any wildcard params found in the request.
+	// Params are any wildcard/query params found in the request.
 	//
-	// example: foo/bar/{baz} - foo/bar/qux -> {baz: qux}
+	// example:
+	// - foo/bar/{baz} - foo/bar/qux -> {baz: qux}
+	// - foo/bar?baz=qux - foo/bar -> {baz: qux}
 	Params map[string]string
 }
 
@@ -66,7 +68,7 @@ func matchURL(u *url.URL, getPatternToQueryInputName map[string]string) *uriMatc
 		regex := regexp.MustCompile(regexPattern)
 		matches := regex.FindStringSubmatch(uriPath)
 
-		if matches != nil && len(matches) > 1 {
+		if len(matches) > 1 {
 			// first match is the full string, subsequent matches are capture groups
 			for i, name := range wildcardNames {
 				params[name] = matches[i+1]

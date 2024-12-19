@@ -54,7 +54,7 @@ func doRejectUnknownFields(
 	if len(bz) == 0 {
 		return hasUnknownNonCriticals, nil
 	}
-	if recursionLimit == 0 {
+	if recursionLimit <= 0 {
 		return false, errors.New("recursion limit reached")
 	}
 

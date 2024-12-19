@@ -54,7 +54,7 @@ require (
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.1.0 // indirect
+	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.3.4 // indirect

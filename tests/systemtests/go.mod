@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/systemtests v1.0.0-rc.3
+	cosmossdk.io/systemtests v1.0.0-rc.4.0.20241219115822-5bebfb028815
 	github.com/cosmos/cosmos-sdk v0.50.11
 )
 

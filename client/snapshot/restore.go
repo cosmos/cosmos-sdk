@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
@@ -23,8 +23,8 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 		Long:  "Restore app state from local snapshot",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := client.GetConfigFromCmd(cmd)
 			viper := client.GetViperFromCmd(cmd)
+			logger := client.GetLoggerFromCmd(cmd)
 
 			height, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
@@ -35,12 +35,11 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 				return err
 			}
 
-			home := cfg.RootDir
+			home := viper.GetString(flags.FlagHome)
 			db, err := openDB(home, server.GetAppDBBackend(viper))
 			if err != nil {
 				return err
 			}
-			logger := log.NewLogger(cmd.OutOrStdout())
 			app := appCreator(logger, db, nil, viper)
 
 			sm := app.SnapshotManager()

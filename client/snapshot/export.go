@@ -3,8 +3,6 @@ package snapshot
 import (
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -19,6 +17,7 @@ func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCrea
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := client.GetConfigFromCmd(cmd)
 			viper := client.GetViperFromCmd(cmd)
+			logger := client.GetLoggerFromCmd(cmd)
 
 			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
@@ -30,7 +29,6 @@ func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCrea
 			if err != nil {
 				return err
 			}
-			logger := log.NewLogger(cmd.OutOrStdout())
 			app := appCreator(logger, db, nil, viper)
 
 			if height == 0 {

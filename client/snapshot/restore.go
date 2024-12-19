@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -25,6 +24,7 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := client.GetConfigFromCmd(cmd)
 			viper := client.GetViperFromCmd(cmd)
+			logger := client.GetLoggerFromCmd(cmd)
 
 			height, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
@@ -40,7 +40,6 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 			if err != nil {
 				return err
 			}
-			logger := log.NewLogger(cmd.OutOrStdout())
 			app := appCreator(logger, db, nil, viper)
 
 			sm := app.SnapshotManager()

@@ -197,5 +197,6 @@ func (t *IavlTree) Import(version uint64) (commitment.Importer, error) {
 
 // Close closes the iavl tree.
 func (t *IavlTree) Close() error {
-	return t.tree.Close()
+	return nil
+	// return t.tree.Close()
 }

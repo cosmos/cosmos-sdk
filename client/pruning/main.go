@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/viper"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -78,7 +78,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			// in our test, it's important to close db explicitly for pebbledb to write to disk.
 			defer db.Close()
 
-			logger := log.NewLogger(cmd.OutOrStdout())
+			logger := client.GetLoggerFromCmd(cmd)
 			app := appCreator(logger, db, nil, vp)
 			cms := app.CommitMultiStore()
 

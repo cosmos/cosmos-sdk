@@ -38,8 +38,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			if err := vp.BindPFlags(cmd.PersistentFlags()); err != nil {
 				return err
 			}
-
-			logger := log.NewLogger(cmd.OutOrStdout())
+			logger := serverv2.GetLoggerFromCmd(cmd)
 
 			rootStore, opts, err := createRootStore(vp, logger)
 			if err != nil {

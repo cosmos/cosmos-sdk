@@ -228,6 +228,8 @@ func TestSTF(t *testing.T) {
 		if len(events) != 7 {
 			t.Fatalf("Expected 7 TxEvents, got %d", len(events))
 		}
+
+		const message = "message"
 		for i, event := range events {
 			if event.BlockStage != appdata.TxProcessingStage {
 				t.Errorf("Expected BlockStage %d, got %d", appdata.TxProcessingStage, event.BlockStage)
@@ -236,7 +238,7 @@ func TestSTF(t *testing.T) {
 				t.Errorf("Expected TxIndex 1, got %d", event.TxIndex)
 			}
 			if event.EventIndex != int32(i%2+1) &&
-				(event.Type == "message" && event.EventIndex != 3) { // special case for message event type as it happens in the msg handling flow
+				(event.Type == message && event.EventIndex != 3) { // special case for message event type as it happens in the msg handling flow
 				t.Errorf("Expected EventIndex %d, got %d", i%2+1, event.EventIndex)
 			}
 
@@ -248,7 +250,7 @@ func TestSTF(t *testing.T) {
 				t.Errorf("Expected 1 or 2 attributes, got %d", len(attrs))
 			}
 
-			if len(attrs) == 2 && event.Type != "message" {
+			if len(attrs) == 2 && event.Type != message {
 				if attrs[1].Key != "index" || attrs[1].Value != "2" {
 					t.Errorf("Expected attribute key 'index' and value '2', got key '%s' and value '%s'", attrs[1].Key, attrs[1].Value)
 				}
@@ -275,7 +277,7 @@ func TestSTF(t *testing.T) {
 					t.Errorf("Expected msg attribute with value '&BoolValue{Value:true,XXX_unrecognized:[],}', got '%s'", attrs[0].Value)
 				}
 			case 4:
-				if event.Type != "message" {
+				if event.Type != message {
 					t.Errorf("Expected event type 'message', got %s", event.Type)
 				}
 

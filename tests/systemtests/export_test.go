@@ -44,6 +44,7 @@ func TestChainExportImport(t *testing.T) {
 	})
 	systest.Sut.StartChain(t)
 	systest.Sut.AwaitNBlocks(t, 2)
+	systest.Sut.StopChain()
 }
 
 func TestExportCmd_WithHeight(t *testing.T) {

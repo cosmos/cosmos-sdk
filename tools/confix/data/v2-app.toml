@@ -86,7 +86,7 @@ skip-fast-storage-upgrade = true
 # Enable enables the application telemetry functionality. When enabled, an in-memory sink is also enabled by default. Operators may also enabled other sinks such as Prometheus.
 enable = true
 # Address defines the metrics server address to bind to.
-address = 'localhost:1327'
+address = 'localhost:7180'
 # Prefixed with keys to separate services.
 service-name = ''
 # Enable prefixing gauge values with hostname.

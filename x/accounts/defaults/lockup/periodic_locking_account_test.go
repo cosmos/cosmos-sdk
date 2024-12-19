@@ -55,7 +55,7 @@ func TestPeriodicAccountDelegate(t *testing.T) {
 	acc := setupPeriodicAccount(t, sdkCtx, ss)
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
 		Sender:           "owner",
-		ValidatorAddress: "val_address",
+		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
@@ -74,7 +74,7 @@ func TestPeriodicAccountDelegate(t *testing.T) {
 
 	_, err = acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
 		Sender:           "owner",
-		ValidatorAddress: "val_address",
+		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(5)),
 	})
 	require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestPeriodicAccountDelegate(t *testing.T) {
 
 	_, err = acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
 		Sender:           "owner",
-		ValidatorAddress: "val_address",
+		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(4)),
 	})
 	require.NoError(t, err)
@@ -118,7 +118,7 @@ func TestPeriodicAccountUndelegate(t *testing.T) {
 	// Delegate first
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
 		Sender:           "owner",
-		ValidatorAddress: "val_address",
+		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
@@ -130,22 +130,22 @@ func TestPeriodicAccountUndelegate(t *testing.T) {
 	// Undelegate
 	_, err = acc.Undelegate(sdkCtx, &lockuptypes.MsgUndelegate{
 		Sender:           "owner",
-		ValidatorAddress: "val_address",
+		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
 
 	// sequence should be the previous one
-	entries, err := acc.UnbondEntries.Get(sdkCtx, "val_address")
+	entries, err := acc.UnbondEntries.Get(sdkCtx, valAddress)
 	require.NoError(t, err)
 	require.Len(t, entries.Entries, 1)
 	require.True(t, entries.Entries[0].Amount.Amount.Equal(math.NewInt(1)))
-	require.True(t, entries.Entries[0].ValidatorAddress == "val_address")
+	require.True(t, entries.Entries[0].ValidatorAddress == valAddress)
 
 	err = acc.checkUnbondingEntriesMature(sdkCtx)
 	require.NoError(t, err)
 
-	_, err = acc.UnbondEntries.Get(sdkCtx, "val_address")
+	_, err = acc.UnbondEntries.Get(sdkCtx, valAddress)
 	require.Error(t, err)
 
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")

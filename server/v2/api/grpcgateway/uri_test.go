@@ -99,12 +99,17 @@ func TestURIMatch_HasParams(t *testing.T) {
 	require.False(t, u.HasParams())
 }
 
+type Pagination struct {
+	Limit int `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
+}
+
 const dummyProtoName = "dummy"
 
 type DummyProto struct {
-	Foo string `protobuf:"bytes,1,opt,name=foo,proto3" json:"foo,omitempty"`
-	Bar bool   `protobuf:"varint,2,opt,name=bar,proto3" json:"bar,omitempty"`
-	Baz int    `protobuf:"varint,3,opt,name=baz,proto3" json:"baz,omitempty"`
+	Foo  string     `protobuf:"bytes,1,opt,name=foo,proto3" json:"foo,omitempty"`
+	Bar  bool       `protobuf:"varint,2,opt,name=bar,proto3" json:"bar,omitempty"`
+	Baz  int        `protobuf:"varint,3,opt,name=baz,proto3" json:"baz,omitempty"`
+	Page Pagination `protobuf:"bytes,4,opt,name=page,proto3" json:"page,omitempty"`
 }
 
 func (d DummyProto) Reset() {}
@@ -137,6 +142,19 @@ func TestCreateMessage(t *testing.T) {
 				Foo: "blah",
 				Bar: true,
 				Baz: 1352,
+			},
+		},
+		{
+			name: "message with nested params",
+			uri: uriMatch{
+				QueryInputName: dummyProtoName,
+				Params:         map[string]string{"foo": "blah", "bar": "true", "baz": "1352", "page.limit": "3"},
+			},
+			expected: &DummyProto{
+				Foo:  "blah",
+				Bar:  true,
+				Baz:  1352,
+				Page: Pagination{Limit: 3},
 			},
 		},
 		{

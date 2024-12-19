@@ -1,9 +1,9 @@
 package grpcgateway
 
 import (
-	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
+	"strconv"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -51,6 +51,7 @@ func newGatewayInterceptor[T transaction.Tx](gateway *runtime.ServeMux, am appma
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	match := matchURL(request.URL, g.customEndpointMapping)
 	if match != nil {
+		_, out := runtime.MarshalerForRequest(g.gateway, request)
 		var msg gogoproto.Message
 		var err error
 
@@ -60,23 +61,30 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		case http.MethodGet:
 			msg, err = createMessage(match)
 		default:
-			http.Error(writer, "unsupported http method", http.StatusMethodNotAllowed)
+			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, errors.New(http.StatusText(http.StatusMethodNotAllowed)))
 			return
 		}
 		if err != nil {
-			http.Error(writer, err.Error(), http.StatusBadRequest)
+			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
 			return
 		}
 
-		query, err := g.appManager.Query(request.Context(), 0, msg)
+		var height uint64
+		heightStr := request.Header.Get(GRPCBlockHeightHeader)
+		if heightStr != "" {
+			height, err = strconv.ParseUint(heightStr, 10, 64)
+			if err != nil {
+				runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
+				return
+			}
+		}
+
+		query, err := g.appManager.Query(request.Context(), height, msg)
 		if err != nil {
-			http.Error(writer, "Error querying", http.StatusInternalServerError)
+			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
 			return
 		}
-		writer.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(writer).Encode(query); err != nil {
-			http.Error(writer, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
-		}
+		runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, query)
 	} else {
 		g.gateway.ServeHTTP(writer, request)
 	}

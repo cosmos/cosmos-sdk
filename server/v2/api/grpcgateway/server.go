@@ -139,15 +139,15 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 }
 
+// GRPCBlockHeightHeader is the gRPC header for block height.
+const GRPCBlockHeightHeader = "x-cosmos-block-height"
+
 // CustomGRPCHeaderMatcher for mapping request headers to
 // GRPC metadata.
 // HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to
 // gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
 // CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
-	// GRPCBlockHeightHeader is the gRPC header for block height.
-	const GRPCBlockHeightHeader = "x-cosmos-block-height"
-
 	switch strings.ToLower(key) {
 	case GRPCBlockHeightHeader:
 		return GRPCBlockHeightHeader, true

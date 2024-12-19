@@ -146,34 +146,38 @@ func createMessage(match *uriMatch) (gogoproto.Message, error) {
 
 	// if the uri match has params, we need to populate the message with the values of those params.
 	if match.HasParams() {
-		// create a map with the proper field names from protobuf tags
-		fieldMap := make(map[string]string)
-		v := reflect.ValueOf(msg).Elem()
-		t := v.Type()
-
+		// convert flat params map to nested structure
+		nestedParams := make(map[string]any)
 		for key, value := range match.Params {
-			// attempt to match wildcard name to protobuf struct tag.
-			for i := 0; i < t.NumField(); i++ {
-				field := t.Field(i)
-				tag := field.Tag.Get("protobuf")
-				if nameMatch := regexp.MustCompile(`name=(\w+)`).FindStringSubmatch(tag); len(nameMatch) > 1 {
-					if nameMatch[1] == key {
-						fieldMap[field.Name] = value
-						break
+			parts := strings.Split(key, ".")
+			current := nestedParams
+
+			// step through nested levels
+			for i, part := range parts {
+				if i == len(parts)-1 {
+					// Last part - set the value
+					current[part] = value
+				} else {
+					// continue nestedness
+					if _, exists := current[part]; !exists {
+						current[part] = make(map[string]any)
 					}
+					current = current[part].(map[string]any)
 				}
 			}
 		}
 
+		// Configure decoder to handle the nested structure
 		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 			Result:           msg,
-			WeaklyTypedInput: true, // TODO(technicallyty): should we put false here?
+			TagName:          "json", // Use json tags as they're simpler
+			WeaklyTypedInput: true,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create decoder: %w", err)
 		}
 
-		if err := decoder.Decode(fieldMap); err != nil {
+		if err := decoder.Decode(nestedParams); err != nil {
 			return nil, fmt.Errorf("failed to decode params: %w", err)
 		}
 	}

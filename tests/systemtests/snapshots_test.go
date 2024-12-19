@@ -24,9 +24,6 @@ func TestSnapshots(t *testing.T) {
 	// Stop all nodes
 	systest.Sut.StopChain()
 
-	// Read config.toml node0
-	fmt.Println(cli.RunCommandWithArgs("config", "get", "config", "db_backend", fmt.Sprintf("--home=%s", systest.Sut.NodeDir(0))))
-
 	var (
 		command         string
 		restoreableDirs []string

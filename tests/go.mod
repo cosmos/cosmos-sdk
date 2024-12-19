@@ -50,7 +50,7 @@ require (
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
 	github.com/cometbft/cometbft/api v1.0.0
-	github.com/cosmos/cosmos-db v1.1.0
+	github.com/cosmos/cosmos-db v1.1.1
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
@@ -108,7 +108,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.3.4 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect

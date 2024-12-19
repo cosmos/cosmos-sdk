@@ -30,7 +30,7 @@ type AppBuilder[T transaction.Tx] struct {
 	branch      func(state store.ReaderMap) store.WriterMap
 	txValidator func(ctx context.Context, tx T) error
 	postTxExec  func(ctx context.Context, tx T, success bool) error
-	preblocker  func(ctx context.Context, txs []T) error
+	preblocker  func(ctx context.Context, txs []T, mmPreblocker func()) error
 }
 
 // RegisterModules registers the provided modules with the module manager.
@@ -97,12 +97,17 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
 	preblockerFn := func(ctx context.Context, txs []T) error {
-		if err := a.app.moduleManager.PreBlocker()(ctx, txs); err != nil {
-			return err
-		}
-
 		if a.preblocker != nil {
-			return a.preblocker(ctx, txs)
+			return a.preblocker(ctx, txs, func() {
+				if err := a.app.moduleManager.PreBlocker()(ctx, txs); err != nil {
+					panic(err)
+				}
+			})
+		} else {
+			// if there is no preblocker set, call the module manager's preblocker directly
+			if err := a.app.moduleManager.PreBlocker()(ctx, txs); err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -233,9 +238,13 @@ func AppBuilderWithPostTxExec[T transaction.Tx](
 	}
 }
 
+// AppBuilderWithPreblocker sets logic that will be executed before each block.
+// mmPreblocker can be used to call module manager's preblocker, so that it can be
+// called before or after depending on the app's logic.
+// This is especially useful when implementing vote extensions.
 func AppBuilderWithPreblocker[T transaction.Tx](
 	preblocker func(
-		ctx context.Context, txs []T,
+		ctx context.Context, txs []T, mmPreblocker func(),
 	) error,
 ) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {

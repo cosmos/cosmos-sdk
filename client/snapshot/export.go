@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
@@ -15,7 +16,6 @@ func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCrea
 		Short: "Export app state to snapshot store",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := client.GetConfigFromCmd(cmd)
 			viper := client.GetViperFromCmd(cmd)
 			logger := client.GetLoggerFromCmd(cmd)
 
@@ -24,7 +24,7 @@ func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCrea
 				return err
 			}
 
-			home := cfg.RootDir
+			home := viper.GetString(flags.FlagHome)
 			db, err := openDB(home, server.GetAppDBBackend(viper))
 			if err != nil {
 				return err

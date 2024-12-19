@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"iter"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -15,7 +16,6 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
-	"iter"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -418,7 +418,7 @@ func doMainLoop[T Tx](
 			}
 		}
 		activeValidatorSet = activeValidatorSet.Update(blockRsp.ValidatorUpdates)
-		//fmt.Printf("active validator set after height %d: %d, %s, %X\n", blockReqN.Height, len(activeValidatorSet), blockReqN.Time, stateRoot)
+		// fmt.Printf("active validator set after height %d: %d, %s, %X\n", blockReqN.Height, len(activeValidatorSet), blockReqN.Time, stateRoot)
 	}
 	fmt.Println("+++ reporter:\n" + rootReporter.Summary().String())
 	fmt.Printf("Tx total: %d skipped: %d\n", txTotalCounter, txSkippedCounter)

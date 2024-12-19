@@ -2,8 +2,11 @@ package v2
 
 import (
 	"context"
-	"cosmossdk.io/core/transaction"
 	"errors"
+	"math/rand"
+
+	"cosmossdk.io/core/transaction"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simsx"
@@ -11,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"math/rand"
 )
 
 const DefaultGenTxGas = 10_000_000
@@ -61,7 +63,6 @@ func NewSDKTXBuilder[T Tx](txConfig client.TxConfig, defaultGas uint64) TXBuilde
 			sequenceNumbers,
 			simsx.Collect(senders, func(a simsx.SimAccount) cryptotypes.PrivKey { return a.PrivKey })...,
 		)
-
 		if err != nil {
 			return tx, err
 		}

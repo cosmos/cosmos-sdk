@@ -3,12 +3,13 @@ package simsx
 import (
 	"cmp"
 	"context"
-	"iter"
 	"maps"
 	"math/rand"
 	"slices"
 	"strings"
 	"time"
+
+	"iter"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/log"

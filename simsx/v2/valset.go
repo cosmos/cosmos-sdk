@@ -39,7 +39,6 @@ type WeightedValidators []WeightedValidator
 
 func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) WeightedValidators {
 	if len(updates) == 0 {
-
 		return v
 	}
 	const truncatedSize = 20

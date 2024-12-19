@@ -12,7 +12,7 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.4.0 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

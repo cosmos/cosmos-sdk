@@ -55,8 +55,10 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 // interceptors internal mapping of http annotations to query request type names.
 // If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	g.logger.Debug("received grpc-gateway request", "request_uri", request.RequestURI)
 	match := matchURL(request.URL, g.customEndpointMapping)
 	if match != nil {
+		g.logger.Debug("matched request", "query_input", match.QueryInputName)
 		_, out := runtime.MarshalerForRequest(g.gateway, request)
 		var msg gogoproto.Message
 		var err error

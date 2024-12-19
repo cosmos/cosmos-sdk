@@ -2,24 +2,30 @@ package grpcgateway
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/genproto/googleapis/api/annotations"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/stf"
 )
 
 var _ http.Handler = &gatewayInterceptor[transaction.Tx]{}
 
 // gatewayInterceptor handles routing grpc-gateway queries to the app manager's query router.
 type gatewayInterceptor[T transaction.Tx] struct {
+	logger log.Logger
 	// gateway is the fallback grpc gateway mux handler.
 	gateway *runtime.ServeMux
 
@@ -33,12 +39,13 @@ type gatewayInterceptor[T transaction.Tx] struct {
 }
 
 // newGatewayInterceptor creates a new gatewayInterceptor.
-func newGatewayInterceptor[T transaction.Tx](gateway *runtime.ServeMux, am appmanager.AppManager[T]) (*gatewayInterceptor[T], error) {
+func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime.ServeMux, am appmanager.AppManager[T]) (*gatewayInterceptor[T], error) {
 	getMapping, err := getHTTPGetAnnotationMapping()
 	if err != nil {
 		return nil, err
 	}
 	return &gatewayInterceptor[T]{
+		logger:                logger,
 		gateway:               gateway,
 		customEndpointMapping: getMapping,
 		appManager:            am,
@@ -61,7 +68,7 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		case http.MethodGet:
 			msg, err = createMessage(match)
 		default:
-			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, errors.New(http.StatusText(http.StatusMethodNotAllowed)))
+			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.Unimplemented, "HTTP method must be POST or GET"))
 			return
 		}
 		if err != nil {
@@ -74,6 +81,7 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		if heightStr != "" {
 			height, err = strconv.ParseUint(heightStr, 10, 64)
 			if err != nil {
+				err = status.Errorf(codes.InvalidArgument, "invalid height: %s", heightStr)
 				runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
 				return
 			}
@@ -81,8 +89,13 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 
 		query, err := g.appManager.Query(request.Context(), height, msg)
 		if err != nil {
-			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
-			return
+			if errors.Is(err, stf.ErrNoHandler) {
+				g.gateway.ServeHTTP(writer, request)
+				return
+			} else {
+				runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
+				return
+			}
 		}
 		runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, query)
 	} else {

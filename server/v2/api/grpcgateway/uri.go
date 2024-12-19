@@ -1,7 +1,6 @@
 package grpcgateway
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,6 +11,8 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/mitchellh/mapstructure"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const maxBodySize = 1 << 20 // 1 MB
@@ -112,19 +113,19 @@ func patternToRegex(pattern string) (string, []string) {
 func createMessageFromJSON(match *uriMatch, r *http.Request) (gogoproto.Message, error) {
 	requestType := gogoproto.MessageType(match.QueryInputName)
 	if requestType == nil {
-		return nil, fmt.Errorf("unknown request type")
+		return nil, status.Error(codes.InvalidArgument, "invalid request type")
 	}
 
 	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
 	if !ok {
-		return nil, fmt.Errorf("failed to create message instance")
+		return nil, status.Error(codes.Internal, "failed to cast to proto message")
 	}
 
 	defer r.Body.Close()
 	limitedReader := io.LimitReader(r.Body, maxBodySize)
 	err := jsonpb.Unmarshal(limitedReader, msg)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing body: %w", err)
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	return msg, nil
@@ -136,12 +137,12 @@ func createMessageFromJSON(match *uriMatch, r *http.Request) (gogoproto.Message,
 func createMessage(match *uriMatch) (gogoproto.Message, error) {
 	requestType := gogoproto.MessageType(match.QueryInputName)
 	if requestType == nil {
-		return nil, fmt.Errorf("unknown request type")
+		return nil, status.Error(codes.InvalidArgument, "unknown request type")
 	}
 
 	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
 	if !ok {
-		return nil, fmt.Errorf("failed to create message instance")
+		return nil, status.Error(codes.Internal, "failed to create message instance")
 	}
 
 	// if the uri match has params, we need to populate the message with the values of those params.
@@ -174,11 +175,11 @@ func createMessage(match *uriMatch) (gogoproto.Message, error) {
 			WeaklyTypedInput: true,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to create decoder: %w", err)
+			return nil, status.Error(codes.Internal, "failed to create message instance")
 		}
 
 		if err := decoder.Decode(nestedParams); err != nil {
-			return nil, fmt.Errorf("failed to decode params: %w", err)
+			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 	}
 	return msg, nil

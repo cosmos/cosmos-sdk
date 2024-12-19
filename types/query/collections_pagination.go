@@ -265,53 +265,59 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V], T any](
 	defer iterator.Close()
 
 	var (
-		count   uint64
-		nextKey []byte
+		count       uint64
+		nextKey     []byte
+		transformed T
 	)
 
 	for ; iterator.Valid(); iterator.Next() {
-		// if we reached the specified limit
-		// then we get the next key, and we exit the iteration.
-		if count == limit {
-			concreteKey, err := iterator.Key()
-			if err != nil {
-				return nil, nil, err
-			}
-
-			nextKey, err = encodeCollKey[K, V](coll, concreteKey)
-			if err != nil {
-				return nil, nil, err
-			}
-			break
-		}
-
 		kv, err := iterator.KeyValue()
 		if err != nil {
 			return nil, nil, err
 		}
+
+		include := false
 		// if no predicate is specified then we just append the result
 		if predicateFunc == nil {
-			transformed, err := transformFunc(kv.Key, kv.Value)
+			transformed, err = transformFunc(kv.Key, kv.Value)
 			if err != nil {
 				return nil, nil, err
 			}
-			results = append(results, transformed)
+			include = true
 			// if predicate is applied we execute the predicate function
 			// and append only if predicateFunc yields true.
 		} else {
-			include, err := predicateFunc(kv.Key, kv.Value)
+			include, err = predicateFunc(kv.Key, kv.Value)
 			if err != nil {
 				return nil, nil, err
 			}
 			if include {
-				transformed, err := transformFunc(kv.Key, kv.Value)
+				transformed, err = transformFunc(kv.Key, kv.Value)
 				if err != nil {
 					return nil, nil, err
 				}
-				results = append(results, transformed)
 			}
 		}
-		count++
+
+		if include {
+			// if we reached the specified limit
+			// then we get the next key, and we exit the iteration.
+			if count == limit {
+				concreteKey, err := iterator.Key()
+				if err != nil {
+					return nil, nil, err
+				}
+
+				nextKey, err = encodeCollKey[K, V](coll, concreteKey)
+				if err != nil {
+					return nil, nil, err
+				}
+				break
+			}
+
+			results = append(results, transformed)
+			count++
+		}
 	}
 
 	return results, &PageResponse{

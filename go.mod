@@ -26,7 +26,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/ledger-cosmos-go v0.13.3
+	github.com/cosmos/ledger-cosmos-go v0.14.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.6.0

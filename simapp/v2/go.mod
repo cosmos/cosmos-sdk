@@ -104,7 +104,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/cosmos/iavl v1.3.4 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/creachadair/atomicfile v0.3.6 // indirect
 	github.com/creachadair/tomledit v0.0.26 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect

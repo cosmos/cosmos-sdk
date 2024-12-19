@@ -3,12 +3,13 @@
 package simapp
 
 import (
+	"fmt"
+
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	benchmarkmodulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	benchmark "cosmossdk.io/tools/benchmark/module"
-	"fmt"
 )
 
 func init() {

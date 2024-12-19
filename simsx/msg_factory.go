@@ -61,24 +61,20 @@ type ResultHandlingSimMsgFactory[T sdk.Msg] struct {
 
 // NewSimMsgFactoryWithDeliveryResultHandler constructor
 func NewSimMsgFactoryWithDeliveryResultHandler[T sdk.Msg](f FactoryMethodWithDeliveryResultHandler[T]) *ResultHandlingSimMsgFactory[T] {
-	// the result handler is always called after the factory. so we initialize it lazy for syntactic sugar and simplicity
-	// in the message factory function that is implemented by the users
-	var lazyResultHandler SimDeliveryResultHandler
 	r := &ResultHandlingSimMsgFactory[T]{
-		resultHandler: func(err error) error {
-			return lazyResultHandler(err)
-		},
+		resultHandler: expectNoError,
 	}
 	r.SimMsgFactoryFn = func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T) {
-		signer, msg, lazyResultHandler = f(ctx, testData, reporter)
-		if lazyResultHandler == nil {
-			lazyResultHandler = expectNoError
+		signer, msg, r.resultHandler = f(ctx, testData, reporter)
+		if r.resultHandler == nil {
+			r.resultHandler = expectNoError
 		}
 		return
 	}
 	return r
 }
 
+// DeliveryResultHandler result handler of the last msg factory invocation
 func (f ResultHandlingSimMsgFactory[T]) DeliveryResultHandler() SimDeliveryResultHandler {
 	return f.resultHandler
 }

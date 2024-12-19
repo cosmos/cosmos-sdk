@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"iter"
 	"strings"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -84,6 +85,16 @@ func New[T transaction.Tx](
 	}, nil
 }
 
+// DeliverSims entrypoint to processes sims transactions similar to DeliverBlock.
+func (s STF[T]) DeliverSims(
+	ctx context.Context,
+	block *server.BlockRequest[T],
+	state store.ReaderMap,
+	simsBuilder func(ctx context.Context) iter.Seq[T],
+) (blockResult *server.BlockResponse, newState store.WriterMap, err error) {
+	return s.deliverBlock(ctx, block, state, s.doSimsTXs(simsBuilder))
+}
+
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
@@ -91,6 +102,23 @@ func (s STF[T]) DeliverBlock(
 	ctx context.Context,
 	block *server.BlockRequest[T],
 	state store.ReaderMap,
+) (blockResult *server.BlockResponse, newState store.WriterMap, err error) {
+	return s.deliverBlock(ctx, block, state, s.doDeliverTXs)
+}
+
+// common code path for DeliverSims and DeliverBlock
+type doInBlockDeliveryFn[T transaction.Tx] func(
+	ctx context.Context,
+	txs []T,
+	newState store.WriterMap,
+	hi header.Info,
+) ([]server.TxResult, error)
+
+func (s STF[T]) deliverBlock(
+	ctx context.Context,
+	block *server.BlockRequest[T],
+	state store.ReaderMap,
+	doInBlockDelivery doInBlockDeliveryFn[T],
 ) (blockResult *server.BlockResponse, newState store.WriterMap, err error) {
 	// creates a new branchFn state, from the readonly view of the state
 	// that can be written to.
@@ -141,14 +169,9 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// execute txs
-	txResults := make([]server.TxResult, len(block.Txs))
-	// TODO: skip first tx if vote extensions are enabled (marko)
-	for i, txBytes := range block.Txs {
-		// check if we need to return early or continue delivering txs
-		if err = isCtxCancelled(ctx); err != nil {
-			return nil, nil, err
-		}
-		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1))
+	txResults, err := doInBlockDelivery(exCtx, block.Txs, newState, hi)
+	if err != nil {
+		return nil, nil, err
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -165,6 +188,25 @@ func (s STF[T]) DeliverBlock(
 		TxResults:        txResults,
 		EndBlockEvents:   endBlockEvents,
 	}, newState, nil
+}
+
+func (s STF[T]) doDeliverTXs(
+	exCtx context.Context,
+	txs []T,
+	newState store.WriterMap,
+	hi header.Info,
+) ([]server.TxResult, error) {
+	// execute txs
+	txResults := make([]server.TxResult, len(txs))
+	// TODO: skip first tx if vote extensions are enabled (marko)
+	for i, txBytes := range txs {
+		// check if we need to return early or continue delivering txs
+		if err := isCtxCancelled(exCtx); err != nil {
+			return nil, err
+		}
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1))
+	}
+	return txResults, nil
 }
 
 // deliverTx executes a TX and returns the result.

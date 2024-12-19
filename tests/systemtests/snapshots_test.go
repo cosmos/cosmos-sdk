@@ -43,10 +43,7 @@ func TestSnapshots(t *testing.T) {
 	require.DirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", node0Dir))
 
 	// Check snapshots list
-	res = cli.
-		WithRunErrorsIgnored().
-		WithRunSingleOutput(). // pebbledb prints logs to stderr, we cannot override the logger in store/v2 and cosmos-db. This isn't problematic in a real-world scenario, but it makes it hard to test the output.
-		RunCommandWithArgs(command, "list", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
+	res = cli.RunCommandWithArgs(command, "list", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	require.Contains(t, res, "height: 5")
 
 	// Dump snapshot

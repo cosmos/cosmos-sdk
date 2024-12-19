@@ -11,8 +11,8 @@ require (
 	cosmossdk.io/indexer/postgres v0.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241219124002-6d12b1df8c2c // main
-	cosmossdk.io/server/v2 v2.0.0-20241218084712-ca559989da43 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20241219154748-69025c556666 // main
+	cosmossdk.io/server/v2 v2.0.0-20241219154748-69025c556666 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
@@ -61,8 +61,8 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241218084712-ca559989da43 // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20241218084712-ca559989da43 // indirect; main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20241219154748-69025c556666 // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20241219154748-69025c556666 // indirect; main
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect; main
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -93,7 +93,7 @@ require (
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.1.0 // indirect
+	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect

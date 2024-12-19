@@ -23,6 +23,11 @@ var ListSnapshotsCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("failed to list snapshots: %w", err)
 		}
+
+		if len(snapshots) == 0 {
+			cmd.Println("no snapshots found")
+		}
+
 		for _, snapshot := range snapshots {
 			cmd.Println("height:", snapshot.Height, "format:", snapshot.Format, "chunks:", snapshot.Chunks)
 		}

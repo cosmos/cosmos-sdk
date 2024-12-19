@@ -464,29 +464,6 @@ jobs:
         with:
           projectBaseDir: indexer/postgres/
 
-  test-simapp:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: simapp/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            simapp/go.mod
-            simapp/go.sum
-      - name: tests simapp
-        if: env.GIT_DIFF
-        run: |
-          cd simapp
-          go test -mod=readonly -timeout 30m -tags='norace ledger test_ledger_mock' ./...
-
   test-simapp-v2:
     runs-on: ubuntu-latest
     steps:

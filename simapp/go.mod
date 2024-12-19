@@ -3,15 +3,15 @@ module cosmossdk.io/simapp
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.0-rc.2
+	cosmossdk.io/api v0.8.0-rc.3
 	cosmossdk.io/client/v2 v2.0.0-beta.6
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b
+	cosmossdk.io/collections v1.0.0-rc.1
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
+	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/store v1.1.1
+	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
@@ -34,30 +34,30 @@ require (
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
-	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9
-	github.com/cometbft/cometbft/api v1.0.0-rc2
+	github.com/cometbft/cometbft v1.0.0
+	github.com/cometbft/cometbft/api v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 )
 
 require (
-	cosmossdk.io/indexer/postgres v0.0.0-20241128094659-bd76b47e1d8b
+	cosmossdk.io/indexer/postgres v0.1.0
 	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000
 	github.com/jackc/pgx/v5 v5.7.1
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
 	cloud.google.com/go v0.115.1 // indirect
 	cloud.google.com/go/auth v0.8.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
@@ -65,7 +65,7 @@ require (
 	cloud.google.com/go/iam v1.1.13 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/schema v0.4.0 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -78,7 +78,7 @@ require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
-	github.com/bytedance/sonic v1.12.4 // indirect
+	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
@@ -97,7 +97,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.3.2 // indirect
+	github.com/cosmos/iavl v1.3.4 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/creachadair/atomicfile v0.3.6 // indirect
@@ -105,7 +105,7 @@ require (
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
-	github.com/dgraph-io/badger/v4 v4.4.0 // indirect
+	github.com/dgraph-io/badger/v4 v4.5.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
@@ -251,9 +251,6 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
-	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/benchmark => ../tools/benchmark
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts

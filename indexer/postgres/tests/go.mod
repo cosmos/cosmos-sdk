@@ -3,9 +3,9 @@ module cosmossdk.io/indexer/postgres/testing
 go 1.23
 
 require (
-	cosmossdk.io/indexer/postgres v0.0.0-00010101000000-000000000000
-	cosmossdk.io/schema v0.4.0
-	cosmossdk.io/schema/testing v0.0.0
+	cosmossdk.io/indexer/postgres v0.1.0
+	cosmossdk.io/schema v1.0.0
+	cosmossdk.io/schema/testing v0.0.1
 	github.com/fergusstrange/embedded-postgres v1.30.0
 	github.com/hashicorp/consul/sdk v0.16.1
 	github.com/jackc/pgx/v5 v5.7.1
@@ -32,9 +32,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
-
-replace cosmossdk.io/indexer/postgres => ../.
-
-replace cosmossdk.io/schema => ../../../schema
-
-replace cosmossdk.io/schema/testing => ../../../schema/testing

@@ -2,6 +2,7 @@ package lockup
 
 import (
 	"context"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -172,6 +173,16 @@ func (s *IntegrationTestSuite) registerQueryRouterService(router *integration.Ro
 		return resp, err
 	}
 
+	stakingUnbondingQueryHandler := func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
+		req, ok := msg.(*stakingtypes.QueryUnbondingDelegationRequest)
+		if !ok {
+			return nil, integration.ErrInvalidMsgType
+		}
+		qs := stakingkeeper.NewQuerier(s.stakingKeeper)
+		resp, err := qs.UnbondingDelegation(ctx, req)
+		return resp, err
+	}
+
 	bankBalanceQueryHandler := func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 		req, ok := msg.(*banktypes.QueryBalanceRequest)
 		if !ok {
@@ -183,6 +194,7 @@ func (s *IntegrationTestSuite) registerQueryRouterService(router *integration.Ro
 	}
 
 	router.RegisterHandler(stakingParamsQueryHandler, "cosmos.staking.v1beta1.QueryParamsRequest")
+	router.RegisterHandler(stakingUnbondingQueryHandler, "cosmos.staking.v1beta1.QueryUnbondingDelegationRequest")
 	router.RegisterHandler(bankBalanceQueryHandler, "cosmos.bank.v1beta1.QueryBalanceRequest")
 }
 
@@ -214,4 +226,28 @@ func (s *IntegrationTestSuite) queryLockupAccInfo(ctx context.Context, ak accoun
 	require.True(s.T(), ok)
 
 	return lockupAccountInfoResponse
+}
+
+func (s *IntegrationTestSuite) queryUnbondingEntries(ctx context.Context, ak accounts.Keeper, accAddr []byte, valAddr string) *types.QueryUnbondingEntriesResponse {
+	req := &types.QueryUnbondingEntriesRequest{
+		ValidatorAddress: valAddr,
+	}
+	resp, err := s.queryAcc(ctx, req, ak, accAddr)
+	require.NoError(s.T(), err)
+	require.NotNil(s.T(), resp)
+
+	unbondingEntriesResponse, ok := resp.(*types.QueryUnbondingEntriesResponse)
+	require.True(s.T(), ok)
+
+	return unbondingEntriesResponse
+}
+
+func (s *IntegrationTestSuite) setupStakingParams(ctx context.Context, sk *stakingkeeper.Keeper) {
+	params, err := sk.Params.Get(ctx)
+	require.NoError(s.T(), err)
+
+	// update unbonding time
+	params.UnbondingTime = time.Duration(time.Second * 10)
+	err = sk.Params.Set(ctx, params)
+	require.NoError(s.T(), err)
 }

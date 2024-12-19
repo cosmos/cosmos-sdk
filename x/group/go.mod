@@ -3,21 +3,17 @@ module cosmossdk.io/x/group
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.0-rc.2
+	cosmossdk.io/api v0.8.0-rc.3
 	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
+	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
-	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
-	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
@@ -29,16 +25,16 @@ require (
 	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 	pgregory.net/rapid v1.1.0
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241128094659-bd76b47e1d8b // indirect
-	cosmossdk.io/schema v0.4.0 // indirect
-	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
+	cosmossdk.io/collections v1.0.0-rc.1 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -48,7 +44,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
-	github.com/bytedance/sonic v1.12.4 // indirect
+	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
@@ -60,20 +56,20 @@ require (
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v1.0.0-rc2.0.20241127125717-4ce33b646ac9 // indirect
+	github.com/cometbft/cometbft v1.0.0 // indirect
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
-	github.com/cometbft/cometbft/api v1.0.0-rc2 // indirect
+	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.3.2 // indirect
+	github.com/cosmos/iavl v1.3.4 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
-	github.com/dgraph-io/badger/v4 v4.4.0 // indirect
+	github.com/dgraph-io/badger/v4 v4.5.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
@@ -145,7 +141,7 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
@@ -184,14 +180,7 @@ replace github.com/cosmos/cosmos-sdk => ../../
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/consensus => ../consensus
-	cosmossdk.io/x/epochs => ../epochs
 	cosmossdk.io/x/gov => ../gov
-	cosmossdk.io/x/mint => ../mint
-	cosmossdk.io/x/protocolpool => ../protocolpool
-	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 )

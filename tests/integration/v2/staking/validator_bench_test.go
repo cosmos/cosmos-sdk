@@ -1,4 +1,4 @@
-package keeper_test
+package staking
 
 import (
 	"bytes"
@@ -29,7 +29,7 @@ func BenchmarkGetValidator(b *testing.B) {
 	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		if err := f.stakingKeeper.SetValidator(f.sdkCtx, validator); err != nil {
+		if err := f.stakingKeeper.SetValidator(f.ctx, validator); err != nil {
 			panic(err)
 		}
 	}
@@ -37,7 +37,7 @@ func BenchmarkGetValidator(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		for _, addr := range valAddrs {
-			_, _ = f.stakingKeeper.GetValidator(f.sdkCtx, addr)
+			_, _ = f.stakingKeeper.GetValidator(f.ctx, addr)
 		}
 	}
 }
@@ -54,7 +54,7 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 
 	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 	for _, validator := range vals {
-		if err := f.stakingKeeper.SetValidator(f.sdkCtx, validator); err != nil {
+		if err := f.stakingKeeper.SetValidator(f.ctx, validator); err != nil {
 			panic(err)
 		}
 	}
@@ -63,14 +63,14 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-			err := banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
+			err := banktestutil.FundAccount(f.ctx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i)))))
 			if err != nil {
 				panic(err)
 			}
 			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
 
-			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
+			if err := f.stakingKeeper.SetDelegation(f.ctx, NewDel); err != nil {
 				panic(err)
 			}
 		}
@@ -95,7 +95,7 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		if err := f.stakingKeeper.SetValidator(f.sdkCtx, validator); err != nil {
+		if err := f.stakingKeeper.SetValidator(f.ctx, validator); err != nil {
 			panic(err)
 		}
 	}
@@ -104,13 +104,13 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-			err := banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
+			err := banktestutil.FundAccount(f.ctx, f.bankKeeper, delegator,
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i)))))
 			if err != nil {
 				panic(err)
 			}
 			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
-			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
+			if err := f.stakingKeeper.SetDelegation(f.ctx, NewDel); err != nil {
 				panic(err)
 			}
 		}
@@ -123,12 +123,14 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 }
 
 func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sdk.ValAddress) {
-	storeKey := f.keys[types.StoreKey]
 	cdc, k := f.cdc, f.stakingKeeper
 
-	store := f.sdkCtx.KVStore(storeKey)
+	store := k.KVStoreService.OpenKVStore(f.ctx)
 
-	iterator := storetypes.KVStorePrefixIterator(store, types.DelegationKey)
+	iterator, err := store.Iterator(types.DelegationKey, storetypes.PrefixEndBytes(types.DelegationKey))
+	if err != nil {
+		panic(err)
+	}
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -139,11 +141,11 @@ func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sd
 		}
 
 		if bytes.EqualFold(valAddr, existingValAddr) {
-			if err := k.RemoveDelegation(f.sdkCtx, delegation); err != nil {
+			if err := k.RemoveDelegation(f.ctx, delegation); err != nil {
 				panic(err)
 			}
 			delegation.ValidatorAddress = newValAddr.String()
-			if err := k.SetDelegation(f.sdkCtx, delegation); err != nil {
+			if err := k.SetDelegation(f.ctx, delegation); err != nil {
 				panic(err)
 			}
 		}
@@ -154,22 +156,22 @@ func updateValidatorDelegations(f *fixture, existingValAddr, newValAddr sdk.ValA
 	k := f.stakingKeeper
 
 	rng := collections.NewPrefixedPairRange[sdk.ValAddress, sdk.AccAddress](existingValAddr)
-	err := k.DelegationsByValidator.Walk(f.sdkCtx, rng, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], _ []byte) (stop bool, err error) {
+	err := k.DelegationsByValidator.Walk(f.ctx, rng, func(key collections.Pair[sdk.ValAddress, sdk.AccAddress], _ []byte) (stop bool, err error) {
 		valAddr, delAddr := key.K1(), key.K2()
 
-		delegation, err := k.Delegations.Get(f.sdkCtx, collections.Join(delAddr, valAddr))
+		delegation, err := k.Delegations.Get(f.ctx, collections.Join(delAddr, valAddr))
 		if err != nil {
 			return true, err
 		}
 
 		// remove old operator addr from delegation
-		if err := k.RemoveDelegation(f.sdkCtx, delegation); err != nil {
+		if err := k.RemoveDelegation(f.ctx, delegation); err != nil {
 			return true, err
 		}
 
 		delegation.ValidatorAddress = newValAddr.String()
 		// add with new operator addr
-		if err := k.SetDelegation(f.sdkCtx, delegation); err != nil {
+		if err := k.SetDelegation(f.ctx, delegation); err != nil {
 			return true, err
 		}
 

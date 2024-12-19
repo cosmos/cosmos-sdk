@@ -1,3 +1,9 @@
+cosmossdk.io/indexer/postgres v0.1.0 h1:BlHRa6g3taQ6HehZnVkvy2F2aq812fCZdizUEDYo+EA=
+cosmossdk.io/indexer/postgres v0.1.0/go.mod h1:uinVfbarely9QIJjwgrIs+BzUMHHneXPimQZ/DsMOxU=
+cosmossdk.io/schema v1.0.0 h1:/diH4XJjpV1JQwuIozwr+A4uFuuwanFdnw2kKeiXwwQ=
+cosmossdk.io/schema v1.0.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+cosmossdk.io/schema/testing v0.0.1 h1:oFSG7uV/efEkTI6rC3gBSDAwvtcvxduP8BTjLNly/Ms=
+cosmossdk.io/schema/testing v0.0.1/go.mod h1:NtTaGcWPpN+20KWwanku62tUPL1PPykBqihaucd8Gdk=
 github.com/cockroachdb/apd/v3 v3.2.1 h1:U+8j7t0axsIgvQUqthuNm82HIrYXodOV2iWLWtEaIwg=
 github.com/cockroachdb/apd/v3 v3.2.1/go.mod h1:klXJcjp+FffLTHlhIG69tezTDvdP065naDsHzKhYSqc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

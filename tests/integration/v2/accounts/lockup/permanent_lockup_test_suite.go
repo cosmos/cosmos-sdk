@@ -23,6 +23,8 @@ func (s *IntegrationTestSuite) TestPermanentLockingAccount() {
 	ctx := s.ctx
 	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime})
 
+	s.setupStakingParams(ctx, s.stakingKeeper)
+
 	ownerAddrStr, err := s.authKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
 	s.fundAccount(s.bankKeeper, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
@@ -109,10 +111,11 @@ func (s *IntegrationTestSuite) TestPermanentLockingAccount() {
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
 
-		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, s.accountsKeeper, accountAddr)
-		delLocking := lockupAccountInfoResponse.DelegatedLocking
-		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
+		// check if an entry is added
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, s.accountsKeeper, accountAddr, val.OperatorAddress)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.True(t, entries[0].Amount.Amount.Equal(math.NewInt(100)))
+		require.True(t, entries[0].ValidatorAddress == val.OperatorAddress)
 	})
 
 	s.fundAccount(s.bankKeeper, ctx, accountAddr, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
@@ -128,5 +131,42 @@ func (s *IntegrationTestSuite) TestPermanentLockingAccount() {
 
 		balance := s.bankKeeper.GetBalance(ctx, randAcc, "stake")
 		require.True(t, balance.Amount.Equal(math.NewInt(100)))
+	})
+
+	// Update context time
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime.Add(time.Second * 11)})
+
+	// trigger endblock for staking to handle matured unbonding delegation
+	_, err = s.stakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
+
+	t.Run("ok - execute delegate message", func(t *testing.T) {
+		msg := &types.MsgDelegate{
+			Sender:           ownerAddrStr,
+			ValidatorAddress: val.OperatorAddress,
+			Amount:           sdk.NewCoin("stake", math.NewInt(10)),
+		}
+		err = s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		valbz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+		require.NoError(t, err)
+
+		del, err := s.stakingKeeper.Delegations.Get(
+			ctx, collections.Join(sdk.AccAddress(accountAddr), sdk.ValAddress(valbz)),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, del)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, s.accountsKeeper, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		// matured ubd entry should be cleared so del locking should only be 10
+		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(10)))
+
+		// check if the entry is removed
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, s.accountsKeeper, accountAddr, val.OperatorAddress)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.Len(t, entries, 0)
 	})
 }

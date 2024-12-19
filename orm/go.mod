@@ -5,7 +5,7 @@ go 1.23
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
+	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	github.com/cosmos/cosmos-db v1.1.0
@@ -23,7 +23,7 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.4.0 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/prometheus/common v0.61.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect

@@ -77,6 +77,19 @@ func TestPermanentAccountUndelegate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// sequence should be the previous one
+	entries, err := acc.UnbondEntries.Get(sdkCtx, "val_address")
+	require.NoError(t, err)
+	require.Len(t, entries.Entries, 1)
+	require.True(t, entries.Entries[0].Amount.Amount.Equal(math.NewInt(1)))
+	require.True(t, entries.Entries[0].ValidatorAddress == "val_address")
+
+	err = acc.checkUnbondingEntriesMature(sdkCtx)
+	require.NoError(t, err)
+
+	_, err = acc.UnbondEntries.Get(sdkCtx, "val_address")
+	require.Error(t, err)
+
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
 	require.NoError(t, err)
 	require.True(t, delLocking.Equal(math.ZeroInt()))

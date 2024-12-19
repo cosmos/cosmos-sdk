@@ -25,13 +25,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Features
-
-*
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/distribution/v0.2.0-rc.1) - 2024-12-18
 
 ### Improvements
 
 * [#20790](https://github.com/cosmos/cosmos-sdk/pull/20790) `x/distribution` does not depend on `x/protocolpool` anymore, now `x/distribution` only does token transfers and `x/protocolpool` does the rest.
+* [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `CalculateDelegationRewards` and `DelegationTotalRewards` methods no longer panics on any sanity checks and instead returns appropriate errors.
 
 ### API Breaking Changes
 
@@ -59,10 +58,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) ~The distribution module keeper now takes a new argument `PoolKeeper` in addition.~ Reverted on #20790
 * [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) `AllocateTokens` takes `comet.VoteInfos` instead of `[]abci.VoteInfo`
 * [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
-
-### Improvements
-
-* [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `CalculateDelegationRewards` and `DelegationTotalRewards` methods no longer panics on any sanity checks and instead returns appropriate errors.
 
 ### CLI Breaking Changes
 

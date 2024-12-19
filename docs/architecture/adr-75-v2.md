@@ -200,7 +200,7 @@ type StateTransitionFunction[T transaction.Tx] interface {
 
 The design of the node comes with a number of tradeoffs.
 
-* Maintenance cost can be the same as existing Baseapp as handling many go.mods is a overhead.
+* Maintenance cost can be the same as existing Baseapp as handling many go.mods is an overhead.
 * Modularity means different layers of abstractions, abstractions always have a cost. 
 
 ### Backwards Compatibility

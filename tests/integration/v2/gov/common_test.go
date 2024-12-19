@@ -203,5 +203,4 @@ func (s *suite) registerMsgRouterService(router *integration.RouterService) {
 }
 
 func (f *suite) registerQueryRouterService(router *integration.RouterService) {
-
 }

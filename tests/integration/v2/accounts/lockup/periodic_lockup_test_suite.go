@@ -23,11 +23,12 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 	ctx := s.ctx
 	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime})
 
+	s.setupStakingParams(ctx, s.stakingKeeper)
+
 	ownerAddrStr, err := s.authKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
 	s.fundAccount(s.bankKeeper, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	_, accountAddr, err := s.accountsKeeper.Init(ctx, lockupaccount.PERIODIC_LOCKING_ACCOUNT, accOwner, &types.MsgInitPeriodicLockingAccount{
 		Owner:     ownerAddrStr,
@@ -75,19 +76,6 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 		err := s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
-	t.Run("error - execute withdraw message, no withdrawable token", func(t *testing.T) {
-		ownerAddr, err := s.authKeeper.AddressCodec().BytesToString(accOwner)
-		require.NoError(t, err)
-		withdrawAddr, err := s.authKeeper.AddressCodec().BytesToString(withdrawAcc)
-		require.NoError(t, err)
-		msg := &types.MsgWithdraw{
-			Withdrawer: ownerAddr,
-			ToAddress:  withdrawAddr,
-			Denoms:     []string{"stake"},
-		}
-		err = s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
-		require.NotNil(t, err)
-	})
 
 	// Update context time
 	// After first period 500stake should be unlock
@@ -110,25 +98,6 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 	// Update context time
 	// After second period 1000stake should be unlock
 	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime.Add(time.Minute * 2)})
-
-	t.Run("oke - execute withdraw message", func(t *testing.T) {
-		ownerAddr, err := s.authKeeper.AddressCodec().BytesToString(accOwner)
-		require.NoError(t, err)
-		withdrawAddr, err := s.authKeeper.AddressCodec().BytesToString(withdrawAcc)
-		require.NoError(t, err)
-		msg := &types.MsgWithdraw{
-			Withdrawer: ownerAddr,
-			ToAddress:  withdrawAddr,
-			Denoms:     []string{"stake"},
-		}
-		err = s.executeTx(ctx, msg, s.accountsKeeper, accountAddr, accOwner)
-		require.NoError(t, err)
-
-		// withdrawable amount should be
-		// 1000stake - 500stake( above sent amt ) = 500stake
-		balance := s.bankKeeper.GetBalance(ctx, withdrawAcc, "stake")
-		require.True(t, balance.Amount.Equal(math.NewInt(500)))
-	})
 
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
@@ -181,15 +150,20 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
 
-		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, s.accountsKeeper, accountAddr)
-		delLocking := lockupAccountInfoResponse.DelegatedLocking
-		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
+		// check if an entry is added
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, s.accountsKeeper, accountAddr, val.OperatorAddress)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.True(t, entries[0].Amount.Amount.Equal(math.NewInt(100)))
+		require.True(t, entries[0].ValidatorAddress == val.OperatorAddress)
 	})
 
 	// Update context time
 	// After third period 1500stake should be unlock
 	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: currentTime.Add(time.Minute * 3)})
+
+	// trigger endblock for staking to handle matured unbonding delegation
+	_, err = s.stakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
@@ -211,7 +185,15 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 
 		// check if tracking is updated accordingly
 		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, s.accountsKeeper, accountAddr)
+		// check if matured ubd entry cleared
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 		delFree := lockupAccountInfoResponse.DelegatedFree
 		require.True(t, delFree.AmountOf("stake").Equal(math.NewInt(100)))
+
+		// check if the entry is removed
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, s.accountsKeeper, accountAddr, val.OperatorAddress)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.Len(t, entries, 0)
 	})
 }

@@ -44,28 +44,20 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
 * (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
-* (client) [#22807](https://github.com/cosmos/cosmos-sdk/pull/22807) Return v2 server information in the `version` command.
 
 ### Improvements
 
-* RocksDB libraries have been upgraded to support RockDB v9 instead of v8.
-* (testutil/integration) [#22616](https://github.com/cosmos/cosmos-sdk/pull/22616) Remove double context in integration tests v1.
-    * Use integrationApp.Context() instead of creating a context prior.
-* [#22826](https://github.com/cosmos/cosmos-sdk/pull/22826) Simplify testing frameworks by removing `testutil/cmdtest`.
-* [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for maxDepth and maxCalls.
+* (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recusion limits.
 
 ### Bug Fixes
-
-* (cli) [#22656](https://github.com/cosmos/cosmos-sdk/pull/22656) Prune cmd should disable async pruning.
 
 ### API Breaking Changes
 
 * (testutil) [#22392](https://github.com/cosmos/cosmos-sdk/pull/22392) Remove `testutil/network` package. Use the integration framework or systemtests framework instead.
-* (client) [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Removed client prompt validations.
 
 ### Deprecated
 
-## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
+## [v0.52.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-rc.1) - 2024-12-18
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
@@ -97,10 +89,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/validate) [#21822](https://github.com/cosmos/cosmos-sdk/pull/21822) New module solely responsible for providing ante/post handlers and tx validators for v2. It can be extended by the app developer to provide extra tx validators.
     * In comparison to x/auth/tx/config, there is no app config to skip ante/post handlers, as overwriting them in baseapp or not injecting the x/validate module has the same effect.
 * (baseapp) [#21979](https://github.com/cosmos/cosmos-sdk/pull/21979) Create CheckTxHandler to allow extending the logic of CheckTx.
-* (baseapp) [[#13981](https://github.com/cosmos/cosmos-sdk/issues/13981)] Add per-message telemetry.
 
 ### Improvements
 
+* RocksDB libraries have been upgraded to support RockDB v9 instead of v8.
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated `fmt.Errorf` errors and using `errors.New` where appropriate.
 * (client) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) Add `client.Context{}.WithAddressCodec`, `WithValidatorAddressCodec`, `WithConsensusAddressCodec` to provide address codecs to the client context. See the [UPGRADING.md](./UPGRADING.md) for more details.
 * (crypto/keyring) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) Simplify keyring interfaces to use `[]byte` instead of `sdk.Address` for addresses.
@@ -147,6 +139,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
 * (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unnecessary overhead.
 * (crypto/ledger) [#22116](https://github.com/cosmos/cosmos-sdk/pull/22116) Improve error message when deriving paths using index >100
+* (testutil/integration) [#22616](https://github.com/cosmos/cosmos-sdk/pull/22616) Remove double context in integration tests v1.
+    * Use `integrationApp.Context()` instead of creating a context prior.
+* (version) [#22807](https://github.com/cosmos/cosmos-sdk/pull/22807) Return server/v2 information in the `version` functions and commands.
+* [#22826](https://github.com/cosmos/cosmos-sdk/pull/22826) Simplify testing frameworks by removing `testutil/cmdtest`.
 
 ### Bug Fixes
 
@@ -161,6 +157,9 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
 * (sims) [#21952](https://github.com/cosmos/cosmos-sdk/pull/21952) Use liveness matrix for validator sign status in sims
 * (baseapp) [#21003](https://github.com/cosmos/cosmos-sdk/pull/21003) Align block header when query with latest height.
+* (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
+* (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+* (cli) [#22656](https://github.com/cosmos/cosmos-sdk/pull/22656) Prune cmd should disable async pruning.
 
 ### API Breaking Changes
 
@@ -238,6 +237,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/auth/tx/config)  [#21822](https://github.com/cosmos/cosmos-sdk/pull/21822) Sign mode textual is no more automatically added to tx config when using runtime. Should be added manually on the server side.
 * (x/auth/tx/config)  [#21822](https://github.com/cosmos/cosmos-sdk/pull/21822) This depinject module now only provide txconfig and tx config options. `x/validate` now handles the providing of ante/post handlers, alongside tx validators for v2. The corresponding app config options have been removed from the depinject module config.
 * (x/crisis) [#20809](https://github.com/cosmos/cosmos-sdk/pull/20809) Crisis module was removed from the Cosmos SDK.
+* (client) [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Removed client prompt validations.
 
 ### Client Breaking Changes
 
@@ -1155,11 +1155,11 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/bank) [#12630](https://github.com/cosmos/cosmos-sdk/pull/12630) Migrate `x/bank` to self-managed parameters and deprecate its usage of `x/params`.
 * (x/auth) [#12475](https://github.com/cosmos/cosmos-sdk/pull/12475) Migrate `x/auth` to self-managed parameters and deprecate its usage of `x/params`.
 * (x/slashing) [#12399](https://github.com/cosmos/cosmos-sdk/pull/12399) Migrate `x/slashing` to self-managed parameters and deprecate its usage of `x/params`.
-* (x/mint) [#12363](https://github.com/cosmos/cosmos-sdk/pull/12363) Migrate `x/mint` to self-managed parameters and deprecate it's usage of `x/params`.
-* (x/distribution) [#12434](https://github.com/cosmos/cosmos-sdk/pull/12434) Migrate `x/distribution` to self-managed parameters and deprecate it's usage of `x/params`.
-* (x/crisis) [#12445](https://github.com/cosmos/cosmos-sdk/pull/12445) Migrate `x/crisis` to self-managed parameters and deprecate it's usage of `x/params`.
-* (x/gov) [#12631](https://github.com/cosmos/cosmos-sdk/pull/12631) Migrate `x/gov` to self-managed parameters and deprecate it's usage of `x/params`.
-* (x/staking) [#12409](https://github.com/cosmos/cosmos-sdk/pull/12409) Migrate `x/staking` to self-managed parameters and deprecate it's usage of `x/params`.
+* (x/mint) [#12363](https://github.com/cosmos/cosmos-sdk/pull/12363) Migrate `x/mint` to self-managed parameters and deprecate its usage of `x/params`.
+* (x/distribution) [#12434](https://github.com/cosmos/cosmos-sdk/pull/12434) Migrate `x/distribution` to self-managed parameters and deprecate its usage of `x/params`.
+* (x/crisis) [#12445](https://github.com/cosmos/cosmos-sdk/pull/12445) Migrate `x/crisis` to self-managed parameters and deprecate its usage of `x/params`.
+* (x/gov) [#12631](https://github.com/cosmos/cosmos-sdk/pull/12631) Migrate `x/gov` to self-managed parameters and deprecate its usage of `x/params`.
+* (x/staking) [#12409](https://github.com/cosmos/cosmos-sdk/pull/12409) Migrate `x/staking` to self-managed parameters and deprecate its usage of `x/params`.
 * (x/bank) [#11859](https://github.com/cosmos/cosmos-sdk/pull/11859) Move the SendEnabled information out of the Params and into the state store directly.
 * (x/gov) [#12771](https://github.com/cosmos/cosmos-sdk/pull/12771) Initial deposit requirement for proposals at submission time.
 * (x/staking) [#12967](https://github.com/cosmos/cosmos-sdk/pull/12967) `unbond` now creates only one unbonding delegation entry when multiple unbondings exist at a single height (e.g. through multiple messages in a transaction).
@@ -1207,7 +1207,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/staking) [#12409](https://github.com/cosmos/cosmos-sdk/pull/12409) `x/staking` module `SetParams` keeper method definition is now updated to return `error`.
 * (x/crisis) [#12445](https://github.com/cosmos/cosmos-sdk/pull/12445) `x/crisis` module `SetConstantFee` keeper method definition is now updated to return `error`.
 * (x/gov) [#12631](https://github.com/cosmos/cosmos-sdk/pull/12631) `x/gov` module refactored to use `Params` as single struct instead of `DepositParams`, `TallyParams` & `VotingParams`.
-* (x/gov) [#12631](https://github.com/cosmos/cosmos-sdk/pull/12631) Migrate `x/gov` to self-managed parameters and deprecate it's usage of `x/params`.
+* (x/gov) [#12631](https://github.com/cosmos/cosmos-sdk/pull/12631) Migrate `x/gov` to self-managed parameters and deprecate its usage of `x/params`.
 * (x/bank) [#12630](https://github.com/cosmos/cosmos-sdk/pull/12630) `x/bank` module `SetParams` keeper method definition is now updated to return `error`.
 * (x/bank) [#11859](https://github.com/cosmos/cosmos-sdk/pull/11859) Move the SendEnabled information out of the Params and into the state store directly.
   The information can now be accessed using the BankKeeper.

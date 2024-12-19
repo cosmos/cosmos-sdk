@@ -15,6 +15,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,12 +25,12 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 // TestSimpleSendProposal creates a multisig account with 1 member, sends a tx, votes and executes it.
 func (s *IntegrationTestSuite) TestSimpleSendProposal() {
-	ctx := sdk.NewContext(s.app.CommitMultiStore(), false, s.app.Logger()).WithHeaderInfo(header.Info{
-		Time: time.Now(),
-	})
+	ctx := s.app.StateLatestContext(s.T())
+
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: time.Now()})
 
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	addr, err := s.app.AuthKeeper.AddressCodec().BytesToString(randAcc)
+	addr, err := s.authKeeper.AddressCodec().BytesToString(randAcc)
 	s.NoError(err)
 
 	initialMembers := map[string]uint64{
@@ -37,7 +38,7 @@ func (s *IntegrationTestSuite) TestSimpleSendProposal() {
 	}
 	accountAddr, accAddrStr := s.initAccount(ctx, s.members[0], initialMembers)
 
-	balance := s.app.BankKeeper.GetBalance(ctx, randAcc, "stake")
+	balance := s.bankKeeper.GetBalance(ctx, randAcc, "stake")
 	s.Equal(math.NewInt(0), balance.Amount)
 
 	// do a simple bank send
@@ -70,37 +71,39 @@ func (s *IntegrationTestSuite) TestSimpleSendProposal() {
 	s.NoError(err)
 
 	foundPropResult := false
-	for _, v := range ctx.EventManager().Events() {
-		if v.Type == "proposal_tally" {
+	events := integration.EventsFromContext(ctx)
+	for _, e := range events {
+		if e.Type == "proposal_tally" {
 			foundPropResult = true
-			status, found := v.GetAttribute("status")
+			attr, found := integration.GetAttribute(e, "status")
 			s.True(found)
-			s.Equal(v1.ProposalStatus_PROPOSAL_STATUS_PASSED.String(), status.Value)
+			s.Equal(v1.ProposalStatus_PROPOSAL_STATUS_PASSED.String(), attr.Value)
 
-			yesVotes, found := v.GetAttribute("yes_votes")
+			yesVotes, found := integration.GetAttribute(e, "yes_votes")
 			s.True(found)
 			s.Equal("100", yesVotes.Value)
 
-			noVotes, found := v.GetAttribute("no_votes")
+			noVotes, found := integration.GetAttribute(e, "no_votes")
 			s.True(found)
 			s.Equal("0", noVotes.Value)
 
-			propID, found := v.GetAttribute("proposal_id")
+			propID, found := integration.GetAttribute(e, "proposal_id")
 			s.True(found)
 			s.Equal("0", propID.Value)
 
-			execErr, found := v.GetAttribute("exec_err")
+			execErr, found := integration.GetAttribute(e, "exec_err")
 			s.True(found)
 			s.Equal("<nil>", execErr.Value)
 
-			rejectErr, found := v.GetAttribute("reject_err")
+			rejectErr, found := integration.GetAttribute(e, "reject_err")
 			s.True(found)
 			s.Equal("<nil>", rejectErr.Value)
+
 		}
 	}
 	s.True(foundPropResult)
 
-	balance = s.app.BankKeeper.GetBalance(ctx, randAcc, "stake")
+	balance = s.bankKeeper.GetBalance(ctx, randAcc, "stake")
 	s.Equal(int64(100), balance.Amount.Int64())
 
 	// try to execute again, should fail
@@ -111,9 +114,9 @@ func (s *IntegrationTestSuite) TestSimpleSendProposal() {
 // TestConfigUpdate creates a multisig with 1 member, adds 2 more members and
 // changes the config to require 2/3 majority (also through a proposal).
 func (s *IntegrationTestSuite) TestConfigUpdate() {
-	ctx := sdk.NewContext(s.app.CommitMultiStore(), false, s.app.Logger()).WithHeaderInfo(header.Info{
-		Time: time.Now(),
-	})
+	ctx := s.app.StateLatestContext(s.T())
+
+	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: time.Now()})
 
 	initialMembers := map[string]uint64{
 		s.membersAddr[0]: 100,
@@ -223,35 +226,37 @@ func (s *IntegrationTestSuite) TestConfigUpdate() {
 	err = s.executeProposal(ctx, accountAddr, s.members[0], 1)
 	s.ErrorContains(err, "voting period has not ended yet, and early execution is not enabled")
 
-	headerInfo := ctx.HeaderInfo()
+	headerInfo := integration.HeaderInfoFromContext(ctx)
 	headerInfo.Time = headerInfo.Time.Add(time.Second * 121)
-	ctx = ctx.WithHeaderInfo(headerInfo)
+	ctx = integration.SetHeaderInfo(ctx, headerInfo)
 
 	// now it should work, but the proposal will fail
 	err = s.executeProposal(ctx, accountAddr, s.members[0], 1)
 	s.NoError(err)
 
 	foundPropResult := false
-	for _, v := range ctx.EventManager().Events() {
-		if v.Type == "proposal_tally" {
-			propID, found := v.GetAttribute("proposal_id")
+	events := integration.EventsFromContext(ctx)
+	for _, e := range events {
+		if e.Type == "proposal_tally" {
+			propID, found := integration.GetAttribute(e, "proposal_id")
 			s.True(found)
 
 			if propID.Value == "1" {
 				foundPropResult = true
-				status, found := v.GetAttribute("status")
+				status, found := integration.GetAttribute(e, "status")
 				s.True(found)
 				s.Equal(v1.ProposalStatus_PROPOSAL_STATUS_REJECTED.String(), status.Value)
 
 				// exec_err is nil because the proposal didn't execute
-				execErr, found := v.GetAttribute("exec_err")
+				execErr, found := integration.GetAttribute(e, "exec_err")
 				s.True(found)
 				s.Equal("<nil>", execErr.Value)
 
-				rejectErr, found := v.GetAttribute("reject_err")
+				rejectErr, found := integration.GetAttribute(e, "reject_err")
 				s.True(found)
 				s.Equal("threshold not reached", rejectErr.Value)
 			}
+
 		}
 	}
 	s.True(foundPropResult)

@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/indexer/postgres v0.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241218084712-ca559989da43 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20241219124002-6d12b1df8c2c // main
 	cosmossdk.io/server/v2 v2.0.0-20241218084712-ca559989da43 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
@@ -59,7 +59,7 @@ require (
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
+	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241218084712-ca559989da43 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241218084712-ca559989da43 // indirect; main
@@ -201,7 +201,7 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect

@@ -3,7 +3,6 @@ package multisig
 import (
 	"context"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/router"
@@ -42,7 +41,6 @@ type IntegrationTestSuite struct {
 	suite.Suite
 
 	app *integration.App
-	ctx context.Context
 
 	members     []sdk.AccAddress
 	membersAddr []string
@@ -105,15 +103,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		), depinject.Supply(log.NewNopLogger())),
 		startupCfg,
 		&s.bankKeeper, &s.accountsKeeper, &s.authKeeper, &s.stakingKeeper, &s.distrKeeper)
-	require.NoError(s.T(), err)
-
-	s.ctx = s.app.StateLatestContext(s.T())
+	s.NoError(err)
 
 	s.members = []sdk.AccAddress{}
 	for i := 0; i < 10; i++ {
 		addr := secp256k1.GenPrivKey().PubKey().Address()
 		addrStr, err := s.authKeeper.AddressCodec().BytesToString(addr)
-		require.NoError(s.T(), err)
+		s.NoError(err)
 		s.membersAddr = append(s.membersAddr, addrStr)
 		s.members = append(s.members, sdk.AccAddress(addr))
 	}
@@ -174,7 +170,7 @@ func (s *IntegrationTestSuite) queryAcc(ctx context.Context, req sdk.Msg, accAdd
 }
 
 func (s *IntegrationTestSuite) fundAccount(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) {
-	require.NoError(s.T(), testutil.FundAccount(ctx, s.bankKeeper, addr, amt))
+	s.NoError(testutil.FundAccount(ctx, s.bankKeeper, addr, amt))
 }
 
 // initAccount initializes a multisig account with the given members and powers

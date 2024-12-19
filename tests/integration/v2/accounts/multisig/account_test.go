@@ -25,7 +25,8 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 // TestSimpleSendProposal creates a multisig account with 1 member, sends a tx, votes and executes it.
 func (s *IntegrationTestSuite) TestSimpleSendProposal() {
-	ctx := s.ctx
+	ctx := s.app.StateLatestContext(s.T())
+
 	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: time.Now()})
 
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
@@ -113,7 +114,8 @@ func (s *IntegrationTestSuite) TestSimpleSendProposal() {
 // TestConfigUpdate creates a multisig with 1 member, adds 2 more members and
 // changes the config to require 2/3 majority (also through a proposal).
 func (s *IntegrationTestSuite) TestConfigUpdate() {
-	ctx := s.ctx
+	ctx := s.app.StateLatestContext(s.T())
+
 	ctx = integration.SetHeaderInfo(ctx, header.Info{Time: time.Now()})
 
 	initialMembers := map[string]uint64{

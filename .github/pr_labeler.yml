@@ -69,8 +69,6 @@
   - x/mint/**/*
 "C:x/nft":
   - x/nft/**/*
-"C:x/params":
-  - x/params/**/*
 "C:x/protocolpool":
   - x/protocolpool/**/*
 "C:x/slashing":

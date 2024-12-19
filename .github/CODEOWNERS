@@ -59,7 +59,6 @@
 /x/group/ @kocubinski @akhilkumarpilli @cosmos/sdk-core-dev
 /x/mint/ @lucaslopezf @facundomedica @cosmos/sdk-core-dev
 /x/nft/ @alpe @lucaslopezf @cosmos/sdk-core-dev
-/x/params/ @cosmos/sdk-core-dev # deprecated so whole team
 /x/protocolpool/ @facundomedica @hieuvubk @alpe @cosmos/sdk-core-dev
 /x/simulation/ @cosmos/sdk-core-dev # deprecated so whole team
 /x/slashing/ @testinginprod @raynaudoe @lucaslopezf @cosmos/sdk-core-dev

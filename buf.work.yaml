@@ -14,7 +14,6 @@ directories:
   - x/group/proto
   - x/mint/proto
   - x/nft/proto
-  - x/params/proto
   - x/protocolpool/proto
   - x/slashing/proto
   - x/staking/proto

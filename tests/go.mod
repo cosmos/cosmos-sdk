@@ -272,7 +272,6 @@ replace (
 	cosmossdk.io/x/group => ../x/group
 	cosmossdk.io/x/mint => ../x/mint
 	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/params => ../x/params
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/staking => ../x/staking

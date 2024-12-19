@@ -44,7 +44,6 @@ use (
 	./x/group
 	./x/mint
 	./x/nft
-	./x/params
 	./x/protocolpool
 	./x/slashing
 	./x/staking

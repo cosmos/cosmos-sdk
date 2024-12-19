@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0)
+
+Identical to `v1.0.0-alpha.6`.
+
 ## [v1.0.0-alpha.6](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.6)
 
 ### API Breaking Changes

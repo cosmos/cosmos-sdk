@@ -25,14 +25,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/mint/v0.2.0-rc.1) - 2024-12-18
+
 ### Features
 
 * [#20363](https://github.com/cosmos/cosmos-sdk/pull/20363) Implemented epoched minting, configurable through `MintFn`. Now `MintFn` doesn't do any assumptions on how tokens are minted, users can define their own minting logic. 
 * [#19896](https://github.com/cosmos/cosmos-sdk/pull/19896) Added a new max supply genesis param to existing params.
-
-### Improvements
-
-### Bug Fixes
 
 ### API Breaking Changes
 

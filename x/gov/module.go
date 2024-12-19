@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simsx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -33,7 +32,6 @@ var (
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasInvariants       = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
@@ -113,11 +111,6 @@ func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Comma
 func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	v1.RegisterInterfaces(registrar)
 	v1beta1.RegisterInterfaces(registrar)
-}
-
-// RegisterInvariants registers module invariants
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)
 }
 
 // RegisterServices registers module services.

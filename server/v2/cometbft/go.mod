@@ -9,12 +9,12 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
+	cosmossdk.io/errors/v2 v2.0.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0 //main
-	cosmossdk.io/server/v2 v2.0.0-20241218084712-ca559989da43 // main
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241218084712-ca559989da43 // main
-	cosmossdk.io/server/v2/stf v0.0.0-20241218084712-ca559989da43 // main
+	cosmossdk.io/server/v2 v2.0.0-20241219154748-69025c556666 // main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20241219154748-69025c556666 // main
+	cosmossdk.io/server/v2/stf v0.0.0-20241219154748-69025c556666 // main
 	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
 	cosmossdk.io/x/consensus v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
@@ -142,7 +142,7 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect

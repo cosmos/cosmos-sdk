@@ -192,6 +192,8 @@ func (s UniqueTypeRegistry) Iterator() WeightedProposalMsgIter {
 
 var _ Registry = &UnorderedRegistry{}
 
+// UnorderedRegistry represents a collection of WeightedFactory elements without guaranteed order.
+// It is used to maintain factories coupled with their associated weights for simulation purposes.
 type UnorderedRegistry []WeightedFactory
 
 func NewUnorderedRegistry() *UnorderedRegistry {
@@ -199,6 +201,7 @@ func NewUnorderedRegistry() *UnorderedRegistry {
 	return &r
 }
 
+// Add appends a new WeightedFactory with the provided weight and factory to the UnorderedRegistry.
 func (x *UnorderedRegistry) Add(weight uint32, f SimMsgFactoryX) {
 	if weight == 0 {
 		return

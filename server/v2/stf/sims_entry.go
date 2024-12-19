@@ -9,6 +9,7 @@ import (
 	"iter"
 )
 
+// doSimsTXs constructs a function to simulate transactions in a block execution context using the provided simsBuilder.
 func (s STF[T]) doSimsTXs(simsBuilder func(ctx context.Context) iter.Seq[T]) doInBlockDeliveryFn[T] {
 	return func(
 		exCtx context.Context,

@@ -13,12 +13,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/simsx"
 )
 
+// WeightedValidator represents a validator for usage in the sims runner.
 type WeightedValidator struct {
 	Power   int64
 	Address []byte
 	Offline bool
 }
 
+// Compare determines the order between two WeightedValidator instances.
+// Returns -1 if the caller has higher Power, 1 if it has lower Power, and defaults to comparing their Address bytes.
 func (a WeightedValidator) Compare(b WeightedValidator) int {
 	switch {
 	case a.Power < b.Power:
@@ -35,6 +38,7 @@ func NewValSet() WeightedValidators {
 	return make(WeightedValidators, 0)
 }
 
+// WeightedValidators represents a slice of WeightedValidator, used for managing and processing validator sets.
 type WeightedValidators []WeightedValidator
 
 func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) WeightedValidators {

@@ -85,6 +85,7 @@ func New[T transaction.Tx](
 	}, nil
 }
 
+// DeliverSims entrypoint to processes sims transactions similar to DeliverBlock.
 func (s STF[T]) DeliverSims(
 	ctx context.Context,
 	block *server.BlockRequest[T],
@@ -105,6 +106,7 @@ func (s STF[T]) DeliverBlock(
 	return s.deliverBlock(ctx, block, state, s.doDeliverTXs)
 }
 
+// common code path for DeliverSims and DeliverBlock
 type doInBlockDeliveryFn[T transaction.Tx] func(
 	ctx context.Context,
 	txs []T,

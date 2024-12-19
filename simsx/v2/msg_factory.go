@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simsx"
 )
 
-// NextFactoryFn shuffles and processes a weighted list of factories, returning a selection function for factory objects.
+// NextFactoryFn shuffles and processes a list of weighted factories, returning a selection function for factory objects.
 func NextFactoryFn(factories []simsx.WeightedFactory, r *rand.Rand) func() simsx.SimMsgFactoryX {
 	factCount := len(factories)
 	r.Shuffle(factCount, func(i, j int) {

@@ -131,7 +131,6 @@ func createMessageFromJSON(match *uriMatch, r *http.Request) (gogoproto.Message,
 	}
 
 	return msg, nil
-
 }
 
 // createMessage creates a message from the given uriMatch. If the match has params, the message will be populated

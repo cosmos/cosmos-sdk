@@ -25,4 +25,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/accounts/defaults/base/v0.2.0-rc.1) - 2024-12-18
 
-Inital release of the `x/accounts/defaults/base` module.
+Initial release of the `x/accounts/defaults/base` module.

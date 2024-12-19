@@ -42,9 +42,9 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
-* (server/v2) [#22715](https://github.com/cosmos/cosmos-sdk/pull/22941) Add custom HTTP handler for grpc-gateway that removes the need to manually register grpc-gateway services.
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
 * (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
+* (server/v2) [#22715](https://github.com/cosmos/cosmos-sdk/pull/22941) Add custom HTTP handler for grpc-gateway that removes the need to manually register grpc-gateway services.
 
 ### Improvements
 

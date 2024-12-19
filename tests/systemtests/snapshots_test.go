@@ -12,8 +12,10 @@ import (
 	systest "cosmossdk.io/systemtests"
 )
 
+const disabledLog = "--log_level=disabled"
+
 func TestSnapshots(t *testing.T) {
-	t.Skip("Skip snapshots test, flaky due to pebbledb logs on CI")
+	t.Skip("Not persisting properly on CI")
 
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -38,28 +40,25 @@ func TestSnapshots(t *testing.T) {
 	}
 
 	// export snapshot at height 5
-	res := cli.RunCommandWithArgs(command, "export", "--height=5", fmt.Sprintf("--home=%s", node0Dir))
+	res := cli.RunCommandWithArgs(command, "export", "--height=5", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	require.Contains(t, res, "Snapshot created at height 5")
 	require.DirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", node0Dir))
 
 	// Check snapshots list
-	res = cli.
-		WithRunErrorsIgnored().
-		WithRunSingleOutput(). // pebbledb prints logs to stderr, we cannot override the logger in store/v2 and cosmos-db. This isn't problematic in a real-world scenario, but it makes it hard to test the output.
-		RunCommandWithArgs(command, "list", fmt.Sprintf("--home=%s", node0Dir))
+	res = cli.RunCommandWithArgs(command, "list", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	require.Contains(t, res, "height: 5")
 
 	// Dump snapshot
-	res = cli.RunCommandWithArgs(command, "dump", "5", "3", fmt.Sprintf("--home=%s", node0Dir), fmt.Sprintf("--output=%s/5-3.tar.gz", node0Dir))
+	res = cli.RunCommandWithArgs(command, "dump", "5", "3", fmt.Sprintf("--home=%s", node0Dir), fmt.Sprintf("--output=%s/5-3.tar.gz", node0Dir), disabledLog)
 	// Check if output file exist
 	require.FileExists(t, fmt.Sprintf("%s/5-3.tar.gz", node0Dir))
 
 	// Delete snapshots
-	res = cli.RunCommandWithArgs(command, "delete", "5", "3", fmt.Sprintf("--home=%s", node0Dir))
+	res = cli.RunCommandWithArgs(command, "delete", "5", "3", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	require.NoDirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", node0Dir))
 
 	// Load snapshot from file
-	res = cli.RunCommandWithArgs(command, "load", fmt.Sprintf("%s/5-3.tar.gz", node0Dir), fmt.Sprintf("--home=%s", node0Dir))
+	res = cli.RunCommandWithArgs(command, "load", fmt.Sprintf("%s/5-3.tar.gz", node0Dir), fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	require.DirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", node0Dir))
 
 	// Restore from snapshots
@@ -73,14 +72,14 @@ func TestSnapshots(t *testing.T) {
 		require.NoError(t, os.RemoveAll(fmt.Sprintf("%s/data/ss", node0Dir)))
 	}
 
-	res = cli.RunCommandWithArgs(command, "restore", "5", "3", fmt.Sprintf("--home=%s", node0Dir))
+	res = cli.RunCommandWithArgs(command, "restore", "5", "3", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	for _, dir := range restoreableDirs {
 		require.DirExists(t, dir)
 	}
 }
 
 func TestPrune(t *testing.T) {
-	t.Skip("Skip snapshots test, flaky due to pebbledb logs on CI")
+	t.Skip("Not persisting properly on CI")
 
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -102,6 +101,6 @@ func TestPrune(t *testing.T) {
 	} else {
 		command = []string{"prune", "everything"}
 	}
-	res := cli.RunCommandWithArgs(append(command, fmt.Sprintf("--home=%s", node0Dir))...)
+	res := cli.RunCommandWithArgs(append(command, fmt.Sprintf("--home=%s", node0Dir), disabledLog)...)
 	require.Contains(t, res, "successfully pruned the application root multi stores")
 }

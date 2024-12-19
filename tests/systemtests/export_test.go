@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,6 +43,7 @@ func TestChainExportImport(t *testing.T) {
 	})
 	systest.Sut.StartChain(t)
 	systest.Sut.AwaitNBlocks(t, 2)
+	systest.Sut.StopChain()
 }
 
 func TestExportCmd_WithHeight(t *testing.T) {
@@ -62,22 +62,16 @@ func TestExportCmd_WithHeight(t *testing.T) {
 		args          []string
 		expZeroHeight bool
 	}{
-		{"should export correct height", []string{"genesis", "export", "--home", systest.Sut.NodeDir(0), "--log_level=disabled"}, false},
-		{"should export correct height with --height", []string{"genesis", "export", "--height=5", "--home", systest.Sut.NodeDir(0), "--log_level=disabled"}, false},
-		{"should export height 0 with --for-zero-height", []string{"genesis", "export", "--for-zero-height=true", "--home", systest.Sut.NodeDir(0), "--log_level=disabled"}, true},
+		{"should export correct height", []string{"genesis", "export", "--home", systest.Sut.NodeDir(0), disabledLog}, false},
+		{"should export correct height with --height", []string{"genesis", "export", "--height=5", "--home", systest.Sut.NodeDir(0), disabledLog}, false},
+		{"should export height 0 with --for-zero-height", []string{"genesis", "export", "--for-zero-height=true", "--home", systest.Sut.NodeDir(0), disabledLog}, true},
 	}
 
 	for _, tc := range testCases {
-		res := cli.RunCommandWithArgs(tc.args...)
-		// PebbleDB logs are printed directly to stderr.
-		// Cosmos-DB and Store/v2 do not provide a way to override the logger.
-		// This isn't problematic in a real-world scenario, but it makes it hard to test the output.
-		// https://github.com/cockroachdb/pebble/blob/v1.1.2/internal/base/logger.go#L26-L40
-		// We trim the output to get the JSON part only
-		if i := strings.Index(res, "{"); i > 0 {
-			res = res[i:]
-		}
-
+		res := cli.
+			WithRunErrorsIgnored().
+			WithRunSingleOutput(). // pebbledb prints logs to stderr, we cannot override the logger in store/v2 and cosmos-db. This isn't problematic in a real-world scenario, but it makes it hard to test the output
+			RunCommandWithArgs(tc.args...)
 		height := gjson.Get(res, "initial_height").Int()
 		if tc.expZeroHeight {
 			require.Equal(t, height, int64(0))

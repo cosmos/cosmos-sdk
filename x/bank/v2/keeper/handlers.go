@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"errors"
 	"fmt"
 
@@ -25,7 +26,20 @@ func NewHandlers(k *Keeper) handlers {
 	return handlers{k}
 }
 
-// UpdateParams updates the parameters of the bank/v2 module.
+// RegisterMsgHandlers registers the message handlers to the router.
+func (h handlers) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
+	appmodulev2.RegisterMsgHandler(router, h.MsgUpdateParams)
+	appmodulev2.RegisterMsgHandler(router, h.MsgSend)
+	appmodulev2.RegisterMsgHandler(router, h.MsgMint)
+}
+
+// RegisterQueryHandlers registers the query handlers to the router.
+func (h handlers) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
+	appmodulev2.RegisterMsgHandler(router, h.QueryParams)
+	appmodulev2.RegisterMsgHandler(router, h.QueryBalance)
+}
+
+// MsgUpdateParams updates the parameters of the bank/v2 module.
 func (h handlers) MsgUpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
 	if err != nil {

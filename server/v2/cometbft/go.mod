@@ -22,9 +22,9 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
 	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1
-	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/store/v2 v2.0.0-beta.1
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0

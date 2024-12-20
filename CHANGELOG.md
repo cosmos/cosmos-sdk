@@ -47,6 +47,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recusion limits.
+
 ### Bug Fixes
 
 ### API Breaking Changes

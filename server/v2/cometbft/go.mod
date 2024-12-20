@@ -12,10 +12,10 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0 //main
-	cosmossdk.io/server/v2 v2.0.0-20241219154748-69025c556666 // main
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241219154748-69025c556666 // main
-	cosmossdk.io/server/v2/stf v0.0.0-20241219154748-69025c556666 // main
-	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
+	cosmossdk.io/server/v2 v2.0.0-20241220083032-422be7044259 // main
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 // main
+	cosmossdk.io/server/v2/stf v1.0.0-beta.1 // main
+	cosmossdk.io/store/v2 v2.0.0-beta.1 // main
 	cosmossdk.io/x/consensus v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0

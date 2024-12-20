@@ -9,11 +9,9 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
 	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/tx v1.0.0-alpha.3
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
@@ -34,8 +32,8 @@ require (
 require (
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/stf v1.0.0-beta.1
+	cosmossdk.io/store/v2 v2.0.0-beta.1
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
@@ -71,11 +69,8 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.6 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
-	cosmossdk.io/indexer/postgres v0.1.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -159,10 +154,6 @@ require (
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.7.1 // indirect
-	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
@@ -281,8 +272,6 @@ replace (
 
 // Below are the long-lived replace for tests.
 replace (
-	// We always want to test against the latest version of the simapp.
-	cosmossdk.io/simapp => ../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

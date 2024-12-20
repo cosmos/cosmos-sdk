@@ -5,8 +5,6 @@
 # Warning: make init-simapp will remove all data in simapp home directory
 #? init-simapp: Initializes a single local node network
 init-simapp:
-	./scripts/init-simapp.sh
-init-simapp-v2:
 	./scripts/init-simapp-v2.sh
 
 #? test: Run `make test-unit`

@@ -102,11 +102,11 @@ Module Dependencies are the modules that an application may depend on and which 
 | cosmossdk.io/x/group        | 0.2.z | 0.2.z  | X      |
 | cosmossdk.io/x/mint         | 0.2.z | 0.2.z  | X      |
 | cosmossdk.io/x/nft          | 0.2.z | 0.2.z  | 0.1.z  |
+| cosmossdk.io/x/params       | N/A   | 0.2.z  | X      |
 | cosmossdk.io/x/protocolpool | 0.2.z | 0.2.z  | N/A    |
 | cosmossdk.io/x/slashing     | 0.2.z | 0.2.z  | X      |
 | cosmossdk.io/x/staking      | 0.2.z | 0.2.z  | X      |
 | cosmossdk.io/x/upgrade      | 0.2.z | 0.2.z  | 0.1.z  |
-| cosmossdk.io/x/params       | N/A   | 0.2.z  | X      |
 
 ## Disambiguation
 

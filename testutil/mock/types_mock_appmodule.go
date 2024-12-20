@@ -154,7 +154,6 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).Name))
 }
 
-
 // RegisterServices mocks base method.
 func (m *MockAppModuleWithAllExtensions) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()

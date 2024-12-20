@@ -40,7 +40,7 @@ on behalf of one account to other accounts. The design is defined in the [ADR 03
 A *grant* is an allowance to execute a Msg by the grantee on behalf of the granter.
 Authorization is an interface that must be implemented by a concrete authorization logic to validate and execute grants. Authorizations are extensible and can be defined for any Msg service method, even if the Msg method is defined outside of the module. See the `SendAuthorization` example in the next section for more details.
 
-**Note:** The authz module is different from the [auth (authentication)](../modules/auth/) module, which is responsible for specifying the base transaction and account types.
+**Note:** The authz module is different from the [auth (authentication)](../auth/) module, which is responsible for specifying the base transaction and account types.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/authorizations.go#L14-L28

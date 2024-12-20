@@ -22,10 +22,6 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-### Features
+## [v1.0.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/server/v2/cometbft%2Fv1.0.0-beta.1)
 
-* [#22715](https://github.com/cosmos/cosmos-sdk/pull/22941) Add custom HTTP handler for grpc-gateway that removes the need to manually register grpc-gateway services.
-
-## [v2.0.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/server/v2.0.0-beta.1)
-
-Initial tag of `cosmossdk.io/server/v2`.
+Initial tag of `cosmossdk.io/server/v2/cometbft`.

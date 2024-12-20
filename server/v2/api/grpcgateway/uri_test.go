@@ -212,6 +212,7 @@ func TestCreateMessageFromJson(t *testing.T) {
 		uri      uriMatch
 		request  func() *http.Request
 		expected gogoproto.Message
+		expErr   bool
 	}{
 		{
 			name: "simple, empty message",
@@ -240,12 +241,24 @@ func TestCreateMessageFromJson(t *testing.T) {
 				Baz: 320,
 			},
 		},
+		{
+			name: "message with invalid json",
+			uri:  uriMatch{QueryInputName: dummyProtoName},
+			request: func() *http.Request {
+				return &http.Request{Body: io.NopCloser(bytes.NewReader([]byte(`{"foo":12,dfi3}"`)))}
+			},
+			expErr: true,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			actual, err := createMessageFromJSON(&tc.uri, tc.request())
-			require.NoError(t, err)
-			require.Equal(t, tc.expected, actual)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, actual)
+			}
 		})
 	}
 }

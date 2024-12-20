@@ -12,9 +12,9 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241219154748-69025c556666 // main
-	cosmossdk.io/server/v2 v2.0.0-20241219154748-69025c556666 // main
+	cosmossdk.io/server/v2 v2.0.0-20241220083032-422be7044259 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20241216193553-ee5da1a70d7a // main
+	cosmossdk.io/store/v2 v2.0.0-beta.1 // main
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
 	cosmossdk.io/tools/confix v0.2.0-rc.1
 	cosmossdk.io/x/accounts v0.2.0-rc.1
@@ -61,8 +61,8 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241219154748-69025c556666 // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20241219154748-69025c556666 // indirect; main
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 // indirect; main
+	cosmossdk.io/server/v2/stf v1.0.0-beta.1 // indirect; main
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect; main
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect

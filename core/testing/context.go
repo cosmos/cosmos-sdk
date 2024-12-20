@@ -15,10 +15,19 @@ func Context() context.Context {
 		stores:      map[string]store.KVStore{},
 		events:      map[string][]event.Event{},
 		protoEvents: map[string][]transaction.Msg{},
+		header:      header.Info{},
 	}
 
 	ctx := context.WithValue(context.Background(), dummyKey{}, dummy)
 	return ctx
+}
+
+// WithHeader sets the header on a testing ctx and returns the updated ctx.
+func WithHeader(ctx context.Context, info header.Info) context.Context {
+	dummy := unwrap(ctx)
+	dummy.header = info
+
+	return context.WithValue(ctx, dummyKey{}, dummy)
 }
 
 type dummyCtx struct {

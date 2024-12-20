@@ -6,8 +6,14 @@ import (
 )
 
 func TestKVStoreService(t *testing.T) {
-	ctx, env := SetupTestEnvironment("bank", nil, nil)
-	svc1 := env.KVStoreService
+	cfg := TestEnvironmentConfig{
+		ModuleName:  "bank",
+		Logger:      nil,
+		MsgRouter:   nil,
+		QueryRouter: nil,
+	}
+	ctx, env := NewTestEnvironment(cfg)
+	svc1 := env.KVStoreService()
 
 	// must panic
 	t.Run("must panic on invalid ctx", func(t *testing.T) {

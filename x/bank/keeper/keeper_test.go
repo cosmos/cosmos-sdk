@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/bank/keeper"
@@ -27,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -112,12 +112,13 @@ func addIBCMetadata(ctx context.Context, k keeper.BaseKeeper) {
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx        context.Context
+	ctx        coretesting.TestContext
+	env        coretesting.TestEnvironment
 	bankKeeper keeper.BaseKeeper
 	addrCdc    address.Codec
 	authKeeper *banktestutil.MockAccountKeeper
 
-	queryClient banktypes.QueryClient
+	queryClient banktypes.QueryServer
 	msgServer   banktypes.MsgServer
 
 	encCfg moduletestutil.TestEncodingConfig
@@ -128,12 +129,22 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	//key := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	//testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	//ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	testEnironmentConfig := coretesting.TestEnvironmentConfig{
+		ModuleName:  banktypes.ModuleName,
+		Logger:      log.NewNopLogger(),
+		MsgRouter:   nil,
+		QueryRouter: nil,
+	}
+
+	newCtx, newEnv := coretesting.NewTestEnvironment(testEnironmentConfig)
+	newCtx = newCtx.WithHeaderInfo(header.Info{Time: time.Now()})
+	// env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	ctx := newCtx
 
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addr, err := ac.BytesToString(accAddrs[4])
@@ -145,11 +156,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctrl := gomock.NewController(suite.T())
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 	authKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
-	suite.ctx = ctx
+	suite.ctx = newCtx
 	suite.authKeeper = authKeeper
 	suite.addrCdc = ac
 	suite.bankKeeper = keeper.NewBaseKeeper(
-		env,
+		newEnv.Environment(),
 		encCfg.Codec,
 		suite.authKeeper,
 		map[string]bool{addr: true},
@@ -162,13 +173,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
-	queryClient := banktypes.NewQueryClient(queryHelper)
+	queryServer := keeper.NewQuerier(&suite.bankKeeper)
 
-	suite.queryClient = queryClient
+	suite.queryClient = queryServer
 	suite.msgServer = keeper.NewMsgServerImpl(suite.bankKeeper)
 	suite.encCfg = encCfg
+	suite.env = newEnv
 }
 
 func (suite *KeeperTestSuite) mockQueryClient(ctx sdk.Context) banktypes.QueryClient {
@@ -1403,7 +1413,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 }
 
 func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	require := suite.Require()
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
@@ -1431,7 +1441,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
 	require.Error(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
-	events := ctx.EventManager().ABCIEvents()
+	events := suite.env.MemEventsService().GetEvents(suite.ctx)
 	require.Equal(0, len(events))
 
 	// Set addr's coins but not accAddrs[1]'s coins
@@ -1441,7 +1451,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
-	events = ctx.EventManager().ABCIEvents()
+	events = suite.env.MemEventsService().GetEvents(suite.ctx)
 	require.Equal(10, len(events)) // 10 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	// Set addr's coins and accAddrs[1]'s coins
@@ -1456,7 +1466,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
-	events = ctx.EventManager().ABCIEvents()
+	events = suite.env.MemEventsService().GetEvents(suite.ctx)
 	require.Equal(25, len(events)) // 25 due to account funding + coin_spent + coin_recv events
 
 	event1 := coreevent.Event{
@@ -1485,21 +1495,29 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.Equal(event1.Type, events[22].Type)
 	attrs1, err := event1.Attributes()
 	require.NoError(err)
+
+	attrs, err := events[22].Attributes()
+	require.NoError(err)
+
 	for i := range attrs1 {
-		require.Equal(attrs1[i].Key, events[22].Attributes[i].Key)
-		require.Equal(attrs1[i].Value, events[22].Attributes[i].Value)
+		require.Equal(attrs1[i].Key, attrs[i].Key)
+		require.Equal(attrs1[i].Value, attrs[i].Value)
 	}
 	require.Equal(event2.Type, events[24].Type)
 	attrs2, err := event2.Attributes()
 	require.NoError(err)
+
+	attrs, err = events[24].Attributes()
+	require.NoError(err)
+
 	for i := range attrs2 {
-		require.Equal(attrs2[i].Key, events[24].Attributes[i].Key)
-		require.Equal(attrs2[i].Value, events[24].Attributes[i].Value)
+		require.Equal(attrs2[i].Key, attrs[i].Key)
+		require.Equal(attrs2[i].Value, attrs[i].Value)
 	}
 }
 
 func (suite *KeeperTestSuite) TestSpendableCoins() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	require := suite.Require()
 	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -1539,7 +1557,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 	suite.Require().NoError(err)
 
 	// Go back to the suite's context since mockFundAccount uses that; FundAccount would fail for bad mocking otherwise.
-	ctx = sdk.UnwrapSDKContext(suite.ctx)
+	ctx = suite.ctx
 	suite.mockFundAccount(accAddrs[2])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[2], balanceCoins2))
 	suite.mockSpendableCoins(ctx, vacc2)
@@ -1691,7 +1709,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 }
 
 func (suite *KeeperTestSuite) TestDelegateCoins() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	require := suite.Require()
 	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -1701,7 +1719,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.HeaderInfo().Time.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, suite.env.HeaderService().HeaderInfo(suite.ctx).Time.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])
@@ -1917,34 +1935,36 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 
 	balances := make(map[string]sdk.Coins)
 
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	events := suite.env.MemEventsService().GetEvents(suite.ctx)
 
-	for _, e := range ctx.EventManager().ABCIEvents() {
+	for _, e := range events {
+		attributes, err := e.Attributes()
+		suite.Require().NoError(err)
 		switch e.Type {
 		case banktypes.EventTypeCoinBurn:
-			burnedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
+			burnedCoins, err := sdk.ParseCoinsNormalized(attributes[1].Value)
 			require.NoError(err)
 			supply = supply.Sub(burnedCoins...)
 
 		case banktypes.EventTypeCoinMint:
-			mintedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
+			mintedCoins, err := sdk.ParseCoinsNormalized(attributes[1].Value)
 			require.NoError(err)
 			supply = supply.Add(mintedCoins...)
 
 		case banktypes.EventTypeCoinSpent:
-			coinsSpent, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
+			coinsSpent, err := sdk.ParseCoinsNormalized(attributes[1].Value)
 			require.NoError(err)
-			_, err = suite.addrCdc.StringToBytes(e.Attributes[0].Value)
+			_, err = suite.addrCdc.StringToBytes(attributes[0].Value)
 			require.NoError(err)
 
-			balances[e.Attributes[0].Value] = balances[e.Attributes[0].Value].Sub(coinsSpent...)
+			balances[attributes[0].Value] = balances[attributes[0].Value].Sub(coinsSpent...)
 
 		case banktypes.EventTypeCoinReceived:
-			coinsRecv, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
+			coinsRecv, err := sdk.ParseCoinsNormalized(attributes[1].Value)
 			require.NoError(err)
-			_, err = suite.addrCdc.StringToBytes(e.Attributes[0].Value)
+			_, err = suite.addrCdc.StringToBytes(attributes[0].Value)
 			require.NoError(err)
-			balances[e.Attributes[0].Value] = balances[e.Attributes[0].Value].Add(coinsRecv...)
+			balances[attributes[0].Value] = balances[attributes[0].Value].Add(coinsRecv...)
 		}
 	}
 

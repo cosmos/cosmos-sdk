@@ -173,7 +173,10 @@ require (
 	golang.org/x/arch v0.12.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ../../.
+replace (
+	cosmossdk.io/core/testing => ../../core/testing
+	github.com/cosmos/cosmos-sdk => ../../.
+)
 
 // TODO remove post spinning out all modules
 replace cosmossdk.io/x/staking => ../staking

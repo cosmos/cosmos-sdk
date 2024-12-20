@@ -2,22 +2,60 @@ package coretesting
 
 import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/store"
 )
 
-func SetupTestEnvironment(moduleName string, msgRouter, queryRouter router.Service) (TestContext, appmodulev2.Environment) {
+type TestEnvironmentConfig struct {
+	ModuleName  string
+	Logger      corelog.Logger
+	MsgRouter   router.Service
+	QueryRouter router.Service
+}
+
+type TestEnvironment struct {
+	env              appmodulev2.Environment
+	memEventsService MemEventsService
+	memHeaderService MemHeaderService
+}
+
+func NewTestEnvironment(cfg TestEnvironmentConfig) (TestContext, TestEnvironment) {
 	ctx := Context()
 
-	return ctx, appmodulev2.Environment{
-		Logger:             nil,
-		BranchService:      nil,
-		EventService:       EventsService(ctx, moduleName),
-		GasService:         MemGasService{},
-		HeaderService:      MemHeaderService{},
-		QueryRouterService: queryRouter,
-		MsgRouterService:   msgRouter,
-		TransactionService: MemTransactionService{},
-		KVStoreService:     KVStoreService(ctx, moduleName),
-		MemStoreService:    nil,
+	memEventService := EventsService(ctx, cfg.ModuleName)
+	memHeaderService := MemHeaderService{}
+
+	return ctx, TestEnvironment{
+		env: appmodulev2.Environment{
+			Logger:             cfg.Logger,
+			BranchService:      nil,
+			EventService:       memEventService,
+			GasService:         MemGasService{},
+			HeaderService:      memHeaderService,
+			QueryRouterService: cfg.QueryRouter,
+			MsgRouterService:   cfg.MsgRouter,
+			TransactionService: MemTransactionService{},
+			KVStoreService:     KVStoreService(ctx, cfg.ModuleName),
+			MemStoreService:    nil,
+		},
+		memEventsService: memEventService,
+		memHeaderService: memHeaderService,
 	}
+}
+
+func (env TestEnvironment) MemEventsService() MemEventsService {
+	return env.memEventsService
+}
+
+func (env TestEnvironment) Environment() appmodulev2.Environment {
+	return env.env
+}
+
+func (env TestEnvironment) KVStoreService() store.KVStoreService {
+	return env.env.KVStoreService
+}
+
+func (env TestEnvironment) HeaderService() MemHeaderService {
+	return env.memHeaderService
 }

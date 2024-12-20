@@ -760,7 +760,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 
 	for name, tc := range testCases {
 		suite.Run(name, func() {
-			resp, err := suite.queryClient.DenomOwners(gocontext.Background(), tc.req)
+			resp, err := suite.queryClient.DenomOwners(suite.ctx, tc.req)
 			if tc.expPass {
 				suite.NoError(err)
 				suite.NotNil(resp)
@@ -998,7 +998,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
 
 	for name, tc := range testCases {
 		suite.Run(name, func() {
-			resp, err := suite.queryClient.DenomOwnersByQuery(gocontext.Background(), tc.req)
+			resp, err := suite.queryClient.DenomOwnersByQuery(suite.ctx, tc.req)
 			if tc.expPass {
 				suite.NoError(err)
 				suite.NotNil(resp)

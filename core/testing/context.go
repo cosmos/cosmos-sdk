@@ -49,8 +49,8 @@ func (t TestContext) Value(key any) any {
 	return t.ctx.Value(key)
 }
 
-// WithHeader sets the header on a testing ctx and returns the updated ctx.
-func (t TestContext) WithHeader(info header.Info) TestContext {
+// WithHeaderInfo sets the header on a testing ctx and returns the updated ctx.
+func (t TestContext) WithHeaderInfo(info header.Info) TestContext {
 	dummy := unwrap(t.ctx)
 	dummy.header = info
 

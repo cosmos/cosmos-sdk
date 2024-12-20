@@ -1,9 +1,9 @@
 package grpcgateway
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/stf"
 )
 
 var _ http.Handler = &gatewayInterceptor[transaction.Tx]{}
@@ -95,7 +94,7 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 	query, err := g.appManager.Query(request.Context(), height, msg)
 	if err != nil {
 		// if we couldn't find a handler for this request, just fall back to the gateway mux.
-		if errors.Is(err, stf.ErrNoHandler) {
+		if strings.Contains(err.Error(), "no handler") {
 			g.gateway.ServeHTTP(writer, request)
 		} else {
 			// for all other errors, we just return the error.

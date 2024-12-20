@@ -1,13 +1,12 @@
 package v2
 
 import (
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	"math/rand"
 	"slices"
 	"time"
 
 	"cosmossdk.io/core/comet"
-
-	"github.com/cosmos/cosmos-sdk/simsx"
 )
 
 type historicValSet struct {
@@ -54,7 +53,7 @@ func (h *ValSetHistory) MissBehaviour(r *rand.Rand) []comet.Evidence {
 		return nil
 	}
 	n := r.Intn(len(h.vals))
-	badVal := simsx.OneOf(r, h.vals[n].vals)
+	badVal := common.OneOf(r, h.vals[n].vals)
 	evidence := comet.Evidence{
 		Type:             comet.DuplicateVote,
 		Validator:        comet.Validator{Address: badVal.Address, Power: badVal.Power},

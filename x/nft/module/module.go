@@ -3,7 +3,7 @@ package module
 import (
 	"context"
 	"encoding/json"
-
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
@@ -17,7 +17,6 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -131,6 +130,6 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+func (am AppModule) WeightedOperationsX(weights common.WeightSource, reg common.Registry) {
 	reg.Add(weights.Get("msg_send", 100), simulation.MsgSendFactory(am.keeper))
 }

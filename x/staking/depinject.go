@@ -2,6 +2,7 @@ package staking
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	"maps"
 	"slices"
 	"sort"
@@ -17,7 +18,6 @@ import (
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -137,12 +137,12 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
 // ProposalMsgsX returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+func (AppModule) ProposalMsgsX(weights common.WeightSource, reg common.Registry) {
 	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
 }
 
 // WeightedOperationsX returns the all the staking module operations with their respective weights.
-func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+func (am AppModule) WeightedOperationsX(weights common.WeightSource, reg common.Registry) {
 	reg.Add(weights.Get("msg_create_validator", 100), simulation.MsgCreateValidatorFactory(am.keeper))
 	reg.Add(weights.Get("msg_delegate", 100), simulation.MsgDelegateFactory(am.keeper))
 	reg.Add(weights.Get("msg_undelegate", 100), simulation.MsgUndelegateFactory(am.keeper))

@@ -3,13 +3,13 @@ package v2
 import (
 	"context"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	"math/rand"
 
 	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -24,8 +24,8 @@ type Tx = transaction.Tx
 type TXBuilder[T Tx] interface {
 	// Build creates a signed transaction
 	Build(ctx context.Context,
-		ak simsx.AccountSource,
-		senders []simsx.SimAccount,
+		ak common.AccountSource,
+		senders []common.SimAccount,
 		msg sdk.Msg,
 		r *rand.Rand,
 		chainID string,
@@ -35,15 +35,15 @@ type TXBuilder[T Tx] interface {
 var _ TXBuilder[Tx] = TXBuilderFn[Tx](nil)
 
 // TXBuilderFn adapter that implements the TXBuilder interface
-type TXBuilderFn[T Tx] func(ctx context.Context, ak simsx.AccountSource, senders []simsx.SimAccount, msg sdk.Msg, r *rand.Rand, chainID string) (T, error)
+type TXBuilderFn[T Tx] func(ctx context.Context, ak common.AccountSource, senders []common.SimAccount, msg sdk.Msg, r *rand.Rand, chainID string) (T, error)
 
-func (b TXBuilderFn[T]) Build(ctx context.Context, ak simsx.AccountSource, senders []simsx.SimAccount, msg sdk.Msg, r *rand.Rand, chainID string) (T, error) {
+func (b TXBuilderFn[T]) Build(ctx context.Context, ak common.AccountSource, senders []common.SimAccount, msg sdk.Msg, r *rand.Rand, chainID string) (T, error) {
 	return b(ctx, ak, senders, msg, r, chainID)
 }
 
 // NewSDKTXBuilder constructor to create a signed transaction builder for sdk.Tx type.
 func NewSDKTXBuilder[T Tx](txConfig client.TxConfig, defaultGas uint64) TXBuilder[T] {
-	return TXBuilderFn[T](func(ctx context.Context, ak simsx.AccountSource, senders []simsx.SimAccount, msg sdk.Msg, r *rand.Rand, chainID string) (tx T, err error) {
+	return TXBuilderFn[T](func(ctx context.Context, ak common.AccountSource, senders []common.SimAccount, msg sdk.Msg, r *rand.Rand, chainID string) (tx T, err error) {
 		accountNumbers := make([]uint64, len(senders))
 		sequenceNumbers := make([]uint64, len(senders))
 		for i := 0; i < len(senders); i++ {
@@ -61,7 +61,7 @@ func NewSDKTXBuilder[T Tx](txConfig client.TxConfig, defaultGas uint64) TXBuilde
 			chainID,
 			accountNumbers,
 			sequenceNumbers,
-			simsx.Collect(senders, func(a simsx.SimAccount) cryptotypes.PrivKey { return a.PrivKey })...,
+			common.Collect(senders, func(a common.SimAccount) cryptotypes.PrivKey { return a.PrivKey })...,
 		)
 		if err != nil {
 			return tx, err

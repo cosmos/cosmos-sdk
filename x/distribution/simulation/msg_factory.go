@@ -3,17 +3,17 @@ package simulation
 import (
 	"context"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	"github.com/cosmos/cosmos-sdk/simsx/module"
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
-
-	"github.com/cosmos/cosmos-sdk/simsx"
 )
 
-func MsgSetWithdrawAddressFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgSetWithdrawAddress] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgSetWithdrawAddress) {
+func MsgSetWithdrawAddressFactory(k keeper.Keeper) module.SimMsgFactoryFn[*types.MsgSetWithdrawAddress] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgSetWithdrawAddress) {
 		switch enabled, err := k.GetWithdrawAddrEnabled(ctx); {
 		case err != nil:
 			reporter.Skip("error getting params")
@@ -23,14 +23,14 @@ func MsgSetWithdrawAddressFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*types.
 			return nil, nil
 		}
 		delegator := testData.AnyAccount(reporter)
-		withdrawer := testData.AnyAccount(reporter, simsx.ExcludeAccounts(delegator))
+		withdrawer := testData.AnyAccount(reporter, common.ExcludeAccounts(delegator))
 		msg := types.NewMsgSetWithdrawAddress(delegator.AddressBech32, withdrawer.AddressBech32)
-		return []simsx.SimAccount{delegator}, msg
+		return []common.SimAccount{delegator}, msg
 	}
 }
 
-func MsgWithdrawDelegatorRewardFactory(k keeper.Keeper, sk types.StakingKeeper) simsx.SimMsgFactoryFn[*types.MsgWithdrawDelegatorReward] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgWithdrawDelegatorReward) {
+func MsgWithdrawDelegatorRewardFactory(k keeper.Keeper, sk types.StakingKeeper) module.SimMsgFactoryFn[*types.MsgWithdrawDelegatorReward] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgWithdrawDelegatorReward) {
 		delegator := testData.AnyAccount(reporter)
 
 		delegations, err := sk.GetAllDelegatorDelegations(ctx, delegator.Address)
@@ -76,18 +76,18 @@ func MsgWithdrawDelegatorRewardFactory(k keeper.Keeper, sk types.StakingKeeper) 
 		}
 
 		msg := types.NewMsgWithdrawDelegatorReward(delegator.AddressBech32, valOper)
-		return []simsx.SimAccount{delegator}, msg
+		return []common.SimAccount{delegator}, msg
 	}
 }
 
-func MsgWithdrawValidatorCommissionFactory(k keeper.Keeper, sk types.StakingKeeper) simsx.SimMsgFactoryFn[*types.MsgWithdrawValidatorCommission] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgWithdrawValidatorCommission) {
+func MsgWithdrawValidatorCommissionFactory(k keeper.Keeper, sk types.StakingKeeper) module.SimMsgFactoryFn[*types.MsgWithdrawValidatorCommission] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgWithdrawValidatorCommission) {
 		allVals, err := sk.GetAllValidators(ctx)
 		if err != nil {
 			reporter.Skip(err.Error())
 			return nil, nil
 		}
-		val := simsx.OneOf(testData.Rand(), allVals)
+		val := common.OneOf(testData.Rand(), allVals)
 		valAddrBz, err := sk.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 		if err != nil {
 			reporter.Skip(err.Error())
@@ -106,12 +106,12 @@ func MsgWithdrawValidatorCommissionFactory(k keeper.Keeper, sk types.StakingKeep
 		}
 		msg := types.NewMsgWithdrawValidatorCommission(val.GetOperator())
 		valAccount := testData.GetAccountbyAccAddr(reporter, valAddrBz)
-		return []simsx.SimAccount{valAccount}, msg
+		return []common.SimAccount{valAccount}, msg
 	}
 }
 
-func MsgUpdateParamsFactory() simsx.SimMsgFactoryFn[*types.MsgUpdateParams] {
-	return func(_ context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgUpdateParams) {
+func MsgUpdateParamsFactory() module.SimMsgFactoryFn[*types.MsgUpdateParams] {
+	return func(_ context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgUpdateParams) {
 		r := testData.Rand()
 		params := types.DefaultParams()
 		params.CommunityTax = r.DecN(sdkmath.LegacyNewDec(1))

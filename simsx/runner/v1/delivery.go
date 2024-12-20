@@ -1,9 +1,10 @@
-package simsx
+package v1
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,12 +18,7 @@ type (
 	// AppEntrypoint is an alias to the simtype interface
 	AppEntrypoint = simtypes.AppEntrypoint
 
-	AccountSource interface {
-		GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	}
-	// SimDeliveryResultHandler processes the delivery response error. Some sims are supposed to fail and expect an error.
-	// An unhandled error returned indicates a failure
-	SimDeliveryResultHandler func(error) error
+	AccountSource = common.AccountSource
 )
 
 // DeliverSimsMsg delivers a simulation message by creating and signing a mock transaction,
@@ -44,22 +40,22 @@ type (
 // of the delivery.
 func DeliverSimsMsg(
 	ctx context.Context,
-	reporter SimulationReporter,
+	reporter common.SimulationReporterRuntime,
 	app AppEntrypoint,
 	r *rand.Rand,
 	txGen client.TxConfig,
 	ak AccountSource,
 	chainID string,
 	msg sdk.Msg,
-	deliveryResultHandler SimDeliveryResultHandler,
-	senders ...SimAccount,
+	deliveryResultHandler common.SimDeliveryResultHandler,
+	senders ...common.SimAccount,
 ) simtypes.OperationMsg {
-	if reporter.IsSkipped() {
-		return reporter.ToLegacyOperationMsg()
+	if reporter.IsAborted() {
+		return toLegacyOperationMsg(reporter)
 	}
 	if len(senders) == 0 {
 		reporter.Fail(errors.New("no senders"), "encoding TX")
-		return reporter.ToLegacyOperationMsg()
+		return toLegacyOperationMsg(reporter)
 	}
 	accountNumbers := make([]uint64, len(senders))
 	sequenceNumbers := make([]uint64, len(senders))
@@ -78,11 +74,11 @@ func DeliverSimsMsg(
 		chainID,
 		accountNumbers,
 		sequenceNumbers,
-		Collect(senders, func(a SimAccount) cryptotypes.PrivKey { return a.PrivKey })...,
+		common.Collect(senders, func(a common.SimAccount) cryptotypes.PrivKey { return a.PrivKey })...,
 	)
 	if err != nil {
 		reporter.Fail(err, "encoding TX")
-		return reporter.ToLegacyOperationMsg()
+		return toLegacyOperationMsg(reporter)
 	}
 	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err2 := deliveryResultHandler(err); err2 != nil {
@@ -91,8 +87,26 @@ func DeliverSimsMsg(
 			comment += fmt.Sprintf("%#v", msg)
 		}
 		reporter.Fail(err2, fmt.Sprintf("delivering tx with msgs: %s", comment))
-		return reporter.ToLegacyOperationMsg()
+		return toLegacyOperationMsg(reporter)
 	}
 	reporter.Success(msg)
-	return reporter.ToLegacyOperationMsg()
+	return toLegacyOperationMsg(reporter)
+}
+
+// convert reporter status into legacy sdk sims result
+func toLegacyOperationMsg(x common.SimulationReporterRuntime) simtypes.OperationMsg {
+	module, msgTypeURL := x.Scope()
+	switch x.Status() {
+	case common.ReporterStatusSkipped:
+		return simtypes.NoOpMsg(module, msgTypeURL, x.Comment())
+	case common.ReporterStatusCompleted:
+		if x.Error() == nil {
+			return simtypes.NewOperationMsgBasic(module, msgTypeURL, x.Comment(), true)
+		} else {
+			return simtypes.NewOperationMsgBasic(module, msgTypeURL, x.Comment(), false)
+		}
+	default:
+		x.Fail(errors.New("operation aborted before msg was executed"))
+		return toLegacyOperationMsg(x)
+	}
 }

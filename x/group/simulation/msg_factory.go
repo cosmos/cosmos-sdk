@@ -2,6 +2,8 @@ package simulation
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	"github.com/cosmos/cosmos-sdk/simsx/module"
 	"slices"
 	"strconv"
 	"sync/atomic"
@@ -9,8 +11,6 @@ import (
 
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/keeper"
-
-	"github.com/cosmos/cosmos-sdk/simsx"
 )
 
 const unsetGroupID = 100000000000000
@@ -35,20 +35,20 @@ func (s *SharedState) setMinGroupID(id uint64) {
 	s.minGroupID.Store(id)
 }
 
-func MsgCreateGroupFactory() simsx.SimMsgFactoryFn[*group.MsgCreateGroup] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgCreateGroup) {
-		admin := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
+func MsgCreateGroupFactory() module.SimMsgFactoryFn[*group.MsgCreateGroup] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgCreateGroup) {
+		admin := testData.AnyAccount(reporter, common.WithSpendableBalance())
 		members := genGroupMembersX(testData, reporter)
 		msg := &group.MsgCreateGroup{Admin: admin.AddressBech32, Members: members, Metadata: testData.Rand().StringN(10)}
-		return []simsx.SimAccount{admin}, msg
+		return []common.SimAccount{admin}, msg
 	}
 }
 
-func MsgCreateGroupPolicyFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgCreateGroupPolicy] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgCreateGroupPolicy) {
+func MsgCreateGroupPolicyFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgCreateGroupPolicy] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgCreateGroupPolicy) {
 		groupInfo := randomGroupX(ctx, k, testData, reporter, s)
 		groupAdmin := testData.GetAccount(reporter, groupInfo.Admin)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		groupID := groupInfo.Id
@@ -69,13 +69,13 @@ func MsgCreateGroupPolicyFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFa
 			reporter.Skip(err.Error())
 			return nil, nil
 		}
-		return []simsx.SimAccount{groupAdmin}, msg
+		return []common.SimAccount{groupAdmin}, msg
 	}
 }
 
-func MsgCreateGroupWithPolicyFactory() simsx.SimMsgFactoryFn[*group.MsgCreateGroupWithPolicy] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgCreateGroupWithPolicy) {
-		admin := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
+func MsgCreateGroupWithPolicyFactory() module.SimMsgFactoryFn[*group.MsgCreateGroupWithPolicy] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgCreateGroupWithPolicy) {
+		admin := testData.AnyAccount(reporter, common.WithSpendableBalance())
 		members := genGroupMembersX(testData, reporter)
 		r := testData.Rand()
 		msg := &group.MsgCreateGroupWithPolicy{
@@ -95,14 +95,14 @@ func MsgCreateGroupWithPolicyFactory() simsx.SimMsgFactoryFn[*group.MsgCreateGro
 			reporter.Skip(err.Error())
 			return nil, nil
 		}
-		return []simsx.SimAccount{admin}, msg
+		return []common.SimAccount{admin}, msg
 	}
 }
 
-func MsgWithdrawProposalFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgWithdrawProposal] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgWithdrawProposal) {
+func MsgWithdrawProposalFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgWithdrawProposal] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgWithdrawProposal) {
 		groupInfo, groupPolicy := randomGroupPolicyX(ctx, testData, reporter, k, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		policy, err := groupPolicy.GetDecisionPolicy()
@@ -123,8 +123,8 @@ func MsgWithdrawProposalFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFac
 			return nil, nil
 		}
 
-		now := simsx.BlockTime(ctx)
-		proposal := simsx.First(proposalsResult.GetProposals(), func(p *group.Proposal) bool {
+		now := common.BlockTime(ctx)
+		proposal := common.First(proposalsResult.GetProposals(), func(p *group.Proposal) bool {
 			return p.Status == group.PROPOSAL_STATUS_SUBMITTED && p.VotingPeriodEnd.After(now)
 		})
 		if proposal == nil {
@@ -133,20 +133,20 @@ func MsgWithdrawProposalFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFac
 		}
 		// select a random proposer
 		r := testData.Rand()
-		proposer := testData.GetAccount(reporter, simsx.OneOf(r, (*proposal).Proposers))
+		proposer := testData.GetAccount(reporter, common.OneOf(r, (*proposal).Proposers))
 
 		msg := &group.MsgWithdrawProposal{
 			ProposalId: (*proposal).Id,
 			Address:    proposer.AddressBech32,
 		}
-		return []simsx.SimAccount{proposer}, msg
+		return []common.SimAccount{proposer}, msg
 	}
 }
 
-func MsgVoteFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgVote] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgVote) {
+func MsgVoteFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgVote] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgVote) {
 		groupInfo, groupPolicy := randomGroupPolicyX(ctx, testData, reporter, k, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		proposalsResult, err := k.ProposalsByGroupPolicy(ctx,
@@ -157,8 +157,8 @@ func MsgVoteFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 			return nil, nil
 		}
 
-		now := simsx.BlockTime(ctx)
-		proposal := simsx.First(proposalsResult.GetProposals(), func(p *group.Proposal) bool {
+		now := common.BlockTime(ctx)
+		proposal := common.First(proposalsResult.GetProposals(), func(p *group.Proposal) bool {
 			return p.Status == group.PROPOSAL_STATUS_SUBMITTED && p.VotingPeriodEnd.After(now)
 		})
 		if proposal == nil {
@@ -176,7 +176,7 @@ func MsgVoteFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 			reporter.Skip("group has no members")
 			return nil, nil
 		}
-		voter := testData.GetAccount(reporter, simsx.OneOf(r, res.Members).Member.Address)
+		voter := testData.GetAccount(reporter, common.OneOf(r, res.Members).Member.Address)
 		vRes, err := k.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
 			ProposalId: (*proposal).Id,
 		})
@@ -195,14 +195,14 @@ func MsgVoteFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 			Option:     group.VOTE_OPTION_YES,
 			Metadata:   r.StringN(10),
 		}
-		return []simsx.SimAccount{voter}, msg
+		return []common.SimAccount{voter}, msg
 	}
 }
 
-func MsgSubmitProposalFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgSubmitProposal] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgSubmitProposal) {
+func MsgSubmitProposalFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgSubmitProposal] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgSubmitProposal) {
 		groupInfo, groupPolicy := randomGroupPolicyX(ctx, testData, reporter, k, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		// Return a no-op if we know the proposal cannot be created
@@ -228,7 +228,7 @@ func MsgSubmitProposalFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFacto
 			reporter.Skip("group has no members")
 			return nil, nil
 		}
-		proposer := testData.GetAccount(reporter, simsx.OneOf(r, res.Members).Member.Address)
+		proposer := testData.GetAccount(reporter, common.OneOf(r, res.Members).Member.Address)
 
 		msg := &group.MsgSubmitProposal{
 			GroupPolicyAddress: groupPolicy.Address,
@@ -237,14 +237,14 @@ func MsgSubmitProposalFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFacto
 			Title:              "Test Proposal",
 			Summary:            "Summary of the proposal",
 		}
-		return []simsx.SimAccount{proposer}, msg
+		return []common.SimAccount{proposer}, msg
 	}
 }
 
-func MsgExecFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgExec] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgExec) {
+func MsgExecFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgExec] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgExec) {
 		groupPolicy, policyAdmin := randomGroupPolicyWithAdmin(ctx, testData, reporter, k, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		proposalsResult, err := k.ProposalsByGroupPolicy(ctx,
@@ -255,7 +255,7 @@ func MsgExecFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 			return nil, nil
 		}
 
-		proposal := simsx.First(proposalsResult.GetProposals(), func(p *group.Proposal) bool {
+		proposal := common.First(proposalsResult.GetProposals(), func(p *group.Proposal) bool {
 			return p.Status == group.PROPOSAL_STATUS_ACCEPTED
 		})
 		if proposal == nil {
@@ -267,11 +267,11 @@ func MsgExecFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 			ProposalId: (*proposal).Id,
 			Executor:   policyAdmin.AddressBech32,
 		}
-		return []simsx.SimAccount{policyAdmin}, msg
+		return []common.SimAccount{policyAdmin}, msg
 	}
 }
 
-func randomGroupPolicyWithAdmin(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, k keeper.Keeper, s *SharedState) (*group.GroupPolicyInfo, simsx.SimAccount) {
+func randomGroupPolicyWithAdmin(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter, k keeper.Keeper, s *SharedState) (*group.GroupPolicyInfo, common.SimAccount) {
 	for i := 0; i < 5; i++ {
 		_, groupPolicy := randomGroupPolicyX(ctx, testData, reporter, k, s)
 		if groupPolicy != nil && testData.HasAccount(groupPolicy.Admin) {
@@ -279,14 +279,14 @@ func randomGroupPolicyWithAdmin(ctx context.Context, testData *simsx.ChainDataSo
 		}
 	}
 	reporter.Skip("no group policy found with a sims account")
-	return nil, simsx.SimAccount{}
+	return nil, common.SimAccount{}
 }
 
-func MsgUpdateGroupMetadataFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgUpdateGroupMetadata] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgUpdateGroupMetadata) {
+func MsgUpdateGroupMetadataFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgUpdateGroupMetadata] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgUpdateGroupMetadata) {
 		groupInfo := randomGroupX(ctx, k, testData, reporter, s)
 		groupAdmin := testData.GetAccount(reporter, groupInfo.Admin)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		msg := &group.MsgUpdateGroupMetadata{
@@ -294,32 +294,32 @@ func MsgUpdateGroupMetadataFactory(k keeper.Keeper, s *SharedState) simsx.SimMsg
 			Admin:    groupAdmin.AddressBech32,
 			Metadata: testData.Rand().StringN(10),
 		}
-		return []simsx.SimAccount{groupAdmin}, msg
+		return []common.SimAccount{groupAdmin}, msg
 	}
 }
 
-func MsgUpdateGroupAdminFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgUpdateGroupAdmin] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgUpdateGroupAdmin) {
+func MsgUpdateGroupAdminFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgUpdateGroupAdmin] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgUpdateGroupAdmin) {
 		groupInfo := randomGroupX(ctx, k, testData, reporter, s)
 		groupAdmin := testData.GetAccount(reporter, groupInfo.Admin)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
-		newAdmin := testData.AnyAccount(reporter, simsx.ExcludeAccounts(groupAdmin))
+		newAdmin := testData.AnyAccount(reporter, common.ExcludeAccounts(groupAdmin))
 		msg := &group.MsgUpdateGroupAdmin{
 			GroupId:  groupInfo.Id,
 			Admin:    groupAdmin.AddressBech32,
 			NewAdmin: newAdmin.AddressBech32,
 		}
-		return []simsx.SimAccount{groupAdmin}, msg
+		return []common.SimAccount{groupAdmin}, msg
 	}
 }
 
-func MsgUpdateGroupMembersFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgUpdateGroupMembers] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgUpdateGroupMembers) {
+func MsgUpdateGroupMembersFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgUpdateGroupMembers] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgUpdateGroupMembers) {
 		groupInfo := randomGroupX(ctx, k, testData, reporter, s)
 		groupAdmin := testData.GetAccount(reporter, groupInfo.Admin)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupInfo.Id})
@@ -327,11 +327,11 @@ func MsgUpdateGroupMembersFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgF
 			reporter.Skip("group members not found")
 			return nil, nil
 		}
-		oldMemberAddrs := simsx.Collect(res.Members, func(a *group.GroupMember) string { return a.Member.Address })
-		members := genGroupMembersX(testData, reporter, simsx.ExcludeAddresses(oldMemberAddrs...))
+		oldMemberAddrs := common.Collect(res.Members, func(a *group.GroupMember) string { return a.Member.Address })
+		members := genGroupMembersX(testData, reporter, common.ExcludeAddresses(oldMemberAddrs...))
 		if len(res.Members) != 0 {
 			// set existing random group member weight to zero to remove from the group
-			obsoleteMember := simsx.OneOf(testData.Rand(), res.Members)
+			obsoleteMember := common.OneOf(testData.Rand(), res.Members)
 			obsoleteMember.Member.Weight = "0"
 			members = append(members, group.MemberToMemberRequest(obsoleteMember.Member))
 		}
@@ -340,30 +340,30 @@ func MsgUpdateGroupMembersFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgF
 			Admin:         groupAdmin.AddressBech32,
 			MemberUpdates: members,
 		}
-		return []simsx.SimAccount{groupAdmin}, msg
+		return []common.SimAccount{groupAdmin}, msg
 	}
 }
 
-func MsgUpdateGroupPolicyAdminFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgUpdateGroupPolicyAdmin] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgUpdateGroupPolicyAdmin) {
+func MsgUpdateGroupPolicyAdminFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgUpdateGroupPolicyAdmin] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgUpdateGroupPolicyAdmin) {
 		groupPolicy, policyAdmin := randomGroupPolicyWithAdmin(ctx, testData, reporter, k, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
-		newAdmin := testData.AnyAccount(reporter, simsx.ExcludeAccounts(policyAdmin))
+		newAdmin := testData.AnyAccount(reporter, common.ExcludeAccounts(policyAdmin))
 		msg := &group.MsgUpdateGroupPolicyAdmin{
 			Admin:              policyAdmin.AddressBech32,
 			GroupPolicyAddress: groupPolicy.Address,
 			NewAdmin:           newAdmin.AddressBech32,
 		}
-		return []simsx.SimAccount{policyAdmin}, msg
+		return []common.SimAccount{policyAdmin}, msg
 	}
 }
 
-func MsgUpdateGroupPolicyDecisionPolicyFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgUpdateGroupPolicyDecisionPolicy] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgUpdateGroupPolicyDecisionPolicy) {
+func MsgUpdateGroupPolicyDecisionPolicyFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgUpdateGroupPolicyDecisionPolicy] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgUpdateGroupPolicyDecisionPolicy) {
 		groupPolicy, policyAdmin := randomGroupPolicyWithAdmin(ctx, testData, reporter, k, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		r := testData.Rand()
@@ -377,14 +377,14 @@ func MsgUpdateGroupPolicyDecisionPolicyFactory(k keeper.Keeper, s *SharedState) 
 			reporter.Skip(err.Error())
 			return nil, nil
 		}
-		return []simsx.SimAccount{policyAdmin}, msg
+		return []common.SimAccount{policyAdmin}, msg
 	}
 }
 
-func MsgUpdateGroupPolicyMetadataFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgUpdateGroupPolicyMetadata] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgUpdateGroupPolicyMetadata) {
+func MsgUpdateGroupPolicyMetadataFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgUpdateGroupPolicyMetadata] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgUpdateGroupPolicyMetadata) {
 		groupPolicy, policyAdmin := randomGroupPolicyWithAdmin(ctx, testData, reporter, k, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		msg := &group.MsgUpdateGroupPolicyMetadata{
@@ -392,14 +392,14 @@ func MsgUpdateGroupPolicyMetadataFactory(k keeper.Keeper, s *SharedState) simsx.
 			GroupPolicyAddress: groupPolicy.Address,
 			Metadata:           testData.Rand().StringN(10),
 		}
-		return []simsx.SimAccount{policyAdmin}, msg
+		return []common.SimAccount{policyAdmin}, msg
 	}
 }
 
-func MsgLeaveGroupFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*group.MsgLeaveGroup] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgLeaveGroup) {
+func MsgLeaveGroupFactory(k keeper.Keeper, s *SharedState) module.SimMsgFactoryFn[*group.MsgLeaveGroup] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *group.MsgLeaveGroup) {
 		groupInfo := randomGroupX(ctx, k, testData, reporter, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupInfo.Id})
@@ -411,22 +411,22 @@ func MsgLeaveGroupFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn
 			reporter.Skip("group has no members")
 			return nil, nil
 		}
-		anyMember := simsx.OneOf(testData.Rand(), res.Members)
+		anyMember := common.OneOf(testData.Rand(), res.Members)
 		leaver := testData.GetAccount(reporter, anyMember.Member.Address)
 		msg := &group.MsgLeaveGroup{
 			GroupId: groupInfo.Id,
 			Address: leaver.AddressBech32,
 		}
-		return []simsx.SimAccount{leaver}, msg
+		return []common.SimAccount{leaver}, msg
 	}
 }
 
-func genGroupMembersX(testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, filters ...simsx.SimAccountFilter) []group.MemberRequest {
+func genGroupMembersX(testData *common.ChainDataSource, reporter common.SimulationReporter, filters ...common.SimAccountFilter) []group.MemberRequest {
 	r := testData.Rand()
 	membersCount := r.Intn(5) + 1
 	members := make([]group.MemberRequest, membersCount)
-	uniqueAccountsFilter := simsx.UniqueAccounts()
-	for i := 0; i < membersCount && !reporter.IsSkipped(); i++ {
+	uniqueAccountsFilter := common.UniqueAccounts()
+	for i := 0; i < membersCount && !reporter.IsAborted(); i++ {
 		m := testData.AnyAccount(reporter, append(filters, uniqueAccountsFilter)...)
 		members[i] = group.MemberRequest{
 			Address:  m.AddressBech32,
@@ -437,7 +437,7 @@ func genGroupMembersX(testData *simsx.ChainDataSource, reporter simsx.Simulation
 	return members
 }
 
-func randomGroupX(ctx context.Context, k keeper.Keeper, testdata *simsx.ChainDataSource, reporter simsx.SimulationReporter, s *SharedState) *group.GroupInfo {
+func randomGroupX(ctx context.Context, k keeper.Keeper, testdata *common.ChainDataSource, reporter common.SimulationReporter, s *SharedState) *group.GroupInfo {
 	r := testdata.Rand()
 	groupID := k.GetGroupSequence(ctx)
 	if initialGroupID := s.getMinGroupID(); initialGroupID == unsetGroupID {
@@ -462,14 +462,14 @@ func randomGroupX(ctx context.Context, k keeper.Keeper, testdata *simsx.ChainDat
 
 func randomGroupPolicyX(
 	ctx context.Context,
-	testdata *simsx.ChainDataSource,
-	reporter simsx.SimulationReporter,
+	testdata *common.ChainDataSource,
+	reporter common.SimulationReporter,
 	k keeper.Keeper,
 	s *SharedState,
 ) (*group.GroupInfo, *group.GroupPolicyInfo) {
 	for i := 0; i < 5; i++ {
 		groupInfo := randomGroupX(ctx, k, testdata, reporter, s)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		groupID := groupInfo.Id
@@ -479,7 +479,7 @@ func randomGroupPolicyX(
 			return nil, nil
 		}
 		if len(result.GroupPolicies) != 0 {
-			return groupInfo, simsx.OneOf(testdata.Rand(), result.GroupPolicies)
+			return groupInfo, common.OneOf(testdata.Rand(), result.GroupPolicies)
 		}
 	}
 	reporter.Skip("no group policies")

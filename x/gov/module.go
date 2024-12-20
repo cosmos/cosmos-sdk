@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	v2 "github.com/cosmos/cosmos-sdk/simsx/runner/v1"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -21,7 +23,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -209,11 +210,11 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
 // ProposalMsgsX returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+func (AppModule) ProposalMsgsX(weights common.WeightSource, reg common.Registry) {
 	reg.Add(weights.Get("submit_text_proposal", 5), simulation.TextProposalFactory())
 }
 
-func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry, proposalMsgIter simsx.WeightedProposalMsgIter,
+func (am AppModule) WeightedOperationsX(weights common.WeightSource, reg common.Registry, proposalMsgIter v2.WeightedProposalMsgIter,
 	legacyProposals []simtypes.WeightedProposalContent, //nolint:staticcheck // used for legacy proposal types
 ) {
 	// submit proposal for each payload message

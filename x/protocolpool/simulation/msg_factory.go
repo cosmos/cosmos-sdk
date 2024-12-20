@@ -2,25 +2,26 @@ package simulation
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	"github.com/cosmos/cosmos-sdk/simsx/module"
 
 	"cosmossdk.io/x/protocolpool/types"
 
-	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func MsgFundCommunityPoolFactory() simsx.SimMsgFactoryFn[*types.MsgFundCommunityPool] {
-	return func(_ context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgFundCommunityPool) {
-		funder := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
+func MsgFundCommunityPoolFactory() module.SimMsgFactoryFn[*types.MsgFundCommunityPool] {
+	return func(_ context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgFundCommunityPool) {
+		funder := testData.AnyAccount(reporter, common.WithSpendableBalance())
 		fundAmount := funder.LiquidBalance().RandSubsetCoins(reporter)
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.AddressBech32)
-		return []simsx.SimAccount{funder}, msg
+		return []common.SimAccount{funder}, msg
 	}
 }
 
 // MsgCommunityPoolSpendFactory creates a gov proposal to send tokens from the community pool to a random account
-func MsgCommunityPoolSpendFactory() simsx.SimMsgFactoryFn[*types.MsgCommunityPoolSpend] {
-	return func(_ context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgCommunityPoolSpend) {
+func MsgCommunityPoolSpendFactory() module.SimMsgFactoryFn[*types.MsgCommunityPoolSpend] {
+	return func(_ context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgCommunityPoolSpend) {
 		return nil, &types.MsgCommunityPoolSpend{
 			Authority: testData.ModuleAccountAddress(reporter, "gov"),
 			Recipient: testData.AnyAccount(reporter).AddressBech32,

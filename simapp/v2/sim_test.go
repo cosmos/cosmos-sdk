@@ -1,8 +1,10 @@
 package simapp
 
-import "testing"
+import (
+	"cosmossdk.io/core/transaction"
+	"testing"
+)
 
 func TestSimsAppV2(t *testing.T) {
-	RunWithSeeds[Tx](t, defaultSeeds)
-	// RunWithSeed(t, cli.NewConfigFromFlags(), 99)
+	RunWithSeeds[transaction.Tx](t, NewSimApp[transaction.Tx], AppConfig, DefaultSeeds)
 }

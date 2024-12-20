@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -19,7 +19,6 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -154,7 +153,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[group.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+func (am AppModule) WeightedOperationsX(weights common.WeightSource, reg common.Registry) {
 	s := simulation.NewSharedState()
 	// note: using old keys for backwards compatibility
 	reg.Add(weights.Get("msg_create_group", 100), simulation.MsgCreateGroupFactory())

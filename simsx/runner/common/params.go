@@ -1,15 +1,11 @@
-package simsx
+package common
 
 import (
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	"math/rand"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
-
-// WeightSource interface for retrieving weights based on a name and a default value.
-type WeightSource interface {
-	Get(name string, defaultValue uint32) uint32
-}
 
 // WeightSourceFn function adapter that implements WeightSource.
 // Example:
@@ -41,7 +37,7 @@ func (f WeightSourceFn) Get(name string, defaultValue uint32) uint32 {
 //
 //	weightSource := ParamWeightSource(appParams)
 //	weightSource.Get("some_weight", 100)
-func ParamWeightSource(p simtypes.AppParams) WeightSource {
+func ParamWeightSource(p simtypes.AppParams) common.WeightSource {
 	return WeightSourceFn(func(name string, defaultValue uint32) uint32 {
 		var result uint32
 		p.GetOrGenerate("op_weight_"+name, &result, nil, func(_ *rand.Rand) {

@@ -2,16 +2,16 @@ package simulation
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	"github.com/cosmos/cosmos-sdk/simsx/module"
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/mint/types"
-
-	"github.com/cosmos/cosmos-sdk/simsx"
 )
 
 // MsgUpdateParamsFactory creates a gov proposal for param updates
-func MsgUpdateParamsFactory() simsx.SimMsgFactoryFn[*types.MsgUpdateParams] {
-	return func(_ context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgUpdateParams) {
+func MsgUpdateParamsFactory() module.SimMsgFactoryFn[*types.MsgUpdateParams] {
+	return func(_ context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgUpdateParams) {
 		r := testData.Rand()
 		params := types.DefaultParams()
 		params.BlocksPerYear = r.Uint64InRange(1, 1_000_000)

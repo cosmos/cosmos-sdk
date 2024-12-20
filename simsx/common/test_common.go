@@ -1,24 +1,11 @@
-package simsx
+package common
 
 import (
 	"context"
-	"math/rand"
-
-	"github.com/cosmos/gogoproto/proto"
-
-	coretransaction "cosmossdk.io/core/transaction"
-	"cosmossdk.io/x/tx/signing"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"math/rand"
 )
 
 // SimAccountFixture testing only
@@ -43,33 +30,6 @@ func MemoryAccountSource(srcs ...SimAccount) AccountSourceFn {
 	return func(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
 		return accs[addr.String()]
 	}
-}
-
-// testing only
-func txConfig() client.TxConfig {
-	ir := must(codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec:          address.NewBech32Codec("cosmos"),
-			ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
-		},
-	}))
-	std.RegisterInterfaces(ir)
-	ir.RegisterImplementations((*coretransaction.Msg)(nil), &testdata.TestMsg{})
-	protoCodec := codec.NewProtoCodec(ir)
-	signingCtx := protoCodec.InterfaceRegistry().SigningContext()
-	return tx.NewTxConfig(protoCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
-}
-
-var _ AppEntrypoint = SimDeliverFn(nil)
-
-type (
-	AppEntrypointFn = SimDeliverFn
-	SimDeliverFn    func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
-)
-
-func (m SimDeliverFn) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	return m(txEncoder, tx)
 }
 
 var _ AccountSource = AccountSourceFn(nil)

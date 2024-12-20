@@ -1,8 +1,10 @@
-package simsx
+package v1
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	runnercommon "github.com/cosmos/cosmos-sdk/simsx/runner/common"
 	"io"
 	"os"
 	"path/filepath"
@@ -53,8 +55,8 @@ type SimStateFactory struct {
 	Codec         codec.Codec
 	AppStateFn    simtypes.AppStateFn
 	BlockedAddr   map[string]bool
-	AccountSource AccountSourceX
-	BalanceSource BalanceSource
+	AccountSource common.AccountSourceX
+	BalanceSource common.BalanceSource
 }
 
 // SimulationApp abstract app that is used by sims
@@ -169,19 +171,10 @@ func RunWithSeed[T SimulationApp](
 }
 
 type (
-	HasWeightedOperationsX interface {
-		WeightedOperationsX(weight WeightSource, reg Registry)
-	}
-	HasWeightedOperationsXWithProposals interface {
-		WeightedOperationsX(weights WeightSource, reg Registry, proposals WeightedProposalMsgIter,
-			legacyProposals []simtypes.WeightedProposalContent) //nolint: staticcheck // used for legacy proposal types
-	}
-	HasProposalMsgsX interface {
-		ProposalMsgsX(weights WeightSource, reg Registry)
-	}
-)
+	HasWeightedOperationsX              = common.HasWeightedOperationsX
+	HasWeightedOperationsXWithProposals = common.HasWeightedOperationsXWithProposals
+	HasProposalMsgsX                    = common.HasProposalMsgsX
 
-type (
 	HasLegacyWeightedOperations interface {
 		// WeightedOperations simulation operations (i.e msgs) with their respective weight
 		WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation
@@ -225,7 +218,7 @@ func prepareWeightedOps(
 	config simtypes.Config,
 	txConfig client.TxConfig,
 	logger log.Logger,
-) (simulation.WeightedOperations, *BasicSimulationReporter) {
+) (simulation.WeightedOperations, *common.BasicSimulationReporter) {
 	cdc := stateFact.Codec
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{
@@ -249,10 +242,10 @@ func prepareWeightedOps(
 		}
 	}
 
-	weights := ParamWeightSource(simState.AppParams)
-	reporter := NewBasicSimulationReporter()
+	weights := runnercommon.ParamWeightSource(simState.AppParams)
+	reporter := common.NewBasicSimulationReporter()
 
-	pReg := make(UniqueTypeRegistry)
+	pReg := runnercommon.NewUniqueTypeRegistry()
 	wContent := make([]simtypes.WeightedProposalContent, 0) //nolint:staticcheck // required for legacy type
 	legacyPReg := NewWeightedFactoryMethods()
 	// add gov proposals types

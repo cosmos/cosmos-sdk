@@ -2,6 +2,9 @@ package simulation
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	"github.com/cosmos/cosmos-sdk/simsx/module"
+	v2 "github.com/cosmos/cosmos-sdk/simsx/runner/v1"
 	"math"
 	"math/rand"
 	"sync/atomic"
@@ -11,14 +14,13 @@ import (
 	"cosmossdk.io/x/gov/keeper"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
-	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-func MsgDepositFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFactoryFn[*v1.MsgDeposit] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgDeposit) {
+func MsgDepositFactory(k *keeper.Keeper, sharedState *SharedState) module.SimMsgFactoryFn[*v1.MsgDeposit] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *v1.MsgDeposit) {
 		r := testData.Rand()
 		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusDepositPeriod, sharedState)
 		if !ok {
@@ -32,46 +34,46 @@ func MsgDepositFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgF
 		}
 		// calculate deposit amount
 		deposit := randDeposit(ctx, proposal, k, r, reporter)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
-		from := testData.AnyAccount(reporter, simsx.WithLiquidBalanceGTE(deposit))
-		return []simsx.SimAccount{from}, v1.NewMsgDeposit(from.AddressBech32, proposalID, sdk.NewCoins(deposit))
+		from := testData.AnyAccount(reporter, common.WithLiquidBalanceGTE(deposit))
+		return []common.SimAccount{from}, v1.NewMsgDeposit(from.AddressBech32, proposalID, sdk.NewCoins(deposit))
 	}
 }
 
-func MsgVoteFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFactoryFn[*v1.MsgVote] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVote) {
+func MsgVoteFactory(k *keeper.Keeper, sharedState *SharedState) module.SimMsgFactoryFn[*v1.MsgVote] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *v1.MsgVote) {
 		r := testData.Rand()
 		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusVotingPeriod, sharedState)
 		if !ok {
 			reporter.Skip("no proposal in deposit state")
 			return nil, nil
 		}
-		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
+		from := testData.AnyAccount(reporter, common.WithSpendableBalance())
 		msg := v1.NewMsgVote(from.AddressBech32, proposalID, randomVotingOption(r.Rand), "")
-		return []simsx.SimAccount{from}, msg
+		return []common.SimAccount{from}, msg
 	}
 }
 
-func MsgWeightedVoteFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFactoryFn[*v1.MsgVoteWeighted] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVoteWeighted) {
+func MsgWeightedVoteFactory(k *keeper.Keeper, sharedState *SharedState) module.SimMsgFactoryFn[*v1.MsgVoteWeighted] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *v1.MsgVoteWeighted) {
 		r := testData.Rand()
 		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusVotingPeriod, sharedState)
 		if !ok {
 			reporter.Skip("no proposal in deposit state")
 			return nil, nil
 		}
-		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
+		from := testData.AnyAccount(reporter, common.WithSpendableBalance())
 		msg := v1.NewMsgVoteWeighted(from.AddressBech32, proposalID, randomWeightedVotingOptions(r.Rand), "")
-		return []simsx.SimAccount{from}, msg
+		return []common.SimAccount{from}, msg
 	}
 }
 
-func MsgCancelProposalFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFactoryFn[*v1.MsgCancelProposal] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgCancelProposal) {
+func MsgCancelProposalFactory(k *keeper.Keeper, sharedState *SharedState) module.SimMsgFactoryFn[*v1.MsgCancelProposal] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *v1.MsgCancelProposal) {
 		r := testData.Rand()
-		status := simsx.OneOf(r, []v1.ProposalStatus{v1.StatusDepositPeriod, v1.StatusVotingPeriod})
+		status := common.OneOf(r, []v1.ProposalStatus{v1.StatusDepositPeriod, v1.StatusVotingPeriod})
 		proposalID, ok := randomProposalID(r, k, ctx, status, sharedState)
 		if !ok {
 			reporter.Skip("no proposal in deposit state")
@@ -85,7 +87,7 @@ func MsgCancelProposalFactory(k *keeper.Keeper, sharedState *SharedState) simsx.
 		// is cancellable? copied from keeper
 		maxCancelPeriodRate := sdkmath.LegacyMustNewDecFromStr(must(k.Params.Get(ctx)).ProposalCancelMaxPeriod)
 		maxCancelPeriod := time.Duration(float64(proposal.VotingEndTime.Sub(*proposal.VotingStartTime)) * maxCancelPeriodRate.MustFloat64()).Round(time.Second)
-		if proposal.VotingEndTime.Add(-maxCancelPeriod).Before(simsx.BlockTime(ctx)) {
+		if proposal.VotingEndTime.Add(-maxCancelPeriod).Before(common.BlockTime(ctx)) {
 			reporter.Skip("not cancellable anymore")
 			return nil, nil
 		}
@@ -96,12 +98,12 @@ func MsgCancelProposalFactory(k *keeper.Keeper, sharedState *SharedState) simsx.
 			return nil, nil
 		}
 		msg := v1.NewMsgCancelProposal(proposalID, from.AddressBech32)
-		return []simsx.SimAccount{from}, msg
+		return []common.SimAccount{from}, msg
 	}
 }
 
-func MsgSubmitLegacyProposalFactory(k *keeper.Keeper, contentSimFn simtypes.ContentSimulatorFn) simsx.SimMsgFactoryX { //nolint:staticcheck // used for legacy testing
-	return simsx.NewSimMsgFactoryWithFutureOps[*v1.MsgSubmitProposal](func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, fOpsReg simsx.FutureOpsRegistry) ([]simsx.SimAccount, *v1.MsgSubmitProposal) {
+func MsgSubmitLegacyProposalFactory(k *keeper.Keeper, contentSimFn simtypes.ContentSimulatorFn) common.SimMsgFactoryX { //nolint:staticcheck // used for legacy testing
+	return module.NewSimMsgFactoryWithFutureOps[*v1.MsgSubmitProposal](func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter, fOpsReg v2.FutureOpsRegistry) ([]common.SimAccount, *v1.MsgSubmitProposal) {
 		// 1) submit proposal now
 		accs := testData.AllAccounts()
 		content := contentSimFn(testData.Rand().Rand, ctx, accs)
@@ -115,8 +117,8 @@ func MsgSubmitLegacyProposalFactory(k *keeper.Keeper, contentSimFn simtypes.Cont
 	})
 }
 
-func MsgSubmitProposalFactory(k *keeper.Keeper, payloadFactory simsx.FactoryMethod) simsx.SimMsgFactoryX {
-	return simsx.NewSimMsgFactoryWithFutureOps[*v1.MsgSubmitProposal](func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, fOpsReg simsx.FutureOpsRegistry) ([]simsx.SimAccount, *v1.MsgSubmitProposal) {
+func MsgSubmitProposalFactory(k *keeper.Keeper, payloadFactory common.FactoryMethod) common.SimMsgFactoryX {
+	return module.NewSimMsgFactoryWithFutureOps[*v1.MsgSubmitProposal](func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter, fOpsReg v2.FutureOpsRegistry) ([]common.SimAccount, *v1.MsgSubmitProposal) {
 		_, proposalMsg := payloadFactory(ctx, testData, reporter)
 		return submitProposalWithVotesScheduled(ctx, k, testData, reporter, fOpsReg, proposalMsg)
 	})
@@ -125,11 +127,11 @@ func MsgSubmitProposalFactory(k *keeper.Keeper, payloadFactory simsx.FactoryMeth
 func submitProposalWithVotesScheduled(
 	ctx context.Context,
 	k *keeper.Keeper,
-	testData *simsx.ChainDataSource,
-	reporter simsx.SimulationReporter,
-	fOpsReg simsx.FutureOpsRegistry,
+	testData *common.ChainDataSource,
+	reporter common.SimulationReporter,
+	fOpsReg v2.FutureOpsRegistry,
 	proposalMsgs ...sdk.Msg,
-) ([]simsx.SimAccount, *v1.MsgSubmitProposal) {
+) ([]common.SimAccount, *v1.MsgSubmitProposal) {
 	r := testData.Rand()
 	expedited := r.Bool()
 	params := must(k.Params.Get(ctx))
@@ -156,8 +158,8 @@ func submitProposalWithVotesScheduled(
 	deposit := minDeposit
 	// deposit := sdk.Coin{Amount: amount.Add(minAmount), Denom: minDeposit.Denom}
 
-	proposer := testData.AnyAccount(reporter, simsx.WithLiquidBalanceGTE(deposit))
-	if reporter.IsSkipped() || !proposer.LiquidBalance().BlockAmount(deposit) {
+	proposer := testData.AnyAccount(reporter, common.WithLiquidBalanceGTE(deposit))
+	if reporter.IsAborted() || !proposer.LiquidBalance().BlockAmount(deposit) {
 		return nil, nil
 	}
 	proposalType := v1.ProposalType_PROPOSAL_TYPE_STANDARD
@@ -216,9 +218,9 @@ func submitProposalWithVotesScheduled(
 	votingPeriod := params.VotingPeriod
 	// future ops so that votes do not flood the sims.
 	if r.Intn(100) == 1 { // 1% chance
-		now := simsx.BlockTime(ctx)
+		now := common.BlockTime(ctx)
 		for i := 0; i < numVotes; i++ {
-			var vF simsx.SimMsgFactoryFn[*v1.MsgVote] = func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVote) {
+			var vF module.SimMsgFactoryFn[*v1.MsgVote] = func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *v1.MsgVote) {
 				switch p, err := k.Proposals.Get(ctx, proposalID); {
 				case err != nil:
 					reporter.Skip(err.Error())
@@ -229,24 +231,24 @@ func submitProposalWithVotesScheduled(
 				}
 				voter := testData.AccountAt(reporter, whoVotes[i])
 				msg := v1.NewMsgVote(voter.AddressBech32, proposalID, randomVotingOption(r.Rand), "")
-				return []simsx.SimAccount{voter}, msg
+				return []common.SimAccount{voter}, msg
 			}
 			whenVote := now.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fOpsReg.Add(whenVote, vF)
 		}
 	}
-	return []simsx.SimAccount{proposer}, msg
+	return []common.SimAccount{proposer}, msg
 }
 
 // TextProposalFactory returns a random text proposal content.
 // A text proposal is a proposal that contains no msgs.
-func TextProposalFactory() simsx.SimMsgFactoryFn[sdk.Msg] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, sdk.Msg) {
+func TextProposalFactory() module.SimMsgFactoryFn[sdk.Msg] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, sdk.Msg) {
 		return nil, nil
 	}
 }
 
-func randDeposit(ctx context.Context, proposal v1.Proposal, k *keeper.Keeper, r *simsx.XRand, reporter simsx.SimulationReporter) sdk.Coin {
+func randDeposit(ctx context.Context, proposal v1.Proposal, k *keeper.Keeper, r *common.XRand, reporter common.SimulationReporter) sdk.Coin {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		reporter.Skipf("gov params: %s", err)
@@ -256,7 +258,7 @@ func randDeposit(ctx context.Context, proposal v1.Proposal, k *keeper.Keeper, r 
 	if proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
 		minDeposits = params.ExpeditedMinDeposit
 	}
-	minDeposit := simsx.OneOf(r, minDeposits)
+	minDeposit := common.OneOf(r, minDeposits)
 	minDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.GetMinDepositRatio())
 	if err != nil {
 		reporter.Skip(err.Error())
@@ -276,7 +278,7 @@ func randDeposit(ctx context.Context, proposal v1.Proposal, k *keeper.Keeper, r 
 // (defined in gov GenesisState) and the latest proposal ID
 // that matches a given Status.
 // It does not provide a default ID.
-func randomProposalID(r *simsx.XRand, k *keeper.Keeper, ctx context.Context, status v1.ProposalStatus, s *SharedState) (proposalID uint64, found bool) {
+func randomProposalID(r *common.XRand, k *keeper.Keeper, ctx context.Context, status v1.ProposalStatus, s *SharedState) (proposalID uint64, found bool) {
 	proposalID, _ = k.ProposalID.Peek(ctx)
 	if initialProposalID := s.getMinProposalID(); initialProposalID == unsetProposalID {
 		s.setMinProposalID(proposalID)

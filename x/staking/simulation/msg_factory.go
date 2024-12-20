@@ -2,6 +2,8 @@ package simulation
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	"github.com/cosmos/cosmos-sdk/simsx/module"
 	"slices"
 	"time"
 
@@ -10,31 +12,30 @@ import (
 	"cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgCreateValidator] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgCreateValidator) {
+func MsgCreateValidatorFactory(k *keeper.Keeper) module.SimMsgFactoryFn[*types.MsgCreateValidator] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgCreateValidator) {
 		r := testData.Rand()
-		withoutValidators := simsx.SimAccountFilterFn(func(a simsx.SimAccount) bool {
+		withoutValidators := common.SimAccountFilterFn(func(a common.SimAccount) bool {
 			_, err := k.GetValidator(ctx, sdk.ValAddress(a.Address))
 			return err != nil
 		})
-		withoutConsAddrUsed := simsx.SimAccountFilterFn(func(a simsx.SimAccount) bool {
+		withoutConsAddrUsed := common.SimAccountFilterFn(func(a common.SimAccount) bool {
 			consPubKey := sdk.GetConsAddress(a.ConsKey.PubKey())
 			_, err := k.GetValidatorByConsAddr(ctx, consPubKey)
 			return err != nil
 		})
 		bondDenom := must(k.BondDenom(ctx))
-		valOper := testData.AnyAccount(reporter, withoutValidators, withoutConsAddrUsed, simsx.WithDenomBalance(bondDenom))
-		if reporter.IsSkipped() {
+		valOper := testData.AnyAccount(reporter, withoutValidators, withoutConsAddrUsed, common.WithDenomBalance(bondDenom))
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 
 		newPubKey := valOper.ConsKey.PubKey()
 		assertKeyUnused(ctx, reporter, k, newPubKey)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 
@@ -66,16 +67,16 @@ func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 			return nil, nil
 		}
 
-		return []simsx.SimAccount{valOper}, msg
+		return []common.SimAccount{valOper}, msg
 	}
 }
 
-func MsgDelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgDelegate] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgDelegate) {
+func MsgDelegateFactory(k *keeper.Keeper) module.SimMsgFactoryFn[*types.MsgDelegate] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgDelegate) {
 		r := testData.Rand()
 		bondDenom := must(k.BondDenom(ctx))
 		val := randomValidator(ctx, reporter, k, r)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 
@@ -85,16 +86,16 @@ func MsgDelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgDelega
 		}
 		sender := testData.AnyAccount(reporter)
 		delegation := sender.LiquidBalance().RandSubsetCoin(reporter, bondDenom)
-		return []simsx.SimAccount{sender}, types.NewMsgDelegate(sender.AddressBech32, val.GetOperator(), delegation)
+		return []common.SimAccount{sender}, types.NewMsgDelegate(sender.AddressBech32, val.GetOperator(), delegation)
 	}
 }
 
-func MsgUndelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgUndelegate] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgUndelegate) {
+func MsgUndelegateFactory(k *keeper.Keeper) module.SimMsgFactoryFn[*types.MsgUndelegate] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgUndelegate) {
 		r := testData.Rand()
 		bondDenom := must(k.BondDenom(ctx))
 		val := randomValidator(ctx, reporter, k, r)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 
@@ -123,20 +124,20 @@ func MsgUndelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgUnde
 
 		unbondAmt := must(r.PositiveSDKIntn(totalBond))
 		msg := types.NewMsgUndelegate(delAddr, val.GetOperator(), sdk.NewCoin(bondDenom, unbondAmt))
-		return []simsx.SimAccount{delegator}, msg
+		return []common.SimAccount{delegator}, msg
 	}
 }
 
-func MsgEditValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgEditValidator] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgEditValidator) {
+func MsgEditValidatorFactory(k *keeper.Keeper) module.SimMsgFactoryFn[*types.MsgEditValidator] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgEditValidator) {
 		r := testData.Rand()
 		val := randomValidator(ctx, reporter, k, r)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 
 		newCommissionRate := r.DecN(val.Commission.MaxRate)
-		if err := val.Commission.ValidateNewRate(newCommissionRate, simsx.BlockTime(ctx)); err != nil {
+		if err := val.Commission.ValidateNewRate(newCommissionRate, common.BlockTime(ctx)); err != nil {
 			// skip as the commission is invalid
 			reporter.Skip("invalid commission rate")
 			return nil, nil
@@ -149,12 +150,12 @@ func MsgEditValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgE
 		})
 
 		msg := types.NewMsgEditValidator(val.GetOperator(), d, &newCommissionRate, nil)
-		return []simsx.SimAccount{valOper}, msg
+		return []common.SimAccount{valOper}, msg
 	}
 }
 
-func MsgBeginRedelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgBeginRedelegate] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgBeginRedelegate) {
+func MsgBeginRedelegateFactory(k *keeper.Keeper) module.SimMsgFactoryFn[*types.MsgBeginRedelegate] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgBeginRedelegate) {
 		bondDenom := must(k.BondDenom(ctx))
 		if !testData.IsSendEnabledDenom(bondDenom) {
 			reporter.Skip("bond denom send not enabled")
@@ -168,7 +169,7 @@ func MsgBeginRedelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 			reporter.Skip("insufficient number of validators")
 			return nil, nil
 		}
-		srcVal := simsx.OneOf(r, vals)
+		srcVal := common.OneOf(r, vals)
 		srcValOpAddrBz := must(k.ValidatorAddressCodec().StringToBytes(srcVal.GetOperator()))
 		delegations := must(k.GetValidatorDelegations(ctx, srcValOpAddrBz))
 		if delegations == nil {
@@ -176,7 +177,7 @@ func MsgBeginRedelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 			return nil, nil
 		}
 		// get random delegator from src validator
-		delegation := simsx.OneOf(r, delegations)
+		delegation := common.OneOf(r, delegations)
 		totalBond := srcVal.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if !totalBond.IsPositive() {
 			reporter.Skip("total bond is negative")
@@ -203,14 +204,14 @@ func MsgBeginRedelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 			return nil, nil
 		}
 		delegator := testData.GetAccountbyAccAddr(reporter, delAddrBz)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 
 		// get random destination validator
-		destVal := simsx.OneOf(r, vals)
+		destVal := common.OneOf(r, vals)
 		if srcVal.Equal(&destVal) {
-			destVal = simsx.OneOf(r, slices.DeleteFunc(vals, func(v types.Validator) bool { return srcVal.Equal(&v) }))
+			destVal = common.OneOf(r, slices.DeleteFunc(vals, func(v types.Validator) bool { return srcVal.Equal(&v) }))
 		}
 		if destVal.InvalidExRate() {
 			reporter.Skip("invalid delegation rate")
@@ -227,15 +228,15 @@ func MsgBeginRedelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 			delAddr, srcVal.GetOperator(), destVal.GetOperator(),
 			sdk.NewCoin(bondDenom, redAmount),
 		)
-		return []simsx.SimAccount{delegator}, msg
+		return []common.SimAccount{delegator}, msg
 	}
 }
 
-func MsgCancelUnbondingDelegationFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgCancelUnbondingDelegation] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgCancelUnbondingDelegation) {
+func MsgCancelUnbondingDelegationFactory(k *keeper.Keeper) module.SimMsgFactoryFn[*types.MsgCancelUnbondingDelegation] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgCancelUnbondingDelegation) {
 		r := testData.Rand()
 		val := randomValidator(ctx, reporter, k, r)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		if val.IsJailed() || val.InvalidExRate() {
@@ -265,7 +266,7 @@ func MsgCancelUnbondingDelegationFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn
 				break
 			}
 		}
-		if unbondingDelegationEntry.CompletionTime.Before(simsx.BlockTime(ctx)) {
+		if unbondingDelegationEntry.CompletionTime.Before(common.BlockTime(ctx)) {
 			reporter.Skip("unbonding delegation is already processed")
 			return nil, nil
 		}
@@ -287,15 +288,15 @@ func MsgCancelUnbondingDelegationFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn
 			sdk.NewCoin(must(k.BondDenom(ctx)), cancelBondAmt),
 		)
 
-		return []simsx.SimAccount{valOper}, msg
+		return []common.SimAccount{valOper}, msg
 	}
 }
 
-func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgRotateConsPubKey] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgRotateConsPubKey) {
+func MsgRotateConsPubKeyFactory(k *keeper.Keeper) module.SimMsgFactoryFn[*types.MsgRotateConsPubKey] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgRotateConsPubKey) {
 		r := testData.Rand()
 		val := randomValidator(ctx, reporter, k, r)
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		if val.Status != types.Bonded || val.ConsensusPower(sdk.DefaultPowerReduction) == 0 {
@@ -304,7 +305,7 @@ func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.M
 		}
 		valOpAddrBz := must(k.ValidatorAddressCodec().StringToBytes(val.GetOperator()))
 		valOper := testData.GetAccountbyAccAddr(reporter, valOpAddrBz)
-		otherAccount := testData.AnyAccount(reporter, simsx.ExcludeAddresses(valOper.AddressBech32))
+		otherAccount := testData.AnyAccount(reporter, common.ExcludeAddresses(valOper.AddressBech32))
 
 		consAddress := must(k.ConsensusAddressCodec().BytesToString(must(val.GetConsAddr())))
 		accAddress := must(k.ConsensusAddressCodec().BytesToString(otherAccount.ConsKey.PubKey().Address()))
@@ -322,17 +323,17 @@ func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.M
 		}
 		// check whether the new cons key associated with another validator
 		assertKeyUnused(ctx, reporter, k, otherAccount.ConsKey.PubKey())
-		if reporter.IsSkipped() {
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		msg := must(types.NewMsgRotateConsPubKey(val.GetOperator(), otherAccount.ConsKey.PubKey()))
-		return []simsx.SimAccount{valOper}, msg
+		return []common.SimAccount{valOper}, msg
 	}
 }
 
 // MsgUpdateParamsFactory creates a gov proposal for param updates
-func MsgUpdateParamsFactory() simsx.SimMsgFactoryFn[*types.MsgUpdateParams] {
-	return func(_ context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgUpdateParams) {
+func MsgUpdateParamsFactory() module.SimMsgFactoryFn[*types.MsgUpdateParams] {
+	return func(_ context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *types.MsgUpdateParams) {
 		r := testData.Rand()
 		params := types.DefaultParams()
 		// do not modify denom or staking will break
@@ -350,17 +351,17 @@ func MsgUpdateParamsFactory() simsx.SimMsgFactoryFn[*types.MsgUpdateParams] {
 	}
 }
 
-func randomValidator(ctx context.Context, reporter simsx.SimulationReporter, k *keeper.Keeper, r *simsx.XRand) types.Validator {
+func randomValidator(ctx context.Context, reporter common.SimulationReporter, k *keeper.Keeper, r *common.XRand) types.Validator {
 	vals, err := k.GetAllValidators(ctx)
 	if err != nil || len(vals) == 0 {
 		reporter.Skipf("unable to get validators or empty list: %s", err)
 		return types.Validator{}
 	}
-	return simsx.OneOf(r, vals)
+	return common.OneOf(r, vals)
 }
 
 // skips execution if there's another key rotation for the same key in the same block
-func assertKeyUnused(ctx context.Context, reporter simsx.SimulationReporter, k *keeper.Keeper, newPubKey cryptotypes.PubKey) {
+func assertKeyUnused(ctx context.Context, reporter common.SimulationReporter, k *keeper.Keeper, newPubKey cryptotypes.PubKey) {
 	newConsAddr := sdk.ConsAddress(newPubKey.Address())
 	if rotatedTo, _ := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newConsAddr); rotatedTo != nil {
 		reporter.Skip("consensus key already used")

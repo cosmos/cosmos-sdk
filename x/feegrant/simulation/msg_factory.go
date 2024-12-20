@@ -2,18 +2,18 @@ package simulation
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	"github.com/cosmos/cosmos-sdk/simsx/module"
 
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
-
-	"github.com/cosmos/cosmos-sdk/simsx"
 )
 
-func MsgGrantAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.MsgGrantAllowance] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *feegrant.MsgGrantAllowance) {
-		granter := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
-		grantee := testData.AnyAccount(reporter, simsx.ExcludeAccounts(granter))
-		if reporter.IsSkipped() {
+func MsgGrantAllowanceFactory(k keeper.Keeper) module.SimMsgFactoryFn[*feegrant.MsgGrantAllowance] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *feegrant.MsgGrantAllowance) {
+		granter := testData.AnyAccount(reporter, common.WithSpendableBalance())
+		grantee := testData.AnyAccount(reporter, common.ExcludeAccounts(granter))
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		if f, _ := k.GetAllowance(ctx, granter.Address, grantee.Address); f != nil {
@@ -21,8 +21,8 @@ func MsgGrantAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.M
 			return nil, nil
 		}
 
-		coins := granter.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
-		oneYear := simsx.BlockTime(ctx).AddDate(1, 0, 0)
+		coins := granter.LiquidBalance().RandSubsetCoins(reporter, common.WithSendEnabledCoins())
+		oneYear := common.BlockTime(ctx).AddDate(1, 0, 0)
 		msg, err := feegrant.NewMsgGrantAllowance(
 			&feegrant.BasicAllowance{SpendLimit: coins, Expiration: &oneYear},
 			granter.AddressBech32,
@@ -32,12 +32,12 @@ func MsgGrantAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.M
 			reporter.Skip(err.Error())
 			return nil, nil
 		}
-		return []simsx.SimAccount{granter}, msg
+		return []common.SimAccount{granter}, msg
 	}
 }
 
-func MsgRevokeAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.MsgRevokeAllowance] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *feegrant.MsgRevokeAllowance) {
+func MsgRevokeAllowanceFactory(k keeper.Keeper) module.SimMsgFactoryFn[*feegrant.MsgRevokeAllowance] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *feegrant.MsgRevokeAllowance) {
 		var gotGrant *feegrant.Grant
 		if err := k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 			gotGrant = &grant
@@ -53,6 +53,6 @@ func MsgRevokeAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.
 		granter := testData.GetAccount(reporter, gotGrant.Granter)
 		grantee := testData.GetAccount(reporter, gotGrant.Grantee)
 		msg := feegrant.NewMsgRevokeAllowance(granter.AddressBech32, grantee.AddressBech32)
-		return []simsx.SimAccount{granter}, &msg
+		return []common.SimAccount{granter}, &msg
 	}
 }

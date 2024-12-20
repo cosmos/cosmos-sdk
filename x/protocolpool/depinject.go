@@ -8,9 +8,8 @@ import (
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/simulation"
 	"cosmossdk.io/x/protocolpool/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simsx"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -80,10 +79,10 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
 // ProposalMsgsX returns all the protocolpool msgs used to simulate governance proposals.
-func (am AppModule) ProposalMsgsX(weight simsx.WeightSource, reg simsx.Registry) {
+func (am AppModule) ProposalMsgsX(weight common.WeightSource, reg common.Registry) {
 	reg.Add(weight.Get("msg_community_pool_spend", 50), simulation.MsgCommunityPoolSpendFactory())
 }
 
-func (am AppModule) WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry) {
+func (am AppModule) WeightedOperationsX(weight common.WeightSource, reg common.Registry) {
 	reg.Add(weight.Get("msg_fund_community_pool", 50), simulation.MsgFundCommunityPoolFactory())
 }

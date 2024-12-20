@@ -1,4 +1,4 @@
-package simsx
+package common
 
 // Collect applies the function f to each element in the source slice,
 // returning a new slice containing the results.

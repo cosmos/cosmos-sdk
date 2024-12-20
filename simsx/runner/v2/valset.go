@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
 	"math/rand"
 	"slices"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
-
-	"github.com/cosmos/cosmos-sdk/simsx"
 )
 
 // WeightedValidator represents a validator for usage in the sims runner.
@@ -46,7 +45,7 @@ func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) Weight
 		return v
 	}
 	const truncatedSize = 20
-	valUpdates := simsx.Collect(updates, func(u appmodulev2.ValidatorUpdate) WeightedValidator {
+	valUpdates := common.Collect(updates, func(u appmodulev2.ValidatorUpdate) WeightedValidator {
 		hash := sha256.Sum256(u.PubKey)
 		return WeightedValidator{Power: u.Power, Address: hash[:truncatedSize]}
 	})

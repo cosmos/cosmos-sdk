@@ -1,4 +1,4 @@
-package simsx
+package common
 
 import (
 	"context"
@@ -12,6 +12,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+)
+
+type (
+	// BalanceSource is an interface for retrieving balance-related information for a given account.
+	BalanceSource interface {
+		SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+		IsSendEnabledDenom(ctx context.Context, denom string) bool
+	}
 )
 
 // helper type for simple bank access
@@ -232,16 +240,6 @@ func WithSpendableBalance() SimAccountFilter {
 	return SimAccountFilterFn(func(a SimAccount) bool {
 		return !a.LiquidBalance().Empty()
 	})
-}
-
-type ModuleAccountSource interface {
-	GetModuleAddress(moduleName string) sdk.AccAddress
-}
-
-// BalanceSource is an interface for retrieving balance-related information for a given account.
-type BalanceSource interface {
-	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-	IsSendEnabledDenom(ctx context.Context, denom string) bool
 }
 
 // ChainDataSource provides common sims test data and helper methods

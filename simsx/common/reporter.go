@@ -1,7 +1,6 @@
-package simsx
+package common
 
 import (
-	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -10,61 +9,11 @@ import (
 	"sync/atomic"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
-
-// SimulationReporter is an interface for reporting the result of a simulation run.
-type SimulationReporter interface {
-	WithScope(msg sdk.Msg, optionalSkipHook ...SkipHook) SimulationReporter
-	Skip(comment string)
-	Skipf(comment string, args ...any)
-	// IsSkipped returns true when skipped or completed
-	IsSkipped() bool
-	ToLegacyOperationMsg() simtypes.OperationMsg
-	// Fail complete with failure
-	Fail(err error, comments ...string)
-	// Success complete with success
-	Success(msg sdk.Msg, comments ...string)
-	// Close returns error captured on fail
-	Close() error
-	Comment() string
-}
 
 var _ SimulationReporter = &BasicSimulationReporter{}
 
-type ReporterStatus uint8
-
-const (
-	undefined ReporterStatus = iota
-	skipped   ReporterStatus = iota
-	completed ReporterStatus = iota
-)
-
-func (s ReporterStatus) String() string {
-	switch s {
-	case skipped:
-		return "skipped"
-	case completed:
-		return "completed"
-	default:
-		return "undefined"
-	}
-}
-
-// SkipHook is an interface that represents a callback hook used triggered on skip operations.
-// It provides a single method `Skip` that accepts variadic arguments. This interface is implemented
-// by Go stdlib testing.T and testing.B
-type SkipHook interface {
-	Skip(args ...any)
-}
-
 var _ SkipHook = SkipHookFn(nil)
-
-type SkipHookFn func(args ...any)
-
-func (s SkipHookFn) Skip(args ...any) {
-	s(args...)
-}
 
 type BasicSimulationReporter struct {
 	skipCallbacks     []SkipHook
@@ -104,7 +53,7 @@ func NewBasicSimulationReporter(optionalSkipHook ...SkipHook) *BasicSimulationRe
 // that can be used to add a callback hook that is triggered on skip operations additional to any parent skip hook.
 // This method returns the newly created
 // SimulationReporter instance.
-func (x *BasicSimulationReporter) WithScope(msg sdk.Msg, optionalSkipHook ...SkipHook) SimulationReporter {
+func (x *BasicSimulationReporter) WithScope(msg sdk.Msg, optionalSkipHook ...SkipHook) SimulationReporterRuntime {
 	typeURL := sdk.MsgTypeURL(msg)
 	r := &BasicSimulationReporter{
 		skipCallbacks:     append(x.skipCallbacks, optionalSkipHook...),
@@ -119,38 +68,23 @@ func (x *BasicSimulationReporter) WithScope(msg sdk.Msg, optionalSkipHook ...Ski
 }
 
 func (x *BasicSimulationReporter) Skip(comment string) {
-	x.toStatus(skipped, comment)
+	x.toStatus(ReporterStatusSkipped, comment)
 }
 
 func (x *BasicSimulationReporter) Skipf(comment string, args ...any) {
 	x.Skip(fmt.Sprintf(comment, args...))
 }
 
-func (x *BasicSimulationReporter) IsSkipped() bool {
-	return ReporterStatus(x.status.Load()) > undefined
+func (x *BasicSimulationReporter) IsAborted() bool {
+	return ReporterStatus(x.status.Load()) > ReporterStatusUndefined
 }
 
-func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {
-	switch ReporterStatus(x.status.Load()) {
-	case skipped:
-		return simtypes.NoOpMsg(x.module, x.msgTypeURL, x.Comment())
-	case completed:
-		x.cMX.RLock()
-		err := x.error
-		x.cMX.RUnlock()
-		if err == nil {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), true)
-		} else {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), false)
-		}
-	default:
-		x.Fail(errors.New("operation aborted before msg was executed"))
-		return x.ToLegacyOperationMsg()
-	}
+func (x *BasicSimulationReporter) Scope() (string, string) {
+	return x.module, x.msgTypeURL
 }
 
 func (x *BasicSimulationReporter) Fail(err error, comments ...string) {
-	if !x.toStatus(completed, comments...) {
+	if !x.toStatus(ReporterStatusCompleted, comments...) {
 		return
 	}
 	x.cMX.Lock()
@@ -159,7 +93,7 @@ func (x *BasicSimulationReporter) Fail(err error, comments ...string) {
 }
 
 func (x *BasicSimulationReporter) Success(msg sdk.Msg, comments ...string) {
-	if !x.toStatus(completed, comments...) {
+	if !x.toStatus(ReporterStatusCompleted, comments...) {
 		return
 	}
 	if msg == nil {
@@ -167,13 +101,27 @@ func (x *BasicSimulationReporter) Success(msg sdk.Msg, comments ...string) {
 	}
 }
 
-func (x *BasicSimulationReporter) Close() error {
-	x.completedCallback(x)
+func (x *BasicSimulationReporter) Error() error {
 	x.cMX.RLock()
 	defer x.cMX.RUnlock()
 	return x.error
 }
+func (x *BasicSimulationReporter) Close() error {
+	x.completedCallback(x)
+	return x.Error()
+}
 
+// IsSkipped
+// Deprecated: use IsAborted instead
+func (x *BasicSimulationReporter) IsSkipped() bool {
+	return x.IsAborted()
+}
+
+func (x *BasicSimulationReporter) Status() ReporterStatus {
+	return ReporterStatus(x.status.Load())
+}
+
+// transition to next status
 func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...string) bool {
 	oldStatus := ReporterStatus(x.status.Load())
 	if oldStatus > next {
@@ -187,7 +135,7 @@ func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...stri
 	x.comments = newComments
 	x.cMX.Unlock()
 
-	if oldStatus != skipped && next == skipped {
+	if oldStatus != ReporterStatusSkipped && next == ReporterStatusSkipped {
 		prettyComments := strings.Join(newComments, ", ")
 		for _, hook := range x.skipCallbacks {
 			hook.Skip(prettyComments)
@@ -221,7 +169,7 @@ func (s *ExecutionSummary) Add(module, url string, status ReporterStatus, commen
 	defer s.mx.Unlock()
 	combinedKey := fmt.Sprintf("%s_%s", module, status.String())
 	s.counts[combinedKey] += 1
-	if status == completed {
+	if status == ReporterStatusCompleted {
 		return
 	}
 	r, ok := s.skipReasons[url]

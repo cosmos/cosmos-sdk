@@ -1,4 +1,4 @@
-package simsx
+package common
 
 import (
 	"errors"
@@ -8,67 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
-
-func TestSimulationReporterToLegacy(t *testing.T) {
-	myErr := errors.New("my-error")
-	myMsg := testdata.NewTestMsg([]byte{1})
-
-	specs := map[string]struct {
-		setup  func() SimulationReporter
-		expOp  simtypes.OperationMsg
-		expErr error
-	}{
-		"init only": {
-			setup:  func() SimulationReporter { return NewBasicSimulationReporter() },
-			expOp:  simtypes.NewOperationMsgBasic("", "", "", false),
-			expErr: errors.New("operation aborted before msg was executed"),
-		},
-		"success result": {
-			setup: func() SimulationReporter {
-				r := NewBasicSimulationReporter().WithScope(myMsg)
-				r.Success(myMsg, "testing")
-				return r
-			},
-			expOp: simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing", true),
-		},
-		"error result": {
-			setup: func() SimulationReporter {
-				r := NewBasicSimulationReporter().WithScope(myMsg)
-				r.Fail(myErr, "testing")
-				return r
-			},
-			expOp:  simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing", false),
-			expErr: myErr,
-		},
-		"last error wins": {
-			setup: func() SimulationReporter {
-				r := NewBasicSimulationReporter().WithScope(myMsg)
-				r.Fail(errors.New("other-err"), "testing1")
-				r.Fail(myErr, "testing2")
-				return r
-			},
-			expOp:  simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing1, testing2", false),
-			expErr: myErr,
-		},
-		"skipped ": {
-			setup: func() SimulationReporter {
-				r := NewBasicSimulationReporter().WithScope(myMsg)
-				r.Skip("testing")
-				return r
-			},
-			expOp: simtypes.NoOpMsg("TestMsg", "/testpb.TestMsg", "testing"),
-		},
-	}
-	for name, spec := range specs {
-		t.Run(name, func(t *testing.T) {
-			r := spec.setup()
-			assert.Equal(t, spec.expOp, r.ToLegacyOperationMsg())
-			require.Equal(t, spec.expErr, r.Close())
-		})
-	}
-}
 
 func TestSimulationReporterTransitions(t *testing.T) {
 	specs := map[string]struct {
@@ -80,35 +20,35 @@ func TestSimulationReporterTransitions(t *testing.T) {
 			setup: func(r SimulationReporter) {
 				r.Skip("testing")
 			},
-			expStatus: skipped,
+			expStatus: ReporterStatusSkipped,
 		},
 		"skipped->skipped": {
 			setup: func(r SimulationReporter) {
 				r.Skip("testing1")
 				r.Skip("testing2")
 			},
-			expStatus: skipped,
+			expStatus: ReporterStatusSkipped,
 		},
 		"skipped->completed": {
 			setup: func(r SimulationReporter) {
 				r.Skip("testing1")
 				r.Success(nil, "testing2")
 			},
-			expStatus: completed,
+			expStatus: ReporterStatusCompleted,
 		},
 		"completed->completed": {
 			setup: func(r SimulationReporter) {
 				r.Success(nil, "testing1")
 				r.Fail(nil, "testing2")
 			},
-			expStatus: completed,
+			expStatus: ReporterStatusCompleted,
 		},
 		"completed->completed2": {
 			setup: func(r SimulationReporter) {
 				r.Fail(nil, "testing1")
 				r.Success(nil, "testing2")
 			},
-			expStatus: completed,
+			expStatus: ReporterStatusCompleted,
 		},
 		"completed->skipped: rejected": {
 			setup: func(r SimulationReporter) {

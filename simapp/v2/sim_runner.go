@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	runnercommon "github.com/cosmos/cosmos-sdk/simsx/runner/common"
+	"github.com/cosmos/cosmos-sdk/simsx/runner/v2"
 	"iter"
 	"math/rand"
 	"os"
@@ -35,8 +38,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simsx"
-	simsxv2 "github.com/cosmos/cosmos-sdk/simsx/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -44,17 +45,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
 
-type Tx = transaction.Tx
 type (
-	HasWeightedOperationsX              = simsx.HasWeightedOperationsX
-	HasWeightedOperationsXWithProposals = simsx.HasWeightedOperationsXWithProposals
-	HasProposalMsgsX                    = simsx.HasProposalMsgsX
+	Tx                                  = transaction.Tx
+	HasWeightedOperationsX              = common.HasWeightedOperationsX
+	HasWeightedOperationsXWithProposals = common.HasWeightedOperationsXWithProposals
+	HasProposalMsgsX                    = common.HasProposalMsgsX
 )
 
 const SimAppChainID = "simulation-app"
 
-// this list of seeds was imported from the original simulation runner: https://github.com/cosmos/tools/blob/v1.0.0/cmd/runsim/main.go#L32
-var defaultSeeds = []int64{
+// DefaultSeeds list of seeds was imported from the original simulation runner: https://github.com/cosmos/tools/blob/v1.0.0/cmd/runsim/main.go#L32
+var DefaultSeeds = []int64{
 	1, 2, 4, 7,
 	32, 123, 124, 582, 1893, 2989,
 	3012, 4728, 37827, 981928, 87821, 891823782,
@@ -71,13 +72,8 @@ const (
 )
 
 type (
-	AuthKeeper interface {
-		simsx.ModuleAccountSource
-		simsx.AccountSource
-	}
-
 	BankKeeper interface {
-		simsx.BalanceSource
+		common.BalanceSource
 		GetBlockedAddresses() map[string]bool
 	}
 
@@ -103,9 +99,9 @@ type (
 		App           SimulationApp[T]
 		TxDecoder     transaction.Codec[T]
 		BankKeeper    BankKeeper
-		AuthKeeper    AuthKeeper
+		AuthKeeper    common.AccountSourceX
 		StakingKeeper StakingKeeper
-		TXBuilder     simsxv2.TXBuilder[T]
+		TXBuilder     v2.TXBuilder[T]
 		AppManager    appmanager.AppManager[T]
 		ModuleManager ModuleManager
 	}
@@ -129,7 +125,7 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](t *testing.T, factory AppFactor
 	)
 	var (
 		bankKeeper BankKeeper
-		authKeeper AuthKeeper
+		authKeeper common.AccountSourceX
 		stKeeper   StakingKeeper
 	)
 
@@ -149,12 +145,12 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](t *testing.T, factory AppFactor
 		StakingKeeper: stKeeper,
 		AppManager:    xapp.GetApp().AppManager,
 		ModuleManager: xapp.ModuleManager(),
-		TxDecoder:     simsxv2.NewGenericTxDecoder[T](xapp.TxConfig()),
-		TXBuilder:     simsxv2.NewSDKTXBuilder[T](xapp.TxConfig(), simsxv2.DefaultGenTxGas),
+		TxDecoder:     v2.NewGenericTxDecoder[T](xapp.TxConfig()),
+		TXBuilder:     v2.NewSDKTXBuilder[T](xapp.TxConfig(), v2.DefaultGenTxGas),
 	}
 }
 
-func RunWithSeeds[T Tx](t *testing.T, seeds []int64) {
+func RunWithSeeds[T Tx, V SimulationApp[T]](t *testing.T, appFactory AppFactory[T, V], appConfigFn func() depinject.Config, seeds []int64) {
 	t.Helper()
 	cfg := cli.NewConfigFromFlags()
 	cfg.ChainID = SimAppChainID
@@ -162,14 +158,14 @@ func RunWithSeeds[T Tx](t *testing.T, seeds []int64) {
 		seed := seeds[i]
 		t.Run(fmt.Sprintf("seed: %d", seed), func(t *testing.T) {
 			t.Parallel()
-			RunWithSeed(t, NewSimApp[T], AppConfig(), cfg, seed)
+			RunWithSeed(t, appFactory, appConfigFn, cfg, seed)
 		})
 	}
 }
 
-func RunWithSeed[T Tx, V SimulationApp[T]](t *testing.T, appFactory AppFactory[T, V], appConfig depinject.Config, tCfg simtypes.Config, seed int64) {
+func RunWithSeed[T Tx, V SimulationApp[T]](t *testing.T, appFactory AppFactory[T, V], appConfigFn func() depinject.Config, tCfg simtypes.Config, seed int64) {
 	r := rand.New(rand.NewSource(seed))
-	testInstance := SetupTestInstance[T, V](t, appFactory, appConfig)
+	testInstance := SetupTestInstance[T, V](t, appFactory, appConfigFn())
 	accounts, genesisAppState, chainID, genesisTimestamp := prepareInitialGenesisState(testInstance.App, r, testInstance.BankKeeper, tCfg, testInstance.ModuleManager)
 
 	appManager := testInstance.AppManager
@@ -178,14 +174,14 @@ func RunWithSeed[T Tx, V SimulationApp[T]](t *testing.T, appFactory AppFactory[T
 	rootCtx, done := context.WithCancel(context.Background())
 	defer done()
 	initRsp, stateRoot := doChainInitWithGenesis(t, rootCtx, chainID, genesisTimestamp, appManager, testInstance.TxDecoder, genesisAppState, appStore)
-	activeValidatorSet := simsxv2.NewValSet().Update(initRsp.ValidatorUpdates)
-	valsetHistory := simsxv2.NewValSetHistory(1)
+	activeValidatorSet := v2.NewValSet().Update(initRsp.ValidatorUpdates)
+	valsetHistory := v2.NewValSetHistory(1)
 	valsetHistory.Add(genesisTimestamp, activeValidatorSet)
 
 	emptySimParams := make(map[string]json.RawMessage) // todo read sims params from disk as before
 
 	modules := testInstance.ModuleManager.Modules()
-	msgFactoriesFn := prepareSimsMsgFactories(r, modules, simsx.ParamWeightSource(emptySimParams))
+	msgFactoriesFn := prepareSimsMsgFactories(r, modules, runnercommon.ParamWeightSource(emptySimParams))
 
 	cs := chainState[T]{
 		chainID:            chainID,
@@ -285,8 +281,8 @@ func doChainInitWithGenesis[T Tx](
 type chainState[T Tx] struct {
 	chainID            string
 	blockTime          time.Time
-	activeValidatorSet simsxv2.WeightedValidators
-	valsetHistory      *simsxv2.ValSetHistory
+	activeValidatorSet v2.WeightedValidators
+	valsetHistory      *v2.ValSetHistory
 	stateRoot          store.Hash
 	app                appmanager.AppManager[T]
 	appStore           storev2.RootStore
@@ -297,12 +293,12 @@ func doMainLoop[T Tx](
 	t *testing.T,
 	rootCtx context.Context,
 	cs chainState[T],
-	nextMsgFactory func() simsx.SimMsgFactoryX,
+	nextMsgFactory func() common.SimMsgFactoryX,
 	r *rand.Rand,
-	authKeeper AuthKeeper,
-	bankKeeper simsx.BalanceSource,
+	authKeeper common.AccountSourceX,
+	bankKeeper common.BalanceSource,
 	accounts []simtypes.Account,
-	txBuilder simsxv2.TXBuilder[T],
+	txBuilder v2.TXBuilder[T],
 	stakingKeeper StakingKeeper,
 ) {
 	blockTime := cs.blockTime
@@ -326,8 +322,8 @@ func doMainLoop[T Tx](
 		txSkippedCounter int
 		txTotalCounter   int
 	)
-	rootReporter := simsx.NewBasicSimulationReporter()
-	futureOpsReg := simsxv2.NewFutureOpsRegistry()
+	rootReporter := common.NewBasicSimulationReporter()
+	futureOpsReg := v2.NewFutureOpsRegistry()
 
 	for i := 0; i < numBlocks; i++ {
 		if len(activeValidatorSet) == 0 {
@@ -354,18 +350,18 @@ func doMainLoop[T Tx](
 		fOps, pos := futureOpsReg.PopScheduledFor(blockTime), 0
 		addressCodec := cs.txConfig.SigningContext().AddressCodec()
 		simsCtx := context.WithValue(rootCtx, corecontext.CometInfoKey, cometInfo) // required for ContextAwareCometInfoService
-		resultHandlers := make([]simsx.SimDeliveryResultHandler, 0, maxTXPerBlock)
+		resultHandlers := make([]common.SimDeliveryResultHandler, 0, maxTXPerBlock)
 		var txPerBlockCounter int
 		blockRsp, updates, err := app.DeliverSims(simsCtx, blockReqN, func(ctx context.Context) iter.Seq[T] {
 			return func(yield func(T) bool) {
 				unbondingTime, err := stakingKeeper.UnbondingTime(ctx)
 				require.NoError(t, err)
 				valsetHistory.SetMaxHistory(minBlocksInUnbondingPeriod(unbondingTime))
-				testData := simsx.NewChainDataSource(ctx, r, authKeeper, bankKeeper, addressCodec, accounts...)
+				testData := common.NewChainDataSource(ctx, r, authKeeper, bankKeeper, addressCodec, accounts...)
 
 				for txPerBlockCounter < maxTXPerBlock {
 					txPerBlockCounter++
-					mergedMsgFactory := func() simsx.SimMsgFactoryX {
+					mergedMsgFactory := func() common.SimMsgFactoryX {
 						if pos < len(fOps) {
 							pos++
 							return fOps[pos-1]
@@ -373,14 +369,14 @@ func doMainLoop[T Tx](
 						return nextMsgFactory()
 					}()
 					reporter := rootReporter.WithScope(mergedMsgFactory.MsgType())
-					if fx, ok := mergedMsgFactory.(simsx.HasFutureOpsRegistry); ok {
+					if fx, ok := mergedMsgFactory.(common.HasFutureOpsRegistry); ok {
 						fx.SetFutureOpsRegistry(futureOpsReg)
 						continue
 					}
 
 					// the stf context is required to access state via keepers
-					signers, msg := mergedMsgFactory.Create()(ctx, testData, reporter)
-					if reporter.IsSkipped() {
+					signers, msg := runnercommon.SafeRunFactoryMethod(ctx, testData, reporter, mergedMsgFactory.Create())
+					if reporter.IsAborted() {
 						txSkippedCounter++
 						require.NoError(t, reporter.Close())
 						continue
@@ -427,13 +423,13 @@ func doMainLoop[T Tx](
 func prepareSimsMsgFactories(
 	r *rand.Rand,
 	modules map[string]appmodulev2.AppModule,
-	weights simsx.WeightSource,
-) func() simsx.SimMsgFactoryX {
+	weights common.WeightSource,
+) func() common.SimMsgFactoryX {
 	moduleNames := maps.Keys(modules)
 	slices.Sort(moduleNames) // make deterministic
 
 	// get all proposal types
-	proposalRegistry := simsx.NewUniqueTypeRegistry()
+	proposalRegistry := runnercommon.NewUniqueTypeRegistry()
 	for _, n := range moduleNames {
 		switch xm := modules[n].(type) {
 		case HasProposalMsgsX:
@@ -442,7 +438,7 @@ func prepareSimsMsgFactories(
 		}
 	}
 	// register all msg factories
-	factoryRegistry := simsx.NewUnorderedRegistry()
+	factoryRegistry := v2.NewUnorderedRegistry()
 	for _, n := range moduleNames {
 		switch xm := modules[n].(type) {
 		case HasWeightedOperationsX:
@@ -451,7 +447,7 @@ func prepareSimsMsgFactories(
 			xm.WeightedOperationsX(weights, factoryRegistry, proposalRegistry.Iterator(), nil)
 		}
 	}
-	return simsxv2.NextFactoryFn(factoryRegistry.Elements(), r)
+	return v2.NextFactoryFn(factoryRegistry.Elements(), r)
 }
 
 func toLegacySimsModule(modules map[string]appmodule.AppModule) []module.AppModuleSimulation {

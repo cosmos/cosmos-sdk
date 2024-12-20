@@ -2,19 +2,20 @@ package simulation
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/simsx/common"
+	"github.com/cosmos/cosmos-sdk/simsx/module"
 
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
 
-	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func MsgSendFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*nft.MsgSend] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *nft.MsgSend) {
-		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
-		to := testData.AnyAccount(reporter, simsx.ExcludeAccounts(from))
-		if reporter.IsSkipped() {
+func MsgSendFactory(k keeper.Keeper) module.SimMsgFactoryFn[*nft.MsgSend] {
+	return func(ctx context.Context, testData *common.ChainDataSource, reporter common.SimulationReporter) ([]common.SimAccount, *nft.MsgSend) {
+		from := testData.AnyAccount(reporter, common.WithSpendableBalance())
+		to := testData.AnyAccount(reporter, common.ExcludeAccounts(from))
+		if reporter.IsAborted() {
 			return nil, nil
 		}
 		n, err := randNFT(ctx, testData.Rand(), k, from.Address)
@@ -29,12 +30,12 @@ func MsgSendFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*nft.MsgSend] {
 			Receiver: to.AddressBech32,
 		}
 
-		return []simsx.SimAccount{from}, msg
+		return []common.SimAccount{from}, msg
 	}
 }
 
 // randNFT picks a random NFT from a class belonging to the specified owner(minter).
-func randNFT(ctx context.Context, r *simsx.XRand, k keeper.Keeper, minter sdk.AccAddress) (nft.NFT, error) {
+func randNFT(ctx context.Context, r *common.XRand, k keeper.Keeper, minter sdk.AccAddress) (nft.NFT, error) {
 	c, err := randClass(ctx, r, k)
 	if err != nil {
 		return nft.NFT{}, err
@@ -53,7 +54,7 @@ func randNFT(ctx context.Context, r *simsx.XRand, k keeper.Keeper, minter sdk.Ac
 }
 
 // randClass picks a random Class.
-func randClass(ctx context.Context, r *simsx.XRand, k keeper.Keeper) (nft.Class, error) {
+func randClass(ctx context.Context, r *common.XRand, k keeper.Keeper) (nft.Class, error) {
 	if classes := k.GetClasses(ctx); len(classes) != 0 {
 		return *classes[r.Intn(len(classes))], nil
 	}

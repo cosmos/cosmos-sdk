@@ -2,8 +2,8 @@ package coretesting
 
 import (
 	"context"
-
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 )
@@ -28,6 +28,8 @@ type dummyCtx struct {
 	events map[string][]event.Event
 	// maps proto events emitted by the actor.
 	protoEvents map[string][]transaction.Msg
+	// header is the header set by a test runner
+	header header.Info
 }
 
 func unwrap(ctx context.Context) *dummyCtx {

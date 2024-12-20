@@ -11,7 +11,6 @@ import (
 
 	appmodule "cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -149,6 +148,7 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).Name))
 }
 
+<<<<<<< HEAD
 // RegisterInvariants mocks base method.
 func (m *MockAppModuleWithAllExtensions) RegisterInvariants(arg0 types.InvariantRegistry) {
 	m.ctrl.T.Helper()
@@ -161,6 +161,8 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInvariants(arg0 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterInvariants), arg0)
 }
 
+=======
+>>>>>>> 71ddfbddb (refactor: remove invariants (#22994))
 // RegisterServices mocks base method.
 func (m *MockAppModuleWithAllExtensions) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()
@@ -321,6 +323,7 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).Name))
 }
 
+<<<<<<< HEAD
 // RegisterInvariants mocks base method.
 func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types.InvariantRegistry) {
 	m.ctrl.T.Helper()
@@ -333,6 +336,8 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInvariants(arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterInvariants), arg0)
 }
 
+=======
+>>>>>>> 71ddfbddb (refactor: remove invariants (#22994))
 // RegisterServices mocks base method.
 func (m *MockAppModuleWithAllExtensionsABCI) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()

@@ -45,7 +45,6 @@ x/{module_name}
 │   ├── genesis.go
 │   ├── grpc_query.go
 │   ├── hooks.go
-│   ├── invariants.go
 │   ├── keeper.go
 │   ├── keys.go
 │   ├── msg_server.go

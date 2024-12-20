@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simsx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -32,7 +31,6 @@ var (
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasInvariants       = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
@@ -90,11 +88,6 @@ func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.
 func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 	group.RegisterLegacyAminoCodec(registrar)
-}
-
-// RegisterInvariants does nothing, there are no invariants to enforce
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // RegisterServices registers module services.

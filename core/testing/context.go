@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -68,6 +69,17 @@ func (t TestContext) WithExecMode(mode transaction.ExecMode) context.Context {
 	}
 }
 
+// WithGas sets the gas config and meter on a testing ctx and returns the updated ctx.
+func (t TestContext) WithGas(gasConfig gas.GasConfig, gasMeter gas.Meter) context.Context {
+	dummy := unwrap(t.ctx)
+	dummy.gasConfig = gasConfig
+	dummy.gasMeter = gasMeter
+
+	return TestContext{
+		ctx: context.WithValue(t.ctx, dummyKey{}, dummy),
+	}
+}
+
 type dummyCtx struct {
 	// maps store by the actor.
 	stores map[string]store.KVStore
@@ -78,6 +90,9 @@ type dummyCtx struct {
 
 	header   header.Info
 	execMode transaction.ExecMode
+
+	gasMeter  gas.Meter
+	gasConfig gas.GasConfig
 }
 
 func unwrap(ctx context.Context) *dummyCtx {

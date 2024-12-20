@@ -73,8 +73,6 @@ func New[T transaction.Tx](
 		}
 	}
 
-	// TODO: register the gRPC-Gateway routes
-
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 	mux := http.NewServeMux()

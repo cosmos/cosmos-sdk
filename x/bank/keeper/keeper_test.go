@@ -25,7 +25,6 @@ import (
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -181,12 +180,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.env = newEnv
 }
 
-func (suite *KeeperTestSuite) mockQueryClient(ctx sdk.Context) banktypes.QueryClient {
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.encCfg.InterfaceRegistry)
-	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
-	return banktypes.NewQueryClient(queryHelper)
-}
-
 func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) {
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
 }
@@ -230,7 +223,7 @@ func (suite *KeeperTestSuite) mockValidateBalance(acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.AccountI) {
+func (suite *KeeperTestSuite) mockSpendableCoins(ctx context.Context, acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 
@@ -1399,16 +1392,19 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 		},
 	}
 
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	events := suite.env.MemEventsService().GetEvents(suite.ctx)
 	// events are shifted due to the funding account events
-	events := ctx.EventManager().Events()
 	require.Equal(8, len(events))
 	require.Equal(event1.Type, events[7].Type)
 	attrs, err := event1.Attributes()
 	require.NoError(err)
+
+	attrs, err = events[7].Attributes()
+	require.NoError(err)
+
 	for i := range attrs {
-		require.Equal(attrs[i].Key, events[7].Attributes[i].Key)
-		require.Equal(attrs[i].Value, events[7].Attributes[i].Value)
+		require.Equal(attrs[i].Key, attrs[i].Key)
+		require.Equal(attrs[i].Value, attrs[i].Value)
 	}
 }
 
@@ -1573,7 +1569,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountSend() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	require := suite.Require()
 	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -1603,7 +1599,7 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 }
 
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	require := suite.Require()
 	now := time.Now()
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -1638,7 +1634,7 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountReceive() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	require := suite.Require()
 	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -1671,7 +1667,7 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 }
 
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	require := suite.Require()
 	now := time.Now()
 
@@ -1767,7 +1763,7 @@ func (suite *KeeperTestSuite) TestDelegateCoins_Invalid() {
 }
 
 func (suite *KeeperTestSuite) TestUndelegateCoins() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	require := suite.Require()
 	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -1777,7 +1773,7 @@ func (suite *KeeperTestSuite) TestUndelegateCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
-	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, suite.env.HeaderService().HeaderInfo(ctx).Time.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
 	suite.mockFundAccount(accAddrs[0])

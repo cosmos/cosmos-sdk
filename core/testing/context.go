@@ -2,6 +2,8 @@ package coretesting
 
 import (
 	"context"
+	"time"
+
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
@@ -10,24 +12,60 @@ import (
 
 type dummyKey struct{}
 
-func Context() context.Context {
+var _ context.Context = &TestContext{}
+
+type TestContext struct {
+	ctx context.Context
+}
+
+func Context() TestContext {
 	dummy := &dummyCtx{
 		stores:      map[string]store.KVStore{},
 		events:      map[string][]event.Event{},
 		protoEvents: map[string][]transaction.Msg{},
 		header:      header.Info{},
+		execMode:    transaction.ExecModeFinalize,
 	}
 
-	ctx := context.WithValue(context.Background(), dummyKey{}, dummy)
-	return ctx
+	return TestContext{
+		ctx: context.WithValue(context.Background(), dummyKey{}, dummy),
+	}
+}
+
+func (t TestContext) Deadline() (deadline time.Time, ok bool) {
+	return t.ctx.Deadline()
+}
+
+func (t TestContext) Done() <-chan struct{} {
+	return t.ctx.Done()
+}
+
+func (t TestContext) Err() error {
+	return t.ctx.Err()
+}
+
+func (t TestContext) Value(key any) any {
+	return t.ctx.Value(key)
 }
 
 // WithHeader sets the header on a testing ctx and returns the updated ctx.
-func WithHeader(ctx context.Context, info header.Info) context.Context {
-	dummy := unwrap(ctx)
+func (t TestContext) WithHeader(info header.Info) TestContext {
+	dummy := unwrap(t.ctx)
 	dummy.header = info
 
-	return context.WithValue(ctx, dummyKey{}, dummy)
+	return TestContext{
+		ctx: context.WithValue(t.ctx, dummyKey{}, dummy),
+	}
+}
+
+// WithExecMode sets the exec mode on a testing ctx and returns the updated ctx.
+func (t TestContext) WithExecMode(mode transaction.ExecMode) context.Context {
+	dummy := unwrap(t.ctx)
+	dummy.execMode = mode
+
+	return TestContext{
+		ctx: context.WithValue(t.ctx, dummyKey{}, dummy),
+	}
 }
 
 type dummyCtx struct {
@@ -37,8 +75,9 @@ type dummyCtx struct {
 	events map[string][]event.Event
 	// maps proto events emitted by the actor.
 	protoEvents map[string][]transaction.Msg
-	// header is the header set by a test runner
-	header header.Info
+
+	header   header.Info
+	execMode transaction.ExecMode
 }
 
 func unwrap(ctx context.Context) *dummyCtx {

@@ -1,11 +1,10 @@
 package coretesting
 
 import (
-	"context"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 )
 
-func SetupTestEnvironment(moduleName string) (context.Context, appmodulev2.Environment) {
+func SetupTestEnvironment(moduleName string) (TestContext, appmodulev2.Environment) {
 	ctx := Context()
 
 	return ctx, appmodulev2.Environment{
@@ -16,7 +15,7 @@ func SetupTestEnvironment(moduleName string) (context.Context, appmodulev2.Envir
 		HeaderService:      MemHeaderService{},
 		QueryRouterService: nil,
 		MsgRouterService:   nil,
-		TransactionService: nil,
+		TransactionService: MemTransactionService{},
 		KVStoreService:     KVStoreService(ctx, moduleName),
 		MemStoreService:    nil,
 	}

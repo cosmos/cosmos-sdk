@@ -59,3 +59,20 @@ type Config struct {
 	// Datadog. Only utilized if MetricsSink is set to "dogstatsd".
 	DatadogHostname string `mapstructure:"datadog-hostname" toml:"data-dog-hostname" comment:"DatadogHostname defines the hostname to use when emitting metrics to Datadog. Only utilized if MetricsSink is set to \"dogstatsd\"."`
 }
+
+// CfgOption is a function that allows to overwrite the default server configuration.
+type CfgOption func(*Config)
+
+// OverwriteDefaultConfig overwrites the default config with the new config.
+func OverwriteDefaultConfig(newCfg *Config) CfgOption {
+	return func(cfg *Config) {
+		*cfg = *newCfg
+	}
+}
+
+// Disable the telemetry server by default (default enabled).
+func Disable() CfgOption {
+	return func(cfg *Config) {
+		cfg.Enable = false
+	}
+}

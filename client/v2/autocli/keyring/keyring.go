@@ -83,6 +83,6 @@ func (k *KeyringImpl) KeyType(name string) (uint, error) {
 }
 
 // KeyInfo given a key name or address returns key name, key address and key type.
-func (k *KeyringImpl) KeyInfo(nameOrAddr string) (string, string, uint, error) {
+func (k *KeyringImpl) KeyInfo(nameOrAddr string) (string, string, []byte, uint, error) {
 	return k.k.KeyInfo(nameOrAddr)
 }

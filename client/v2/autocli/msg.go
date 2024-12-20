@@ -12,6 +12,8 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/autocli/prompt"
+	v2context "cosmossdk.io/client/v2/context"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/governance"
 	"cosmossdk.io/client/v2/internal/print"
@@ -21,10 +23,6 @@ import (
 	"cosmossdk.io/core/transaction"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/input"
-	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
@@ -122,21 +120,17 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 // BuildMsgMethodCommand returns a command that outputs the JSON representation of the message.
 func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
 	execFunc := func(cmd *cobra.Command, input protoreflect.Message) error {
-		clientCtx, err := client.GetClientTxContext(cmd)
-		if err != nil {
-			return err
-		}
-
-		clientCtx = clientCtx.WithCmdContext(cmd.Context())
-		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
-
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
 		addressCodec := b.Builder.AddressCodec
 
+		ctx, err := b.getContext(cmd)
+		if err != nil {
+			return err
+		}
 		// handle gov proposals commands
 		skipProposal, _ := cmd.Flags().GetBool(flags.FlagNoProposal)
 		if options.GovProposal && !skipProposal {
-			return b.handleGovProposal(cmd, input, clientCtx, addressCodec, fd)
+			return b.handleGovProposal(ctx, cmd, input, addressCodec, fd)
 		}
 
 		// set signer to signer field if empty
@@ -152,8 +146,8 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 				}
 			}
 
-			signerFromFlag := clientCtx.GetFromAddress()
-			signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
+			_, signerFromFlag, err := b.getFromAddress(ctx, cmd)
+			signer, err := addressCodec.BytesToString(signerFromFlag)
 			if err != nil {
 				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
 			}
@@ -167,7 +161,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		msg := dynamicpb.NewMessage(input.Descriptor())
 		proto.Merge(msg, input.Interface())
 
-		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		return b.generateOrBroadcastTxWithV2(cmd, msg)
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, execFunc)
@@ -193,9 +187,9 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 // handleGovProposal sets the authority field of the message to the gov module address and creates a gov proposal.
 func (b *Builder) handleGovProposal(
+	ctx context.Context,
 	cmd *cobra.Command,
 	input protoreflect.Message,
-	clientCtx client.Context,
 	addressCodec addresscodec.Codec,
 	fd protoreflect.FieldDescriptor,
 ) error {
@@ -206,12 +200,10 @@ func (b *Builder) handleGovProposal(
 	}
 	input.Set(fd, protoreflect.ValueOfString(authority))
 
-	signerFromFlag := clientCtx.GetFromAddress()
-	signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
+	signer, _, err := b.getFromAddress(ctx, cmd)
 	if err != nil {
-		return fmt.Errorf("failed to set signer on message, got %q: %w", signerFromFlag, err)
+		return err
 	}
-
 	proposal, err := governance.ReadGovPropCmdFlags(signer, cmd.Flags())
 	if err != nil {
 		return err
@@ -227,12 +219,32 @@ func (b *Builder) handleGovProposal(
 		return fmt.Errorf("failed to set msg in proposal %w", err)
 	}
 
-	return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+	return b.generateOrBroadcastTxWithV2(cmd, proposal)
+}
+
+// getFromAddress retrieves the sender's address from the command flags and keyring.
+// It returns the address string, raw address bytes, and any error encountered.
+// The address is obtained from the --from flag and looked up in the keyring.
+func (b *Builder) getFromAddress(ctx context.Context, cmd *cobra.Command) (string, []byte, error) {
+	clientCtx, err := v2context.ClientContextFromGoContext(ctx)
+	if err != nil {
+		return "", nil, err
+	}
+
+	from, err := cmd.Flags().GetString(flags.FlagFrom)
+	if err != nil {
+		return "", nil, err
+	}
+
+	_, addrStr, addr, _, err := clientCtx.Keyring.KeyInfo(from)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return addrStr, addr, nil
 }
 
 // generateOrBroadcastTxWithV2 generates or broadcasts a transaction with the provided messages using v2 transaction handling.
-//
-//nolint:unused // It'll be used once BuildMsgMethodCommand is updated to use factory v2.
 func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transaction.Msg) error {
 	ctx, err := b.getContext(cmd)
 	if err != nil {
@@ -274,8 +286,6 @@ func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transa
 
 // userConfirmation returns a function that prompts the user for confirmation
 // before signing and broadcasting a transaction.
-//
-//nolint:unused // It is used in generateOrBroadcastTxWithV2 however linting is complaining.
 func (b *Builder) userConfirmation(cmd *cobra.Command) func([]byte) (bool, error) {
 	format, _ := cmd.Flags().GetString(flags.FlagOutput)
 	printer := print.Printer{
@@ -289,7 +299,13 @@ func (b *Builder) userConfirmation(cmd *cobra.Command) func([]byte) (bool, error
 			return false, err
 		}
 		buf := bufio.NewReader(cmd.InOrStdin())
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, cmd.ErrOrStderr())
+
+		err = printer.PrintString("confirm transaction before signing and broadcasting y/N: ")
+		if err != nil {
+			return false, err
+		}
+
+		ok, err := prompt.UserConfirmation(buf)
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "error: %v\ncanceled transaction\n", err)
 			return false, err

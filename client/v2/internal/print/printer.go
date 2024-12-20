@@ -42,7 +42,7 @@ func NewPrinter(cmd *cobra.Command) (*Printer, error) {
 
 // PrintString prints the raw string
 func (p *Printer) PrintString(str string) error {
-	return p.PrintBytes([]byte(str))
+	return p.print([]byte(str))
 }
 
 // PrintRaw prints raw JSON message without marshaling
@@ -63,12 +63,21 @@ func (p *Printer) PrintBytes(out []byte) error {
 		}
 	}
 
+	err = p.print(out)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Printer) print(out []byte) error {
 	writer := p.Output
 	if writer == nil {
 		writer = os.Stdout
 	}
 
-	_, err = writer.Write(out)
+	_, err := writer.Write(out)
 	if err != nil {
 		return err
 	}

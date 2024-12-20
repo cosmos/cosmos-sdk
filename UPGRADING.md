@@ -44,6 +44,8 @@ To be able to simulate nested messages within a transaction, message types conta
 the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
 transaction simulation. -->
 
+### Modules
+
 #### `x/params`
 
 The `x/params` module has been removed from the Cosmos SDK.  The following [migration](https://github.com/cosmos/cosmos-sdk/blob/828fcf2f05db0c4759ed370852b6dacc589ea472/x/mint/migrations/v2/migrate.go) 

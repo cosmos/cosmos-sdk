@@ -3,9 +3,10 @@ package keeper
 import (
 	"bytes"
 	"context"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"errors"
 	"fmt"
+
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

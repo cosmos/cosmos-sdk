@@ -128,11 +128,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	//key := storetypes.NewKVStoreKey(banktypes.StoreKey)
-	//testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	//ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
-
 	testEnironmentConfig := coretesting.TestEnvironmentConfig{
 		ModuleName:  banktypes.ModuleName,
 		Logger:      log.NewNopLogger(),
@@ -140,10 +136,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 		QueryRouter: nil,
 	}
 
-	newCtx, newEnv := coretesting.NewTestEnvironment(testEnironmentConfig)
-	newCtx = newCtx.WithHeaderInfo(header.Info{Time: time.Now()})
-	// env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
-	ctx := newCtx
+	ctx, env := coretesting.NewTestEnvironment(testEnironmentConfig)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addr, err := ac.BytesToString(accAddrs[4])
@@ -155,11 +149,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctrl := gomock.NewController(suite.T())
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 	authKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
-	suite.ctx = newCtx
+	suite.ctx = ctx
 	suite.authKeeper = authKeeper
 	suite.addrCdc = ac
 	suite.bankKeeper = keeper.NewBaseKeeper(
-		newEnv.Environment(),
+		env.Environment(),
 		encCfg.Codec,
 		suite.authKeeper,
 		map[string]bool{addr: true},
@@ -177,7 +171,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.queryClient = queryServer
 	suite.msgServer = keeper.NewMsgServerImpl(suite.bankKeeper)
 	suite.encCfg = encCfg
-	suite.env = newEnv
+	suite.env = env
 }
 
 func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) {
@@ -1396,15 +1390,15 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	// events are shifted due to the funding account events
 	require.Equal(8, len(events))
 	require.Equal(event1.Type, events[7].Type)
-	attrs, err := event1.Attributes()
+	attrs1, err := event1.Attributes()
 	require.NoError(err)
 
-	attrs, err = events[7].Attributes()
+	attrs, err := events[7].Attributes()
 	require.NoError(err)
 
-	for i := range attrs {
-		require.Equal(attrs[i].Key, attrs[i].Key)
-		require.Equal(attrs[i].Value, attrs[i].Value)
+	for i := range attrs1 {
+		require.Equal(attrs1[i].Key, attrs[i].Key)
+		require.Equal(attrs1[i].Value, attrs[i].Value)
 	}
 }
 

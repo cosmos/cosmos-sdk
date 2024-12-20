@@ -1,8 +1,6 @@
 package types_test
 
 import (
-	"context"
-	"cosmossdk.io/log"
 	"fmt"
 	"testing"
 
@@ -10,6 +8,7 @@ import (
 
 	coregas "cosmossdk.io/core/gas"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
 
@@ -26,19 +25,11 @@ var (
 	unknownAddrStr = "cosmos1ta047h6lw4hxkmn0wah97h6lta0sml880l"
 )
 
-type mockGasService struct {
-	coregas.Service
-}
-
-func (m mockGasService) GasMeter(_ context.Context) coregas.Meter {
-	return mockGasMeter{}
-}
-
 type mockGasMeter struct {
 	coregas.Meter
 }
 
-func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
+func (m mockGasMeter) Consume(_ coregas.Gas, _ string) error {
 	return nil
 }
 

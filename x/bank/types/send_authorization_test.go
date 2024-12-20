@@ -2,21 +2,18 @@ package types_test
 
 import (
 	"context"
+	"cosmossdk.io/log"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	corecontext "cosmossdk.io/core/context"
 	coregas "cosmossdk.io/core/gas"
-	coreheader "cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/bank/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -29,17 +26,11 @@ var (
 	unknownAddrStr = "cosmos1ta047h6lw4hxkmn0wah97h6lta0sml880l"
 )
 
-type headerService struct{}
-
-func (h headerService) HeaderInfo(ctx context.Context) coreheader.Info {
-	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
-}
-
 type mockGasService struct {
 	coregas.Service
 }
 
-func (m mockGasService) GasMeter(ctx context.Context) coregas.Meter {
+func (m mockGasService) GasMeter(_ context.Context) coregas.Meter {
 	return mockGasMeter{}
 }
 
@@ -53,11 +44,13 @@ func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
 
 func TestSendAuthorization(t *testing.T) {
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	sdkCtx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithHeaderInfo(coreheader.Info{})
-	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodulev2.Environment{
-		HeaderService: headerService{},
-		GasService:    mockGasService{},
-	})
+	cfg := coretesting.TestEnvironmentConfig{
+		ModuleName: "bank",
+		Logger:     log.NewNopLogger(),
+	}
+
+	ctx, _ := coretesting.NewTestEnvironment(cfg)
+	ctx = ctx.WithGas(coregas.GasConfig{}, mockGasMeter{})
 
 	allowList := make([]sdk.AccAddress, 1)
 	allowList[0] = toAddr

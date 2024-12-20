@@ -1,7 +1,10 @@
 package coretesting
 
 import (
+	"context"
+
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	corecontext "cosmossdk.io/core/context"
 	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/store"
@@ -26,7 +29,7 @@ func NewTestEnvironment(cfg TestEnvironmentConfig) (TestContext, TestEnvironment
 	memEventService := EventsService(ctx, cfg.ModuleName)
 	memHeaderService := MemHeaderService{}
 
-	return ctx, TestEnvironment{
+	env := TestEnvironment{
 		env: appmodulev2.Environment{
 			Logger:             cfg.Logger,
 			BranchService:      nil,
@@ -42,6 +45,10 @@ func NewTestEnvironment(cfg TestEnvironmentConfig) (TestContext, TestEnvironment
 		memEventsService: memEventService,
 		memHeaderService: memHeaderService,
 	}
+
+	// set internal context to point to environment
+	ctx.ctx = context.WithValue(ctx.ctx, corecontext.EnvironmentContextKey, env.env)
+	return ctx, env
 }
 
 func (env TestEnvironment) MemEventsService() MemEventsService {

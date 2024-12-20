@@ -26,6 +26,8 @@ func Context() TestContext {
 		protoEvents: map[string][]transaction.Msg{},
 		header:      header.Info{},
 		execMode:    transaction.ExecModeFinalize,
+		gasConfig:   gas.GasConfig{},
+		gasMeter:    nil,
 	}
 
 	return TestContext{
@@ -60,7 +62,7 @@ func (t TestContext) WithHeaderInfo(info header.Info) TestContext {
 }
 
 // WithExecMode sets the exec mode on a testing ctx and returns the updated ctx.
-func (t TestContext) WithExecMode(mode transaction.ExecMode) context.Context {
+func (t TestContext) WithExecMode(mode transaction.ExecMode) TestContext {
 	dummy := unwrap(t.ctx)
 	dummy.execMode = mode
 
@@ -70,7 +72,7 @@ func (t TestContext) WithExecMode(mode transaction.ExecMode) context.Context {
 }
 
 // WithGas sets the gas config and meter on a testing ctx and returns the updated ctx.
-func (t TestContext) WithGas(gasConfig gas.GasConfig, gasMeter gas.Meter) context.Context {
+func (t TestContext) WithGas(gasConfig gas.GasConfig, gasMeter gas.Meter) TestContext {
 	dummy := unwrap(t.ctx)
 	dummy.gasConfig = gasConfig
 	dummy.gasMeter = gasMeter

@@ -147,7 +147,7 @@ Same as above:
 ```go
 serverOptions.VerifyVoteExtensionHandler = CustomVerifyVoteExtensionHandler()
 
-func CustomVerifyVoteExtensionHandler]() handlers.VerifyVoteExtensionHandler {
+func CustomVerifyVoteExtensionHandler() handlers.VerifyVoteExtensionHandler {
     return  func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
         return &abci.VerifyVoteExtensionResponse{}, nil
     }
@@ -268,7 +268,7 @@ func CustomProcessProposalHandler[T transaction.Tx]() handlers.ProcessHandler[T]
 ### Preblocker
 
 In v2, the `PreBlocker` function works in the same way as it does in v1. However, it is
-is now passed in as an option to `appbuilder.Build`.
+now passed in as an option to `appbuilder.Build`.
 
 ```go
 app.App, err = appBuilder.Build(runtime.AppBuilderWithPreblocker(

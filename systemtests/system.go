@@ -493,7 +493,7 @@ func (s *SystemUnderTest) ModifyGenesisJSON(t *testing.T, mutators ...GenesisMut
 	s.modifyGenesisJSON(t, mutators...)
 }
 
-// modify json without enforcing a reset
+// modifyGenesisJSON modify json without enforcing a reset
 func (s *SystemUnderTest) modifyGenesisJSON(t *testing.T, mutators ...GenesisMutator) {
 	t.Helper()
 	require.Empty(t, s.currentHeight.Load(), "forced chain reset required")
@@ -607,7 +607,7 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 	})
 }
 
-// tracks the PID in state with a go routine waiting for the shutdown completion to unregister
+// awaitProcessCleanup tracks the PID in state with a go routine waiting for the shutdown completion to unregister
 func (s *SystemUnderTest) awaitProcessCleanup(cmd *exec.Cmd) {
 	pid := cmd.Process.Pid
 	s.pidsLock.Lock()
@@ -779,7 +779,7 @@ func (s *SystemUnderTest) NewEventListener(t *testing.T) *EventListener {
 	return NewEventListener(t, s.rpcAddr)
 }
 
-// is any process let running?
+// anyNodeRunning is any process let running?
 func (s *SystemUnderTest) anyNodeRunning() bool {
 	s.pidsLock.RLock()
 	defer s.pidsLock.RUnlock()

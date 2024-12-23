@@ -16,21 +16,17 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/client/v2/internal/testpb"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var buildModuleMsgCommand = func(moduleName string, f *fixture) (*cobra.Command, error) {
-	ctx := context.WithValue(context.Background(), client.ClientContextKey, &f.clientCtx)
-	cmd := topLevelCmd(ctx, moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
+	cmd := topLevelCmd(context.Background(), moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 	err := f.b.AddMsgServiceCommands(cmd, bankAutoCLI)
 	return cmd, err
 }
 
 func buildCustomModuleMsgCommand(cmdDescriptor *autocliv1.ServiceCommandDescriptor) func(moduleName string, f *fixture) (*cobra.Command, error) {
 	return func(moduleName string, f *fixture) (*cobra.Command, error) {
-		ctx := context.WithValue(context.Background(), client.ClientContextKey, &f.clientCtx)
-		cmd := topLevelCmd(ctx, moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
+		cmd := topLevelCmd(context.Background(), moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 		err := f.b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err
 	}
@@ -56,6 +52,7 @@ func TestMsg(t *testing.T) {
 		"--generate-only",
 		"--output", "json",
 		"--chain-id", fixture.chainID,
+		"--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -76,6 +73,7 @@ func TestMsg(t *testing.T) {
 		"--generate-only",
 		"--output", "json",
 		"--chain-id", fixture.chainID,
+		"--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -99,6 +97,7 @@ func TestMsg(t *testing.T) {
 		"--generate-only",
 		"--chain-id", fixture.chainID,
 		"--keyring-backend", fixture.kBackend,
+		"--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -123,6 +122,7 @@ func TestMsg(t *testing.T) {
 		"--output", "json",
 		"--generate-only",
 		"--chain-id", fixture.chainID,
+		"--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -150,6 +150,7 @@ func TestMsgWithFlattenFields(t *testing.T) {
 		"--generate-only",
 		"--output", "json",
 		"--chain-id", fixture.chainID,
+		"--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "flatten-output.golden"))

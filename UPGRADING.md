@@ -12,7 +12,11 @@ It is additional to the changes described here.
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
+<<<<<<< HEAD
 Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](./simapp/CHANGELOG.md).
+=======
+Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/simapp/CHANGELOG.md).
+>>>>>>> 2596c7f6b (docs: fix dead link in `UPGRADING.md` (#23059))
 
 #### Client (`root.go`)
 

@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -28,9 +27,8 @@ import (
 )
 
 type fixture struct {
-	conn      *testClientConn
-	b         *Builder
-	clientCtx client.Context
+	conn *testClientConn
+	b    *Builder
 
 	home     string
 	chainID  string

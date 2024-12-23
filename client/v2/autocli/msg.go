@@ -146,7 +146,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 				}
 			}
 
-			signer, _, err := b.getFromAddress(ctx, cmd)
+			signer, _, err := b.getFromAddress(ctx, cmd, addressCodec)
 			if err != nil {
 				return err
 			}
@@ -199,7 +199,7 @@ func (b *Builder) handleGovProposal(
 	}
 	input.Set(fd, protoreflect.ValueOfString(authority))
 
-	signer, _, err := b.getFromAddress(ctx, cmd)
+	signer, _, err := b.getFromAddress(ctx, cmd, addressCodec)
 	if err != nil {
 		return err
 	}
@@ -224,7 +224,7 @@ func (b *Builder) handleGovProposal(
 // getFromAddress retrieves the sender's address from the command flags and keyring.
 // It returns the address string, raw address bytes, and any error encountered.
 // The address is obtained from the --from flag and looked up in the keyring.
-func (b *Builder) getFromAddress(ctx context.Context, cmd *cobra.Command) (string, []byte, error) {
+func (b *Builder) getFromAddress(ctx context.Context, cmd *cobra.Command, ac addresscodec.Codec) (string, []byte, error) {
 	clientCtx, err := v2context.ClientContextFromGoContext(ctx)
 	if err != nil {
 		return "", nil, err
@@ -235,7 +235,7 @@ func (b *Builder) getFromAddress(ctx context.Context, cmd *cobra.Command) (strin
 		return "", nil, err
 	}
 
-	addr, err := clientCtx.AddressCodec.StringToBytes(from)
+	addr, err := ac.StringToBytes(from)
 	if err == nil {
 		return from, addr, nil
 	}

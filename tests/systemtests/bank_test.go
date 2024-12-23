@@ -94,7 +94,7 @@ func TestBankSendTxCmd(t *testing.T) {
 		require.Len(t, gotOutputs, 1)
 		rsp := gotOutputs[0].(string)
 		// check gas estimate value found in output
-		require.Contains(t, rsp, "gas estimate")
+		require.Contains(t, rsp, "gas_estimate")
 		return false
 	}
 	dryRunCmdArgs := append(bankSendCmdArgs, "--dry-run")

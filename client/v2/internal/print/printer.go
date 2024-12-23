@@ -63,12 +63,7 @@ func (p *Printer) PrintBytes(out []byte) error {
 		}
 	}
 
-	err = p.print(out)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return p.print(out)
 }
 
 func (p *Printer) print(out []byte) error {

@@ -147,6 +147,10 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			}
 
 			_, signerFromFlag, err := b.getFromAddress(ctx, cmd)
+			if err != nil {
+				return err
+			}
+
 			signer, err := addressCodec.BytesToString(signerFromFlag)
 			if err != nil {
 				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)

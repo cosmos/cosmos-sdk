@@ -146,14 +146,9 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 				}
 			}
 
-			_, signerFromFlag, err := b.getFromAddress(ctx, cmd)
+			signer, _, err := b.getFromAddress(ctx, cmd)
 			if err != nil {
 				return err
-			}
-
-			signer, err := addressCodec.BytesToString(signerFromFlag)
-			if err != nil {
-				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
 			}
 
 			input.Set(fd, protoreflect.ValueOfString(signer))
@@ -238,6 +233,11 @@ func (b *Builder) getFromAddress(ctx context.Context, cmd *cobra.Command) (strin
 	from, err := cmd.Flags().GetString(flags.FlagFrom)
 	if err != nil {
 		return "", nil, err
+	}
+
+	addr, err := clientCtx.AddressCodec.StringToBytes(from)
+	if err == nil {
+		return from, addr, nil
 	}
 
 	_, addrStr, addr, _, err := clientCtx.Keyring.KeyInfo(from)

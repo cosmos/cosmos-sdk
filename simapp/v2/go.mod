@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241219154748-69025c556666 // main
 	cosmossdk.io/server/v2 v2.0.0-beta.1 // main
-	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/cometbft v1.0.0-beta.1
 	cosmossdk.io/store/v2 v2.0.0-beta.1 // main
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
 	cosmossdk.io/tools/confix v0.2.0-rc.1
@@ -253,7 +253,6 @@ require (
 // )
 replace (
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main
-	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 )
 
 // Below are the long-lived replace of the SimApp

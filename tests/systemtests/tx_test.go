@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"google.golang.org/grpc/metadata"
 
 	systest "cosmossdk.io/systemtests"
 
@@ -60,8 +61,10 @@ func TestQueryBySig(t *testing.T) {
 	res := cli.Run("tx", "broadcast", signedTxFile.Name())
 	systest.RequireTxSuccess(t, res)
 
+	md := map[string][]string{"x-cosmos-block-height": []string{gjson.Get(res, "height").String()}}
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
 	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
-	resp, err := qc.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{
+	resp, err := qc.GetTxsEvent(ctx, &tx.GetTxsEventRequest{
 		Query:   sigFormatted,
 		OrderBy: 0,
 		Page:    0,

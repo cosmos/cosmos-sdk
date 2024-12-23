@@ -280,6 +280,9 @@ func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transa
 	}
 
 	output, _ := cmd.Flags().GetString(flags.FlagOutput)
+	if genOnly {
+		output = "json"
+	}
 	p := print.Printer{
 		Output:       cmd.OutOrStdout(),
 		OutputFormat: output,

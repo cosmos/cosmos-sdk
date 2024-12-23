@@ -363,6 +363,11 @@ func createSnapshotsManager(
 	if err != nil {
 		return nil, err
 	}
+
+	if store == nil {
+		return nil, errors.New("store is nil")
+	}
+
 	var interval, keepRecent uint64
 	// if flag was not passed, use as 0.
 	if cmd.Flags().Changed(FlagKeepRecent) {

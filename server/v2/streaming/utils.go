@@ -1,11 +1,12 @@
 package streaming
 
-import "cosmossdk.io/core/event"
+import (
+	"cosmossdk.io/core/event"
+)
 
 func IntoStreamingEvents(events []event.Event) ([]*Event, error) {
 	streamingEvents := make([]*Event, len(events))
-
-	for _, event := range events {
+	for i, event := range events {
 		strEvent := &Event{
 			Type: event.Type,
 		}
@@ -19,7 +20,7 @@ func IntoStreamingEvents(events []event.Event) ([]*Event, error) {
 				Value: eventValue.Value,
 			})
 		}
-		streamingEvents = append(streamingEvents, strEvent)
+		streamingEvents[i] = strEvent
 	}
 
 	return streamingEvents, nil

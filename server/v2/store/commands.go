@@ -74,12 +74,18 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func createRootStore(v *viper.Viper, logger log.Logger) (storev2.RootStore, root.Options, error) {
+func createRootStore(v *viper.Viper, logger log.Logger, storeKeys ...string) (storev2.RootStore, root.Options, error) {
 	storeConfig, err := UnmarshalConfig(v.AllSettings())
 	if err != nil {
 		return nil, root.Options{}, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-	store, err := root.NewBuilder().Build(logger, storeConfig)
+
+	builder := root.NewBuilder()
+	for _, key := range storeKeys {
+		builder.RegisterKey(key)
+	}
+
+	store, err := builder.Build(logger, storeConfig)
 	if err != nil {
 		return nil, root.Options{}, fmt.Errorf("failed to create store backend: %w", err)
 	}

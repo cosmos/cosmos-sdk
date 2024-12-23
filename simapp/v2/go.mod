@@ -251,9 +251,7 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace (
-	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main
-)
+replace cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main
 
 // Below are the long-lived replace of the SimApp
 replace (

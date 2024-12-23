@@ -20,7 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -32,7 +31,6 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
-	_ module.HasInvariants       = AppModule{}
 	_ module.HasABCIGenesis      = AppModule{}
 	_ module.HasABCIEndBlock     = AppModule{}
 
@@ -87,11 +85,6 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 // GetTxCmd returns the root tx command for the staking module.
 func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
-}
-
-// RegisterInvariants registers the staking module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // RegisterServices registers module services.

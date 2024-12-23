@@ -39,3 +39,27 @@ message DecCoin {
     (gogoproto.nullable)   = false
   ];
 }
+
+// IntProto defines a Protobuf wrapper around an Int object.
+// Deprecated: Prefer to use math.Int directly. It supports binary Marshal and Unmarshal.
+message IntProto {
+  option deprecated = true;
+
+  string int = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// DecProto defines a Protobuf wrapper around a Dec object.
+// Deprecated: Prefer to use math.LegacyDec directly. It supports binary Marshal and Unmarshal.
+message DecProto {
+  option deprecated = true;
+
+  string dec = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+}

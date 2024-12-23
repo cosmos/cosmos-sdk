@@ -1,18 +1,18 @@
 module cosmossdk.io/store
 
-go 1.23
+go 1.23.4
 
 require (
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
+	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
-	github.com/cometbft/cometbft v1.0.0-rc1
-	github.com/cometbft/cometbft/api v1.0.0-rc.1
+	github.com/cometbft/cometbft v1.0.0
+	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/iavl v1.3.2
+	github.com/cosmos/iavl v1.3.4
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-metrics v0.5.3
@@ -27,8 +27,8 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.4.0 // indirect
-	github.com/bytedance/sonic v1.12.4 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
+	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
@@ -38,7 +38,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/btree v1.1.2 // indirect
+	github.com/google/btree v1.1.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
@@ -48,7 +48,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect

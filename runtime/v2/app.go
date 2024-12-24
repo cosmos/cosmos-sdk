@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"encoding/json"
+	"maps"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -90,10 +91,7 @@ func (a *App[T]) QueryHandlers() map[string]appmodulev2.Handler {
 
 // SchemaDecoderResolver returns the module schema resolver.
 func (a *App[T]) SchemaDecoderResolver() decoding.DecoderResolver {
-	moduleSet := map[string]any{}
-	for moduleName, module := range a.moduleManager.Modules() {
-		moduleSet[moduleName] = module
-	}
+	moduleSet := maps.Clone(a.moduleManager.Modules())
 
 	for _, overrideKey := range a.config.OverrideStoreKeys {
 		moduleSet[overrideKey.KvStoreKey] = moduleSet[overrideKey.ModuleName]

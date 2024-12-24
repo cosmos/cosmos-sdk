@@ -94,18 +94,13 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 // RegisterMsgHandlers registers the message handlers for the bank module.
 func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 	handlers := keeper.NewHandlers(am.keeper)
-
-	appmodulev2.RegisterMsgHandler(router, handlers.MsgUpdateParams)
-	appmodulev2.RegisterMsgHandler(router, handlers.MsgSend)
-	appmodulev2.RegisterMsgHandler(router, handlers.MsgMint)
+	handlers.RegisterMsgHandlers(router)
 }
 
 // RegisterQueryHandlers registers the query handlers for the bank module.
 func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 	handlers := keeper.NewHandlers(am.keeper)
-
-	appmodulev2.RegisterMsgHandler(router, handlers.QueryParams)
-	appmodulev2.RegisterMsgHandler(router, handlers.QueryBalance)
+	handlers.RegisterQueryHandlers(router)
 }
 
 // GetTxCmd returns the root tx command for the bank/v2 module.

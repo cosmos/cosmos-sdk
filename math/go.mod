@@ -1,6 +1,8 @@
 module cosmossdk.io/math
 
-go 1.20
+go 1.21
+
+toolchain go1.23.4
 
 require (
 	github.com/cockroachdb/apd/v3 v3.2.1
@@ -17,7 +19,7 @@ require (
 	golang.org/x/sys v0.24.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
 	google.golang.org/grpc v1.64.1 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 )
 
 require (

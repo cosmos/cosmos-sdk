@@ -858,8 +858,8 @@ func (k Keeper) getBeginInfo(
 		return completionTime, height, false, nil
 	}
 	headerInfo := k.HeaderService.HeaderInfo(ctx)
-	unbondingTime, err := k.UnbondingTime(ctx)
-	if err != nil {
+	unbondingTime, err2 := k.UnbondingTime(ctx)
+	if err2 != nil {
 		return completionTime, height, false, err
 	}
 

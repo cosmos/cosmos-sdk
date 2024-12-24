@@ -26,7 +26,7 @@ that `Msg` return types be captured using a protobuf extension field, ex:
 package cosmos.gov;
 
 message MsgSubmitProposal
-	option (cosmos_proto.msg_return) = “uint64”;
+	option (cosmos_proto.msg_return) = "uint64";
 	string delegator_address = 1;
 	string validator_address = 2;
 	repeated sdk.Coin amount = 3;

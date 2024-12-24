@@ -114,7 +114,7 @@ func (m *ListAllInterfacesResponse) GetInterfaceNames() []string {
 // ListImplementationsRequest is the request type of the ListImplementations
 // RPC.
 type ListImplementationsRequest struct {
-	// interface_name defines the interface to query the implementations for.
+	// interface_name defines the interface to query the implementations.
 	InterfaceName string `protobuf:"bytes,1,opt,name=interface_name,json=interfaceName,proto3" json:"interface_name,omitempty"`
 }
 
@@ -300,12 +300,12 @@ type ReflectionServiceServer interface {
 	ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
 }
 
-// UnimplementedReflectionServiceServer can be embedded to have forward compatible implementations.
+// UnimplementedReflectionServiceServer can be embedded to have forward-compatible implementations.
 type UnimplementedReflectionServiceServer struct {
 }
 
 func (*UnimplementedReflectionServiceServer) ListAllInterfaces(ctx context.Context, req *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAllInterfaces not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method ListAllInterfaces is not implemented")
 }
 func (*UnimplementedReflectionServiceServer) ListImplementations(ctx context.Context, req *ListImplementationsRequest) (*ListImplementationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListImplementations not implemented")

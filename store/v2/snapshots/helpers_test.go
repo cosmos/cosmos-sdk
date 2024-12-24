@@ -59,7 +59,7 @@ func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 	return bodies
 }
 
-// snapshotItems serialize a array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
+// snapshotItems serialize an array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
 func snapshotItems(items [][]byte, ext snapshots.ExtensionSnapshotter) [][]byte {
 	// copy the same parameters from the code
 	snapshotChunkSize := uint64(10e6)

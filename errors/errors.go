@@ -105,7 +105,7 @@ func (e Error) Codespace() string {
 // it will be labeled as internal error.
 //
 // If err is nil, this returns nil, avoiding the need for an if statement when
-// wrapping a error returned at the end of a function
+// wrapping an error returned at the end of a function
 func Wrap(err error, description string) error {
 	if err == nil {
 		return nil

@@ -789,7 +789,7 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	baseapptestutil.RegisterNestedMessagesServer(suite.baseApp.MsgServiceRouter(), NestedMessgesServerImpl{})
+	baseapptestutil.RegisterNestedMessagesServer(suite.baseApp.MsgServiceRouter(), NestedMessagesServerImpl{})
 	baseapptestutil.RegisterSendServer(suite.baseApp.MsgServiceRouter(), SendServerImpl{})
 
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
@@ -975,7 +975,7 @@ func TestABCI_Query_SimulateNestedMessagesGas(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			baseapptestutil.RegisterNestedMessagesServer(tt.suite.baseApp.MsgServiceRouter(), NestedMessgesServerImpl{})
+			baseapptestutil.RegisterNestedMessagesServer(tt.suite.baseApp.MsgServiceRouter(), NestedMessagesServerImpl{})
 			baseapptestutil.RegisterSendServer(tt.suite.baseApp.MsgServiceRouter(), SendServerImpl{})
 
 			nestedMessages := make([]*any.Any, 1)

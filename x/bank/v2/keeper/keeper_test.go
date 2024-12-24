@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addressCodec = ac
 }
 
-func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Account() {
+func (suite *KeeperTestSuite) TestSendCoins_Account_To_Account() {
 	ctx := suite.ctx
 	require := suite.Require()
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Account() {
 	require.Equal(acc1BarBalance.Amount, math.NewInt(10))
 }
 
-func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Module() {
+func (suite *KeeperTestSuite) TestSendCoins_Account_To_Module() {
 	ctx := suite.ctx
 	require := suite.Require()
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))

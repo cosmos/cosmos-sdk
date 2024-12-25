@@ -85,7 +85,7 @@ type UnsafeQueryServer interface {
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {
-	// If the following call pancis, it indicates UnimplementedQueryServer was
+	// If the following call panics, it indicates UnimplementedQueryServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.

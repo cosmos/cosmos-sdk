@@ -39,11 +39,12 @@ var (
 
 	MaxGas = 10_000_000
 	// DefaultApiPort is the port for the node to interact with
-	DefaultApiPort  = 1317
-	DefaultRpcPort  = 26657
-	DefaultRestPort = 8080
-	DefaultGrpcPort = 9090
-	DefaultP2PPort  = 16656
+	DefaultApiPort       = 1317
+	DefaultRpcPort       = 26657
+	DefaultTelemetryPort = 7180
+	DefaultRestPort      = 8080
+	DefaultGrpcPort      = 9090
+	DefaultP2PPort       = 16656
 )
 
 type TestnetInitializer interface {
@@ -737,6 +738,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 			EditToml(file, func(doc *tomledit.Document) {
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultApiPort+nodeNumber), "grpc-gateway", "address")
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultRestPort+nodeNumber), "rest", "address")
+				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultTelemetryPort+nodeNumber), "telemetry", "address")
 			})
 		}
 	}

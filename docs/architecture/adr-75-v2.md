@@ -104,7 +104,7 @@ Consensus is the component that controls the interaction with the consensus engi
 
 The consensus server is responsible for handling the execution model of the state machine. The state machine executes transactions when it is told, it is unaware of the execution model.
 
-Since consensus servers can be swapped there are certain features features specific to consensus engines need to be implemented in the server. In the CometBFT server we have implemented the following features:
+Since consensus servers can be swapped there are certain features specific to consensus engines need to be implemented in the server. In the CometBFT server we have implemented the following features:
 
 * Mempool 
 * Prepare & Process Proposal

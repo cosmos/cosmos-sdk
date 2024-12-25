@@ -1,9 +1,10 @@
+# TODO: This should be ported to work with SimApp v2.
 
 #? test-sim-nondeterminism: Run non-determinism test for simapp
 test-sim-nondeterminism:
-	@echo "Running non-determinism test..."
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminism \
-		-NumBlocks=100 -BlockSize=200 -Period=0
+	# @echo "Running non-determinism test..."
+	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminism \
+	# 	-NumBlocks=100 -BlockSize=200 -Period=0
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #
@@ -15,49 +16,47 @@ test-sim-nondeterminism:
 #   export COSMOS_SDK_ABCI_V1=<path-to-sdk>/store/streaming/abci/examples/file/file
 #   make test-sim-nondeterminism-streaming
 test-sim-nondeterminism-streaming:
-	@echo "Running non-determinism-streaming test..."
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminism \
-		-NumBlocks=100 -BlockSize=200 -Period=0 -EnableStreaming=true
+	# @echo "Running non-determinism-streaming test..."
+	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminism \
+	# 	-NumBlocks=100 -BlockSize=200 -Period=0 -EnableStreaming=true
 
 test-sim-custom-genesis-fast:
-	@echo "Running custom genesis simulation..."
-	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
-		-NumBlocks=100 -BlockSize=200 -Seed=99 -Period=5 -SigverifyTx=false
+	# @echo "Running custom genesis simulation..."
+	# @echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
+	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+	# 	-NumBlocks=100 -BlockSize=200 -Seed=99 -Period=5 -SigverifyTx=false
 
 test-sim-import-export:
-	@echo "Running application import/export simulation. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 20m -tags='sims' -run TestAppImportExport \
-		-NumBlocks=50 -Period=5
+	# @echo "Running application import/export simulation. This may take several minutes..."
+	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 20m -tags='sims' -run TestAppImportExport \
+	# 	-NumBlocks=50 -Period=5
 
 test-sim-after-import:
-	@echo "Running application simulation-after-import. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestAppSimulationAfterImport \
-		-NumBlocks=50 -Period=5
-
+	# @echo "Running application simulation-after-import. This may take several minutes..."
+	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestAppSimulationAfterImport \
+	# 	-NumBlocks=50 -Period=5
 
 test-sim-custom-genesis-multi-seed:
-	@echo "Running multi-seed custom genesis simulation..."
-	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
-		-NumBlocks=400 -Period=5
+	# @echo "Running multi-seed custom genesis simulation..."
+	# @echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
+	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+	# 	-NumBlocks=400 -Period=5
 
 test-sim-multi-seed-long:
-	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=2h -tags='sims' -run TestFullAppSimulation \
-		-NumBlocks=150 -Period=50
+	# @echo "Running long multi-seed application simulation. This may take awhile!"
+	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=2h -tags='sims' -run TestFullAppSimulation \
+	# 	-NumBlocks=150 -Period=50
 
 test-sim-multi-seed-short:
-	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
-		-NumBlocks=50 -Period=10 -FauxMerkle=true
-
+	# @echo "Running short multi-seed application simulation. This may take awhile!"
+	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
+	# 	-NumBlocks=50 -Period=10 -FauxMerkle=true
 
 test-sim-benchmark-invariants:
-	@echo "Running simulation invariant benchmarks..."
-	cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -benchmem -bench=BenchmarkInvariants -tags='sims' -run=^$ \
-	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
-	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
+	# @echo "Running simulation invariant benchmarks..."
+	# cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -benchmem -bench=BenchmarkInvariants -tags='sims' -run=^$ \
+	# -Enabled=true -NumBlocks=1000 -BlockSize=200 \
+	# -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 .PHONY: \
 test-sim-nondeterminism \

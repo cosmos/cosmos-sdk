@@ -8,12 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/server/v2/api/swagger"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"github.com/rakyll/statik/fs"
 )
 
 // ServerComponent is a server component that can be started and stopped.
@@ -73,6 +75,7 @@ var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 type Server[T transaction.Tx] struct {
 	components []ServerComponent[T]
 	config     ServerConfig
+	router     *http.ServeMux
 }
 
 func NewServer[T transaction.Tx](
@@ -82,6 +85,7 @@ func NewServer[T transaction.Tx](
 	return &Server[T]{
 		config:     config,
 		components: components,
+		router:     http.NewServeMux(),
 	}
 }
 
@@ -241,4 +245,19 @@ func (s *Server[T]) StartFlags() []*pflag.FlagSet {
 	}
 
 	return flags
+}
+
+func (s *Server[T]) setupSwagger() error {
+	cfg := s.config.API.Swagger
+	if !cfg.Enable {
+		return nil
+	}
+
+	statikFS, err := fs.New()
+	if err != nil {
+		return err
+	}
+
+	s.router.PathPrefix(cfg.Path).Handler(swagger.Handler(statikFS))
+	return nil
 }

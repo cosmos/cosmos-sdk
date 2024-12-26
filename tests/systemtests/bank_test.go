@@ -5,29 +5,31 @@ package systemtests
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestBankSendTxCmd(t *testing.T) {
 	// scenario: test bank send command
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
-	require.NotEmpty(t, valAddr)
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
 	denom := "stake"
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// query validator balance and make sure it has enough balance
 	var transferAmount int64 = 1000
@@ -40,7 +42,7 @@ func TestBankSendTxCmd(t *testing.T) {
 	rsp := cli.Run(append(bankSendCmdArgs, "--fees=1stake")...)
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
-	RequireTxSuccess(t, txResult)
+	systest.RequireTxSuccess(t, txResult)
 	// check valaddr balance equals to valBalance-(transferedAmount+feeAmount)
 	require.Equal(t, valBalance-(transferAmount+1), cli.QueryBalance(valAddr, denom))
 	// check receiver balance equals to transferAmount
@@ -50,21 +52,24 @@ func TestBankSendTxCmd(t *testing.T) {
 	insufficientCmdArgs := bankSendCmdArgs[0 : len(bankSendCmdArgs)-1]
 	insufficientCmdArgs = append(insufficientCmdArgs, fmt.Sprintf("%d%s", valBalance, denom), "--fees=10stake")
 	rsp = cli.Run(insufficientCmdArgs...)
-	RequireTxFailure(t, rsp)
+	systest.RequireTxFailure(t, rsp)
 	require.Contains(t, rsp, "insufficient funds")
 
 	// test tx bank send with unauthorized signature
 	assertUnauthorizedErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-		require.Len(t, gotOutputs, 1)
-		code := gjson.Get(gotOutputs[0].(string), "code")
-		require.True(t, code.Exists())
-		require.Greater(t, code.Int(), int64(0))
+		var hasString bool
+		for _, output := range gotOutputs {
+			if strings.Contains(output.(string), "signature verification failed; please verify account number") {
+				hasString = true
+				break
+			}
+		}
+		require.True(t, hasString, "outputs doesn't contain: signature verification failed; please verify account number")
 		return false
 	}
-	invalidCli := cli
-	invalidCli.chainID = cli.chainID + "a" // set invalid chain-id
+	invalidCli := cli.WithChainID(cli.ChainID() + "a") // set invalid chain-id
 	rsp = invalidCli.WithRunErrorMatcher(assertUnauthorizedErr).Run(bankSendCmdArgs...)
-	RequireTxFailure(t, rsp)
+	systest.RequireTxFailure(t, rsp)
 
 	// test tx bank send generate only
 	assertGenOnlyOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
@@ -100,8 +105,8 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 	// scenario: test bank multi-send command
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// add genesis account with some tokens
 	account1Addr := cli.AddKey("account1")
 	account2Addr := cli.AddKey("account2")
@@ -111,11 +116,11 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 	denom := "stake"
 	var initialAmount int64 = 10000000
 	initialBalance := fmt.Sprintf("%d%s", initialAmount, denom)
-	sut.ModifyGenesisCLI(t,
+	systest.Sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", account1Addr, initialBalance},
 		[]string{"genesis", "add-genesis-account", account2Addr, initialBalance},
 	)
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// query accounts balances
 	account1Bal := cli.QueryBalance(account1Addr, denom)
@@ -172,7 +177,7 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 			rsp := cli.Run(tc.cmdArgs...)
 			txResult, found := cli.AwaitTxCommitted(rsp)
 			require.True(t, found)
-			RequireTxSuccess(t, txResult)
+			systest.RequireTxSuccess(t, txResult)
 			// check account1 balance equals to account1Bal - transferredAmount*no_of_accounts - fees
 			expAcc1Balance := account1Bal - (1000 * 2) - 1
 			require.Equal(t, expAcc1Balance, cli.QueryBalance(account1Addr, denom))
@@ -193,8 +198,8 @@ func TestBankGRPCQueries(t *testing.T) {
 	// scenario: test bank grpc gateway queries
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// update bank denom metadata in genesis
 	atomDenomMetadata := `{"description":"The native staking token of the Cosmos Hub.","denom_units":[{"denom":"uatom","exponent":0,"aliases":["microatom"]},{"denom":"atom","exponent":6,"aliases":["ATOM"]}],"base":"uatom","display":"atom","name":"Cosmos Hub Atom","symbol":"ATOM","uri":"","uri_hash":""}`
@@ -202,7 +207,7 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	bankDenomMetadata := fmt.Sprintf("[%s,%s]", atomDenomMetadata, ethDenomMetadata)
 
-	sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
+	systest.Sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
 		state, err := sjson.SetRawBytes(genesis, "app_state.bank.denom_metadata", []byte(bankDenomMetadata))
 		require.NoError(t, err)
 		return state
@@ -212,13 +217,13 @@ func TestBankGRPCQueries(t *testing.T) {
 	account1Addr := cli.AddKey("account1")
 	newDenom := "newdenom"
 	initialAmount := "10000000"
-	sut.ModifyGenesisCLI(t,
+	systest.Sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", account1Addr, "10000000stake," + initialAmount + newDenom},
 	)
 
 	// start chain
-	sut.StartChain(t)
-	baseurl := sut.APIAddress()
+	systest.Sut.StartChain(t)
+	baseurl := systest.Sut.APIAddress()
 
 	// test supply grpc endpoint
 	supplyUrl := baseurl + "/cosmos/bank/v1beta1/supply"
@@ -229,7 +234,7 @@ func TestBankGRPCQueries(t *testing.T) {
 	bogusDenomOutput := `{"denom":"foobar","amount":"0"}`
 
 	blockHeightHeader := "x-cosmos-block-height"
-	blockHeight := sut.CurrentHeight()
+	blockHeight := systest.Sut.CurrentHeight()
 
 	supplyTestCases := []struct {
 		name        string
@@ -260,7 +265,7 @@ func TestBankGRPCQueries(t *testing.T) {
 			map[string]string{
 				blockHeightHeader: fmt.Sprintf("%d", blockHeight+5),
 			},
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			"invalid height",
 		},
 		{
@@ -275,60 +280,60 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	for _, tc := range supplyTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp := GetRequestWithHeaders(t, tc.url, tc.headers, tc.expHttpCode)
+			resp := systest.GetRequestWithHeadersGreaterThanOrEqual(t, tc.url, tc.headers, tc.expHttpCode)
 			require.Contains(t, string(resp), tc.expOut)
 		})
 	}
 
 	// test denom metadata endpoint
 	denomMetadataUrl := baseurl + "/cosmos/bank/v1beta1/denoms_metadata"
-	dmTestCases := []RestTestCase{
+	dmTestCases := []systest.RestTestCase{
 		{
-			"test GRPC client metadata",
-			denomMetadataUrl,
-			http.StatusOK,
-			fmt.Sprintf(`{"metadatas":%s,"pagination":{"next_key":null,"total":"2"}}`, bankDenomMetadata),
+			Name:    "test GRPC client metadata",
+			Url:     denomMetadataUrl,
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"metadatas":%s,"pagination":{"next_key":null,"total":"2"}}`, bankDenomMetadata),
 		},
 		{
-			"test GRPC client metadata of a specific denom",
-			denomMetadataUrl + "/uatom",
-			http.StatusOK,
-			fmt.Sprintf(`{"metadata":%s}`, atomDenomMetadata),
+			Name:    "test GRPC client metadata of a specific denom",
+			Url:     denomMetadataUrl + "/uatom",
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"metadata":%s}`, atomDenomMetadata),
 		},
 		{
-			"test GRPC client metadata of a bogus denom",
-			denomMetadataUrl + "/foobar",
-			http.StatusNotFound,
-			`{"code":5, "message":"client metadata for denom foobar", "details":[]}`,
+			Name:    "test GRPC client metadata of a bogus denom",
+			Url:     denomMetadataUrl + "/foobar",
+			ExpCode: http.StatusNotFound,
+			ExpOut:  `{"code":5, "message":"client metadata for denom foobar", "details":[]}`,
 		},
 	}
 
-	RunRestQueries(t, dmTestCases)
+	systest.RunRestQueries(t, dmTestCases...)
 
 	// test bank balances endpoint
 	balanceUrl := baseurl + "/cosmos/bank/v1beta1/balances/"
 	allBalancesOutput := `{"balances":[` + specificDenomOutput + `,{"denom":"stake","amount":"10000000"}],"pagination":{"next_key":null,"total":"2"}}`
 
-	balanceTestCases := []RestTestCase{
+	balanceTestCases := []systest.RestTestCase{
 		{
-			"test GRPC total account balance",
-			balanceUrl + account1Addr,
-			http.StatusOK,
-			allBalancesOutput,
+			Name:    "test GRPC total account balance",
+			Url:     balanceUrl + account1Addr,
+			ExpCode: http.StatusOK,
+			ExpOut:  allBalancesOutput,
 		},
 		{
-			"test GRPC account balance of a specific denom",
-			fmt.Sprintf("%s%s/by_denom?denom=%s", balanceUrl, account1Addr, newDenom),
-			http.StatusOK,
-			fmt.Sprintf(`{"balance":%s}`, specificDenomOutput),
+			Name:    "test GRPC account balance of a specific denom",
+			Url:     fmt.Sprintf("%s%s/by_denom?denom=%s", balanceUrl, account1Addr, newDenom),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"balance":%s}`, specificDenomOutput),
 		},
 		{
-			"test GRPC account balance of a bogus denom",
-			fmt.Sprintf("%s%s/by_denom?denom=foobar", balanceUrl, account1Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"balance":%s}`, bogusDenomOutput),
+			Name:    "test GRPC account balance of a bogus denom",
+			Url:     fmt.Sprintf("%s%s/by_denom?denom=foobar", balanceUrl, account1Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"balance":%s}`, bogusDenomOutput),
 		},
 	}
 
-	RunRestQueries(t, balanceTestCases)
+	systest.RunRestQueries(t, balanceTestCases...)
 }

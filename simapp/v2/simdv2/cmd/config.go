@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
-// initAppConfig helps to override default client config template and configs.
+// initClientConfig helps to override default client config template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initClientConfig() (string, interface{}) {
 	type GasConfig struct {
@@ -84,12 +84,18 @@ func initCometConfig() cometbft.CfgOption {
 	cfg.Consensus.TimeoutCommit = 5 * time.Second
 	// overwrite default pprof listen address
 	cfg.RPC.PprofListenAddress = "localhost:6060"
+	// use previous db backend
+	cfg.DBBackend = "goleveldb"
 
 	return cometbft.OverwriteDefaultConfigTomlConfig(cfg)
 }
 
 func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
 	serverOptions := cometbft.DefaultServerOptions[T]()
+	// Implement custom handlers (e.g. for Vote Extensions)
+	// serverOptions.PrepareProposalHandler = CustomPrepareProposal[T]()
+	// serverOptions.ProcessProposalHandler = CustomProcessProposalHandler[T]()
+	// serverOptions.ExtendVoteHandler = CustomExtendVoteHandler[T]()
 
 	// overwrite app mempool, using max-txs option
 	// serverOptions.Mempool = func(cfg map[string]any) mempool.Mempool[T] {

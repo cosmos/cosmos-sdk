@@ -8,6 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 const (
@@ -18,18 +20,18 @@ func TestGroupCommands(t *testing.T) {
 	// scenario: test group commands
 	// given a running chain
 
-	sut.ResetChain(t)
-	require.GreaterOrEqual(t, sut.NodesCount(), 2)
+	systest.Sut.ResetChain(t)
+	require.GreaterOrEqual(t, systest.Sut.NodesCount(), 2)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	baseurl := sut.APIAddress()
+	baseurl := systest.Sut.APIAddress()
 
 	// test create group
 	memberWeight := "5"
@@ -43,10 +45,10 @@ func TestGroupCommands(t *testing.T) {
 			}
 		]
 	}`, valAddr, memberWeight, validMetadata)
-	validMembersFile := StoreTempFile(t, []byte(validMembers))
+	validMembersFile := systest.StoreTempFile(t, []byte(validMembers))
 	createGroupCmd := []string{"tx", "group", "create-group", valAddr, validMetadata, validMembersFile.Name(), "--from=" + valAddr}
 	rsp := cli.RunAndWait(createGroupCmd...)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// query groups by admin to confirm group creation
 	rsp = cli.CustomQuery("q", "group", "groups-by-admin", valAddr)
@@ -56,34 +58,34 @@ func TestGroupCommands(t *testing.T) {
 	// test create group policies
 	for i := 0; i < 5; i++ {
 		threshold := i + 1
-		policyFile := StoreTempFile(t, []byte(fmt.Sprintf(`{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"%d", "windows":{"voting_period":"30000s"}}`, threshold)))
+		policyFile := systest.StoreTempFile(t, []byte(fmt.Sprintf(`{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"%d", "windows":{"voting_period":"30000s"}}`, threshold)))
 		policyCmd := []string{"tx", "group", "create-group-policy", valAddr, groupId, validMetadata, policyFile.Name(), "--from=" + valAddr}
 		rsp = cli.RunAndWait(policyCmd...)
-		RequireTxSuccess(t, rsp)
+		systest.RequireTxSuccess(t, rsp)
 
 		// TODO: remove isV2() check once v2 is integrated with grpc gateway
 		var groupPoliciesResp, policyAddrQuery string
-		if isV2() {
+		if systest.IsV2() {
 			groupPoliciesResp = cli.CustomQuery("q", "group", "group-policies-by-group", groupId)
 			policyAddrQuery = fmt.Sprintf("group_policies.#(decision_policy.value.threshold==%d).address", threshold)
 		} else {
-			groupPoliciesResp = string(GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", baseurl, groupId)))
+			groupPoliciesResp = string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", baseurl, groupId)))
 			policyAddrQuery = fmt.Sprintf("group_policies.#(decision_policy.threshold==%d).address", threshold)
 		}
 		require.Equal(t, gjson.Get(groupPoliciesResp, "pagination.total").Int(), int64(threshold))
 		policyAddr := gjson.Get(groupPoliciesResp, policyAddrQuery).String()
 		require.NotEmpty(t, policyAddr)
 
-		rsp = cli.RunCommandWithArgs(cli.withTXFlags("tx", "bank", "send", valAddr, policyAddr, "1000stake", "--generate-only")...)
+		rsp = cli.RunCommandWithArgs(cli.WithTXFlags("tx", "bank", "send", valAddr, policyAddr, "1000stake", "--generate-only")...)
 		require.Equal(t, policyAddr, gjson.Get(rsp, "body.messages.0.to_address").String())
 	}
 
 	// test create group policy with percentage decision policy
 	percentagePolicyType := "/cosmos.group.v1.PercentageDecisionPolicy"
-	policyFile := StoreTempFile(t, []byte(fmt.Sprintf(`{"@type":"%s", "percentage":"%f", "windows":{"voting_period":"30000s"}}`, percentagePolicyType, 0.5)))
+	policyFile := systest.StoreTempFile(t, []byte(fmt.Sprintf(`{"@type":"%s", "percentage":"%f", "windows":{"voting_period":"30000s"}}`, percentagePolicyType, 0.5)))
 	policyCmd := []string{"tx", "group", "create-group-policy", valAddr, groupId, validMetadata, policyFile.Name(), "--from=" + valAddr}
 	rsp = cli.RunAndWait(policyCmd...)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	groupPoliciesResp := cli.CustomQuery("q", "group", "group-policies-by-admin", valAddr)
 	require.Equal(t, gjson.Get(groupPoliciesResp, "pagination.total").Int(), int64(6))
@@ -106,9 +108,9 @@ func TestGroupCommands(t *testing.T) {
 		"summary": "Summary",
 		"proposers": ["%s"]
 	}`, policyAddr, policyAddr, valAddr, validMetadata, valAddr)
-	proposalFile := StoreTempFile(t, []byte(proposalJSON))
+	proposalFile := systest.StoreTempFile(t, []byte(proposalJSON))
 	rsp = cli.RunAndWait("tx", "group", "submit-proposal", proposalFile.Name())
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// query proposals
 	rsp = cli.CustomQuery("q", "group", "proposals-by-group-policy", policyAddr)
@@ -117,15 +119,15 @@ func TestGroupCommands(t *testing.T) {
 
 	// test vote proposal
 	rsp = cli.RunAndWait("tx", "group", "vote", proposalId, valAddr, "yes", validMetadata)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// query votes
 	// TODO: remove isV2() check once v2 is integrated with grpc gateway
 	var voteResp string
-	if isV2() {
+	if systest.IsV2() {
 		voteResp = cli.CustomQuery("q", "group", "vote", proposalId, valAddr)
 	} else {
-		voteResp = string(GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/%s/%s", baseurl, proposalId, valAddr)))
+		voteResp = string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/%s/%s", baseurl, proposalId, valAddr)))
 	}
 	require.Equal(t, "VOTE_OPTION_YES", gjson.Get(voteResp, "vote.option").String())
 }

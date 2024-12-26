@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # go-arch: ["amd64", "arm", "arm64"]
         go-arch: ["amd64", "arm64"] # drop 32 bit support for now (and maybe forever)
     steps:
       - uses: actions/checkout@v4
@@ -48,13 +47,17 @@ jobs:
         ###################
         #### Build App ####
         ###################
-      - name: Build
-        run: GOARCH=${{ matrix.go-arch }} make build
-      - name: Build Legacy
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
+      - name: Build v2
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2 make build
       - name: Build with rocksdb backend
         if: matrix.go-arch == 'amd64'
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="rocksdb" make build
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,rocksdb make build
+      - name: Build with BLS12381
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,bls12381 make build
+      - name: Build with Secp_cgo
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,secp make build
         ###################
         ## Build Tooling ##
         ###################

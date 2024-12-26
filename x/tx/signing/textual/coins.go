@@ -41,17 +41,17 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	coin := &basev1beta1.Coin{}
 	err := coerceToMessage(v.Interface().(protoreflect.Message).Interface(), coin)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to coerce message to coin: %w", err)
 	}
 
 	metadata, err := vr.coinMetadataQuerier(ctx, coin.Denom)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query coin metadata: %w", err)
 	}
 
 	formatted, err := FormatCoins([]*basev1beta1.Coin{coin}, []*bankv1beta1.Metadata{metadata})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to format coins: %w", err)
 	}
 
 	return []Screen{{Content: formatted}}, nil
@@ -68,18 +68,18 @@ func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.
 		coin := &basev1beta1.Coin{}
 		err := coerceToMessage(protoCoins.Get(i).Interface().(protoreflect.Message).Interface(), coin)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to coerce message to coin: %w", err)
 		}
 		coins[i] = coin
 		metadatas[i], err = vr.coinMetadataQuerier(ctx, coin.Denom)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to query coin metadata: %w", err)
 		}
 	}
 
 	formatted, err := FormatCoins(coins, metadatas)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to format coins: %w", err)
 	}
 
 	return []Screen{{Content: formatted}}, nil

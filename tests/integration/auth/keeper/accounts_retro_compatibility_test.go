@@ -74,7 +74,7 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 
 	// init three accounts
 	for n, a := range accs {
-		_, addr, err := f.accountsKeeper.Init(f.ctx, n, []byte("me"), &gogotypes.Empty{}, nil)
+		_, addr, err := f.accountsKeeper.Init(f.app.Context(), n, []byte("me"), &gogotypes.Empty{}, nil, nil)
 		require.NoError(t, err)
 		a.(*mockRetroCompatAccount).address = addr
 	}
@@ -82,13 +82,13 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 	qs := authkeeper.NewQueryServer(f.authKeeper)
 
 	t.Run("account supports info and account query", func(t *testing.T) {
-		infoResp, err := qs.AccountInfo(f.ctx, &authtypes.QueryAccountInfoRequest{
+		infoResp, err := qs.AccountInfo(f.app.Context(), &authtypes.QueryAccountInfoRequest{
 			Address: f.mustAddr(valid.address),
 		})
 		require.NoError(t, err)
 		require.Equal(t, infoResp.Info, valid.retroCompat.Base)
 
-		accountResp, err := qs.Account(f.ctx, &authtypes.QueryAccountRequest{
+		accountResp, err := qs.Account(f.app.Context(), &authtypes.QueryAccountRequest{
 			Address: f.mustAddr(noInfo.address),
 		})
 		require.NoError(t, err)
@@ -96,13 +96,13 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 	})
 
 	t.Run("account only supports account query, not info", func(t *testing.T) {
-		_, err := qs.AccountInfo(f.ctx, &authtypes.QueryAccountInfoRequest{
+		_, err := qs.AccountInfo(f.app.Context(), &authtypes.QueryAccountInfoRequest{
 			Address: f.mustAddr(noInfo.address),
 		})
 		require.Error(t, err)
 		require.Equal(t, status.Code(err), codes.NotFound)
 
-		resp, err := qs.Account(f.ctx, &authtypes.QueryAccountRequest{
+		resp, err := qs.Account(f.app.Context(), &authtypes.QueryAccountRequest{
 			Address: f.mustAddr(noInfo.address),
 		})
 		require.NoError(t, err)
@@ -110,13 +110,13 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 	})
 
 	t.Run("account does not support any retro compat", func(t *testing.T) {
-		_, err := qs.AccountInfo(f.ctx, &authtypes.QueryAccountInfoRequest{
+		_, err := qs.AccountInfo(f.app.Context(), &authtypes.QueryAccountInfoRequest{
 			Address: f.mustAddr(noImplement.address),
 		})
 		require.Error(t, err)
 		require.Equal(t, status.Code(err), codes.NotFound)
 
-		_, err = qs.Account(f.ctx, &authtypes.QueryAccountRequest{
+		_, err = qs.Account(f.app.Context(), &authtypes.QueryAccountRequest{
 			Address: f.mustAddr(noImplement.address),
 		})
 
@@ -132,22 +132,22 @@ func TestAccountsBaseAccountRetroCompat(t *testing.T) {
 	require.NoError(t, err)
 
 	// we init two accounts to have account num not be zero.
-	_, _, err = f.accountsKeeper.Init(f.ctx, "base", []byte("me"), &basev1.MsgInit{PubKey: anyPk}, nil)
+	_, _, err = f.accountsKeeper.Init(f.app.Context(), "base", []byte("me"), &basev1.MsgInit{PubKey: anyPk}, nil, nil)
 	require.NoError(t, err)
 
-	_, addr, err := f.accountsKeeper.Init(f.ctx, "base", []byte("me"), &basev1.MsgInit{PubKey: anyPk}, nil)
+	_, addr, err := f.accountsKeeper.Init(f.app.Context(), "base", []byte("me"), &basev1.MsgInit{PubKey: anyPk}, nil, nil)
 	require.NoError(t, err)
 
 	// try to query it via auth
 	qs := authkeeper.NewQueryServer(f.authKeeper)
 
-	r, err := qs.Account(f.ctx, &authtypes.QueryAccountRequest{
+	r, err := qs.Account(f.app.Context(), &authtypes.QueryAccountRequest{
 		Address: f.mustAddr(addr),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, r.Account)
 
-	info, err := qs.AccountInfo(f.ctx, &authtypes.QueryAccountInfoRequest{
+	info, err := qs.AccountInfo(f.app.Context(), &authtypes.QueryAccountInfoRequest{
 		Address: f.mustAddr(addr),
 	})
 	require.NoError(t, err)

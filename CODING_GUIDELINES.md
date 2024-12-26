@@ -148,7 +148,7 @@ Desired outcomes:
 
 As a developer, you must help the QA team by providing instructions for User Experience (UX) and functional testing.
 
-### QA Team to cross check Acceptance Tests
+### QA Team to cross-check Acceptance Tests
 
 Once the AT are defined, the QA team will have an overview of the behavior a user can expect and:
 

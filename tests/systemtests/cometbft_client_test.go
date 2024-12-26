@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 
+	systest "cosmossdk.io/systemtests"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -20,80 +22,95 @@ import (
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 )
 
-func TestQueryNodeInfo(t *testing.T) {
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
-	sut.ResetChain(t)
-	sut.StartChain(t)
+func TestQueryStatus(t *testing.T) {
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	systest.Sut.StartChain(t)
 
-	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
+	var resp string
+	if systest.IsV2() {
+		resp = cli.CustomQuery("comet", "status")
+	} else {
+		resp = cli.CustomQuery("status")
+	}
+
+	// make sure the output has the validator moniker.
+	assert.Contains(t, resp, "\"moniker\":\"node0\"")
+}
+
+func TestQueryNodeInfo(t *testing.T) {
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
+
+	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	res, err := qc.GetNodeInfo(context.Background(), &cmtservice.GetNodeInfoRequest{})
 	assert.NoError(t, err)
 
-	v := NewCLIWrapper(t, sut, true).Version()
+	v := systest.NewCLIWrapper(t, systest.Sut, true).Version()
 	assert.Equal(t, res.ApplicationVersion.Version, v)
 
+	baseurl := systest.Sut.APIAddress()
 	// TODO: we should be adding a way to distinguish a v2. Eventually we should skip some v2 system depending on the consensus engine we want to test
-	restRes := GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/node_info")))
+	restRes := systest.GetRequest(t, must(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/node_info")))
 	assert.NoError(t, err)
 	assert.Equal(t, gjson.GetBytes(restRes, "application_version.version").String(), res.ApplicationVersion.Version)
 }
 
 func TestQuerySyncing(t *testing.T) {
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
+	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	res, err := qc.GetSyncing(context.Background(), &cmtservice.GetSyncingRequest{})
 	assert.NoError(t, err)
 
-	restRes := GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/syncing")))
+	baseurl := systest.Sut.APIAddress()
+	restRes := systest.GetRequest(t, must(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/syncing")))
 	assert.Equal(t, gjson.GetBytes(restRes, "syncing").Bool(), res.Syncing)
 }
 
 func TestQueryLatestBlock(t *testing.T) {
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
+	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	res, err := qc.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
 	assert.NoError(t, err)
 	assert.Contains(t, res.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 
-	_ = GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/blocks/latest")))
+	baseurl := systest.Sut.APIAddress()
+	_ = systest.GetRequest(t, must(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/blocks/latest")))
 }
 
 func TestQueryBlockByHeight(t *testing.T) {
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
-	sut.AwaitNBlocks(t, 2, time.Second*25)
+	systest.Sut.AwaitNBlocks(t, 2, time.Second*25)
 
-	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
+	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	res, err := qc.GetBlockByHeight(context.Background(), &cmtservice.GetBlockByHeightRequest{Height: 2})
 	assert.NoError(t, err)
 	assert.Equal(t, res.SdkBlock.Header.Height, int64(2))
 	assert.Contains(t, res.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 
-	restRes := GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/blocks/2")))
+	baseurl := systest.Sut.APIAddress()
+	restRes := systest.GetRequest(t, must(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/blocks/2")))
 	assert.Equal(t, gjson.GetBytes(restRes, "sdk_block.header.height").Int(), int64(2))
 	assert.Contains(t, gjson.GetBytes(restRes, "sdk_block.header.proposer_address").String(), "cosmosvalcons")
 }
 
 func TestQueryLatestValidatorSet(t *testing.T) {
-	if sut.NodesCount() < 2 {
+	if systest.Sut.NodesCount() < 2 {
 		t.Skip("not enough nodes")
 		return
 	}
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
-	vals := sut.RPCClient(t).Validators()
+	vals := systest.Sut.RPCClient(t).Validators()
 
-	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
+	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	res, err := qc.GetLatestValidatorSet(context.Background(), &cmtservice.GetLatestValidatorSetRequest{
 		Pagination: nil,
 	})
@@ -108,17 +125,18 @@ func TestQueryLatestValidatorSet(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(res.Validators), 2)
 
-	restRes := GetRequest(t, fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", baseurl, 0, 2))
+	baseurl := systest.Sut.APIAddress()
+	restRes := systest.GetRequest(t, fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", baseurl, 0, 2))
 	assert.Equal(t, len(gjson.GetBytes(restRes, "validators").Array()), 2)
 }
 
 func TestLatestValidatorSet(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
-	vals := sut.RPCClient(t).Validators()
+	vals := systest.Sut.RPCClient(t).Validators()
 
-	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
+	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	testCases := []struct {
 		name      string
 		req       *cmtservice.GetLatestValidatorSetRequest
@@ -147,12 +165,12 @@ func TestLatestValidatorSet(t *testing.T) {
 }
 
 func TestLatestValidatorSet_GRPCGateway(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
+	baseurl := systest.Sut.APIAddress()
 
-	vals := sut.RPCClient(t).Validators()
+	vals := systest.Sut.RPCClient(t).Validators()
 
 	testCases := []struct {
 		name      string
@@ -167,23 +185,23 @@ func TestLatestValidatorSet_GRPCGateway(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.expErr {
-				rsp := GetRequestWithHeaders(t, baseurl+tc.url, nil, http.StatusBadRequest)
+				rsp := systest.GetRequestWithHeaders(t, baseurl+tc.url, nil, http.StatusBadRequest)
 				errMsg := gjson.GetBytes(rsp, "message").String()
 				assert.Contains(t, errMsg, tc.expErrMsg)
 				return
 			}
-			rsp := GetRequest(t, baseurl+tc.url)
+			rsp := systest.GetRequest(t, baseurl+tc.url)
 			assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
 		})
 	}
 }
 
 func TestValidatorSetByHeight(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
-	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
-	vals := sut.RPCClient(t).Validators()
+	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
+	vals := systest.Sut.RPCClient(t).Validators()
 
 	testCases := []struct {
 		name      string
@@ -210,14 +228,14 @@ func TestValidatorSetByHeight(t *testing.T) {
 	}
 }
 
-func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
-	sut.ResetChain(t)
-	sut.StartChain(t)
+func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
 
-	vals := sut.RPCClient(t).Validators()
+	vals := systest.Sut.RPCClient(t).Validators()
 
-	baseurl := sut.APIAddress()
-	block := sut.AwaitNextBlock(t, time.Second*3)
+	baseurl := systest.Sut.APIAddress()
+	block := systest.Sut.AwaitNextBlock(t, time.Second*3)
 	testCases := []struct {
 		name        string
 		url         string
@@ -232,7 +250,7 @@ func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rsp := GetRequestWithHeaders(t, tc.url, nil, tc.expHttpCode)
+			rsp := systest.GetRequestWithHeaders(t, tc.url, nil, tc.expHttpCode)
 			if tc.expErr {
 				errMsg := gjson.GetBytes(rsp, "message").String()
 				assert.Contains(t, errMsg, tc.expErrMsg)
@@ -244,9 +262,11 @@ func TestValidatorSetByHeight_GRPCRestGateway(t *testing.T) {
 }
 
 func TestABCIQuery(t *testing.T) {
-	sut.StartChain(t)
+	systest.Sut.ResetChain(t)
+	systest.Sut.StartChain(t)
+	_ = systest.Sut.AwaitNextBlock(t, time.Second*3)
 
-	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
+	qc := cmtservice.NewServiceClient(systest.Sut.RPCClient(t))
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	testCases := []struct {
 		name         string
@@ -327,4 +347,11 @@ func TestABCIQuery(t *testing.T) {
 			}
 		})
 	}
+}
+
+func must[T any](r T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return r
 }

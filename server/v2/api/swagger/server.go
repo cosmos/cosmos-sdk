@@ -11,6 +11,12 @@ import (
     serverv2 "cosmossdk.io/server/v2"
 )
 
+var (
+    _ serverv2.ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
+    _ serverv2.HasConfig                       = (*Server[transaction.Tx])(nil)
+)
+
+// Server represents a Swagger UI server
 type Server[T transaction.Tx] struct {
     logger     log.Logger
     config     *Config
@@ -18,6 +24,7 @@ type Server[T transaction.Tx] struct {
     server     *http.Server
 }
 
+// New creates a new Swagger UI server
 func New[T transaction.Tx](
     logger log.Logger,
     cfg server.ConfigMap,
@@ -36,8 +43,12 @@ func New[T transaction.Tx](
     }
     srv.config = serverCfg
 
+    if err := srv.config.Validate(); err != nil {
+        return nil, err
+    }
+
     mux := http.NewServeMux()
-    mux.Handle(srv.config.Path, NewSwaggerHandler())
+    mux.Handle(srv.config.Path, Handler())
 
     srv.server = &http.Server{
         Addr:    srv.config.Address,
@@ -47,13 +58,34 @@ func New[T transaction.Tx](
     return srv, nil
 }
 
+// NewWithConfigOptions creates a new server with configuration options
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+    return &Server[T]{
+        cfgOptions: opts,
+    }
+}
+
+// Name returns the server's name
 func (s *Server[T]) Name() string {
     return ServerName
 }
 
+// Config returns the server configuration
+func (s *Server[T]) Config() any {
+    if s.config == nil || s.config.Address == "" {
+        cfg := DefaultConfig()
+        for _, opt := range s.cfgOptions {
+            opt(cfg)
+        }
+        return cfg
+    }
+    return s.config
+}
+
+// Start starts the server
 func (s *Server[T]) Start(ctx context.Context) error {
     if !s.config.Enable {
-        s.logger.Info("swagger server is disabled via config")
+        s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
         return nil
     }
 
@@ -65,6 +97,7 @@ func (s *Server[T]) Start(ctx context.Context) error {
     return nil
 }
 
+// Stop stops the server
 func (s *Server[T]) Stop(ctx context.Context) error {
     if !s.config.Enable {
         return nil

@@ -1,46 +1,85 @@
 package swagger
 
 import (
+    "io"
     "net/http"
-    "path"
     "path/filepath"
     "strings"
+    "time"
 
     "github.com/rakyll/statik/fs"
 )
 
-// Handler returns an HTTP handler that serves the Swagger UI files
-func Handler(statikFS http.FileSystem) http.HandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request) {
-        // If the path is empty or "/", show index.html
-        if r.URL.Path == "/" || r.URL.Path == "" {
-            r.URL.Path = "/index.html"
-        }
+// Handler returns an HTTP handler for Swagger UI
+func Handler() http.Handler {
+    return &swaggerHandler{}
+}
 
-        // Clearing the path
-        urlPath := path.Clean(r.URL.Path)
+type swaggerHandler struct{}
 
-        // Opening the file from statikFS
-        f, err := statikFS.Open(urlPath)
-        if err != nil {
-            w.WriteHeader(http.StatusNotFound)
-            return
-        }
-        defer f.Close()
+func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+    // Set CORS headers
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    w.Header().Set("Access-Control-Allow-Headers", "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type")
 
-        // Determining the content-type
-        ext := strings.ToLower(filepath.Ext(urlPath))
-        switch ext {
-        case ".html":
-            w.Header().Set("Content-Type", "text/html")
-        case ".css":
-            w.Header().Set("Content-Type", "text/css")
-        case ".js":
-            w.Header().Set("Content-Type", "application/javascript")
-        case ".json":
-            w.Header().Set("Content-Type", "application/json")
-        }
-
-        http.ServeContent(w, r, urlPath, time.Time{}, f)
+    if r.Method == http.MethodOptions {
+        return
     }
-} 
+
+    // Get the static file system
+    statikFS, err := fs.New()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // Process the path
+    urlPath := strings.TrimPrefix(r.URL.Path, "/swagger")
+    if urlPath == "" || urlPath == "/" {
+        urlPath = "/index.html"
+    }
+
+    // Open the file
+    file, err := statikFS.Open(urlPath)
+    if err != nil {
+        http.Error(w, "File not found", http.StatusNotFound)
+        return
+    }
+    defer file.Close()
+
+    // Set the content-type
+    ext := filepath.Ext(urlPath)
+    if ct := getContentType(ext); ct != "" {
+        w.Header().Set("Content-Type", ct)
+    }
+
+    // Set caching headers
+    w.Header().Set("Cache-Control", "public, max-age=31536000")
+    w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
+
+    // Serve the file
+    http.ServeContent(w, r, urlPath, time.Now(), file.(io.ReadSeeker))
+}
+
+// getContentType returns the content-type for a file extension
+func getContentType(ext string) string {
+    switch strings.ToLower(ext) {
+    case ".html":
+        return "text/html"
+    case ".css":
+        return "text/css"
+    case ".js":
+        return "application/javascript"
+    case ".json":
+        return "application/json"
+    case ".png":
+        return "image/png"
+    case ".jpg", ".jpeg":
+        return "image/jpeg"
+    case ".svg":
+        return "image/svg+xml"
+    default:
+        return ""
+    }
+}

@@ -13,12 +13,6 @@ import (
 	"github.com/creachadair/tomledit/parser"
 )
 
-// IsV2 checks if the tests run with simapp v2
-func IsV2() bool {
-	buildOptions := os.Getenv("COSMOS_BUILD_OPTIONS")
-	return strings.Contains(buildOptions, "v2")
-}
-
 // SingleHostTestnetCmdInitializer default testnet cmd that supports the --single-host param
 type SingleHostTestnetCmdInitializer struct {
 	execBinary        string
@@ -77,11 +71,7 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 		"--single-host",
 	}
 
-	if IsV2() {
-		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
-	} else {
-		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
-	}
+	args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 	out, err := RunShellCmd(s.execBinary, args...)
@@ -129,11 +119,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		"--keyring-backend=test",
 	}
 
-	if IsV2() {
-		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
-	} else {
-		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
-	}
+	args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 

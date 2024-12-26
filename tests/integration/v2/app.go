@@ -169,7 +169,7 @@ func NewApp(
 		txConfigOptions tx.ConfigOptions
 		cometService    comet.Service                   = &cometServiceImpl{}
 		kvFactory       corestore.KVStoreServiceFactory = func(actor []byte) corestore.KVStoreService {
-			return services.NewGenesisKVService(actor, &storeService{actor, stf.NewKVStoreService(actor)})
+			return &genesisStoreService{actor, &storeService{actor, stf.NewKVStoreService(actor)}}
 		}
 		cdc codec.Codec
 		err error

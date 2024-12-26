@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/server"
+	"cosmossdk.io/core/store"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf"
@@ -170,8 +171,7 @@ var (
 	_ event.Manager = &eventManager{}
 )
 
-type eventService struct {
-}
+type eventService struct{}
 
 // EventManager implements event.Service.
 func (e *eventService) EventManager(ctx context.Context) event.Manager {
@@ -364,4 +364,54 @@ func (g *GasService) GasMeter(ctx context.Context) gas.Meter {
 
 func (g *GasService) GasConfig(ctx context.Context) gas.GasConfig {
 	return gas.GasConfig{}
+}
+
+var _ store.KVStoreService = (*genesisStoreService)(nil)
+
+type genesisStoreService struct {
+	actor            []byte
+	executionService store.KVStoreService
+}
+
+type genesisContextKeyType struct{}
+
+var genesisContextKey = genesisContextKeyType{}
+
+type genesisContext struct {
+	state store.ReaderMap
+}
+
+// OpenKVStore implements store.KVStoreService.
+func (g *genesisStoreService) OpenKVStore(ctx context.Context) store.KVStore {
+	genCtx, ok := ctx.Value("services.genesisContextKeyType").(*genesisContext)
+	if !ok {
+		return g.executionService.OpenKVStore(ctx)
+	}
+
+	writerMap, ok := genCtx.state.(store.WriterMap)
+	if ok {
+		state, err := writerMap.GetWriter(g.actor)
+		if err != nil {
+			panic(err)
+		}
+		return state
+
+	}
+	state, err := genCtx.state.GetReader(g.actor)
+	if err != nil {
+		panic(err)
+	}
+	return readonlyKVStore{state}
+}
+
+type readonlyKVStore struct {
+	store.Reader
+}
+
+func (r readonlyKVStore) Set(key, value []byte) error {
+	return errors.New("tried to call Set on a readonly store")
+}
+
+func (r readonlyKVStore) Delete(key []byte) error {
+	return errors.New("tried to call Delete on a readonly store")
 }

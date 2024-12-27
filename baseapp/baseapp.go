@@ -517,6 +517,28 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 	}
 }
 
+func (app *BaseApp) clearState(mode execMode) {
+	app.stateMut.Lock()
+	defer app.stateMut.Unlock()
+
+	switch mode {
+	case execModeCheck:
+		app.checkState = nil
+
+	case execModePrepareProposal:
+		app.prepareProposalState = nil
+
+	case execModeProcessProposal:
+		app.processProposalState = nil
+
+	case execModeFinalize:
+		app.finalizeBlockState = nil
+
+	default:
+		panic(fmt.Sprintf("invalid runTxMode for clearState: %d", mode))
+	}
+}
+
 // SetCircuitBreaker sets the circuit breaker for the BaseApp.
 // The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
 func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {

@@ -439,7 +439,8 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	app.prepareProposalState.SetContext(app.getContextForProposal(app.prepareProposalState.Context(), req.Height).
+	prepareProposalState := app.getState(execModePrepareProposal)
+	prepareProposalState.SetContext(app.getContextForProposal(prepareProposalState.Context(), req.Height).
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithProposer(req.ProposerAddress).
@@ -456,9 +457,9 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 			Time:    req.Time,
 		}))
 
-	app.prepareProposalState.SetContext(app.prepareProposalState.Context().
-		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.Context())).
-		WithBlockGasMeter(app.getBlockGasMeter(app.prepareProposalState.Context())))
+	prepareProposalState.SetContext(prepareProposalState.Context().
+		WithConsensusParams(app.GetConsensusParams(prepareProposalState.Context())).
+		WithBlockGasMeter(app.getBlockGasMeter(prepareProposalState.Context())))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -473,7 +474,7 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 		}
 	}()
 
-	resp, err = app.prepareProposal(app.prepareProposalState.Context(), req)
+	resp, err = app.prepareProposal(prepareProposalState.Context(), req)
 	if err != nil {
 		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
 		return &abci.PrepareProposalResponse{Txs: req.Txs}, nil
@@ -531,7 +532,8 @@ func (app *BaseApp) ProcessProposal(req *abci.ProcessProposalRequest) (resp *abc
 		app.setState(execModeFinalize, header)
 	}
 
-	app.processProposalState.SetContext(app.getContextForProposal(app.processProposalState.Context(), req.Height).
+	processProposalState := app.getState(execModeProcessProposal)
+	processProposalState.SetContext(app.getContextForProposal(processProposalState.Context(), req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithHeaderHash(req.Hash).
@@ -550,9 +552,9 @@ func (app *BaseApp) ProcessProposal(req *abci.ProcessProposalRequest) (resp *abc
 			Time:    req.Time,
 		}))
 
-	app.processProposalState.SetContext(app.processProposalState.Context().
-		WithConsensusParams(app.GetConsensusParams(app.processProposalState.Context())).
-		WithBlockGasMeter(app.getBlockGasMeter(app.processProposalState.Context())))
+	processProposalState.SetContext(processProposalState.Context().
+		WithConsensusParams(app.GetConsensusParams(processProposalState.Context())).
+		WithBlockGasMeter(app.getBlockGasMeter(processProposalState.Context())))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -567,7 +569,7 @@ func (app *BaseApp) ProcessProposal(req *abci.ProcessProposalRequest) (resp *abc
 		}
 	}()
 
-	resp, err = app.processProposal(app.processProposalState.Context(), req)
+	resp, err = app.processProposal(processProposalState.Context(), req)
 	if err != nil {
 		app.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_REJECT}, nil
@@ -935,9 +937,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.FinalizeBlockRequest) (res *abci.Fin
 		}
 
 		// if it was aborted, we need to reset the state
-		app.stateMut.Lock()
-		app.finalizeBlockState = nil
-		app.stateMut.Unlock()
+		app.clearState(execModeFinalize)
 
 		app.optimisticExec.Reset()
 	}
@@ -1026,10 +1026,7 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(execModeCheck, header)
-
-	app.stateMut.Lock()
-	app.finalizeBlockState = nil
-	app.stateMut.Unlock()
+	app.clearState(execModeFinalize)
 
 	if app.prepareCheckStater != nil {
 		app.prepareCheckStater(app.getState(execModeCheck).Context())

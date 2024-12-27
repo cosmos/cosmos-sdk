@@ -6,9 +6,12 @@ import (
 	"os"
 	"sort"
 
-	"github.com/manifoldco/promptui"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
+	"cosmossdk.io/client/v2/autocli/prompt"
 	"cosmossdk.io/core/address"
 	govcli "cosmossdk.io/x/gov/client/cli"
 	govtypes "cosmossdk.io/x/gov/types"
@@ -27,14 +30,15 @@ const (
 )
 
 type proposalType struct {
-	Name string
-	Msg  sdk.Msg
+	Name    string
+	MsgType string
+	Msg     sdk.Msg
 }
 
 // Prompt the proposal type values and return the proposal and its metadata.
-func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec address.Codec) (*Proposal, govtypes.ProposalMetadata, error) {
+func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec, validatorAddressCodec, consensusAddressCodec address.Codec) (*Proposal, govtypes.ProposalMetadata, error) {
 	// set metadata
-	metadata, err := govcli.PromptMetadata(skipMetadata, addressCodec)
+	metadata, err := govcli.PromptMetadata(skipMetadata)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
@@ -46,22 +50,14 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec a
 	}
 
 	// set group policy address
-	policyAddressPrompt := promptui.Prompt{
-		Label:    "Enter group policy address",
-		Validate: client.ValidatePromptAddress,
-	}
-	groupPolicyAddress, err := policyAddressPrompt.Run()
+	groupPolicyAddress, err := prompt.PromptString("Enter group policy address", prompt.ValidateAddress(addressCodec))
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set group policy address: %w", err)
 	}
 	proposal.GroupPolicyAddress = groupPolicyAddress
 
 	// set proposer address
-	proposerPrompt := promptui.Prompt{
-		Label:    "Enter proposer address",
-		Validate: client.ValidatePromptAddress,
-	}
-	proposerAddress, err := proposerPrompt.Run()
+	proposerAddress, err := prompt.PromptString("Enter proposer address", prompt.ValidateAddress(addressCodec))
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposer address: %w", err)
 	}
@@ -72,12 +68,29 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec a
 	}
 
 	// set messages field
-	result, err := govcli.Prompt(p.Msg, "msg", addressCodec)
+	msg, err := protoregistry.GlobalTypes.FindMessageByURL(p.MsgType)
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to find proposal msg: %w", err)
+	}
+	newMsg := msg.New()
+
+	result, err := prompt.PromptMessage(addressCodec, validatorAddressCodec, consensusAddressCodec, "msg", newMsg)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal message: %w", err)
 	}
 
-	message, err := cdc.MarshalInterfaceJSON(result)
+	// message must be converted to gogoproto so @type is not lost
+	resultBytes, err := proto.Marshal(result.Interface())
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
+	}
+
+	err = gogoproto.Unmarshal(resultBytes, p.Msg)
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to unmarshal proposal message: %w", err)
+	}
+
+	message, err := cdc.MarshalInterfaceJSON(p.Msg)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
 	}
@@ -101,12 +114,7 @@ func NewCmdDraftProposal() *cobra.Command {
 			}
 
 			// prompt proposal type
-			proposalTypesPrompt := promptui.Select{
-				Label: "Select proposal type",
-				Items: []string{proposalText, proposalOther},
-			}
-
-			_, selectedProposalType, err := proposalTypesPrompt.Run()
+			selectedProposalType, err := prompt.Select("Select proposal type", []string{proposalText, proposalOther})
 			if err != nil {
 				return fmt.Errorf("failed to prompt proposal types: %w", err)
 			}
@@ -118,20 +126,15 @@ func NewCmdDraftProposal() *cobra.Command {
 			case proposalOther:
 				// prompt proposal type
 				proposal = &proposalType{Name: proposalOther}
-				msgPrompt := promptui.Select{
-					Label: "Select proposal message type:",
-					Items: func() []string {
-						msgs := clientCtx.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName)
-						sort.Strings(msgs)
-						return msgs
-					}(),
-				}
 
-				_, result, err := msgPrompt.Run()
+				msgs := clientCtx.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName)
+				sort.Strings(msgs)
+
+				result, err := prompt.Select("Select proposal message type:", msgs)
 				if err != nil {
 					return fmt.Errorf("failed to prompt proposal types: %w", err)
 				}
-
+				proposal.MsgType = result
 				proposal.Msg, err = sdk.GetMsgFromTypeURL(clientCtx.Codec, result)
 				if err != nil {
 					// should never happen
@@ -143,7 +146,7 @@ func NewCmdDraftProposal() *cobra.Command {
 
 			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
 
-			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt, clientCtx.AddressCodec)
+			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt, clientCtx.AddressCodec, clientCtx.ValidatorAddressCodec, clientCtx.ConsensusAddressCodec)
 			if err != nil {
 				return err
 			}

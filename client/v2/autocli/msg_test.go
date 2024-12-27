@@ -55,6 +55,7 @@ func TestMsg(t *testing.T) {
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--generate-only",
 		"--output", "json",
+		"--chain-id", fixture.chainID,
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -74,6 +75,7 @@ func TestMsg(t *testing.T) {
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--generate-only",
 		"--output", "json",
+		"--chain-id", fixture.chainID,
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -93,8 +95,10 @@ func TestMsg(t *testing.T) {
 	}), "send",
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--from", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
-		"--generate-only",
 		"--output", "json",
+		"--generate-only",
+		"--chain-id", fixture.chainID,
+		"--keyring-backend", fixture.kBackend,
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -116,11 +120,39 @@ func TestMsg(t *testing.T) {
 	}), "send",
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--sender", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
-		"--generate-only",
 		"--output", "json",
+		"--generate-only",
+		"--chain-id", fixture.chainID,
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
+}
+
+func TestMsgWithFlattenFields(t *testing.T) {
+	fixture := initFixture(t)
+
+	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "UpdateParams",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{ProtoField: "authority"},
+					{ProtoField: "params.send_enabled.denom"},
+					{ProtoField: "params.send_enabled.enabled"},
+					{ProtoField: "params.default_send_enabled"},
+				},
+			},
+		},
+		EnhanceCustomCommand: true,
+	}), "update-params",
+		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "stake", "true", "true",
+		"--generate-only",
+		"--output", "json",
+		"--chain-id", fixture.chainID,
+	)
+	assert.NilError(t, err)
+	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "flatten-output.golden"))
 }
 
 func goldenLoad(t *testing.T, filename string) []byte {

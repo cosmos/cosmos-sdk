@@ -123,6 +123,7 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 		}
 
 		sort.Sort(abcitypes.ValidatorUpdates(req.Validators))
+		sort.Sort(abcitypes.ValidatorUpdates(res.Validators))
 
 		for i := range res.Validators {
 			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
@@ -413,7 +414,7 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 
 	// Abort any running OE so it cannot overlap with `PrepareProposal`. This could happen if optimistic
 	// `internalFinalizeBlock` from previous round takes a long time, but consensus has moved on to next round.
-	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProoposal` could share access to
+	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProposal` could share access to
 	// in-memory structs depending on application implementation.
 	// No-op if OE is not enabled.
 	// Similar call to Abort() is done in `ProcessProposal`.
@@ -643,6 +644,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 			ChainID: app.chainID,
 			Height:  req.Height,
 			Hash:    req.Hash,
+			Time:    req.Time,
 		})
 
 	// add a deferred recover handler in case extendVote panics
@@ -1005,6 +1007,10 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
 				if app.streamingManager.StopNodeOnErr {
 					err = fmt.Errorf("Commit listening hook failed: %w", err)
+					if blockHeight == 1 {
+						// can't rollback to height 0, so just return the error
+						return nil, fmt.Errorf("failed to commit block 1, can't automatically rollback: %w", err)
+					}
 					rollbackErr := app.cms.RollbackToVersion(blockHeight - 1)
 					if rollbackErr != nil {
 						return nil, errors.Join(err, rollbackErr)
@@ -1337,6 +1343,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  height,
+			Time:    header.Time,
 		}).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)

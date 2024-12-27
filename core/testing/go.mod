@@ -8,4 +8,4 @@ require (
 	go.uber.org/mock v0.5.0
 )
 
-require cosmossdk.io/schema v0.3.0 // indirect
+require cosmossdk.io/schema v1.0.0 // indirect

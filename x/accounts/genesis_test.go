@@ -19,13 +19,13 @@ func TestGenesis(t *testing.T) {
 	// we init two accounts of the same type
 
 	// we set counter to 10
-	_, addr1, err := k.Init(ctx, testAccountType, []byte("sender"), &types.Empty{}, nil)
+	_, addr1, err := k.Init(ctx, testAccountType, []byte("sender"), &types.Empty{}, nil, nil)
 	require.NoError(t, err)
 	_, err = k.Execute(ctx, addr1, []byte("sender"), &types.UInt64Value{Value: 10}, nil)
 	require.NoError(t, err)
 
 	// we set counter to 20
-	_, addr2, err := k.Init(ctx, testAccountType, []byte("sender"), &types.Empty{}, nil)
+	_, addr2, err := k.Init(ctx, testAccountType, []byte("sender"), &types.Empty{}, nil, nil)
 	require.NoError(t, err)
 	_, err = k.Execute(ctx, addr2, []byte("sender"), &types.UInt64Value{Value: 20}, nil)
 	require.NoError(t, err)
@@ -62,7 +62,7 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, &types.UInt64Value{Value: 20}, resp)
 
 	// check initted on genesis account
-	addr3, err := k.makeAddress(2)
+	addr3, err := k.makeAddress([]byte("sender-2"), 2, nil)
 	require.NoError(t, err)
 	resp, err = k.Query(ctx, addr3, &types.DoubleValue{})
 	require.NoError(t, err)

@@ -54,7 +54,7 @@ An implementation example can be found in `simapp` package.
 
 To run Rosetta in your application CLI, use the following command:
 
-> **Note:** if using the native approach, add your node name before any rosetta comand.
+> **Note:** if using the native approach, add your node name before any rosetta command.
 
 ```shell
 rosetta --help
@@ -74,13 +74,13 @@ rosetta
 
 ## Plugins - Multi chain connections
 
-Rosetta will try to reflect the node types trough reflection over the node gRPC endpoints, there may be cases were this approach is not enough. It is possible to extend or implement the required types easily trough plugins.
+Rosetta will try to reflect the node types through reflection over the node gRPC endpoints, there may be cases where this approach is not enough. It is possible to extend or implement the required types easily through plugins.
 
 To use Rosetta over any chain, it is required to set up prefixes and registering zone specific interfaces through plugins.
 
-Each plugin is a minimalist implementation of `InitZone` and `RegisterInterfaces` which allow Rosetta to parse chain specific data. There is an example for cosmos-hub chain under `plugins/cosmos-hun/` folder
+Each plugin is a minimalist implementation of `InitZone` and `RegisterInterfaces` which allow Rosetta to parse chain specific data. There is an example for cosmos-hub chain under `plugins/cosmos-hub/` folder
 - **InitZone**: An empty method that is executed first and defines prefixes, parameters and other settings.
-- **RegisterInterfaces**: This method receives an interface registry which is were the zone specific types and interfaces will be loaded
+- **RegisterInterfaces**: This method receives an interface registry which is where the zone specific types and interfaces will be loaded
 
 In order to add a new plugin: 
 1. Create a folder over `plugins` folder with the name of the desired zone

@@ -19,6 +19,7 @@ var (
 
 	_ appmodule.AppModule        = AppModule{}
 	_ appmodulev2.GenesisDecoder = AppModule{}
+	_ appmodulev2.HasABCIGenesis = AppModule{}
 )
 
 // AppModule implements an application module for the genutil module.

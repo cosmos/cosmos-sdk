@@ -13,13 +13,13 @@ type Type interface {
 	isType()
 }
 
-// ReferenceType is a marker interface that all types that can be the target of Field.ReferencedType implement.
+// ReferenceableType is a marker interface that all types that can be the target of Field.ReferencedType implement.
 // Currently, this is only EnumType.
-type ReferenceType interface {
+type ReferenceableType interface {
 	Type
 
-	// isReferenceType is implemented if this is a reference type.
-	isReferenceType()
+	// isReferenceableType is implemented if this is a reference type.
+	isReferenceableType()
 }
 
 // TypeSet represents something that has types and allows them to be looked up by name.

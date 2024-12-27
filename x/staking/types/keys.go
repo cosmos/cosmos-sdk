@@ -49,10 +49,6 @@ var (
 	RedelegationByValSrcIndexKey = collections.NewPrefix(53) // prefix for each key for a redelegation, by source validator operator
 	RedelegationByValDstIndexKey = collections.NewPrefix(54) // prefix for each key for a redelegation, by destination validator operator
 
-	UnbondingIDKey    = collections.NewPrefix(55) // key for the counter for the incrementing id for UnbondingOperations
-	UnbondingIndexKey = collections.NewPrefix(56) // prefix for an index for looking up unbonding operations by their IDs
-	UnbondingTypeKey  = collections.NewPrefix(57) // prefix for an index containing the type of unbonding operations
-
 	UnbondingQueueKey    = collections.NewPrefix(65) // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = collections.NewPrefix(66) // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = collections.NewPrefix(67) // prefix for the timestamps in validator queue

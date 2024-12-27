@@ -33,6 +33,10 @@ func (c *coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 }
 
 func (c *coinValue) String() string {
+	if c.value == nil {
+		return ""
+	}
+
 	return c.value.String()
 }
 

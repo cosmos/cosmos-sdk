@@ -79,9 +79,14 @@ v                     without deliberation
     * [ ] Make sure state machine logic matches Msg method documentation
     * [ ] Ensure that all state machine edge cases are covered with tests and that test coverage is sufficient (at least 90% coverage on module code)
     * [ ] Assess potential threats for each method including spam attacks and ensure that threats have been addressed sufficiently. This should be done by writing up threat assessment for each method. Specifically we should be paying attention to: 
-        * [ ] algorithmic complexity and places this could be exploited (ex. nested `for` loops)
-        * [ ] charging gas complex computation (ex. `for` loops)
-        * [ ] storage is safe (we don't pollute the state).
+        * [ ] Algorithmic Complexity Audit:
+            * [ ] Identify and review all nested loops and complex computations
+            * [ ] Verify proper gas charging for complex operations
+            * [ ] Check for potential DoS vectors in loops and recursions
+        * [ ] Storage Safety Audit:
+            * [ ] Verify state pollution prevention
+            * [ ] Check proper cleanup of temporary storage
+            * [ ] Review storage access patterns
     * [ ] Assess potential risks of any new third party dependencies and decide whether a dependency audit is needed
     * [ ] Check correctness of simulation implementation if any
 * [ ] Audit Changelog against commit log, ensuring all breaking changes, bug fixes, and improvements are properly documented.

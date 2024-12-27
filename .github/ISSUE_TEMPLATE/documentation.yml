@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         ✰  Thanks for opening an issue! ✰    
-        Tell us where what you would like to see get added to the documentation or if there is an error in the documentation?
+        Please let us know what you would like to see added to the documentation or if you've found any errors in the existing documentation.
 
   - type: textarea
     id: what-happened

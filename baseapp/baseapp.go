@@ -120,6 +120,10 @@ type BaseApp struct {
 	//
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
 	// previous block's state. This state is committed.
+	//
+	// NOTE: The states should be accessed via getter and setter to avoid race conditions.
+	// - getter: getState
+	// - setter: setState and clearState
 	checkState           *state
 	prepareProposalState *state
 	processProposalState *state

@@ -22,7 +22,7 @@ body:
     attributes:
       label: Problem Definition
       description: |
-        If applicable please answer the below questions
+        If applicable, please answer the below questions:
         Why do we need this feature? 
         What problems may be addressed by introducing this feature?
         What benefits does the SDK stand to gain by including this feature?
@@ -35,7 +35,7 @@ body:
     attributes:
       label: Proposed Feature
       description: |
-        Description of the proposed features or changes to an existing feature to meet your needs
+        Please provide a detailed description of the proposed feature or changes to existing functionality that would meet your needs.
       placeholder: Description of the proposed feature(s)
     validations:
       required: true

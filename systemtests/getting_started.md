@@ -56,7 +56,7 @@ Then print the result to for the next steps
 ### Run the test
 
 ```shell
-go test -mod=readonly -tags='system_test' -v ./...  --run TestQueryTotalSupply --verbose 
+go test -mod=readonly -tags='system_test' -v ./...  --run TestQueryTotalSupply
 ```
 
 This give very verbose output. You would see all simd CLI commands used for starting the server or by the client to interact.

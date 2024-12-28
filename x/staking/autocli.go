@@ -17,6 +17,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Validators",
+					Use:       "validators",
 					Short:     "Query for all validators",
 					Long:      "Query details about all validators on a network.",
 				},

@@ -25,13 +25,13 @@ Or via manual steps
 ```shell
 make build
 mkdir -p ./tests/systemtests/binaries
-cp ./build/simd ./tests/systemtests/binaries/
+cp ./build/simdv2 ./tests/systemtests/binaries/
 ```
 
 ### Manual test run
 
 ```shell
-go test -v -mod=readonly -failfast -tags='system_test' --run TestStakeUnstake    ./... --verbose
+go test -v -mod=readonly -failfast -tags='system_test' --run TestStakeUnstake ./...
 ```
 
 ### Working with macOS

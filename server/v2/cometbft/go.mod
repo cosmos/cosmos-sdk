@@ -1,6 +1,6 @@
 module cosmossdk.io/server/v2/cometbft
 
-go 1.23.4
+go 1.23.2
 
 replace (
 	cosmossdk.io/server/v2 => ../
@@ -44,7 +44,7 @@ require (
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/math v1.4.0 // indirect
-	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
+	cosmossdk.io/store v1.10.0-rc.1 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
@@ -162,7 +162,7 @@ require (
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b // indirect
 	gitlab.com/yawning/tuplehash v0.0.0-20230713102510-df83abbf9a02 // indirect
-	go.etcd.io/bbolt v1.4.0-alpha.1 // indirect
+	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect

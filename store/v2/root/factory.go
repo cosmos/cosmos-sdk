@@ -33,6 +33,7 @@ type Options struct {
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`
 	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
+	IavlV2Config    iavl_v2.TreeOptions
 }
 
 // FactoryOptions are the options for creating a root store.
@@ -102,12 +103,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
 				dir := fmt.Sprintf("%s/data/iavl-v2/%s", opts.RootDir, key)
-				// TODO load from config YAML or at least simapp
-				iavlOpts := iavl_v2.DefaultTreeOptions()
-				iavlOpts.EvictionDepth = 22
-				iavlOpts.HeightFilter = 1
-				iavlOpts.CheckpointInterval = 55
-				return iavlv2.NewTree(iavlOpts, iavl_v2.SqliteDbOptions{Path: dir}, opts.Logger)
+				return iavlv2.NewTree(opts.Options.IavlV2Config, iavl_v2.SqliteDbOptions{Path: dir}, opts.Logger)
 			default:
 				return nil, errors.New("unsupported commitment store type")
 			}

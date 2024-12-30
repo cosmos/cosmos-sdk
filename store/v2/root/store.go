@@ -289,13 +289,11 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades, overrid
 // from the SC tree. Finally, it commits the SC tree and returns the hash of
 // the CommitInfo.
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
-	s.logger.Warn("begin commit", "version", cs.Version)
 	now := time.Now()
 	defer func() {
 		if s.telemetry != nil {
 			s.telemetry.MeasureSince(now, "root_store", "commit")
 		}
-		s.logger.Warn(fmt.Sprintf("commit version %d took %s", cs.Version, time.Since(now)))
 	}()
 
 	if err := s.handleMigration(cs); err != nil {
@@ -311,12 +309,13 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
 		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
-
+	writeDur := time.Since(st)
+	st = time.Now()
 	cInfo, err := s.stateCommitment.Commit(cs.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC store: %w", err)
 	}
-	s.logger.Warn(fmt.Sprintf("sc commit version %d took %s", cs.Version, time.Since(st)))
+	s.logger.Warn(fmt.Sprintf("commit version %d write=%s commit=%s", cs.Version, writeDur, time.Since(st)))
 
 	if cInfo.Version != cs.Version {
 		return nil, fmt.Errorf("commit version mismatch: got %d, expected %d", cInfo.Version, cs.Version)

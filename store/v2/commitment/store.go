@@ -178,16 +178,33 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 		}
 	}
 
+	eg := errgroup.Group{}
+	eg.SetLimit(store.MaxWriteParallelism)
 	for _, storeKey := range storeKeys {
+		tree := c.multiTrees[storeKey]
 		if overrideAfter {
-			if err := c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion); err != nil {
-				return err
+			if tree.IsConcurrentSafe() {
+				eg.Go(func() error {
+					return c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion)
+				})
+			} else {
+				if err := c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion); err != nil {
+					return err
+				}
 			}
 		} else {
-			if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
-				return err
+			if tree.IsConcurrentSafe() {
+				eg.Go(func() error { return c.multiTrees[storeKey].LoadVersion(targetVersion) })
+			} else {
+				if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
+					return err
+				}
 			}
 		}
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
 	// If the target version is greater than the latest version, it is the snapshot

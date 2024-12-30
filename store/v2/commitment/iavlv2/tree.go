@@ -3,10 +3,10 @@ package iavlv2
 import (
 	"fmt"
 
-	"cosmossdk.io/core/log"
 	"github.com/cosmos/iavl/v2"
 	ics23 "github.com/cosmos/ics23/go"
 
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
@@ -19,10 +19,9 @@ var (
 )
 
 type Tree struct {
-	tree  *iavl.Tree
-	log   log.Logger
-	path  string
-	dirty bool
+	tree *iavl.Tree
+	log  log.Logger
+	path string
 }
 
 func NewTree(
@@ -66,14 +65,11 @@ func (t *Tree) LoadVersion(version uint64) error {
 		return err
 	}
 
-	if version == 0 {
-		return nil
-	}
 	return t.tree.LoadVersion(int64(version))
 }
 
 func (t *Tree) LoadVersionForOverwriting(version uint64) error {
-	return t.LoadVersion(version) // TODO: implement overwriting
+	return t.LoadVersion(version)
 }
 
 func (t *Tree) Commit() ([]byte, uint64, error) {
@@ -180,11 +176,8 @@ func (t *Tree) Close() error {
 }
 
 func (t *Tree) Prune(version uint64) error {
-	if err := isHighBitSet(version); err != nil {
-		return err
-	}
-
-	return t.tree.DeleteVersionsTo(int64(version))
+	// do nothing, IAVL v2 has its own advanced pruning mechanism
+	return nil
 }
 
 // PausePruning is unnecessary in IAVL v2 due to the advanced pruning mechanism

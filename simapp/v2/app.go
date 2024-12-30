@@ -28,6 +28,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
+	iavlv2 "github.com/cosmos/iavl/v2"
 )
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
@@ -220,5 +221,18 @@ func (app *SimApp[T]) Close() error {
 }
 
 func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {
-	return serverstore.UnmarshalConfig(config)
+	cfg, err := serverstore.UnmarshalConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	iavlV2Opts := iavlv2.DefaultTreeOptions()
+	iavlV2Opts.MinimumKeepVersions = int64(cfg.Options.SCPruningOption.KeepRecent)
+	iavlV2Opts.EvictionDepth = 22
+	iavlV2Opts.HeightFilter = 1
+	iavlV2Opts.CheckpointInterval = 60
+	iavlV2Opts.PruneRatio = 1.5
+	iavlv2.SetGlobalPruneLimit(1)
+	cfg.Options.IavlV2Config = iavlV2Opts
+
+	return cfg, err
 }

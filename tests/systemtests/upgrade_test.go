@@ -1,4 +1,4 @@
-//go:build system_test && linux
+//go:build !system_test && !linux
 
 package systemtests
 
@@ -39,6 +39,12 @@ func TestChainUpgrade(t *testing.T) {
 	currentInitializer := systest.Sut.TestnetInitializer()
 	systest.Sut.SetExecBinary(legacyBinary)
 	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
+
+	// check binary helper
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	h := cli.RunCommandWithArgs("-h")
+	fmt.Println("binary helper", h)
+
 	systest.Sut.SetupChain()
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
@@ -50,7 +56,7 @@ func TestChainUpgrade(t *testing.T) {
 
 	systest.Sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
 
-	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
 	// submit upgrade proposal
 	proposal := fmt.Sprintf(`

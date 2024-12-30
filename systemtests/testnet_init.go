@@ -85,7 +85,7 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 	out, err := RunShellCmd(s.execBinary, args...)
-	fmt.Println("RunShellCmd", out, err)
+	fmt.Println("RunShellCmd", out, err.Error())
 	if err != nil {
 		panic(err)
 	}

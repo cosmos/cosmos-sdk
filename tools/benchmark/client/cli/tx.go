@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/tools/benchmark"
 	gen "cosmossdk.io/tools/benchmark/generator"

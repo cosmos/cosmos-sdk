@@ -8,6 +8,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -21,7 +22,6 @@ import (
 	"cosmossdk.io/log"
 	storeserver "cosmossdk.io/server/v2/store"
 
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -526,12 +526,20 @@ func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abc
 	if strings.HasPrefix(req.Path, "/cosmos.tx.v1beta1.Service") {
 		rpcClient, _ := client.NewClientFromNode(c.cfg.AppTomlConfig.Address)
 
+		txConfig := authtx.NewTxConfig(
+			c.appCodecs.AppCodec,
+			c.appCodecs.AppCodec.InterfaceRegistry().SigningContext().AddressCodec(),
+			c.appCodecs.AppCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
+			authtx.DefaultSignModes,
+		)
+
 		// init simple client context
 		clientCtx := client.Context{}.
 			WithLegacyAmino(c.appCodecs.LegacyAmino.(*codec.LegacyAmino)).
 			WithCodec(c.appCodecs.AppCodec).
 			WithNodeURI(c.cfg.AppTomlConfig.Address).
-			WithClient(rpcClient)
+			WithClient(rpcClient).
+			WithTxConfig(txConfig)
 
 		txService := txServer[T]{
 			clientCtx: clientCtx,

@@ -147,6 +147,12 @@ type genesisTxCodec struct {
 	tx.ConfigOptions
 }
 
+func NewGenesisTxCodec(txConfigOptions tx.ConfigOptions) *genesisTxCodec {
+	return &genesisTxCodec{
+		txConfigOptions,
+	}
+}
+
 // Decode implements transaction.Codec.
 func (t *genesisTxCodec) Decode(bz []byte) (stateMachineTx, error) {
 	var out stateMachineTx

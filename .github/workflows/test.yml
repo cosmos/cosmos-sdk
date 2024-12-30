@@ -114,46 +114,6 @@ jobs:
           name: "${{ github.sha }}-integration-coverage"
           path: ./tests/integration-profile.out
 
-  test-system: # v2 system tests are in v2-test.yml
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: |
-            simapp/go.sum
-            systemtest/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
-            **/Makefile
-            Makefile
-      - name: Install musl lib for simd (docker) binary
-        if: env.GIT_DIFF
-        run: |
-          sudo apt-get install -y musl
-      - name: system tests v1
-        if: env.GIT_DIFF
-        run: |
-          make test-system
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: "testnet-setup"
-          path: ./systemtests/testnet/
-          retention-days: 3
-
   repo-analysis:
     runs-on: ubuntu-latest
     needs: [tests, test-integration]
@@ -503,29 +463,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: indexer/postgres/
-
-  test-simapp:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: simapp/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            simapp/go.mod
-            simapp/go.sum
-      - name: tests simapp
-        if: env.GIT_DIFF
-        run: |
-          cd simapp
-          go test -mod=readonly -timeout 30m -tags='norace ledger test_ledger_mock' ./...
 
   test-simapp-v2:
     runs-on: ubuntu-latest
@@ -1199,36 +1136,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: x/evidence/
-  test-x-params:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/params/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/params/**/*.go
-            x/params/go.mod
-            x/params/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/params
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - name: sonarcloud
-        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: x/params/
   test-x-upgrade:
     runs-on: ubuntu-latest
     steps:

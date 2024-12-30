@@ -3,7 +3,7 @@ package module
 import (
 	"context"
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
+
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -20,6 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 var (

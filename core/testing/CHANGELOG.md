@@ -36,3 +36,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+> Testing suite for the core module. Should stay in 0ver. 
+
+## [v0.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core/testing%2Fv0.0.1)
+
+* Initial tag.

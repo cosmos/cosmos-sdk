@@ -8,13 +8,16 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
 	gen "cosmossdk.io/tools/benchmark/generator"
 )
 
-const ModuleName = "benchmark"
-const maxStoreKeyGenIterations = 100
+const (
+	ModuleName               = "benchmark"
+	maxStoreKeyGenIterations = 100
+)
 
 func init() {
 	appconfig.RegisterModule(

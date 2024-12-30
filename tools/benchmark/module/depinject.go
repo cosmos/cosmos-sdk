@@ -3,8 +3,6 @@ package module
 import (
 	"unsafe"
 
-	"cosmossdk.io/depinject"
-
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"

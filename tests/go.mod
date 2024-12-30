@@ -102,7 +102,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/iavl v1.3.4 // indirect
-	github.com/cosmos/iavl/v2 v2.0.0-20241230201056-64573f084690 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-20241230202043-079dc2f54186 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect

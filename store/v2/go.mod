@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.3.4
-	github.com/cosmos/iavl/v2 v2.0.0-20241230201056-64573f084690
+	github.com/cosmos/iavl/v2 v2.0.0-20241230202043-079dc2f54186
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/google/btree v1.1.3
 	github.com/hashicorp/go-metrics v0.5.3

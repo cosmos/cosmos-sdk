@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/spf13/cobra"
 )
 
 func NewTxCmd(params *modulev1.GeneratorParams) *cobra.Command {

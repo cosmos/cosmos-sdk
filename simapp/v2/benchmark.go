@@ -10,7 +10,6 @@ import (
 	benchmarkmodulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	benchmark "cosmossdk.io/tools/benchmark/module"
-	"fmt"
 )
 
 func init() {

@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 
+	iavlv2 "github.com/cosmos/iavl/v2"
 	_ "github.com/jackc/pgx/v5/stdlib" // Import and register pgx driver
 
 	"cosmossdk.io/core/registry"
@@ -17,6 +18,7 @@ import (
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
+	_ "cosmossdk.io/tools/benchmark"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
@@ -28,7 +30,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	iavlv2 "github.com/cosmos/iavl/v2"
 )
 
 // SimApp extends an ABCI application, but with most of its parameters exported.

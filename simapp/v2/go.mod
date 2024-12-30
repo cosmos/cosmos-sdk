@@ -48,7 +48,7 @@ require (
 	google.golang.org/protobuf v1.36.0
 )
 
-require github.com/cosmos/iavl/v2 v2.0.0-20241230201056-64573f084690
+require github.com/cosmos/iavl/v2 v2.0.0-20241230202043-079dc2f54186
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect

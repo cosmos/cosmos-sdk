@@ -12,7 +12,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	proto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"

@@ -30,9 +30,9 @@ func NewMetadataStore(kv corestore.KVStoreWithBatch) *MetadataStore {
 	}
 }
 
-// GetLatestVersion returns the latest committed version.
-func (m *MetadataStore) GetLatestVersion() (uint64, error) {
-	value, err := m.kv.Get([]byte(latestVersionKey))
+// getVersion is an internal helper method to retrieve and decode a version from the store.
+func (m *MetadataStore) getVersion(key string) (uint64, error) {
+	value, err := m.kv.Get([]byte(key))
 	if err != nil {
 		return 0, err
 	}
@@ -46,6 +46,11 @@ func (m *MetadataStore) GetLatestVersion() (uint64, error) {
 	}
 
 	return version, nil
+}
+
+// GetLatestVersion returns the latest committed version.
+func (m *MetadataStore) GetLatestVersion() (uint64, error) {
+	return m.getVersion(latestVersionKey)
 }
 
 func (m *MetadataStore) setLatestVersion(version uint64) error {
@@ -57,21 +62,9 @@ func (m *MetadataStore) setLatestVersion(version uint64) error {
 	return m.kv.Set([]byte(latestVersionKey), buf.Bytes())
 }
 
+// GetV2MigrationHeight retrieves the height at which the migration to store v2 occurred.
 func (m *MetadataStore) GetV2MigrationHeight() (uint64, error) {
-	value, err := m.kv.Get([]byte(v2MigrationHeightKey))
-	if err != nil {
-		return 0, err
-	}
-	if value == nil {
-		return 0, nil
-	}
-
-	version, _, err := encoding.DecodeUvarint(value)
-	if err != nil {
-		return 0, err
-	}
-
-	return version, nil
+	return m.getVersion(v2MigrationHeightKey)
 }
 
 // setV2MigrationHeight sets the v2 migration height.

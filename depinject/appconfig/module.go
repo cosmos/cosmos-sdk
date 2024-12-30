@@ -11,6 +11,15 @@ import (
 
 var Register = RegisterModule
 
+func modouleProtoType(m any) (proto.Message, reflect.Type) {
+	protoM, ok := m.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("expected module to be a proto.Message, got %T", m))
+	}
+
+	return protoM, reflect.TypeOf(protoM)
+}
+
 // RegisterModule registers a module with the global module registry. The provided
 // protobuf message is used only to uniquely identify the protobuf module config
 // type. The instance of the protobuf message used in the actual configuration
@@ -21,12 +30,7 @@ var Register = RegisterModule
 // cosmos.app.v1alpha.module option and must explicitly specify go_package
 // to make debugging easier for users.
 func RegisterModule(config any, options ...Option) {
-	protoConfig, ok := config.(proto.Message)
-	if !ok {
-		panic(fmt.Errorf("expected config to be a proto.Message, got %T", config))
-	}
-
-	ty := reflect.TypeOf(config)
+	protoConfig, ty := modouleProtoType(config)
 	init := &internal.ModuleInitializer{
 		ConfigProtoMessage: protoConfig,
 		ConfigGoType:       ty,
@@ -39,6 +43,13 @@ func RegisterModule(config any, options ...Option) {
 			return
 		}
 	}
+}
+
+// UnregisterModule from the global module registry. Can be used to overwrite previously
+// registered module.
+func UnregisterModule(config any, options ...Option) {
+	_, ty := modouleProtoType(config)
+	delete(internal.ModuleRegistry, ty)
 }
 
 // Option is a functional option for implementing modules.

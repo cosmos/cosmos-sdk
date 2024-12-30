@@ -12,7 +12,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-COSMOS_BUILD_OPTIONS := v2
+COSMOS_BUILD_OPTIONS += ' v2'
 
 rocksdb_version=v9.6.1
 

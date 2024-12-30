@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 
+	iavlv2 "github.com/cosmos/iavl/v2"
 	_ "github.com/jackc/pgx/v5/stdlib" // Import and register pgx driver
 
 	"cosmossdk.io/core/registry"
@@ -17,6 +18,7 @@ import (
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
+	_ "cosmossdk.io/tools/benchmark"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
@@ -220,5 +222,18 @@ func (app *SimApp[T]) Close() error {
 }
 
 func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {
-	return serverstore.UnmarshalConfig(config)
+	cfg, err := serverstore.UnmarshalConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	iavlV2Opts := iavlv2.DefaultTreeOptions()
+	iavlV2Opts.MinimumKeepVersions = int64(cfg.Options.SCPruningOption.KeepRecent)
+	iavlV2Opts.EvictionDepth = 22
+	iavlV2Opts.HeightFilter = 1
+	iavlV2Opts.CheckpointInterval = 60
+	iavlV2Opts.PruneRatio = 0.8
+	iavlv2.SetGlobalPruneLimit(1)
+	cfg.Options.IavlV2Config = iavlV2Opts
+
+	return cfg, err
 }

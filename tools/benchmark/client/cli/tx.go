@@ -110,6 +110,7 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 				}
 			}()
 
+			i := 0
 			begin := time.Now()
 			ops := make([]*benchmark.Op, numOps)
 			for {
@@ -170,8 +171,9 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 					accSeq++
 					successCount++
 				}
+				i++
 				if pause > 0 {
-					time.Sleep(time.Duration(pause) * time.Millisecond)
+					time.Sleep(time.Duration(pause) * time.Microsecond)
 				}
 			}
 		},
@@ -180,7 +182,7 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "print the response")
 	cmd.Flags().Uint64Var(&numOps, "ops", 1, "number of operations per transaction")
-	cmd.Flags().Int64Var(&pause, "pause", 0, "pause between transactions in milliseconds")
+	cmd.Flags().Int64Var(&pause, "pause", 0, "pause between transactions in microseconds")
 
 	return cmd
 }

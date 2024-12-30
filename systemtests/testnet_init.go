@@ -78,7 +78,7 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 	}
 
 	if IsV2() {
-		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
+		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
 	} else {
 		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
 	}

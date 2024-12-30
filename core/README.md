@@ -17,3 +17,4 @@ Additionally, it contains all core services APIs that can be used in modules to 
 Last but not least, it provides codecs and packages for the Cosmos SDK's core types (think of, for instance, logger, store interface or an address codec).
 
 Developers and contributors approach core API design with careful deliberation, ensuring that additions provide significant value while maintaining the module's stability and simplicity.
+

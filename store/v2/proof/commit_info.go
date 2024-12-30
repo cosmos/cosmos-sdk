@@ -106,9 +106,6 @@ func (ci *CommitInfo) encodedSize() int {
 	size += encoding.EncodeUvarintSize(uint64(len(ci.StoreInfos)))
 	for _, storeInfo := range ci.StoreInfos {
 		size += encoding.EncodeBytesSize(storeInfo.Name)
-		if storeInfo.CommitID == nil {
-			panic("zomg")
-		}
 		size += encoding.EncodeBytesSize(storeInfo.CommitID.Hash)
 		size += encoding.EncodeBytesSize([]byte(storeInfo.Structure))
 	}

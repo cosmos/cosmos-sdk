@@ -27,6 +27,14 @@ func TestChainUpgrade(t *testing.T) {
 
 	legacyBinary := FetchExecutable(t, "0.52.0-beta.3")
 	t.Logf("+++ legacy binary: %s\n", legacyBinary)
+
+	binariesPath := filepath.Join("binaries", "simdv2_0.52.0-beta.3")
+	_, err := os.Stat(binariesPath)
+	// Check if the file does not exist
+	if os.IsNotExist(err) {
+		fmt.Println("File not exist")
+	}
+
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
 	systest.Sut.SetExecBinary(legacyBinary)

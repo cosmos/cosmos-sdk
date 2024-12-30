@@ -69,18 +69,24 @@ type AccountAbstractionKeeper interface {
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak              AccountKeeper
-	aaKeeper        AccountAbstractionKeeper
-	signModeHandler *txsigning.HandlerMap
-	sigGasConsumer  SignatureVerificationGasConsumer
+	ak                   AccountKeeper
+	aaKeeper             AccountAbstractionKeeper
+	signModeHandler      *txsigning.HandlerMap
+	sigGasConsumer       SignatureVerificationGasConsumer
+	extraVerifyIsOnCurve func(pubKey cryptotypes.PubKey) (bool, error)
 }
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper) SigVerificationDecorator {
+	return NewSigVerificationDecoratorWithVerifyOnCurve(ak, signModeHandler, sigGasConsumer, aaKeeper, nil)
+}
+
+func NewSigVerificationDecoratorWithVerifyOnCurve(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper, verifyFn func(pubKey cryptotypes.PubKey) (bool, error)) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		aaKeeper:        aaKeeper,
-		ak:              ak,
-		signModeHandler: signModeHandler,
-		sigGasConsumer:  sigGasConsumer,
+		aaKeeper:             aaKeeper,
+		ak:                   ak,
+		signModeHandler:      signModeHandler,
+		sigGasConsumer:       sigGasConsumer,
+		extraVerifyIsOnCurve: verifyFn,
 	}
 }
 
@@ -148,6 +154,16 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 	}
 
 	return nil
+}
+
+func (svd SigVerificationDecorator) VerifyIsOnCurve(pubKey cryptotypes.PubKey) error {
+	if svd.extraVerifyIsOnCurve != nil {
+		handled, err := svd.extraVerifyIsOnCurve(pubKey)
+		if handled {
+			return err
+		}
+	}
+	return verifyIsOnCurve(pubKey)
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -417,7 +433,7 @@ func (svd SigVerificationDecorator) setPubKey(ctx context.Context, acc sdk.Accou
 		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", acc.GetAddress(), txPubKey.Address())
 	}
 
-	err := verifyIsOnCurve(txPubKey)
+	err := svd.VerifyIsOnCurve(txPubKey)
 	if err != nil {
 		return err
 	}

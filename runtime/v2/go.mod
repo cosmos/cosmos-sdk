@@ -49,7 +49,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/iavl v1.3.1 // indirect
-	github.com/cosmos/iavl/v2 v2.0.0-20241128205019-1b18c0edbbd9 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-20241230201056-64573f084690 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect

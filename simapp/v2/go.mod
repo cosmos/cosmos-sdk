@@ -48,6 +48,7 @@ require (
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+	github.com/cosmos/iavl/v2 v2.0.0-20241230201056-64573f084690
 	github.com/jackc/pgx/v5 v5.7.1
 )
 
@@ -105,7 +106,6 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/cosmos/iavl v1.3.2 // indirect
-	github.com/cosmos/iavl/v2 v2.0.0-20241128205019-1b18c0edbbd9 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/creachadair/atomicfile v0.3.6 // indirect
@@ -313,5 +313,4 @@ replace (
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/store/v2 => ../../store/v2
-	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
 )

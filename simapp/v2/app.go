@@ -230,7 +230,7 @@ func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {
 	iavlV2Opts.EvictionDepth = 22
 	iavlV2Opts.HeightFilter = 1
 	iavlV2Opts.CheckpointInterval = 60
-	iavlV2Opts.PruneRatio = 1.5
+	iavlV2Opts.PruneRatio = 0.8
 	iavlv2.SetGlobalPruneLimit(1)
 	cfg.Options.IavlV2Config = iavlV2Opts
 

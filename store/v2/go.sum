@@ -1,3 +1,5 @@
+cosmossdk.io/core v1.0.0-alpha.6 h1:5ukC4JcQKmemLQXcAgu/QoOvJI50hpBkIIg4ZT2EN8E=
+cosmossdk.io/core v1.0.0-alpha.6/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
 cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e h1:F+ScucYxwrrDJU8guJXQXpGhdpziYSbxW6HMP2wCNxs=
 cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e/go.mod h1:3YvVv9aJayjPhdX0DY1IMrGse4sR63hNBWx2VtDWjGQ=
 cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 h1:IQNdY2kB+k+1OM2DvqFG1+UgeU1JzZrWtwuWzI3ZfwA=
@@ -59,6 +61,8 @@ github.com/cosmos/iavl v1.3.1 h1:+W1G2uSUtJMqMGpwz/fKiwZxY2DDT/9/0hyNLm6Geu0=
 github.com/cosmos/iavl v1.3.1/go.mod h1:T6SfBcyhulVIY2G/ZtAtQm/QiJvsuhIos52V4dWYk88=
 github.com/cosmos/iavl-bench/bench v0.0.4 h1:J6zQPiBqF4CXMM3QBsLqZgQEBGY0taX85vLIZMhmAfQ=
 github.com/cosmos/iavl-bench/bench v0.0.4/go.mod h1:j2rLae77EffacWcp7mmj3Uaa4AOAmZA7ymvhsuBQKKI=
+github.com/cosmos/iavl/v2 v2.0.0-20241230201056-64573f084690 h1:9J9VLOdacwrJkuyEt1fOxIOQ+0jrgKf0L2SlwkHNYQ8=
+github.com/cosmos/iavl/v2 v2.0.0-20241230201056-64573f084690/go.mod h1:7RSm0aeApe3S1x4TrLffvUL6pjOtMYV4glYnpAhr2lw=
 github.com/cosmos/ics23/go v0.11.0 h1:jk5skjT0TqX5e5QJbEnwXIS2yI2vnmLOgpQPeM5RtnU=
 github.com/cosmos/ics23/go v0.11.0/go.mod h1:A8OjxPE67hHST4Icw94hOxxFEJMBG031xIGF/JHNIY0=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=

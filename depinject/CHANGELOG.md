@@ -22,6 +22,8 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+* [#23127](https://github.com/cosmos/cosmos-sdk/pull/23127) feat: add `UnregisterModule` function.
+
 ## 1.1.0
 
 * [#22438](https://github.com/cosmos/cosmos-sdk/pull/22438) Unexported fields on `In` structs are now silently ignored instead of failing.

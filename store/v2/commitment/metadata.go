@@ -13,7 +13,8 @@ import (
 const (
 	commitInfoKeyFmt      = "c/%d" // c/<version>
 	latestVersionKey      = "c/latest"
-	removedStoreKeyPrefix = "c/removed/" // c/removed/<version>/<store-name>
+	v2MigrationHeightKey  = "c/v2migration" // c/v2migration height where the migration to store v2 happened
+	removedStoreKeyPrefix = "c/removed/"    // c/removed/<version>/<store-name>
 )
 
 // MetadataStore is a store for metadata related to the commitment store.
@@ -54,6 +55,33 @@ func (m *MetadataStore) setLatestVersion(version uint64) error {
 		return err
 	}
 	return m.kv.Set([]byte(latestVersionKey), buf.Bytes())
+}
+
+func (m *MetadataStore) GetV2MigrationHeight() (uint64, error) {
+	value, err := m.kv.Get([]byte(v2MigrationHeightKey))
+	if err != nil {
+		return 0, err
+	}
+	if value == nil {
+		return 0, nil
+	}
+
+	version, _, err := encoding.DecodeUvarint(value)
+	if err != nil {
+		return 0, err
+	}
+
+	return version, nil
+}
+
+// setV2MigrationHeight sets the v2 migration height.
+func (m *MetadataStore) setV2MigrationHeight(height uint64) error {
+	var buf bytes.Buffer
+	buf.Grow(encoding.EncodeUvarintSize(height))
+	if err := encoding.EncodeUvarint(&buf, height); err != nil {
+		return err
+	}
+	return m.kv.Set([]byte(v2MigrationHeightKey), buf.Bytes())
 }
 
 // GetCommitInfo returns the commit info for the given version.

@@ -22,10 +22,7 @@ import (
 
 // Example shows how to use the integration test framework to test the integration of SDK modules.
 // Panics are used in this example, but in a real test case, you should use the testing.T object and assertions.
-func Example() {
-	// example functions should not take any arguments, t is created in the function to avoid passing it
-	// in your code pass t to the integration test function
-	t := &testing.T{}
+func Example(t *testing.T) {
 	authority := authtypes.NewModuleAddress("gov").String()
 
 	var mintKeeper *mintkeeper.Keeper

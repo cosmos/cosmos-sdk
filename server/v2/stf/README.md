@@ -31,4 +31,4 @@ type (
 )
 ```
 
-THe wrappGasMeter is used in order to consume gas. Application developers can seamlsessly replace the gas meter with their own implementation in order to customize consumption of gas.
+THe wrapGasMeter is used in order to consume gas. Application developers can seamlsessly replace the gas meter with their own implementation in order to customize consumption of gas.

@@ -22,12 +22,12 @@ import (
 
 // Example shows how to use the integration test framework to test the integration of SDK modules.
 // Panics are used in this example, but in a real test case, you should use the testing.T object and assertions.
+// nolint:govet // ignore removal of parameter here as its run as a test as well.
 func Example(t *testing.T) {
+	t.Helper()
 	authority := authtypes.NewModuleAddress("gov").String()
 
-	var (
-		mintKeeper *mintkeeper.Keeper
-	)
+	var mintKeeper *mintkeeper.Keeper
 
 	moduleConfigs := []configurator.ModuleOption{
 		configurator.AccountsModule(),

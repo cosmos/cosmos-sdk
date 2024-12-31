@@ -506,7 +506,7 @@ When a Validator is slashed, the following occurs:
   redelegation began from the validator are slashed by the `slashFactor` percentage of the initialBalance.
 * Each amount slashed from redelegations and unbonding delegations is subtracted from the
   total slash amount.
-* The `remaingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
+* The `remainingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
   `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
 
 In the case of a slash due to any infraction that requires evidence to submitted (for example double-sign), the slash

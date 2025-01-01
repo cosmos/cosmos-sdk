@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -236,7 +237,19 @@ func (w *gogoTxWrapper) GetSigningTxData() txsigning.TxData {
 }
 
 func (w *gogoTxWrapper) GetExtensionOptions() []*codectypes.Any {
-	return intoAnyV1(w.Tx.Body.ExtensionOptions)
+	anys := make([]*codectypes.Any, 0, len(w.Tx.Body.ExtensionOptions))
+	for _, opt := range w.Tx.Body.ExtensionOptions {
+		msg, err := decodeFromAny(w.cdc, opt)
+		if err != nil {
+			return nil
+		}
+		value, err := gogoproto.NewAnyWithCacheWithValue(msg)
+		if err != nil {
+			return nil
+		}
+		anys = append(anys, value)
+	}
+	return anys
 }
 
 func (w *gogoTxWrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {

@@ -165,7 +165,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	for version := uint64(1); version <= originalLatestVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < 10; i++ {
-				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), false)
 				s.Require().NoError(err)
 				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
 			}

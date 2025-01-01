@@ -1,6 +1,7 @@
 package root
 
 import (
+	"cosmossdk.io/store/v2/commitment"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -34,6 +35,9 @@ type Store struct {
 
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
+
+	// v1StateCommitment reflects the v1 state commitment prior to migration
+	v1StateCommitment store.Committer
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *proof.CommitInfo
@@ -173,9 +177,33 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
-	val, err := s.stateCommitment.Get(storeKey, version, key)
-	if err != nil {
-		return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
+	var err error
+	var v2upgradeHeight uint64
+	var val []byte
+	v2StateCommitment, stateCommitmentIsV2 := s.stateCommitment.(*commitment.CommitStore)
+
+	if stateCommitmentIsV2 {
+		v2upgradeHeight, err = v2StateCommitment.GetV2MigrationHeight()
+		if err != nil {
+			return store.QueryResult{}, fmt.Errorf("failed to get v2 migration height: %w", err)
+		}
+
+		if version <= v2upgradeHeight {
+			val, err = s.v1StateCommitment.Get(storeKey, version, key)
+			if err != nil {
+				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
+			}
+		} else {
+			val, err = s.stateCommitment.Get(storeKey, version, key)
+			if err != nil {
+				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
+			}
+		}
+	} else {
+		val, err = s.stateCommitment.Get(storeKey, version, key)
+		if err != nil {
+			return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
+		}
 	}
 
 	result := store.QueryResult{
@@ -363,10 +391,15 @@ func (s *Store) handleMigration(cs *corestore.Changeset) error {
 			close(s.chDone)
 			close(s.chChangeset)
 			s.isMigrating = false
-			// close the old state commitment and replace it with the new one
+
+			/*// close the old state commitment and replace it with the new one
 			if err := s.stateCommitment.Close(); err != nil {
 				return fmt.Errorf("failed to close the old SC store: %w", err)
-			}
+			} */
+
+			// set old state commitment as v1StateCommitment
+			s.v1StateCommitment = s.stateCommitment
+
 			newStateCommitment := s.migrationManager.GetStateCommitment()
 			if newStateCommitment != nil {
 				s.stateCommitment = newStateCommitment

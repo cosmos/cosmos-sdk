@@ -237,23 +237,11 @@ func (w *gogoTxWrapper) GetSigningTxData() txsigning.TxData {
 }
 
 func (w *gogoTxWrapper) GetExtensionOptions() []*codectypes.Any {
-	anys := make([]*codectypes.Any, 0, len(w.Tx.Body.ExtensionOptions))
-	for _, opt := range w.Tx.Body.ExtensionOptions {
-		msg, err := decodeFromAny(w.cdc, opt)
-		if err != nil {
-			return nil
-		}
-		value, err := gogoproto.NewAnyWithCacheWithValue(msg)
-		if err != nil {
-			return nil
-		}
-		anys = append(anys, value)
-	}
-	return anys
+	return intoAnyV1(w.cdc, w.Tx.Body.ExtensionOptions)
 }
 
 func (w *gogoTxWrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
-	return intoAnyV1(w.Tx.Body.NonCriticalExtensionOptions)
+	return intoAnyV1(w.cdc, w.Tx.Body.NonCriticalExtensionOptions)
 }
 
 func (w *gogoTxWrapper) AsTx() (*txtypes.Tx, error) {
@@ -283,13 +271,20 @@ func (w *gogoTxWrapper) AsTxRaw() (*txtypes.TxRaw, error) {
 	}, nil
 }
 
-func intoAnyV1(v2s []*anypb.Any) []*codectypes.Any {
+func intoAnyV1(cdc codec.BinaryCodec, v2s []*anypb.Any) []*codectypes.Any {
 	v1s := make([]*codectypes.Any, len(v2s))
 	for i, v2 := range v2s {
-		v1s[i] = &codectypes.Any{
-			TypeUrl: v2.TypeUrl,
-			Value:   v2.Value,
+		var value *gogoproto.Any
+		if msg, err := decodeFromAny(cdc, v2); err == nil {
+			value, _ = gogoproto.NewAnyWithCacheWithValue(msg)
 		}
+		if value == nil {
+			value = &codectypes.Any{
+				TypeUrl: v2.TypeUrl,
+				Value:   v2.Value,
+			}
+		}
+		v1s[i] = value
 	}
 	return v1s
 }

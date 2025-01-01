@@ -233,6 +233,21 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 	return nil
 }
 
+// SetV2MigrationHeight sets the migration height for v2 store.
+func (c *CommitStore) SetV2MigrationHeight(height uint64) error {
+	err := c.metadata.setV2MigrationHeight(height)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetV2MigrationHeight returns the migration height for v2 store.
+func (c *CommitStore) GetV2MigrationHeight() (uint64, error) {
+	return c.metadata.GetV2MigrationHeight()
+}
+
 // GetProof returns a proof for the given key and version.
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
 	rawStoreKey := conv.UnsafeBytesToStr(storeKey)

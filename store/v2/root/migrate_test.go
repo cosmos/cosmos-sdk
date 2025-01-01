@@ -78,7 +78,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 }
 
 func (s *MigrateStoreTestSuite) TestMigrateState() {
-	err := s.rootStore.LoadLatestVersion()
+	err := s.rootStore.LoadLatestVersion() // here it starts the migration
 	s.Require().NoError(err)
 	originalLatestVersion, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
@@ -153,4 +153,22 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	version, err = s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
 	s.Require().Equal(latestVersion+10, version)
+
+	commitStore, ok := s.rootStore.GetStateCommitment().(*commitment.CommitStore)
+	s.Require().True(ok)
+	height, err := commitStore.GetV2MigrationHeight()
+	s.Require().NoError(err)
+	fmt.Printf("commit store height %d\n", height)
+	s.Require().Equal(height, originalLatestVersion)
+
+	// check if the Query fallback to the original SC after the migration
+	for version := uint64(1); version <= originalLatestVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < 10; i++ {
+				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				s.Require().NoError(err)
+				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
+			}
+		}
+	}
 }

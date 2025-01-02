@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -122,7 +123,7 @@ func TestSimulateTx_GRPC(t *testing.T) {
 				require.NoError(t, err)
 				// Check the result and gas used are correct.
 				//
-				// The 12 events are:
+				// The 10 events are:
 				// - Sending Fee to the pool: coin_spent, coin_received and transfer
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
 				// - Sending Amount to recipient: coin_spent, coin_received and transfer
@@ -946,7 +947,7 @@ func TestTxDecodeAmino_GRPC(t *testing.T) {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.TxDecodeAminoRequest{}, true, "invalid empty tx bytes"},
-		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "invalid request"},
+		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "unmarshal to legacytx.StdTx failed"},
 		{"valid request with tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: encodedTx}, false, ""},
 	}
 
@@ -1085,4 +1086,113 @@ func readTestAminoTxBinary(t *testing.T, aminoCodec *codec.LegacyAmino) ([]byte,
 	err = aminoCodec.Unmarshal(txJSONBytes, &stdTx)
 	require.NoError(t, err)
 	return txJSONBytes, &stdTx
+}
+
+func TestSimulateTx_GasImprovements(t *testing.T) {
+	systest.Sut.ResetChain(t)
+
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	// use node 1 as granter
+	granter := cli.GetKeyAddr("node1")
+
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+
+	systest.Sut.StartChain(t)
+
+	baseURL := systest.Sut.APIAddress()
+
+	// node1 grant to node0
+	grantCmdArgs := []string{"tx", "feegrant", "grant", granter, valAddr, "--chain-id=" + cli.ChainID()}
+	rsp := cli.Run(grantCmdArgs...)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	systest.RequireTxSuccess(t, txResult)
+
+	sendSimulateCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID()}
+	testCases := []struct {
+		name         string
+		simulateArgs []string
+		txArgs []string
+	}{
+		{
+			"simulate without fees",
+			sendSimulateCmdArgs,
+			bankSendCmdArgs,
+		},
+		{
+			"simulate with fees",
+			append(sendSimulateCmdArgs, "--fees=1stake"),
+			bankSendCmdArgs,
+		},
+		{
+			"simulate without fee-granter",
+			sendSimulateCmdArgs,
+			append(bankSendCmdArgs, fmt.Sprintf("--fee-granter=%s", granter)),
+		},
+		{
+			"simulate with fee-granter",
+			append(sendSimulateCmdArgs, fmt.Sprintf("--fee-granter=%s", granter)),
+			append(bankSendCmdArgs, fmt.Sprintf("--fee-granter=%s", granter)),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			txlen := 1
+			gasSimulated := make([]int64, txlen)
+			gasAdjustment := make([]float64, txlen)
+
+			for i := 0; i < txlen; i++ {
+				// create unsign tx
+				res := cli.RunCommandWithArgs(tc.simulateArgs...)
+				txFile := systest.StoreTempFile(t, []byte(res))
+		
+				res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
+				signedTxFile := systest.StoreTempFile(t, []byte(res))
+		
+				res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
+				txBz, err := base64.StdEncoding.DecodeString(res)
+				require.NoError(t, err)
+		
+				reqBz, err := json.Marshal(&tx.SimulateRequest{TxBytes: txBz})
+				require.NoError(t, err)
+		
+				resBz, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", baseURL), "application/json", reqBz)
+				require.NoError(t, err)
+				gasUsed := gjson.Get(string(resBz), "gas_info.gas_used").Int()
+				require.True(t, gasUsed > 0)
+				gasSimulated[i] = gasUsed
+			}
+
+			for i := 0; i < txlen; i++ {
+				// Submit tx with gas return from simulate
+				gasAdjustment[i] = 0.99
+				// test valid transaction
+				shouldRerun := true
+				for shouldRerun {
+					gasAdjustment[i] = gasAdjustment[i] + 0.01
+					gasUse := int64(gasAdjustment[i] * float64(gasSimulated[i]))
+					rsp := cli.Run(append(tc.txArgs, fmt.Sprintf("--gas=%d", gasUse))...)
+					// rerun if tx err and increase gas-adjustment by 1%
+					shouldRerun = strings.Contains(gjson.Get(rsp, "raw_log").String(), "out of gas") || gjson.Get(rsp, "gas_used").Int() == int64(0) || gjson.Get(rsp, "code").Int() != 0
+					fmt.Println("gasAdjustment", i, gasAdjustment[i])
+				}
+			}
+		
+			// Calculate average adjustments
+			total := 0.0
+			for i := 0; i < txlen; i++ {
+				total = total + gasAdjustment[i]
+			}
+			average := total / float64(txlen)
+			result := fmt.Sprintf("Test case %s average gas adjustment is: %f", tc.name, average)
+			fmt.Println(result)
+		})
+	}
 }

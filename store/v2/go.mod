@@ -4,19 +4,19 @@ go 1.23
 
 require (
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
+	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/errors/v2 v2.0.0
 	cosmossdk.io/log v1.5.0
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/iavl v1.3.1
+	github.com/cosmos/iavl v1.3.4
 	github.com/cosmos/iavl/v2 v2.0.0-20241128205019-1b18c0edbbd9
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/google/btree v1.1.3
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/linxGnu/grocksdb v1.9.3
-	github.com/spf13/cast v1.7.0
+	github.com/spf13/cast v1.7.1
 	github.com/stretchr/testify v1.10.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
 	go.uber.org/mock v0.5.0
@@ -24,12 +24,12 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.3.0 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
-	github.com/bytedance/sonic v1.12.4 // indirect
+	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -68,12 +68,10 @@ require (
 	github.com/tidwall/btree v1.7.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	golang.org/x/arch v0.12.0 // indirect
-	golang.org/x/crypto v0.29.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace cosmossdk.io/core => ../../core

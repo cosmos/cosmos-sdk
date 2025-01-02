@@ -165,6 +165,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 			copy(peers[nodeNumber:], nodeAddresses[nodeNumber+1:])
 			SetValue(doc, strings.Join(peers, ","), "p2p", "persistent_peers")
 			SetValue(doc, s.commitTimeout.String(), "consensus", "timeout_commit")
+			SetValue(doc, "goleveldb", "db_backend")
 		})
 		EditToml(filepath.Join(nodeDir, "app.toml"), func(doc *tomledit.Document) {
 			UpdatePort(doc, DefaultApiPort+i, "api", "address")

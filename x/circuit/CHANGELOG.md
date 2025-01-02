@@ -31,6 +31,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/circuit/v0.2.0-rc.1) - 2024-12-18
+
 ### API Breaking Changes
 
 * [#19041](https://github.com/cosmos/cosmos-sdk/pull/19041) `appmodule.Environment` is received on the Keeper to get access to different application services

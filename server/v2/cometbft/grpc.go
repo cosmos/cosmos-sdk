@@ -8,6 +8,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -21,13 +22,11 @@ import (
 	"cosmossdk.io/log"
 	storeserver "cosmossdk.io/server/v2/store"
 
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -117,12 +116,13 @@ func (t txServer[T]) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockW
 	}
 	decodeTxAt := func(i uint64) error {
 		tx := blockTxs[i]
-		txb, err := t.clientCtx.TxConfig.TxDecoder()(tx)
-		fmt.Println("TxDecoder", txb, err)
+		txb, err := t.txCodec.Decode(tx)
 		if err != nil {
 			return err
 		}
-		p, err := txb.(interface{ AsTx() (*txtypes.Tx, error) }).AsTx()
+
+		// txServer works only with sdk.Tx
+		p, err := any(txb).(interface{ AsTx() (*txtypes.Tx, error) }).AsTx()
 		if err != nil {
 			return err
 		}
@@ -256,6 +256,11 @@ func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest)
 		msgResponses = append(msgResponses, anyMsg)
 	}
 
+	event, err := intoABCIEvents(txResult.Events, map[string]struct{}{}, false)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "failed to convert events: %v", err)
+	}
+
 	return &txtypes.SimulateResponse{
 		GasInfo: &sdk.GasInfo{
 			GasUsed:   txResult.GasUsed,
@@ -263,6 +268,7 @@ func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest)
 		},
 		Result: &sdk.Result{
 			MsgResponses: msgResponses,
+			Events:       event,
 		},
 	}, nil
 }
@@ -273,15 +279,17 @@ func (t txServer[T]) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest)
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
 	}
 
-	txb, err := t.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
+	txb, err := t.txCodec.Decode(req.TxBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	tx, err := txb.(interface{ AsTx() (*txtypes.Tx, error) }).AsTx() // TODO: maybe we can break the Tx interface to add this also
+	// txServer works only with sdk.Tx
+	tx, err := any(txb).(interface{ AsTx() (*txtypes.Tx, error) }).AsTx()
 	if err != nil {
 		return nil, err
 	}
+
 	return &txtypes.TxDecodeResponse{
 		Tx: tx,
 	}, nil
@@ -350,7 +358,7 @@ func (t txServer[T]) TxEncodeAmino(_ context.Context, req *txtypes.TxEncodeAmino
 	var stdTx legacytx.StdTx
 	err := t.clientCtx.LegacyAmino.UnmarshalJSON([]byte(req.AminoJson), &stdTx)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid request %s", err))
 	}
 
 	encodedBytes, err := t.clientCtx.LegacyAmino.Marshal(stdTx)
@@ -466,7 +474,7 @@ func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abc
 	if strings.HasPrefix(req.Path, "/cosmos.base.tendermint.v1beta1.Service") {
 		rpcClient, _ := rpchttp.New(c.cfg.ConfigTomlConfig.RPC.ListenAddress)
 
-		cometQServer := cmtservice.NewQueryServer(rpcClient, c.Query, c.consensusAddressCodec)
+		cometQServer := cmtservice.NewQueryServer(rpcClient, c.Query, c.appCodecs.ConsensusAddressCodec)
 		paths := strings.Split(req.Path, "/")
 		if len(paths) <= 2 {
 			return nil, fmt.Errorf("invalid request path: %s", req.Path)
@@ -516,27 +524,26 @@ func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abc
 
 	// Handle tx service
 	if strings.HasPrefix(req.Path, "/cosmos.tx.v1beta1.Service") {
-		// init simple client context
-		amino := codec.NewLegacyAmino()
-		std.RegisterLegacyAminoCodec(amino)
-		txConfig := authtx.NewTxConfig(
-			c.appCodec,
-			c.appCodec.InterfaceRegistry().SigningContext().AddressCodec(),
-			c.appCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
-			authtx.DefaultSignModes,
-		)
 		rpcClient, _ := client.NewClientFromNode(c.cfg.AppTomlConfig.Address)
 
+		txConfig := authtx.NewTxConfig(
+			c.appCodecs.AppCodec,
+			c.appCodecs.AppCodec.InterfaceRegistry().SigningContext().AddressCodec(),
+			c.appCodecs.AppCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
+			authtx.DefaultSignModes,
+		)
+
+		// init simple client context
 		clientCtx := client.Context{}.
-			WithLegacyAmino(amino).
-			WithCodec(c.appCodec).
-			WithTxConfig(txConfig).
+			WithLegacyAmino(c.appCodecs.LegacyAmino.(*codec.LegacyAmino)).
+			WithCodec(c.appCodecs.AppCodec).
 			WithNodeURI(c.cfg.AppTomlConfig.Address).
-			WithClient(rpcClient)
+			WithClient(rpcClient).
+			WithTxConfig(txConfig)
 
 		txService := txServer[T]{
 			clientCtx: clientCtx,
-			txCodec:   c.txCodec,
+			txCodec:   c.appCodecs.TxCodec,
 			app:       c.app,
 			consensus: c,
 		}

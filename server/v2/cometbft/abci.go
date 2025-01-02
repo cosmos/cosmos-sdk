@@ -15,7 +15,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/collections"
-	addresscodec "cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
@@ -35,8 +34,6 @@ import (
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 const (
@@ -52,13 +49,12 @@ type consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              appmanager.AppManager[T]
-	appCodec         codec.Codec
-	txCodec          transaction.Codec[T]
 	store            types.Store
 	listener         *appdata.Listener
 	snapshotManager  *snapshots.Manager
 	streamingManager streaming.Manager
 	mempool          mempool.Mempool[T]
+	appCodecs        AppCodecs[T]
 
 	cfg               Config
 	chainID           string
@@ -72,7 +68,7 @@ type consensus[T transaction.Tx] struct {
 
 	prepareProposalHandler handlers.PrepareHandler[T]
 	processProposalHandler handlers.ProcessHandler[T]
-	verifyVoteExt          handlers.VerifyVoteExtensionhandler
+	verifyVoteExt          handlers.VerifyVoteExtensionHandler
 	extendVote             handlers.ExtendVoteHandler
 	checkTxHandler         handlers.CheckTxHandler[T]
 
@@ -84,16 +80,15 @@ type consensus[T transaction.Tx] struct {
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
-	queryHandlersMap      map[string]appmodulev2.Handler
-	getProtoRegistry      func() (*protoregistry.Files, error)
-	consensusAddressCodec addresscodec.Codec
-	cfgMap                server.ConfigMap
+	queryHandlersMap map[string]appmodulev2.Handler
+	getProtoRegistry func() (*protoregistry.Files, error)
+	cfgMap           server.ConfigMap
 }
 
 // CheckTx implements types.Application.
 // It is called by cometbft to verify transaction validity
 func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxRequest) (*abciproto.CheckTxResponse, error) {
-	decodedTx, err := c.txCodec.Decode(req.Tx)
+	decodedTx, err := c.appCodecs.TxCodec.Decode(req.Tx)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +142,7 @@ func (c *consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	// if height is 0, we dont know the consensus params
 	var appVersion uint64 = 0
 	if version > 0 {
-		cp, err := c.GetConsensusParams(ctx)
+		cp, err := GetConsensusParams(ctx, c.app)
 		// if the consensus params are not found, we set the app version to 0
 		// in the case that the start version is > 0
 		if cp == nil || errors.Is(err, collections.ErrNotFound) {
@@ -325,7 +320,7 @@ func (c *consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		ctx,
 		br,
 		req.AppStateBytes,
-		c.txCodec)
+		c.appCodecs.TxCodec)
 	if err != nil {
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
@@ -379,7 +374,7 @@ func (c *consensus[T]) PrepareProposal(
 
 	// Abort any running OE so it cannot overlap with `PrepareProposal`. This could happen if optimistic
 	// `internalFinalizeBlock` from previous round takes a long time, but consensus has moved on to next round.
-	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProoposal` could share access to
+	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProposal` could share access to
 	// in-memory structs depending on application implementation.
 	// No-op if OE is not enabled.
 	// Similar call to Abort() is done in `ProcessProposal`.
@@ -392,7 +387,7 @@ func (c *consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req)
+	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.appCodecs.TxCodec, req, c.chainID)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +433,7 @@ func (c *consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req)
+	err := c.processProposalHandler(ciCtx, c.app, c.appCodecs.TxCodec, req, c.chainID)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{
@@ -538,7 +533,7 @@ func (c *consensus[T]) FinalizeBlock(
 
 	c.lastCommittedHeight.Store(req.Height)
 
-	cp, err := c.GetConsensusParams(ctx) // we get the consensus params from the latest state because we committed state above
+	cp, err := GetConsensusParams(ctx, c.app) // we get the consensus params from the latest state because we committed state above
 	if err != nil {
 		return nil, err
 	}
@@ -567,7 +562,7 @@ func (c *consensus[T]) internalFinalizeBlock(
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
 	// have a tx that fails decoding.
-	decodedTxs, err := decodeTxs(c.logger, req.Txs, c.txCodec)
+	decodedTxs, err := decodeTxs(c.logger, req.Txs, c.appCodecs.TxCodec)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -605,7 +600,7 @@ func (c *consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (
 
 	c.snapshotManager.SnapshotIfApplicable(lastCommittedHeight)
 
-	cp, err := c.GetConsensusParams(ctx)
+	cp, err := GetConsensusParams(ctx, c.app)
 	if err != nil {
 		return nil, err
 	}
@@ -624,7 +619,7 @@ func (c *consensus[T]) VerifyVoteExtension(
 ) (*abciproto.VerifyVoteExtensionResponse, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
-	cp, err := c.GetConsensusParams(ctx)
+	cp, err := GetConsensusParams(ctx, c.app)
 	if err != nil {
 		return nil, err
 	}
@@ -663,7 +658,7 @@ func (c *consensus[T]) VerifyVoteExtension(
 func (c *consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVoteRequest) (*abciproto.ExtendVoteResponse, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
-	cp, err := c.GetConsensusParams(ctx)
+	cp, err := GetConsensusParams(ctx, c.app)
 	if err != nil {
 		return nil, err
 	}
@@ -707,6 +702,8 @@ func decodeTxs[T transaction.Tx](logger log.Logger, rawTxs [][]byte, codec trans
 		if err != nil {
 			// do not return an error here, as we want to deliver the block even if some txs are invalid
 			logger.Debug("failed to decode tx", "err", err)
+			txs[i] = RawTx(rawTx).(T) // allows getting the raw bytes down the line
+			continue
 		}
 		txs[i] = tx
 	}

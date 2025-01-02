@@ -111,7 +111,7 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
+func (svd SigVerificationDecorator) verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 	// when simulating pubKey.Key will always be nil
 	if pubKey.Bytes() == nil {
 		return nil
@@ -140,7 +140,7 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 		pubKeysObjects := typedPubKey.GetPubKeys()
 		ok := true
 		for _, pubKeyObject := range pubKeysObjects {
-			if err := verifyIsOnCurve(pubKeyObject); err != nil {
+			if err := svd.VerifyIsOnCurve(pubKeyObject); err != nil {
 				ok = false
 				break
 			}
@@ -163,7 +163,7 @@ func (svd SigVerificationDecorator) VerifyIsOnCurve(pubKey cryptotypes.PubKey) e
 			return err
 		}
 	}
-	return verifyIsOnCurve(pubKey)
+	return svd.verifyIsOnCurve(pubKey)
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {

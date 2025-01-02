@@ -3,8 +3,9 @@ package commitment
 import (
 	"testing"
 
-	dbm "cosmossdk.io/store/v2/db"
 	"github.com/stretchr/testify/assert"
+
+	dbm "cosmossdk.io/store/v2/db"
 )
 
 func TestMetadataStore_GetLatestVersion(t *testing.T) {

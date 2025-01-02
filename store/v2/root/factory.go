@@ -54,7 +54,7 @@ func DefaultStoreOptions() Options {
 			Interval:   100,
 		},
 		IavlConfig: &iavl.Config{
-			CacheSize:              1_000_000,
+			CacheSize:              500_000,
 			SkipFastStorageUpgrade: true,
 		},
 	}

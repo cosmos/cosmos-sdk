@@ -201,7 +201,7 @@ func isHighBitSet(version uint64) error {
 func DefaultOptions(keepVersions int64) iavl.TreeOptions {
 	opts := iavl.DefaultTreeOptions()
 	opts.MinimumKeepVersions = keepVersions
-	opts.CheckpointInterval = 60
+	opts.CheckpointInterval = 200
 	opts.PruneRatio = 1
 	opts.HeightFilter = 1
 	opts.EvictionDepth = 22

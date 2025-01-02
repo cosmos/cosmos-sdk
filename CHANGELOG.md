@@ -49,7 +49,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+
 * (baseapp) [#22692](https://github.com/cosmos/cosmos-sdk/pull/22692) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
+* (query) [23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
+
 
 ### API Breaking Changes
 

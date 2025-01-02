@@ -177,14 +177,7 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
-	var (
-		val      []byte
-		proofOps []proof.CommitmentOp
-		err      error
-	)
-
 	var cs store.Committer
-
 	// if is V2 means that the store is a v2 store, it can be a migrated v1 store or a v2 store
 	if v2Commitment, isV2 := s.stateCommitment.(*commitment.CommitStore); isV2 {
 		// if the store is a v2 store, we need to check if the version is less than or equal to the v2 migration height
@@ -203,10 +196,12 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		cs = s.stateCommitment
 	}
 
-	val, err = cs.Get(storeKey, version, key)
+	val, err := cs.Get(storeKey, version, key)
 	if err != nil {
 		return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
 	}
+
+	var proofOps []proof.CommitmentOp
 
 	if prove {
 		proofOps, err = cs.GetProof(storeKey, version, key)

@@ -819,7 +819,7 @@ type BaseAccount struct {
 ```
 
 First of all, when we save our accounts in state we map them using a primary key `sdk.AccAddress`.
-If it were to be a `collections.Map` it would be `collections.Map[sdk.AccAddres, authtypes.BaseAccount]`.
+If it were to be a `collections.Map` it would be `collections.Map[sdk.AccAddress, authtypes.BaseAccount]`.
 
 Then we also want to be able to get an account not only by its `sdk.AccAddress`, but also by its `AccountNumber`.
 

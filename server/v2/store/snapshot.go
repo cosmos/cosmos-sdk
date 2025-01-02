@@ -177,7 +177,7 @@ func (s *Server[T]) DumpArchiveCmd() *cobra.Command {
 		Use:   "dump <height> <format>",
 		Short: "Dump the snapshot as portable archive format",
 		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			v := serverv2.GetViperFromCmd(cmd)
 			snapshotStore, err := snapshots.NewStore(filepath.Join(v.GetString(serverv2.FlagHome), "data", "snapshots"))
 			if err != nil {
@@ -220,7 +220,9 @@ func (s *Server[T]) DumpArchiveCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer fp.Close()
+			defer func() {
+				err = errors.Join(err, fp.Close())
+			}()
 
 			// since the chunk files are already compressed, we just use fastest compression here
 			gzipWriter, err := gzip.NewWriterLevel(fp, gzip.BestSpeed)
@@ -255,7 +257,7 @@ func (s *Server[T]) DumpArchiveCmd() *cobra.Command {
 				return fmt.Errorf("failed to close gzip writer: %w", err)
 			}
 
-			return fp.Close()
+			return nil
 		},
 	}
 

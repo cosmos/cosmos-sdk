@@ -109,7 +109,7 @@ ifeq (debug,$(findstring debug,$(COSMOS_BUILD_OPTIONS)))
   BUILD_FLAGS += -gcflags "all=-N -l"
 endif
 
-#? all: Run tools build 
+#? all: Run tools build
 all: build
 
 
@@ -127,7 +127,10 @@ build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
-	cd ${CURRENT_DIR}/${SIMAPP} && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+	cd ${CURRENT_DIR}/${SIMAPP} && \
+	CC=$(shell if [ "$(shell go env GOARCH)" = "arm64" ]; then echo "aarch64-linux-gnu-gcc"; else echo "gcc"; fi) \
+	CGO_ENABLED=1 \
+	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/

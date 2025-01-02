@@ -68,7 +68,13 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 
 	snapshotsStore, err := snapshots.NewStore(s.T().TempDir())
 	s.Require().NoError(err)
-	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, testLog)
+	snapshotManager := snapshots.NewManager(
+		snapshotsStore,
+		snapshots.NewSnapshotOptions(1500, 2),
+		orgSC,
+		nil,
+		testLog,
+	)
 	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, sc, testLog)
 	pm := pruning.NewManager(sc, nil)
 
@@ -87,7 +93,12 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	for version := uint64(1); version <= originalLatestVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < 10; i++ {
-				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				res, err := s.rootStore.Query(
+					[]byte(storeKey),
+					version,
+					[]byte(fmt.Sprintf("key-%d-%d", version, i)),
+					true,
+				)
 				s.Require().NoError(err)
 				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
 			}
@@ -101,7 +112,12 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 		cs := corestore.NewChangeset(latestVersion)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", latestVersion, i)), []byte(fmt.Sprintf("value-%d-%d", latestVersion, i)), false)
+				cs.Add(
+					[]byte(storeKey),
+					[]byte(fmt.Sprintf("key-%d-%d", latestVersion, i)),
+					[]byte(fmt.Sprintf("value-%d-%d", latestVersion, i)),
+					false,
+				)
 			}
 		}
 		_, err = s.rootStore.Commit(cs)
@@ -131,7 +147,12 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 				if version < originalLatestVersion {
 					targetVersion = originalLatestVersion
 				}
-				res, err := s.rootStore.Query([]byte(storeKey), targetVersion, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				res, err := s.rootStore.Query(
+					[]byte(storeKey),
+					targetVersion,
+					[]byte(fmt.Sprintf("key-%d-%d", version, i)),
+					true,
+				)
 				s.Require().NoError(err)
 				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
 			}
@@ -143,7 +164,12 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 		cs := corestore.NewChangeset(version)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
-				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
+				cs.Add(
+					[]byte(storeKey),
+					[]byte(fmt.Sprintf("key-%d-%d", version, i)),
+					[]byte(fmt.Sprintf("value-%d-%d", version, i)),
+					false,
+				)
 			}
 		}
 		_, err = s.rootStore.Commit(cs)
@@ -165,7 +191,12 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	for version := uint64(1); version <= originalLatestVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < 10; i++ {
-				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				res, err := s.rootStore.Query(
+					[]byte(storeKey),
+					version,
+					[]byte(fmt.Sprintf("key-%d-%d", version, i)),
+					true,
+				)
 				s.Require().NoError(err)
 				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
 			}

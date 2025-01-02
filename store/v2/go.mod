@@ -15,7 +15,6 @@ require (
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/google/btree v1.1.3
 	github.com/hashicorp/go-metrics v0.5.3
-	github.com/linxGnu/grocksdb v1.9.3
 	github.com/spf13/cast v1.7.1
 	github.com/stretchr/testify v1.10.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d

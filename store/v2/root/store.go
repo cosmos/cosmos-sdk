@@ -1,7 +1,6 @@
 package root
 
 import (
-	"cosmossdk.io/store/v2/commitment"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -12,6 +11,7 @@ import (
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/proof"

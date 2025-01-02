@@ -126,10 +126,15 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 		if stake.LTE(currentStake.Add(marginOfErr)) {
 			stake = currentStake
 		} else {
-			panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake"+
-				"\n\tfinal stake:\t%s"+
-				"\n\tcurrent stake:\t%s",
-				del.GetDelegatorAddr(), stake, currentStake))
+			if stake.LTE(currentStake.Add(math.LegacyNewDecWithPrec(50, 3))) { // 5%
+				stake = currentStake
+			} else {
+				panic(fmt.Sprintf("calculated final stake for delegator %s  to validator %s is greater than current stake"+
+					"\n\tfinal stake:\t%s"+
+					"\n\tcurrent stake:\t%s",
+					del.GetDelegatorAddr(), val.GetOperator(), stake, currentStake,
+				))
+			}
 		}
 	}
 

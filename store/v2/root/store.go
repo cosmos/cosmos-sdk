@@ -185,18 +185,21 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 
 	var cs store.Committer
 
+	// if is V2 means that the store is a v2 store, it can be a migrated v1 store or a v2 store
 	if v2Commitment, isV2 := s.stateCommitment.(*commitment.CommitStore); isV2 {
+		// if the store is a v2 store, we need to check if the version is less than or equal to the v2 migration height
 		v2UpgradeHeight, err := v2Commitment.GetV2MigrationHeight()
 		if err != nil {
 			return store.QueryResult{}, fmt.Errorf("failed to get v2 migration height: %w", err)
 		}
 
+		// if the version is less than or equal to the v2 migration height, we need to use the v1 state commitment
 		if version <= v2UpgradeHeight {
 			cs = s.v1StateCommitment
-		} else {
+		} else { // if the version is greater than the v2 migration height, we need to use the v2 state commitment
 			cs = s.stateCommitment
 		}
-	} else {
+	} else { // if is V1 means that the store is a v1 store
 		cs = s.stateCommitment
 	}
 

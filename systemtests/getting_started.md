@@ -92,7 +92,7 @@ At the end is a tail from the server log printed. This can sometimes be handy wh
 When we have a json response, the [gjson](https://github.com/tidwall/gjson) lib can shine. It comes with jquery like
 syntax that makes it easy to navigation within the document.
 
-For example `gjson.Get(raw, "supply").Array()` gives us all the childs to `supply` as an array.
+For example `gjson.Get(raw, "supply").Array()` gives us all the children to `supply` as an array.
 Or `gjson.Get("supply.#(denom==stake).amount").Int()` for the amount of the stake token as int64 type.
 
 In order to test our assumptions in the system test, we modify the code to use `gjson` to fetch the data:

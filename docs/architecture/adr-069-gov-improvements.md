@@ -66,8 +66,8 @@ Voter can only vote NO on the proposal. If the NO threshold is reached, the opti
 Two governance parameters will be in added [`v1.Params`][5] to support optimistic proposals:
 
 ```protobuf
-// optimistic_authorized_addreses is an optional governance parameter that limits the authorized accounts that can submit optimistic proposals
-repeated string optimistic_authorized_addreses = 17 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+// optimistic_authorized_addresses is an optional governance parameter that limits the authorized accounts that can submit optimistic proposals
+repeated string optimistic_authorized_addresses = 17 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
 // Optimistic rejected threshold defines at which percentage of NO votes, the optimistic proposal should fail and be converted to a standard proposal.
 string optimistic_rejected_threshold = 18 [(cosmos_proto.scalar) = "cosmos.Dec"];

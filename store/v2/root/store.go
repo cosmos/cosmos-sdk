@@ -177,49 +177,47 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
-	var err error
-	var v2upgradeHeight uint64
-	var val []byte
-	v2StateCommitment, stateCommitmentIsV2 := s.stateCommitment.(*commitment.CommitStore)
+	var (
+		val      []byte
+		proofOps []proof.CommitmentOp
+		err      error
+	)
 
-	if stateCommitmentIsV2 {
-		v2upgradeHeight, err = v2StateCommitment.GetV2MigrationHeight()
+	var cs store.Committer
+
+	if v2Commitment, isV2 := s.stateCommitment.(*commitment.CommitStore); isV2 {
+		v2UpgradeHeight, err := v2Commitment.GetV2MigrationHeight()
 		if err != nil {
 			return store.QueryResult{}, fmt.Errorf("failed to get v2 migration height: %w", err)
 		}
 
-		if version <= v2upgradeHeight {
-			val, err = s.v1StateCommitment.Get(storeKey, version, key)
-			if err != nil {
-				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
-			}
+		if version <= v2UpgradeHeight {
+			cs = s.v1StateCommitment
 		} else {
-			val, err = s.stateCommitment.Get(storeKey, version, key)
-			if err != nil {
-				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
-			}
+			cs = s.stateCommitment
 		}
 	} else {
-		val, err = s.stateCommitment.Get(storeKey, version, key)
-		if err != nil {
-			return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
-		}
+		cs = s.stateCommitment
 	}
 
-	result := store.QueryResult{
-		Key:     key,
-		Value:   val,
-		Version: version,
+	val, err = cs.Get(storeKey, version, key)
+	if err != nil {
+		return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
 	}
 
 	if prove {
-		result.ProofOps, err = s.stateCommitment.GetProof(storeKey, version, key)
+		proofOps, err = cs.GetProof(storeKey, version, key)
 		if err != nil {
 			return store.QueryResult{}, fmt.Errorf("failed to get SC store proof: %w", err)
 		}
 	}
 
-	return result, nil
+	return store.QueryResult{
+		Key:      key,
+		Value:    val,
+		Version:  version,
+		ProofOps: proofOps,
+	}, nil
 }
 
 func (s *Store) LoadLatestVersion() error {

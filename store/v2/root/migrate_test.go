@@ -161,11 +161,11 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	fmt.Printf("commit store height %d\n", height)
 	s.Require().Equal(height, originalLatestVersion)
 
-	// check if the Query fallback to the original SC after the migration
+	// check if the Query fallback to the original SC after the migration without proofs
 	for version := uint64(1); version <= originalLatestVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < 10; i++ {
-				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), false)
+				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
 				s.Require().NoError(err)
 				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
 			}

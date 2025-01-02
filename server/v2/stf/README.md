@@ -13,7 +13,6 @@ This document outlines the main external calls in the STF package, their executi
 DeliverBlock is the main state transition function that processes an entire block of transactions.
 
 ```mermaid
-mermaid
 sequenceDiagram
 participant Caller
 participant STF
@@ -56,7 +55,6 @@ STF-->>Caller: BlockResponse, newState, error
 Simulate executes a transaction without committing changes to the actual state.
 
 ```mermaid
-mermaid
 sequenceDiagram
 participant Caller
 participant STF
@@ -85,7 +83,6 @@ TxProcessor-->>Caller: TxResult, simulationState
 ValidateTx performs transaction validation without execution.
 
 ```mermaid
-mermaid
 sequenceDiagram
 participant Caller
 participant STF
@@ -112,7 +109,6 @@ Validator-->>Caller: TxResult
 Query executes a read-only query against the application state.
 
 ```mermaid
-mermaid
 sequenceDiagram
 participant Caller
 participant STF

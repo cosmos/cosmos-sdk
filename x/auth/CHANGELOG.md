@@ -23,7 +23,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+> While x/auth has not been extracted from the Cosmos SDK, it's changelog is maintained here for consistency with the rest of the modules.
+
+## [0.52.0]
 
 ### Features
 
@@ -62,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating [#vesting accounts](../accounts/defaults/lockup/README.md) on a running chain. 
 * [#21688](https://github.com/cosmos/cosmos-sdk/pull/21688) Allow x/accounts to be queryable from the `AccountInfo` and `Account` gRPC endpoints
 * [#21820](https://github.com/cosmos/cosmos-sdk/pull/21820) Allow x/auth `BaseAccount` to migrate to a `x/accounts` via the new `MsgMigrateAccount`. 
+
 ### Bug Fixes
 
 * [#19148](https://github.com/cosmos/cosmos-sdk/pull/19148) Checks the consumed gas for verifying a multisig pubKey signature during simulation.

@@ -100,7 +100,7 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 				return &stakingtypes.QueryUnbondingDelegationResponse{
 					Unbond: stakingtypes.UnbondingDelegation{
 						DelegatorAddress: "sender",
-						ValidatorAddress: "val_address",
+						ValidatorAddress: valAddress,
 						Entries: []stakingtypes.UnbondingDelegationEntry{
 							{
 								CreationHeight: 1,
@@ -125,7 +125,6 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			default:
 				return nil, errors.New("unrecognized request type")
 			}
-
 		},
 	)
 }

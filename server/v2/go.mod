@@ -2,20 +2,19 @@ module cosmossdk.io/server/v2
 
 go 1.23
 
-replace (
-	cosmossdk.io/server/v2/appmanager => ./appmanager
-	cosmossdk.io/server/v2/stf => ./stf
-	cosmossdk.io/store/v2 => ../../store/v2
-	cosmossdk.io/store/v2/db => ../../store/v2/db
-)
+// server v2 integration (uncomment during development, but comment before release)
+// replace (
+// 	cosmossdk.io/server/v2/appmanager => ./appmanager
+// 	cosmossdk.io/store/v2 => ../../store/v2
+// )
 
 require (
 	cosmossdk.io/api v0.8.0-rc.1
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/log v1.5.0
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
+	cosmossdk.io/store/v2 v2.0.0-beta.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -38,7 +37,7 @@ require (
 )
 
 require (
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
+	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
@@ -92,7 +91,7 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect

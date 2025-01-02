@@ -381,13 +381,12 @@ func (bva *BaseLockup) checkUnbondingEntriesMature(ctx context.Context) error {
 				if !errorsmod.IsOf(err, stakingtypes.ErrNoUnbondingDelegation) {
 					return true, err
 				}
-
 			}
 
 			found := false
 			// check if the entry is still exist in the unbonding entries
 			for _, e := range stakingUnbonding {
-				if e.CompletionTime.Equal(entry.EndTime) && entry.CreationHeight == entry.CreationHeight {
+				if e.CompletionTime.Equal(entry.EndTime) && e.CreationHeight == entry.CreationHeight {
 					found = true
 					break
 				}

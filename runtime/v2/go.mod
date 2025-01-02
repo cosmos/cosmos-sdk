@@ -2,12 +2,12 @@ module cosmossdk.io/runtime/v2
 
 go 1.23
 
-// server v2 integration
-replace (
-	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
-	cosmossdk.io/server/v2/stf => ../../server/v2/stf
-	cosmossdk.io/store/v2 => ../../store/v2
-)
+// server v2 integration (uncomment during development, but comment before release)
+// replace (
+// 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
+// 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
+// 	cosmossdk.io/store/v2 => ../../store/v2
+// )
 
 require (
 	cosmossdk.io/api v0.8.0-rc.1
@@ -15,9 +15,9 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
+	cosmossdk.io/server/v2/stf v1.0.0-beta.1
+	cosmossdk.io/store/v2 v2.0.0-beta.1
 	cosmossdk.io/x/tx v1.0.0-alpha.3
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.10.0
@@ -29,7 +29,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/core/testing v0.0.1 // indirect
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
+	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
@@ -72,7 +72,7 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect

@@ -4,8 +4,8 @@ go 1.23.2
 
 require (
 	cosmossdk.io/core v1.0.0-alpha.6
-	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
-	cosmossdk.io/schema v0.3.0
+	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/schema v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0

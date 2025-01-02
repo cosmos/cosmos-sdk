@@ -8,8 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -305,24 +303,14 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	// background pruning process (iavl v1 for example) which must be paused during the commit
 	s.pruningManager.PausePruning()
 
-	eg := new(errgroup.Group)
-
-	// commit SC async
 	var cInfo *proof.CommitInfo
-	eg.Go(func() error {
-		if err := s.stateCommitment.WriteChangeset(cs); err != nil {
-			return fmt.Errorf("failed to write batch to SC store: %w", err)
-		}
-		var scErr error
-		cInfo, scErr = s.stateCommitment.Commit(cs.Version)
-		if scErr != nil {
-			return fmt.Errorf("failed to commit SC store: %w", scErr)
-		}
-		return nil
-	})
+	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
+		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
+	}
 
-	if err := eg.Wait(); err != nil {
-		return nil, err
+	cInfo, err := s.stateCommitment.Commit(cs.Version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to commit SC store: %w", err)
 	}
 
 	if cInfo.Version != cs.Version {

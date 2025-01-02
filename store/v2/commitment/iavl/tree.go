@@ -1,6 +1,7 @@
 package iavl
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/iavl"
@@ -184,7 +185,7 @@ func (t *IavlTree) PausePruning(pause bool) {
 // Export exports the tree exporter at the given version.
 func (t *IavlTree) Export(version uint64) (commitment.Exporter, error) {
 	if version < t.initialVersion {
-		return &EmptyExporter{}, nil
+		return nil, errors.New("version is less than the initial version")
 	}
 	tree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {

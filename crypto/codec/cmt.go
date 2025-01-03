@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/errors"
 
-	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

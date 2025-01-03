@@ -3,12 +3,13 @@
 package simapp
 
 import (
+	"fmt"
+
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	benchmarkmodulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	benchmark "cosmossdk.io/tools/benchmark/module"
-	"fmt"
 )
 
 func init() {
@@ -20,8 +21,8 @@ func init() {
 		Config: appconfig.WrapAny(&benchmarkmodulev1.Module{
 			GenesisParams: &benchmarkmodulev1.GeneratorParams{
 				Seed:         34,
-				BucketCount:  3,
-				GenesisCount: 3_000_000,
+				BucketCount:  5,
+				GenesisCount: 20_000_000,
 				KeyMean:      64,
 				KeyStdDev:    12,
 				ValueMean:    1024,

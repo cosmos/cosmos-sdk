@@ -99,10 +99,6 @@ func validateFlagSet(flags *pflag.FlagSet, offline bool) error {
 			return errors.New("account-number and sequence must be set in offline mode")
 		}
 
-		if generateOnly && chainID != "" {
-			return errors.New("chain ID cannot be used when offline and generate-only flags are set")
-		}
-
 		gas, _ := flags.GetString(flags2.FlagGas)
 		gasSetting, _ := flags2.ParseGasSetting(gas)
 		if gasSetting.Simulate {

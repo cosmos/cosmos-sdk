@@ -19,19 +19,16 @@ import (
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 type fixture struct {
-	conn      *testClientConn
-	b         *Builder
-	clientCtx client.Context
+	conn *testClientConn
+	b    *Builder
 
 	home     string
 	chainID  string
@@ -57,33 +54,17 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, err)
 
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, bank.AppModule{})
-	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
-	assert.NilError(t, err)
-
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
-
-	clientCtx := client.Context{}.
-		WithAddressCodec(interfaceRegistry.SigningContext().AddressCodec()).
-		WithValidatorAddressCodec(interfaceRegistry.SigningContext().ValidatorAddressCodec()).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
-		WithKeyring(kr).
-		WithKeyringDir(home).
-		WithHomeDir(home).
-		WithViper("").
-		WithInterfaceRegistry(interfaceRegistry).
-		WithTxConfig(encodingConfig.TxConfig).
-		WithAccountRetriever(client.MockAccountRetriever{}).
-		WithChainID("autocli-test")
 
 	conn := &testClientConn{ClientConn: clientConn}
 	b := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          protoregistry.GlobalFiles,
-			AddressCodec:          clientCtx.AddressCodec,
-			ValidatorAddressCodec: clientCtx.ValidatorAddressCodec,
-			ConsensusAddressCodec: clientCtx.ConsensusAddressCodec,
+			AddressCodec:          interfaceRegistry.SigningContext().AddressCodec(),
+			ValidatorAddressCodec: interfaceRegistry.SigningContext().ValidatorAddressCodec(),
+			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
@@ -95,10 +76,8 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, b.ValidateAndComplete())
 
 	return &fixture{
-		conn:      conn,
-		b:         b,
-		clientCtx: clientCtx,
-
+		conn:     conn,
+		b:        b,
 		home:     home,
 		chainID:  "autocli-test",
 		kBackend: sdkkeyring.BackendMemory,

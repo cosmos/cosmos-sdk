@@ -25,9 +25,14 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+      - name: install aarch64-gcc
+        if: matrix.go-arch == 'arm64'
+        run: sudo apt-get install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
       - name: Get rocksdb version
+        if: matrix.go-arch == 'amd64'
         run: ./.github/scripts/get-rocksdb-version.sh
       - name: Fix permissions for cache
+        if: matrix.go-arch == 'amd64'
         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
       - name: Restore rocksdb libraries cache
         id: cache-rocksdb
@@ -47,8 +52,8 @@ jobs:
         ###################
         #### Build App ####
         ###################
-      - name: Build v2
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2 make build
+      - name: Build with sqlite backend
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,sqlite make build
       - name: Build with rocksdb backend
         if: matrix.go-arch == 'amd64'
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,rocksdb make build

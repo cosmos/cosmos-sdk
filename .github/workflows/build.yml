@@ -52,8 +52,8 @@ jobs:
         ###################
         #### Build App ####
         ###################
-      - name: Build
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2 make build
+      - name: Build with sqlite backend
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,sqlite make build
       - name: Build with rocksdb backend
         if: matrix.go-arch == 'amd64'
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,rocksdb make build

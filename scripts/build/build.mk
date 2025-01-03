@@ -71,6 +71,14 @@ ifeq (bls12381,$(findstring bls12381,$(COSMOS_BUILD_OPTIONS)))
   build_tags += bls12381
 endif
 
+# handle sqlite
+ifeq (sqlite,$(findstring sqlite,$(COSMOS_BUILD_OPTIONS)))
+  CGO_ENABLED=1
+  ifeq (arm64,$(shell go env GOARCH))
+    CC=aarch64-linux-gnu-gcc
+  endif
+endif
+
 # benchmark module
 ifeq (benchmark,$(findstring benchmark,$(COSMOS_BUILD_OPTIONS)))
   build_tags += benchmark
@@ -128,8 +136,8 @@ build-linux-arm64:
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	cd ${CURRENT_DIR}/${SIMAPP} && \
-	CC=$(shell if [ "$(shell go env GOARCH)" = "arm64" ]; then echo "aarch64-linux-gnu-gcc"; else echo "gcc"; fi) \
-	CGO_ENABLED=1 \
+	$(if $(CGO_ENABLED),CGO_ENABLED=$(CGO_ENABLED)) \
+	$(if $(CC),CC=$(CC)) \
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:

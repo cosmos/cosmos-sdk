@@ -131,7 +131,7 @@ func ValidateGenAccounts(accounts GenesisAccounts) error {
 		// check for duplicated accounts
 		addrStr := acc.GetAddress().String()
 		if _, ok := addrMap[addrStr]; ok {
-			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
+			return fmt.Errorf("duplicates account found in genesis state; address: %s", addrStr)
 		}
 
 		addrMap[addrStr] = true

@@ -13,7 +13,8 @@ import (
 const (
 	commitInfoKeyFmt      = "c/%d" // c/<version>
 	latestVersionKey      = "c/latest"
-	removedStoreKeyPrefix = "c/removed/" // c/removed/<version>/<store-name>
+	v2MigrationHeightKey  = "c/v2migration" // c/v2migration height where the migration to store v2 happened
+	removedStoreKeyPrefix = "c/removed/"    // c/removed/<version>/<store-name>
 )
 
 // MetadataStore is a store for metadata related to the commitment store.
@@ -29,9 +30,9 @@ func NewMetadataStore(kv corestore.KVStoreWithBatch) *MetadataStore {
 	}
 }
 
-// GetLatestVersion returns the latest committed version.
-func (m *MetadataStore) GetLatestVersion() (uint64, error) {
-	value, err := m.kv.Get([]byte(latestVersionKey))
+// getVersion is an internal helper method to retrieve and decode a version from the store.
+func (m *MetadataStore) getVersion(key string) (uint64, error) {
+	value, err := m.kv.Get([]byte(key))
 	if err != nil {
 		return 0, err
 	}
@@ -47,6 +48,11 @@ func (m *MetadataStore) GetLatestVersion() (uint64, error) {
 	return version, nil
 }
 
+// GetLatestVersion returns the latest committed version.
+func (m *MetadataStore) GetLatestVersion() (uint64, error) {
+	return m.getVersion(latestVersionKey)
+}
+
 func (m *MetadataStore) setLatestVersion(version uint64) error {
 	var buf bytes.Buffer
 	buf.Grow(encoding.EncodeUvarintSize(version))
@@ -54,6 +60,21 @@ func (m *MetadataStore) setLatestVersion(version uint64) error {
 		return err
 	}
 	return m.kv.Set([]byte(latestVersionKey), buf.Bytes())
+}
+
+// GetV2MigrationHeight retrieves the height at which the migration to store v2 occurred.
+func (m *MetadataStore) GetV2MigrationHeight() (uint64, error) {
+	return m.getVersion(v2MigrationHeightKey)
+}
+
+// setV2MigrationHeight sets the v2 migration height.
+func (m *MetadataStore) setV2MigrationHeight(height uint64) error {
+	var buf bytes.Buffer
+	buf.Grow(encoding.EncodeUvarintSize(height))
+	if err := encoding.EncodeUvarint(&buf, height); err != nil {
+		return err
+	}
+	return m.kv.Set([]byte(v2MigrationHeightKey), buf.Bytes())
 }
 
 // GetCommitInfo returns the commit info for the given version.

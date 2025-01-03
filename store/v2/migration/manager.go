@@ -107,6 +107,12 @@ func (m *Manager) Migrate(height uint64) error {
 
 	m.migratedVersion.Store(height)
 
+	// Updates migration height to support historical queries
+	err := m.stateCommitment.SetV2MigrationHeight(height)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

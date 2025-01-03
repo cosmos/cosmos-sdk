@@ -11,6 +11,7 @@ import (
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/proof"
@@ -34,6 +35,9 @@ type Store struct {
 
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
+
+	// v1StateCommitment reflects the v1 state commitment prior to migration
+	v1StateCommitment store.Committer
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *proof.CommitInfo
@@ -172,25 +176,45 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		defer s.telemetry.MeasureSince(time.Now(), "root_store", "query")
 	}
 
-	val, err := s.stateCommitment.Get(storeKey, version, key)
+	var cs store.Committer
+	// if is V2 means that the store is a v2 store, it can be a migrated v1 store or a v2 store
+	if v2Commitment, isV2 := s.stateCommitment.(*commitment.CommitStore); isV2 {
+		// if the store is a v2 store, we need to check if the version is less than or equal to the v2 migration height
+		v2UpgradeHeight, err := v2Commitment.GetV2MigrationHeight()
+		if err != nil {
+			return store.QueryResult{}, fmt.Errorf("failed to get v2 migration height: %w", err)
+		}
+
+		// if the version is less than or equal to the v2 migration height, we need to use the v1 state commitment
+		if version <= v2UpgradeHeight {
+			cs = s.v1StateCommitment
+		} else { // if the version is greater than the v2 migration height, we need to use the v2 state commitment
+			cs = s.stateCommitment
+		}
+	} else { // if is V1 means that the store is a v1 store
+		cs = s.stateCommitment
+	}
+
+	val, err := cs.Get(storeKey, version, key)
 	if err != nil {
 		return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
 	}
 
-	result := store.QueryResult{
-		Key:     key,
-		Value:   val,
-		Version: version,
-	}
+	var proofOps []proof.CommitmentOp
 
 	if prove {
-		result.ProofOps, err = s.stateCommitment.GetProof(storeKey, version, key)
+		proofOps, err = cs.GetProof(storeKey, version, key)
 		if err != nil {
 			return store.QueryResult{}, fmt.Errorf("failed to get SC store proof: %w", err)
 		}
 	}
 
-	return result, nil
+	return store.QueryResult{
+		Key:      key,
+		Value:    val,
+		Version:  version,
+		ProofOps: proofOps,
+	}, nil
 }
 
 func (s *Store) LoadLatestVersion() error {
@@ -362,10 +386,15 @@ func (s *Store) handleMigration(cs *corestore.Changeset) error {
 			close(s.chDone)
 			close(s.chChangeset)
 			s.isMigrating = false
-			// close the old state commitment and replace it with the new one
+
+			/*// close the old state commitment and replace it with the new one
 			if err := s.stateCommitment.Close(); err != nil {
 				return fmt.Errorf("failed to close the old SC store: %w", err)
-			}
+			} */
+
+			// set old state commitment as v1StateCommitment
+			s.v1StateCommitment = s.stateCommitment
+
 			newStateCommitment := s.migrationManager.GetStateCommitment()
 			if newStateCommitment != nil {
 				s.stateCommitment = newStateCommitment

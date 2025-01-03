@@ -24,6 +24,6 @@ func TestFactory(t *testing.T) {
 
 	fop.Options.SCType = SCTypeIavlV2
 	f, err = CreateRootStore(&fop)
-	require.Error(t, err)
-	require.Nil(t, f)
+	require.NoError(t, err)
+	require.NotNil(t, f)
 }

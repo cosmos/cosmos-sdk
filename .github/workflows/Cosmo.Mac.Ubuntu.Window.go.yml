@@ -1,0 +1,42 @@
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5.2.0
+      with:
+        go-version: '1.20'  # You can specify a version range or use 'stable' if you want the latest stable version
+        cache: true
+        cache-dependency-path: go.sum
+
+    - name: Fetch Latest Cosmos SDK Version
+      run: |
+        # Fetch the latest release tag from GitHub
+        LATEST_VERSION=$(curl -s "https://api.github.com/repos/cosmos/cosmos-sdk/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        echo "Latest Cosmos SDK version: $LATEST_VERSION"
+        echo "COSMOS_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+
+    - name: Update Go Modules
+      run: |
+        # Update go.mod with the latest Cosmos SDK version
+        go get github.com/cosmos/cosmos-sdk@${{ env.COSMOS_VERSION }}
+        go mod tidy
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...

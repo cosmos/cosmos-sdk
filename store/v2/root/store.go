@@ -114,6 +114,12 @@ func (s *Store) getVersionedReader(version uint64) (store.VersionedReader, error
 	return nil, fmt.Errorf("version %d does not exist", version)
 }
 
+// StateAt returns a read-only view of the state at a given version.
+func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
+	vReader, err := s.getVersionedReader(v)
+	return NewReaderMap(v, vReader), err
+}
+
 func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	v, err := s.GetLatestVersion()
 	if err != nil {
@@ -127,12 +133,6 @@ func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	return v, NewReaderMap(v, vReader), nil
 }
 
-// StateAt returns a read-only view of the state at a given version.
-func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
-	vReader, err := s.getVersionedReader(v)
-	return NewReaderMap(v, vReader), err
-}
-
 func (s *Store) GetStateCommitment() store.Committer {
 	return s.stateCommitment
 }
@@ -142,7 +142,7 @@ func (s *Store) GetStateCommitment() store.Committer {
 // latest version set, which is based off of the SC view.
 func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if s.lastCommitInfo != nil {
-		return s.lastCommitInfo.CommitID(), nil
+		return *s.lastCommitInfo.CommitID(), nil
 	}
 
 	latestVersion, err := s.stateCommitment.GetLatestVersion()
@@ -169,8 +169,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 
 func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (store.QueryResult, error) {
 	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "query")
+		defer s.telemetry.MeasureSince(time.Now(), "root_store", "query")
 	}
 
 	val, err := s.stateCommitment.Get(storeKey, version, key)
@@ -196,8 +195,7 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 
 func (s *Store) LoadLatestVersion() error {
 	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
+		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_latest_version")
 	}
 
 	lv, err := s.GetLatestVersion()
@@ -210,8 +208,7 @@ func (s *Store) LoadLatestVersion() error {
 
 func (s *Store) LoadVersion(version uint64) error {
 	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "load_version")
+		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version")
 	}
 
 	return s.loadVersion(version, nil, false)
@@ -219,8 +216,7 @@ func (s *Store) LoadVersion(version uint64) error {
 
 func (s *Store) LoadVersionForOverwriting(version uint64) error {
 	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "load_version_for_overwriting")
+		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version_for_overwriting")
 	}
 
 	return s.loadVersion(version, nil, true)
@@ -233,7 +229,6 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 	if upgrades == nil {
 		return errors.New("upgrades cannot be nil")
 	}
-
 	if s.telemetry != nil {
 		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version_and_upgrade")
 	}
@@ -291,7 +286,9 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades, overrid
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "commit")
+		defer func() {
+			s.telemetry.MeasureSince(now, "root_store", "commit")
+		}()
 	}
 
 	if err := s.handleMigration(cs); err != nil {
@@ -303,15 +300,17 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	// background pruning process (iavl v1 for example) which must be paused during the commit
 	s.pruningManager.PausePruning()
 
-	var cInfo *proof.CommitInfo
+	st := time.Now()
 	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
 		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
-
+	writeDur := time.Since(st)
+	st = time.Now()
 	cInfo, err := s.stateCommitment.Commit(cs.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC store: %w", err)
 	}
+	s.logger.Warn(fmt.Sprintf("commit version %d write=%s commit=%s", cs.Version, writeDur, time.Since(st)))
 
 	if cInfo.Version != cs.Version {
 		return nil, fmt.Errorf("commit version mismatch: got %d, expected %d", cInfo.Version, cs.Version)

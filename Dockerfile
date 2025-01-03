@@ -68,4 +68,4 @@ WORKDIR /root
 RUN apk add --no-cache curl make bash jq sed
 
 # Copy over binaries from the build-env
-COPY --from=build-env /go/src/github.com/cosmos/cosmos-sdk/build/simd /usr/bin/simd
+COPY --from=build-env /go/src/github.com/cosmos/cosmos-sdk/build/simdv2 /usr/bin/simd

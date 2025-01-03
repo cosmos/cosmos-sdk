@@ -18,7 +18,7 @@ import (
 var _ corestore.KVStoreWithBatch = (*PebbleDB)(nil)
 
 // PebbleDB implements `corestore.KVStoreWithBatch` using PebbleDB as the underlying storage engine.
-// It is used for only store v2 migration, since some clients use PebbleDB as
+// It is used only for store v2 migration, since some clients use PebbleDB as
 // the IAVL v0/v1 backend.
 type PebbleDB struct {
 	storage *pebble.DB

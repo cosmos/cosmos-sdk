@@ -293,9 +293,11 @@ func intoV2SignerInfo(v1s []*tx.SignerInfo) []*txv1beta1.SignerInfo {
 		modeInfoV2 := new(txv1beta1.ModeInfo)
 		intoV2ModeInfo(v1.ModeInfo, modeInfoV2)
 		v2 := &txv1beta1.SignerInfo{
-			PublicKey: intoAnyV2([]*codectypes.Any{v1.PublicKey})[0],
-			ModeInfo:  modeInfoV2,
-			Sequence:  v1.Sequence,
+			ModeInfo: modeInfoV2,
+			Sequence: v1.Sequence,
+		}
+		if v1.PublicKey != nil {
+			v2.PublicKey = intoAnyV2([]*codectypes.Any{v1.PublicKey})[0]
 		}
 		v2s[i] = v2
 	}

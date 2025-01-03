@@ -12,9 +12,9 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-COSMOS_BUILD_OPTIONS := v2
+COSMOS_BUILD_OPTIONS += ' v2'
 
-rocksdb_version=v9.6.1
+rocksdb_version=v9.7.3
 
 ifeq ($(findstring .,$(VERSION)),)
 	VERSION := 0.0.0
@@ -71,6 +71,14 @@ ifeq (bls12381,$(findstring bls12381,$(COSMOS_BUILD_OPTIONS)))
   build_tags += bls12381
 endif
 
+# handle sqlite
+ifeq (sqlite,$(findstring sqlite,$(COSMOS_BUILD_OPTIONS)))
+  CGO_ENABLED=1
+  ifeq (arm64,$(shell go env GOARCH))
+    CC=aarch64-linux-gnu-gcc
+  endif
+endif
+
 # benchmark module
 ifeq (benchmark,$(findstring benchmark,$(COSMOS_BUILD_OPTIONS)))
   build_tags += benchmark
@@ -109,7 +117,7 @@ ifeq (debug,$(findstring debug,$(COSMOS_BUILD_OPTIONS)))
   BUILD_FLAGS += -gcflags "all=-N -l"
 endif
 
-#? all: Run tools build 
+#? all: Run tools build
 all: build
 
 
@@ -127,7 +135,10 @@ build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
-	cd ${CURRENT_DIR}/${SIMAPP} && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+	cd ${CURRENT_DIR}/${SIMAPP} && \
+	$(if $(CGO_ENABLED),CGO_ENABLED=$(CGO_ENABLED)) \
+	$(if $(CC),CC=$(CC)) \
+	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/

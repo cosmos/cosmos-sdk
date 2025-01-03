@@ -66,9 +66,6 @@ type CommitStoreTestSuite struct {
 //   - Checks that the restored store's Merkle tree hashes match the original
 //   - Ensures store integrity by comparing CommitInfo hashes
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
-	if s.TreeType == "iavlv2" {
-		s.T().Skip("FIXME: iavlv2 does not yet support snapshots")
-	}
 	storeKeys := []string{storeKey1, storeKey2}
 	commitStore, err := s.NewStore(dbm.NewMemDB(), s.T().TempDir(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)

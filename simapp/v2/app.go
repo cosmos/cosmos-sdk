@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"cosmossdk.io/store/v2/commitment/iavlv2"
 	_ "embed"
 	"fmt"
 
@@ -17,6 +16,7 @@ import (
 	"cosmossdk.io/runtime/v2"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment/iavlv2"
 	"cosmossdk.io/store/v2/root"
 	_ "cosmossdk.io/tools/benchmark"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"

@@ -6,11 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/v2/types"
 

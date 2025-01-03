@@ -158,7 +158,7 @@ func NewModuleAddress(name string) sdk.AccAddress {
 	return address.Module(name)
 }
 
-// NewEmptyModuleAccount creates a empty ModuleAccount from a string
+// NewEmptyModuleAccount creates an empty ModuleAccount from a string
 func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)
 	baseAcc := NewBaseAccountWithAddress(moduleAddress)

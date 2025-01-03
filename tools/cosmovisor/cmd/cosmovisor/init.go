@@ -120,7 +120,6 @@ func minConfigValidate(cfg *cosmovisor.Config) error {
 	if len(cfg.Name) == 0 {
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvName))
 	}
-
 	switch {
 	case len(cfg.Home) == 0:
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvHome))

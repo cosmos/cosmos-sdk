@@ -32,44 +32,46 @@ func newWrapperFromDecodedTx(
 	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
 ) (*gogoTxWrapper, error) {
 	var (
-		fees = sdk.Coins{} // decodedTx.Tx.AuthInfo.Fee.Amount might be nil
-		err  error
+		fees                 = sdk.Coins{} // decodedTx.Tx.AuthInfo.Fee.Amount might be nil
+		err                  error
+		feePayer, feeGranter []byte
 	)
-	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
-		amtInt, ok := math.NewIntFromString(fee.Amount)
-		if !ok {
-			return nil, fmt.Errorf("invalid fee coin amount at index %d: %s", i, fee.Amount)
+	if decodedTx.Tx.AuthInfo.Fee != nil {
+		for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
+			amtInt, ok := math.NewIntFromString(fee.Amount)
+			if !ok {
+				return nil, fmt.Errorf("invalid fee coin amount at index %d: %s", i, fee.Amount)
+			}
+			if err = sdk.ValidateDenom(fee.Denom); err != nil {
+				return nil, fmt.Errorf("invalid fee coin denom at index %d: %w", i, err)
+			}
+
+			fees = fees.Add(sdk.Coin{
+				Denom:  fee.Denom,
+				Amount: amtInt,
+			})
 		}
-		if err = sdk.ValidateDenom(fee.Denom); err != nil {
-			return nil, fmt.Errorf("invalid fee coin denom at index %d: %w", i, err)
+		if !fees.IsSorted() {
+			return nil, fmt.Errorf("invalid not sorted tx fees: %s", fees.String())
 		}
 
-		fees = fees.Add(sdk.Coin{
-			Denom:  fee.Denom,
-			Amount: amtInt,
-		})
-	}
-	if !fees.IsSorted() {
-		return nil, fmt.Errorf("invalid not sorted tx fees: %s", fees.String())
-	}
-	// set fee payer
-	var feePayer []byte
-	if len(decodedTx.Signers) != 0 {
-		feePayer = decodedTx.Signers[0]
-		if decodedTx.Tx.AuthInfo.Fee.Payer != "" {
-			feePayer, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Payer)
+		// set fee payer
+		if len(decodedTx.Signers) != 0 {
+			feePayer = decodedTx.Signers[0]
+			if decodedTx.Tx.AuthInfo.Fee.Payer != "" {
+				feePayer, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Payer)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		// fee granter
+		if decodedTx.Tx.AuthInfo.Fee.Granter != "" {
+			feeGranter, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Granter)
 			if err != nil {
 				return nil, err
 			}
-		}
-	}
-
-	// fee granter
-	var feeGranter []byte
-	if decodedTx.Tx.AuthInfo.Fee.Granter != "" {
-		feeGranter, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Granter)
-		if err != nil {
-			return nil, err
 		}
 	}
 

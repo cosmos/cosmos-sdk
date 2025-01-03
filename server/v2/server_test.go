@@ -15,7 +15,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	grpc "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/store"
 	storev2 "cosmossdk.io/store/v2"
 )

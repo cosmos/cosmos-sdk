@@ -72,10 +72,6 @@ func (db *PebbleDB) Get(key []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to perform PebbleDB read: %w", err)
 	}
 
-	if len(bz) == 0 {
-		return nil, closer.Close()
-	}
-
 	return bz, closer.Close()
 }
 

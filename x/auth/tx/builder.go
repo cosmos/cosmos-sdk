@@ -46,7 +46,7 @@ func newBuilderFromDecodedTx(
 		modeInfoV1 := new(tx.ModeInfo)
 		fromV2ModeInfo(sigInfo.ModeInfo, modeInfoV1)
 		sigInfos[i] = &tx.SignerInfo{
-			PublicKey: intoAnyV1([]*anypb.Any{sigInfo.PublicKey})[0],
+			PublicKey: intoAnyV1(codec, []*anypb.Any{sigInfo.PublicKey})[0],
 			ModeInfo:  modeInfoV1,
 			Sequence:  sigInfo.Sequence,
 		}

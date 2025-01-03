@@ -44,6 +44,15 @@ To be able to simulate nested messages within a transaction, message types conta
 the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
 transaction simulation. -->
 
+### Modules
+
+#### `x/params`
+
+The `x/params` module has been removed from the Cosmos SDK.  The following [migration](https://github.com/cosmos/cosmos-sdk/blob/828fcf2f05db0c4759ed370852b6dacc589ea472/x/mint/migrations/v2/migrate.go) 
+and [PR](https://github.com/cosmos/cosmos-sdk/pull/12363) can be used as a reference for migrating a legacy params module to the supported module-managed params paradigm.
+
+More information can be found in the [deprecation notice](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams).
+
 ## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-beta.1)
 
 Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
@@ -53,7 +62,7 @@ It is additional to the changes described here.
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
-Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/CHANGELOG.md).
+Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/simapp/CHANGELOG.md).
 
 #### Client (`root.go`)
 
@@ -1276,7 +1285,7 @@ The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away
 Cosmos SDK modules now store their parameters directly in its respective modules.
 The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.50`.
 
-When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
+When performing a chain migration, the params table must be initialized manually. This was done in the modules keepers in previous versions.
 Have a look at `simapp.RegisterUpgradeHandlers()` for an example.
 
 #### `x/crisis`

@@ -2,12 +2,12 @@ module cosmossdk.io/runtime/v2
 
 go 1.23
 
-// server v2 integration
-replace (
-	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
-	cosmossdk.io/server/v2/stf => ../../server/v2/stf
-	cosmossdk.io/store/v2 => ../../store/v2
-)
+// server v2 integration (uncomment during development, but comment before release)
+// replace (
+// 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
+// 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
+// 	cosmossdk.io/store/v2 => ../../store/v2
+// )
 
 require (
 	cosmossdk.io/api v0.8.0-rc.1
@@ -15,14 +15,14 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
+	cosmossdk.io/server/v2/stf v1.0.0-beta.1
+	cosmossdk.io/store/v2 v2.0.0-beta.1
 	cosmossdk.io/x/tx v1.0.0-alpha.3
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 )
 
 require (

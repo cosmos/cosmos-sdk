@@ -3,6 +3,7 @@ package types
 import (
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -23,6 +24,9 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&MsgSoftwareUpgrade{},
 		&MsgCancelUpgrade{},
 	)
-
+	registrar.RegisterImplementations(
+		(*v1beta1.Content)(nil),
+		&SoftwareUpgradeProposal{},
+	)
 	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
 }

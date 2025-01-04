@@ -1,0 +1,125 @@
+name: Build SimApp
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+      - release/**
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-arch: ["amd64", "arm64"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+      - name: Get rocksdb version
+        run: ./.github/scripts/get-rocksdb-version.sh
+      - name: Fix permissions for cache
+        run: sudo chown $(whoami) /usr/local/lib /usr/local/include
+      - name: Restore rocksdb libraries cache
+        id: cache-rocksdb
+        if: matrix.go-arch == 'amd64'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-${{ matrix.go-arch }}
+      - name: Install rocksdb deps
+        if: matrix.go-arch == 'amd64'
+        run: ./.github/scripts/install-rocksdb-deps.sh
+      - name: Install rocksdb
+        if: matrix.go-arch == 'amd64' && steps.cache-rocksdb.outputs.cache-hit != 'true'
+        run: ./.github/scripts/install-rocksdb.sh
+      - name: Build v2
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2 make build
+      - name: Build with rocksdb backend
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,rocksdb make build
+      - name: Build with BLS12381
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,bls12381 make build
+      - name: Build with Secp_cgo
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,secp make build
+      - name: Build Cosmovisor
+        run: GOARCH=${{ matrix.go-arch }} make cosmovisor
+      - name: Build Confix
+        run: GOARCH=${{ matrix.go-arch }} make confix
+      - name: Build Hubl
+        run: GOARCH=${{ matrix.go-arch }} make hubl
+
+name: Build & Push SDK Proto Builder
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "contrib/devtools/Dockerfile"
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: "Docker image tags"
+        required: true
+        type: string
+  pull_request:
+    paths:
+      - "contrib/devtools/Dockerfile"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: cosmos/proto-builder
+
+concurrency:
+  group: "proto-docker"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.tags }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: ./contrib/devtools
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+... (the full YAML file would continue for the remaining workflows)

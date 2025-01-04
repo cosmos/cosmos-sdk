@@ -52,7 +52,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (query) [23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
 * (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
-* (x/upgrade) [#23177](https://github.com/cosmos/cosmos-sdk/pull/23177) Register missing implementation for SoftwareUpgradeProposal to avoid no concrete type registered for type URL /cosmos.upgrade.v1beta1.SoftwareUpgradeProposal against interface *v1beta1.Content error.
+* (x/upgrade) [#23179](https://github.com/cosmos/cosmos-sdk/pull/23179) Register missing implementation for SoftwareUpgradeProposal to avoid no concrete type registered for type URL /cosmos.upgrade.v1beta1.SoftwareUpgradeProposal against interface *v1beta1.Content error.
 
 ### API Breaking Changes
 

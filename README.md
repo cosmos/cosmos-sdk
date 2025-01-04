@@ -28,7 +28,7 @@
   <a href="https://sourcegraph.com/github.com/cosmos/cosmos-sdk?badge">
     <img alt="Imported by" src="https://sourcegraph.com/github.com/cosmos/cosmos-sdk/-/badge.svg" />
   </a>
-  <a href="https://https://github.com/cosmos/cosmos-sdk/actions/workflows/sims.yml">
+  <a href="https://github.com/cosmos/cosmos-sdk/actions/workflows/sims.yml">
     <img alt="Sims" src="https://github.com/cosmos/cosmos-sdk/workflows/Sims/badge.svg" />
   <a href="https://github.com/cosmos/cosmos-sdk/actions/workflows/lint.yml">
     <img alt="Lint Status" src="https://github.com/cosmos/cosmos-sdk/workflows/Lint/badge.svg" />

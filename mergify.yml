@@ -1,0 +1,61 @@
+pull_request_rules:
+  - name: backport to v0.52.x
+    conditions:
+      - "label=backport/v0.52.x"
+      - "base=main"
+      - "merged"
+    actions:
+      backport:
+        branches:
+          - "v0.52.x"
+
+  - name: backport to v0.50.x
+    conditions:
+      - "label=backport/v0.50.x"
+      - "base=main"
+      - "merged"
+    actions:
+      backport:
+        branches:
+          - "v0.50.x"
+
+  - name: backport to v0.47.x
+    conditions:
+      - "label=backport/v0.47.x"
+      - "base=main"
+      - "merged"
+    actions:
+      backport:
+        branches:
+          - "v0.47.x"
+
+  - name: backport to v0.46.x
+    conditions:
+      - "label=backport/v0.46.x"
+      - "base=main"
+      - "merged"
+    actions:
+      backport:
+        branches:
+          - "v0.46.x"
+
+  - name: backport to v0.45.x
+    conditions:
+      - "label=backport/v0.45.x"
+      - "base=main"
+      - "merged"
+    actions:
+      backport:
+        branches:
+          - "v0.45.x"
+
+  - name: automerge to main
+    conditions:
+      - "label=A:automerge"
+      - "#approved-reviews-by>=2"
+      - "-draft"
+      - "-closed"
+      - "check-success=tests"
+    actions:
+      merge:
+        method: merge

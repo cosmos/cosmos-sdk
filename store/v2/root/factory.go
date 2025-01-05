@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 
+	iavl_v2 "github.com/cosmos/iavl/v2"
+
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/commitment/iavlv2"
 	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
@@ -34,6 +37,7 @@ type Options struct {
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`
 	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
+	IavlV2Config    iavl_v2.TreeOptions
 }
 
 // FactoryOptions are the options for creating a root store.
@@ -54,7 +58,7 @@ func DefaultStoreOptions() Options {
 			Interval:   100,
 		},
 		IavlConfig: &iavl.Config{
-			CacheSize:              100_000,
+			CacheSize:              500_000,
 			SkipFastStorageUpgrade: true,
 		},
 	}
@@ -102,7 +106,8 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			case SCTypeIavl:
 				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(fmt.Sprintf(storePrefixTpl, key))), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
-				return nil, errors.New("iavl v2 not supported")
+				dir := fmt.Sprintf("%s/data/iavl-v2/%s", opts.RootDir, key)
+				return iavlv2.NewTree(opts.Options.IavlV2Config, iavl_v2.SqliteDbOptions{Path: dir}, opts.Logger)
 			default:
 				return nil, errors.New("unsupported commitment store type")
 			}

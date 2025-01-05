@@ -1,0 +1,73 @@
+sk-svcacct-h0bgkoS0AyNbnWVZiDAoq0hJ011D_G6Jz2mU5XlQIdgWUIKnMZD9KBmSx9aJfSYCp0JVMQPMjT1GmT3BlbkFJM8HBpYLhcOok-ZogvkSmkZ5rOwWZ1MZ0lrigiMglgLnr-uAz1Zukj9TSrp4YjEcp4UmusLQQgQkog
+
+name: dRPC-BTC-Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  integrate-drpc-btc:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set Environment Variables
+      run: |
+        echo "Setting up environment variables"
+        echo "DRPC_API_KEY=AuSOWQjkiECipiHDz8n2HvST869lv4sR76ypIlZWwHzR" >> $GITHUB_ENV
+        echo "BITCOIN_RPC=https://lb.drpc.org/ogrpc?network=bitcoin" >> $GITHUB_ENV
+        echo "CONTRACT_WASM=employment_contract.wasm" >> $GITHUB_ENV
+
+    - name: Test Bitcoin RPC Connection
+      env:
+        DRPC_API_KEY: ${{ env.DRPC_API_KEY }}
+        BITCOIN_RPC: ${{ env.BITCOIN_RPC }}
+      run: |
+        echo "Testing Bitcoin dRPC"
+        response=$(curl -s -X POST \
+          -H "Authorization: Bearer $DRPC_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"method": "getblockchaininfo", "params": []}' \
+          $BITCOIN_RPC)
+        echo "Response: $response"
+        if [[ $(echo $response | jq -r '.error') != "null" ]]; then
+          echo "Error in response: $response"
+          exit 1
+        fi
+        echo "Bitcoin dRPC connection verified!"
+
+    - name: Deploy CosmWasm Contract
+      run: |
+        wasmcli tx wasm store ${{ env.CONTRACT_WASM }} --from $WALLET --chain-id cosmoshub-4
+        echo "Smart Contract Deployed"
+
+    - name: Instantiate Contract
+      run: |
+        wasmcli tx wasm instantiate $CONTRACT_ID \
+          '{"employee_name":"Josef Edwards","employer_name":"Interchain Inc.","base_salary":180000,"token_allocation":75000,"start_date":"2024-12-25"}' \
+          --from $WALLET --label "Employment Contract" --chain-id cosmoshub-4
+        echo "Contract Instantiated"
+
+    - name: Execute Contract Example
+      run: |
+        wasmcli tx wasm execute $CONTRACT_ADDRESS \
+          '{"update_salary":{"new_salary":200000}}' \
+          --from $WALLET --chain-id cosmoshub-4
+        echo "Executed Update Salary"
+
+    - name: Query Contract State
+      run: |
+        response=$(wasmcli query wasm contract-state smart $CONTRACT_ADDRESS '{"get_contract_details":{}}')
+        echo "Contract Details: $response"
+
+    - name: Notify Success
+      run: echo "dRPC BTC integration with CosmWasm contract deployed successfully!"

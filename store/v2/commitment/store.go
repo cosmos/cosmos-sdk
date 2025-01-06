@@ -189,6 +189,7 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 				})
 			} else {
 				if err := c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion); err != nil {
+					fmt.Println(err, "loadversion err", storeKey)
 					return err
 				}
 			}
@@ -197,6 +198,7 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 				eg.Go(func() error { return c.multiTrees[storeKey].LoadVersion(targetVersion) })
 			} else {
 				if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
+					fmt.Println(err, "loadversion err", storeKey)
 					return err
 				}
 			}

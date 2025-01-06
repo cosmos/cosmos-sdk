@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#22832](https://github.com/cosmos/cosmos-sdk/pull/22832) Ensure the distribution module has at least as many tokens as outstanding rewards at genesis import
+
 ## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/distribution/v0.2.0-rc.1) - 2024-12-18
 
 ### Improvements

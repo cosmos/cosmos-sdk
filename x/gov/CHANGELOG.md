@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#22832](https://github.com/cosmos/cosmos-sdk/pull/22832) Ensure the governance module has at least as many tokens as are deposited at genesis import.
+
 ## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/gov/v0.2.0-rc.1) - 2024-12-18
 
 ### Features

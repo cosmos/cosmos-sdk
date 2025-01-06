@@ -90,7 +90,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			return nil, fmt.Errorf("tried to construct a root store with no store keys specified but no commit info found for version %d", latestVersion)
 		}
 		for _, si := range lastCommitInfo.StoreInfos {
-			opts.StoreKeys = append(opts.StoreKeys, string(si.Name))
+			opts.StoreKeys = append(opts.StoreKeys, si.Name)
 		}
 	}
 	removedStoreKeys, err := metadata.GetRemovedStoreKeys(latestVersion)

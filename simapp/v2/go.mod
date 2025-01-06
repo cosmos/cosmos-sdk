@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241219154748-69025c556666 // main
-	cosmossdk.io/server/v2 v2.0.0-beta.1 // main
+	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250106081242-884a7a51c3c3 // main
 	cosmossdk.io/server/v2/cometbft v1.0.0-beta.1
 	cosmossdk.io/store/v2 v2.0.0-beta.1 // main
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
@@ -45,7 +45,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 )
 
 require (

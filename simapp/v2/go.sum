@@ -218,8 +218,8 @@ cosmossdk.io/runtime/v2 v2.0.0-20241219154748-69025c556666 h1:zFMi1URvs3NiJdSf2z
 cosmossdk.io/runtime/v2 v2.0.0-20241219154748-69025c556666/go.mod h1:C0MTcmQlZFPQvYoXzYiWP+h9lFOgezzafEFiQBa6xYo=
 cosmossdk.io/schema v1.0.0 h1:/diH4XJjpV1JQwuIozwr+A4uFuuwanFdnw2kKeiXwwQ=
 cosmossdk.io/schema v1.0.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-cosmossdk.io/server/v2 v2.0.0-beta.1 h1:mMfWf7wVEv6oVZcgxEZ52x8h/bOuGRjdSrUAEqNQmf4=
-cosmossdk.io/server/v2 v2.0.0-beta.1/go.mod h1:lfkdTKM2tMlt6KhNi5f9zT+Ww5HcRpnINWjeKXCHjmc=
+cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250106081242-884a7a51c3c3 h1:r7zBzz+Xs0rAGx/ia/5tNgM2Y4xa+SkU+Rli1mIsTRI=
+cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250106081242-884a7a51c3c3/go.mod h1:vqgLhoQRRFyRUrLrDj7S18ojvgP8f0X+S1t6CME6GcQ=
 cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 h1:EISWki+z9SDAt3OJnUl2y5Ow4qjOb+epYjLb1C7CN/E=
 cosmossdk.io/server/v2/appmanager v1.0.0-beta.1/go.mod h1:RVYxIaEdIT10nWSRqbwKDLFWfvCVx+cwAorCyPAQg9A=
 cosmossdk.io/server/v2/cometbft v1.0.0-beta.1 h1:kzTMGqIwcpcynbnU0Wyoe0HObyUUBZbkD/sHBUrbZl8=
@@ -1484,8 +1484,8 @@ google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQ
 google.golang.org/protobuf v1.27.1/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.28.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 google.golang.org/protobuf v1.28.1/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
-google.golang.org/protobuf v1.36.0 h1:mjIs9gYtt56AzC4ZaffQuh88TZurBGhIJMBZGSxNerQ=
-google.golang.org/protobuf v1.36.0/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
+google.golang.org/protobuf v1.36.1 h1:yBPeRvTftaleIgM3PZ/WBIZ7XM/eEYAaEyCwvyjq/gk=
+google.golang.org/protobuf v1.36.1/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

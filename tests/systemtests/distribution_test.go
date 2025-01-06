@@ -179,20 +179,26 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 
 	// test validator slashes grpc endpoint
 	slashURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/slashes`
-	invalidHeightOutput := `{"code":3, "message":"strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
+	invalidStartingHeightOutput := `{"code":3, "message":"1 error(s) decoding:\n\n* cannot parse 'starting_height' as uint: strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
+	invalidEndingHeightOutput := `{"code":3, "message":"1 error(s) decoding:\n\n* cannot parse 'ending_height' as uint: strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
+
+	if !systest.IsV2() {
+		invalidStartingHeightOutput = `{"code":3, "message":"strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
+		invalidEndingHeightOutput = invalidStartingHeightOutput
+	}
 
 	slashTestCases := []systest.RestTestCase{
 		{
 			Name:    "invalid start height",
 			Url:     fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "-3", "3"),
 			ExpCode: http.StatusBadRequest,
-			ExpOut:  invalidHeightOutput,
+			ExpOut:  invalidStartingHeightOutput,
 		},
 		{
 			Name:    "invalid end height",
 			Url:     fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "1", "-3"),
 			ExpCode: http.StatusBadRequest,
-			ExpOut:  invalidHeightOutput,
+			ExpOut:  invalidEndingHeightOutput,
 		},
 		{
 			Name:    "valid request get slashes",

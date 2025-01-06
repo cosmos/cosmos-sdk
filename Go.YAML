@@ -1,0 +1,188 @@
+name: Go Workflow with Cosmos SDK Integration
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5.2.0
+      with:
+        go-version: '1.20'
+        cache: true
+        cache-dependency-path: go.sum
+
+    - name: Fetch Latest Cosmos SDK Version
+      run: |
+        # Fetch the latest release tag from GitHub
+        LATEST_VERSION=$(curl -s "https://api.github.com/repos/cosmos/cosmos-sdk/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        echo "Latest Cosmos SDK version: $LATEST_VERSION"
+        echo "COSMOS_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+    - name: Update Go Modules
+      run: |
+        # Update go.mod with the latest Cosmos SDK version
+        go get github.com/cosmos/cosmos-sdk@${{ env.COSMOS_VERSION }}
+        go mod tidy
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...
+
+    - name: Check PR Title for Semantic Compliance
+      uses: amannn/action-semantic-pull-request@v5.5.3
+      with:
+        githubBaseUrl: https://api.github.com
+
+    - name: Add Sticky Pull Request Comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: pr-title-lint-error
+        message: |
+          Hey there and thank you for opening this pull request! 👋🏼
+          
+          We require PR titles to follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/). 
+          It looks like your title needs adjustment. Please see below:
+          
+          
+No release type found in pull request title "{{ github.event.pull_request.title }}". 
+          Add a prefix to indicate the type of release (e.g., `feat:` for new features). Refer to the guide above for available types.
+
+  windows-image-setup:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Define Windows Image Matrix
+      run: |
+        echo "Defining Windows image names for testing..."
+        WINDOWS_IMAGE_NAME="runner-images-windows-2022"
+        WINDOWS_IMAGE_NAME="runner-images-windows-2023"
+        WINDOWS_IMAGE_NAME="runner-images-windows-2024"
+        echo "Matrix setup complete."
+    - name: Setup BlockCypher Token Securely
+      env:
+        BLOCKCYPHER_TOKEN: ${{ secrets.BLOCKCYPHER_TOKEN }}
+      run: |
+        if [[ -z "$BLOCKCYPHER_TOKEN" ]]; then
+          echo "Error: BLOCKCYPHER_TOKEN not set."
+          exit 1
+        fi
+        echo "BLOCKCYPHER_TOKEN is set and secure."
+    - name: Sync Blockchain Cypher
+      run: |
+        echo "Synchronizing Blockchain Cypher with token..."
+        curl -X POST -H "Authorization: Bearer $BLOCKCYPHER_TOKEN" \
+          -d '{"action":"sync","target":"CosmosSDK"}' \
+          https://api.blockcypher.com/v1/blockchains/pulse
+name: Go and .NET Workflow
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+
+    # Set up Go
+    - name: Set up Go
+      uses: actions/setup-go@v5.2.0
+      with:
+        go-version: '1.20'
+        cache: true
+        cache-dependency-path: go.sum
+
+    - name: Fetch Latest Cosmos SDK Version
+      run: |
+        LATEST_VERSION=$(curl -s "https://api.github.com/repos/cosmos/cosmos-sdk/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        echo "Latest Cosmos SDK version: $LATEST_VERSION"
+        echo "COSMOS_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+    - name: Update Go Modules
+      run: |
+        go get github.com/cosmos/cosmos-sdk@${{ env.COSMOS_VERSION }}
+        go mod tidy
+    - name: Build Go Project
+      run: go build -v ./...
+
+    - name: Test Go Project
+      run: go test -v ./...
+
+    # Set up .NET
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6.0.x'
+        cache: true
+
+    - name: Restore .NET Dependencies
+      run: dotnet restore --locked-mode
+
+    - name: Build .NET Project
+      run: dotnet build <my-project-path>
+
+    - name: Test .NET Project
+      run: dotnet test <my-project-path>
+
+    # PR Title Check
+    - name: Check PR Title for Semantic Compliance
+      uses: amannn/action-semantic-pull-request@v5.5.3
+      with:
+        githubBaseUrl: https://api.github.com
+
+    - name: Add Sticky Pull Request Comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: pr-title-lint-error
+        message: |
+          Hey there and thank you for opening this pull request! 👋🏼
+          
+          Please ensure your PR title follows the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/). 
+          Adjust the title as needed to include a release type.
+  dotnet-matrix-testing:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet: [ '3.1.x', '5.0.x', '6.0.x' ]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up .NET for Matrix
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet }}
+
+    - name: Create Temporary global.json
+      run: echo '{"sdk":{"version":"${{ matrix.dotnet }}"}}' > global.json
+
+    - name: Restore .NET Dependencies
+      run: dotnet restore --locked-mode
+
+    - name: Build Matrix .NET Project
+      run: dotnet build <my-project-path>
+
+    - name: Test Matrix .NET Project
+      run: dotnet test <my-project-path>

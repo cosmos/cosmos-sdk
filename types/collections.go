@@ -125,9 +125,21 @@ func (a genericAddressKey[T]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 	return collcodec.SchemaCodec[T]{
 		Fields: []schema.Field{{Kind: schema.AddressKind}},
 		ToSchemaType: func(t T) (any, error) {
+			if len(t) == 0 {
+				return nil, fmt.Errorf("invalid empty address")
+			}
 			return t, nil
 		},
-		FromSchemaType: nil,
+		FromSchemaType: func(s any) (T, error) {
+			addr, ok := s.([]byte)
+			if !ok {
+				return nil, fmt.Errorf("expected []byte, got %T", s)
+			}
+			if len(addr) == 0 {
+				return nil, fmt.Errorf("invalid empty address")
+			}
+			return T(addr), nil
+		},
 	}, nil
 }
 

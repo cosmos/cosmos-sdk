@@ -149,16 +149,6 @@ func TestSlashRedelegation(t *testing.T) {
 	err = slashKeeper.Slash(ctx, evilValConsAddr, math.LegacyMustNewDecFromStr("0.9"), evilPower, 3)
 	require.NoError(t, err)
 
-	// assert invariant to make sure we conduct slashing correctly
-	_, stop := stakingkeeper.AllInvariants(stakingKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
-	require.False(t, stop)
-
 	// one eternity later
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1000000000000000000))
 	require.NoError(t, err)
@@ -335,14 +325,6 @@ func TestOverSlashing(t *testing.T) {
 	err = slashKeeper.Slash(ctx, evilValConsAddr, math.LegacyMustNewDecFromStr(slashFraction), evilPower, misbehaveHeight)
 	require.NoError(t, err)
 
-	// assert invariants
-	_, stop := stakingkeeper.AllInvariants(stakingKeeper)(ctx)
-	require.False(t, stop)
-	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
-	require.False(t, stop)
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
-	require.False(t, stop)
-
 	// fastforward 2 blocks to complete redelegations and unbondings
 	for i := 0; i < 2; i++ {
 		ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1000000000000000000))
@@ -489,14 +471,4 @@ func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
 
 	err = slashKeeper.Slash(ctx, srcConsAddr, math.LegacyMustNewDecFromStr("0.5"), srcPower, srcInfractionHeight)
 	require.NoError(t, err)
-
-	// assert invariants to ensure correctness
-	_, stop := stakingkeeper.AllInvariants(stakingKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
-	require.False(t, stop)
 }

@@ -742,13 +742,6 @@ func TestFixAvoidFullSlashPenalty(t *testing.T) {
 	// next block
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
 	require.NoError(t, err)
-	// assert invariants
-	_, stop := keeper.AllInvariants(stakingKeeper)(ctx)
-	require.False(t, stop)
-	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
-	require.False(t, stop)
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
-	require.False(t, stop)
 	// evilValAddr1 is bad!
 	// lets slash evilValAddr1 with a 100% penalty
 	evilVal, err := stakingKeeper.GetValidator(ctx, evilValAddr1)

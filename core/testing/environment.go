@@ -18,7 +18,8 @@ type TestEnvironmentConfig struct {
 }
 
 type TestEnvironment struct {
-	env              appmodulev2.Environment
+	appmodulev2.Environment
+
 	memEventsService MemEventsService
 	memHeaderService MemHeaderService
 }
@@ -30,7 +31,7 @@ func NewTestEnvironment(cfg TestEnvironmentConfig) (TestContext, TestEnvironment
 	memHeaderService := MemHeaderService{}
 
 	env := TestEnvironment{
-		env: appmodulev2.Environment{
+		Environment: appmodulev2.Environment{
 			Logger:             cfg.Logger,
 			BranchService:      nil,
 			EventService:       memEventService,
@@ -47,7 +48,7 @@ func NewTestEnvironment(cfg TestEnvironmentConfig) (TestContext, TestEnvironment
 	}
 
 	// set internal context to point to environment
-	ctx.ctx = context.WithValue(ctx.ctx, corecontext.EnvironmentContextKey, env.env)
+	ctx.Context = context.WithValue(ctx.Context, corecontext.EnvironmentContextKey, env.Environment)
 	return ctx, env
 }
 
@@ -55,12 +56,8 @@ func (env TestEnvironment) MemEventsService() MemEventsService {
 	return env.memEventsService
 }
 
-func (env TestEnvironment) Environment() appmodulev2.Environment {
-	return env.env
-}
-
 func (env TestEnvironment) KVStoreService() store.KVStoreService {
-	return env.env.KVStoreService
+	return env.Environment.KVStoreService
 }
 
 func (env TestEnvironment) HeaderService() MemHeaderService {

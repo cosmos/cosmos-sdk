@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.authKeeper = authKeeper
 	suite.addrCdc = ac
 	suite.bankKeeper = keeper.NewBaseKeeper(
-		env.Environment(),
+		env.Environment,
 		encCfg.Codec,
 		suite.authKeeper,
 		map[string]bool{addr: true},

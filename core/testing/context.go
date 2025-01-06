@@ -2,8 +2,6 @@ package coretesting
 
 import (
 	"context"
-	"time"
-
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
@@ -16,7 +14,7 @@ type dummyKey struct{}
 var _ context.Context = &TestContext{}
 
 type TestContext struct {
-	ctx context.Context
+	context.Context
 }
 
 func Context() TestContext {
@@ -31,54 +29,38 @@ func Context() TestContext {
 	}
 
 	return TestContext{
-		ctx: context.WithValue(context.Background(), dummyKey{}, dummy),
+		Context: context.WithValue(context.Background(), dummyKey{}, dummy),
 	}
-}
-
-func (t TestContext) Deadline() (deadline time.Time, ok bool) {
-	return t.ctx.Deadline()
-}
-
-func (t TestContext) Done() <-chan struct{} {
-	return t.ctx.Done()
-}
-
-func (t TestContext) Err() error {
-	return t.ctx.Err()
-}
-
-func (t TestContext) Value(key any) any {
-	return t.ctx.Value(key)
 }
 
 // WithHeaderInfo sets the header on a testing ctx and returns the updated ctx.
 func (t TestContext) WithHeaderInfo(info header.Info) TestContext {
-	dummy := unwrap(t.ctx)
+	dummy := unwrap(t.Context)
 	dummy.header = info
 
 	return TestContext{
-		ctx: context.WithValue(t.ctx, dummyKey{}, dummy),
+		Context: context.WithValue(t.Context, dummyKey{}, dummy),
 	}
 }
 
 // WithExecMode sets the exec mode on a testing ctx and returns the updated ctx.
 func (t TestContext) WithExecMode(mode transaction.ExecMode) TestContext {
-	dummy := unwrap(t.ctx)
+	dummy := unwrap(t.Context)
 	dummy.execMode = mode
 
 	return TestContext{
-		ctx: context.WithValue(t.ctx, dummyKey{}, dummy),
+		Context: context.WithValue(t.Context, dummyKey{}, dummy),
 	}
 }
 
 // WithGas sets the gas config and meter on a testing ctx and returns the updated ctx.
 func (t TestContext) WithGas(gasConfig gas.GasConfig, gasMeter gas.Meter) TestContext {
-	dummy := unwrap(t.ctx)
+	dummy := unwrap(t.Context)
 	dummy.gasConfig = gasConfig
 	dummy.gasMeter = gasMeter
 
 	return TestContext{
-		ctx: context.WithValue(t.ctx, dummyKey{}, dummy),
+		Context: context.WithValue(t.Context, dummyKey{}, dummy),
 	}
 }
 

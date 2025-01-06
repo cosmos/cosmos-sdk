@@ -310,7 +310,12 @@ func fromKeySchemaType[T any](cdc codec.SchemaCodec[T], key any) (T, error) {
 	if cdc.FromSchemaType != nil {
 		return cdc.FromSchemaType(key)
 	}
-	return key.(T), nil
+	tKey, ok := key.(T)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("expected type %T, got %T", zero, key)
+	}
+	return tKey, nil
 }
 
 // NewPrefixUntilPairRange defines a collection query which ranges until the provided Pair prefix.

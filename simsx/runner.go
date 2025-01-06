@@ -315,7 +315,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
 	appOptions[server.FlagInvCheckPeriod] = cli.FlagPeriodValue
-	opts := []func(*baseapp.BaseApp){baseapp.SetChainID(SimAppChainID)}
+	opts := []func(*baseapp.BaseApp){baseapp.SetChainID(tCfg.ChainID)}
 	if tCfg.FauxMerkle {
 		opts = append(opts, FauxMerkleModeOpt)
 	}

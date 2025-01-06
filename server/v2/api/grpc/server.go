@@ -26,7 +26,6 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
-	"cosmossdk.io/server/v2/api/grpc/nodeservice"
 )
 
 const (
@@ -74,9 +73,6 @@ func New[T transaction.Tx](
 
 	// register grpc query handler v2
 	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
-
-	// register node service
-	nodeservice.RegisterServiceServer(grpcSrv, nodeservice.NewQueryServer(cfg))
 
 	// reflection allows external clients to see what services and methods the gRPC server exposes.
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))

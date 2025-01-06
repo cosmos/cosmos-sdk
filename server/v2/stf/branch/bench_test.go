@@ -1,6 +1,7 @@
 package branch
 
 import (
+	"encoding/binary"
 	"fmt"
 	"testing"
 
@@ -20,11 +21,16 @@ func Benchmark_CacheStack_Set(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				_ = bs.Set([]byte{0}, []byte{0})
+				err := bs.Set([]byte{0}, []byte{0})
+				if err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	}
 }
+
+var sink any
 
 func Benchmark_Get(b *testing.B) {
 	for _, stackSize := range stackSizes {
@@ -33,15 +39,47 @@ func Benchmark_Get(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				_, _ = bs.Get([]byte{0})
+				sink, _ = bs.Get([]byte{0})
 			}
 		})
 	}
+	if sink == nil {
+		b.Fatal("benchmark did not run")
+	}
+	sink = nil
 }
 
-func Benchmark_Iterate(b *testing.B) {
-	var keySink, valueSink any
+func Benchmark_GetSparse(b *testing.B) {
+	var sink any
+	for _, stackSize := range stackSizes {
+		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
+			bs := makeBranchStack(b, stackSize)
+			keys := func() [][]byte {
+				var keys [][]byte
+				for i := 0; i < b.N; i++ {
+					keys = append(keys, numToBytes(i))
+				}
+				return keys
+			}()
+			b.ResetTimer()
+			b.ReportAllocs()
+			for _, key := range keys {
+				sink, _ = bs.Get(key)
+			}
+		})
+	}
+	if sink == nil {
+		b.Fatal("benchmark did not run")
+	}
+	sink = nil
+}
 
+var (
+	keySink   any
+	valueSink any
+)
+
+func Benchmark_Iterate(b *testing.B) {
 	for _, stackSize := range stackSizes {
 		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
 			bs := makeBranchStack(b, stackSize)
@@ -58,20 +96,23 @@ func Benchmark_Iterate(b *testing.B) {
 			}
 		})
 	}
-
-	_ = keySink
-	_ = valueSink
+	if valueSink == nil || keySink == nil {
+		b.Fatal("benchmark did not run")
+	}
+	valueSink = nil
+	keySink = nil
 }
 
 // makeBranchStack creates a branch stack of the given size and initializes it with unique key-value pairs.
 func makeBranchStack(b *testing.B, stackSize int) Store[store.KVStore] {
+	b.Helper()
 	parent := coretesting.NewMemKV()
 	branch := NewStore[store.KVStore](parent)
 	for i := 1; i < stackSize; i++ {
 		branch = NewStore[store.KVStore](branch)
 		for j := 0; j < elemsInStack; j++ {
 			// create unique keys by including the branch index.
-			key := []byte{byte(i), byte(j)}
+			key := append(numToBytes(i), numToBytes(j)...)
 			value := []byte{byte(j)}
 			err := branch.Set(key, value)
 			if err != nil {
@@ -80,4 +121,8 @@ func makeBranchStack(b *testing.B, stackSize int) Store[store.KVStore] {
 		}
 	}
 	return branch
+}
+
+func numToBytes[T ~int](n T) []byte {
+	return binary.BigEndian.AppendUint64(nil, uint64(n))
 }

@@ -25,18 +25,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Bug Fixes
+### Features
 
-* [#20688](https://github.com/cosmos/cosmos-sdk/pull/20688) Avoid overslashing unbonding delegations after a redelegation.
-* [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
+* [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315), [#22556](https://github.com/cosmos/cosmos-sdk/pull/22556) Create metadata type and add metadata field in validator details proto
+    * Add parsing of `metadata-profile-pic-uri` in `create-validator` JSON.
+    * Add cli flag: `metadata-profile-pic-uri` to `edit-validator` cmd.
+
+### API Breaking Changes
+
+* [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
+    * New field `Metadata` introduced in `types`: `Description`.
+    * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.
+
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/staking/v0.2.0-rc.1) - 2024-12-18
 
 ### Features
 
 * [#19537](https://github.com/cosmos/cosmos-sdk/pull/19537) Changing `MinCommissionRate` in `MsgUpdateParams` now updates the minimum commission rate for all validators.
 * [#20434](https://github.com/cosmos/cosmos-sdk/pull/20434) Add consensus address to validator query response
-* [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Create metadata type and add metadata field in validator details proto
-    * Add parsing of `metadata-profile-pic-uri` in `create-validator` JSON.
-    * Add cli flag: `metadata-profile-pic-uri` to `edit-validator` cmd.
 
 ### Improvements
 
@@ -45,8 +51,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19277](https://github.com/cosmos/cosmos-sdk/pull/19277) Hooks calls on `SetUnbondingDelegationEntry`, `SetRedelegationEntry`, `Slash` and `RemoveValidator` returns errors instead of logging just like other hooks calls.
 * [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `IterateBondedValidatorsByPower`, `GetDelegatorBonded`, `Delegate`, `Unbond`, `Slash`, `Jail`, `SlashRedelegation`, `ApplyAndReturnValidatorSetUpdates` methods no longer panics on any kind of errors but instead returns appropriate errors.
 * [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
-* [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Add a `Validate` method to the `Description` type that validates the metadata as well as other description details.
 
+### Bug Fixes
+
+* [#20688](https://github.com/cosmos/cosmos-sdk/pull/20688) Avoid overslashing unbonding delegations after a redelegation.
+* [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
 
 ### API Breaking Changes
 
@@ -101,13 +110,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20295](https://github.com/cosmos/cosmos-sdk/pull/20295) `GetValidatorByConsAddr` now returns the Cosmos SDK `cryptotypes.Pubkey` instead of `cometcrypto.Publickey`. The caller is responsible to translate the returned value to the expected type. 
     * Remove `CmtConsPublicKey()` and `TmConsPublicKey()` from `Validator` interface and as methods on the `Validator` struct.
 * [#21480](https://github.com/cosmos/cosmos-sdk/pull/21480) ConsensusKeeper is required to be passed to the keeper.
-* [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
-    * New field `Metadata` introduced in `types`: `Description`.
-    * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) `NewUnbondingDelegationEntry`, `NewUnbondingDelegation`, `AddEntry`, `NewRedelegationEntry`, `NewRedelegation` and `NewRedelegationEntryResponse` no longer take an ID in there function signatures.
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) AfterUnbondingInitiated hook has been removed as it is no longer required by ICS.
   
 ### State Breaking changes
 
-* [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In a undelegation or redelegation if the shares being left delegated correspond to less than 1 token (in base denom) the entire delegation gets removed.
+* [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In an undelegation or redelegation if the shares being left delegated correspond to less than 1 token (in base denom) the entire delegation gets removed.
 * [#18142](https://github.com/cosmos/cosmos-sdk/pull/18142) Introduce `key_rotation_fee` param to calculate fees while rotating the keys
 * [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 * [#20845](https://github.com/cosmoc/cosmos-sdk/pull/20845) Remove HistoricalInfo from the staking modules storage
+* [#22795](https://github.com/cosmos/cosmos-sdk/pull/22795) Keys `stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey` have been removed as they are no longer required by ICS.

@@ -163,8 +163,9 @@ func AuthModule() ModuleOption {
 				Bech32Prefix: "cosmos",
 				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
 					{Account: "fee_collector"},
-					{Account: testutil.DistributionModuleName},
+					{Account: testutil.DistributionModuleName, Permissions: []string{"minter"}},
 					{Account: testutil.MintModuleName, Permissions: []string{"minter"}},
+					{Account: testutil.StakingModuleName, Permissions: []string{"minter"}},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", testutil.StakingModuleName}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", testutil.StakingModuleName}},
 					{Account: testutil.GovModuleName, Permissions: []string{"burner"}},
@@ -173,6 +174,18 @@ func AuthModule() ModuleOption {
 					{Account: "stream_acc"},
 					{Account: "protocolpool_distr"},
 				},
+			}),
+		}
+	}
+}
+
+func AuthModuleWithMaccPerms(maccPerms []*authmodulev1.ModuleAccountPermission) ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.AuthModuleName] = &appv1alpha1.ModuleConfig{
+			Name: testutil.AuthModuleName,
+			Config: appconfig.WrapAny(&authmodulev1.Module{
+				Bech32Prefix:             "cosmos",
+				ModuleAccountPermissions: maccPerms,
 			}),
 		}
 	}

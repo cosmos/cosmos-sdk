@@ -714,3 +714,17 @@ func TestReadGovPropFlags(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatePromptNotEmpty(t *testing.T) {
+	require := require.New(t)
+
+	require.NoError(ValidatePromptNotEmpty("foo"))
+	require.ErrorContains(ValidatePromptNotEmpty(""), "input cannot be empty")
+}
+
+func TestValidatePromptCoins(t *testing.T) {
+	require := require.New(t)
+
+	require.NoError(ValidatePromptCoins("100stake"))
+	require.ErrorContains(ValidatePromptCoins("foo"), "invalid coins")
+}

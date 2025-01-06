@@ -25,6 +25,7 @@ type Tree interface {
 	Version() uint64
 
 	LoadVersion(version uint64) error
+	LoadVersionForOverwriting(version uint64) error
 	Commit() ([]byte, uint64, error)
 	SetInitialVersion(version uint64) error
 	GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error)
@@ -32,6 +33,8 @@ type Tree interface {
 	Prune(version uint64) error
 	Export(version uint64) (Exporter, error)
 	Import(version uint64) (Importer, error)
+
+	IsConcurrentSafe() bool
 
 	io.Closer
 }

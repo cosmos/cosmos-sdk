@@ -8,19 +8,20 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
+	clientcontext "cosmossdk.io/client/v2/context"
 	clitx "cosmossdk.io/client/v2/tx"
+	"cosmossdk.io/core/address"
 	txsigning "cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Verify verifies a digest after unmarshalling it.
-func Verify(ctx client.Context, digest []byte, fileFormat string) error {
+func Verify(ctx clientcontext.Context, digest []byte, fileFormat string) error {
 	txConfig, err := clitx.NewTxConfig(clitx.ConfigOptions{
 		AddressCodec:          ctx.AddressCodec,
-		Cdc:                   ctx.Codec,
+		Cdc:                   ctx.Cdc,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
 		EnabledSignModes:      enabledSignModes,
 	})
@@ -33,12 +34,12 @@ func Verify(ctx client.Context, digest []byte, fileFormat string) error {
 		return err
 	}
 
-	return verify(ctx, dTx)
+	return verify(ctx.AddressCodec, txConfig, dTx)
 }
 
 // verify verifies given Tx.
-func verify(ctx client.Context, dTx clitx.Tx) error {
-	signModeHandler := ctx.TxConfig.SignModeHandler()
+func verify(addressCodec address.Codec, txConfig clitx.TxConfig, dTx clitx.Tx) error {
+	signModeHandler := txConfig.SignModeHandler()
 
 	signers, err := dTx.GetSigners()
 	if err != nil {
@@ -60,7 +61,7 @@ func verify(ctx client.Context, dTx clitx.Tx) error {
 			return errors.New("signature does not match its respective signer")
 		}
 
-		addr, err := ctx.AddressCodec.BytesToString(pubKey.Address())
+		addr, err := addressCodec.BytesToString(pubKey.Address())
 		if err != nil {
 			return err
 		}

@@ -291,10 +291,18 @@ func (bt *MemDB) Set(key, value []byte) error {
 	return bt.kv.Set(key, value)
 }
 
+func (bt *MemDB) SetSync(key, value []byte) error {
+	return bt.Set(key, value)
+}
+
 func (bt *MemDB) Delete(key []byte) error {
 	bt.mtx.Lock()
 	defer bt.mtx.Unlock()
 	return bt.kv.Delete(key)
+}
+
+func (bt *MemDB) DeleteSync(key []byte) error {
+	return bt.Delete(key)
 }
 
 func (bt *MemDB) Iterator(start, end []byte) (store.Iterator, error) {
@@ -303,6 +311,27 @@ func (bt *MemDB) Iterator(start, end []byte) (store.Iterator, error) {
 
 func (bt *MemDB) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	return bt.kv.ReverseIterator(start, end)
+}
+
+func (db *MemDB) Print() error {
+	db.mtx.RLock()
+	defer db.mtx.RUnlock()
+
+	db.kv.tree.Ascend(item{}, func(i item) bool {
+		fmt.Printf("[%X]:\t[%X]\n", i.key, i.value)
+		return true
+	})
+	return nil
+}
+
+func (db *MemDB) Stats() map[string]string {
+	db.mtx.RLock()
+	defer db.mtx.RUnlock()
+
+	stats := make(map[string]string)
+	stats["database.type"] = "memDB"
+	stats["database.size"] = fmt.Sprintf("%d", db.kv.tree.Len())
+	return stats
 }
 
 // Close closes the MemDB, releasing any resources held.

@@ -21,14 +21,15 @@ var (
 const ServerName = "telemetry"
 
 type Server[T transaction.Tx] struct {
-	logger  log.Logger
-	config  *Config
-	server  *http.Server
-	metrics *Metrics
+	logger     log.Logger
+	config     *Config
+	cfgOptions []CfgOption
+	server     *http.Server
+	metrics    *Metrics
 }
 
 // New creates a new telemetry server.
-func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger) (*Server[T], error) {
+func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTelemetry func(), cfgOptions ...CfgOption) (*Server[T], error) {
 	srv := &Server[T]{}
 	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {
@@ -37,14 +38,43 @@ func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger) (*Server[T],
 		}
 	}
 	srv.config = serverCfg
+	srv.cfgOptions = cfgOptions
 	srv.logger = logger.With(log.ModuleKey, srv.Name())
+
+	if enableTelemetry == nil {
+		panic("enableTelemetry must be provided")
+	}
+
+	if srv.config.Enable {
+		enableTelemetry()
+	}
 
 	metrics, err := NewMetrics(srv.config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize metrics: %w", err)
 	}
 	srv.metrics = metrics
+	mux := http.NewServeMux()
+	// /metrics is the default standard path for Prometheus metrics.
+	mux.HandleFunc("/metrics", srv.metricsHandler)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/metrics", http.StatusMovedPermanently)
+	})
+
+	srv.server = &http.Server{
+		Addr:    srv.config.Address,
+		Handler: mux,
+	}
 	return srv, nil
+}
+
+// NewWithConfigOptions creates a new telemetry server with the provided config options.
+// It is *not* a fully functional server (since it has been created without dependencies)
+// The returned server should only be used to get and set configuration.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+	return &Server[T]{
+		cfgOptions: opts,
+	}
 }
 
 // Name returns the server name.
@@ -54,7 +84,13 @@ func (s *Server[T]) Name() string {
 
 func (s *Server[T]) Config() any {
 	if s.config == nil || s.config.Address == "" {
-		return DefaultConfig()
+		cfg := DefaultConfig()
+		// overwrite the default config with the provided options
+		for _, opt := range s.cfgOptions {
+			opt(cfg)
+		}
+
+		return cfg
 	}
 
 	return s.config
@@ -64,18 +100,6 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
-	}
-
-	mux := http.NewServeMux()
-	// /metrics is the default standard path for Prometheus metrics.
-	mux.HandleFunc("/metrics", s.metricsHandler)
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/metrics", http.StatusMovedPermanently)
-	})
-
-	s.server = &http.Server{
-		Addr:    s.config.Address,
-		Handler: mux,
 	}
 
 	s.logger.Info("starting telemetry server...", "address", s.config.Address)

@@ -11,7 +11,6 @@ type DBType string
 
 const (
 	DBTypeGoLevelDB DBType = "goleveldb"
-	DBTypeRocksDB   DBType = "rocksdb"
 	DBTypePebbleDB  DBType = "pebbledb"
 	DBTypePrefixDB  DBType = "prefixdb"
 

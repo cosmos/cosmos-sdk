@@ -44,7 +44,7 @@ type Factory struct {
 	txConfig         TxConfig
 	txParams         TxParameters
 
-	tx txState
+	tx *txState
 }
 
 func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
@@ -81,15 +81,26 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever acc
 		txConfig:         txConfig,
 		txParams:         parameters,
 
-		tx: txState{},
+		tx: &txState{},
 	}, nil
 }
 
 // validateFlagSet checks the provided flags for consistency and requirements based on the operation mode.
 func validateFlagSet(flags *pflag.FlagSet, offline bool) error {
+	dryRun, _ := flags.GetBool(flags2.FlagDryRun)
+	if offline && dryRun {
+		return errors.New("dry-run: cannot use offline mode")
+	}
+
+	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
+	chainID, _ := flags.GetString(flags2.FlagChainID)
 	if offline {
-		if !flags.Changed(flags2.FlagAccountNumber) || !flags.Changed(flags2.FlagSequence) {
+		if !generateOnly && (!flags.Changed(flags2.FlagAccountNumber) || !flags.Changed(flags2.FlagSequence)) {
 			return errors.New("account-number and sequence must be set in offline mode")
+		}
+
+		if generateOnly && chainID != "" {
+			return errors.New("chain ID cannot be used when offline and generate-only flags are set")
 		}
 
 		gas, _ := flags.GetString(flags2.FlagGas)
@@ -97,20 +108,8 @@ func validateFlagSet(flags *pflag.FlagSet, offline bool) error {
 		if gasSetting.Simulate {
 			return errors.New("simulate and offline flags cannot be set at the same time")
 		}
-	}
-
-	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
-	chainID, _ := flags.GetString(flags2.FlagChainID)
-	if offline && generateOnly && chainID != "" {
-		return errors.New("chain ID cannot be used when offline and generate-only flags are set")
-	}
-	if chainID == "" {
+	} else if chainID == "" {
 		return errors.New("chain ID required but not specified")
-	}
-
-	dryRun, _ := flags.GetBool(flags2.FlagDryRun)
-	if offline && dryRun {
-		return errors.New("dry-run: cannot use offline mode")
 	}
 
 	return nil
@@ -483,7 +482,7 @@ func (f *Factory) signMode() apitxsigning.SignMode { return f.txParams.SignMode 
 // getSimPK gets the public key to use for building a simulation tx.
 // Note, we should only check for keys in the keybase if we are in simulate and execute mode,
 // e.g. when using --gas=auto.
-// When using --dry-run, we are is simulation mode only and should not check the keybase.
+// When using --dry-run, we are in simulation mode only and should not check the keybase.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/11283
 func (f *Factory) getSimPK() (cryptotypes.PubKey, error) {
 	var (

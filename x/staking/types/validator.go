@@ -189,7 +189,7 @@ func (v Validator) IsUnbonding() bool {
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
-func NewDescription(moniker, identity, website, securityContact, details string, metadata Metadata) Description {
+func NewDescription(moniker, identity, website, securityContact, details string, metadata *Metadata) Description {
 	return Description{
 		Moniker:         moniker,
 		Identity:        identity,
@@ -223,8 +223,10 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.Details = d.Details
 	}
 
-	if d2.Metadata.ProfilePicUri == DoNotModifyDesc {
-		d2.Metadata.ProfilePicUri = d.Metadata.ProfilePicUri
+	if d2.Metadata != nil {
+		if d2.Metadata.ProfilePicUri == DoNotModifyDesc {
+			d2.Metadata.ProfilePicUri = d.Metadata.ProfilePicUri
+		}
 	}
 
 	return NewDescription(
@@ -264,13 +266,15 @@ func (d Description) EnsureLength() (Description, error) {
 
 func (d Description) IsEmpty() bool {
 	return d.Moniker == "" && d.Details == "" && d.Identity == "" && d.Website == "" && d.SecurityContact == "" &&
-		d.Metadata.ProfilePicUri == "" && len(d.Metadata.SocialHandleUris) == 0
+		(d.Metadata == nil || d.Metadata.ProfilePicUri == "" && len(d.Metadata.SocialHandleUris) == 0)
 }
 
 // Validate calls metadata.Validate() description.EnsureLength()
 func (d Description) Validate() (Description, error) {
-	if err := d.Metadata.Validate(); err != nil {
-		return d, err
+	if d.Metadata != nil {
+		if err := d.Metadata.Validate(); err != nil {
+			return d, err
+		}
 	}
 
 	return d.EnsureLength()

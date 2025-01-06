@@ -31,8 +31,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.0.0)
+
 ### Features
 
+* [#22641](https://github.com/cosmos/cosmos-sdk/pull/22641) Add reverse iterator support for `Triple`.
 * [#17656](https://github.com/cosmos/cosmos-sdk/pull/17656) Introduces `Vec`, a collection type that allows to represent a growable array on top of a KVStore.
 * [#18933](https://github.com/cosmos/cosmos-sdk/pull/18933) Add LookupMap implementation. It is basic wrapping of the standard Map methods but is not iterable.
 * [#19343](https://github.com/cosmos/cosmos-sdk/pull/19343) Simplify IndexedMap creation by allowing to infer indexes through reflection.
@@ -40,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#21090](https://github.com/cosmos/cosmos-sdk/pull/21090) Introduces `Quad`, a composite key with four keys.
 * [#20704](https://github.com/cosmos/cosmos-sdk/pull/20704) Add `ModuleCodec` method to `Schema` and `HasSchemaCodec` interface in order to support `cosmossdk.io/schema` compatible indexing.
 * [#20538](https://github.com/cosmos/cosmos-sdk/pull/20538) Add `Nameable` variations to `KeyCodec` and `ValueCodec` to allow for better indexing of `collections` types.
+* [#22544](https://github.com/cosmos/cosmos-sdk/pull/22544) Schema's `ModuleCodec` will now also return Enum descriptors to be registered with the indexer.
 
 ## [v0.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.4.0)
 

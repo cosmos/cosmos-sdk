@@ -14,7 +14,7 @@ use (
 	./log
 	./math
 	./orm
-	./simapp
+	./simapp/v2
 	./tests
 	./tests/systemtests
 	./schema
@@ -22,10 +22,12 @@ use (
 	./server/v2/appmanager
 	./store
 	./store/v2
+	./systemtests
 	./runtime/v2
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl
+	./tools/benchmark
 	./x/accounts
 	./x/accounts/defaults/base
 	./x/accounts/defaults/lockup
@@ -42,7 +44,6 @@ use (
 	./x/group
 	./x/mint
 	./x/nft
-	./x/params
 	./x/protocolpool
 	./x/slashing
 	./x/staking

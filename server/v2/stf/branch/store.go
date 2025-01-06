@@ -29,8 +29,7 @@ func (s Store[T]) Get(key []byte) (value []byte, err error) {
 	if found {
 		return
 	}
-	// after we get it from parent store, we cache it.
-	// if it is not found in parent store, we still cache it as nil.
+	// if not found in the changeset, then check the parent.
 	value, err = s.parent.Get(key)
 	if err != nil {
 		return nil, err

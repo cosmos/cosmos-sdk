@@ -7,30 +7,41 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 
 	abciserver "github.com/cometbft/cometbft/abci/server"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"google.golang.org/grpc"
 
+	addresscodec "cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/schema/indexer"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/appmanager"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -44,32 +55,50 @@ var (
 
 type CometBFTServer[T transaction.Tx] struct {
 	Node      *node.Node
-	Consensus *Consensus[T]
+	Consensus abci.Application
 
-	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
 	serverOptions ServerOptions[T]
 	config        Config
 	cfgOptions    []CfgOption
+
+	app     appmanager.AppManager[T]
+	txCodec transaction.Codec[T]
+	store   types.Store
+}
+
+// AppCodecs contains all codecs that the CometBFT server requires
+// provided by the application. They are extracted in struct to not be API
+// breaking once amino is completely deprecated or new codecs should be added.
+type AppCodecs[T transaction.Tx] struct {
+	TxCodec transaction.Codec[T]
+
+	// The following codecs are only required for the gRPC services
+	AppCodec              codec.Codec
+	LegacyAmino           registry.AminoRegistrar
+	ConsensusAddressCodec addresscodec.Codec
 }
 
 func New[T transaction.Tx](
 	logger log.Logger,
 	appName string,
 	store types.Store,
-	appManager appmanager.AppManager[T],
+	app appmanager.AppManager[T],
+	appCodecs AppCodecs[T],
 	queryHandlers map[string]appmodulev2.Handler,
 	decoderResolver decoding.DecoderResolver,
-	txCodec transaction.Codec[T],
-	cfg server.ConfigMap,
 	serverOptions ServerOptions[T],
+	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*CometBFTServer[T], error) {
 	srv := &CometBFTServer[T]{
-		initTxCodec:   txCodec,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
+		app:           app,
+		txCodec:       appCodecs.TxCodec,
+		store:         store,
 	}
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
 
 	home, _ := cfg[serverv2.FlagHome].(string)
 
@@ -106,47 +135,22 @@ func New[T transaction.Tx](
 		}
 	}
 
-	indexEvents := make(map[string]struct{}, len(srv.config.AppTomlConfig.IndexEvents))
-	for _, e := range srv.config.AppTomlConfig.IndexEvents {
-		indexEvents[e] = struct{}{}
+	indexedABCIEvents := make(map[string]struct{}, len(srv.config.AppTomlConfig.IndexABCIEvents))
+	for _, e := range srv.config.AppTomlConfig.IndexABCIEvents {
+		indexedABCIEvents[e] = struct{}{}
 	}
 
-	srv.logger = logger.With(log.ModuleKey, srv.Name())
-	consensus := NewConsensus(
-		logger,
-		appName,
-		appManager,
-		srv.serverOptions.Mempool(cfg),
-		indexEvents,
-		queryHandlers,
-		store,
-		srv.config,
-		srv.initTxCodec,
-		chainID,
-	)
-	consensus.prepareProposalHandler = srv.serverOptions.PrepareProposalHandler
-	consensus.processProposalHandler = srv.serverOptions.ProcessProposalHandler
-	consensus.checkTxHandler = srv.serverOptions.CheckTxHandler
-	consensus.verifyVoteExt = srv.serverOptions.VerifyVoteExtensionHandler
-	consensus.extendVote = srv.serverOptions.ExtendVoteHandler
-	consensus.addrPeerFilter = srv.serverOptions.AddrPeerFilter
-	consensus.idPeerFilter = srv.serverOptions.IdPeerFilter
-
-	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
 	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
 
 	snapshotStore, err := GetSnapshotStore(srv.config.ConfigTomlConfig.RootDir)
 	if err != nil {
 		return nil, err
 	}
-	consensus.snapshotManager = snapshots.NewManager(
-		snapshotStore, srv.serverOptions.SnapshotOptions(cfg), sc, ss, nil, logger)
-
-	srv.Consensus = consensus
 
 	// initialize the indexer
+	var listener *appdata.Listener
 	if indexerCfg := srv.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
-		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
+		indexingTarget, err := indexer.StartIndexing(indexer.IndexingOptions{
 			Config:   indexerCfg,
 			Resolver: decoderResolver,
 			Logger:   logger.With(log.ModuleKey, "indexer"),
@@ -154,8 +158,58 @@ func New[T transaction.Tx](
 		if err != nil {
 			return nil, fmt.Errorf("failed to start indexing: %w", err)
 		}
-		consensus.listener = &listener.Listener
+
+		listener = &indexingTarget.Listener
 	}
+
+	// snapshot manager
+	snapshotManager := snapshots.NewManager(
+		snapshotStore,
+		srv.serverOptions.SnapshotOptions(cfg),
+		sc,
+		nil, // extensions snapshotter registered below
+		logger,
+	)
+	if exts := serverOptions.SnapshotExtensions; len(exts) > 0 {
+		if err := snapshotManager.RegisterExtensions(serverOptions.SnapshotExtensions...); err != nil {
+			return nil, fmt.Errorf("failed to register snapshot extensions: %w", err)
+		}
+	}
+
+	c := &consensus[T]{
+		appName:                appName,
+		version:                getCometBFTServerVersion(),
+		app:                    app,
+		cfg:                    srv.config,
+		store:                  store,
+		logger:                 logger,
+		appCodecs:              appCodecs,
+		listener:               listener,
+		snapshotManager:        snapshotManager,
+		streamingManager:       srv.serverOptions.StreamingManager,
+		mempool:                srv.serverOptions.Mempool(cfg),
+		lastCommittedHeight:    atomic.Int64{},
+		prepareProposalHandler: srv.serverOptions.PrepareProposalHandler,
+		processProposalHandler: srv.serverOptions.ProcessProposalHandler,
+		verifyVoteExt:          srv.serverOptions.VerifyVoteExtensionHandler,
+		checkTxHandler:         srv.serverOptions.CheckTxHandler,
+		extendVote:             srv.serverOptions.ExtendVoteHandler,
+		chainID:                chainID,
+		indexedABCIEvents:      indexedABCIEvents,
+		initialHeight:          0,
+		queryHandlersMap:       queryHandlers,
+		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
+		addrPeerFilter:         srv.serverOptions.AddrPeerFilter,
+		idPeerFilter:           srv.serverOptions.IdPeerFilter,
+		cfgMap:                 cfg,
+	}
+
+	c.optimisticExec = oe.NewOptimisticExecution(
+		logger,
+		c.internalFinalizeBlock,
+	)
+
+	srv.Consensus = c
 
 	return srv, nil
 }
@@ -332,4 +386,14 @@ func (s *CometBFTServer[T]) WriteCustomConfigAt(configPath string) error {
 
 	cmtcfg.WriteConfigFile(filepath.Join(configPath, "config.toml"), cfg.ConfigTomlConfig)
 	return nil
+}
+
+// gRPCServiceRegistrar returns a function that registers the CometBFT gRPC service
+// Those services are defined for backward compatibility.
+// Eventually, they will be removed in favor of the new gRPC services.
+func (s *CometBFTServer[T]) GRPCServiceRegistrar(
+	clientCtx client.Context,
+	cfg server.ConfigMap,
+) func(srv *grpc.Server) error {
+	return gRPCServiceRegistrar[T](clientCtx, cfg, s.Config().(*AppTomlConfig), s.txCodec, s.Consensus, s.app)
 }

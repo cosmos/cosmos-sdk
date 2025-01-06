@@ -14,8 +14,11 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	corebranch "cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -53,6 +56,8 @@ const (
 
 type stateMachineTx = transaction.Tx
 
+type handler = func(ctx context.Context) (transaction.Msg, error)
+
 // DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
@@ -88,10 +93,19 @@ type StartupConfig struct {
 	GenesisAccounts []GenesisAccount
 	// HomeDir defines the home directory of the app where config and data will be stored.
 	HomeDir string
+	// BranchService defines the custom branch service to be used in the app.
+	BranchService corebranch.Service
+	// RouterServiceBuilder defines the custom builder
+	// for msg router and query router service to be used in the app.
+	RouterServiceBuilder runtime.RouterServiceBuilder
+	// HeaderService defines the custom header service to be used in the app.
+	HeaderService header.Service
+
+	GasService gas.Service
 }
 
-func DefaultStartUpConfig(t *testing.T) StartupConfig {
-	t.Helper()
+func DefaultStartUpConfig(tb testing.TB) StartupConfig {
+	tb.Helper()
 
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(
@@ -106,13 +120,35 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 			sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)),
 		),
 	}
-	homedir := t.TempDir()
-	t.Logf("generated integration test app config; HomeDir=%s", homedir)
+	homedir := tb.TempDir()
+	tb.Logf("generated integration test app config; HomeDir=%s", homedir)
 	return StartupConfig{
 		ValidatorSet:    CreateRandomValidatorSet,
 		GenesisBehavior: Genesis_COMMIT,
 		GenesisAccounts: []GenesisAccount{ga},
 		HomeDir:         homedir,
+		BranchService:   stf.BranchService{},
+		RouterServiceBuilder: runtime.NewRouterBuilder(
+			stf.NewMsgRouterService, stf.NewQueryRouterService(),
+		),
+		HeaderService: services.NewGenesisHeaderService(stf.HeaderService{}),
+		GasService:    stf.NewGasMeterService(),
+	}
+}
+
+// RunMsgConfig defines the run message configuration.
+type RunMsgConfig struct {
+	Commit bool
+}
+
+// Option is a function that can be used to configure the integration app.
+type Option func(*RunMsgConfig)
+
+// WithAutomaticCommit enables automatic commit.
+// This means that the integration app will automatically commit the state after each msg.
+func WithAutomaticCommit() Option {
+	return func(cfg *RunMsgConfig) {
+		cfg.Commit = true
 	}
 }
 
@@ -154,14 +190,18 @@ func NewApp(
 						"minimum-gas-prices": "0stake",
 					},
 				},
-				services.NewGenesisHeaderService(stf.HeaderService{}),
 				cometService,
 				kvFactory,
 				&eventService{},
 				storeBuilder,
+				startupConfig.BranchService,
+				startupConfig.RouterServiceBuilder,
+				startupConfig.HeaderService,
+				startupConfig.GasService,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
+				std.RegisterLegacyAminoCodec,
 			),
 		),
 		append(extraOutputs, &appBuilder, &cdc, &txConfigOptions, &txConfig, &storeBuilder)...); err != nil {
@@ -283,6 +323,10 @@ type App struct {
 	txConfig   client.TxConfig
 }
 
+func (a App) LastBlockHeight() uint64 {
+	return a.lastHeight
+}
+
 // Deliver delivers a block with the given transactions and returns the resulting state.
 func (a *App) Deliver(
 	t *testing.T, ctx context.Context, txs []stateMachineTx,
@@ -297,14 +341,20 @@ func (a *App) Deliver(
 	resp, state, err := a.DeliverBlock(ctx, req)
 	require.NoError(t, err)
 	a.lastHeight++
+
+	// update block height and block time if integration context is present
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if ok {
+		iCtx.header.Height = int64(a.lastHeight)
+	}
 	return resp, state
 }
 
 // StateLatestContext creates returns a new context from context.Background() with the latest state.
-func (a *App) StateLatestContext(t *testing.T) context.Context {
-	t.Helper()
+func (a *App) StateLatestContext(tb testing.TB) context.Context {
+	tb.Helper()
 	_, state, err := a.Store.StateLatest()
-	require.NoError(t, err)
+	require.NoError(tb, err)
 	writeableState := branch.DefaultNewWriterMap(state)
 	iCtx := &integrationContext{state: writeableState}
 	return context.WithValue(context.Background(), contextKey, iCtx)
@@ -395,6 +445,33 @@ func (a *App) SignCheckDeliver(
 	require.NoError(t, err)
 
 	return txResult
+}
+
+// RunMsg runs the handler for a transaction message.
+// It required the context to have the integration context.
+// a new state is committed if the option WithAutomaticCommit is set in options.
+func (app *App) RunMsg(t *testing.T, ctx context.Context, handler handler, option ...Option) (resp transaction.Msg, err error) {
+	t.Helper()
+
+	// set options
+	cfg := &RunMsgConfig{}
+	for _, opt := range option {
+		opt(cfg)
+	}
+
+	// need to have integration context
+	integrationCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	require.True(t, ok)
+
+	resp, err = handler(ctx)
+
+	if cfg.Commit {
+		app.lastHeight++
+		_, err := app.Commit(integrationCtx.state)
+		require.NoError(t, err)
+	}
+
+	return resp, err
 }
 
 // CheckBalance checks the balance of the given address.

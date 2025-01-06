@@ -34,6 +34,10 @@ func (t *Tree) LoadVersion(version uint64) error {
 	return nil
 }
 
+func (t *Tree) LoadVersionForOverwriting(version uint64) error {
+	return nil
+}
+
 func (t *Tree) Commit() ([]byte, uint64, error) {
 	return nil, 0, nil
 }
@@ -64,4 +68,8 @@ func (t *Tree) Import(version uint64) (commitment.Importer, error) {
 
 func New() *Tree {
 	return &Tree{MemDB: db.NewMemDB()}
+}
+
+func (t *Tree) IsConcurrentSafe() bool {
+	return false
 }

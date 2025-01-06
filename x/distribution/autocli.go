@@ -24,7 +24,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "ValidatorDistributionInfo",
 					Use:       "validator-distribution-info <validator>",
 					Short:     "Query validator distribution info",
-					Example:   fmt.Sprintf(`Example: $ %s query distribution validator-distribution-info [validator-address]`, version.AppName),
+					Example:   fmt.Sprintf(`$ %s query distribution validator-distribution-info [validator-address]`, version.AppName),
 
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "validator_address"},
@@ -63,7 +63,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "DelegationRewards",
 					Use:       "rewards-by-validator <delegator-addr> <validator-addr>",
 					Short:     "Query all distribution delegator from a particular validator",
-					Example:   fmt.Sprintf("$ %s query distribution rewards [delegator-address] [validator-address]", version.AppName),
+					Example:   fmt.Sprintf("$ %s query distribution rewards-by-validator [delegator-address] [validator-address]", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "delegator_address"},
 						{ProtoField: "validator_address"},

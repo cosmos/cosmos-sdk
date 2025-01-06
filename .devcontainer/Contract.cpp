@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 
-// Recipient structure
+// Recipient structure and refactored code
 struct Recipient {
     std::string address;
     uint64_t amount; // Amount in microATOM

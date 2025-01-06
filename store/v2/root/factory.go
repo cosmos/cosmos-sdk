@@ -181,6 +181,12 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		mm = migration.NewManager(opts.SCRawDB, snapshotMgr, newSC, opts.Logger)
 	}
 
+	version, err := sc.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(version, "version")
+
 	pm := pruning.NewManager(sc, storeOpts.SCPruningOption)
 	return New(opts.SCRawDB, opts.Logger, sc, pm, mm, metrics.NoOpMetrics{})
 }

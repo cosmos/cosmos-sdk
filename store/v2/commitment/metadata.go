@@ -1,7 +1,6 @@
 package commitment
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 
@@ -42,9 +41,8 @@ func (m *MetadataStore) GetLatestVersion() (uint64, error) {
 	}
 
 	var latestVersion int64
-
 	if err := gogotypes.StdInt64Unmarshal(&latestVersion, value); err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	return uint64(latestVersion), nil
@@ -53,7 +51,7 @@ func (m *MetadataStore) GetLatestVersion() (uint64, error) {
 func (m *MetadataStore) setLatestVersion(version uint64) error {
 	bz, err := gogotypes.StdInt64Marshal(int64(version)) // convert uint64 to int64 is safe since there will be no overflow or underflow
 	if err != nil {
-		panic(err)
+		return err
 	}
 	return m.kv.Set([]byte(latestVersionKey), bz)
 }
@@ -99,12 +97,11 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 		return err
 	}
 
-	var buf bytes.Buffer
-	buf.Grow(encoding.EncodeUvarintSize(version))
-	if err := encoding.EncodeUvarint(&buf, version); err != nil {
+	bz, err := gogotypes.StdInt64Marshal(int64(version)) // convert uint64 to int64 is safe since there will be no overflow or underflow
+	if err != nil {
 		return err
 	}
-	if err := batch.Set([]byte(latestVersionKey), buf.Bytes()); err != nil {
+	if err := batch.Set([]byte(latestVersionKey), bz); err != nil {
 		return err
 	}
 

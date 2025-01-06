@@ -203,8 +203,6 @@ func (s *Store) LoadLatestVersion() error {
 		return err
 	}
 
-	fmt.Println("loadLatestVersion", lv)
-
 	return s.loadVersion(lv, nil, false)
 }
 
@@ -247,7 +245,6 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 }
 
 func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades, overrideAfter bool) error {
-	fmt.Println("loadVersion", v)
 	s.logger.Debug("loading version", "version", v)
 
 	if upgrades == nil {

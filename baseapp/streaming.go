@@ -37,10 +37,11 @@ const (
 // types of streaming listeners.
 func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*storetypes.KVStoreKey, appModules map[string]any) error {
 	listener, err := indexer.StartIndexing(indexer.IndexingOptions{
-		Config:     indexerOpts,
-		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
-		SyncSource: nil,
-		Logger:     app.logger.With(log.ModuleKey, "indexer"),
+		Config:       indexerOpts,
+		Resolver:     decoding.ModuleSetDecoderResolver(appModules),
+		Logger:       app.logger.With(log.ModuleKey, "indexer"),
+		SyncSource:   nil, // TODO: Support catch-up syncs
+		AddressCodec: app.interfaceRegistry.SigningContext().AddressCodec(),
 	})
 	if err != nil {
 		return err

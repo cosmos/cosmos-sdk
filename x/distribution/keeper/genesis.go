@@ -123,11 +123,16 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 	}
 
 	balances := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
+<<<<<<< HEAD
 	if balances.IsZero() {
 		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
 	if !balances.Equal(moduleHoldingsInt) {
 		return fmt.Errorf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt)
+=======
+	if balances.IsAllLT(moduleHoldingsInt) {
+		return fmt.Errorf("distribution module balance is less than module holdings: %s < %s", balances, moduleHoldingsInt)
+>>>>>>> 4ff445ca6 (fix(x/gov,x/distribution): Balance assertions on genesis import shouldn't be exact (#22832))
 	}
 	return nil
 }

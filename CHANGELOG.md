@@ -40,31 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
-<<<<<<< HEAD
-=======
-### Features
-
-* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
-* (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
-* (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
-
-### Improvements
-
 ### Bug Fixes
 
-* (query) [23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
 * (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
 
-### API Breaking Changes
-
-* (x/params) [#22995](https://github.com/cosmos/cosmos-sdk/pull/22995) Remove `x/params`.  Migrate to the new params system introduced in `v0.47` as demonstrated [here](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams).
-* (testutil) [#22392](https://github.com/cosmos/cosmos-sdk/pull/22392) Remove `testutil/network` package. Use the integration framework or systemtests framework instead.
-
-### Deprecated
-
-* (modules) [#22994](https://github.com/cosmos/cosmos-sdk/pull/22994) Deprecate `Invariants` and associated methods.
-
->>>>>>> 07d5168d2 (fix(x/auth/tx): avoid panic from intoAnyV2 when v1.PublicKey is optional (#23148))
 ## [v0.52.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-rc.1) - 2024-12-18
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.

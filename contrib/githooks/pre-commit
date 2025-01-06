@@ -23,7 +23,7 @@ f_check_cmds() {
 f_check_cmds
 
 if [[ $STAGED_GO_FILES != "" ]]; then
-  f_echo_stderr "[pre-commit] fmt'ing staged files..."
+  f_echo_stderr "[pre-commit] formatting staged files..."
   for file in $STAGED_GO_FILES; do
     if [[ $file =~ vendor/ ]] || [[ $file =~ tests/mocks/ ]] || [[ $file =~ \.pb\.go ]]; then
       continue

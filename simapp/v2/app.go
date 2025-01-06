@@ -28,6 +28,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
+	"cosmossdk.io/client/docs"
+	swaggerv2 "cosmossdk.io/server/v2/api/swagger"
 )
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
@@ -184,6 +186,33 @@ func NewSimApp[T transaction.Tx](
 	if err = app.LoadLatest(); err != nil {
 		return nil, err
 	}
+
+	// Creating and Adding a Swagger Server
+	swaggerLogger := logger.With(log.ModuleKey, "swagger")
+	swaggerCfg := server.ConfigMap{
+		"swagger": map[string]any{
+			"enable": true,
+			"address": "localhost:8080",
+			"path": "/swagger/",
+		},
+	}
+	
+	swaggerServer, err := swaggerv2.New[T](
+		swaggerLogger,
+		swaggerCfg,
+		swaggerv2.CfgOption(func(cfg *swaggerv2.Config) {
+			cfg.SwaggerUI = docs.SwaggerUI
+		}),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create swagger server: %w", err)
+	}
+
+	// Adding a Swagger server to the application
+	if err := app.App.AddServer(swaggerServer); err != nil {
+		return nil, fmt.Errorf("failed to add swagger server: %w", err)
+	}
+
 	return app, nil
 }
 

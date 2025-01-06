@@ -74,9 +74,6 @@ endif
 # handle sqlite
 ifeq (sqlite,$(findstring sqlite,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
-  ifeq (arm64,$(shell go env GOARCH))
-    CC=aarch64-linux-gnu-gcc
-  endif
 endif
 
 # benchmark module
@@ -136,8 +133,6 @@ build-linux-arm64:
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	cd ${CURRENT_DIR}/${SIMAPP} && \
-	$(if $(CGO_ENABLED),CGO_ENABLED=$(CGO_ENABLED)) \
-	$(if $(CC),CC=$(CC)) \
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:

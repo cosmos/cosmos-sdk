@@ -6,8 +6,6 @@ import (
     "path/filepath"
     "strings"
     "time"
-
-    "github.com/rakyll/statik/fs"
 )
 
 type swaggerHandler struct {
@@ -15,10 +13,9 @@ type swaggerHandler struct {
 }
 
 func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    // Set CORS headers
+    // Set minimal CORS headers
     w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    w.Header().Set("Access-Control-Allow-Headers", "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type")
+    w.Header().Set("Access-Control-Allow-Methods", "GET")
 
     if r.Method == http.MethodOptions {
         return

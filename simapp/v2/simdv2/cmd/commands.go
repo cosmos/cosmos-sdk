@@ -38,6 +38,8 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
+	"cosmossdk.io/client/docs"
+	swaggerv2 "cosmossdk.io/server/v2/api/swagger"
 )
 
 // CommandDependencies is a struct that contains all the dependencies needed to initialize the root command.
@@ -92,6 +94,7 @@ func InitRootCmd[T transaction.Tx](
 			&telemetry.Server[T]{},
 			&rest.Server[T]{},
 			&grpcgateway.Server[T]{},
+			&swaggerv2.Server[T]{},
 		)
 	}
 
@@ -163,6 +166,18 @@ func InitRootCmd[T transaction.Tx](
 	}
 	registerGRPCGatewayRoutes[T](deps, grpcgatewayServer)
 
+	// Create Swagger server
+	swaggerServer, err := swaggerv2.New[T](
+		logger.With(log.ModuleKey, "swagger"),
+		deps.GlobalConfig,
+		swaggerv2.CfgOption(func(cfg *swaggerv2.Config) {
+			cfg.SwaggerUI = docs.SwaggerUI
+		}),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	// wire server commands
 	return serverv2.AddCommands[T](
 		rootCmd,
@@ -176,6 +191,7 @@ func InitRootCmd[T transaction.Tx](
 		telemetryServer,
 		restServer,
 		grpcgatewayServer,
+		swaggerServer,
 	)
 }
 

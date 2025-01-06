@@ -44,6 +44,10 @@ max-recv-msg-size = 10485760
 # MaxSendMsgSize defines the max message size in bytes the server can send.
 # The default value is math.MaxInt32.
 max-send-msg-size = 2147483647
+# SkipCheckHeader defines if the gRPC server should bypass check header.
+skip-check-header = false
+# SkipCheckHeader defines if the gRPC server should bypass check header.
+skip-check-header = false
 
 [grpc-gateway]
 # Enable defines if the gRPC-gateway should be enabled.

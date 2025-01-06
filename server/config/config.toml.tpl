@@ -171,6 +171,9 @@ max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 # The default value is math.MaxInt32.
 max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
+# SkipCheckHeader defines if the gRPC server should bypass check header.
+skip-check-header = {{ .GRPC.SkipCheckHeader }}
+
 ###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################

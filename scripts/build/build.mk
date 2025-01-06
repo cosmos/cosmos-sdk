@@ -14,8 +14,6 @@ DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 COSMOS_BUILD_OPTIONS += ' v2'
 
-rocksdb_version=v9.7.3
-
 ifeq ($(findstring .,$(VERSION)),)
 	VERSION := 0.0.0
 endif
@@ -55,11 +53,6 @@ ifeq (v2,$(findstring v2,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 # DB backend selection
-# handle rocksdb
-ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
-  CGO_ENABLED=1
-  build_tags += rocksdb grocksdb_clean_link
-endif
 # handle boltdb
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += boltdb

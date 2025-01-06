@@ -10,30 +10,30 @@ import (
 
 func TestGetStoreProof(t *testing.T) {
 	tests := []struct {
-		storeInfos []*StoreInfo
+		storeInfos []StoreInfo
 	}{
-		{[]*StoreInfo{
-			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
+		{[]StoreInfo{
+			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]*StoreInfo{
-			{[]byte("key2"), &CommitID{1, []byte("value2")}, "iavl"},
-			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
+		{[]StoreInfo{
+			{("key2"), CommitID{1, []byte("value2")}, "iavl"},
+			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]*StoreInfo{
-			{[]byte("key3"), &CommitID{1, []byte("value3")}, "iavl"},
-			{[]byte("key2"), &CommitID{1, []byte("value2")}, "iavl"},
-			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
+		{[]StoreInfo{
+			{("key3"), CommitID{1, []byte("value3")}, "iavl"},
+			{("key2"), CommitID{1, []byte("value2")}, "iavl"},
+			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]*StoreInfo{
-			{[]byte("key2"), &CommitID{1, []byte("value2")}, "iavl"},
-			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
-			{[]byte("key3"), &CommitID{1, []byte("value3")}, "iavl"},
+		{[]StoreInfo{
+			{("key2"), CommitID{1, []byte("value2")}, "iavl"},
+			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
+			{("key3"), CommitID{1, []byte("value3")}, "iavl"},
 		}},
-		{[]*StoreInfo{
-			{[]byte("key4"), &CommitID{1, []byte("value4")}, "iavl"},
-			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
-			{[]byte("key3"), &CommitID{1, []byte("value3")}, "iavl"},
-			{[]byte("key2"), &CommitID{1, []byte("value2")}, "iavl"},
+		{[]StoreInfo{
+			{("key4"), CommitID{1, []byte("value4")}, "iavl"},
+			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
+			{("key3"), CommitID{1, []byte("value3")}, "iavl"},
+			{("key2"), CommitID{1, []byte("value2")}, "iavl"},
 		}},
 	}
 
@@ -50,10 +50,10 @@ func TestGetStoreProof(t *testing.T) {
 			require.Equal(t, ci.StoreInfos[0].Name, []byte("key1"))
 			for _, si := range tc.storeInfos {
 				// get the proof
-				_, proof, err := ci.GetStoreProof(si.Name)
+				_, proof, err := ci.GetStoreProof([]byte(si.Name))
 				require.NoError(t, err, "test case %d", i)
 				// verify the proof
-				expRoots, err := proof.Run([][]byte{si.CommitID.Hash})
+				expRoots, err := proof.Run([][]byte{si.CommitId.Hash})
 				require.NoError(t, err, "test case %d", i)
 				require.Equal(t, commitHash, expRoots[0], "test case %d", i)
 

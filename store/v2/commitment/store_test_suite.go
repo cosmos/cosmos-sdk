@@ -1,9 +1,9 @@
 package commitment
 
 import (
-	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/stretchr/testify/suite"
 
@@ -134,7 +134,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	for _, storeInfo := range targetCommitInfo.StoreInfos {
 		matched := false
 		for _, latestStoreInfo := range cInfo.StoreInfos {
-			if bytes.Equal(storeInfo.Name, latestStoreInfo.Name) {
+			if strings.EqualFold(storeInfo.Name, latestStoreInfo.Name) {
 				s.Require().Equal(latestStoreInfo.GetHash(), storeInfo.GetHash())
 				matched = true
 			}

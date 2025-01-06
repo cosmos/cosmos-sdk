@@ -152,7 +152,7 @@ func (s *Store) LastCommitID() (proof.CommitID, error) {
 	// if the latest version is 0, we return a CommitID with version 0 and a hash of an empty byte slice
 	bz := sha256.Sum256([]byte{})
 
-	return proof.CommitID{Version: latestVersion, Hash: bz[:]}, nil
+	return proof.CommitID{Version: int64(latestVersion), Hash: bz[:]}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -164,7 +164,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 		return 0, err
 	}
 
-	return lastCommitID.Version, nil
+	return uint64(lastCommitID.Version), nil
 }
 
 func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (store.QueryResult, error) {
@@ -312,13 +312,13 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	}
 	s.logger.Warn(fmt.Sprintf("commit version %d write=%s commit=%s", cs.Version, writeDur, time.Since(st)))
 
-	if cInfo.Version != cs.Version {
+	if cInfo.Version != int64(cs.Version) {
 		return nil, fmt.Errorf("commit version mismatch: got %d, expected %d", cInfo.Version, cs.Version)
 	}
 	s.lastCommitInfo = cInfo
 
 	// signal to the pruning manager that the commit is done
-	if err := s.pruningManager.ResumePruning(s.lastCommitInfo.Version); err != nil {
+	if err := s.pruningManager.ResumePruning(uint64(s.lastCommitInfo.Version)); err != nil {
 		s.logger.Error("failed to signal commit done to pruning manager", "err", err)
 	}
 
@@ -344,7 +344,7 @@ func (s *Store) startMigration() {
 		version := s.lastCommitInfo.Version
 		s.logger.Info("starting migration", "version", version)
 		mtx.Unlock()
-		if err := s.migrationManager.Start(version, s.chChangeset, s.chDone); err != nil {
+		if err := s.migrationManager.Start(uint64(version), s.chChangeset, s.chDone); err != nil {
 			s.logger.Error("failed to start migration", "err", err)
 		}
 	}()
@@ -358,7 +358,7 @@ func (s *Store) handleMigration(cs *corestore.Changeset) error {
 	if s.isMigrating {
 		// if the migration manager has already migrated to the version, close the
 		// channels and replace the state commitment
-		if s.migrationManager.GetMigratedVersion() == s.lastCommitInfo.Version {
+		if s.migrationManager.GetMigratedVersion() == uint64(s.lastCommitInfo.Version) {
 			close(s.chDone)
 			close(s.chChangeset)
 			s.isMigrating = false
@@ -376,7 +376,7 @@ func (s *Store) handleMigration(cs *corestore.Changeset) error {
 			s.logger.Info("migration completed", "version", s.lastCommitInfo.Version)
 		} else {
 			// queue the next changeset to the migration manager
-			s.chChangeset <- &migration.VersionedChangeset{Version: s.lastCommitInfo.Version + 1, Changeset: cs}
+			s.chChangeset <- &migration.VersionedChangeset{Version: uint64(s.lastCommitInfo.Version + 1), Changeset: cs}
 		}
 	}
 	return nil

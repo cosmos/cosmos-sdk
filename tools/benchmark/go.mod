@@ -17,8 +17,8 @@ require (
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
@@ -39,6 +39,7 @@ require (
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
@@ -141,7 +142,7 @@ require (
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241219192143-6b3ec007d9bb // indirect
-	google.golang.org/protobuf v1.36.0 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect

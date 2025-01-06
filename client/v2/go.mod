@@ -14,7 +14,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -24,6 +24,7 @@ require (
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
@@ -31,8 +32,8 @@ require (
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1

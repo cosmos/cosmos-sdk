@@ -1,4 +1,4 @@
-go 1.23.2
+go 1.23.4
 
 module github.com/cosmos/cosmos-sdk
 
@@ -175,6 +175,7 @@ require (
 
 // TODO remove after all modules have their own go.mods
 replace (
+	cosmossdk.io/api => ./api
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking
 )
@@ -203,3 +204,5 @@ retract (
 	// do not use
 	v0.43.0
 )
+
+replace cosmossdk.io/store => ./store

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	protoio "github.com/cosmos/gogoproto/io"
@@ -59,7 +60,7 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 type Store struct {
 	db                  corestore.KVStoreWithBatch
 	logger              iavltree.Logger
-	lastCommitInfo      *types.CommitInfo
+	lastCommitInfo      atomic.Pointer[types.CommitInfo]
 	pruningManager      *pruning.Manager
 	iavlCacheSize       int
 	iavlDisableFastNode bool
@@ -293,7 +294,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
-	rs.lastCommitInfo = cInfo
+	rs.lastCommitInfo.Store(cInfo)
 	rs.stores = newStores
 
 	// load any snapshot heights we missed from disk to be pruned on the next run
@@ -439,16 +440,18 @@ func (rs *Store) PopStateCache() []*types.StoreKVPair {
 
 // LatestVersion returns the latest version in the store
 func (rs *Store) LatestVersion() int64 {
-	if rs.lastCommitInfo == nil {
+	lastCommitInfo := rs.lastCommitInfo.Load()
+	if lastCommitInfo == nil {
 		return GetLatestVersion(rs.db)
 	}
 
-	return rs.lastCommitInfo.Version
+	return lastCommitInfo.Version
 }
 
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
-	if rs.lastCommitInfo == nil {
+	lastCommitInfo := rs.lastCommitInfo.Load()
+	if lastCommitInfo == nil {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
@@ -456,16 +459,16 @@ func (rs *Store) LastCommitID() types.CommitID {
 			Hash:    appHash, // set empty apphash to sha256([]byte{}) if info is nil
 		}
 	}
-	if len(rs.lastCommitInfo.CommitID().Hash) == 0 {
+	if len(lastCommitInfo.CommitID().Hash) == 0 {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
-			Version: rs.lastCommitInfo.Version,
+			Version: lastCommitInfo.Version,
 			Hash:    appHash, // set empty apphash to sha256([]byte{}) if hash is nil
 		}
 	}
 
-	return rs.lastCommitInfo.CommitID()
+	return lastCommitInfo.CommitID()
 }
 
 // PausePruning temporarily pauses the pruning of all individual stores which implement
@@ -481,7 +484,7 @@ func (rs *Store) PausePruning(pause bool) {
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64
-	if rs.lastCommitInfo.GetVersion() == 0 && rs.initialVersion > 1 {
+	if rs.lastCommitInfo.Load().GetVersion() == 0 && rs.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = rs.initialVersion
@@ -491,7 +494,7 @@ func (rs *Store) Commit() types.CommitID {
 		// case we increment the version from there,
 		// - or there was no previous commit, and initial version was not set,
 		// in which case we start at version 1.
-		previousHeight = rs.lastCommitInfo.GetVersion()
+		previousHeight = rs.lastCommitInfo.Load().GetVersion()
 		version = previousHeight + 1
 	}
 
@@ -504,11 +507,15 @@ func (rs *Store) Commit() types.CommitID {
 		rs.PausePruning(true)
 		// unset the committing flag on all stores to continue the pruning
 		defer rs.PausePruning(false)
-		rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
+
+		cInfo := commitStores(version, rs.stores, rs.removalMap)
+		rs.lastCommitInfo.Store(cInfo)
 	}()
 
-	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
-	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
+	cInfo := rs.lastCommitInfo.Load()
+	cInfo.Timestamp = rs.commitHeader.Time
+
+	defer rs.flushMetadata(rs.db, version, cInfo)
 
 	// remove remnants of removed stores
 	for sk := range rs.removalMap {
@@ -531,7 +538,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	return types.CommitID{
 		Version: version,
-		Hash:    rs.lastCommitInfo.Hash(),
+		Hash:    rs.lastCommitInfo.Load().Hash(),
 	}
 }
 
@@ -786,8 +793,9 @@ func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 	// Otherwise, we query for the commit info from disk.
 	var commitInfo *types.CommitInfo
 
-	if res.Height == rs.lastCommitInfo.Version {
-		commitInfo = rs.lastCommitInfo
+	lastCommitInfo := rs.lastCommitInfo.Load()
+	if res.Height == lastCommitInfo.Version {
+		commitInfo = lastCommitInfo
 	} else {
 		commitInfo, err = rs.GetCommitInfo(res.Height)
 		if err != nil {

@@ -237,13 +237,13 @@ func ConvertV1CommitInfo(value []byte) (*CommitInfo, error) {
 	}
 	cInfo := &CommitInfo{
 		Version:    uint64(v1CommitInfo.Version),
-		StoreInfos: make([]StoreInfo, len(v1CommitInfo.StoreInfos)),
+		StoreInfos: make([]*StoreInfo, len(v1CommitInfo.StoreInfos)),
 		Timestamp:  v1CommitInfo.Timestamp,
 	}
 	for i, v1StoreInfo := range v1CommitInfo.StoreInfos {
-		cInfo.StoreInfos[i] = StoreInfo{
+		cInfo.StoreInfos[i] = &StoreInfo{
 			Name: []byte(v1StoreInfo.Name),
-			CommitID: CommitID{
+			CommitID: &CommitID{
 				Version: uint64(v1StoreInfo.CommitId.Version),
 				Hash:    v1StoreInfo.CommitId.Hash,
 			},

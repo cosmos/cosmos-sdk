@@ -347,7 +347,7 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 func (suite *KeeperTestSuite) TestQueryDenomsMetadata() {
 	var (
 		req         *types.QueryDenomsMetadataRequest
-		expMetadata = []types.Metadata{}
+		expMetadata []types.Metadata
 	)
 
 	testCases := []struct {

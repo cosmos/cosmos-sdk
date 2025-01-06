@@ -27,6 +27,7 @@ import (
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/queryclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -117,7 +118,7 @@ type KeeperTestSuite struct {
 	addrCdc    address.Codec
 	authKeeper *banktestutil.MockAccountKeeper
 
-	queryClient banktypes.QueryServer
+	queryClient banktypes.QueryClient
 	msgServer   banktypes.MsgServer
 
 	encCfg moduletestutil.TestEncodingConfig
@@ -164,11 +165,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
 	}))
 
+	queryHelper := queryclient.NewQueryHelper(encCfg.InterfaceRegistry)
+	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
-	queryServer := keeper.NewQuerier(&suite.bankKeeper)
-
-	suite.queryClient = queryServer
+	suite.queryClient = banktypes.NewQueryClient(queryHelper)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.bankKeeper)
 	suite.encCfg = encCfg
 	suite.env = env

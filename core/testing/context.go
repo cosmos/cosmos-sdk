@@ -2,6 +2,7 @@ package coretesting
 
 import (
 	"context"
+
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"

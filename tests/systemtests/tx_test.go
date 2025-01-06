@@ -1089,6 +1089,10 @@ func readTestAminoTxBinary(t *testing.T, aminoCodec *codec.LegacyAmino) ([]byte,
 }
 
 func TestSimulateTx_GasImprovements(t *testing.T) {
+	if !systest.IsV2() {
+		t.Skip("This test was made for testing gas improvements for v2. It doesn't work as is for v1, because of how the v1 handles out of gas issues compared to v2 (server error instead of proper response). This makes this test not compatible with v1.")
+	}
+
 	systest.Sut.ResetChain(t)
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -1118,7 +1122,7 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 	testCases := []struct {
 		name         string
 		simulateArgs []string
-		txArgs []string
+		txArgs       []string
 	}{
 		{
 			"simulate without fees",
@@ -1152,17 +1156,17 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 				// create unsign tx
 				res := cli.RunCommandWithArgs(tc.simulateArgs...)
 				txFile := systest.StoreTempFile(t, []byte(res))
-		
+
 				res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
 				signedTxFile := systest.StoreTempFile(t, []byte(res))
-		
+
 				res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
 				txBz, err := base64.StdEncoding.DecodeString(res)
 				require.NoError(t, err)
-		
+
 				reqBz, err := json.Marshal(&tx.SimulateRequest{TxBytes: txBz})
 				require.NoError(t, err)
-		
+
 				resBz, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", baseURL), "application/json", reqBz)
 				require.NoError(t, err)
 				gasUsed := gjson.Get(string(resBz), "gas_info.gas_used").Int()
@@ -1184,7 +1188,7 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 					fmt.Println("gasAdjustment", i, gasAdjustment[i])
 				}
 			}
-		
+
 			// Calculate average adjustments
 			total := 0.0
 			for i := 0; i < txlen; i++ {

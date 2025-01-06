@@ -125,16 +125,9 @@ func (a genericAddressKey[T]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 	return collcodec.SchemaCodec[T]{
 		Fields: []schema.Field{{Kind: schema.AddressKind}},
 		ToSchemaType: func(t T) (any, error) {
-			return t.String(), nil
+			return t, nil
 		},
-		FromSchemaType: func(s any) (T, error) {
-			var t T
-			sz, ok := s.(string)
-			if !ok {
-				return t, fmt.Errorf("expected string, got %T", s)
-			}
-			return a.stringDecoder(sz)
-		},
+		FromSchemaType: nil,
 	}, nil
 }
 

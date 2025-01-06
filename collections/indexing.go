@@ -190,6 +190,7 @@ func (c collectionImpl[K, V]) schemaCodec() (*collectionSchemaCodec, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		if valueDecoder.ToSchemaType == nil {
 			return x, nil
 		}

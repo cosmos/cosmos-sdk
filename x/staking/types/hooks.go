@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -111,6 +111,39 @@ func (h MultiStakingHooks) BeforeValidatorSlashed(ctx context.Context, valAddr s
 func (h MultiStakingHooks) AfterUnbondingInitiated(ctx context.Context, id uint64) error {
 	for i := range h {
 		if err := h[i].AfterUnbondingInitiated(ctx, id); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h MultiStakingHooks) AfterUnbondingDelegationSlashed(
+	ctx context.Context, valAddr sdk.ValAddress, delAddr sdk.AccAddress, slashedAmount sdkmath.Int,
+) error {
+	for i := range h {
+		if err := h[i].AfterUnbondingDelegationSlashed(ctx, valAddr, delAddr, slashedAmount); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h MultiStakingHooks) AfterRedelegationSlashed(
+	ctx context.Context, valAddr sdk.ValAddress, delAddr sdk.AccAddress, slashedAmount sdkmath.Int,
+) error {
+	for i := range h {
+		if err := h[i].AfterRedelegationSlashed(ctx, valAddr, delAddr, slashedAmount); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h MultiStakingHooks) CustomBeforeValidatorSlashed(
+	ctx context.Context, valAddr sdk.ValAddress, fraction sdkmath.LegacyDec, totalSlashedAmt sdkmath.Int,
+) error {
+	for i := range h {
+		if err := h[i].CustomBeforeValidatorSlashed(ctx, valAddr, fraction, totalSlashedAmt); err != nil {
 			return err
 		}
 	}

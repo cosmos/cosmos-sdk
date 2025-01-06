@@ -27,6 +27,16 @@ func (s *KeeperTestSuite) TestDelegation() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
+	getAllFromIterateValidatorDelegations := func(valAddr sdk.ValAddress) []stakingtypes.Delegation {
+		var delegations []stakingtypes.Delegation
+		err := keeper.IterateValidatorDelegations(ctx, valAddr, func(delegation stakingtypes.Delegation) (stop bool) {
+			delegations = append(delegations, delegation)
+			return false
+		})
+		require.NoError(err)
+		return delegations
+	}
+
 	addrDels, valAddrs := createValAddrs(3)
 
 	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
@@ -48,11 +58,18 @@ func (s *KeeperTestSuite) TestDelegation() {
 	_, err := keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.ErrorIs(err, stakingtypes.ErrNoDelegation)
 
+	// check empty iterator
+	require.Empty(getAllFromIterateValidatorDelegations(valAddrs[0]))
+
 	// set and retrieve a record
 	require.NoError(keeper.SetDelegation(ctx, bond1to1))
 	resBond, err := keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.NoError(err)
 	require.Equal(bond1to1, resBond)
+
+	// check iterator only has one value
+	delegations := getAllFromIterateValidatorDelegations(valAddrs[0])
+	require.EqualValues([]stakingtypes.Delegation{bond1to1}, delegations)
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = math.LegacyNewDec(99)
@@ -60,6 +77,10 @@ func (s *KeeperTestSuite) TestDelegation() {
 	resBond, err = keeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.NoError(err)
 	require.Equal(bond1to1, resBond)
+
+	// check iterator only has one value
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[0])
+	require.EqualValues([]stakingtypes.Delegation{bond1to1}, delegations)
 
 	// add some more records
 	bond1to2 := stakingtypes.NewDelegation(addrDels[0].String(), valAddrs[1].String(), math.LegacyNewDec(9))
@@ -72,6 +93,14 @@ func (s *KeeperTestSuite) TestDelegation() {
 	require.NoError(keeper.SetDelegation(ctx, bond2to1))
 	require.NoError(keeper.SetDelegation(ctx, bond2to2))
 	require.NoError(keeper.SetDelegation(ctx, bond2to3))
+
+	// check iterator has multiple records
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[0])
+	require.EqualValues([]stakingtypes.Delegation{bond1to1, bond2to1}, delegations)
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[1])
+	require.EqualValues([]stakingtypes.Delegation{bond1to2, bond2to2}, delegations)
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[2])
+	require.EqualValues([]stakingtypes.Delegation{bond1to3, bond2to3}, delegations)
 
 	// test all bond retrieve capabilities
 	resBonds, err := keeper.GetDelegatorDelegations(ctx, addrDels[0], 5)
@@ -139,6 +168,14 @@ func (s *KeeperTestSuite) TestDelegation() {
 	require.Equal(bond2to1, resBonds[0])
 	require.Equal(bond2to2, resBonds[1])
 
+	// check iterator has multiple records
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[0])
+	require.EqualValues([]stakingtypes.Delegation{bond1to1, bond2to1}, delegations)
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[1])
+	require.EqualValues([]stakingtypes.Delegation{bond1to2, bond2to2}, delegations)
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[2])
+	require.EqualValues([]stakingtypes.Delegation{bond1to3}, delegations) // 1 record less
+
 	resBonds, err = keeper.GetAllDelegatorDelegations(ctx, addrDels[1])
 	require.NoError(err)
 	require.Equal(2, len(resBonds))
@@ -153,6 +190,14 @@ func (s *KeeperTestSuite) TestDelegation() {
 	resBonds, err = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.NoError(err)
 	require.Equal(0, len(resBonds))
+
+	// check iterator has multiple records
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[0])
+	require.EqualValues([]stakingtypes.Delegation{bond1to1}, delegations) // 1 record less
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[1])
+	require.EqualValues([]stakingtypes.Delegation{bond1to2}, delegations) // 1 record less
+	delegations = getAllFromIterateValidatorDelegations(valAddrs[2])
+	require.EqualValues([]stakingtypes.Delegation{bond1to3}, delegations) // 1 record less
 }
 
 func (s *KeeperTestSuite) TestDelegationsByValIndex() {

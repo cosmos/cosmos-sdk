@@ -180,3 +180,17 @@ func (h Hooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sd
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
 	return nil
 }
+
+func (h Hooks) AfterUnbondingDelegationSlashed(_ context.Context, _ sdk.ValAddress, _ sdk.AccAddress, _ sdkmath.Int) error {
+	return nil
+}
+
+func (h Hooks) AfterRedelegationSlashed(_ context.Context, _ sdk.ValAddress, _ sdk.AccAddress, _ sdkmath.Int) error {
+	return nil
+}
+
+func (h Hooks) CustomBeforeValidatorSlashed(
+	_ context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec, _ sdkmath.Int,
+) error {
+	return nil
+}

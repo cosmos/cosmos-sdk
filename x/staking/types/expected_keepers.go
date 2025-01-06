@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
@@ -109,6 +109,17 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error
 	AfterUnbondingInitiated(ctx context.Context, id uint64) error
+
+	// These are custom hooks
+	AfterUnbondingDelegationSlashed(
+		ctx context.Context, valAddr sdk.ValAddress, delAddr sdk.AccAddress, slashedAmount math.Int,
+	) error
+	AfterRedelegationSlashed(
+		ctx context.Context, valAddr sdk.ValAddress, delAddr sdk.AccAddress, slashedAmount math.Int,
+	) error
+	CustomBeforeValidatorSlashed(
+		ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec, totalSlashedAmt math.Int,
+	) error
 }
 
 // StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.

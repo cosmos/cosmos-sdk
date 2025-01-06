@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Slash a validator for an infraction committed at a known height
@@ -160,6 +160,10 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	}
 
 	// we need to calculate the *effective* slash fraction for distribution
+	//
+	// Note: `validator.Tokens` are always positive at this stage, otherwise, they would have caused tokensToBurn to be
+	// zero and hence the tokensToBurn.IsZero() condition would have returned execution to the calling function.
+	// In other words we will always be computing an effectiveFraction, and it should never be zero or infinite.
 	if validator.Tokens.IsPositive() {
 		effectiveFraction := math.LegacyNewDecFromInt(tokensToBurn).QuoRoundUp(math.LegacyNewDecFromInt(validator.Tokens))
 		// possible if power has changed
@@ -169,6 +173,25 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		// call the before-slashed hook
 		if err := k.Hooks().BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction); err != nil {
 			k.Logger(ctx).Error("failed to call before validator slashed hook", "error", err)
+		}
+
+		// Call the custom-before-validator-slashed hook. Due to previous checks we are sure that tokensToBurn is
+		// positive i.e. that slashing will occur.
+		//
+		// Notes:
+		// 1. We are implementing a custom BeforeValidatorSlashedHook to make sure that if slashing occurs, the
+		// (Custom)BeforeValidatorSlashed hook for the reports module will still be called. If the reports module made
+		// use of the standard BeforeValidatorSlashed hook and another module's BeforeValidatorSlashed hook errored,
+		// the reports module hook logic would be skipped because of how the error handling is implemented above.
+		// 2. The CustomBeforeValidatorSlashed should be used by Sequencer-native modules only.
+		if err := k.Hooks().CustomBeforeValidatorSlashed(
+			ctx, operatorAddress, effectiveFraction, tokensToBurn,
+		); err != nil {
+			// To maintain a general implementation in the staking module, the responsibility for halting chain
+			// execution is delegated to the individual modules that implement this hook. Errors are logged if they
+			// occur, as not all modules may require the chain to halt upon encountering an error. If a module needs to
+			// stop execution, it should explicitly trigger a panic within the logic of CustomBeforeValidatorSlashed.
+			k.Logger(ctx).Error("failed to call after validator slashed hook", "error", err)
 		}
 	}
 
@@ -242,6 +265,18 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 	totalSlashAmount = math.ZeroInt()
 	burnedAmount := math.ZeroInt()
 
+	// compute operator address; to be used later when calling hooks
+	validatorAddress, err := k.ValidatorAddressCodec().StringToBytes(unbondingDelegation.ValidatorAddress)
+	if err != nil {
+		return math.ZeroInt(), fmt.Errorf("SlashUnbondingDelegation: could not parse validator address: %w", err)
+	}
+
+	// compute delegator address; to be used later when calling hooks
+	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(unbondingDelegation.DelegatorAddress)
+	if err != nil {
+		return math.ZeroInt(), fmt.Errorf("SlashUnbondingDelegation: could not parse delegator address: %w", err)
+	}
+
 	// perform slashing on all entries within the unbonding delegation
 	for i, entry := range unbondingDelegation.Entries {
 		// If unbonding started before this height, stake didn't contribute to infraction
@@ -280,6 +315,21 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 
 	if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
 		return math.ZeroInt(), err
+	}
+
+	// Call the after-unbonding-delegation-slashed hook if the burned amount is greater than zero. The burned amount is
+	// used instead of the slashed amount because it represents the actual number of tokens that were slashed. In other
+	// words, if no tokens were burned, the unbonding delegation was not slashed.
+	if burnedAmount.IsPositive() {
+		if err := k.Hooks().AfterUnbondingDelegationSlashed(
+			ctx, validatorAddress, delegatorAddress, burnedAmount,
+		); err != nil {
+			// To maintain a general implementation in the staking module, the responsibility for halting chain
+			// execution is delegated to the individual modules that implement this hook. Errors are logged if they
+			// occur, as not all modules may require the chain to halt upon encountering an error. If a module needs to
+			// stop execution, it should explicitly trigger a panic within the logic of AfterUnbondingDelegationSlashed.
+			k.Logger(ctx).Error("failed to call after unbonding delegation slashed hook", "error", err)
+		}
 	}
 
 	return totalSlashAmount, nil
@@ -409,6 +459,23 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 
 	if err := k.burnNotBondedTokens(ctx, notBondedBurnedAmount); err != nil {
 		return math.ZeroInt(), err
+	}
+
+	// Call the after-redelegation-slashed hook if the sum of burned amounts is greater than zero. We are using the
+	// burned amounts instead of the slashed amount because it represents the actual number of tokens that were slashed.
+	// In other words, if no tokens were burned, the redelegation was not slashed.
+	//
+	// Note: In a redelegation we are actually slashing the validator receiving the redelegation, therefore, the valAddr
+	// in the hook must be set to the dst validator.
+	burnedAmount := bondedBurnedAmount.Add(notBondedBurnedAmount)
+	if burnedAmount.IsPositive() {
+		if err := k.Hooks().AfterRedelegationSlashed(ctx, valDstAddr, delegatorAddress, burnedAmount); err != nil {
+			// To maintain a general implementation in the staking module, the responsibility for halting chain
+			// execution is delegated to the individual modules that implement this hook. Errors are logged if they
+			// occur, as not all modules may require the chain to halt upon encountering an error. If a module needs to
+			// stop execution, it should explicitly trigger a panic within the logic of AfterRedelegationSlashed.
+			k.Logger(ctx).Error("failed to call after redelegation slashed hook", "error", err)
+		}
 	}
 
 	return totalSlashAmount, nil

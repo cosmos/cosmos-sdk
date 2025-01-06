@@ -584,6 +584,34 @@ func (mr *MockStakingHooksMockRecorder) AfterDelegationModified(ctx, delAddr, va
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDelegationModified", reflect.TypeOf((*MockStakingHooks)(nil).AfterDelegationModified), ctx, delAddr, valAddr)
 }
 
+// AfterRedelegationSlashed mocks base method.
+func (m *MockStakingHooks) AfterRedelegationSlashed(ctx context.Context, valAddr types.ValAddress, delAddr types.AccAddress, slashedAmount math.Int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterRedelegationSlashed", ctx, valAddr, delAddr, slashedAmount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterRedelegationSlashed indicates an expected call of AfterRedelegationSlashed.
+func (mr *MockStakingHooksMockRecorder) AfterRedelegationSlashed(ctx, valAddr, delAddr, slashedAmount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterRedelegationSlashed", reflect.TypeOf((*MockStakingHooks)(nil).AfterRedelegationSlashed), ctx, valAddr, delAddr, slashedAmount)
+}
+
+// AfterUnbondingDelegationSlashed mocks base method.
+func (m *MockStakingHooks) AfterUnbondingDelegationSlashed(ctx context.Context, valAddr types.ValAddress, delAddr types.AccAddress, slashedAmount math.Int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterUnbondingDelegationSlashed", ctx, valAddr, delAddr, slashedAmount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterUnbondingDelegationSlashed indicates an expected call of AfterUnbondingDelegationSlashed.
+func (mr *MockStakingHooksMockRecorder) AfterUnbondingDelegationSlashed(ctx, valAddr, delAddr, slashedAmount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterUnbondingDelegationSlashed", reflect.TypeOf((*MockStakingHooks)(nil).AfterUnbondingDelegationSlashed), ctx, valAddr, delAddr, slashedAmount)
+}
+
 // AfterUnbondingInitiated mocks base method.
 func (m *MockStakingHooks) AfterUnbondingInitiated(ctx context.Context, id uint64) error {
 	m.ctrl.T.Helper()
@@ -722,4 +750,18 @@ func (m *MockStakingHooks) BeforeValidatorSlashed(ctx context.Context, valAddr t
 func (mr *MockStakingHooksMockRecorder) BeforeValidatorSlashed(ctx, valAddr, fraction interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeValidatorSlashed", reflect.TypeOf((*MockStakingHooks)(nil).BeforeValidatorSlashed), ctx, valAddr, fraction)
+}
+
+// CustomBeforeValidatorSlashed mocks base method.
+func (m *MockStakingHooks) CustomBeforeValidatorSlashed(ctx context.Context, valAddr types.ValAddress, fraction math.LegacyDec, totalSlashedAmt math.Int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CustomBeforeValidatorSlashed", ctx, valAddr, fraction, totalSlashedAmt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CustomBeforeValidatorSlashed indicates an expected call of CustomBeforeValidatorSlashed.
+func (mr *MockStakingHooksMockRecorder) CustomBeforeValidatorSlashed(ctx, valAddr, fraction, totalSlashedAmt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CustomBeforeValidatorSlashed", reflect.TypeOf((*MockStakingHooks)(nil).CustomBeforeValidatorSlashed), ctx, valAddr, fraction, totalSlashedAmt)
 }

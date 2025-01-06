@@ -465,7 +465,7 @@ func randInt(n int) int {
 	return unsafe.NewRand().Int() % n
 }
 
-// useful for replaying a error case if we find one
+// useful for replaying an error case if we find one
 func doOp(t *testing.T, st types.CacheKVStore, truth corestore.KVStoreWithBatch, op int, args ...int) {
 	t.Helper()
 	switch op {

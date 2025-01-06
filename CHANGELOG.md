@@ -48,9 +48,12 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recursion limits.
+
 ### Bug Fixes
 
 * (query) [23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
+* (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
 
 ### API Breaking Changes
 

@@ -14,7 +14,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -31,8 +31,8 @@ require (
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1

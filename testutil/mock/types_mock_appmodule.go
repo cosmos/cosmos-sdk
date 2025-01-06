@@ -11,7 +11,6 @@ import (
 
 	appmodule "cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -147,18 +146,6 @@ func (m *MockAppModuleWithAllExtensions) Name() string {
 func (mr *MockAppModuleWithAllExtensionsMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).Name))
-}
-
-// RegisterInvariants mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterInvariants(arg0 types.InvariantRegistry) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterInvariants", arg0)
-}
-
-// RegisterInvariants indicates an expected call of RegisterInvariants.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterInvariants), arg0)
 }
 
 // RegisterServices mocks base method.
@@ -319,18 +306,6 @@ func (m *MockAppModuleWithAllExtensionsABCI) Name() string {
 func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).Name))
-}
-
-// RegisterInvariants mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types.InvariantRegistry) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterInvariants", arg0)
-}
-
-// RegisterInvariants indicates an expected call of RegisterInvariants.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterInvariants), arg0)
 }
 
 // RegisterServices mocks base method.

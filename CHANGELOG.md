@@ -44,6 +44,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
 
+### Deprecated
+
+* (modules) [#22994](https://github.com/cosmos/cosmos-sdk/pull/22994) Deprecate `Invariants` and associated methods.
+
 ## [v0.52.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-rc.1) - 2024-12-18
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.

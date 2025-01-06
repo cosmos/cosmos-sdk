@@ -1,0 +1,25 @@
+commands_restrictions:
+  update:
+    conditions:
+      - or:
+          - sender-permission >= reader
+          - sender = {{author}}
+  rebase:
+    conditions:
+      - or:
+          - sender-permission >= reader
+          - sender = {{author}}
+  squash:
+    conditions:
+      - or:
+          - sender-permission >= reader
+          - sender = {{author}}
+  backport:
+    conditions:
+      - sender-permission >= reader
+  unqueue:
+    conditions:
+      - ""
+      - sender-permission >= reader
+queue_rules:
+  - name: "100"

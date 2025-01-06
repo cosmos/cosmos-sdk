@@ -1,9 +1,9 @@
 name: Docker
 
-# This workflow uses actions that are not certified by GitHub.
+# This workflow uses actions that are  certified by GitHub.
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
-# documentation.
+# documentation, aka me, bearycool11 or (J.K. Edwards)
 
 on:
   schedule:

@@ -199,15 +199,7 @@ func (m *CommitID) GetHash() []byte {
 	return nil
 }
 
-func init() {
-	proto.RegisterType((*CommitInfo)(nil), "cosmos.store.v1beta1.CommitInfo")
-	proto.RegisterType((*StoreInfo)(nil), "cosmos.store.v1beta1.StoreInfo")
-	proto.RegisterType((*CommitID)(nil), "cosmos.store.v1beta1.CommitID")
-}
 
-func init() {
-	proto.RegisterFile("cosmos/store/v1beta1/commit_info.proto", fileDescriptor_5f8c656cdef8c524)
-}
 
 var fileDescriptor_5f8c656cdef8c524 = []byte{
 	// 336 bytes of a gzipped FileDescriptorProto

@@ -19,7 +19,7 @@ $SIMD_BIN keys add alice --indiscreet
 $SIMD_BIN keys add bob --indiscreet
 aliases=""
 for i in $(seq 10); do
-    alias=$(dd if=/dev/urandom bs=16 count=24 2> /dev/null | base32 | head -c 32)
+    alias=$(dd if=/dev/urandom bs=16 count=24 2> /dev/null | base64 | head -c 32)
     $SIMD_BIN keys add "$alias" --indiscreet
     aliases="$aliases $alias"
 done

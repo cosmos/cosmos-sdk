@@ -204,12 +204,6 @@ var (
 		GenType(&slashingtypes.MsgUpdateParams{}, &slashingapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 
 		// staking
-		GenType(&stakingtypes.MsgCreateValidator{}, &stakingapi.MsgCreateValidator{},
-			GenOpts.WithDisallowNil().
-				WithAnyTypes(&ed25519.PubKey{}).
-				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{}),
-		),
-		GenType(&stakingtypes.MsgEditValidator{}, &stakingapi.MsgEditValidator{}, GenOpts.WithDisallowNil()),
 		GenType(&stakingtypes.MsgDelegate{}, &stakingapi.MsgDelegate{}, GenOpts.WithDisallowNil()),
 		GenType(&stakingtypes.MsgUndelegate{}, &stakingapi.MsgUndelegate{}, GenOpts.WithDisallowNil()),
 		GenType(&stakingtypes.MsgBeginRedelegate{}, &stakingapi.MsgBeginRedelegate{}, GenOpts.WithDisallowNil()),

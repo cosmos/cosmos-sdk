@@ -103,7 +103,7 @@ func First(it Iterator, dest proto.Message) (RowID, error) {
 
 // Paginate does pagination with a given Iterator based on the provided
 // PageRequest and unmarshals the results into the dest interface that must be
-// an non-nil pointer to a slice.
+// a non-nil pointer to a slice.
 //
 // If pageRequest is nil, then we will use these default values:
 //   - Offset: 0

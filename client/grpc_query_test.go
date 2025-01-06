@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
 	counterkeeper "github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
@@ -38,7 +37,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	logger := log.NewNopLogger()
 	keys := storetypes.NewKVStoreKeys(countertypes.StoreKey)
-	cms := integration.CreateMultiStore(keys, logger)
+	cms := moduletestutil.CreateMultiStore(keys, logger)
 	s.ctx = sdk.NewContext(cms, true, logger)
 	cfg := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, counter.AppModule{})
 	s.cdc = cfg.Codec

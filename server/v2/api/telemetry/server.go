@@ -21,14 +21,15 @@ var (
 const ServerName = "telemetry"
 
 type Server[T transaction.Tx] struct {
-	logger  log.Logger
-	config  *Config
-	server  *http.Server
-	metrics *Metrics
+	logger     log.Logger
+	config     *Config
+	cfgOptions []CfgOption
+	server     *http.Server
+	metrics    *Metrics
 }
 
 // New creates a new telemetry server.
-func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTelemetry func()) (*Server[T], error) {
+func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTelemetry func(), cfgOptions ...CfgOption) (*Server[T], error) {
 	srv := &Server[T]{}
 	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {
@@ -37,6 +38,7 @@ func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTeleme
 		}
 	}
 	srv.config = serverCfg
+	srv.cfgOptions = cfgOptions
 	srv.logger = logger.With(log.ModuleKey, srv.Name())
 
 	if enableTelemetry == nil {
@@ -66,6 +68,15 @@ func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTeleme
 	return srv, nil
 }
 
+// NewWithConfigOptions creates a new telemetry server with the provided config options.
+// It is *not* a fully functional server (since it has been created without dependencies)
+// The returned server should only be used to get and set configuration.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+	return &Server[T]{
+		cfgOptions: opts,
+	}
+}
+
 // Name returns the server name.
 func (s *Server[T]) Name() string {
 	return ServerName
@@ -73,7 +84,13 @@ func (s *Server[T]) Name() string {
 
 func (s *Server[T]) Config() any {
 	if s.config == nil || s.config.Address == "" {
-		return DefaultConfig()
+		cfg := DefaultConfig()
+		// overwrite the default config with the provided options
+		for _, opt := range s.cfgOptions {
+			opt(cfg)
+		}
+
+		return cfg
 	}
 
 	return s.config

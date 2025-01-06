@@ -31,7 +31,7 @@ prefix-based iteration, including reverse iteration.
 
 Typically, each module has its own dedicated `KVStore` instance, which it can
 get access to via the `sdk.Context` and the use of a pointer-based named key --
-`KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How a exactly a `KVStoreKey`
+`KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How an exactly a `KVStoreKey`
 maps to a `KVStore` will be illustrated below through the `CommitMultiStore`.
 
 Note, a `KVStore` cannot directly commit state. Instead, a `KVStore` can be wrapped
@@ -103,7 +103,7 @@ responsibility of the caller to ensure that concurrent access to the store is
 not performed. 
 
 The main issue with concurrent use is when data is written at the same time as
-it's being iterated over. Doing so will cause a irrecoverable fatal error because
+it's being iterated over. Doing so will cause an irrecoverable fatal error because
 of concurrent reads and writes to an internal map.
 
 Although it's not recommended, you can iterate through values while writing to

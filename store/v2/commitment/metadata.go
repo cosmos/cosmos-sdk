@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
@@ -39,21 +41,21 @@ func (m *MetadataStore) GetLatestVersion() (uint64, error) {
 		return 0, nil
 	}
 
-	version, _, err := encoding.DecodeUvarint(value)
-	if err != nil {
-		return 0, err
+	var latestVersion int64
+
+	if err := gogotypes.StdInt64Unmarshal(&latestVersion, value); err != nil {
+		panic(err)
 	}
 
-	return version, nil
+	return uint64(latestVersion), nil
 }
 
 func (m *MetadataStore) setLatestVersion(version uint64) error {
-	var buf bytes.Buffer
-	buf.Grow(encoding.EncodeUvarintSize(version))
-	if err := encoding.EncodeUvarint(&buf, version); err != nil {
-		return err
+	bz, err := gogotypes.StdInt64Marshal(int64(version)) // convert uint64 to int64 is safe since there will be no overflow or underflow
+	if err != nil {
+		panic(err)
 	}
-	return m.kv.Set([]byte(latestVersionKey), buf.Bytes())
+	return m.kv.Set([]byte(latestVersionKey), bz)
 }
 
 // GetCommitInfo returns the commit info for the given version.

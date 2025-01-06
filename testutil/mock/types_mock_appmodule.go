@@ -148,21 +148,6 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).Name))
 }
 
-<<<<<<< HEAD
-// RegisterInvariants mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterInvariants(arg0 types.InvariantRegistry) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterInvariants", arg0)
-}
-
-// RegisterInvariants indicates an expected call of RegisterInvariants.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterInvariants), arg0)
-}
-
-=======
->>>>>>> 71ddfbddb (refactor: remove invariants (#22994))
 // RegisterServices mocks base method.
 func (m *MockAppModuleWithAllExtensions) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()
@@ -323,21 +308,6 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).Name))
 }
 
-<<<<<<< HEAD
-// RegisterInvariants mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterInvariants(arg0 types.InvariantRegistry) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterInvariants", arg0)
-}
-
-// RegisterInvariants indicates an expected call of RegisterInvariants.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterInvariants), arg0)
-}
-
-=======
->>>>>>> 71ddfbddb (refactor: remove invariants (#22994))
 // RegisterServices mocks base method.
 func (m *MockAppModuleWithAllExtensionsABCI) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()

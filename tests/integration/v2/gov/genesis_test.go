@@ -60,6 +60,10 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal1.Status == v1.StatusDepositPeriod)
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
+	// transfer some tokens to the governance account to simulate more money being there than deposits would require
+	err = s1.BankKeeper.SendCoinsFromAccountToModule(ctx, addrs[0], types.ModuleName, params.MinDeposit)
+	require.NoError(t, err)
+
 	authGenState, err := s1.AuthKeeper.ExportGenesis(ctx)
 	require.NoError(t, err)
 	bankGenState, err := s1.BankKeeper.ExportGenesis(ctx)
@@ -119,7 +123,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	macc := s2.GovKeeper.GetGovernanceAccount(ctx2)
-	assert.DeepEqual(t, sdk.Coins(params.MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	assert.DeepEqual(t, sdk.Coins(params.MinDeposit).MulInt(sdkmath.NewInt(2)), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	err = s2.GovKeeper.EndBlocker(ctx2)
@@ -159,4 +163,68 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	genState, err := gov.ExportGenesis(ctx, suite.GovKeeper)
 	require.NoError(t, err)
 	require.Equal(t, genState, v1.DefaultGenesisState())
+}
+
+func TestImportExportQueues_ErrorInsufficientBalance(t *testing.T) {
+	var err error
+	s1 := createTestSuite(t, integration.Genesis_COMMIT)
+
+	ctx := s1.ctx
+	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
+
+	// Create a proposal and put it into the deposit period
+	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	assert.NilError(t, err)
+	proposalID1 := proposal1.Id
+
+	params, err := s1.GovKeeper.Params.Get(ctx)
+	assert.NilError(t, err)
+	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID1, addrs[0], params.MinDeposit)
+	assert.NilError(t, err)
+	assert.Assert(t, votingStarted)
+
+	proposal1, err = s1.GovKeeper.Proposals.Get(ctx, proposalID1)
+	assert.NilError(t, err)
+	assert.Assert(t, proposal1.Status == v1.StatusVotingPeriod)
+
+	// transfer some tokens from the governance account to the user account to simulate less money being there than deposits would require
+	err = s1.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addrs[0], sdk.Coins(params.MinDeposit).QuoInt(sdkmath.NewInt(2)))
+	require.NoError(t, err)
+
+	authGenState, err := s1.AuthKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
+	bankGenState, err := s1.BankKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
+	stakingGenState, err := s1.StakingKeeper.ExportGenesis(ctx)
+	require.NoError(t, err)
+
+	// export the state and import it into a new app
+	govGenState, err := gov.ExportGenesis(ctx, s1.GovKeeper)
+	require.NoError(t, err)
+	genesisState := s1.app.DefaultGenesis()
+
+	genesisState[authtypes.ModuleName] = s1.cdc.MustMarshalJSON(authGenState)
+	genesisState[banktypes.ModuleName] = s1.cdc.MustMarshalJSON(bankGenState)
+	genesisState[types.ModuleName] = s1.cdc.MustMarshalJSON(govGenState)
+	genesisState[stakingtypes.ModuleName] = s1.cdc.MustMarshalJSON(stakingGenState)
+
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	assert.NilError(t, err)
+
+	s2 := createTestSuite(t, integration.Genesis_SKIP)
+	emptyHash := sha256.Sum256(nil)
+	_, _, err = s2.app.InitGenesis(
+		ctx,
+		&server.BlockRequest[transaction.Tx]{
+			Height:    1,
+			Time:      time.Now(),
+			Hash:      emptyHash[:],
+			ChainId:   "test-chain",
+			AppHash:   emptyHash[:],
+			IsGenesis: true,
+		},
+		stateBytes,
+		integration.NewGenesisTxCodec(s2.txConfigOptions),
+	)
+	require.ErrorContains(t, err, "expected gov module to hold at least")
 }

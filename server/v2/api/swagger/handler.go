@@ -10,12 +10,9 @@ import (
     "github.com/rakyll/statik/fs"
 )
 
-// Handler returns an HTTP handler for Swagger UI
-func Handler() http.Handler {
-    return &swaggerHandler{}
+type swaggerHandler struct {
+    swaggerFS http.FileSystem
 }
-
-type swaggerHandler struct{}
 
 func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     // Set CORS headers
@@ -27,13 +24,6 @@ func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Get the static file system
-    statikFS, err := fs.New()
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-
     // Process the path
     urlPath := strings.TrimPrefix(r.URL.Path, "/swagger")
     if urlPath == "" || urlPath == "/" {
@@ -41,7 +31,7 @@ func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 
     // Open the file
-    file, err := statikFS.Open(urlPath)
+    file, err := h.swaggerFS.Open(urlPath)
     if err != nil {
         http.Error(w, "File not found", http.StatusNotFound)
         return

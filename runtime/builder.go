@@ -55,6 +55,8 @@ func (a *AppBuilder) Build(db corestore.KVStoreWithBatch, traceStore io.Writer, 
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)
 	bApp.MountStores(a.app.storeKeys...)
+	const Identity = "stf"
+	bApp.MountStores(storetypes.NewKVStoreKey(Identity))
 
 	a.app.BaseApp = bApp
 	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())

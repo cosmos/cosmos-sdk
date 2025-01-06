@@ -38,19 +38,6 @@ jobs:
           PATTERNS: |
             **/*.go
             *.go
-            !store/**
-      - name: run linting (short)
-        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
-        run: |
-          make lint
-        env:
-          GIT_DIFF: ${{ env.GIT_DIFF }}
-          LINT_DIFF: 1
-      - uses: technote-space/get-diff-action@v6.1.2
-        if: steps.lint_long.outcome == 'skipped'
-        with:
-          PATTERNS: |
-            store/**
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |

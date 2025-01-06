@@ -3,13 +3,13 @@ module cosmossdk.io/x/accounts/defaults/base
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.0-rc.3 // main
+	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v1.0.0-rc.1 // main
-	cosmossdk.io/core v1.0.0-alpha.6 // main
+	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/x/accounts v0.2.0-rc.1
 	cosmossdk.io/x/bank v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/staking v0.2.0-rc.1 // indirect
-	cosmossdk.io/x/tx v1.0.0-alpha.3
+	cosmossdk.io/x/tx v1.0.0
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
@@ -24,7 +24,7 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
-	cosmossdk.io/math v1.4.0 // indirect
+	cosmossdk.io/math v1.5.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

@@ -3,15 +3,15 @@ module cosmossdk.io/simapp
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.0-rc.3 // main
+	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.10.0-beta.1
-	cosmossdk.io/collections v1.0.0-rc.1 // main
-	cosmossdk.io/core v1.0.0-alpha.6 // main
+	cosmossdk.io/collections v1.0.0 // main
+	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.1.0 // main
 	cosmossdk.io/log v1.5.0
-	cosmossdk.io/math v1.4.0
+	cosmossdk.io/math v1.5.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // main
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
 	cosmossdk.io/tools/confix v0.2.0-rc.1
@@ -34,7 +34,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.2.0-rc.1
 	cosmossdk.io/x/slashing v0.2.0-rc.1
 	cosmossdk.io/x/staking v0.2.0-rc.1
-	cosmossdk.io/x/tx v1.0.0-alpha.3 // main
+	cosmossdk.io/x/tx v1.0.0 // main
 	cosmossdk.io/x/upgrade v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0
@@ -49,12 +49,12 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.0-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.0-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 // indirect
 	cloud.google.com/go v0.115.0 // indirect
 	cloud.google.com/go/auth v0.5.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect

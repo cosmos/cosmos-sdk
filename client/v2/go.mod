@@ -3,11 +3,11 @@ module cosmossdk.io/client/v2
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.0-rc.3 // main
-	cosmossdk.io/core v1.0.0-alpha.6 // main
+	cosmossdk.io/api v0.8.0 // main
+	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/x/bank v0.2.0-rc.1
-	cosmossdk.io/x/tx v1.0.0-alpha.3
+	cosmossdk.io/x/tx v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/spf13/cobra v1.8.1
@@ -37,7 +37,7 @@ require (
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
-	cosmossdk.io/math v1.4.0
+	cosmossdk.io/math v1.5.0
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
 	cosmossdk.io/x/staking v0.2.0-rc.1 // indirect

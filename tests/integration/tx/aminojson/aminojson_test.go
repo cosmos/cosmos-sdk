@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/cosmos-proto/rapidproto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
@@ -16,7 +17,9 @@ import (
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	secp256k1 "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/math"
 	authztypes "cosmossdk.io/x/authz"
 	authzmodule "cosmossdk.io/x/authz/module"
@@ -138,6 +141,51 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 			})
 		})
 	}
+}
+
+// Expect failure, see https://github.com/cosmos/cosmos-sdk/issues/22862 for context.
+func Test_StakingMsgWithDescriptionMetadata_Fails(t *testing.T) {
+	fixture := internal.NewSigningFixture(t, internal.SigningFixtureOptions{}, staking.AppModule{})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	pubKey := &secp256k1.PubKey{Key: []byte("bar")}
+	pubkeyAny, err := anyutil.New(pubKey)
+	require.NoError(t, err)
+
+	createValidatorMsg := &stakingv1beta1.MsgCreateValidator{
+		Description:       &stakingv1beta1.Description{Metadata: &stakingv1beta1.Metadata{ProfilePicUri: "bar"}},
+		Commission:        &stakingv1beta1.CommissionRates{},
+		MinSelfDelegation: "10",
+		Pubkey:            pubkeyAny,
+		Value:             &v1beta1.Coin{Denom: "foo", Amount: "10"},
+	}
+	protoBz, err := proto.Marshal(createValidatorMsg)
+	require.NoError(t, err)
+
+	var createValidatorGogoMsg stakingtypes.MsgCreateValidator
+	err = fixture.UnmarshalGogoProto(protoBz, &createValidatorGogoMsg)
+	require.NoError(t, err)
+
+	legacyAminoJSON := fixture.MarshalLegacyAminoJSON(t, &createValidatorGogoMsg)
+	aminoJSON, err := aj.Marshal(createValidatorMsg)
+	require.NoError(t, err)
+	require.NotEqual(t, string(legacyAminoJSON), string(aminoJSON))
+
+	editValidatorMsg := &stakingv1beta1.MsgEditValidator{
+		Description:       &stakingv1beta1.Description{Metadata: &stakingv1beta1.Metadata{ProfilePicUri: "bar"}},
+		MinSelfDelegation: "10",
+	}
+	protoBz, err = proto.Marshal(editValidatorMsg)
+	require.NoError(t, err)
+
+	var editValidatorGogoMsg stakingtypes.MsgEditValidator
+	err = fixture.UnmarshalGogoProto(protoBz, &editValidatorGogoMsg)
+	require.NoError(t, err)
+
+	legacyAminoJSON = fixture.MarshalLegacyAminoJSON(t, &editValidatorGogoMsg)
+	aminoJSON, err = aj.Marshal(editValidatorMsg)
+	require.NoError(t, err)
+	require.NotEqual(t, string(legacyAminoJSON), string(aminoJSON))
 }
 
 // TestAminoJSON_LegacyParity tests that the Encoder encoder produces the same output as the Encoder encoder.

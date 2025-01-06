@@ -182,6 +182,11 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 	invalidStartingHeightOutput := `{"code":3, "message":"1 error(s) decoding:\n\n* cannot parse 'starting_height' as uint: strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
 	invalidEndingHeightOutput := `{"code":3, "message":"1 error(s) decoding:\n\n* cannot parse 'ending_height' as uint: strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
 
+	if !systest.IsV2() {
+		invalidStartingHeightOutput = `{"code":3, "message":"strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
+		invalidEndingHeightOutput = invalidStartingHeightOutput
+	}
+
 	slashTestCases := []systest.RestTestCase{
 		{
 			Name:    "invalid start height",

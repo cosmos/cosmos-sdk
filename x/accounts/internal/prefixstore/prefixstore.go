@@ -139,15 +139,14 @@ func (pi *prefixIterator) Next() {
 	}
 
 	if pi.iter.Next(); !pi.iter.Valid() || !bytes.HasPrefix(pi.iter.Key(), pi.prefix) {
-		// TODO: shouldn't pi be set to nil instead?
-		pi.valid = false
+		*pi = prefixIterator{}
 	}
 }
 
 // Implements Iterator
 func (pi *prefixIterator) Key() (key []byte) {
-	if !pi.valid {
-		panic("prefixIterator invalid, cannot call Key()")
+	if pi == nil || !pi.valid {
+		panic("prefixIterator invalid or nil, cannot call Key()")
 	}
 
 	key = pi.iter.Key()
@@ -158,8 +157,8 @@ func (pi *prefixIterator) Key() (key []byte) {
 
 // Implements Iterator
 func (pi *prefixIterator) Value() []byte {
-	if !pi.valid {
-		panic("prefixIterator invalid, cannot call Value()")
+	if pi == nil || !pi.valid {
+		panic("prefixIterator invalid or nil, cannot call Value()")
 	}
 
 	return pi.iter.Value()

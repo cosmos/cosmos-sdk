@@ -59,7 +59,7 @@ func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk
 	return sdk.NewContext(app.finalizeBlockState.ms, false, app.logger).WithBlockHeader(header)
 }
 
-// NewContext returns a new sdk.Context with a empty header
+// NewContext returns a new sdk.Context with an empty header
 func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 	return app.NewContextLegacy(isCheckTx, cmtproto.Header{})
 }

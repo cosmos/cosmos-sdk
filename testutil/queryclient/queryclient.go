@@ -16,7 +16,7 @@ import (
 
 var (
 	_ gogogrpc.ClientConn = &QueryHelper{}
-	_ gogogrpc.ClientConn = &QueryHelper{}
+	_ gogogrpc.Server     = &QueryHelper{}
 )
 
 // QueryHelper is a test utility for building a query client from a proto interface registry.

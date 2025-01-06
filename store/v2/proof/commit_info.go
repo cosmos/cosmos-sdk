@@ -7,7 +7,6 @@ import (
 )
 
 func (si StoreInfo) GetHash() []byte {
-	fmt.Println("si.CommitId.Hash", si.CommitId.Hash)
 	return si.CommitId.Hash
 }
 

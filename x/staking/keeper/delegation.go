@@ -860,7 +860,7 @@ func (k Keeper) getBeginInfo(
 	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	unbondingTime, err2 := k.UnbondingTime(ctx)
 	if err2 != nil {
-		return completionTime, height, false, err
+		return completionTime, height, false, errors.Join(err, err2)
 	}
 
 	// TODO: When would the validator not be found?

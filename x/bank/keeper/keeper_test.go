@@ -1387,7 +1387,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 		},
 	}
 
-	events := suite.env.MemEventsService().GetEvents(suite.ctx)
+	events := suite.env.EventService().GetEvents(suite.ctx)
 	// events are shifted due to the funding account events
 	require.Equal(8, len(events))
 	require.Equal(event1.Type, events[7].Type)
@@ -1432,7 +1432,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
 	require.Error(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
-	events := suite.env.MemEventsService().GetEvents(suite.ctx)
+	events := suite.env.EventService().GetEvents(suite.ctx)
 	require.Equal(0, len(events))
 
 	// Set addr's coins but not accAddrs[1]'s coins
@@ -1442,7 +1442,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
-	events = suite.env.MemEventsService().GetEvents(suite.ctx)
+	events = suite.env.EventService().GetEvents(suite.ctx)
 	require.Equal(10, len(events)) // 10 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	// Set addr's coins and accAddrs[1]'s coins
@@ -1457,7 +1457,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
-	events = suite.env.MemEventsService().GetEvents(suite.ctx)
+	events = suite.env.EventService().GetEvents(suite.ctx)
 	require.Equal(25, len(events)) // 25 due to account funding + coin_spent + coin_recv events
 
 	event1 := coreevent.Event{
@@ -1926,7 +1926,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 
 	balances := make(map[string]sdk.Coins)
 
-	events := suite.env.MemEventsService().GetEvents(suite.ctx)
+	events := suite.env.EventService().GetEvents(suite.ctx)
 
 	for _, e := range events {
 		attributes, err := e.Attributes()

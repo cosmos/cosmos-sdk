@@ -6,11 +6,11 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
-var _ transaction.Service = &MemTransactionService{}
+var _ transaction.Service = &TestTransactionService{}
 
-type MemTransactionService struct{}
+type TestTransactionService struct{}
 
-func (m MemTransactionService) ExecMode(ctx context.Context) transaction.ExecMode {
+func (m TestTransactionService) ExecMode(ctx context.Context) transaction.ExecMode {
 	dummy := unwrap(ctx)
 
 	return dummy.execMode

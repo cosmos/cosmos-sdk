@@ -6,10 +6,10 @@ import (
 	"cosmossdk.io/core/header"
 )
 
-var _ header.Service = &MemHeaderService{}
+var _ header.Service = &TestHeaderService{}
 
-type MemHeaderService struct{}
+type TestHeaderService struct{}
 
-func (e MemHeaderService) HeaderInfo(ctx context.Context) header.Info {
+func (e TestHeaderService) HeaderInfo(ctx context.Context) header.Info {
 	return unwrap(ctx).header
 }

@@ -20,31 +20,31 @@ type TestEnvironmentConfig struct {
 type TestEnvironment struct {
 	appmodulev2.Environment
 
-	memEventsService MemEventsService
-	memHeaderService MemHeaderService
+	testEventService  TestEventService
+	testHeaderService TestHeaderService
 }
 
 func NewTestEnvironment(cfg TestEnvironmentConfig) (TestContext, TestEnvironment) {
 	ctx := Context()
 
-	memEventService := EventsService(ctx, cfg.ModuleName)
-	memHeaderService := MemHeaderService{}
+	testEventService := NewTestEventService(ctx, cfg.ModuleName)
+	testHeaderService := TestHeaderService{}
 
 	env := TestEnvironment{
 		Environment: appmodulev2.Environment{
 			Logger:             cfg.Logger,
 			BranchService:      nil,
-			EventService:       memEventService,
-			GasService:         MemGasService{},
-			HeaderService:      memHeaderService,
+			EventService:       testEventService,
+			GasService:         TestGasService{},
+			HeaderService:      testHeaderService,
 			QueryRouterService: cfg.QueryRouter,
 			MsgRouterService:   cfg.MsgRouter,
-			TransactionService: MemTransactionService{},
+			TransactionService: TestTransactionService{},
 			KVStoreService:     KVStoreService(ctx, cfg.ModuleName),
 			MemStoreService:    nil,
 		},
-		memEventsService: memEventService,
-		memHeaderService: memHeaderService,
+		testEventService:  testEventService,
+		testHeaderService: testHeaderService,
 	}
 
 	// set internal context to point to environment
@@ -52,14 +52,14 @@ func NewTestEnvironment(cfg TestEnvironmentConfig) (TestContext, TestEnvironment
 	return ctx, env
 }
 
-func (env TestEnvironment) MemEventsService() MemEventsService {
-	return env.memEventsService
+func (env TestEnvironment) EventService() TestEventService {
+	return env.testEventService
 }
 
 func (env TestEnvironment) KVStoreService() store.KVStoreService {
 	return env.Environment.KVStoreService
 }
 
-func (env TestEnvironment) HeaderService() MemHeaderService {
-	return env.memHeaderService
+func (env TestEnvironment) HeaderService() TestHeaderService {
+	return env.testHeaderService
 }

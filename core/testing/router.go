@@ -31,7 +31,6 @@ type ReflectionRouterBuilder struct {
 }
 
 func (b *ReflectionRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.HandlerFunc) error {
-	// panic on override
 	if _, ok := b.handlers[msgType]; ok {
 		return fmt.Errorf("handler already registered: %s", msgType)
 	}

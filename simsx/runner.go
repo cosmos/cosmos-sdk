@@ -111,6 +111,27 @@ func RunWithSeeds[T SimulationApp](
 	fuzzSeed []byte,
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
+	RunWithSeedsAndRandAcc(t, appFactory, setupStateFactory, seeds, fuzzSeed, simtypes.RandomAccounts, postRunActions...)
+}
+
+// RunWithSeedsAndRandAcc calls RunWithSeeds with randAccFn
+func RunWithSeedsAndRandAcc[T SimulationApp](
+	t *testing.T,
+	appFactory func(
+		logger log.Logger,
+		db corestore.KVStoreWithBatch,
+		traceStore io.Writer,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp),
+	) T,
+	setupStateFactory func(app T) SimStateFactory,
+	seeds []int64,
+	fuzzSeed []byte,
+	randAccFn simtypes.RandomAccountFn,
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+
+) {
 	t.Helper()
 	cfg := cli.NewConfigFromFlags()
 	cfg.ChainID = SimAppChainID
@@ -138,6 +159,20 @@ func RunWithSeed[T SimulationApp](
 	fuzzSeed []byte,
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
+	RunWithSeedAndRandAcc(tb, cfg, appFactory, setupStateFactory, seed, fuzzSeed, simtypes.RandomAccounts, postRunActions...)
+}
+
+// RunWithSeedAndRandAcc calls RunWithSeed with randAccFn
+func RunWithSeedAndRandAcc[T SimulationApp](
+	tb testing.TB,
+	cfg simtypes.Config,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	setupStateFactory func(app T) SimStateFactory,
+	seed int64,
+	fuzzSeed []byte,
+	randAccFn simtypes.RandomAccountFn,
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+) {
 	tb.Helper()
 	// setup environment
 	tCfg := cfg.With(tb, seed, fuzzSeed)
@@ -153,7 +188,7 @@ func RunWithSeed[T SimulationApp](
 	app := testInstance.App
 	stateFactory := setupStateFactory(app)
 	ops, reporter := prepareWeightedOps(app.SimulationManager(), stateFactory, tCfg, testInstance.App.TxConfig(), runLogger)
-	simParams, accs, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, simtypes.RandomAccounts, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
+	simParams, accs, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, randAccFn, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
 	require.NoError(tb, err)
 	err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 	require.NoError(tb, err)

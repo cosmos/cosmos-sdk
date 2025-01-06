@@ -526,12 +526,20 @@ func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abc
 	if strings.HasPrefix(req.Path, "/cosmos.tx.v1beta1.Service") {
 		rpcClient, _ := client.NewClientFromNode(c.cfg.AppTomlConfig.Address)
 
+		txConfig := authtx.NewTxConfig(
+			c.appCodecs.AppCodec,
+			c.appCodecs.AppCodec.InterfaceRegistry().SigningContext().AddressCodec(),
+			c.appCodecs.AppCodec.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
+			authtx.DefaultSignModes,
+		)
+
 		// init simple client context
 		clientCtx := client.Context{}.
 			WithLegacyAmino(c.appCodecs.LegacyAmino.(*codec.LegacyAmino)).
 			WithCodec(c.appCodecs.AppCodec).
 			WithNodeURI(c.cfg.AppTomlConfig.Address).
-			WithClient(rpcClient)
+			WithClient(rpcClient).
+			WithTxConfig(txConfig)
 
 		txService := txServer[T]{
 			clientCtx: clientCtx,

@@ -946,7 +946,7 @@ func TestTxDecodeAmino_GRPC(t *testing.T) {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.TxDecodeAminoRequest{}, true, "invalid empty tx bytes"},
-		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "invalid request"},
+		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "unmarshal to legacytx.StdTx failed"},
 		{"valid request with tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: encodedTx}, false, ""},
 	}
 

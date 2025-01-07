@@ -187,7 +187,7 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		}
 
 		// if the version is less than or equal to the v2 migration height, we need to use the v1 state commitment
-		if version <= v2UpgradeHeight {
+		if version <= v2UpgradeHeight && s.v1StateCommitment != nil {
 			cs = s.v1StateCommitment
 		} else { // if the version is greater than the v2 migration height, we need to use the v2 state commitment
 			cs = s.stateCommitment

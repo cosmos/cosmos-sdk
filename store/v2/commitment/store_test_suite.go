@@ -176,7 +176,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 	for i := uint64(1); i <= latestVersion; i++ {
 		commitInfo, _ := targetStore.GetCommitInfo(i)
 		s.Require().NotNil(commitInfo)
-		s.Require().Equal(uint64(i), commitInfo.Version)
+		s.Require().Equal(i, commitInfo.Version)
 	}
 
 	// rollback to a previous version

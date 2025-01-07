@@ -1,9 +1,9 @@
 package commitment
 
 import (
-	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/stretchr/testify/suite"
 
@@ -134,7 +134,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	for _, storeInfo := range targetCommitInfo.StoreInfos {
 		matched := false
 		for _, latestStoreInfo := range cInfo.StoreInfos {
-			if bytes.Equal(storeInfo.Name, latestStoreInfo.Name) {
+			if strings.EqualFold(storeInfo.Name, latestStoreInfo.Name) {
 				s.Require().Equal(latestStoreInfo.GetHash(), storeInfo.GetHash())
 				matched = true
 			}
@@ -176,7 +176,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 	for i := uint64(1); i <= latestVersion; i++ {
 		commitInfo, _ := targetStore.GetCommitInfo(i)
 		s.Require().NotNil(commitInfo)
-		s.Require().Equal(i, commitInfo.Version)
+		s.Require().Equal(uint64(i), commitInfo.Version)
 	}
 
 	// rollback to a previous version

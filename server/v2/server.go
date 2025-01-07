@@ -101,8 +101,15 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		}()
 	}
 
-	if err := <-resCh; err != nil {
-		return fmt.Errorf("failed to start servers: %w", err)
+	for i := 0; i < len(s.components); i++ {
+		select {
+		case err := <-resCh:
+			if err != nil {
+				return fmt.Errorf("failed to start servers: %w", err)
+			}
+		case <-ctx.Done():
+			return nil
+		}
 	}
 
 	<-ctx.Done()

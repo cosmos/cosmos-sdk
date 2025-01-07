@@ -14,8 +14,8 @@ replace (
 )
 
 require (
-	cosmossdk.io/api v0.8.0-rc.3
-	cosmossdk.io/collections v1.0.0-rc.1
+	cosmossdk.io/api v0.8.0
+	cosmossdk.io/collections v1.0.0
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/errors/v2 v2.0.0
@@ -43,11 +43,11 @@ require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect
-	cosmossdk.io/math v1.4.0 // indirect
+	cosmossdk.io/math v1.5.0 // indirect
 	cosmossdk.io/store v1.10.0-rc.1 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
+	cosmossdk.io/x/tx v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -63,6 +63,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect

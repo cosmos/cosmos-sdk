@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // Execute executes the root command of an application. It handles creating a
@@ -30,7 +29,7 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, "plain", "The logging format (json|plain)")
 	rootCmd.PersistentFlags().Bool(flags.FlagLogNoColor, false, "Disable colored logs")
 	rootCmd.PersistentFlags().StringP(flags.FlagHome, "", defaultHome, "directory for config and data")
-	rootCmd.PersistentFlags().Bool(server.FlagTrace, false, "print out full stack trace on errors")
+	rootCmd.PersistentFlags().Bool(flags.FlagTrace, false, "print out full stack trace on errors")
 
 	// update the global viper with the root command's configuration
 	viper.SetEnvPrefix(envPrefix)

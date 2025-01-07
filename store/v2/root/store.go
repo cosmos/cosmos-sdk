@@ -178,9 +178,9 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 	}
 
 	var cs store.Committer
-	// if is V2 means that the store is a v2 store, it can be a migrated v1 store or a v2 store
+	// if is V2 means that the store is using iavlv2, it has been migrated from iavlv1 to iavlv2
 	if v2Commitment, isV2 := s.stateCommitment.(*commitment.CommitStore); isV2 {
-		// if the store is a v2 store, we need to check if the version is less than or equal to the v2 migration height
+		// if the commitment structure is  iavlv2 store, we need to check if the version is less than or equal to the v2 migration height
 		v2UpgradeHeight, err := v2Commitment.GetV2MigrationHeight()
 		if err != nil {
 			return store.QueryResult{}, fmt.Errorf("failed to get v2 migration height: %w", err)

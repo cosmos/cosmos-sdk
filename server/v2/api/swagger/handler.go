@@ -50,10 +50,6 @@ func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", ct)
     }
 
-    // Set caching headers
-    w.Header().Set("Cache-Control", "public, max-age=31536000")
-    w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
-
     // Serve the file
     http.ServeContent(w, r, urlPath, time.Now(), file.(io.ReadSeeker))
 }

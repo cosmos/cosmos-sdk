@@ -15,6 +15,7 @@ import (
 	grpcserver "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/grpcgateway"
 	"cosmossdk.io/server/v2/api/rest"
+	swaggerv2 "cosmossdk.io/server/v2/api/swagger"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
@@ -38,8 +39,6 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
-	"cosmossdk.io/client/docs"
-	swaggerv2 "cosmossdk.io/server/v2/api/swagger"
 )
 
 // CommandDependencies is a struct that contains all the dependencies needed to initialize the root command.
@@ -170,9 +169,6 @@ func InitRootCmd[T transaction.Tx](
 	swaggerServer, err := swaggerv2.New[T](
 		logger.With(log.ModuleKey, "swagger"),
 		deps.GlobalConfig,
-		swaggerv2.CfgOption(func(cfg *swaggerv2.Config) {
-			cfg.SwaggerUI = docs.SwaggerUI
-		}),
 	)
 	if err != nil {
 		return nil, err

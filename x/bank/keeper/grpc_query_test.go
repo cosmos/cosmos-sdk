@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	}
 	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, true)
 	testFunc := func() {
-		res, err = queryClient.AllBalances(gocontext.Background(), req)
+		res, err = queryClient.AllBalances(ctx, req)
 	}
 	suite.Require().NotPanics(testFunc, "AllBalances with resolve denom + incomplete metadata")
 	suite.Require().NoError(err)

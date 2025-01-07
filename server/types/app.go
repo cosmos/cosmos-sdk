@@ -15,7 +15,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -42,12 +41,6 @@ type (
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).
 		RegisterTxService(client.Context)
-
-		// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
-		RegisterTendermintService(client.Context)
-
-		// RegisterNodeService registers the node gRPC Query service.
-		RegisterNodeService(client.Context, config.Config)
 
 		// CommitMultiStore return the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore

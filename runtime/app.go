@@ -18,12 +18,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -219,22 +215,6 @@ func (a *App) InitChainer(ctx sdk.Context, req *abci.InitChainRequest) (*abci.In
 // RegisterTxService implements the Application.RegisterTxService method.
 func (a *App) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(a.GRPCQueryRouter(), clientCtx, a.Simulate, a.interfaceRegistry)
-}
-
-// RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (a *App) RegisterTendermintService(clientCtx client.Context) {
-	cmtApp := server.NewCometABCIWrapper(a)
-	cmtservice.RegisterTendermintService(
-		clientCtx,
-		a.GRPCQueryRouter(),
-		a.interfaceRegistry,
-		cmtApp.Query,
-	)
-}
-
-// RegisterNodeService registers the node gRPC service on the app gRPC router.
-func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter(), cfg)
 }
 
 // Configurator returns the app's configurator.

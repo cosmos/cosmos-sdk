@@ -47,7 +47,7 @@ func TestGetStoreProof(t *testing.T) {
 			}
 			commitHash := ci.Hash()
 			// make sure the store infos are sorted
-			require.Equal(t, ci.StoreInfos[0].Name, []byte("key1"))
+			require.Equal(t, ci.StoreInfos[0].Name, "key1")
 			for _, si := range tc.storeInfos {
 				// get the proof
 				_, proof, err := ci.GetStoreProof([]byte(si.Name))

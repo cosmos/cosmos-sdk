@@ -6,12 +6,16 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+
+	corestore "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -40,7 +44,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 				return err
 			}
 
-			db, err := server.OpenDB(config.RootDir, server.GetAppDBBackend(viper))
+			db, err := openDB(config.RootDir, getAppDBBackend(viper))
 			if err != nil {
 				return err
 			}
@@ -67,20 +71,13 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 				return nil
 			}
 
-			traceWriterFile, _ := cmd.Flags().GetString(flagTraceStore)
-			traceWriter, cleanup, err := server.SetupTraceWriter(logger, traceWriterFile) //resleak:notresource
-			if err != nil {
-				return err
-			}
-			defer cleanup()
-
 			height, _ := cmd.Flags().GetInt64(flagHeight)
 			forZeroHeight, _ := cmd.Flags().GetBool(flagForZeroHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(flagJailAllowedAddrs)
 			modulesToExport, _ := cmd.Flags().GetStringSlice(flagModulesToExport)
 			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
-			exported, err := appExporter(logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, viper, modulesToExport)
+			exported, err := appExporter(logger, db, nil, height, forZeroHeight, jailAllowedAddrs, viper, modulesToExport)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %w", err)
 			}
@@ -124,4 +121,29 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 	cmd.Flags().String(flags.FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
 
 	return cmd
+}
+
+// OpenDB opens the application database using the appropriate driver.
+func openDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
+	dataDir := filepath.Join(rootDir, "data")
+	return dbm.NewDB("application", backendType, dataDir)
+}
+
+// GetAppDBBackend gets the backend type to use for the application DBs.
+func getAppDBBackend(opts servertypes.AppOptions) dbm.BackendType {
+	rv := cast.ToString(opts.Get("app-db-backend"))
+	if len(rv) == 0 {
+		rv = cast.ToString(opts.Get("db_backend"))
+	}
+
+	// Cosmos SDK has migrated to cosmos-db which does not support all the backends which tm-db supported
+	if rv == "cleveldb" || rv == "badgerdb" || rv == "boltdb" {
+		panic(fmt.Sprintf("invalid app-db-backend %q, use %q, %q, %q instead", rv, dbm.GoLevelDBBackend, dbm.PebbleDBBackend, dbm.RocksDBBackend))
+	}
+
+	if len(rv) != 0 {
+		return dbm.BackendType(rv)
+	}
+
+	return dbm.GoLevelDBBackend
 }

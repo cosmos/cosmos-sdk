@@ -10,37 +10,37 @@ import (
 
 func TestGetStoreProof(t *testing.T) {
 	tests := []struct {
-		storeInfos []StoreInfo
+		storeInfos []*StoreInfo
 	}{
-		{[]StoreInfo{
-			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
+		{[]*StoreInfo{
+			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]StoreInfo{
-			{[]byte("key2"), CommitID{1, []byte("value2")}, "iavl"},
-			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
+		{[]*StoreInfo{
+			{[]byte("key2"), &CommitID{1, []byte("value2")}, "iavl"},
+			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]StoreInfo{
-			{[]byte("key3"), CommitID{1, []byte("value3")}, "iavl"},
-			{[]byte("key2"), CommitID{1, []byte("value2")}, "iavl"},
-			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
+		{[]*StoreInfo{
+			{[]byte("key3"), &CommitID{1, []byte("value3")}, "iavl"},
+			{[]byte("key2"), &CommitID{1, []byte("value2")}, "iavl"},
+			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]StoreInfo{
-			{[]byte("key2"), CommitID{1, []byte("value2")}, "iavl"},
-			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
-			{[]byte("key3"), CommitID{1, []byte("value3")}, "iavl"},
+		{[]*StoreInfo{
+			{[]byte("key2"), &CommitID{1, []byte("value2")}, "iavl"},
+			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
+			{[]byte("key3"), &CommitID{1, []byte("value3")}, "iavl"},
 		}},
-		{[]StoreInfo{
-			{[]byte("key4"), CommitID{1, []byte("value4")}, "iavl"},
-			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
-			{[]byte("key3"), CommitID{1, []byte("value3")}, "iavl"},
-			{[]byte("key2"), CommitID{1, []byte("value2")}, "iavl"},
+		{[]*StoreInfo{
+			{[]byte("key4"), &CommitID{1, []byte("value4")}, "iavl"},
+			{[]byte("key1"), &CommitID{1, []byte("value1")}, "iavl"},
+			{[]byte("key3"), &CommitID{1, []byte("value3")}, "iavl"},
+			{[]byte("key2"), &CommitID{1, []byte("value2")}, "iavl"},
 		}},
 	}
 
 	for i, tc := range tests {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			// create a commit info
-			ci := CommitInfo{
+			ci := &CommitInfo{
 				Version:    1,
 				Timestamp:  time.Now(),
 				StoreInfos: tc.storeInfos,
@@ -59,7 +59,7 @@ func TestGetStoreProof(t *testing.T) {
 
 				bz, err := ci.Marshal()
 				require.NoError(t, err)
-				var ci2 CommitInfo
+				ci2 := &CommitInfo{}
 				err = ci2.Unmarshal(bz)
 				require.NoError(t, err)
 				require.True(t, ci.Timestamp.Equal(ci2.Timestamp))

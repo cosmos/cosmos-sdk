@@ -48,7 +48,7 @@ func New[T transaction.Tx](
     }
 
     mux := http.NewServeMux()
-    mux.Handle(srv.config.Path, &swaggerHandler{
+    mux.Handle("/swagger", &swaggerHandler{
         swaggerFS: srv.config.SwaggerUI,
     })
 

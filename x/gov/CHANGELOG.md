@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#22832](https://github.com/cosmos/cosmos-sdk/pull/22832) Ensure the governance module has at least as many tokens as are deposited at genesis import.
 * [#20521](https://github.com/cosmos/cosmos-sdk/pull/20521) Legacy proposals can now access the `appmodule.Environment` present in the `context.Context` of the handler. This is useful when migrating to server/v2 and removing the sdk context dependency.
 * [#19741](https://github.com/cosmos/cosmos-sdk/pull/19741) Add `ExpeditedQuorum` parameter specifying a minimum quorum for expedited proposals, that can differ from the regular quorum.
 * [#19352](https://github.com/cosmos/cosmos-sdk/pull/19352) `TallyResult` include vote options counts. Those counts replicates the now deprecated (but not removed) yes, no, abstain and veto count fields.

@@ -22,7 +22,6 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Group](./group/README.md) - On-chain multisig accounts creation and management.
 * [Mint](./mint/README.md) - Creation of new units of staking token.
 * [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).
-* [Params](./params/README.md) - Globally available parameter store.
 * [Protocolpool](./protocolpool/README.md) - Functionalities handling community pool funds.
 * [Slashing](./slashing/README.md) - Validator punishment mechanisms.
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.

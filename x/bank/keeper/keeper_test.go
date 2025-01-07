@@ -41,6 +41,8 @@ const (
 	barDenom            = "bar"
 	ibcPath             = "transfer/channel-0"
 	ibcBaseDenom        = "farboo"
+	incompleteBaseDenom = "incomplete"
+	incompletePath      = "factory/someaddr"
 	metaDataDescription = "IBC Token from %s"
 	initialPower        = int64(100)
 	holder              = "holder"
@@ -83,6 +85,10 @@ func newIbcCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(getIBCDenom(ibcPath, ibcBaseDenom), amt)
 }
 
+func newIncompleteMetadataCoin(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(incompletePath+"/"+incompleteBaseDenom, amt)
+}
+
 func getIBCDenom(path, baseDenom string) string {
 	return fmt.Sprintf("%s/%s", "ibc", hex.EncodeToString(getIBCHash(path, baseDenom)))
 }
@@ -105,6 +111,21 @@ func addIBCMetadata(ctx context.Context, k keeper.BaseKeeper) {
 		// and the bank keeper will only have the IBCHash to get the denom metadata
 		Base:    getIBCDenom(ibcPath, ibcBaseDenom),
 		Display: ibcPath + "/" + ibcBaseDenom,
+	}
+	k.SetDenomMetaData(ctx, metadata)
+}
+
+func addIncompleteMetadata(ctx context.Context, k keeper.BaseKeeper) {
+	metadata := banktypes.Metadata{
+		Description: "Incomplete metadata without display field",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    incompleteBaseDenom,
+				Exponent: 0,
+			},
+		},
+		Base: incompletePath + "/" + incompleteBaseDenom,
+		// Not setting any Display value
 	}
 	k.SetDenomMetaData(ctx, metadata)
 }

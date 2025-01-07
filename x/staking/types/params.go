@@ -27,13 +27,8 @@ const (
 	DefaultMaxEntries uint32 = 7
 )
 
-var (
-	// DefaultMinCommissionRate is set to 0%
-	DefaultMinCommissionRate = math.LegacyZeroDec()
-
-	// DefaultKeyRotationFee is fees used to rotate the ConsPubkey or Operator key
-	DefaultKeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)
-)
+// DefaultMinCommissionRate is set to 0%
+var DefaultMinCommissionRate = math.LegacyZeroDec()
 
 // NewParams creates a new Params instance
 func NewParams(unbondingTime time.Duration,
@@ -60,7 +55,7 @@ func DefaultParams() Params {
 		DefaultMaxEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
-		DefaultKeyRotationFee,
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000), // fees used to rotate the ConsPubkey or Operator key
 	)
 }
 

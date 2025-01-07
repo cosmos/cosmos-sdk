@@ -23,7 +23,7 @@ var (
 		UseProtoNames:  true,
 		UseEnumNumbers: false,
 		// Do not emit unpopulated fields.
-		// It helps the client to be compatible accross SDK versions.
+		// It helps the client to be compatible across SDK versions.
 		// Unknown fields will still be rejected by the SDK (node).
 		// However, the client should stay as compatible as possible.
 		EmitUnpopulated: false,

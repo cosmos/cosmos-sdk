@@ -65,7 +65,9 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		func(key collections.Pair[sdk.AccAddress, string], value math.Int) (sdk.Coin, error) {
 			if req.ResolveDenom {
 				if metadata, ok := k.GetDenomMetaData(ctx, key.K2()); ok {
-					return sdk.NewCoin(metadata.Display, value), nil
+					if err := sdk.ValidateDenom(metadata.Display); err == nil {
+						return sdk.NewCoin(metadata.Display, value), nil
+					}
 				}
 			}
 			return sdk.NewCoin(key.K2(), value), nil

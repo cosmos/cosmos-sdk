@@ -119,11 +119,13 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	suite.Require().NotNil(res)
 	suite.True(res.Balances.IsZero())
 
-	fooCoins := newFooCoin(50)
 	barCoins := newBarCoin(30)
+	incompleteCoin := newIncompleteMetadataCoin(40)
+	fooCoins := newFooCoin(50)
 	ibcCoins := newIbcCoin(20)
 
-	origCoins := sdk.NewCoins(fooCoins, barCoins, ibcCoins)
+	// NewCoins will sort the Coins, so we prepare in alphabetical order to avoid confusion
+	origCoins := sdk.NewCoins(barCoins, incompleteCoin, fooCoins, ibcCoins)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
@@ -133,10 +135,28 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(barCoins.Denom, res.Balances[0].Denom)
 	suite.NotNil(res.Pagination.NextKey)
 
-	suite.T().Log("query second page with nextkey")
+	addIncompleteMetadata(ctx, suite.bankKeeper)
+	suite.T().Log("query second page with nextkey and resolve denom with incomplete metadata")
+	pageReq = &query.PageRequest{
+		Key:        res.Pagination.NextKey,
+		Limit:      1,
+		CountTotal: true,
+	}
+	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, true)
+	testFunc := func() {
+		res, err = queryClient.AllBalances(gocontext.Background(), req)
+	}
+	suite.Require().NotPanics(testFunc, "AllBalances with resolve denom + incomplete metadata")
+	suite.Require().NoError(err)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(incompleteCoin.Denom, res.Balances[0].Denom)
+	suite.NotNil(res.Pagination.NextKey)
+
+	suite.T().Log("query third page with nextkey")
 	pageReq = &query.PageRequest{
 		Key:        res.Pagination.NextKey,
 		Limit:      1,
@@ -145,34 +165,35 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
-	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(fooCoins.Denom, res.Balances[0].Denom)
 	suite.NotNil(res.Pagination.NextKey)
 
-	pageThree := res.Pagination.NextKey
+	pageFour := res.Pagination.NextKey
 
-	suite.T().Log("query third page with nextkey")
+	suite.T().Log("query fourth page with nextkey")
 	pageReq = &query.PageRequest{
-		Key:        pageThree,
+		Key:        pageFour,
 		Limit:      1,
 		CountTotal: true,
 	}
 	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
-	suite.Equal(res.Balances.Len(), 1)
-	suite.Equal(res.Balances[0].Denom, ibcCoins.Denom)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(ibcCoins.Denom, res.Balances[0].Denom)
 
-	suite.T().Log("query third page with nextkey and resolve ibc denom")
+	suite.T().Log("query fourth page with nextkey and resolve ibc denom")
 	pageReq = &query.PageRequest{
-		Key:        pageThree,
+		Key:        pageFour,
 		Limit:      1,
 		CountTotal: true,
 	}
 	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, true)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
-	suite.Equal(res.Balances.Len(), 1)
-	suite.Equal(res.Balances[0].Denom, ibcPath+"/"+ibcBaseDenom)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(ibcPath+"/"+ibcBaseDenom, res.Balances[0].Denom)
 	suite.Nil(res.Pagination.NextKey)
 }
 

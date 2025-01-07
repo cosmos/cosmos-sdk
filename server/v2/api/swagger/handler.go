@@ -21,11 +21,20 @@ func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Process the path
+    // Process and validate the path
     urlPath := strings.TrimPrefix(r.URL.Path, "/swagger")
     if urlPath == "" || urlPath == "/" {
         urlPath = "/index.html"
     }
+
+    // Basic path validation
+    if strings.Contains(urlPath, "..") || strings.Contains(urlPath, "//") {
+        http.Error(w, "Invalid path", http.StatusBadRequest)
+        return
+    }
+
+    // Clean the path
+    urlPath = filepath.Clean(urlPath)
 
     // Open the file
     file, err := h.swaggerFS.Open(urlPath)

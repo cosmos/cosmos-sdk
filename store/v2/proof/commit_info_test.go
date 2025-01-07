@@ -10,30 +10,30 @@ import (
 
 func TestGetStoreProof(t *testing.T) {
 	tests := []struct {
-		storeInfos []StoreInfo
+		storeInfos []*StoreInfo
 	}{
-		{[]StoreInfo{
-			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
+		{[]*StoreInfo{
+			{("key1"), &CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]StoreInfo{
-			{("key2"), CommitID{1, []byte("value2")}, "iavl"},
-			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
+		{[]*StoreInfo{
+			{("key2"), &CommitID{1, []byte("value2")}, "iavl"},
+			{("key1"), &CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]StoreInfo{
-			{("key3"), CommitID{1, []byte("value3")}, "iavl"},
-			{("key2"), CommitID{1, []byte("value2")}, "iavl"},
-			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
+		{[]*StoreInfo{
+			{("key3"), &CommitID{1, []byte("value3")}, "iavl"},
+			{("key2"), &CommitID{1, []byte("value2")}, "iavl"},
+			{("key1"), &CommitID{1, []byte("value1")}, "iavl"},
 		}},
-		{[]StoreInfo{
-			{("key2"), CommitID{1, []byte("value2")}, "iavl"},
-			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
-			{("key3"), CommitID{1, []byte("value3")}, "iavl"},
+		{[]*StoreInfo{
+			{("key2"), &CommitID{1, []byte("value2")}, "iavl"},
+			{("key1"), &CommitID{1, []byte("value1")}, "iavl"},
+			{("key3"), &CommitID{1, []byte("value3")}, "iavl"},
 		}},
-		{[]StoreInfo{
-			{("key4"), CommitID{1, []byte("value4")}, "iavl"},
-			{("key1"), CommitID{1, []byte("value1")}, "iavl"},
-			{("key3"), CommitID{1, []byte("value3")}, "iavl"},
-			{("key2"), CommitID{1, []byte("value2")}, "iavl"},
+		{[]*StoreInfo{
+			{("key4"), &CommitID{1, []byte("value4")}, "iavl"},
+			{("key1"), &CommitID{1, []byte("value1")}, "iavl"},
+			{("key3"), &CommitID{1, []byte("value3")}, "iavl"},
+			{("key2"), &CommitID{1, []byte("value2")}, "iavl"},
 		}},
 	}
 

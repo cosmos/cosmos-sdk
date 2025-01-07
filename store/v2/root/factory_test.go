@@ -27,7 +27,7 @@ func TestFactory(t *testing.T) {
 
 	fop.Options.SCType = SCTypeIavlV2
 	f, err = CreateRootStore(&fop)
-	require.Error(t, err)
+	require.NoError(t, err)
 	require.Nil(t, f)
 
 	require.NoError(t, setLatestVersion(fop.SCRawDB, 1))

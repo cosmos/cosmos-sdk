@@ -29,7 +29,7 @@ func (ci *CommitInfo) Hash() []byte {
 func (ci *CommitInfo) GetStoreCommitID(storeKey []byte) *CommitID {
 	for _, si := range ci.StoreInfos {
 		if strings.EqualFold(si.Name, string(storeKey)) {
-			return &si.CommitId
+			return si.CommitId
 		}
 	}
 	return &CommitID{}

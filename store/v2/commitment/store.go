@@ -189,7 +189,6 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 				})
 			} else {
 				if err := c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion); err != nil {
-					fmt.Println(err, "loadversion err", storeKey)
 					return err
 				}
 			}
@@ -198,7 +197,6 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 				eg.Go(func() error { return c.multiTrees[storeKey].LoadVersion(targetVersion) })
 			} else {
 				if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
-					fmt.Println(err, "loadversion err", storeKey)
 					return err
 				}
 			}
@@ -251,10 +249,8 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 	}
 
 	// convert storeInfos to []proof.StoreInfo
-	sideref := make([]proof.StoreInfo, 0, len(c.multiTrees))
-	for _, si := range storeInfos {
-		sideref = append(sideref, *si)
-	}
+	sideref := make([]*proof.StoreInfo, 0, len(c.multiTrees))
+	sideref = append(sideref, storeInfos...)
 
 	cInfo := &proof.CommitInfo{
 		Version:    int64(version),
@@ -280,7 +276,7 @@ func (c *CommitStore) commit(tree Tree, si *proof.StoreInfo, expected uint64) er
 	if v != expected {
 		return fmt.Errorf("commit version %d does not match the target version %d", v, expected)
 	}
-	si.CommitId = proof.CommitID{
+	si.CommitId = &proof.CommitID{
 		Version: int64(v),
 		Hash:    h,
 	}
@@ -595,7 +591,7 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 		return ci, nil
 	}
 	// otherwise built the commit info from the trees
-	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
+	storeInfos := make([]*proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
 		if internal.IsMemoryStoreKey(storeKey) {
 			continue
@@ -604,9 +600,9 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 		if v != version {
 			return nil, fmt.Errorf("tree version %d does not match the target version %d", v, version)
 		}
-		storeInfos = append(storeInfos, proof.StoreInfo{
+		storeInfos = append(storeInfos, &proof.StoreInfo{
 			Name: storeKey,
-			CommitId: proof.CommitID{
+			CommitId: &proof.CommitID{
 				Version: int64(v),
 				Hash:    tree.Hash(),
 			},

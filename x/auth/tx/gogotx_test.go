@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestNewWrapperFromDecodedTx(t *testing.T) {
+func TestNewWrapperFromDecodedTxAllowsNilFee(t *testing.T) {
 	addrCodec := addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
 	cdc := codec.NewProtoCodec(codectestutil.CodecOptions{}.NewInterfaceRegistry())
 	_, err := newWrapperFromDecodedTx(addrCodec, cdc, &decode.DecodedTx{

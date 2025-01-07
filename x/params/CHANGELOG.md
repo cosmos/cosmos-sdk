@@ -25,14 +25,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<<<<<<< HEAD:x/params/CHANGELOG.md
 ## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/params/v0.2.0-rc.1) - 2024-12-18
-=======
-### API Breaking
-
-* [#23157](https://github.com/cosmos/cosmos-sdk/pull/23157) Remove support for RocksDB.
-
-## [v2.0.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store/v2.0.0-beta.1)
-
-Initial tag of `cosmossdk.io/store/v2`.
->>>>>>> b0031a103 (docs: remove RocksDB (#23212)):store/v2/CHANGELOG.md

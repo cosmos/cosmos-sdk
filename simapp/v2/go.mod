@@ -3,13 +3,13 @@ module cosmossdk.io/simapp/v2
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.0-rc.3
+	cosmossdk.io/api v0.8.0
 	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.1.0
 	cosmossdk.io/log v1.5.0
-	cosmossdk.io/math v1.4.0
+	cosmossdk.io/math v1.5.0
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2 v2.0.0-beta.1
 	cosmossdk.io/server/v2/cometbft v0.0.0-20241015140036-ee3d320eaa55
@@ -59,7 +59,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.13 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
-	cosmossdk.io/collections v1.0.0-rc.1 // indirect
+	cosmossdk.io/collections v1.0.0 // indirect
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
@@ -67,7 +67,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 // indirect
 	cosmossdk.io/server/v2/stf v1.0.0-beta.1 // indirect
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
-	cosmossdk.io/x/tx v1.0.0-alpha.3 // indirect
+	cosmossdk.io/x/tx v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

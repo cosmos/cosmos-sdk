@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 var (
@@ -37,6 +38,7 @@ func New[T transaction.Tx](
 	logger log.Logger,
 	config server.ConfigMap,
 	ir jsonpb.AnyResolver,
+	appManager appmanager.AppManager[T],
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
@@ -71,11 +73,19 @@ func New[T transaction.Tx](
 		}
 	}
 
-	// TODO: register the gRPC-Gateway routes
-
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
+	mux := http.NewServeMux()
+	interceptor, err := newGatewayInterceptor[T](logger, s.GRPCGatewayRouter, appManager)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create grpc-gateway interceptor: %w", err)
+	}
+	mux.Handle("/", interceptor)
 
+	s.server = &http.Server{
+		Addr:    s.config.Address,
+		Handler: mux,
+	}
 	return s, nil
 }
 
@@ -110,14 +120,6 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		return nil
 	}
 
-	mux := http.NewServeMux()
-	mux.Handle("/", s.GRPCGatewayRouter)
-
-	s.server = &http.Server{
-		Addr:    s.config.Address,
-		Handler: mux,
-	}
-
 	s.logger.Info("starting gRPC-Gateway server...", "address", s.config.Address)
 	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("failed to start gRPC-Gateway server: %w", err)
@@ -135,15 +137,15 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 }
 
+// GRPCBlockHeightHeader is the gRPC header for block height.
+const GRPCBlockHeightHeader = "x-cosmos-block-height"
+
 // CustomGRPCHeaderMatcher for mapping request headers to
 // GRPC metadata.
 // HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to
 // gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
 // CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
-	// GRPCBlockHeightHeader is the gRPC header for block height.
-	const GRPCBlockHeightHeader = "x-cosmos-block-height"
-
 	switch strings.ToLower(key) {
 	case GRPCBlockHeightHeader:
 		return GRPCBlockHeightHeader, true

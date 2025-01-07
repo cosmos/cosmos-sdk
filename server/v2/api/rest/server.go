@@ -46,7 +46,10 @@ func New[T transaction.Tx](
 		}
 	}
 	srv.config = serverCfg
-
+	srv.httpServer = &http.Server{
+		Addr:    srv.config.Address,
+		Handler: srv.router,
+	}
 	return srv, nil
 }
 
@@ -67,11 +70,6 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
-	}
-
-	s.httpServer = &http.Server{
-		Addr:    s.config.Address,
-		Handler: s.router,
 	}
 
 	s.logger.Info("starting HTTP server", "address", s.config.Address)

@@ -6,6 +6,7 @@ sidebar_position: 0
 
 Here are some production-grade modules that can be used in Cosmos SDK applications, along with their respective documentation:
 
+* [Accounts](./accounts/README.md) - Tools and infrastructure for creating advanced smart accounts.
 * [Auth](./auth/README.md) - Authentication of accounts and transactions for Cosmos SDK applications.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Bank](./bank/README.md) - Token transfer functionalities.
@@ -18,9 +19,9 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
 * [Genutil](./genutil/README.md) - Genesis utilities for the Cosmos SDK.
 * [Governance](./gov/README.md) - On-chain proposals and voting.
+* [Group](./group/README.md) - On-chain multisig accounts creation and management.
 * [Mint](./mint/README.md) - Creation of new units of staking token.
 * [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).
-* [Params](./params/README.md) - Globally available parameter store.
 * [Protocolpool](./protocolpool/README.md) - Functionalities handling community pool funds.
 * [Slashing](./slashing/README.md) - Validator punishment mechanisms.
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.
@@ -28,7 +29,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.
 * [Validate](./validate/README.md) - Global ante/post handlers and tx validator setup.
 
-To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
+To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/build/building-modules/intro).
 
 ## IBC
 

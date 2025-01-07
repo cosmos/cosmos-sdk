@@ -688,78 +688,78 @@ func TestAuthzGRPCQueries(t *testing.T) {
 
 	grantTestCases := []systest.RestTestCase{
 		{
-			"invalid granter address",
-			fmt.Sprintf(grantURL, "invalid_granter", grantee1Addr, msgSendTypeURL),
-			http.StatusInternalServerError,
-			bech32FailOutput,
+			Name:       "invalid granter address",
+			Url:        fmt.Sprintf(grantURL, "invalid_granter", grantee1Addr, msgSendTypeURL),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     bech32FailOutput,
 		},
 		{
-			"invalid grantee address",
-			fmt.Sprintf(grantURL, granterAddr, "invalid_grantee", msgSendTypeURL),
-			http.StatusInternalServerError,
-			bech32FailOutput,
+			Name:       "invalid grantee address",
+			Url:        fmt.Sprintf(grantURL, granterAddr, "invalid_grantee", msgSendTypeURL),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     bech32FailOutput,
 		},
 		{
-			"with empty granter",
-			fmt.Sprintf(grantURL, "", grantee1Addr, msgSendTypeURL),
-			http.StatusInternalServerError,
-			emptyStrOutput,
+			Name:       "with empty granter",
+			Url:        fmt.Sprintf(grantURL, "", grantee1Addr, msgSendTypeURL),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     emptyStrOutput,
 		},
 		{
-			"with empty grantee",
-			fmt.Sprintf(grantURL, granterAddr, "", msgSendTypeURL),
-			http.StatusInternalServerError,
-			emptyStrOutput,
+			Name:       "with empty grantee",
+			Url:        fmt.Sprintf(grantURL, granterAddr, "", msgSendTypeURL),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     emptyStrOutput,
 		},
 		{
-			"invalid msg-type",
-			fmt.Sprintf(grantURL, granterAddr, grantee1Addr, "invalidMsg"),
-			http.StatusInternalServerError,
-			invalidMsgTypeOutput,
+			Name:    "invalid msg-type",
+			Url:     fmt.Sprintf(grantURL, granterAddr, grantee1Addr, "invalidMsg"),
+			ExpCode: http.StatusInternalServerError,
+			ExpOut:  invalidMsgTypeOutput,
 		},
 		{
-			"valid grant query",
-			fmt.Sprintf(grantURL, granterAddr, grantee1Addr, msgSendTypeURL),
-			http.StatusOK,
-			expGrantOutput,
+			Name:    "valid grant query",
+			Url:     fmt.Sprintf(grantURL, granterAddr, grantee1Addr, msgSendTypeURL),
+			ExpCode: http.StatusOK,
+			ExpOut:  expGrantOutput,
 		},
 	}
 
-	systest.RunRestQueries(t, grantTestCases...)
+	systest.RunRestQueriesIgnoreNumbers(t, grantTestCases...)
 
 	// test query grants grpc endpoint
 	grantsURL := baseurl + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 
 	grantsTestCases := []systest.RestTestCase{
 		{
-			"expect single grant",
-			fmt.Sprintf(grantsURL, granterAddr, grantee1Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"1"}}`, grant1),
+			Name:    "expect single grant",
+			Url:     fmt.Sprintf(grantsURL, granterAddr, grantee1Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"1"}}`, grant1),
 		},
 		{
-			"expect two grants",
-			fmt.Sprintf(grantsURL, granterAddr, grantee2Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"2"}}`, grant2, grant3),
+			Name:    "expect two grants",
+			Url:     fmt.Sprintf(grantsURL, granterAddr, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"2"}}`, grant2, grant3),
 		},
 		{
-			"expect single grant with pagination",
-			fmt.Sprintf(grantsURL+"&pagination.limit=1", granterAddr, grantee2Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":"L2Nvc21vcy5nb3YudjEuTXNnVm90ZQ==","total":"0"}}`, grant2),
+			Name:    "expect single grant with pagination",
+			Url:     fmt.Sprintf(grantsURL+"&pagination.limit=1", granterAddr, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":"L2Nvc21vcy5nb3YudjEuTXNnVm90ZQ==","total":"0"}}`, grant2),
 		},
 		{
-			"expect single grant with pagination limit and offset",
-			fmt.Sprintf(grantsURL+"&pagination.limit=1&pagination.offset=1", granterAddr, grantee2Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant3),
+			Name:    "expect single grant with pagination limit and offset",
+			Url:     fmt.Sprintf(grantsURL+"&pagination.limit=1&pagination.offset=1", granterAddr, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant3),
 		},
 		{
-			"expect two grants with pagination",
-			fmt.Sprintf(grantsURL+"&pagination.limit=2", granterAddr, grantee2Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant2, grant3),
+			Name:    "expect two grants with pagination",
+			Url:     fmt.Sprintf(grantsURL+"&pagination.limit=2", granterAddr, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant2, grant3),
 		},
 	}
 
@@ -774,26 +774,26 @@ func TestAuthzGRPCQueries(t *testing.T) {
 
 	granterTestCases := []systest.RestTestCase{
 		{
-			"invalid granter account address",
-			fmt.Sprintf(grantsByGranterURL, "invalid address"),
-			http.StatusInternalServerError,
-			decodingFailedOutput,
+			Name:       "invalid granter account address",
+			Url:        fmt.Sprintf(grantsByGranterURL, "invalid address"),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     decodingFailedOutput,
 		},
 		{
-			"no authorizations found from granter",
-			fmt.Sprintf(grantsByGranterURL, grantee2Addr),
-			http.StatusOK,
-			noAuthorizationsOutput,
+			Name:    "no authorizations found from granter",
+			Url:     fmt.Sprintf(grantsByGranterURL, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  noAuthorizationsOutput,
 		},
 		{
-			"valid granter query",
-			fmt.Sprintf(grantsByGranterURL, grantee1Addr),
-			http.StatusOK,
-			granterQueryOutput,
+			Name:    "valid granter query",
+			Url:     fmt.Sprintf(grantsByGranterURL, grantee1Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  granterQueryOutput,
 		},
 	}
 
-	systest.RunRestQueries(t, granterTestCases...)
+	systest.RunRestQueriesIgnoreNumbers(t, granterTestCases...)
 
 	// test query grants by grantee grpc endpoint
 	grantsByGranteeURL := baseurl + "/cosmos/authz/v1beta1/grants/grantee/%s"
@@ -801,26 +801,26 @@ func TestAuthzGRPCQueries(t *testing.T) {
 
 	granteeTestCases := []systest.RestTestCase{
 		{
-			"invalid grantee account address",
-			fmt.Sprintf(grantsByGranteeURL, "invalid address"),
-			http.StatusInternalServerError,
-			decodingFailedOutput,
+			Name:       "invalid grantee account address",
+			Url:        fmt.Sprintf(grantsByGranteeURL, "invalid address"),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     decodingFailedOutput,
 		},
 		{
-			"no authorizations found from grantee",
-			fmt.Sprintf(grantsByGranteeURL, granterAddr),
-			http.StatusOK,
-			noAuthorizationsOutput,
+			Name:    "no authorizations found from grantee",
+			Url:     fmt.Sprintf(grantsByGranteeURL, granterAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  noAuthorizationsOutput,
 		},
 		{
-			"valid grantee query",
-			fmt.Sprintf(grantsByGranteeURL, grantee1Addr),
-			http.StatusOK,
-			grantee1GrantsOutput,
+			Name:    "valid grantee query",
+			Url:     fmt.Sprintf(grantsByGranteeURL, grantee1Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  grantee1GrantsOutput,
 		},
 	}
 
-	systest.RunRestQueries(t, granteeTestCases...)
+	systest.RunRestQueriesIgnoreNumbers(t, granteeTestCases...)
 }
 
 func setupChain(t *testing.T) (*systest.CLIWrapper, string, string) {

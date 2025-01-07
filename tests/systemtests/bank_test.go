@@ -265,7 +265,7 @@ func TestBankGRPCQueries(t *testing.T) {
 			map[string]string{
 				blockHeightHeader: fmt.Sprintf("%d", blockHeight+5),
 			},
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			"invalid height",
 		},
 		{
@@ -280,7 +280,7 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	for _, tc := range supplyTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp := systest.GetRequestWithHeaders(t, tc.url, tc.headers, tc.expHttpCode)
+			resp := systest.GetRequestWithHeadersGreaterThanOrEqual(t, tc.url, tc.headers, tc.expHttpCode)
 			require.Contains(t, string(resp), tc.expOut)
 		})
 	}
@@ -289,22 +289,22 @@ func TestBankGRPCQueries(t *testing.T) {
 	denomMetadataUrl := baseurl + "/cosmos/bank/v1beta1/denoms_metadata"
 	dmTestCases := []systest.RestTestCase{
 		{
-			"test GRPC client metadata",
-			denomMetadataUrl,
-			http.StatusOK,
-			fmt.Sprintf(`{"metadatas":%s,"pagination":{"next_key":null,"total":"2"}}`, bankDenomMetadata),
+			Name:    "test GRPC client metadata",
+			Url:     denomMetadataUrl,
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"metadatas":%s,"pagination":{"next_key":null,"total":"2"}}`, bankDenomMetadata),
 		},
 		{
-			"test GRPC client metadata of a specific denom",
-			denomMetadataUrl + "/uatom",
-			http.StatusOK,
-			fmt.Sprintf(`{"metadata":%s}`, atomDenomMetadata),
+			Name:    "test GRPC client metadata of a specific denom",
+			Url:     denomMetadataUrl + "/uatom",
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"metadata":%s}`, atomDenomMetadata),
 		},
 		{
-			"test GRPC client metadata of a bogus denom",
-			denomMetadataUrl + "/foobar",
-			http.StatusNotFound,
-			`{"code":5, "message":"client metadata for denom foobar", "details":[]}`,
+			Name:    "test GRPC client metadata of a bogus denom",
+			Url:     denomMetadataUrl + "/foobar",
+			ExpCode: http.StatusNotFound,
+			ExpOut:  `{"code":5, "message":"client metadata for denom foobar", "details":[]}`,
 		},
 	}
 
@@ -316,22 +316,22 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	balanceTestCases := []systest.RestTestCase{
 		{
-			"test GRPC total account balance",
-			balanceUrl + account1Addr,
-			http.StatusOK,
-			allBalancesOutput,
+			Name:    "test GRPC total account balance",
+			Url:     balanceUrl + account1Addr,
+			ExpCode: http.StatusOK,
+			ExpOut:  allBalancesOutput,
 		},
 		{
-			"test GRPC account balance of a specific denom",
-			fmt.Sprintf("%s%s/by_denom?denom=%s", balanceUrl, account1Addr, newDenom),
-			http.StatusOK,
-			fmt.Sprintf(`{"balance":%s}`, specificDenomOutput),
+			Name:    "test GRPC account balance of a specific denom",
+			Url:     fmt.Sprintf("%s%s/by_denom?denom=%s", balanceUrl, account1Addr, newDenom),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"balance":%s}`, specificDenomOutput),
 		},
 		{
-			"test GRPC account balance of a bogus denom",
-			fmt.Sprintf("%s%s/by_denom?denom=foobar", balanceUrl, account1Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"balance":%s}`, bogusDenomOutput),
+			Name:    "test GRPC account balance of a bogus denom",
+			Url:     fmt.Sprintf("%s%s/by_denom?denom=foobar", balanceUrl, account1Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"balance":%s}`, bogusDenomOutput),
 		},
 	}
 

@@ -25,6 +25,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.2.0-rc.1) - 2024-12-18
+
 ### Improvements
 
 * [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) Follow latest `cosmossdk.io/core` `PreBlock` simplification.

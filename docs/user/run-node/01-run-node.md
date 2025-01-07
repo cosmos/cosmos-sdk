@@ -132,7 +132,7 @@ When running a node (not a validator!) and not wanting to run the application me
 
 ```toml
 [mempool]
-# Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
+# Setting max-txs to 0 will allow for an unbounded amount of transactions in the mempool.
 # Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool.
 # Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
 #
@@ -198,7 +198,7 @@ Local state sync work similar to normal state sync except that it works off a lo
 
 1. As mentioned in https://docs.cometbft.com/v0.37/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
 2. Run `<appd snapshot restore <height> <format>` to restore a local snapshot (note: first load it from a file with the *load* command). 
-3. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
+3. Bootstrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
 
 ### Snapshots Commands
 

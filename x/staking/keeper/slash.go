@@ -254,7 +254,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 			continue
 		}
 
-		if entry.IsMature(now) && !entry.OnHold() {
+		if entry.IsMature(now) {
 			// Unbonding delegation no longer eligible for slashing, skip it
 			continue
 		}
@@ -346,7 +346,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 				case entry.CreationHeight < infractionHeight:
 					continue
 				// Unbonding delegation no longer eligible for slashing, skip it
-				case entry.IsMature(now) && !entry.OnHold():
+				case entry.IsMature(now):
 					continue
 				// Slash the unbonding delegation
 				default:

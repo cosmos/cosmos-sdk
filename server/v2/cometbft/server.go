@@ -23,7 +23,9 @@ import (
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 
+	addresscodec "cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -65,13 +67,24 @@ type CometBFTServer[T transaction.Tx] struct {
 	store   types.Store
 }
 
+// AppCodecs contains all codecs that the CometBFT server requires
+// provided by the application. They are extracted in struct to not be API
+// breaking once amino is completely deprecated or new codecs should be added.
+type AppCodecs[T transaction.Tx] struct {
+	TxCodec transaction.Codec[T]
+
+	// The following codecs are only required for the gRPC services
+	AppCodec              codec.Codec
+	LegacyAmino           registry.AminoRegistrar
+	ConsensusAddressCodec addresscodec.Codec
+}
+
 func New[T transaction.Tx](
 	logger log.Logger,
 	appName string,
 	store types.Store,
 	app appmanager.AppManager[T],
-	appCodec codec.Codec,
-	txCodec transaction.Codec[T],
+	appCodecs AppCodecs[T],
 	queryHandlers map[string]appmodulev2.Handler,
 	decoderResolver decoding.DecoderResolver,
 	serverOptions ServerOptions[T],
@@ -82,7 +95,7 @@ func New[T transaction.Tx](
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
 		app:           app,
-		txCodec:       txCodec,
+		txCodec:       appCodecs.TxCodec,
 		store:         store,
 	}
 	srv.logger = logger.With(log.ModuleKey, srv.Name())
@@ -138,9 +151,11 @@ func New[T transaction.Tx](
 	var listener *appdata.Listener
 	if indexerCfg := srv.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
 		indexingTarget, err := indexer.StartIndexing(indexer.IndexingOptions{
-			Config:   indexerCfg,
-			Resolver: decoderResolver,
-			Logger:   logger.With(log.ModuleKey, "indexer"),
+			Config:       indexerCfg,
+			Resolver:     decoderResolver,
+			Logger:       logger.With(log.ModuleKey, "indexer"),
+			SyncSource:   nil, // TODO: Support catch-up syncs
+			AddressCodec: appCodecs.AppCodec.InterfaceRegistry().SigningContext().AddressCodec(),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to start indexing: %w", err)
@@ -170,8 +185,7 @@ func New[T transaction.Tx](
 		cfg:                    srv.config,
 		store:                  store,
 		logger:                 logger,
-		txCodec:                txCodec,
-		appCodec:               appCodec,
+		appCodecs:              appCodecs,
 		listener:               listener,
 		snapshotManager:        snapshotManager,
 		streamingManager:       srv.serverOptions.StreamingManager,
@@ -189,6 +203,7 @@ func New[T transaction.Tx](
 		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
 		addrPeerFilter:         srv.serverOptions.AddrPeerFilter,
 		idPeerFilter:           srv.serverOptions.IdPeerFilter,
+		cfgMap:                 cfg,
 	}
 
 	c.optimisticExec = oe.NewOptimisticExecution(

@@ -45,3 +45,14 @@ func NewMetrics(labels [][]string) (Metrics, error) {
 func (m Metrics) MeasureSince(start time.Time, keys ...string) {
 	metrics.MeasureSinceWithLabels(keys, start.UTC(), m.Labels)
 }
+
+// NoOpMetrics is a no-op implementation of the StoreMetrics interface
+type NoOpMetrics struct{}
+
+// NewNoOpMetrics returns a new instance of the NoOpMetrics
+func NewNoOpMetrics() NoOpMetrics {
+	return NoOpMetrics{}
+}
+
+// MeasureSince is a no-op implementation of the StoreMetrics interface to avoid time.Now() calls
+func (m NoOpMetrics) MeasureSince(start time.Time, keys ...string) {}

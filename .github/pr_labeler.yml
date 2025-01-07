@@ -14,6 +14,7 @@
   - x/simulation/**/*
   - x/*/simulation/**/*
   - simsx/**/*
+  - tools/benchmark/**/*
 "C:Store":
   - store/**/*
 "C:collections":
@@ -50,8 +51,6 @@
   - x/circuit/**/*
 "C:x/consensus":
   - x/consensus/**/*
-"C:x/crisis":
-  - x/crisis/**/*
 "C:x/distribution":
   - x/distribution/**/*
 "C:x/evidence":
@@ -68,8 +67,6 @@
   - x/mint/**/*
 "C:x/nft":
   - x/nft/**/*
-"C:x/params":
-  - x/params/**/*
 "C:x/protocolpool":
   - x/protocolpool/**/*
 "C:x/slashing":

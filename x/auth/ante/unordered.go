@@ -44,7 +44,7 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
 // chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
 type UnorderedTxDecorator struct {
-	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
+	// maxTimeoutDuration defines the maximum TTL a transaction can define.
 	maxTimeoutDuration time.Duration
 	txManager          *unorderedtx.Manager
 	env                appmodulev2.Environment

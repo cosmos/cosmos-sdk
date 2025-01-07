@@ -3,7 +3,7 @@ module cosmossdk.io/orm
 go 1.23
 
 require (
-	cosmossdk.io/api v0.7.6
+	cosmossdk.io/api v0.8.0
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
@@ -23,6 +23,8 @@ require (
 )
 
 require (
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.6 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

@@ -192,8 +192,8 @@ cloud.google.com/go/webrisk v1.4.0/go.mod h1:Hn8X6Zr+ziE2aNd8SliSDWpEnSS1u4R9+xX
 cloud.google.com/go/webrisk v1.5.0/go.mod h1:iPG6fr52Tv7sGk0H6qUFzmL3HHZev1htXuWDEEsqMTg=
 cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1Vwf+KmJENM0=
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
-cosmossdk.io/api v0.8.0-rc.3 h1:BNVMqBO7jO20fQCLKzAYLI9RPTq9bVn30ncq9vF8SBk=
-cosmossdk.io/api v0.8.0-rc.3/go.mod h1:1hADc5N9rDJ4RTH7z3sp6+PXI+shznzk0Frf0/k3ilE=
+cosmossdk.io/api v0.8.0 h1:E5Xifxu/3mPTLF79si9fyq4rR0wagubeVNmOz5duTUo=
+cosmossdk.io/api v0.8.0/go.mod h1:hgJ83P0ZUu0rS1SZoVM6abk6ADOkiM259BVVlYtAPP0=
 cosmossdk.io/collections v1.0.0-rc.1 h1:Mzv0YKZJ6aloy4oSnMnyl8b6PtM2dTdDlzRR/079TyM=
 cosmossdk.io/collections v1.0.0-rc.1/go.mod h1:nOgrEpyMFOWBy8QmSbq/T6Tgtm2IyOFvxDRWk+DI97k=
 cosmossdk.io/core v1.0.0 h1:e7XBbISOytLBOXMVwpRPixThXqEkeLGlg8no/qpgS8U=

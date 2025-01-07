@@ -1,5 +1,9 @@
-cosmossdk.io/api v0.7.6 h1:PC20PcXy1xYKH2KU4RMurVoFjjKkCgYRbVAD4PdqUuY=
-cosmossdk.io/api v0.7.6/go.mod h1:IcxpYS5fMemZGqyYtErK7OqvdM0C8kdW3dq8Q/XIG38=
+buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1 h1:ETkPUd9encx5SP6yuo0BR7DOnQHDbmU0RMzHsu2dkuQ=
+buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1/go.mod h1:HulBNxlqJNXVcysFv/RxTEWz+khiJg8SOmfgC1ktVTM=
+buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 h1:X62BxjEhtx1/PWJPxg5BGahf1UXeFgM9dFfNpQ6kUPo=
+buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1/go.mod h1:GB5hdNJd6cahKmHcLArJo5wnV9TeZGMSz7ysK4YLvag=
+cosmossdk.io/api v0.8.0 h1:E5Xifxu/3mPTLF79si9fyq4rR0wagubeVNmOz5duTUo=
+cosmossdk.io/api v0.8.0/go.mod h1:hgJ83P0ZUu0rS1SZoVM6abk6ADOkiM259BVVlYtAPP0=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=
 cosmossdk.io/errors v1.0.1/go.mod h1:MeelVSZThMi4bEakzhhhE/CKqVv3nOJDA25bIqRDu/U=
 cosmossdk.io/math v1.4.0 h1:XbgExXFnXmF/CccPPEto40gOO7FpWu9yWNAZPN3nkNQ=

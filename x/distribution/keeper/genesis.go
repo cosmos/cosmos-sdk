@@ -123,8 +123,8 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 	}
 
 	balances := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
-	if !balances.Equal(moduleHoldingsInt) {
-		return fmt.Errorf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt)
+	if balances.IsAllLT(moduleHoldingsInt) {
+		return fmt.Errorf("distribution module balance is less than module holdings: %s < %s", balances, moduleHoldingsInt)
 	}
 	return nil
 }

@@ -118,15 +118,15 @@ The spendable amount is calculated as:
 `spendableAmount` = `balance` - `notBondedLockedAmount`
 where `notBondedLockedAmount` = `lockedAmount` - `Min(lockedAmount, delegatedLockedAmount)`
 
-As seen in the formula `notBondedLockedAmout` can only be 0 or a positive value when `DelegatedLockedAmount` < `LockedAmount`. Let call `NewDelegatedLockedAmount` is the `delegatedLockedAmount` when applying N slash
+As seen in the formula `notBondedLockedAmount` can only be 0 or a positive value when `DelegatedLockedAmount` < `LockedAmount`. Let call `NewDelegatedLockedAmount` is the `delegatedLockedAmount` when applying N slash
 
 1. Case 1: Originally `DelegatedLockedAmount` > `lockedAmount` but when applying the slash amount the `NewDelegatedLockedAmount` < `lockedAmount` then 
-    * When not applying slash  `notBondedLockedAmout` will be 0 
-    * When apply slash `notBondedLockedAmout` will be `lockedAmount` - `NewDelegatedLockedAmount` =  a positive amount
+    * When not applying slash  `notBondedLockedAmount` will be 0 
+    * When apply slash `notBondedLockedAmount` will be `lockedAmount` - `NewDelegatedLockedAmount` =  a positive amount
 2. Case 2: where originally `DelegatedLockedAmount` < `lockedAmount` when applying the slash amount the `NewDelegatedLockedAmount` < `lockedAmount` then 
     * When not applying slash `lockedAmount` - `DelegatedLockedAmount`
-    * When apply slash `notBondedLockedAmout` will be `lockedAmount` - `NewDelegatedLockedAmount` = `lockedAmount` - `(DelegatedLockedAmount - N)` = `lockedAmount` - `DelegatedLockedAmount` + N 
-3. Case 3:  where originally `DelegatedLockedAmount` > `lockedAmount` when applying the slash amount still the `NewDelegatedLockedAmount` > `lockedAmount` then `notBondedLockedAmout` will be 0 applying slash or not
+    * When apply slash `notBondedLockedAmount` will be `lockedAmount` - `NewDelegatedLockedAmount` = `lockedAmount` - `(DelegatedLockedAmount - N)` = `lockedAmount` - `DelegatedLockedAmount` + N 
+3. Case 3:  where originally `DelegatedLockedAmount` > `lockedAmount` when applying the slash amount still the `NewDelegatedLockedAmount` > `lockedAmount` then `notBondedLockedAmount` will be 0 applying slash or not
 
 In cases 1 and 2, `notBondedLockedAmount` decreases when not applying the slash, resulting in a higher `spendableAmount`.
 

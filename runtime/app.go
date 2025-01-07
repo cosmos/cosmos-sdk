@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
@@ -267,8 +266,6 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 
 	return a.storeKeys[i]
 }
-
-var _ servertypes.Application = &App{}
 
 // hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
 // This API is part of core/appmodule but commented out for dependencies.

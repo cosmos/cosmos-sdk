@@ -1,47 +1,26 @@
 /*
 Package swagger provides Swagger UI support for server/v2.
 
-Example usage:
+Example usage in commands.go:
 
-	import (
-		"cosmossdk.io/client/docs"
-		"cosmossdk.io/core/server"
-		"cosmossdk.io/log"
-		swaggerv2 "cosmossdk.io/server/v2/api/swagger"
-	)
-
-	// Create a logger
-	logger := log.NewLogger()
-
-	// Configure Swagger server
-	swaggerCfg := server.ConfigMap{
-		"swagger": map[string]any{
-			"enable":  true,
-			"address": "localhost:8080",
-			"path":    "/swagger/",
-		},
-	}
-
-	// Create new Swagger server with the default SDK Swagger UI
-	swaggerServer, err := swaggerv2.New[YourTxType](
+	// Create Swagger server
+	swaggerServer, err := swaggerv2.New[T](
 		logger.With(log.ModuleKey, "swagger"),
-		swaggerCfg,
+		deps.GlobalConfig,
 		swaggerv2.CfgOption(func(cfg *swaggerv2.Config) {
-			cfg.SwaggerUI = docs.SwaggerUI // Use the default SDK Swagger UI
+			cfg.SwaggerUI = docs.SwaggerUI
 		}),
 	)
-	if err != nil {
-		// Handle error
-	}
 
-	// Add Swagger server to your application
-	app.AddServer(swaggerServer)
+	// Add server to your application
+	return serverv2.AddCommands[T](
+		// ...other servers...,
+		swaggerServer,
+	)
 
-The server will serve Swagger UI documentation at the configured path (default: /swagger/).
-Users can customize the configuration through the following options:
-  - enable: Enable/disable the Swagger server
-  - address: The address to listen on (default: localhost:8080)
-  - path: The path to serve Swagger UI at (default: /swagger/)
-  - SwaggerUI: The http.FileSystem containing Swagger UI files
+Configuration options:
+  - enable: Enable/disable the Swagger server (default: true)
+  - address: Server address (default: localhost:8080)
+  - path: UI endpoint path (default: /swagger/)
 */
 package swagger 

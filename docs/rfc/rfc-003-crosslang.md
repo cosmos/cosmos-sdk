@@ -162,7 +162,7 @@ These bytes can be used by the **state handler** to determine what type of state
 
 A **state token** is an opaque array of 32-bytes that is passed in each message request.
 The hypervisor has no knowledge of what this token represents or how it is created,
-but it is expected that modules that mange state do understand this token and use it to manage all state changes
+but it is expected that modules that manage state do understand this token and use it to manage all state changes
 in consistent transactions.
 All side effects regarding state, events, etc. are expected to coordinate around the usage of this token.
 It is possible that state modules expose methods for creating new **state tokens**

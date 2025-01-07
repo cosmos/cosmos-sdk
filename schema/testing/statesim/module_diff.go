@@ -40,7 +40,7 @@ func DiffModuleStates(expected, actual view.ModuleState) string {
 			continue
 		}
 		if actualColl == nil {
-			res += fmt.Sprintf("Object Collection %s: actuall collection NOT FOUND\n", objTypeName)
+			res += fmt.Sprintf("Object Collection %s: actual collection NOT FOUND\n", objTypeName)
 			continue
 		}
 

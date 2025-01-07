@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	transaction "cosmossdk.io/core/transaction"
+	"cosmossdk.io/core/transaction"
 )
 
 type (

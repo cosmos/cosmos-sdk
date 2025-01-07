@@ -32,7 +32,7 @@ func NewEventManager(ctx context.Context) event.Manager {
 	return &Events{sdkCtx.EventManager()}
 }
 
-// Emit emits an typed event that is defined in the protobuf file.
+// Emit emits a typed event that is defined in the protobuf file.
 // In the future these events will be added to consensus.
 func (e Events) Emit(event gogoproto.Message) error {
 	return e.EventManagerI.EmitTypedEvent(event)

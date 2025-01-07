@@ -15,7 +15,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	corectx "cosmossdk.io/core/context"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/x/accounts"
+	_ "cosmossdk.io/x/bank"
+	_ "cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,15 +29,16 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
-	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	genutilhelpers "github.com/cosmos/cosmos-sdk/testutil/x/genutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	_ "github.com/cosmos/cosmos-sdk/x/validate"
 )
 
 var testMbm = module.NewManager(
@@ -211,13 +216,24 @@ func TestEmptyState(t *testing.T) {
 
 func TestStartStandAlone(t *testing.T) {
 	home := t.TempDir()
-	logger := log.NewNopLogger()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	err := genutilhelpers.ExecInitCmd(testMbm, home, marshaler)
 	require.NoError(t, err)
 
-	app, err := mock.NewApp(home, logger)
+	app, err := simtestutil.SetupWithConfiguration(
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AccountsModule(),
+				configurator.AuthModule(),
+				configurator.StakingModule(),
+				configurator.TxModule(),
+				configurator.ValidateModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		), simtestutil.DefaultStartUpConfig())
 	require.NoError(t, err)
 
 	svrAddr, _, closeFn, err := freeTCPAddr()
@@ -228,7 +244,6 @@ func TestStartStandAlone(t *testing.T) {
 	svr, err := abci_server.NewServer(svrAddr, "socket", cmtApp)
 	require.NoError(t, err, "error creating listener")
 
-	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "abci-server")})
 	err = svr.Start()
 	require.NoError(t, err)
 

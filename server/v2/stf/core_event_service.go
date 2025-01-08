@@ -36,7 +36,7 @@ type eventManager struct {
 	executionContext *executionContext
 }
 
-// Emit emits an typed event that is defined in the protobuf file.
+// Emit emits a typed event that is defined in the protobuf file.
 // In the future these events will be added to consensus.
 func (em *eventManager) Emit(tev transaction.Msg) error {
 	ev := event.Event{

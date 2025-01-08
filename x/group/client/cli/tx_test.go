@@ -23,7 +23,6 @@ import (
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -221,8 +220,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-			cmd.SetContext(ctx)
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
 			cmd.SetArgs(tc.args)
 			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
 
@@ -335,9 +333,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
-			cmd.SetContext(ctx)
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
 			cmd.SetArgs(tc.args)
 
 			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
@@ -457,9 +453,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
-			cmd.SetContext(ctx)
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
 			cmd.SetArgs(tc.args)
 
 			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
@@ -592,9 +586,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
-			cmd.SetContext(ctx)
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
 			cmd.SetArgs(tc.args)
 
 			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
@@ -697,9 +689,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
-			cmd.SetContext(ctx)
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
 			cmd.SetArgs(tc.args)
 
 			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
@@ -799,9 +789,7 @@ func (s *CLITestSuite) TestTxSubmitProposal() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
-			cmd.SetContext(ctx)
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
 			cmd.SetArgs(tc.args)
 
 			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))

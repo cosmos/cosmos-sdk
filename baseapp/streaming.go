@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/log"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
@@ -20,7 +22,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -37,10 +38,11 @@ const (
 // types of streaming listeners.
 func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*storetypes.KVStoreKey, appModules map[string]any) error {
 	listener, err := indexer.StartIndexing(indexer.IndexingOptions{
-		Config:     indexerOpts,
-		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
-		SyncSource: nil,
-		Logger:     app.logger.With(log.ModuleKey, "indexer"),
+		Config:       indexerOpts,
+		Resolver:     decoding.ModuleSetDecoderResolver(appModules),
+		Logger:       app.logger.With(log.ModuleKey, "indexer"),
+		SyncSource:   nil, // TODO: Support catch-up syncs
+		AddressCodec: app.interfaceRegistry.SigningContext().AddressCodec(),
 	})
 	if err != nil {
 		return err
@@ -58,7 +60,7 @@ func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*stor
 }
 
 // RegisterStreamingServices registers streaming services with the BaseApp.
-func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, keys map[string]*storetypes.KVStoreKey) error {
+func (app *BaseApp) RegisterStreamingServices(appOpts server.DynamicConfig, keys map[string]*storetypes.KVStoreKey) error {
 	// register streaming services
 	streamingCfg := cast.ToStringMap(appOpts.Get(StreamingTomlKey))
 	for service := range streamingCfg {
@@ -81,7 +83,7 @@ func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, ke
 
 // registerStreamingPlugin registers streaming plugins with the BaseApp.
 func (app *BaseApp) registerStreamingPlugin(
-	appOpts servertypes.AppOptions,
+	appOpts server.DynamicConfig,
 	keys map[string]*storetypes.KVStoreKey,
 	streamingPlugin interface{},
 ) error {
@@ -96,7 +98,7 @@ func (app *BaseApp) registerStreamingPlugin(
 
 // registerABCIListenerPlugin registers plugins that implement the ABCIListener interface.
 func (app *BaseApp) registerABCIListenerPlugin(
-	appOpts servertypes.AppOptions,
+	appOpts server.DynamicConfig,
 	keys map[string]*storetypes.KVStoreKey,
 	abciListener storetypes.ABCIListener,
 ) {
@@ -115,12 +117,7 @@ func (app *BaseApp) registerABCIListenerPlugin(
 }
 
 func exposeAll(list []string) bool {
-	for _, ele := range list {
-		if ele == "*" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, "*")
 }
 
 func exposeStoreKeysSorted(keysStr []string, keys map[string]*storetypes.KVStoreKey) []storetypes.StoreKey {

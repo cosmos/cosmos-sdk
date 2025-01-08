@@ -8,12 +8,12 @@ import (
 
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
@@ -25,7 +25,7 @@ import (
 type AppBuilder struct {
 	app *App
 
-	appOptions servertypes.AppOptions
+	appOptions server.DynamicConfig
 }
 
 // DefaultGenesis returns a default genesis from the registered modules.

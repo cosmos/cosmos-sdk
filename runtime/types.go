@@ -1,9 +1,11 @@
 package runtime
 
 import (
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/server/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -29,7 +31,20 @@ type AppI interface {
 	LoadHeight(height int64) error
 
 	// ExportAppStateAndValidators exports the state of the application for a genesis file.
-	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (types.ExportedApp, error)
+	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (ExportedApp, error)
+}
+
+// ExportedApp represents an exported app state, along with
+// validators, consensus params and latest app height.
+type ExportedApp struct {
+	// AppState is the application state as JSON.
+	AppState json.RawMessage
+	// Validators is the exported validator set.
+	Validators []sdk.GenesisValidator
+	// Height is the app's latest block height.
+	Height int64
+	// ConsensusParams are the exported consensus params for ABCI.
+	ConsensusParams cmtproto.ConsensusParams
 }
 
 // AppSimI implements the common methods for a Cosmos SDK-based application

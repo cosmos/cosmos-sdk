@@ -69,10 +69,11 @@ func (m *MetadataStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 
 	cInfo := &proof.CommitInfo{}
 	if err := cInfo.Unmarshal(value); err != nil {
-		cInfo, err = proof.ConvertV1CommitInfo(value)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
+	}
+
+	if err := migrateStoreInfo(cInfo); err != nil {
+		return nil, err
 	}
 
 	return cInfo, nil
@@ -173,4 +174,24 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(
 func (m *MetadataStore) deleteCommitInfo(version uint64) error {
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	return m.kv.Delete(cInfoKey)
+}
+
+// when in migration mode, we need to add new fields to the store info
+// this will only be the case for the storev1 to storev2 migration
+func migrateStoreInfo(cInfo *proof.CommitInfo) error {
+	for _, storeInfo := range cInfo.StoreInfos {
+		if storeInfo.Structure == "" {
+			storeInfo.Structure = "iavl"
+		}
+	}
+
+	if cInfo.CommitHash == nil {
+		commitHash, _, err := cInfo.GetStoreProof([]byte{})
+		if err != nil {
+			return err
+		}
+
+		cInfo.CommitHash = commitHash
+	}
+	return nil
 }

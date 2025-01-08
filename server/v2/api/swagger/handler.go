@@ -17,6 +17,11 @@ func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Header().Set("Access-Control-Allow-Methods", "GET")
 
+    // Add security headers
+    w.Header().Set("X-Content-Type-Options", "nosniff")
+    w.Header().Set("X-Frame-Options", "DENY")
+    w.Header().Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'")
+
     if r.Method == http.MethodOptions {
         return
     }
@@ -27,14 +32,14 @@ func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         urlPath = "/index.html"
     }
 
-    // Basic path validation
-    if strings.Contains(urlPath, "..") || strings.Contains(urlPath, "//") {
+    // Clean the path before validation
+    urlPath = filepath.Clean(urlPath)
+
+    // Validate path before any operations
+    if strings.Contains(urlPath, "..") || strings.Contains(urlPath, "//") || strings.Contains(urlPath, "\\") {
         http.Error(w, "Invalid path", http.StatusBadRequest)
         return
     }
-
-    // Clean the path
-    urlPath = filepath.Clean(urlPath)
 
     // Open the file
     file, err := h.swaggerFS.Open(urlPath)

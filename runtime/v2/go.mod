@@ -10,7 +10,7 @@ go 1.23
 // )
 
 require (
-	cosmossdk.io/api v0.8.0-rc.1
+	cosmossdk.io/api v0.8.0
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
@@ -22,7 +22,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 )
 
 require (

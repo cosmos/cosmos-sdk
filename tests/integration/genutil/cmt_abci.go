@@ -1,20 +1,14 @@
-package server
+package genutil
 
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 type cometABCIWrapper struct {
-	app servertypes.ABCI
-}
-
-func NewCometABCIWrapper(app servertypes.ABCI) abci.Application {
-	return cometABCIWrapper{app: app}
+	app *runtime.App
 }
 
 func (w cometABCIWrapper) Info(_ context.Context, req *abciproto.InfoRequest) (*abciproto.InfoResponse, error) {

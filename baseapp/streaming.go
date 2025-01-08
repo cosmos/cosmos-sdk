@@ -12,6 +12,7 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/log"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
@@ -21,7 +22,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -60,7 +60,7 @@ func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*stor
 }
 
 // RegisterStreamingServices registers streaming services with the BaseApp.
-func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, keys map[string]*storetypes.KVStoreKey) error {
+func (app *BaseApp) RegisterStreamingServices(appOpts server.DynamicConfig, keys map[string]*storetypes.KVStoreKey) error {
 	// register streaming services
 	streamingCfg := cast.ToStringMap(appOpts.Get(StreamingTomlKey))
 	for service := range streamingCfg {
@@ -83,7 +83,7 @@ func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, ke
 
 // registerStreamingPlugin registers streaming plugins with the BaseApp.
 func (app *BaseApp) registerStreamingPlugin(
-	appOpts servertypes.AppOptions,
+	appOpts server.DynamicConfig,
 	keys map[string]*storetypes.KVStoreKey,
 	streamingPlugin interface{},
 ) error {
@@ -98,7 +98,7 @@ func (app *BaseApp) registerStreamingPlugin(
 
 // registerABCIListenerPlugin registers plugins that implement the ABCIListener interface.
 func (app *BaseApp) registerABCIListenerPlugin(
-	appOpts servertypes.AppOptions,
+	appOpts server.DynamicConfig,
 	keys map[string]*storetypes.KVStoreKey,
 	abciListener storetypes.ABCIListener,
 ) {

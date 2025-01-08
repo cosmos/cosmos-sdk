@@ -327,7 +327,7 @@ func (store *GStore[V]) dirtyItems(start, end []byte) {
 	}
 
 	n := len(store.unsortedCache)
-	unsorted := make([]*kvPair[V], 0) //nolint:staticcheck // We are in store v1.
+	unsorted := make([]*kvPair[V], 0) 
 	// If the unsortedCache is too big, its costs too much to determine
 	// what's in the subset we are concerned about.
 	// If you are interleaving iterator calls with writes, this can easily become an
@@ -339,7 +339,7 @@ func (store *GStore[V]) dirtyItems(start, end []byte) {
 			// dbm.IsKeyInDomain is nil safe and returns true iff key is greater than start
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
-				unsorted = append(unsorted, &kvPair[V]{Key: []byte(key), Value: cacheValue.value}) //nolint:staticcheck // We are in store v1.
+				unsorted = append(unsorted, &kvPair[V]{Key: []byte(key), Value: cacheValue.value}) 
 			}
 		}
 		store.clearUnsortedCacheSubset(unsorted, stateUnsorted)
@@ -382,18 +382,18 @@ func (store *GStore[V]) dirtyItems(start, end []byte) {
 		}
 	}
 
-	kvL := make([]*kvPair[V], 0, 1+endIndex-startIndex) //nolint:staticcheck // We are in store v1.
+	kvL := make([]*kvPair[V], 0, 1+endIndex-startIndex) 
 	for i := startIndex; i <= endIndex; i++ {
 		key := strL[i]
 		cacheValue := store.cache[key]
-		kvL = append(kvL, &kvPair[V]{Key: []byte(key), Value: cacheValue.value}) //nolint:staticcheck // We are in store v1.
+		kvL = append(kvL, &kvPair[V]{Key: []byte(key), Value: cacheValue.value}) 
 	}
 
 	// kvL was already sorted so pass it in as is.
 	store.clearUnsortedCacheSubset(kvL, stateAlreadySorted)
 }
 
-func (store *GStore[V]) clearUnsortedCacheSubset(unsorted []*kvPair[V], sortState sortState) { //nolint:staticcheck // We are in store v1.
+func (store *GStore[V]) clearUnsortedCacheSubset(unsorted []*kvPair[V], sortState sortState) { 
 	n := len(store.unsortedCache)
 	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
 		for key := range store.unsortedCache {

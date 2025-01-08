@@ -5,7 +5,6 @@ import (
 	"io"
 
 	corestore "cosmossdk.io/core/store"
-
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"

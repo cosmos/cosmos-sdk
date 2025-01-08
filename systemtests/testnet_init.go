@@ -123,12 +123,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		"--output-dir=" + s.outputDir,
 		"--v=" + strconv.Itoa(s.initialNodesCount),
 		"--keyring-backend=test",
-	}
-
-	if IsV2() {
-		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
-	} else {
-		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
+		"--server.minimum-gas-prices=" + s.minGasPrice,
 	}
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))

@@ -733,7 +733,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		configFile := filepath.Join(configPath, tomlFile)
 		_ = os.Remove(configFile)
 		_ = MustCopyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
-		if tomlFile == "app.toml" && IsV2() {
+		if tomlFile == "app.toml" {
 			file := filepath.Join(WorkDir, s.nodePath(nodeNumber), "config", tomlFile)
 			EditToml(file, func(doc *tomledit.Document) {
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultApiPort+nodeNumber), "grpc-gateway", "address")

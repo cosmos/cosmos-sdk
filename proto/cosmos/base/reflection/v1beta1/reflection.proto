@@ -33,7 +33,7 @@ message ListAllInterfacesResponse {
 // ListImplementationsRequest is the request type of the ListImplementations
 // RPC.
 message ListImplementationsRequest {
-  // interface_name defines the interface to query the implementations for.
+  // interface_name defines the interface to query the implementations.
   string interface_name = 1;
 }
 

@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/viper"
 
 	clientcfg "github.com/cosmos/cosmos-sdk/client/config"
-	srvcfg "github.com/cosmos/cosmos-sdk/server/config"
 )
 
 // Upgrade reads the configuration file at configPath and applies any
@@ -43,11 +42,8 @@ func Upgrade(ctx context.Context, plan transform.Plan, doc *tomledit.Document, c
 		return fmt.Errorf("formatting config: %w", err)
 	}
 
-	// ignore validation for serverv2 by checking any default field found in doc
-	isServerV2 := doc.First(strings.Split("store.options.sc-pruning-option", ".")...) != nil
-
 	// allow to skip validation
-	if !skipValidate && !isServerV2 {
+	if !skipValidate {
 		// verify that file is valid after applying fixes
 		if err := CheckValid(configPath, buf.Bytes()); err != nil {
 			return fmt.Errorf("updated config is invalid: %w", err)
@@ -76,14 +72,8 @@ func CheckValid(fileName string, data []byte) error {
 
 	switch {
 	case strings.HasSuffix(fileName, AppConfig):
-		var cfg srvcfg.Config
-		if err := v.Unmarshal(&cfg); err != nil {
-			return fmt.Errorf("failed to unmarshal as server config: %w", err)
-		}
-
-		if err := cfg.ValidateBasic(); err != nil {
-			return fmt.Errorf("server config invalid: %w", err)
-		}
+		// no validation of server config as v1 and v2 configs are both valid.
+		// any app.toml is simply considered as a server config.
 	case strings.HasSuffix(fileName, ClientConfig):
 		var cfg clientcfg.ClientConfig
 		if err := v.Unmarshal(&cfg); err != nil {

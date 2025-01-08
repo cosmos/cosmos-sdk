@@ -103,7 +103,7 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
 			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
 			reasonAttr,
-			sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
+			sdk.NewAttribute(types.AttributeKeySlashedCoins, coinsBurned.String()),
 		),
 	)
 	return nil

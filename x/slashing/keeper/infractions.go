@@ -141,7 +141,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 					sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
 					sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
 					sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
-					sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
+					sdk.NewAttribute(types.AttributeKeySlashedCoins, coinsBurned.String()),
 				),
 			)
 			k.sk.Jail(sdkCtx, consAddr)

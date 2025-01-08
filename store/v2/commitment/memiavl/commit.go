@@ -24,7 +24,6 @@ var (
 	_ store.Committer             = (*CommitStore)(nil)
 	_ store.UpgradeableStore      = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
-	_ store.PausablePruner        = (*CommitStore)(nil)
 )
 
 type CommitStore struct {
@@ -353,13 +352,6 @@ loop:
 	}
 
 	return snapshotItem, nil
-}
-
-func (c *CommitStore) Prune(version uint64) error {
-	return nil
-}
-
-func (c *CommitStore) PausePruning(pause bool) {
 }
 
 func (c *CommitStore) Close() error {

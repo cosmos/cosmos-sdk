@@ -300,12 +300,12 @@ type ReflectionServiceServer interface {
 	ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
 }
 
-// UnimplementedReflectionServiceServer can be embedded to have forward-compatible implementations.
+// UnimplementedReflectionServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedReflectionServiceServer struct {
 }
 
 func (*UnimplementedReflectionServiceServer) ListAllInterfaces(ctx context.Context, req *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAllInterfaces is not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method ListAllInterfaces not implemented")
 }
 func (*UnimplementedReflectionServiceServer) ListImplementations(ctx context.Context, req *ListImplementationsRequest) (*ListImplementationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListImplementations not implemented")

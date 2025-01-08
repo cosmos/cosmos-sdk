@@ -35,11 +35,14 @@ func New[T transaction.Tx](
         cfgOptions: cfgOptions,
     }
 
-    serverCfg := srv.Config().(*Config)
+    serverCfg := DefaultConfig()
     if len(cfg) > 0 {
-        if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
+        if err := serverv2.UnmarshalSubConfig(cfg, ServerName, serverCfg); err != nil {
             return nil, fmt.Errorf("failed to unmarshal config: %w", err)
         }
+    }
+    for _, opt := range cfgOptions {
+        opt(serverCfg)
     }
     srv.config = serverCfg
 
@@ -48,7 +51,7 @@ func New[T transaction.Tx](
     }
 
     mux := http.NewServeMux()
-    mux.Handle("/swagger/", &swaggerHandler{
+    mux.Handle("/swagger", &swaggerHandler{
         swaggerFS: srv.config.SwaggerUI,
     })
 
@@ -58,4 +61,46 @@ func New[T transaction.Tx](
     }
 
     return srv, nil
+}
+
+// Name returns the server's name
+func (s *Server[T]) Name() string {
+    return ServerName
+}
+
+// Config returns the server configuration
+func (s *Server[T]) Config() any {
+    if s.config == nil {
+        cfg := DefaultConfig()
+        for _, opt := range s.cfgOptions {
+            opt(cfg)
+        }
+        return cfg
+    }
+    return s.config
+}
+
+// Start starts the server
+func (s *Server[T]) Start(ctx context.Context) error {
+    if !s.config.Enable {
+        s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
+        return nil
+    }
+
+    s.logger.Info("starting swagger server...", "address", s.config.Address)
+    if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+        return fmt.Errorf("failed to start swagger server: %w", err)
+    }
+
+    return nil
+}
+
+// Stop stops the server
+func (s *Server[T]) Stop(ctx context.Context) error {
+    if !s.config.Enable {
+        return nil
+    }
+
+    s.logger.Info("stopping swagger server...", "address", s.config.Address)
+    return s.server.Shutdown(ctx)
 } 

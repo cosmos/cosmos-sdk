@@ -213,12 +213,12 @@ func (a appManager[T]) DeliverSims(
 	}
 
 	if latestVersion+1 != block.Height {
-		return nil, nil, fmt.Errorf("invalid DeliverBlock height wanted %d, got %d", latestVersion+1, block.Height)
+		return nil, nil, fmt.Errorf("invalid DeliverSims height wanted %d, got %d", latestVersion+1, block.Height)
 	}
 
 	blockResponse, newState, err := a.stf.DeliverSims(ctx, block, currentState, simsBuilder)
 	if err != nil {
-		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
+		return nil, nil, fmt.Errorf("sims delivery failed: %w", err)
 	}
 
 	return blockResponse, newState, nil

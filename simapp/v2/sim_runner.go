@@ -151,7 +151,11 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](t *testing.T, factory AppFactor
 }
 
 // RunWithSeeds runs a series of subtests using the default set of random seeds for deterministic simulation testing.
-func RunWithSeeds[T Tx](t *testing.T, seeds []int64) {
+func RunWithSeeds[T Tx](
+	t *testing.T,
+	seeds []int64,
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+) {
 	t.Helper()
 	cfg := cli.NewConfigFromFlags()
 	cfg.ChainID = SimAppChainID
@@ -159,13 +163,20 @@ func RunWithSeeds[T Tx](t *testing.T, seeds []int64) {
 		seed := seeds[i]
 		t.Run(fmt.Sprintf("seed: %d", seed), func(t *testing.T) {
 			t.Parallel()
-			RunWithSeed(t, NewSimApp[T], AppConfig(), cfg, seed)
+			RunWithSeed(t, NewSimApp[T], AppConfig(), cfg, seed, postRunActions...)
 		})
 	}
 }
 
 // RunWithSeed initializes and executes a simulation run with the given seed, generating blocks and transactions.
-func RunWithSeed[T Tx, V SimulationApp[T]](t *testing.T, appFactory AppFactory[T, V], appConfig depinject.Config, tCfg simtypes.Config, seed int64) {
+func RunWithSeed[T Tx, V SimulationApp[T]](
+	t *testing.T,
+	appFactory AppFactory[T, V],
+	appConfig depinject.Config,
+	tCfg simtypes.Config,
+	seed int64,
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+) {
 	t.Helper()
 	r := rand.New(rand.NewSource(seed))
 	testInstance := SetupTestInstance[T, V](t, appFactory, appConfig)
@@ -209,6 +220,10 @@ func RunWithSeed[T Tx, V SimulationApp[T]](t *testing.T, appFactory AppFactory[T
 		testInstance.StakingKeeper,
 	)
 	require.NoError(t, testInstance.App.Close(), "closing app")
+
+	for _, step := range postRunActions {
+		step(t, testInstance, accounts)
+	}
 }
 
 // prepareInitialGenesisState initializes the genesis state for simulation by generating accounts, app state, chain ID, and timestamp.

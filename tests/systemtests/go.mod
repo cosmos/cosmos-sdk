@@ -11,7 +11,7 @@ require (
 require (
 	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
-	github.com/creachadair/tomledit v0.0.26 // indirect
+	github.com/creachadair/tomledit v0.0.27 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -57,7 +57,6 @@ require (
 	github.com/cosmos/iavl v1.2.2 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
-	github.com/creachadair/tomledit v0.0.27 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect

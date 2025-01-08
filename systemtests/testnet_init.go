@@ -69,9 +69,8 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 		"--keyring-backend=test",
 		"--commit-timeout=" + s.commitTimeout.String(),
 		"--single-host",
+		"--server.minimum-gas-prices=" + s.minGasPrice,
 	}
-
-	args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 	out, err := RunShellCmd(s.execBinary, args...)

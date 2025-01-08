@@ -1,15 +1,14 @@
 package root
 
 import (
-	"bytes"
 	"testing"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/internal/encoding"
 )
 
 func TestFactory(t *testing.T) {
@@ -28,21 +27,20 @@ func TestFactory(t *testing.T) {
 	fop.Options.SCType = SCTypeIavlV2
 	f, err = CreateRootStore(&fop)
 	require.NoError(t, err)
-	require.Nil(t, f)
+	require.NotNil(t, f)
 
 	require.NoError(t, setLatestVersion(fop.SCRawDB, 1))
 	fop.Options.SCType = SCTypeIavl
 	f, err = CreateRootStore(&fop)
 	require.NoError(t, err)
 	require.NotNil(t, f)
-	require.True(t, f.(*Store).isMigrating)
+	require.False(t, f.(*Store).isMigrating)
 }
 
-func setLatestVersion(db corestore.KVStoreWithBatch, version uint64) error {
-	var buf bytes.Buffer
-	buf.Grow(encoding.EncodeUvarintSize(version))
-	if err := encoding.EncodeUvarint(&buf, version); err != nil {
-		return err
+func setLatestVersion(db corestore.KVStoreWithBatch, version int64) error {
+	bz, err := gogotypes.StdInt64Marshal(version)
+	if err != nil {
+		panic(err)
 	}
-	return db.Set([]byte("s/latest"), buf.Bytes())
+	return db.Set([]byte("s/latest"), bz)
 }

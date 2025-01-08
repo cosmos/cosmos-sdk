@@ -14,10 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
-const (
-	balancesPrefix = 0x2
-)
-
 type fuzzTestSuite struct {
 	paginationTestSuite
 }

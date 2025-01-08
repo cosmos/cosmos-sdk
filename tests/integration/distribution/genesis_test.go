@@ -4,25 +4,28 @@ import (
 	"encoding/json"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	"github.com/stretchr/testify/suite"
+
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-
-	bankkeeper "cosmossdk.io/x/bank/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
+
+// ... rest of the file remains unchanged ...
 
 type ImportExportSuite struct {
 	suite.Suite

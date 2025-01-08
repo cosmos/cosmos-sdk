@@ -2,6 +2,7 @@ package grpcgateway
 
 import (
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -20,17 +21,25 @@ import (
 
 var _ http.Handler = &gatewayInterceptor[transaction.Tx]{}
 
+// queryMetadata is a type that holds information related to handling gateway queries.
+type queryMetadata struct {
+	// queryInputProtoName is the proto name of the query's input type.
+	queryInputProtoName string
+	// wildcardKeyNames are the wildcard key names from the HTTP annotation.
+	// for example /foo/bar/{baz}/{qux} would produce []string{"baz", "qux"}
+	// this is used for building the query parameter map for a request.
+	wildcardKeyNames []string
+}
+
 // gatewayInterceptor handles routing grpc-gateway queries to the app manager's query router.
 type gatewayInterceptor[T transaction.Tx] struct {
 	logger log.Logger
 	// gateway is the fallback grpc gateway mux handler.
 	gateway *runtime.ServeMux
 
-	// customEndpointMapping is a mapping of custom GET options on proto RPC handlers, to the fully qualified query input name.
-	//
-	// example: /cosmos/bank/v1beta1/denoms_metadata -> cosmos.bank.v1beta1.Query.QueryDenomsMetadataRequest
-	// /cosmos/bank/v1beta1/balances/{denom}/{address} -> cosmos.bank.v1beta1.Query.QueryBalanceRequest
-	customEndpointMapping map[string]string
+	// regexpToQueryMetadata is a mapping of regular expressions of HTTP annotations to metadata for the query.
+	// it is built from parsing the HTTP annotations obtained from the gogoproto global registry.
+	regexpToQueryMetadata map[*regexp.Regexp]queryMetadata
 
 	// appManager is used to route queries to the application.
 	appManager appmanager.AppManager[T]
@@ -42,20 +51,20 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 	if err != nil {
 		return nil, err
 	}
+	regexQueryMD := createRegexMapping(getMapping)
 	return &gatewayInterceptor[T]{
 		logger:                logger,
 		gateway:               gateway,
-		customEndpointMapping: getMapping,
+		regexpToQueryMetadata: regexQueryMD,
 		appManager:            am,
 	}, nil
 }
 
-// ServeHTTP implements the http.Handler interface. This function will attempt to match http requests to the
-// interceptors internal mapping of http annotations to query request type names.
+// ServeHTTP implements the http.Handler interface. This function will attempt to match http request using it's internal mapping.
 // If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	g.logger.Debug("received grpc-gateway request", "request_uri", request.RequestURI)
-	match := matchURL(request.URL, g.customEndpointMapping)
+	match := matchURL(request.URL, g.regexpToQueryMetadata)
 	if match == nil {
 		// no match cases fall back to gateway mux.
 		g.gateway.ServeHTTP(writer, request)
@@ -143,4 +152,17 @@ func getHTTPGetAnnotationMapping() (map[string]string, error) {
 	})
 
 	return httpGets, nil
+}
+
+func createRegexMapping(annotationMapping map[string]string) map[*regexp.Regexp]queryMetadata {
+	regexQueryMD := make(map[*regexp.Regexp]queryMetadata)
+	for annotation, queryInputName := range annotationMapping {
+		pattern, wildcardNames := patternToRegex(annotation)
+		reg := regexp.MustCompile(pattern)
+		regexQueryMD[reg] = queryMetadata{
+			queryInputProtoName: queryInputName,
+			wildcardKeyNames:    wildcardNames,
+		}
+	}
+	return regexQueryMD
 }

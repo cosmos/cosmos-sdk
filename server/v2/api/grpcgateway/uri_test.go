@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -85,7 +86,8 @@ func TestMatchURI(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			u, err := url.Parse(tc.uri)
 			require.NoError(t, err)
-			actual := matchURL(u, tc.mapping)
+			regexpMapping := createRegexMapping(tc.mapping)
+			actual := matchURL(u, regexpMapping)
 			require.Equal(t, tc.expected, actual)
 		})
 	}
@@ -258,6 +260,73 @@ func TestCreateMessageFromJson(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, actual)
+			}
+		})
+	}
+}
+
+func Test_patternToRegex(t *testing.T) {
+	tests := []struct {
+		name           string
+		pattern        string
+		wildcards      []string
+		wildcardValues []string
+		shouldMatch    string
+		shouldNotMatch []string
+	}{
+		{
+			name:           "simple match, no wildcards",
+			pattern:        "/foo/bar/baz",
+			shouldMatch:    "/foo/bar/baz",
+			shouldNotMatch: []string{"/foo/bar", "/foo", "/foo/bar/baz/boo"},
+		},
+		{
+			name:           "match with wildcard",
+			pattern:        "/foo/bar/{baz}",
+			wildcards:      []string{"baz"},
+			shouldMatch:    "/foo/bar/hello",
+			wildcardValues: []string{"hello"},
+			shouldNotMatch: []string{"/foo/bar", "/foo/bar/baz/boo"},
+		},
+		{
+			name:           "match with multiple wildcards",
+			pattern:        "/foo/{bar}/{baz}/meow",
+			wildcards:      []string{"bar", "baz"},
+			shouldMatch:    "/foo/hello/world/meow",
+			wildcardValues: []string{"hello", "world"},
+			shouldNotMatch: []string{"/foo/bar/baz/boo", "/foo/bar/baz"},
+		},
+		{
+			name:           "match catch-all wildcard",
+			pattern:        `/foo/bar/{baz=**}`,
+			wildcards:      []string{"baz"},
+			shouldMatch:    `/foo/bar/this/is/a/long/wildcard`,
+			wildcardValues: []string{"this/is/a/long/wildcard"},
+			shouldNotMatch: []string{"/foo/bar", "/foo", "/foo/baz/bar/long/wild/card"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			regString, wildcards := patternToRegex(tt.pattern)
+			// should produce the same wildcard keys
+			require.Equal(t, tt.wildcards, wildcards)
+			reg := regexp.MustCompile(regString)
+
+			// handle the "should match" case.
+			matches := reg.FindStringSubmatch(tt.shouldMatch)
+			require.True(t, len(matches) > 0) // there should always be a match.
+			// when matches > 1, this means we got wildcard values to handle. the test should have wildcard values.
+			if len(matches) > 1 {
+				require.Greater(t, len(tt.wildcardValues), 0)
+			}
+			// matches[0] is the URL, everything else should be those wildcard values.
+			if len(tt.wildcardValues) > 0 {
+				require.Equal(t, matches[1:], tt.wildcardValues)
+			}
+
+			// should never match these.
+			for _, notMatch := range tt.shouldNotMatch {
+				require.Len(t, reg.FindStringSubmatch(notMatch), 0)
 			}
 		})
 	}

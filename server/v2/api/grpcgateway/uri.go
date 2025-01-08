@@ -37,7 +37,7 @@ func (uri uriMatch) HasParams() bool {
 
 // matchURL attempts to find a match for the given URL.
 // NOTE: if no match is found, nil is returned.
-func matchURL(u *url.URL, getPatternToQueryInputName map[string]string) *uriMatch {
+func matchURL(u *url.URL, regexpToQueryMetadata map[*regexp.Regexp]queryMetadata) *uriMatch {
 	uriPath := strings.TrimRight(u.Path, "/")
 	queryParams := u.Query()
 
@@ -50,37 +50,26 @@ func matchURL(u *url.URL, getPatternToQueryInputName map[string]string) *uriMatc
 			params[key] = vals[0]
 		}
 	}
-
-	// for simple cases where there are no wildcards, we can just do a map lookup.
-	if inputName, ok := getPatternToQueryInputName[uriPath]; ok {
-		return &uriMatch{
-			QueryInputName: inputName,
-			Params:         params,
-		}
-	}
-
-	// attempt to find a match in the pattern map.
-	for getPattern, queryInputName := range getPatternToQueryInputName {
-		getPattern = strings.TrimRight(getPattern, "/")
-
-		regexPattern, wildcardNames := patternToRegex(getPattern)
-
-		regex := regexp.MustCompile(regexPattern)
-		matches := regex.FindStringSubmatch(uriPath)
-
-		if len(matches) > 1 {
-			// first match is the full URL, subsequent matches the wild card values.
-			for i, name := range wildcardNames {
+	for reg, qmd := range regexpToQueryMetadata {
+		matches := reg.FindStringSubmatch(uriPath)
+		switch {
+		case len(matches) == 1:
+			return &uriMatch{
+				QueryInputName: qmd.queryInputProtoName,
+				Params:         params,
+			}
+		case len(matches) > 1:
+			// first match is the URI, subsequent matches are the wild card values.
+			for i, name := range qmd.wildcardKeyNames {
 				params[name] = matches[i+1]
 			}
 
 			return &uriMatch{
-				QueryInputName: queryInputName,
+				QueryInputName: qmd.queryInputProtoName,
 				Params:         params,
 			}
 		}
 	}
-
 	return nil
 }
 

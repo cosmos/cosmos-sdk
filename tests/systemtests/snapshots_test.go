@@ -60,7 +60,7 @@ func TestSnapshots(t *testing.T) {
 	err := os.RemoveAll(fmt.Sprintf("%s/data/application.db", node0Dir))
 	require.NoError(t, err)
 	require.NoError(t, os.RemoveAll(fmt.Sprintf("%s/data/ss", node0Dir)))
-	
+
 	res = cli.RunCommandWithArgs(command, "restore", "5", "3", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	for _, dir := range restoreableDirs {
 		require.DirExists(t, dir)
@@ -84,12 +84,7 @@ func TestPrune(t *testing.T) {
 	node0Dir := systest.Sut.NodeDir(0)
 
 	// prune
-	var command []string
-	if systest.IsV2() {
-		command = []string{"store", "prune", "--store.keep-recent=1"}
-	} else {
-		command = []string{"prune", "everything"}
-	}
+	command := []string{"store", "prune", "--store.keep-recent=1"}
 	res := cli.RunCommandWithArgs(append(command, fmt.Sprintf("--home=%s", node0Dir), disabledLog)...)
 	require.Contains(t, res, "successfully pruned the application root multi stores")
 }

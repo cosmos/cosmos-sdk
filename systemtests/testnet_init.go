@@ -13,12 +13,6 @@ import (
 	"github.com/creachadair/tomledit/parser"
 )
 
-// IsV2 checks if the tests run with simapp v2
-func IsV2() bool {
-	buildOptions := os.Getenv("COSMOS_BUILD_OPTIONS")
-	return strings.Contains(buildOptions, "v2")
-}
-
 // SingleHostTestnetCmdInitializer default testnet cmd that supports the --single-host param
 type SingleHostTestnetCmdInitializer struct {
 	execBinary        string

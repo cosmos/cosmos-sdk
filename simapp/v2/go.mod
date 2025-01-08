@@ -53,7 +53,6 @@ require github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
 require (
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
 	github.com/cometbft/cometbft/api v1.0.0
-	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 )
 
 require (
@@ -230,6 +229,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect

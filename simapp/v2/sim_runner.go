@@ -5,17 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"iter"
+	"maps"
 	"math/rand"
-	"os"
-	"path/filepath"
 	"slices"
 	"testing"
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -27,7 +26,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
-	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/appmanager"
 	cometbfttypes "cosmossdk.io/server/v2/cometbft/types"
 	storev2 "cosmossdk.io/store/v2"
@@ -92,7 +90,6 @@ type (
 	// SimulationApp abstract blockchain app
 	SimulationApp[T Tx] interface {
 		GetApp() *runtime.App[T]
-		ModuleManager() *runtime.MM[T]
 		TxConfig() client.TxConfig
 		AppCodec() codec.Codec
 		DefaultGenesis() map[string]json.RawMessage
@@ -118,17 +115,12 @@ type (
 // SetupTestInstance initializes and returns the system under test.
 func SetupTestInstance[T Tx, V SimulationApp[T]](t *testing.T, factory AppFactory[T, V], appConfig depinject.Config) TestInstance[T] {
 	t.Helper()
-	nodeHome := t.TempDir()
-	currentDir, err := os.Getwd()
-	require.NoError(t, err)
-	configPath := filepath.Join(currentDir, "testdata")
-	v, err := serverv2.ReadConfig(configPath)
-	require.NoError(t, err)
-	v.Set("home", nodeHome)
-	v.Set("store.app-db-backend", "memdb")
+	vp := viper.New()
+	vp.Set("store.app-db-backend", "memdb")
+	vp.Set("home", t.TempDir())
 
 	depInjCfg := depinject.Configs(
-		depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(v.AllSettings())),
+		depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(vp.AllSettings())),
 		appConfig,
 	)
 	var (
@@ -137,22 +129,22 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](t *testing.T, factory AppFactor
 		stKeeper   StakingKeeper
 	)
 
-	err = depinject.Inject(depInjCfg,
+	err := depinject.Inject(depInjCfg,
 		&authKeeper,
 		&bankKeeper,
 		&stKeeper,
 	)
 	require.NoError(t, err)
 
-	xapp, err := factory(depinject.Configs(depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(v.AllSettings()))))
+	xapp, err := factory(depinject.Configs(depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(vp.AllSettings()))))
 	require.NoError(t, err)
 	return TestInstance[T]{
 		App:           xapp,
 		BankKeeper:    bankKeeper,
 		AuthKeeper:    authKeeper,
 		StakingKeeper: stKeeper,
-		AppManager:    xapp.GetApp().AppManager,
-		ModuleManager: xapp.ModuleManager(),
+		AppManager:    xapp.GetApp(),
+		ModuleManager: xapp.GetApp().ModuleManager(),
 		TxDecoder:     simsxv2.NewGenericTxDecoder[T](xapp.TxConfig()),
 		TXBuilder:     simsxv2.NewSDKTXBuilder[T](xapp.TxConfig(), simsxv2.DefaultGenTxGas),
 	}
@@ -301,7 +293,7 @@ type chainState[T Tx] struct {
 	activeValidatorSet simsxv2.WeightedValidators
 	valsetHistory      *simsxv2.ValSetHistory
 	stateRoot          store.Hash
-	app                appmanager.AppManager[T]
+	app                appmanager.TransactionFuzzer[T]
 	appStore           storev2.RootStore
 	txConfig           client.TxConfig
 }
@@ -442,7 +434,7 @@ func prepareSimsMsgFactories(
 	modules map[string]appmodulev2.AppModule,
 	weights simsx.WeightSource,
 ) func() simsx.SimMsgFactoryX {
-	moduleNames := maps.Keys(modules)
+	moduleNames := slices.Collect(maps.Keys(modules))
 	slices.Sort(moduleNames) // make deterministic
 
 	// get all proposal types
@@ -469,7 +461,7 @@ func prepareSimsMsgFactories(
 
 func toLegacySimsModule(modules map[string]appmodule.AppModule) []module.AppModuleSimulation {
 	r := make([]module.AppModuleSimulation, 0, len(modules))
-	names := maps.Keys(modules)
+	names := slices.Collect(maps.Keys(modules))
 	slices.Sort(names) // make deterministic
 	for _, v := range names {
 		if m, ok := modules[v].(module.AppModuleSimulation); ok {

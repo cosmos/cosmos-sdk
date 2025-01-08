@@ -16,17 +16,17 @@ func (s STF[T]) doSimsTXs(simsBuilder func(ctx context.Context) iter.Seq[T]) doI
 		exCtx context.Context,
 		_ []T,
 		newState store.WriterMap,
-		hi header.Info,
+		headerInfo header.Info,
 	) ([]server.TxResult, error) {
 		const key = "sims.header.time"
-		simsCtx := context.WithValue(exCtx, key, hi.Time) //nolint: staticcheck // using string key to decouple
+		simsCtx := context.WithValue(exCtx, key, headerInfo.Time) //nolint: staticcheck // using string key to decouple
 		var results []server.TxResult
 		var i int32
 		for tx := range simsBuilder(simsCtx) {
 			if err := isCtxCancelled(simsCtx); err != nil {
 				return nil, err
 			}
-			results = append(results, s.deliverTx(simsCtx, newState, tx, transaction.ExecModeFinalize, hi, i+1))
+			results = append(results, s.deliverTx(simsCtx, newState, tx, transaction.ExecModeFinalize, headerInfo, i+1))
 			i++
 		}
 		return results, nil

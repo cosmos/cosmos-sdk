@@ -17,6 +17,8 @@ import (
 // It is responsible for interacting with stf and store.
 // Runtime/v2 is an extension of this interface.
 type AppManager[T transaction.Tx] interface {
+	TransactionFuzzer[T]
+
 	// InitGenesis initializes the genesis state of the application.
 	InitGenesis(
 		ctx context.Context,
@@ -54,7 +56,10 @@ type AppManager[T transaction.Tx] interface {
 	// independently of the db state. For example, it can be used to process a query with temporary
 	// and uncommitted state
 	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error)
+}
 
+// TransactionFuzzer defines an interface for processing simulated transactions and generating responses with state changes.
+type TransactionFuzzer[T transaction.Tx] interface {
 	// DeliverSims processes simulated transactions for a block and generates a response with potential state changes.
 	// The simsBuilder generates simulated transactions.
 	DeliverSims(

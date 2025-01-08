@@ -3,7 +3,6 @@ package v2
 import (
 	"bytes"
 	"crypto/sha256"
-	"fmt"
 	"math/rand"
 	"slices"
 
@@ -58,8 +57,6 @@ func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) Weight
 		if pos == -1 { // new address
 			if u.Power > 0 {
 				newValset = append(newValset, u)
-			} else {
-				panic(fmt.Sprintf("Adding validator with power 0: %X\n", u.Address))
 			}
 			continue
 		}
@@ -83,7 +80,9 @@ func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) Weight
 
 // NewCommitInfo build Comet commit info for the validator set
 func (v WeightedValidators) NewCommitInfo(r *rand.Rand) comet.CommitInfo {
-	// todo: refactor to transition matrix?
+	if len(v) == 0 {
+		return comet.CommitInfo{Votes: make([]comet.VoteInfo, 0)}
+	}
 	if r.Intn(10) == 0 {
 		v[r.Intn(len(v))].Offline = r.Intn(2) == 0
 	}

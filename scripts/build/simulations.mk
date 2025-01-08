@@ -47,13 +47,13 @@ test-sim-multi-seed-long:
 	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=2h -tags='sims' -run TestFullAppSimulation \
 	# 	-NumBlocks=150 -Period=50
 
-test-sim-multi-seed-short: test-v2-sim-wip
+test-sim-multi-seed-short: test-v2-sim
 	# @echo "Running short multi-seed application simulation. This may take awhile!"
 	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
 	#	-NumBlocks=50 -Period=10 -FauxMerkle=true
 
-.Phony: test-v2-sim-wip
-test-v2-sim-wip:
+.Phony: test-v2-sim
+test-v2-sim:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
 	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestSimsAppV2 \
 #		-NumBlocks=50 -Period=10 -FauxMerkle=true

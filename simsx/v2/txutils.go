@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 
 	"cosmossdk.io/core/transaction"
@@ -134,17 +135,17 @@ func GenSignedMockTx(
 			context.Background(), txConfig.SignModeHandler(), signMode, signerData,
 			tx.GetTx())
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("sign bytes: %w", err)
 		}
 		sig, err := p.Sign(signBytes)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("sign: %w", err)
 		}
 		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
 	}
-	err = tx.SetSignatures(sigs...)
-	if err != nil {
-		panic(err)
+
+	if err = tx.SetSignatures(sigs...); err != nil {
+		return nil, fmt.Errorf("signature: %w", err)
 	}
 
 	return tx.GetTx(), nil

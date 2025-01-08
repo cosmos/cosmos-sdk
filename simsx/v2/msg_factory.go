@@ -13,8 +13,8 @@ func NextFactoryFn(factories []simsx.WeightedFactory, r *rand.Rand) func() simsx
 		factories[i], factories[j] = factories[j], factories[i]
 	})
 	var totalWeight int
-	for k := range factories {
-		totalWeight += k
+	for _, f := range factories {
+		totalWeight += int(f.Weight)
 	}
 	return func() simsx.SimMsgFactoryX {
 		// this is copied from old sims WeightedOperations.getSelectOpFn

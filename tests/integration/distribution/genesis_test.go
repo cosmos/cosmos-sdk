@@ -25,8 +25,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
-// ... rest of the file remains unchanged ...
-
 type ImportExportSuite struct {
 	suite.Suite
 

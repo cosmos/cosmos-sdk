@@ -423,12 +423,12 @@ func initGenFiles[T transaction.Tx](
 	}
 	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
 
-	var bankV2GenState bankv2types.GenesisState
-	clientCtx.Codec.MustUnmarshalJSON(appGenState[bankv2types.ModuleName], &bankV2GenState)
-	if len(bankV2GenState.Balances) == 0 {
-		bankV2GenState = getBankV2GenesisFromV1(bankGenState)
-	}
-	appGenState[bankv2types.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankV2GenState)
+	// var bankV2GenState bankv2types.GenesisState
+	// clientCtx.Codec.MustUnmarshalJSON(appGenState[bankv2types.ModuleName], &bankV2GenState)
+	// if len(bankV2GenState.Balances) == 0 {
+	// 	bankV2GenState = getBankV2GenesisFromV1(bankGenState)
+	// }
+	// appGenState[bankv2types.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankV2GenState)
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
 	if err != nil {

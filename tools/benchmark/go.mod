@@ -151,6 +151,7 @@ require (
 )
 
 replace (
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../../x/bank
 	cosmossdk.io/x/staking => ../../x/staking
 	github.com/cosmos/cosmos-sdk => ../../

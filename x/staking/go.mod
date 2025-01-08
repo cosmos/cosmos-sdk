@@ -172,4 +172,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
-replace cosmossdk.io/x/bank => ../bank
+replace (
+	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/bank => ../bank
+)

@@ -162,6 +162,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../../../.
 
 replace (
+	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/staking => ../../../staking

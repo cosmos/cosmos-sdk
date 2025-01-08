@@ -198,6 +198,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking

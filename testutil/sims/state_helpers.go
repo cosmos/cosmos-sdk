@@ -51,14 +51,14 @@ func AppStateFn(
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 // genesisState is the default genesis state of the whole app.
 // moduleStateCb is the callback function to access moduleState.
-// rawStateCb is the callback function to extend rawState.
+// postRawStateCb is the callback function to extend rawState.
 func AppStateFnWithExtendedCbs(
 	cdc codec.JSONCodec,
 	addressCodec, validatorCodec address.Codec,
 	modules []module.AppModuleSimulation,
 	genesisState map[string]json.RawMessage,
 	moduleStateCb func(moduleName string, genesisState interface{}),
-	rawStateCb func(rawState map[string]json.RawMessage),
+	postRawStateCb func(rawState map[string]json.RawMessage),
 ) simtypes.AppStateFn {
 	return func(
 		r *rand.Rand,
@@ -167,8 +167,8 @@ func AppStateFnWithExtendedCbs(
 		}
 
 		// extend state from callback function
-		if rawStateCb != nil {
-			rawStateCb(rawState)
+		if postRawStateCb != nil {
+			postRawStateCb(rawState)
 		}
 
 		// replace appstate

@@ -913,7 +913,7 @@ func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 	require.Equal(t, target, version)
 	commitInfo, err := store.GetStateCommitment().GetCommitInfo(version)
 	require.NoError(t, err)
-	require.Equal(t, target, commitInfo.Version)
+	require.Equal(t, target, uint64(commitInfo.Version))
 }
 
 func TestOptimisticExecution(t *testing.T) {

@@ -184,3 +184,6 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
+
+// TODO remove post spinning out all modules
+replace cosmossdk.io/store => ../../../store

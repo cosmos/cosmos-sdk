@@ -26,9 +26,10 @@ type gatewayInterceptor[T transaction.Tx] struct {
 	// gateway is the fallback grpc gateway mux handler.
 	gateway *runtime.ServeMux
 
-	// customEndpointMapping is a mapping of custom GET options on proto RPC handlers, to the fully qualified method name.
+	// customEndpointMapping is a mapping of custom GET options on proto RPC handlers, to the fully qualified query input name.
 	//
-	// example: /cosmos/bank/v1beta1/denoms_metadata -> cosmos.bank.v1beta1.Query.DenomsMetadata
+	// example: /cosmos/bank/v1beta1/denoms_metadata -> cosmos.bank.v1beta1.Query.QueryDenomsMetadataRequest
+	// /cosmos/bank/v1beta1/balances/{denom}/{address} -> cosmos.bank.v1beta1.Query.QueryBalanceRequest
 	customEndpointMapping map[string]string
 
 	// appManager is used to route queries to the application.

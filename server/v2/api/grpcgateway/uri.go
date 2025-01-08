@@ -69,7 +69,7 @@ func matchURL(u *url.URL, getPatternToQueryInputName map[string]string) *uriMatc
 		matches := regex.FindStringSubmatch(uriPath)
 
 		if len(matches) > 1 {
-			// first match is the full string, subsequent matches are capture groups
+			// first match is the full URL, subsequent matches the wild card values.
 			for i, name := range wildcardNames {
 				params[name] = matches[i+1]
 			}

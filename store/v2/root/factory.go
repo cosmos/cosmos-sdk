@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	iavl_v2 "github.com/cosmos/iavl/v2"
-	memiavl_lib "github.com/crypto-org-chain/cronos/memiavl/v2"
+	memiavl_lib "github.com/crypto-org-chain/cronos/memiavl"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"

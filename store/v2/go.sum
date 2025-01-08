@@ -84,6 +84,8 @@ github.com/cosmos/iavl/v2 v2.0.0-alpha.4/go.mod h1:7RSm0aeApe3S1x4TrLffvUL6pjOtM
 github.com/cosmos/ics23/go v0.11.0 h1:jk5skjT0TqX5e5QJbEnwXIS2yI2vnmLOgpQPeM5RtnU=
 github.com/cosmos/ics23/go v0.11.0/go.mod h1:A8OjxPE67hHST4Icw94hOxxFEJMBG031xIGF/JHNIY0=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
+github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20241220020014-5ebf30508c11 h1:RbzpP8tRpfsXzve5lmPAjcaKDmMkELQx62uGraVO7pY=
+github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20241220020014-5ebf30508c11/go.mod h1:ZF3UhlQvQm4FcU1AEGYmyXRbMZg4F2sh5NAo58fsy4I=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

@@ -15,7 +15,7 @@ require (
 	github.com/cosmos/iavl v1.3.4
 	github.com/cosmos/iavl/v2 v2.0.0-alpha.4
 	github.com/cosmos/ics23/go v0.11.0
-	github.com/crypto-org-chain/cronos/memiavl/v2 v2.0.0-00010101000000-000000000000
+	github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20241220020014-5ebf30508c11
 	github.com/google/btree v1.1.3
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/spf13/cast v1.7.1
@@ -97,6 +97,3 @@ require (
 	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// github.com/crypto-org-chain/cronos/memiavl/v2 => github.com/yihuang/cronos/memiavl/v2 v2.0.0-20241206090149-498f7df095dc
-replace github.com/crypto-org-chain/cronos/memiavl/v2 => ../../../cronos/memiavl

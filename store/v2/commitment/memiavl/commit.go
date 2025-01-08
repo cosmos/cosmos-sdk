@@ -17,7 +17,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	ics23 "github.com/cosmos/ics23/go"
 
-	"github.com/crypto-org-chain/cronos/memiavl/v2"
+	"github.com/crypto-org-chain/cronos/memiavl"
 )
 
 var (

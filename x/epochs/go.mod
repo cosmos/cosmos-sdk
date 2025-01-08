@@ -1,6 +1,6 @@
 module cosmossdk.io/x/epochs
 
-go 1.23.2
+go 1.23.4
 
 require (
 	cosmossdk.io/api v0.8.0
@@ -49,7 +49,7 @@ require (
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/iavl v1.3.4 // indirect
+	github.com/cosmos/iavl v1.3.5 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect

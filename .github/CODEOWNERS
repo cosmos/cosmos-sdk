@@ -74,11 +74,11 @@
 
 # ci & build
 
-.github/ @auricom @julienrbrt @tac0turtle
-scripts/ @auricom @julienrbrt @tac0turtle
-contrib/ @auricom @julienrbrt @tac0turtle
-*.mk @auricom @julienrbrt @tac0turtle
-Makefile @auricom @julienrbrt @tac0turtle
+.github/ @julienrbrt @tac0turtle
+scripts/ @julienrbrt @tac0turtle
+contrib/ @julienrbrt @tac0turtle
+*.mk @julienrbrt @tac0turtle
+Makefile @julienrbrt @tac0turtle
 
 # docs configuration
 

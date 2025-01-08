@@ -129,7 +129,7 @@ NOTE: when using a customized client, the command cannot be used as the construc
 
 ### Error extension
 
-Since rosetta requires to provide 'returned' errors to network options. In order to declare a new rosetta error, we use the `errors` package in cosmos-rosetta-gateway.
+Since Rosetta requires providing 'returned' errors to network options, we use the `errors` package in cosmos-rosetta-gateway.
 
 Example:
 

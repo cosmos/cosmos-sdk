@@ -79,9 +79,9 @@ First we create a pool for storing tokens that are being bonded, but should be a
 
 ### Staking messages
 
-* **MsgCreateValidator**: Move user's self-bond to `EpochDelegationPool` immediately. Queue a message for the epoch boundary to handle the self-bond, taking the funds from the `EpochDelegationPool`. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
+* **MsgCreateValidator**: Move user's self-bond to `EpochDelegationPool` immediately. Queue a message for the epoch boundary to handle the self-bond, taking the funds from the `EpochDelegationPool`. If Epoch execution fails, return back funds from `EpochDelegationPool` to user's account.
 * **MsgEditValidator**: Validate message and if valid queue the message for execution at the end of the Epoch.
-* **MsgDelegate**: Move user's funds to `EpochDelegationPool` immediately. Queue a message for the epoch boundary to handle the delegation, taking the funds from the `EpochDelegationPool`. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
+* **MsgDelegate**: Move user's funds to `EpochDelegationPool` immediately. Queue a message for the epoch boundary to handle the delegation, taking the funds from the `EpochDelegationPool`. If Epoch execution fails, return back funds from `EpochDelegationPool` to user's account.
 * **MsgBeginRedelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 * **MsgUndelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 

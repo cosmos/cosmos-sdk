@@ -59,11 +59,11 @@ An expedited optimistic proposal and an expedited multiple choice proposal do no
 
 #### Optimistic Proposal
 
-An optimistic proposal is a proposal that passes unless a threshold a NO votes is reached.
+An optimistic proposal is a proposal that passes unless a threshold of NO votes is reached.
 
 Voter can only vote NO on the proposal. If the NO threshold is reached, the optimistic proposal is converted to a standard proposal.
 
-Two governance parameters will be in added [`v1.Params`][5] to support optimistic proposals:
+Two governance parameters will be added [`v1.Params`][5] to support optimistic proposals:
 
 ```protobuf
 // optimistic_authorized_addresses is an optional governance parameter that limits the authorized accounts that can submit optimistic proposals

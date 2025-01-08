@@ -346,7 +346,7 @@ message MsgSend {
 
 * `cosmos.gov.v1.MsgVote` -> `governance v1 vote`
 
-#### Best Pratices
+#### Best Practices
 
 We recommend to use this option only for `Msg`s whose Protobuf fully qualified name can be hard to understand. As such, the two examples above (`MsgSend` and `MsgVote`) are not good examples to be used with `msg_title`. We still allow `msg_title` for chains who might have `Msg`s with complex or non-obvious names.
 

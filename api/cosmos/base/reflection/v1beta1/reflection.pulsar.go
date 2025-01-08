@@ -1833,7 +1833,7 @@ type ListImplementationsRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// interface_name defines the interface to query the implementations for.
+	// interface_name defines the interface to query the implementations.
 	InterfaceName string `protobuf:"bytes,1,opt,name=interface_name,json=interfaceName,proto3" json:"interface_name,omitempty"`
 }
 

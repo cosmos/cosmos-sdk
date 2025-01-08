@@ -68,7 +68,7 @@ type coreKVStore struct {
 	kvStore storetypes.KVStore
 }
 
-// NewKVStore returns a wrapper of Core/Store kvstore interface
+// newKVStore returns a wrapper of Core/Store kvstore interface
 func newKVStore(store storetypes.KVStore) store.KVStore {
 	return coreKVStore{kvStore: store}
 }

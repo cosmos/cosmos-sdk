@@ -30,6 +30,7 @@ func NewPebbleDB(name, dataDir string) (*PebbleDB, error) {
 
 func NewPebbleDBWithOpts(name, dataDir string, opts coreserver.DynamicConfig) (*PebbleDB, error) {
 	do := &pebble.Options{
+		Logger:                   &fatalLogger{},          // pebble info logs are messing up the logs (not a cosmossdk.io/log logger)
 		MaxConcurrentCompactions: func() int { return 3 }, // default 1
 	}
 
@@ -69,10 +70,6 @@ func (db *PebbleDB) Get(key []byte) ([]byte, error) {
 		}
 
 		return nil, fmt.Errorf("failed to perform PebbleDB read: %w", err)
-	}
-
-	if len(bz) == 0 {
-		return nil, closer.Close()
 	}
 
 	return bz, closer.Close()
@@ -231,6 +228,9 @@ func (itr *pebbleDBIterator) Error() error {
 }
 
 func (itr *pebbleDBIterator) Close() error {
+	if itr.source == nil {
+		return nil
+	}
 	err := itr.source.Close()
 	itr.source = nil
 	itr.valid = false
@@ -301,3 +301,13 @@ func (b *pebbleDBBatch) Close() error {
 func (b *pebbleDBBatch) GetByteSize() (int, error) {
 	return b.batch.Len(), nil
 }
+
+type fatalLogger struct {
+	pebble.Logger
+}
+
+func (*fatalLogger) Fatalf(format string, args ...interface{}) {
+	pebble.DefaultLogger.Fatalf(format, args...)
+}
+
+func (*fatalLogger) Infof(format string, args ...interface{}) {}

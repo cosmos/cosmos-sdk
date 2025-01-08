@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # go-arch: ["amd64", "arm", "arm64"]
         go-arch: ["amd64", "arm64"] # drop 32 bit support for now (and maybe forever)
     steps:
       - uses: actions/checkout@v4
@@ -26,41 +25,20 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
-      - name: Get rocksdb version
-        run: ./.github/scripts/get-rocksdb-version.sh
-      - name: Fix permissions for cache
-        run: sudo chown $(whoami) /usr/local/lib /usr/local/include
-      - name: Restore rocksdb libraries cache
-        id: cache-rocksdb
-        if: matrix.go-arch == 'amd64'
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            /usr/local/lib/librocksdb.*
-            /usr/local/include/rocksdb
-          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-${{ matrix.go-arch }}
-      - name: Install rocksdb deps
-        if: matrix.go-arch == 'amd64'
-        run: ./.github/scripts/install-rocksdb-deps.sh
-      - name: Install rocksdb
-        if: matrix.go-arch == 'amd64' && steps.cache-rocksdb.outputs.cache-hit != 'true'
-        run: ./.github/scripts/install-rocksdb.sh
+      - name: install aarch64-gcc
+        if: matrix.go-arch == 'arm64'
+        run: sudo apt-get install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
         ###################
         #### Build App ####
         ###################
-      - name: Build
-        run: GOARCH=${{ matrix.go-arch }} make build
-      - name: Build v2
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2 make build
-      - name: Build with rocksdb backend
-        if: matrix.go-arch == 'amd64'
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="rocksdb" make build
+      - name: Build with sqlite backend
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,sqlite make build
       - name: Build with BLS12381
         if: matrix.go-arch == 'amd64'
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="bls12381" make build
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,bls12381 make build
       - name: Build with Secp_cgo
         if: matrix.go-arch == 'amd64'
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="secp" make build
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,secp make build
         ###################
         ## Build Tooling ##
         ###################

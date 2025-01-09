@@ -26,7 +26,7 @@ func ORMPluginRunner(p *protogen.Plugin) error {
 			continue
 		}
 
-		if !hashtables(f) {
+		if !hasTables(f) {
 			continue
 		}
 
@@ -52,7 +52,7 @@ func QueryProtoPluginRunner(p *protogen.Plugin) error {
 			continue
 		}
 
-		if !hashtables(f) {
+		if !hasTables(f) {
 			continue
 		}
 
@@ -76,7 +76,7 @@ func QueryProtoPluginRunner(p *protogen.Plugin) error {
 	return nil
 }
 
-func hashtables(file *protogen.File) bool {
+func hasTables(file *protogen.File) bool {
 	for _, message := range file.Messages {
 		if proto.GetExtension(message.Desc.Options(), ormv1.E_Table).(*ormv1.TableDescriptor) != nil {
 			return true

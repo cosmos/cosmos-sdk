@@ -207,7 +207,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 
 	var (
 		req    *types.QueryValidatorSlashesRequest
-		express *types.QueryValidatorSlashesResponse
+		expRes *types.QueryValidatorSlashesResponse
 	)
 
 	testCases := []struct {
@@ -220,7 +220,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 			name: "empty request",
 			malleate: func() {
 				req = &types.QueryValidatorSlashesRequest{}
-				express = &types.QueryValidatorSlashesResponse{}
+				expRes = &types.QueryValidatorSlashesResponse{}
 			},
 			expPass:   false,
 			expErrMsg: "empty validator address",
@@ -233,7 +233,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 					StartingHeight:   10,
 					EndingHeight:     1,
 				}
-				express = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
+				expRes = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
 			},
 			expPass:   false,
 			expErrMsg: "starting height greater than ending height",
@@ -246,7 +246,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 					StartingHeight:   1,
 					EndingHeight:     10,
 				}
-				express = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
+				expRes = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
 			},
 			expPass: true,
 		},
@@ -265,7 +265,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 					Pagination:       pageReq,
 				}
 
-				express = &types.QueryValidatorSlashesResponse{
+				expRes = &types.QueryValidatorSlashesResponse{
 					Slashes: slashes[2:],
 				}
 			},
@@ -286,7 +286,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 					Pagination:       pageReq,
 				}
 
-				express = &types.QueryValidatorSlashesResponse{
+				expRes = &types.QueryValidatorSlashesResponse{
 					Slashes: slashes[:3],
 				}
 			},
@@ -307,7 +307,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 					Pagination:       pageReq,
 				}
 
-				express = &types.QueryValidatorSlashesResponse{
+				expRes = &types.QueryValidatorSlashesResponse{
 					Slashes: slashes[:4],
 				}
 			},
@@ -324,7 +324,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 
 			if tc.expPass {
 				assert.NilError(t, err)
-				assert.DeepEqual(t, express.GetSlashes(), slashesRes.GetSlashes())
+				assert.DeepEqual(t, expRes.GetSlashes(), slashesRes.GetSlashes())
 			} else {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, slashesRes == nil)
@@ -467,7 +467,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	assert.NilError(t, f.distrKeeper.ValidatorCurrentRewards.Set(f.ctx, f.valAddr, currentRewards))
 	assert.NilError(t, f.distrKeeper.ValidatorOutstandingRewards.Set(f.ctx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
 
-	express := &types.QueryDelegationRewardsResponse{
+	expRes := &types.QueryDelegationRewardsResponse{
 		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},
 	}
 
@@ -528,7 +528,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 
 			if tc.expPass {
 				assert.NilError(t, err)
-				assert.DeepEqual(t, express, rewards)
+				assert.DeepEqual(t, expRes, rewards)
 			} else {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, rewards == nil)

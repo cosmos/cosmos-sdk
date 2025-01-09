@@ -15,10 +15,8 @@ require (
 	cosmossdk.io/server/v2/cometbft v0.0.0-20241015140036-ee3d320eaa55
 	cosmossdk.io/store/v2 v2.0.0
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
-	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
@@ -52,6 +50,8 @@ require github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
 
 require (
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
+	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft/api v1.0.0
 )
 

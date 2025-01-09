@@ -66,16 +66,10 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 // indirect; main
 	cosmossdk.io/server/v2/stf v1.0.0-beta.1 // indirect; main
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect; main
 	cosmossdk.io/x/tx v1.0.0 // indirect; main
-=======
-	cosmossdk.io/server/v2/stf v1.0.0-beta.1 // indirect
-	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
-	cosmossdk.io/x/tx v1.0.0 // indirect
->>>>>>> cf721a654 (feat(sims): Integration with app v2 (#23013))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

@@ -47,24 +47,16 @@ test-sim-multi-seed-long:
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=2h -tags='sims' -run TestFullAppSimulation \
 		-NumBlocks=150 -Period=50
 
-<<<<<<< HEAD
 test-sim-multi-seed-short:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
 		-NumBlocks=50 -Period=10 -FauxMerkle=true
 
-=======
-test-sim-multi-seed-short: test-v2-sim
-	# @echo "Running short multi-seed application simulation. This may take awhile!"
-	# @cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
-	#	-NumBlocks=50 -Period=10 -FauxMerkle=true
-
-.Phony: test-v2-sim
 test-v2-sim:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestSimsAppV2 \
-#		-NumBlocks=50 -Period=10 -FauxMerkle=true
->>>>>>> cf721a654 (feat(sims): Integration with app v2 (#23013))
+	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestSimsAppV2
+.PHONY: test-v2-sim
+
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."

@@ -40,15 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
-<<<<<<< HEAD
-=======
 ### Features
-* (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
-* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
-* (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
-* (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
 
->>>>>>> cf721a654 (feat(sims): Integration with app v2 (#23013))
+* (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
+
 ### Improvements
 
 * (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recursion limits.

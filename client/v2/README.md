@@ -304,7 +304,7 @@ To sign a file `sign-file` command offers some helpful flags:
       --encoding string          Choose an encoding method for the file content to be added as msg data (no-encoding|base64|hex) (default "no-encoding")
       --indent string            Choose an indent for the tx (default "  ")
       --notEmitUnpopulated       Don't show unpopulated fields in the tx
-      --output string            Choose an output format for the tx (json|text (default "json")
+      --output string            Choose an output format for the tx (json|text) (default "json")
       --output-document string   The document will be written to the given file instead of STDOUT
 ```
 

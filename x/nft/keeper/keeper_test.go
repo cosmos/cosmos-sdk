@@ -399,3 +399,171 @@ func (s *TestSuite) TestInitGenesis() {
 	s.Require().True(has)
 	s.Require().EqualValues(expNFT, actNFT)
 }
+
+func (s *TestSuite) TestMsgNewClass() {
+	msg := &nft.MsgNewClass{
+		ClassId:     testClassID,
+		Name:        testClassName,
+		Symbol:      testClassSymbol,
+		Description: testClassDescription,
+		Uri:         testClassURI,
+		UriHash:     testClassURIHash,
+	}
+
+	_, err := s.nftKeeper.MsgNewClass(s.ctx, msg)
+	s.Require().NoError(err)
+
+	actual, has := s.nftKeeper.GetClass(s.ctx, testClassID)
+	s.Require().True(has)
+	s.Require().EqualValues(nft.Class{
+		Id:          testClassID,
+		Name:        testClassName,
+		Symbol:      testClassSymbol,
+		Description: testClassDescription,
+		Uri:         testClassURI,
+		UriHash:     testClassURIHash,
+	}, actual)
+}
+
+func (s *TestSuite) TestMsgUpdateClass() {
+	class := nft.Class{
+		Id:          testClassID,
+		Name:        testClassName,
+		Symbol:      testClassSymbol,
+		Description: testClassDescription,
+		Uri:         testClassURI,
+		UriHash:     testClassURIHash,
+	}
+	err := s.nftKeeper.SaveClass(s.ctx, class)
+	s.Require().NoError(err)
+
+	msg := &nft.MsgUpdateClass{
+		ClassId:     testClassID,
+		Name:        "Updated Name",
+		Symbol:      "Updated Symbol",
+		Description: "Updated Description",
+		Uri:         "Updated URI",
+		UriHash:     "Updated URI Hash",
+	}
+
+	_, err = s.nftKeeper.MsgUpdateClass(s.ctx, msg)
+	s.Require().NoError(err)
+
+	actual, has := s.nftKeeper.GetClass(s.ctx, testClassID)
+	s.Require().True(has)
+	s.Require().EqualValues(nft.Class{
+		Id:          testClassID,
+		Name:        "Updated Name",
+		Symbol:      "Updated Symbol",
+		Description: "Updated Description",
+		Uri:         "Updated URI",
+		UriHash:     "Updated URI Hash",
+	}, actual)
+}
+
+func (s *TestSuite) TestMsgMintNFT() {
+	class := nft.Class{
+		Id:          testClassID,
+		Name:        testClassName,
+		Symbol:      testClassSymbol,
+		Description: testClassDescription,
+		Uri:         testClassURI,
+		UriHash:     testClassURIHash,
+	}
+	err := s.nftKeeper.SaveClass(s.ctx, class)
+	s.Require().NoError(err)
+
+	msg := &nft.MsgMintNFT{
+		ClassId:  testClassID,
+		Id:       testID,
+		Uri:      testURI,
+		UriHash:  testURIHash,
+		Receiver: s.encodedAddrs[0],
+	}
+
+	_, err = s.nftKeeper.MsgMintNFT(s.ctx, msg)
+	s.Require().NoError(err)
+
+	actual, has := s.nftKeeper.GetNFT(s.ctx, testClassID, testID)
+	s.Require().True(has)
+	s.Require().EqualValues(nft.NFT{
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
+		UriHash: testURIHash,
+	}, actual)
+}
+
+func (s *TestSuite) TestMsgBurnNFT() {
+	class := nft.Class{
+		Id:          testClassID,
+		Name:        testClassName,
+		Symbol:      testClassSymbol,
+		Description: testClassDescription,
+		Uri:         testClassURI,
+		UriHash:     testClassURIHash,
+	}
+	err := s.nftKeeper.SaveClass(s.ctx, class)
+	s.Require().NoError(err)
+
+	nft := nft.NFT{
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
+		UriHash: testURIHash,
+	}
+	err = s.nftKeeper.Mint(s.ctx, nft, s.addrs[0])
+	s.Require().NoError(err)
+
+	msg := &nft.MsgBurnNFT{
+		ClassId: testClassID,
+		Id:      testID,
+	}
+
+	_, err = s.nftKeeper.MsgBurnNFT(s.ctx, msg)
+	s.Require().NoError(err)
+
+	_, has := s.nftKeeper.GetNFT(s.ctx, testClassID, testID)
+	s.Require().False(has)
+}
+
+func (s *TestSuite) TestMsgUpdateNFT() {
+	class := nft.Class{
+		Id:          testClassID,
+		Name:        testClassName,
+		Symbol:      testClassSymbol,
+		Description: testClassDescription,
+		Uri:         testClassURI,
+		UriHash:     testClassURIHash,
+	}
+	err := s.nftKeeper.SaveClass(s.ctx, class)
+	s.Require().NoError(err)
+
+	nft := nft.NFT{
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
+		UriHash: testURIHash,
+	}
+	err = s.nftKeeper.Mint(s.ctx, nft, s.addrs[0])
+	s.Require().NoError(err)
+
+	msg := &nft.MsgUpdateNFT{
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     "Updated URI",
+		UriHash: "Updated URI Hash",
+	}
+
+	_, err = s.nftKeeper.MsgUpdateNFT(s.ctx, msg)
+	s.Require().NoError(err)
+
+	actual, has := s.nftKeeper.GetNFT(s.ctx, testClassID, testID)
+	s.Require().True(has)
+	s.Require().EqualValues(nft.NFT{
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     "Updated URI",
+		UriHash: "Updated URI Hash",
+	}, actual)
+}

@@ -52,3 +52,75 @@ func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespons
 
 	return &nft.MsgSendResponse{}, nil
 }
+
+// NewClass implements NewClass method of the types.MsgServer.
+func (k Keeper) NewClass(ctx context.Context, msg *nft.MsgNewClass) (*nft.MsgNewClassResponse, error) {
+	class := nft.Class{
+		Id:          msg.ClassId,
+		Name:        msg.Name,
+		Symbol:      msg.Symbol,
+		Description: msg.Description,
+		Uri:         msg.Uri,
+		UriHash:     msg.UriHash,
+		Data:        msg.Data,
+	}
+	if err := k.SaveClass(ctx, class); err != nil {
+		return nil, err
+	}
+	return &nft.MsgNewClassResponse{}, nil
+}
+
+// UpdateClass implements UpdateClass method of the types.MsgServer.
+func (k Keeper) UpdateClass(ctx context.Context, msg *nft.MsgUpdateClass) (*nft.MsgUpdateClassResponse, error) {
+	class := nft.Class{
+		Id:          msg.ClassId,
+		Name:        msg.Name,
+		Symbol:      msg.Symbol,
+		Description: msg.Description,
+		Uri:         msg.Uri,
+		UriHash:     msg.UriHash,
+		Data:        msg.Data,
+	}
+	if err := k.UpdateClass(ctx, class); err != nil {
+		return nil, err
+	}
+	return &nft.MsgUpdateClassResponse{}, nil
+}
+
+// MintNFT implements MintNFT method of the types.MsgServer.
+func (k Keeper) MintNFT(ctx context.Context, msg *nft.MsgMintNFT) (*nft.MsgMintNFTResponse, error) {
+	nft := nft.NFT{
+		ClassId: msg.ClassId,
+		Id:      msg.Id,
+		Uri:     msg.Uri,
+		UriHash: msg.UriHash,
+		Data:    msg.Data,
+	}
+	if err := k.Mint(ctx, nft, msg.Receiver); err != nil {
+		return nil, err
+	}
+	return &nft.MsgMintNFTResponse{}, nil
+}
+
+// BurnNFT implements BurnNFT method of the types.MsgServer.
+func (k Keeper) BurnNFT(ctx context.Context, msg *nft.MsgBurnNFT) (*nft.MsgBurnNFTResponse, error) {
+	if err := k.Burn(ctx, msg.ClassId, msg.Id); err != nil {
+		return nil, err
+	}
+	return &nft.MsgBurnNFTResponse{}, nil
+}
+
+// UpdateNFT implements UpdateNFT method of the types.MsgServer.
+func (k Keeper) UpdateNFT(ctx context.Context, msg *nft.MsgUpdateNFT) (*nft.MsgUpdateNFTResponse, error) {
+	nft := nft.NFT{
+		ClassId: msg.ClassId,
+		Id:      msg.Id,
+		Uri:     msg.Uri,
+		UriHash: msg.UriHash,
+		Data:    msg.Data,
+	}
+	if err := k.Update(ctx, nft); err != nil {
+		return nil, err
+	}
+	return &nft.MsgUpdateNFTResponse{}, nil
+}

@@ -12,6 +12,21 @@ service Msg {
 
   // Send defines a method to send a nft from one account to another account.
   rpc Send(MsgSend) returns (MsgSendResponse);
+
+  // NewClass defines a method to create a new NFT class.
+  rpc NewClass(MsgNewClass) returns (MsgNewClassResponse);
+
+  // UpdateClass defines a method to update an existing NFT class.
+  rpc UpdateClass(MsgUpdateClass) returns (MsgUpdateClassResponse);
+
+  // MintNFT defines a method to mint a new NFT.
+  rpc MintNFT(MsgMintNFT) returns (MsgMintNFTResponse);
+
+  // BurnNFT defines a method to burn an existing NFT.
+  rpc BurnNFT(MsgBurnNFT) returns (MsgBurnNFTResponse);
+
+  // UpdateNFT defines a method to update an existing NFT.
+  rpc UpdateNFT(MsgUpdateNFT) returns (MsgUpdateNFTResponse);
 }
 
 // MsgSend represents a message to send a nft from one account to another account.
@@ -30,5 +45,142 @@ message MsgSend {
   // receiver is the receiver address of nft
   string receiver = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
+
 // MsgSendResponse defines the Msg/Send response type.
 message MsgSendResponse {}
+
+// MsgNewClass represents a message to create a new NFT class.
+message MsgNewClass {
+  option (cosmos.msg.v1.signer) = "creator";
+
+  // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
+  string class_id = 1;
+
+  // name defines the human-readable name of the NFT classification. Optional
+  string name = 2;
+
+  // symbol is an abbreviated name for nft classification. Optional
+  string symbol = 3;
+
+  // description is a brief description of nft classification. Optional
+  string description = 4;
+
+  // uri for the class metadata stored off chain. It can define schema for Class and NFT `Data` attributes. Optional
+  string uri = 5;
+
+  // uri_hash is a hash of the document pointed by uri. Optional
+  string uri_hash = 6;
+
+  // data is the app specific metadata of the NFT class. Optional
+  google.protobuf.Any data = 7;
+
+  // creator is the address of the creator of the NFT class
+  string creator = 8 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgNewClassResponse defines the Msg/NewClass response type.
+message MsgNewClassResponse {}
+
+// MsgUpdateClass represents a message to update an existing NFT class.
+message MsgUpdateClass {
+  option (cosmos.msg.v1.signer) = "updater";
+
+  // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
+  string class_id = 1;
+
+  // name defines the human-readable name of the NFT classification. Optional
+  string name = 2;
+
+  // symbol is an abbreviated name for nft classification. Optional
+  string symbol = 3;
+
+  // description is a brief description of nft classification. Optional
+  string description = 4;
+
+  // uri for the class metadata stored off chain. It can define schema for Class and NFT `Data` attributes. Optional
+  string uri = 5;
+
+  // uri_hash is a hash of the document pointed by uri. Optional
+  string uri_hash = 6;
+
+  // data is the app specific metadata of the NFT class. Optional
+  google.protobuf.Any data = 7;
+
+  // updater is the address of the updater of the NFT class
+  string updater = 8 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateClassResponse defines the Msg/UpdateClass response type.
+message MsgUpdateClassResponse {}
+
+// MsgMintNFT represents a message to mint a new NFT.
+message MsgMintNFT {
+  option (cosmos.msg.v1.signer) = "minter";
+
+  // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
+  string class_id = 1;
+
+  // id defines the unique identification of nft
+  string id = 2;
+
+  // uri for the NFT metadata stored off chain
+  string uri = 3;
+
+  // uri_hash is a hash of the document pointed by uri
+  string uri_hash = 4;
+
+  // data is an app specific data of the NFT. Optional
+  google.protobuf.Any data = 5;
+
+  // minter is the address of the minter of the NFT
+  string minter = 6 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // receiver is the receiver address of nft
+  string receiver = 7 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgMintNFTResponse defines the Msg/MintNFT response type.
+message MsgMintNFTResponse {}
+
+// MsgBurnNFT represents a message to burn an existing NFT.
+message MsgBurnNFT {
+  option (cosmos.msg.v1.signer) = "burner";
+
+  // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
+  string class_id = 1;
+
+  // id defines the unique identification of nft
+  string id = 2;
+
+  // burner is the address of the burner of the NFT
+  string burner = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgBurnNFTResponse defines the Msg/BurnNFT response type.
+message MsgBurnNFTResponse {}
+
+// MsgUpdateNFT represents a message to update an existing NFT.
+message MsgUpdateNFT {
+  option (cosmos.msg.v1.signer) = "updater";
+
+  // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
+  string class_id = 1;
+
+  // id defines the unique identification of nft
+  string id = 2;
+
+  // uri for the NFT metadata stored off chain
+  string uri = 3;
+
+  // uri_hash is a hash of the document pointed by uri
+  string uri_hash = 4;
+
+  // data is an app specific data of the NFT. Optional
+  google.protobuf.Any data = 5;
+
+  // updater is the address of the updater of the NFT
+  string updater = 6 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateNFTResponse defines the Msg/UpdateNFT response type.
+message MsgUpdateNFTResponse {}

@@ -154,6 +154,8 @@ func getHTTPGetAnnotationMapping() (map[string]string, error) {
 	return httpGets, nil
 }
 
+// createRegexMapping converts the annotationMapping (HTTP annotation -> query input type name) to a
+// map of regular expressions for that HTTP annotation pattern, to queryMetadata.
 func createRegexMapping(annotationMapping map[string]string) map[*regexp.Regexp]queryMetadata {
 	regexQueryMD := make(map[*regexp.Regexp]queryMetadata)
 	for annotation, queryInputName := range annotationMapping {

@@ -74,7 +74,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 			args{nil, ed25519.GenPrivKey().PubKey(), params, func(mm *gastestutil.MockMeter) {
 				mm.EXPECT().Consume(p.SigVerifyCostED25519, "ante verify: ed25519").Times(1)
 			}},
-			true,
+			false,
 		},
 		{
 			"PubKeySecp256k1",

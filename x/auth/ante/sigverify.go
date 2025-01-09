@@ -69,24 +69,22 @@ type AccountAbstractionKeeper interface {
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak                   AccountKeeper
-	aaKeeper             AccountAbstractionKeeper
-	signModeHandler      *txsigning.HandlerMap
-	sigGasConsumer       SignatureVerificationGasConsumer
-	extraVerifyIsOnCurve func(pubKey cryptotypes.PubKey) (bool, error)
+	ak              AccountKeeper
+	aaKeeper        AccountAbstractionKeeper
+	signModeHandler *txsigning.HandlerMap
+	sigGasConsumer  SignatureVerificationGasConsumer
 }
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper) SigVerificationDecorator {
-	return NewSigVerificationDecoratorWithVerifyOnCurve(ak, signModeHandler, sigGasConsumer, aaKeeper, nil)
+	return NewSigVerificationDecoratorWithVerifyOnCurve(ak, signModeHandler, sigGasConsumer, aaKeeper)
 }
 
-func NewSigVerificationDecoratorWithVerifyOnCurve(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper, verifyFn func(pubKey cryptotypes.PubKey) (bool, error)) SigVerificationDecorator {
+func NewSigVerificationDecoratorWithVerifyOnCurve(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		aaKeeper:             aaKeeper,
-		ak:                   ak,
-		signModeHandler:      signModeHandler,
-		sigGasConsumer:       sigGasConsumer,
-		extraVerifyIsOnCurve: verifyFn,
+		aaKeeper:        aaKeeper,
+		ak:              ak,
+		signModeHandler: signModeHandler,
+		sigGasConsumer:  sigGasConsumer,
 	}
 }
 
@@ -112,18 +110,16 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 }
 
 func (svd SigVerificationDecorator) VerifyIsOnCurve(pubKey cryptotypes.PubKey) error {
-	if svd.extraVerifyIsOnCurve != nil {
-		handled, err := svd.extraVerifyIsOnCurve(pubKey)
-		if handled {
-			return err
-		}
-	}
 	// when simulating pubKey.Key will always be nil
 	if pubKey.Bytes() == nil {
 		return nil
 	}
 
 	switch typedPubKey := pubKey.(type) {
+	case *ed25519.PubKey:
+		if !typedPubKey.IsOnCurve() {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ed25519 key is not on curve")
+		}
 	case *secp256k1.PubKey:
 		pubKeyObject, err := secp256k1dcrd.ParsePubKey(typedPubKey.Bytes())
 		if err != nil {
@@ -534,10 +530,7 @@ func DefaultSigVerificationGasConsumer(meter gas.Meter, sig signing.SignatureV2,
 
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
-		if err := meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519"); err != nil {
-			return err
-		}
-		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
+		return meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519")
 
 	case *secp256k1.PubKey:
 		return meter.Consume(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")

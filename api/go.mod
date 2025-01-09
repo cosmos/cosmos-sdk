@@ -14,7 +14,7 @@ require (
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect

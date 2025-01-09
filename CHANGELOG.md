@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
+### Features
+
+* (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
+
 ### Improvements
 
 * (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recursion limits.

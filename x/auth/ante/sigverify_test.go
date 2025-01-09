@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -401,23 +402,21 @@ func TestAnteHandlerChecks(t *testing.T) {
 	anteHandler := sdk.ChainAnteDecorators(sigVerificationDecorator)
 
 	type testCase struct {
-		name      string
-		privs     []cryptotypes.PrivKey
-		msg       sdk.Msg
-		accNums   []uint64
-		accSeqs   []uint64
-		shouldErr bool
-		supported bool
+		name    string
+		privs   []cryptotypes.PrivKey
+		msg     sdk.Msg
+		accNums []uint64
+		accSeqs []uint64
 	}
 
 	// Secp256r1 keys that are not on curve will fail before even doing any operation i.e when trying to get the pubkey
 	testCases := []testCase{
-		{"secp256k1_onCurve", []cryptotypes.PrivKey{priv1}, msgs[0], []uint64{accs[0].GetAccountNumber()}, []uint64{0}, false, true},
-		{"secp256r1_onCurve", []cryptotypes.PrivKey{priv2}, msgs[1], []uint64{accs[1].GetAccountNumber()}, []uint64{0}, false, true},
-		{"ed255619", []cryptotypes.PrivKey{priv3}, msgs[2], []uint64{accs[2].GetAccountNumber()}, []uint64{2}, false, true},
+		{"secp256k1_onCurve", []cryptotypes.PrivKey{priv1}, msgs[0], []uint64{accs[0].GetAccountNumber()}, []uint64{0}},
+		{"secp256r1_onCurve", []cryptotypes.PrivKey{priv2}, msgs[1], []uint64{accs[1].GetAccountNumber()}, []uint64{0}},
+		{"ed255619", []cryptotypes.PrivKey{priv3}, msgs[2], []uint64{accs[2].GetAccountNumber()}, []uint64{2}},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s key", tc.name), func(t *testing.T) {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
@@ -434,16 +433,8 @@ func TestAnteHandlerChecks(t *testing.T) {
 
 			byteCtx := suite.ctx.WithTxBytes(txBytes)
 			_, err = anteHandler(byteCtx, tx, true)
-			if tc.shouldErr {
-				require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
-				if tc.supported {
-					require.ErrorContains(t, err, "not on curve")
-				} else {
-					require.ErrorContains(t, err, "unsupported key type")
-				}
-			} else {
-				require.Nil(t, err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
-			}
+
+			assert.NoError(t, err)
 		})
 	}
 }

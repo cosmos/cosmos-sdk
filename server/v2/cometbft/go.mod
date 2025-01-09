@@ -12,9 +12,9 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0 //main
-	cosmossdk.io/server/v2 v2.0.0-beta.1 // main
-	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 // main
-	cosmossdk.io/server/v2/stf v1.0.0-beta.1 // main
+	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 // main
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1.0.20250109081935-cf721a654090 // main
+	cosmossdk.io/server/v2/stf v1.0.0-beta.1.0.20250109081935-cf721a654090 // main
 	cosmossdk.io/store/v2 v2.0.0-beta.1 // main
 	cosmossdk.io/x/consensus v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
@@ -25,7 +25,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 	sigs.k8s.io/yaml v1.4.0
 )
 

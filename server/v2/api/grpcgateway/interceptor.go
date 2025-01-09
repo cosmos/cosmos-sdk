@@ -63,8 +63,8 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 	}, nil
 }
 
-// ServeHTTP implements the http.Handler interface. This function will attempt to match http request using it's internal mapping.
-// If no match can be made, it falls back to the runtime gateway server mux.
+// ServeHTTP implements the http.Handler interface. This method will attempt to match request URIs to its internal mapping
+// of gateway HTTP annotations. If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	g.logger.Debug("received grpc-gateway request", "request_uri", request.RequestURI)
 	match := matchURL(request.URL, g.regexpToQueryMetadata)

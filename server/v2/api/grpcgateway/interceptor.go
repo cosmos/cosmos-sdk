@@ -25,9 +25,9 @@ var _ http.Handler = &gatewayInterceptor[transaction.Tx]{}
 type queryMetadata struct {
 	// queryInputProtoName is the proto name of the query's input type.
 	queryInputProtoName string
-	// wildcardKeyNames are the wildcard key names from the HTTP annotation.
+	// wildcardKeyNames are the wildcard key names from the query's HTTP annotation.
 	// for example /foo/bar/{baz}/{qux} would produce []string{"baz", "qux"}
-	// this is used for building the query parameter map for a request.
+	// this is used for building the query's parameter map.
 	wildcardKeyNames []string
 }
 
@@ -38,7 +38,10 @@ type gatewayInterceptor[T transaction.Tx] struct {
 	gateway *runtime.ServeMux
 
 	// regexpToQueryMetadata is a mapping of regular expressions of HTTP annotations to metadata for the query.
-	// it is built from parsing the HTTP annotations obtained from the gogoproto global registry.
+	// it is built from parsing the HTTP annotations obtained from the gogoproto global registry.'
+	//
+	// TODO: it might be interesting to make this a 'most frequently used' data structure, so frequently used regexp's are
+	// iterated over first.
 	regexpToQueryMetadata map[*regexp.Regexp]queryMetadata
 
 	// appManager is used to route queries to the application.

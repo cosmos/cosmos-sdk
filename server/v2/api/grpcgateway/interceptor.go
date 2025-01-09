@@ -21,7 +21,7 @@ import (
 
 var _ http.Handler = &gatewayInterceptor[transaction.Tx]{}
 
-// queryMetadata is a type that holds information related to handling gateway queries.
+// queryMetadata holds information related to handling gateway queries.
 type queryMetadata struct {
 	// queryInputProtoName is the proto name of the query's input type.
 	queryInputProtoName string

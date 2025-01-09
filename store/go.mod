@@ -3,7 +3,7 @@ module cosmossdk.io/store
 go 1.23.4
 
 require (
-	cosmossdk.io/core v1.0.0-alpha.6
+	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
@@ -22,7 +22,7 @@ require (
 	github.com/tidwall/btree v1.7.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 	gotest.tools/v3 v3.5.1
 )
 

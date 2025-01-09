@@ -25,9 +25,10 @@ type uriMatch struct {
 	// Params are any wildcard/query params found in the request.
 	//
 	// example:
-	// - foo/bar/{baz} - foo/bar/qux -> {baz: qux}
-	// - foo/bar?baz=qux - foo/bar -> {baz: qux}
-	Params map[string]string
+	// - foo/bar/{baz} - foo/bar/qux -> {baz: {"qux"}}
+	// - foo/bar?baz=qux - foo/bar -> {baz: {"qux"}
+	// - foo/bar?denom=atom&denom=stake -> {denom: {"atom", "stake"}}
+	Params map[string][]string
 }
 
 // HasParams reports whether the uriMatch has any params.
@@ -41,13 +42,10 @@ func matchURL(u *url.URL, regexpToQueryMetadata map[*regexp.Regexp]queryMetadata
 	uriPath := strings.TrimRight(u.Path, "/")
 	queryParams := u.Query()
 
-	params := make(map[string]string)
+	params := make(map[string][]string)
 	for key, vals := range queryParams {
 		if len(vals) > 0 {
-			// url.Values contains a slice for the values as you are able to specify a key multiple times in URL.
-			// example: https://localhost:9090/do/something?color=red&color=blue&color=green
-			// We will just take the first value in the slice.
-			params[key] = vals[0]
+			params[key] = vals
 		}
 	}
 	for reg, qmd := range regexpToQueryMetadata {
@@ -61,7 +59,7 @@ func matchURL(u *url.URL, regexpToQueryMetadata map[*regexp.Regexp]queryMetadata
 		case len(matches) > 1:
 			// first match is the URI, subsequent matches are the wild card values.
 			for i, name := range qmd.wildcardKeyNames {
-				params[name] = matches[i+1]
+				params[name] = []string{matches[i+1]}
 			}
 
 			return &uriMatch{
@@ -137,17 +135,20 @@ func createMessage(match *uriMatch) (gogoproto.Message, error) {
 
 	// if the uri match has params, we need to populate the message with the values of those params.
 	if match.HasParams() {
-		// convert flat params map to nested structure
 		nestedParams := make(map[string]any)
-		for key, value := range match.Params {
+		for key, values := range match.Params {
 			parts := strings.Split(key, ".")
 			current := nestedParams
 
 			// step through nested levels
 			for i, part := range parts {
 				if i == len(parts)-1 {
-					// Last part - set the value
-					current[part] = value
+					// Last part - set the value(s)
+					if len(values) == 1 {
+						current[part] = values[0] // single value
+					} else {
+						current[part] = values // slice of values
+					}
 				} else {
 					// continue nestedness
 					if _, exists := current[part]; !exists {

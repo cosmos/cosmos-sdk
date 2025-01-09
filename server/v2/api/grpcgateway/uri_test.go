@@ -24,19 +24,19 @@ func TestMatchURI(t *testing.T) {
 			name:     "simple match, no wildcards",
 			uri:      "https://localhost:8080/foo/bar",
 			mapping:  map[string]string{"/foo/bar": "query.Bank"},
-			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string]string{}},
+			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string][]string{}},
 		},
 		{
 			name:     "match with query parameters",
 			uri:      "https://localhost:8080/foo/bar?baz=qux",
 			mapping:  map[string]string{"/foo/bar": "query.Bank"},
-			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string]string{"baz": "qux"}},
+			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string][]string{"baz": {"qux"}}},
 		},
 		{
 			name:     "match with multiple query parameters",
 			uri:      "https://localhost:8080/foo/bar?baz=qux&foo=/msg.type.bank.send",
 			mapping:  map[string]string{"/foo/bar": "query.Bank"},
-			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string]string{"baz": "qux", "foo": "/msg.type.bank.send"}},
+			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string][]string{"baz": {"qux"}, "foo": {"/msg.type.bank.send"}}},
 		},
 		{
 			name:    "wildcard match at the end",
@@ -44,7 +44,7 @@ func TestMatchURI(t *testing.T) {
 			mapping: map[string]string{"/foo/bar/{baz}": "bar"},
 			expected: &uriMatch{
 				QueryInputName: "bar",
-				Params:         map[string]string{"baz": "buzz"},
+				Params:         map[string][]string{"baz": {"buzz"}},
 			},
 		},
 		{
@@ -53,7 +53,7 @@ func TestMatchURI(t *testing.T) {
 			mapping: map[string]string{"/foo/{baz}/bar": "bar"},
 			expected: &uriMatch{
 				QueryInputName: "bar",
-				Params:         map[string]string{"baz": "buzz"},
+				Params:         map[string][]string{"baz": {"buzz"}},
 			},
 		},
 		{
@@ -62,7 +62,16 @@ func TestMatchURI(t *testing.T) {
 			mapping: map[string]string{"/foo/bar/{q1}/{q2}": "bar"},
 			expected: &uriMatch{
 				QueryInputName: "bar",
-				Params:         map[string]string{"q1": "baz", "q2": "buzz"},
+				Params:         map[string][]string{"q1": {"baz"}, "q2": {"buzz"}},
+			},
+		},
+		{
+			name:    "match with multiple query parameters",
+			uri:     "https://localhost:8080/bank/supply/by_denom?denom=foo&denom=bar",
+			mapping: map[string]string{"/bank/supply/by_denom": "queryDenom"},
+			expected: &uriMatch{
+				QueryInputName: "queryDenom",
+				Params:         map[string][]string{"denom": {"foo", "bar"}},
 			},
 		},
 		{
@@ -71,7 +80,7 @@ func TestMatchURI(t *testing.T) {
 			mapping: map[string]string{"/foo/bar/{ibc_token=**}": "bar"},
 			expected: &uriMatch{
 				QueryInputName: "bar",
-				Params:         map[string]string{"ibc_token": "ibc/token/stuff"},
+				Params:         map[string][]string{"ibc_token": {"ibc/token/stuff"}},
 			},
 		},
 		{
@@ -94,7 +103,7 @@ func TestMatchURI(t *testing.T) {
 }
 
 func TestURIMatch_HasParams(t *testing.T) {
-	u := uriMatch{Params: map[string]string{"foo": "bar"}}
+	u := uriMatch{Params: map[string][]string{"foo": {"bar"}}}
 	require.True(t, u.HasParams())
 
 	u = uriMatch{}
@@ -113,10 +122,11 @@ type Pagination struct {
 const dummyProtoName = "dummy"
 
 type DummyProto struct {
-	Foo  string      `protobuf:"bytes,1,opt,name=foo,proto3" json:"foo,omitempty"`
-	Bar  bool        `protobuf:"varint,2,opt,name=bar,proto3" json:"bar,omitempty"`
-	Baz  int         `protobuf:"varint,3,opt,name=baz,proto3" json:"baz,omitempty"`
-	Page *Pagination `protobuf:"bytes,4,opt,name=page,proto3" json:"page,omitempty"`
+	Foo    string      `protobuf:"bytes,1,opt,name=foo,proto3" json:"foo,omitempty"`
+	Bar    bool        `protobuf:"varint,2,opt,name=bar,proto3" json:"bar,omitempty"`
+	Baz    int         `protobuf:"varint,3,opt,name=baz,proto3" json:"baz,omitempty"`
+	Denoms []string    `protobuf:"bytes,4,rep,name=denoms,proto3" json:"denoms,omitempty"`
+	Page   *Pagination `protobuf:"bytes,4,opt,name=page,proto3" json:"page,omitempty"`
 }
 
 func (d DummyProto) Reset() {}
@@ -143,7 +153,11 @@ func TestCreateMessage(t *testing.T) {
 			name: "message with params",
 			uri: uriMatch{
 				QueryInputName: dummyProtoName,
-				Params:         map[string]string{"foo": "blah", "bar": "true", "baz": "1352"},
+				Params: map[string][]string{
+					"foo": {"blah"},
+					"bar": {"true"},
+					"baz": {"1352"},
+				},
 			},
 			expected: &DummyProto{
 				Foo: "blah",
@@ -152,10 +166,46 @@ func TestCreateMessage(t *testing.T) {
 			},
 		},
 		{
+			name: "message with slice param",
+			uri: uriMatch{
+				QueryInputName: dummyProtoName,
+				Params: map[string][]string{
+					"foo":    {"blah"},
+					"bar":    {"true"},
+					"baz":    {"1352"},
+					"denoms": {"atom", "stake"},
+				},
+			},
+			expected: &DummyProto{
+				Foo:    "blah",
+				Bar:    true,
+				Baz:    1352,
+				Denoms: []string{"atom", "stake"},
+			},
+		},
+		{
+			name: "message with multiple param for single value field should fail",
+			uri: uriMatch{
+				QueryInputName: dummyProtoName,
+				Params: map[string][]string{
+					"foo":    {"blah", "blahhh"}, // foo is a single value field.
+					"bar":    {"true"},
+					"baz":    {"1352"},
+					"denoms": {"atom", "stake"},
+				},
+			},
+			expErr: true,
+		},
+		{
 			name: "message with nested params",
 			uri: uriMatch{
 				QueryInputName: dummyProtoName,
-				Params:         map[string]string{"foo": "blah", "bar": "true", "baz": "1352", "page.limit": "3"},
+				Params: map[string][]string{
+					"foo":        {"blah"},
+					"bar":        {"true"},
+					"baz":        {"1352"},
+					"page.limit": {"3"},
+				},
 			},
 			expected: &DummyProto{
 				Foo:  "blah",
@@ -168,7 +218,13 @@ func TestCreateMessage(t *testing.T) {
 			name: "message with multi nested params",
 			uri: uriMatch{
 				QueryInputName: dummyProtoName,
-				Params:         map[string]string{"foo": "blah", "bar": "true", "baz": "1352", "page.limit": "3", "page.nest.foo": "5"},
+				Params: map[string][]string{
+					"foo":           {"blah"},
+					"bar":           {"true"},
+					"baz":           {"1352"},
+					"page.limit":    {"3"},
+					"page.nest.foo": {"5"},
+				},
 			},
 			expected: &DummyProto{
 				Foo:  "blah",
@@ -181,7 +237,11 @@ func TestCreateMessage(t *testing.T) {
 			name: "invalid params should error out",
 			uri: uriMatch{
 				QueryInputName: dummyProtoName,
-				Params:         map[string]string{"foo": "blah", "bar": "235235", "baz": "true"},
+				Params: map[string][]string{
+					"foo": {"blah"},
+					"bar": {"235235"},
+					"baz": {"true"},
+				},
 			},
 			expErr: true,
 		},

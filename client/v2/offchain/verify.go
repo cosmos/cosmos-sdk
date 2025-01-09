@@ -95,7 +95,7 @@ func verify(addressCodec address.Codec, txConfig clitx.TxConfig, dTx clitx.Tx) e
 	return nil
 }
 
-// unmarshal unmarshalls a digest to a Tx using protobuf protojson.
+// unmarshal unmarshals a digest to a Tx using protobuf protojson.
 func unmarshal(format string, bz []byte, config clitx.TxConfig) (clitx.Tx, error) {
 	switch format {
 	case "json":

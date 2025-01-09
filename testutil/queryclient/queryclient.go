@@ -31,14 +31,14 @@ func NewQueryHelper(interfaceRegistry codectypes.InterfaceRegistry) *QueryHelper
 	// Once we have an interface registry, we can register the interface
 	// registry reflection gRPC service.
 
-	qH := &QueryHelper{
+	qh := &QueryHelper{
 		cdc:    cdc,
 		routes: map[string]GRPCQueryHandler{},
 	}
 
-	reflection.RegisterReflectionServiceServer(qH, reflection.NewReflectionServiceServer(interfaceRegistry))
+	reflection.RegisterReflectionServiceServer(qh, reflection.NewReflectionServiceServer(interfaceRegistry))
 
-	return qH
+	return qh
 }
 
 // Invoke implements the grpc ClientConn.Invoke method

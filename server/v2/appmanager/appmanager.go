@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"iter"
 
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
@@ -16,6 +17,8 @@ import (
 // It is responsible for interacting with stf and store.
 // Runtime/v2 is an extension of this interface.
 type AppManager[T transaction.Tx] interface {
+	TransactionFuzzer[T]
+
 	// InitGenesis initializes the genesis state of the application.
 	InitGenesis(
 		ctx context.Context,
@@ -53,6 +56,17 @@ type AppManager[T transaction.Tx] interface {
 	// independently of the db state. For example, it can be used to process a query with temporary
 	// and uncommitted state
 	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error)
+}
+
+// TransactionFuzzer defines an interface for processing simulated transactions and generating responses with state changes.
+type TransactionFuzzer[T transaction.Tx] interface {
+	// DeliverSims processes simulated transactions for a block and generates a response with potential state changes.
+	// The simsBuilder generates simulated transactions.
+	DeliverSims(
+		ctx context.Context,
+		block *server.BlockRequest[T],
+		simsBuilder func(ctx context.Context) iter.Seq[T],
+	) (*server.BlockResponse, corestore.WriterMap, error)
 }
 
 // Store defines the underlying storage behavior needed by AppManager.
@@ -182,6 +196,29 @@ func (a appManager[T]) DeliverBlock(
 	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
 	if err != nil {
 		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
+	}
+
+	return blockResponse, newState, nil
+}
+
+// DeliverSims same as DeliverBlock for sims only.
+func (a appManager[T]) DeliverSims(
+	ctx context.Context,
+	block *server.BlockRequest[T],
+	simsBuilder func(ctx context.Context) iter.Seq[T],
+) (*server.BlockResponse, corestore.WriterMap, error) {
+	latestVersion, currentState, err := a.db.StateLatest()
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+	}
+
+	if latestVersion+1 != block.Height {
+		return nil, nil, fmt.Errorf("invalid DeliverSims height wanted %d, got %d", latestVersion+1, block.Height)
+	}
+
+	blockResponse, newState, err := a.stf.DeliverSims(ctx, block, currentState, simsBuilder)
+	if err != nil {
+		return nil, nil, fmt.Errorf("sims delivery failed: %w", err)
 	}
 
 	return blockResponse, newState, nil

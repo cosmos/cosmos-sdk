@@ -114,7 +114,7 @@ func writeConfigFile(configFilePath string, config *Config) error {
 	return os.WriteFile(configFilePath, b, 0o600)
 }
 
-// readConfig reads values from client.toml file and unmarshalls them into ClientConfig
+// readConfig reads values from client.toml file and unmarshals them into ClientConfig
 func readConfig(configPath string, v *viper.Viper) (*Config, error) {
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")

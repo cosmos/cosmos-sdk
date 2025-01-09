@@ -212,6 +212,7 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
+// Deprecated: the private keys are not matching the accounts read from app state
 func AppStateFromGenesisFileFn(_ io.Reader, cdc codec.JSONCodec, genesisFile string) (genutiltypes.AppGenesis, []simtypes.Account, error) {
 	file, err := os.Open(filepath.Clean(genesisFile))
 	if err != nil {
@@ -233,6 +234,8 @@ func AppStateFromGenesisFileFn(_ io.Reader, cdc codec.JSONCodec, genesisFile str
 	return *genesis, newAccs, nil
 }
 
+// AccountsFromAppState
+// Deprecated: the private keys are not matching the accounts read from app state
 func AccountsFromAppState(cdc codec.JSONCodec, appStateJSON json.RawMessage) ([]simtypes.Account, error) {
 	var appState map[string]json.RawMessage
 	if err := json.Unmarshal(appStateJSON, &appState); err != nil {

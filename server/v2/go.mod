@@ -9,8 +9,8 @@ go 1.23
 // )
 
 require (
-	cosmossdk.io/api v0.8.0-rc.1
-	cosmossdk.io/core v1.0.0-alpha.6
+	cosmossdk.io/api v0.8.0
+	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
@@ -34,7 +34,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 )
 
 require (

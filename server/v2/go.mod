@@ -9,8 +9,8 @@ go 1.23
 // )
 
 require (
-	cosmossdk.io/api v0.8.0-rc.1
-	cosmossdk.io/core v1.0.0-alpha.6
+	cosmossdk.io/api v0.8.0
+	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
@@ -21,7 +21,7 @@ require (
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-hclog v1.6.3
-	github.com/hashicorp/go-metrics v0.5.3
+	github.com/hashicorp/go-metrics v0.5.4
 	github.com/hashicorp/go-plugin v1.6.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml/v2 v2.2.2
@@ -34,7 +34,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.68.1
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 )
 
 require (
@@ -104,7 +104,7 @@ require (
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect

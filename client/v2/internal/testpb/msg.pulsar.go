@@ -3870,7 +3870,7 @@ type MsgRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// u32 is an uint32
+	// u32 is a uint32
 	U32                      uint32                 `protobuf:"varint,1,opt,name=u32,proto3" json:"u32,omitempty"`
 	U64                      uint64                 `protobuf:"varint,2,opt,name=u64,proto3" json:"u64,omitempty"`
 	Str                      string                 `protobuf:"bytes,3,opt,name=str,proto3" json:"str,omitempty"`

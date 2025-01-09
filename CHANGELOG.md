@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
 ### Features
-
+* (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
 * (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
 * (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
@@ -60,6 +60,15 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (x/params) [#22995](https://github.com/cosmos/cosmos-sdk/pull/22995) Remove `x/params`.  Migrate to the new params system introduced in `v0.47` as demonstrated [here](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams).
 * (testutil) [#22392](https://github.com/cosmos/cosmos-sdk/pull/22392) Remove `testutil/network` package. Use the integration framework or systemtests framework instead.
+
+#### Removal of v1 components
+
+This subsection lists the API breaking changes that are [part of the removal of v1 components](https://github.com/cosmos/cosmos-sdk/issues/22904). The v1 components were deprecated in `v0.52` and are now removed.
+
+* (simapp) [#23009](https://github.com/cosmos/cosmos-sdk/pull/23009) Simapp has been removed. Check-out Simapp/v2 instead.
+* (server) [#23018](https://github.com/cosmos/cosmos-sdk/pull/23018) [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) The server package has been removed. Use server/v2 instead
+* (x/genutil) [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) Genutil commands specific to a baseapp chain have been deleted.
+* (client) [#22904](https://github.com/cosmos/cosmos-sdk/issues/22904) v1 specific client commands have been removed.
 
 ### Deprecated
 

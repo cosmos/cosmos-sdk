@@ -1121,7 +1121,7 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 	testCases := []struct {
 		name         string
 		simulateArgs []string
-		txArgs []string
+		txArgs       []string
 	}{
 		{
 			"simulate without fees",
@@ -1155,17 +1155,17 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 				// create unsign tx
 				res := cli.RunCommandWithArgs(tc.simulateArgs...)
 				txFile := systest.StoreTempFile(t, []byte(res))
-		
+
 				res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
 				signedTxFile := systest.StoreTempFile(t, []byte(res))
-		
+
 				res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
 				txBz, err := base64.StdEncoding.DecodeString(res)
 				require.NoError(t, err)
-		
+
 				reqBz, err := json.Marshal(&tx.SimulateRequest{TxBytes: txBz})
 				require.NoError(t, err)
-		
+
 				resBz, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", baseURL), "application/json", reqBz)
 				require.NoError(t, err)
 				gasUsed := gjson.Get(string(resBz), "gas_info.gas_used").Int()
@@ -1187,7 +1187,7 @@ func TestSimulateTx_GasImprovements(t *testing.T) {
 					fmt.Println("gasAdjustment", i, gasAdjustment[i])
 				}
 			}
-		
+
 			// Calculate average adjustments
 			total := 0.0
 			for i := 0; i < txlen; i++ {

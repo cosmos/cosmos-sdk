@@ -1,11 +1,12 @@
 package testdata
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

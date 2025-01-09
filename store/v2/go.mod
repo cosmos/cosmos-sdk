@@ -3,7 +3,7 @@ module cosmossdk.io/store/v2
 go 1.23
 
 require (
-	cosmossdk.io/core v1.0.0-alpha.6
+	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/errors/v2 v2.0.0
 	cosmossdk.io/log v1.5.0
@@ -72,5 +72,6 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
+	google.golang.org/protobuf v1.36.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib" // Import and register pgx driver
 
+	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -29,6 +30,7 @@ import (
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	_ "cosmossdk.io/x/protocolpool"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
@@ -115,6 +117,9 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
+	appconfig.RegisterModule(&feegrantmodulev1.Module{},
+		appconfig.Provide(ProvideFeegrantModule_VWhatever),
+	)
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
@@ -402,4 +407,11 @@ func BlockedAddresses(_ address.Codec) (map[string]bool, error) {
 	}
 
 	return result, nil
+}
+
+func ProvideFeegrantModule_VWhatever(in feegrantmodule.FeegrantInputs) (feegrantkeeper.Keeper, appmodule.AppModule) {
+	k := feegrantkeeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper)
+	m := feegrantmodule.NewAppModule(in.Cdc, k, in.Registry)
+	fmt.Printf("******* hello I'm a different provider\n")
+	return k, m
 }

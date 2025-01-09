@@ -15,7 +15,7 @@ require (
 	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 // main
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1.0.20250109081935-cf721a654090
 	cosmossdk.io/server/v2/cometbft v1.0.0-beta.1
-	cosmossdk.io/store/v2 v2.0.0-beta.1 // main
+	cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 // main
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
 	cosmossdk.io/tools/confix v0.2.0-rc.1
 	cosmossdk.io/x/accounts v0.2.0-rc.1
@@ -244,6 +244,13 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 	rsc.io/qr v0.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
+)
+
+require (
+	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
+	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
+	github.com/kocubinski/costor-api v1.1.1 // indirect
 )
 
 // Here are the short-lived replace from the SimApp

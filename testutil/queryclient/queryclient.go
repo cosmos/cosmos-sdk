@@ -76,8 +76,8 @@ type GRPCQueryHandler = func(ctx context.Context, req *abci.QueryRequest) (*abci
 
 // Route returns the GRPCQueryHandler for a given query route path or nil
 // if not found
-func (qrt *QueryHelper) Route(path string) GRPCQueryHandler {
-	handler, found := qrt.routes[path]
+func (q *QueryHelper) Route(path string) GRPCQueryHandler {
+	handler, found := q.routes[path]
 	if !found {
 		return nil
 	}
@@ -89,27 +89,27 @@ func (qrt *QueryHelper) Route(path string) GRPCQueryHandler {
 //
 // This functions PANICS:
 // - if a protobuf service is registered twice.
-func (qrt *QueryHelper) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+func (q *QueryHelper) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// adds a top-level query handler based on the gRPC service name
 	for _, method := range sd.Methods {
-		qrt.registerABCIQueryHandler(sd, method, handler)
+		q.registerABCIQueryHandler(sd, method, handler)
 	}
 }
 
-func (qrt *QueryHelper) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) {
+func (q *QueryHelper) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) {
 	fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 	methodHandler := method.Handler
 
-	_, found := qrt.routes[fqName]
+	_, found := q.routes[fqName]
 	if found {
 		panic(fmt.Sprintf("handler for %s already registered", fqName))
 	}
 
-	qrt.routes[fqName] = func(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
+	q.routes[fqName] = func(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 		// call the method handler from the service description with the handler object,
 		// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 		res, err := methodHandler(handler, ctx, func(i interface{}) error {
-			return qrt.cdc.Unmarshal(req.Data, i)
+			return q.cdc.Unmarshal(req.Data, i)
 		}, nil)
 		if err != nil {
 			return nil, err
@@ -117,7 +117,7 @@ func (qrt *QueryHelper) registerABCIQueryHandler(sd *grpc.ServiceDesc, method gr
 
 		// proto marshal the result bytes
 		var resBytes []byte
-		resBytes, err = qrt.cdc.Marshal(res)
+		resBytes, err = q.cdc.Marshal(res)
 		if err != nil {
 			return nil, err
 		}

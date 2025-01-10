@@ -187,7 +187,7 @@ Note that `sdk.Msg`s are bundled in [transactions](../advanced/01-transactions.m
 
 When a valid block of transactions is received by the full-node, CometBFT relays each one to the application via [`DeliverTx`](https://docs.cometbft.com/v0.37/spec/abci/abci++_app_requirements#specifics-of-responsedelivertx). Then, the application handles the transaction:
 
-1. Upon receiving the transaction, the application first unmarshalls it from `[]byte`.
+1. Upon receiving the transaction, the application first unmarshals it from `[]byte`.
 2. Then, it verifies a few things about the transaction like [fee payment and signatures](./04-gas-fees.md#antehandler) before extracting the `Msg`(s) contained in the transaction.
 3. `sdk.Msg`s are encoded using Protobuf [`Any`s](#register-codec). By analyzing each `Any`'s `type_url`, baseapp's `msgServiceRouter` routes the `sdk.Msg` to the corresponding module's `Msg` service.
 4. If the message is successfully processed, the state is updated.

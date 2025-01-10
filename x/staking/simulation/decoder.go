@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -30,8 +30,12 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 		case bytes.Equal(kvA.Key[:1], types.ValidatorsKey):
 			var validatorA, validatorB types.Validator
 
-			cdc.MustUnmarshal(kvA.Value, &validatorA)
-			cdc.MustUnmarshal(kvB.Value, &validatorB)
+			if err := cdc.Unmarshal(kvA.Value, &validatorA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &validatorB); err != nil {
+				panic(err)
+			}
 
 			return fmt.Sprintf("%v\n%v", validatorA, validatorB)
 		case bytes.Equal(kvA.Key[:1], types.LastValidatorPowerKey),
@@ -42,45 +46,69 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 		case bytes.Equal(kvA.Key[:1], types.DelegationKey):
 			var delegationA, delegationB types.Delegation
 
-			cdc.MustUnmarshal(kvA.Value, &delegationA)
-			cdc.MustUnmarshal(kvB.Value, &delegationB)
+			if err := cdc.Unmarshal(kvA.Value, &delegationA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &delegationB); err != nil {
+				panic(err)
+			}
 
 			return fmt.Sprintf("%v\n%v", delegationA, delegationB)
 		case bytes.Equal(kvA.Key[:1], types.UnbondingDelegationKey),
 			bytes.Equal(kvA.Key[:1], types.UnbondingDelegationByValIndexKey):
 			var ubdA, ubdB types.UnbondingDelegation
 
-			cdc.MustUnmarshal(kvA.Value, &ubdA)
-			cdc.MustUnmarshal(kvB.Value, &ubdB)
+			if err := cdc.Unmarshal(kvA.Value, &ubdA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &ubdB); err != nil {
+				panic(err)
+			}
 
 			return fmt.Sprintf("%v\n%v", ubdA, ubdB)
 		case bytes.Equal(kvA.Key[:1], types.RedelegationKey),
 			bytes.Equal(kvA.Key[:1], types.RedelegationByValSrcIndexKey):
 			var redA, redB types.Redelegation
 
-			cdc.MustUnmarshal(kvA.Value, &redA)
-			cdc.MustUnmarshal(kvB.Value, &redB)
+			if err := cdc.Unmarshal(kvA.Value, &redA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &redB); err != nil {
+				panic(err)
+			}
 
 			return fmt.Sprintf("%v\n%v", redA, redB)
 		case bytes.Equal(kvA.Key[:1], types.ParamsKey):
 			var paramsA, paramsB types.Params
 
-			cdc.MustUnmarshal(kvA.Value, &paramsA)
-			cdc.MustUnmarshal(kvB.Value, &paramsB)
+			if err := cdc.Unmarshal(kvA.Value, &paramsA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &paramsB); err != nil {
+				panic(err)
+			}
 
 			return fmt.Sprintf("%v\n%v", paramsA, paramsB)
 		case bytes.Equal(kvA.Key[:1], types.ValidatorConsPubKeyRotationHistoryKey):
 			var historyA, historyB types.ConsPubKeyRotationHistory
 
-			cdc.MustUnmarshal(kvA.Value, &historyA)
-			cdc.MustUnmarshal(kvB.Value, &historyB)
+			if err := cdc.Unmarshal(kvA.Value, &historyA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &historyB); err != nil {
+				panic(err)
+			}
 
 			return fmt.Sprintf("%v\n%v", historyA, historyB)
 		case bytes.Equal(kvA.Key[:1], types.ValidatorConsensusKeyRotationRecordQueueKey):
 			var historyA, historyB types.ValAddrsOfRotatedConsKeys
 
-			cdc.MustUnmarshal(kvA.Value, &historyA)
-			cdc.MustUnmarshal(kvB.Value, &historyB)
+			if err := cdc.Unmarshal(kvA.Value, &historyA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &historyB); err != nil {
+				panic(err)
+			}
 
 			return fmt.Sprintf("%v\n%v", historyA, historyB)
 		default:

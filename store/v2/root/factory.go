@@ -43,6 +43,7 @@ type FactoryOptions struct {
 	Options   Options
 	StoreKeys []string
 	SCRawDB   corestore.KVStoreWithBatch
+	Metrics   metrics.StoreMetrics
 }
 
 // DefaultStoreOptions returns the default options for creating a root store.
@@ -69,6 +70,9 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		sc  *commitment.CommitStore
 		err error
 	)
+	if opts.Metrics == nil {
+		opts.Metrics = metrics.NoOpMetrics{}
+	}
 
 	storeOpts := opts.Options
 
@@ -102,8 +106,11 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			case SCTypeIavl:
 				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
+				metrics := metrics.NoOpMetrics{}
+				opts.Options.IavlV2Config.MetricsProxy = metrics
 				dir := fmt.Sprintf("%s/data/iavl-v2/%s", opts.RootDir, key)
-				return iavlv2.NewTree(opts.Options.IavlV2Config, iavl_v2.SqliteDbOptions{Path: dir}, opts.Logger)
+				return iavlv2.NewTree(
+					opts.Options.IavlV2Config, iavl_v2.SqliteDbOptions{Path: dir, Metrics: metrics}, opts.Logger)
 			default:
 				return nil, errors.New("unsupported commitment store type")
 			}
@@ -127,11 +134,11 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		oldTrees[string(key)] = tree
 	}
 
-	sc, err = commitment.NewCommitStore(trees, oldTrees, opts.SCRawDB, opts.Logger)
+	sc, err = commitment.NewCommitStore(trees, oldTrees, opts.SCRawDB, opts.Logger, opts.Metrics)
 	if err != nil {
 		return nil, err
 	}
 
 	pm := pruning.NewManager(sc, storeOpts.SCPruningOption)
-	return New(opts.SCRawDB, opts.Logger, sc, pm, nil, metrics.NoOpMetrics{})
+	return New(opts.SCRawDB, opts.Logger, sc, pm, nil, opts.Metrics)
 }

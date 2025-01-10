@@ -7,6 +7,7 @@ import (
 	"maps"
 	"math"
 	"slices"
+	"time"
 
 	protoio "github.com/cosmos/gogoproto/io"
 	"golang.org/x/sync/errgroup"
@@ -16,6 +17,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/internal/conv"
+	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
@@ -49,19 +51,33 @@ type CommitStore struct {
 	// oldTrees is a map of store keys to old trees that have been deleted or renamed.
 	// It is used to get the proof for the old store keys.
 	oldTrees map[string]Tree
+	metrics  metrics.StoreMetrics
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees, oldTrees map[string]Tree, db corestore.KVStoreWithBatch, logger corelog.Logger) (*CommitStore, error) {
+func NewCommitStore(
+	trees, oldTrees map[string]Tree,
+	db corestore.KVStoreWithBatch,
+	logger corelog.Logger,
+	metrics metrics.StoreMetrics,
+) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
 		multiTrees: trees,
 		oldTrees:   oldTrees,
 		metadata:   NewMetadataStore(db),
+		metrics:    metrics,
 	}, nil
 }
 
 func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
+	if c.metrics != nil {
+		start := time.Now()
+		defer func() {
+			c.metrics.MeasureSince(start, "store_write_changeset")
+			c.logger.Info("write changeset", "duration", time.Since(start))
+		}()
+	}
 	eg := new(errgroup.Group)
 	eg.SetLimit(store.MaxWriteParallelism)
 	for _, pairs := range cs.Changes {
@@ -221,6 +237,13 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 }
 
 func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
+	if c.metrics != nil {
+		start := time.Now()
+		defer func() {
+			c.metrics.MeasureSince(start, "store_commit")
+			c.logger.Info("commit", "duration", time.Since(start))
+		}()
+	}
 	storeInfos := make([]*proof.StoreInfo, 0, len(c.multiTrees))
 	eg := new(errgroup.Group)
 	eg.SetLimit(store.MaxWriteParallelism)

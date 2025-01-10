@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/metrics"
 )
 
 // Builder is the interface for a store/v2 RootStore builder.
@@ -81,6 +82,7 @@ func (sb *builder) Build(
 		Options:   config.Options,
 		StoreKeys: storeKeys,
 		SCRawDB:   scRawDb,
+		Metrics:   &metrics.Metrics{},
 	}
 
 	rs, err := CreateRootStore(factoryOptions)

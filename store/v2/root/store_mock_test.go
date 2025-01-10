@@ -20,7 +20,7 @@ func newTestRootStore(sc store.Committer) *Store {
 	pm := pruning.NewManager(sc.(store.Pruner), nil)
 	return &Store{
 		logger:          noopLog,
-		telemetry:       metrics.Metrics{},
+		telemetry:       &metrics.Metrics{},
 		stateCommitment: sc,
 		pruningManager:  pm,
 		isMigrating:     false,

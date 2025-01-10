@@ -12,6 +12,7 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/metrics"
 )
 
 func TestCommitterSuite(t *testing.T) {
@@ -36,7 +37,7 @@ func TestCommitterSuite(t *testing.T) {
 				oldTrees[storeKey], _ = mountTreeFn(storeKey)
 			}
 
-			return commitment.NewCommitStore(multiTrees, oldTrees, db, logger)
+			return commitment.NewCommitStore(multiTrees, oldTrees, db, logger, metrics.NoOpMetrics{})
 		},
 	}
 

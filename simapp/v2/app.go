@@ -227,6 +227,8 @@ func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {
 		return nil, err
 	}
 	cfg.Options.IavlV2Config = iavlv2.DefaultOptions(int64(cfg.Options.SCPruningOption.KeepRecent))
+	cfg.Options.IavlV2Config.CheckpointInterval = 60
+	// cfg.Options.IavlV2Config.HeightFilter = -1
 	iavlv2.SetGlobalPruneLimit(1)
 	return cfg, err
 }

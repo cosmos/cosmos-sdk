@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/pruning"
 )
 
@@ -41,7 +42,7 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 		multiTrees[storeKey], _ = newTreeFn(storeKey)
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, nil, s.commitDB, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees, nil, s.commitDB, testLog, metrics.NewNoOpMetrics())
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, nil)
 	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil, nil)
@@ -83,7 +84,7 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 		oldTrees[deleted], _ = newTreeFn(deleted)
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, oldTrees, s.commitDB, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees, oldTrees, s.commitDB, testLog, metrics.NewNoOpMetrics())
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, nil)
 	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil, nil)

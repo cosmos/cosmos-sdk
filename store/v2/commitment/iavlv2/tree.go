@@ -10,6 +10,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/metrics"
 )
 
 var (
@@ -29,7 +30,7 @@ func NewTree(
 	dbOptions iavl.SqliteDbOptions,
 	log log.Logger,
 ) (*Tree, error) {
-	pool := iavl.NewNodePool()
+	pool := iavl.NewSyncNodePool(&metrics.Metrics{})
 	sql, err := iavl.NewSqliteDb(pool, dbOptions)
 	if err != nil {
 		return nil, err
@@ -201,7 +202,7 @@ func isHighBitSet(version uint64) error {
 func DefaultOptions(keepVersions int64) iavl.TreeOptions {
 	opts := iavl.DefaultTreeOptions()
 	opts.MinimumKeepVersions = keepVersions
-	opts.CheckpointInterval = 200
+	opts.CheckpointInterval = 100
 	opts.PruneRatio = 1
 	opts.HeightFilter = 1
 	opts.EvictionDepth = 22

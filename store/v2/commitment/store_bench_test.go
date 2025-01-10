@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/metrics"
 )
 
 var (
@@ -60,7 +61,7 @@ func getCommitStore(b *testing.B, db corestore.KVStoreWithBatch) *commitment.Com
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, nil, db, coretesting.NewNopLogger())
+	sc, err := commitment.NewCommitStore(multiTrees, nil, db, coretesting.NewNopLogger(), metrics.NoOpMetrics{})
 	require.NoError(b, err)
 
 	return sc

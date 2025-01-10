@@ -84,14 +84,7 @@ func (s *Store) Close() (err error) {
 	err = errors.Join(err, s.stateCommitment.Close())
 	err = errors.Join(err, s.dbCloser.Close())
 
-	s.stateCommitment = nil
-	s.lastCommitInfo = nil
-
 	return err
-}
-
-func (s *Store) SetMetrics(m metrics.Metrics) {
-	s.telemetry = m
 }
 
 func (s *Store) SetInitialVersion(v uint64) error {
@@ -285,9 +278,9 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades, overrid
 // the CommitInfo.
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
-		now := time.Now()
+		start := time.Now()
 		defer func() {
-			s.telemetry.MeasureSince(now, "root_store", "commit")
+			s.telemetry.MeasureSince(start, "root_store", "commit")
 		}()
 	}
 
@@ -300,17 +293,13 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	// background pruning process (iavl v1 for example) which must be paused during the commit
 	s.pruningManager.PausePruning()
 
-	st := time.Now()
 	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
 		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
-	writeDur := time.Since(st)
-	st = time.Now()
 	cInfo, err := s.stateCommitment.Commit(cs.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit SC store: %w", err)
 	}
-	s.logger.Warn(fmt.Sprintf("commit version %d write=%s commit=%s", cs.Version, writeDur, time.Since(st)))
 
 	if cInfo.Version != cs.Version {
 		return nil, fmt.Errorf("commit version mismatch: got %d, expected %d", cInfo.Version, cs.Version)

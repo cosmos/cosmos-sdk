@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
 )
@@ -48,7 +49,9 @@ func (s *RootStoreTestSuite) SetupTest() {
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, nil, dbm.NewMemDB(), noopLog)
+	sc, err := commitment.NewCommitStore(
+		map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3},
+		nil, dbm.NewMemDB(), noopLog, metrics.NewNoOpMetrics())
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, nil)
@@ -68,7 +71,7 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, nil, dbm.NewMemDB(), noopLog)
+	sc, err := commitment.NewCommitStore(multiTrees, nil, dbm.NewMemDB(), noopLog, metrics.NoOpMetrics{})
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, config)
@@ -586,12 +589,13 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	}
 
 	noopLog := coretesting.NewNopLogger()
+	noopMetrics := metrics.NoOpMetrics{}
 
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()
 
 	tree := iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog, noopMetrics)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, pruneOpt)
@@ -617,7 +621,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().Equal(uint64(0), actualHeightToPrune)
 
 	tree = iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
-	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
+	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog, noopMetrics)
 	s.Require().NoError(err)
 
 	pm = pruning.NewManager(sc, pruneOpt)
@@ -670,7 +674,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
+	sc, err := commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog, metrics.NoOpMetrics{})
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, nil)
@@ -757,7 +761,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
 	}
 
-	sc, err = commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
+	sc, err = commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog, metrics.NoOpMetrics{})
 	s.Require().NoError(err)
 
 	pm = pruning.NewManager(sc, nil)

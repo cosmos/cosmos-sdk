@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 

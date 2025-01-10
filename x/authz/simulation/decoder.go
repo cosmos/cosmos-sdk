@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -18,13 +18,21 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], keeper.GrantKey):
 			var grantA, grantB authz.Grant
-			cdc.MustUnmarshal(kvA.Value, &grantA)
-			cdc.MustUnmarshal(kvB.Value, &grantB)
+			if err := cdc.Unmarshal(kvA.Value, &grantA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &grantB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", grantA, grantB)
 		case bytes.Equal(kvA.Key[:1], keeper.GrantQueuePrefix):
 			var grantA, grantB authz.GrantQueueItem
-			cdc.MustUnmarshal(kvA.Value, &grantA)
-			cdc.MustUnmarshal(kvB.Value, &grantB)
+			if err := cdc.Unmarshal(kvA.Value, &grantA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &grantB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", grantA, grantB)
 		default:
 			panic(fmt.Sprintf("invalid authz key %X", kvA.Key))

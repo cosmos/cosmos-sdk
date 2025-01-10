@@ -42,12 +42,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
-<<<<<<< HEAD
 * (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
-=======
-* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
-* (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
->>>>>>> 57a1437fd (feat(x/auth/ante): allow custom verifyIsOnCurve when validate tx for public key (#23128))
 * (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
 
 ### Improvements

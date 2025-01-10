@@ -14,11 +14,7 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-=======
->>>>>>> ea78b3c5b (chore(x/upgrade): Use `cosmossdk.io/core/codec` instead of `github.com/cosmos/cosmos-sdk/codec` (#23261))
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

@@ -19,11 +19,6 @@ type uriMatch struct {
 	Params map[string]string
 }
 
-// HasParams reports whether the uriMatch has any params.
-func (uri uriMatch) HasParams() bool {
-	return len(uri.Params) > 0
-}
-
 // matchURL attempts to find a match for the given URL.
 // NOTE: if no match is found, nil is returned.
 func matchURL(u *url.URL, regexpToQueryMetadata map[*regexp.Regexp]queryMetadata) *uriMatch {

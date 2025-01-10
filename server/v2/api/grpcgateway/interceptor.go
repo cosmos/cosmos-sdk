@@ -2,6 +2,7 @@ package grpcgateway
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -58,6 +59,7 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 	if err != nil {
 		return nil, err
 	}
+	// convert the mapping to regular expressions for URL matching.
 	regexQueryMD := createRegexMapping(logger, getMapping)
 	if err != nil {
 		return nil, err
@@ -80,16 +82,42 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		g.gateway.ServeHTTP(writer, request)
 		return
 	}
+
 	g.logger.Info("matched request", "query_input", match.QueryInputName)
 
-	_, out := runtime.MarshalerForRequest(g.gateway, request)
+	in, out := runtime.MarshalerForRequest(g.gateway, request)
+
+	// extract the proto message type.
 	msgType := gogoproto.MessageType(match.QueryInputName)
 	msg, ok := reflect.New(msgType.Elem()).Interface().(gogoproto.Message)
 	if !ok {
-		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.InvalidArgument, "that was not a message"))
+		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Errorf(codes.Internal, "unable to to create gogoproto message from query input name %s", match.QueryInputName))
+		return
 	}
 
-	res, err := g.handleRequest(request.Context(), out, request, msg, match.Params)
+	// msg population based on http method.
+	var inputMsg gogoproto.Message
+	var err error
+	switch request.Method {
+	case http.MethodGet:
+		inputMsg, err = g.createMessageFromGetRequest(request.Context(), in, request, msg, match.Params)
+	case http.MethodPost:
+		inputMsg, err = g.createMessageFromPostRequest(request.Context(), in, request, msg)
+	default:
+		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.InvalidArgument, "HTTP method was not POST or GET"))
+	}
+
+	// get the height from the header.
+	var height uint64
+	heightStr := request.Header.Get(GRPCBlockHeightHeader)
+	if heightStr != "" {
+		if height, err = strconv.ParseUint(heightStr, 10, 64); err != nil {
+			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Errorf(codes.InvalidArgument, "invalid height in header: %s", heightStr))
+			return
+		}
+	}
+
+	responseMsg, err := g.appManager.Query(request.Context(), height, inputMsg)
 	if err != nil {
 		// if we couldn't find a handler for this request, just fall back to the gateway mux.
 		if strings.Contains(err.Error(), "no handler") {
@@ -100,12 +128,25 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		}
 		return
 	}
+	
 	// for no errors, we forward the response.
-	runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, res)
+	runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, responseMsg)
 }
 
-func (g *gatewayInterceptor[T]) handleRequest(ctx context.Context, _ runtime.Marshaler, req *http.Request, input gogoproto.Message, wildcardValues map[string]string) (gogoproto.Message, error) {
+func (g *gatewayInterceptor[T]) createMessageFromPostRequest(_ context.Context, marshaler runtime.Marshaler, req *http.Request, input gogoproto.Message) (gogoproto.Message, error) {
+	newReader, err := utilities.IOReaderFactory(req.Body)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
+	if err = marshaler.NewDecoder(newReader()).Decode(input); err != nil && err != io.EOF {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	return input, nil
+}
+
+func (g *gatewayInterceptor[T]) createMessageFromGetRequest(_ context.Context, _ runtime.Marshaler, req *http.Request, input gogoproto.Message, wildcardValues map[string]string) (gogoproto.Message, error) {
 	// decode the path wildcards into the message.
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result:           input,
@@ -123,21 +164,15 @@ func (g *gatewayInterceptor[T]) handleRequest(ctx context.Context, _ runtime.Mar
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	err = runtime.PopulateQueryParameters(input, req.Form, &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)})
+	// im not really sure what this filter is for, but defaulting it like so doesn't seem to break anything.
+	// pb.gw.go code uses it, but im not sure why.
+	filter := &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	err = runtime.PopulateQueryParameters(input, req.Form, filter)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	var height uint64
-	heightStr := req.Header.Get(GRPCBlockHeightHeader)
-	if heightStr != "" {
-		if height, err = strconv.ParseUint(heightStr, 10, 64); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "invalid height in header: %s", heightStr)
-		}
-	}
-
-	res, err := g.appManager.Query(ctx, height, input)
-	return res, err
+	return input, err
 }
 
 // getHTTPGetAnnotationMapping returns a mapping of RPC Method HTTP GET annotation to the RPC Handler's Request Input type full name.

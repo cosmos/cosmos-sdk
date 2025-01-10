@@ -8,10 +8,10 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 

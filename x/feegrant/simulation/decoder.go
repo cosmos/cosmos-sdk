@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/core/codec"
 	"cosmossdk.io/x/feegrant"
+
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 

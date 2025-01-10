@@ -189,16 +189,15 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		}
 	}
 
+	txConfig.txDecoder, err = txdecode.NewDecoder(txdecode.Options{
+		SigningContext: configOptions.SigningContext,
+		ProtoCodec:     protoCodec,
+	})
+	if err != nil {
+		return nil, err
+	}
 	if configOptions.ProtoDecoder == nil {
-		dec, err := txdecode.NewDecoder(txdecode.Options{
-			SigningContext: configOptions.SigningContext,
-			ProtoCodec:     protoCodec,
-		})
-		if err != nil {
-			return nil, err
-		}
-		txConfig.decoder = txV2toInterface(configOptions.SigningOptions.AddressCodec, protoCodec, dec)
-		txConfig.txDecoder = dec
+		txConfig.decoder = DefaultTxDecoder(configOptions.SigningOptions.AddressCodec, protoCodec, txConfig.txDecoder)
 	}
 	if configOptions.ProtoEncoder == nil {
 		txConfig.encoder = DefaultTxEncoder()
@@ -261,14 +260,4 @@ func (g config) TxJSONDecoder() sdk.TxDecoder {
 
 func (g config) SigningContext() *txsigning.Context {
 	return g.signingContext
-}
-
-func txV2toInterface(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *txdecode.Decoder) func([]byte) (sdk.Tx, error) {
-	return func(txBytes []byte) (sdk.Tx, error) {
-		decodedTx, err := decoder.Decode(txBytes)
-		if err != nil {
-			return nil, err
-		}
-		return newWrapperFromDecodedTx(addrCodec, cdc, decodedTx)
-	}
 }

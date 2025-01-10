@@ -63,15 +63,9 @@ func TestGroupCommands(t *testing.T) {
 		rsp = cli.RunAndWait(policyCmd...)
 		systest.RequireTxSuccess(t, rsp)
 
-		// TODO: remove isV2() check once v2 is integrated with grpc gateway
-		var groupPoliciesResp, policyAddrQuery string
-		if systest.IsV2() {
-			groupPoliciesResp = cli.CustomQuery("q", "group", "group-policies-by-group", groupId)
-			policyAddrQuery = fmt.Sprintf("group_policies.#(decision_policy.value.threshold==%d).address", threshold)
-		} else {
-			groupPoliciesResp = string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", baseurl, groupId)))
-			policyAddrQuery = fmt.Sprintf("group_policies.#(decision_policy.threshold==%d).address", threshold)
-		}
+		groupPoliciesResp := string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", baseurl, groupId)))
+		policyAddrQuery := fmt.Sprintf("group_policies.#(decision_policy.threshold==%d).address", threshold)
+
 		require.Equal(t, gjson.Get(groupPoliciesResp, "pagination.total").Int(), int64(threshold))
 		policyAddr := gjson.Get(groupPoliciesResp, policyAddrQuery).String()
 		require.NotEmpty(t, policyAddr)
@@ -122,12 +116,7 @@ func TestGroupCommands(t *testing.T) {
 	systest.RequireTxSuccess(t, rsp)
 
 	// query votes
-	// TODO: remove isV2() check once v2 is integrated with grpc gateway
-	var voteResp string
-	if systest.IsV2() {
-		voteResp = cli.CustomQuery("q", "group", "vote", proposalId, valAddr)
-	} else {
-		voteResp = string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/%s/%s", baseurl, proposalId, valAddr)))
-	}
+	voteResp := string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/%s/%s", baseurl, proposalId, valAddr)))
+
 	require.Equal(t, "VOTE_OPTION_YES", gjson.Get(voteResp, "vote.option").String())
 }

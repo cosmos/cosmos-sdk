@@ -36,6 +36,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* [#23325](https://github.com/cosmos/cosmos-sdk/pull/23325) Remove `NewAppOptionsFromConfig` that isn't needed in normal wiring.
+
 ## [v2.10.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/client/v2/v2.10.0-beta.1) - 2024-12-18
 
 ### Features

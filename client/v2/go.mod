@@ -37,7 +37,7 @@ require (
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.5.0
+	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect

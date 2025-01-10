@@ -14,6 +14,8 @@ const (
 	DBTypePebbleDB  DBType = "pebbledb"
 	DBTypePrefixDB  DBType = "prefixdb"
 
+	DBTypeMemDB DBType = "memdb" // used for sims
+
 	DBFileSuffix string = ".db"
 )
 
@@ -24,6 +26,8 @@ func NewDB(dbType DBType, name, dataDir string, opts coreserver.DynamicConfig) (
 
 	case DBTypePebbleDB:
 		return NewPebbleDB(name, dataDir)
+	case DBTypeMemDB:
+		return NewMemDB(), nil
 	}
 
 	return nil, fmt.Errorf("unsupported db type: %s", dbType)

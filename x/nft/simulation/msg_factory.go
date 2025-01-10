@@ -14,7 +14,9 @@ func MsgSendFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*nft.MsgSend] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *nft.MsgSend) {
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
 		to := testData.AnyAccount(reporter, simsx.ExcludeAccounts(from))
-
+		if reporter.IsSkipped() {
+			return nil, nil
+		}
 		n, err := randNFT(ctx, testData.Rand(), k, from.Address)
 		if err != nil {
 			reporter.Skip(err.Error())

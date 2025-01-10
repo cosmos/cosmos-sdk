@@ -23,7 +23,7 @@ type AppModule interface {
 // custom logic before BeginBlock.
 type HasPreBlocker interface {
 	AppModule
-	// PreBlock is method that will be run before BeginBlock.
+	// PreBlock is a method that will be run before BeginBlock.
 	PreBlock(context.Context) error
 }
 
@@ -85,7 +85,7 @@ type HasTxValidator[T transaction.Tx] interface {
 }
 
 // HasUpdateValidators is an extension interface that contains information about the AppModule and UpdateValidators.
-// It can be seen as the alternative of the Cosmos SDK' HasABCIEndBlocker.
+// It can be seen as the alternative of the Cosmos SDK HasABCIEndBlocker.
 // Both are still supported.
 type HasUpdateValidators interface {
 	AppModule

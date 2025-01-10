@@ -2,13 +2,10 @@
 
 set -e
 
-REPO_ROOT="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &>/dev/null && pwd)"
 export REPO_ROOT
 
 LINT_TAGS="e2e,ledger,test_ledger_mock"
-if [[ ! -z "${ROCKSDB:-}" ]]; then
-  LINT_TAGS+=",rocksdb"
-fi
 export LINT_TAGS
 
 lint_module() {

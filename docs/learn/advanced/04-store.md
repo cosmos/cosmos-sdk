@@ -189,12 +189,6 @@ When methods of the parent `KVStore` are called, `GasKv.Store` automatically con
 https://github.com/cosmos/cosmos-sdk/blob/store/v1.1.1/store/types/gas.go#L220-L229
 ```
 
-By default, all `KVStores` are wrapped in `GasKv.Stores` when retrieved. This is done in the `KVStore()` method of the [`context`](./02-context.md):
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/context.go#L339-L342
-```
-
 `KVStores` can be accessed in their corresponding modules by using the [`kvStoreService` and `memStoreService`](./02-core.md#kvstore-service).
 
 ### `TraceKv` Store

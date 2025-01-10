@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -66,7 +66,11 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 // App module genesis
 
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(&v1.GenesisState{})
+	data, err := am.cdc.MarshalJSON(&v1.GenesisState{})
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 func (am AppModule) ValidateGenesis(message json.RawMessage) error {

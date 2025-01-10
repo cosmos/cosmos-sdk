@@ -7,9 +7,9 @@ import (
 	"sort"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/x/bank/exported"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

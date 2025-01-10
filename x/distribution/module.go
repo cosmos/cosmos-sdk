@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/x/distribution/client/cli"
@@ -19,7 +20,6 @@ import (
 	"cosmossdk.io/x/distribution/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -115,7 +115,11 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 
 // DefaultGenesis returns default genesis state as raw bytes for the distribution module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the distribution module.

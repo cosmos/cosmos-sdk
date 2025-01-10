@@ -3,9 +3,8 @@ package v6
 import (
 	"context"
 
-	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/core/codec"
+	storetypes "cosmossdk.io/store/types"
 )
 
 // MigrateStore performs in-place store migrations from v5 to v6.

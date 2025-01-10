@@ -25,7 +25,7 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking" // import as blank for app wirings
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"

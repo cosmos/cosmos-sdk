@@ -12,10 +12,10 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/codec"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -148,6 +148,21 @@ func (v Validators) UnpackInterfaces(c gogoprotoany.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+// return the redelegation
+func MustMarshalValidator(cdc codec.BinaryCodec, validator *Validator) []byte {
+	return cdc.MustMarshal(validator)
+}
+
+// unmarshal a redelegation from a store value
+func MustUnmarshalValidator(cdc codec.BinaryCodec, value []byte) Validator {
+	validator, err := UnmarshalValidator(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return validator
 }
 
 // unmarshal a redelegation from a store value

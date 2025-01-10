@@ -178,8 +178,8 @@ func createMessage(match *uriMatch) (gogoproto.Message, error) {
 		if err != nil {
 			return nil, status.Error(codes.Internal, "failed to create message instance")
 		}
-
-		if err := decoder.Decode(nestedParams); err != nil {
+		err = decoder.Decode(nestedParams)
+		if err != nil && !strings.Contains(err.Error(), "order_by") {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 	}

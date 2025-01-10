@@ -363,12 +363,30 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 		},
 		{
 			"valid request: order by asc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=%d", baseURL, bankMsgSendEventAction, "message.module='bank'", tx.OrderBy_ORDER_BY_ASC),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 2,
 		},
 		{
 			"valid request: order by desc",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			false,
+			"", 2,
+		},
+		{
+			"invalid request: invalid order by",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			true,
+			"is not a valid tx.OrderBy", 0,
+		},
+		{
+			"valid request: order by 1",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=%d", baseURL, bankMsgSendEventAction, "message.module='bank'", tx.OrderBy_ORDER_BY_ASC),
+			false,
+			"", 2,
+		},
+		{
+			"valid request: order by 2",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=%d", baseURL, bankMsgSendEventAction, "message.module='bank'", tx.OrderBy_ORDER_BY_DESC),
 			false,
 			"", 2,

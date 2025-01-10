@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/registry"
 	eviclient "cosmossdk.io/x/evidence/client"
@@ -18,7 +19,6 @@ import (
 	"cosmossdk.io/x/evidence/simulation"
 	"cosmossdk.io/x/evidence/types"
 
-	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

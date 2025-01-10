@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/client/cli"
@@ -19,7 +20,6 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
-	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"

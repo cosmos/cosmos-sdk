@@ -105,6 +105,7 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		inputMsg, err = g.createMessageFromPostRequest(request.Context(), in, request, msg)
 	default:
 		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.InvalidArgument, "HTTP method was not POST or GET"))
+		return
 	}
 
 	// get the height from the header.

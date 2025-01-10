@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/math"
 
-	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

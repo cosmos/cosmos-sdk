@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
-	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )

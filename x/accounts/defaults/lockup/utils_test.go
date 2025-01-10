@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/collections"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -20,6 +19,7 @@ import (
 	distrtypes "cosmossdk.io/x/distribution/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

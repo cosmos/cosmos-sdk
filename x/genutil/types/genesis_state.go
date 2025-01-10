@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/core/codec"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

@@ -365,20 +365,6 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 			expLen:    1,
 		},
 		{
-			name:      "valid request: order by asc",
-			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
-			expErr:    false,
-			expErrMsg: "",
-			expLen:    2,
-		},
-		{
-			name:      "valid request: order by desc",
-			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
-			expErr:    false,
-			expErrMsg: "",
-			expLen:    2,
-		},
-		{
 			name:      "invalid request: invalid order by",
 			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", baseURL, bankMsgSendEventAction, "message.module='bank'"),
 			expErr:    true,
@@ -395,6 +381,20 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 		{
 			name:      "expect pass with escape event",
 			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", baseURL, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    2,
+		},
+		{
+			name:      "valid request: order by asc",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    2,
+		},
+		{
+			name:      "valid request: order by desc",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
 			expErr:    false,
 			expErrMsg: "",
 			expLen:    2,

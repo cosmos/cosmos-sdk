@@ -7,13 +7,15 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/group"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 )
 
 // InitGenesis initializes the group module's genesis state.
 func (k Keeper) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) error {
 	var genesisState group.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
+	if err := cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		panic(err)
+	}
 
 	store := k.KVStoreService.OpenKVStore(ctx)
 

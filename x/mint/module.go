@@ -16,8 +16,8 @@ import (
 	"cosmossdk.io/x/mint/simulation"
 	"cosmossdk.io/x/mint/types"
 
+	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -110,7 +110,11 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the mint module.

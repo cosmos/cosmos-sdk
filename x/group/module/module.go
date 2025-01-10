@@ -16,8 +16,8 @@ import (
 	"cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/simulation"
 
+	"cosmossdk.io/core/codec"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -118,7 +118,11 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 
 // DefaultGenesis returns default genesis state as raw bytes for the group module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(group.NewGenesisState())
+	data, err := am.cdc.MarshalJSON(group.NewGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the group module.

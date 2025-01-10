@@ -14,8 +14,8 @@ import (
 	"cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
 
+	"cosmossdk.io/core/codec"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -85,7 +85,11 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwr
 
 // DefaultGenesis returns default genesis state as raw bytes for the nft module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(nft.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(nft.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the nft module.

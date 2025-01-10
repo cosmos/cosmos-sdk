@@ -351,11 +351,11 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 			expLen:    0,
 		},
 		{
-			name:   "without pagination",
-			url:    fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", baseURL, bankMsgSendEventAction),
-			expErr: false,
-			"",
-			expLen: 2,
+			name:      "without pagination",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", baseURL, bankMsgSendEventAction),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    2,
 		},
 		{
 			name:      "with pagination",
@@ -368,7 +368,7 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 			name:      "invalid request: invalid order by",
 			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", baseURL, bankMsgSendEventAction, "message.module='bank'"),
 			expErr:    true,
-			expErrMsg: "is not a valid tx.OrderBy",
+			expErrMsg: "cannot parse 'order_by'",
 			expLen:    0,
 		},
 		{
@@ -387,14 +387,14 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 		},
 		{
 			name:      "valid request: order by asc",
-			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&order_by=1", baseURL, bankMsgSendEventAction),
 			expErr:    false,
 			expErrMsg: "",
 			expLen:    2,
 		},
 		{
 			name:      "valid request: order by desc",
-			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&order_by=2", baseURL, bankMsgSendEventAction),
 			expErr:    false,
 			expErrMsg: "",
 			expLen:    2,

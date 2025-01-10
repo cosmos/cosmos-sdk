@@ -1,13 +1,17 @@
 package grpcgateway
 
 import (
+	"context"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/utilities"
+	"github.com/mitchellh/mapstructure"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -69,45 +73,23 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 // ServeHTTP implements the http.Handler interface. This method will attempt to match request URIs to its internal mapping
 // of gateway HTTP annotations. If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	g.logger.Debug("received grpc-gateway request", "request_uri", request.RequestURI)
+	g.logger.Info("received grpc-gateway request", "request_uri", request.RequestURI)
 	match := matchURL(request.URL, g.regexpToQueryMetadata)
 	if match == nil {
 		// no match cases fall back to gateway mux.
 		g.gateway.ServeHTTP(writer, request)
 		return
 	}
-	g.logger.Debug("matched request", "query_input", match.QueryInputName)
+	g.logger.Info("matched request", "query_input", match.QueryInputName)
+
 	_, out := runtime.MarshalerForRequest(g.gateway, request)
-	var msg gogoproto.Message
-	var err error
-
-	switch request.Method {
-	case http.MethodPost:
-		msg, err = createMessageFromJSON(match, request)
-	case http.MethodGet:
-		msg, err = createMessage(match)
-	default:
-		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.Unimplemented, "HTTP method must be POST or GET"))
-		return
-	}
-	if err != nil {
-		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
-		return
+	msgType := gogoproto.MessageType(match.QueryInputName)
+	msg, ok := reflect.New(msgType.Elem()).Interface().(gogoproto.Message)
+	if !ok {
+		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.InvalidArgument, "that was not a message"))
 	}
 
-	// extract block height header
-	var height uint64
-	heightStr := request.Header.Get(GRPCBlockHeightHeader)
-	if heightStr != "" {
-		height, err = strconv.ParseUint(heightStr, 10, 64)
-		if err != nil {
-			err = status.Errorf(codes.InvalidArgument, "invalid height: %s", heightStr)
-			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
-			return
-		}
-	}
-
-	query, err := g.appManager.Query(request.Context(), height, msg)
+	res, err := g.handleRequest(request.Context(), out, request, msg, match.Params)
 	if err != nil {
 		// if we couldn't find a handler for this request, just fall back to the gateway mux.
 		if strings.Contains(err.Error(), "no handler") {
@@ -119,7 +101,43 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		return
 	}
 	// for no errors, we forward the response.
-	runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, query)
+	runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, res)
+}
+
+func (g *gatewayInterceptor[T]) handleRequest(ctx context.Context, _ runtime.Marshaler, req *http.Request, input gogoproto.Message, wildcardValues map[string]string) (gogoproto.Message, error) {
+
+	// decode the path wildcards into the message.
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Result:           input,
+		TagName:          "json",
+		WeaklyTypedInput: true,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to create message decoder")
+	}
+	if err := decoder.Decode(wildcardValues); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if err = req.ParseForm(); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	err = runtime.PopulateQueryParameters(input, req.Form, &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)})
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var height uint64
+	heightStr := req.Header.Get(GRPCBlockHeightHeader)
+	if heightStr != "" {
+		if height, err = strconv.ParseUint(heightStr, 10, 64); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid height in header: %s", heightStr)
+		}
+	}
+
+	res, err := g.appManager.Query(ctx, height, input)
+	return res, err
 }
 
 // getHTTPGetAnnotationMapping returns a mapping of RPC Method HTTP GET annotation to the RPC Handler's Request Input type full name.
@@ -137,7 +155,6 @@ func getHTTPGetAnnotationMapping() (map[string]string, error) {
 			serviceDesc := fd.Services().Get(i)
 			for j := 0; j < serviceDesc.Methods().Len(); j++ {
 				methodDesc := serviceDesc.Methods().Get(j)
-
 				httpAnnotation := proto.GetExtension(methodDesc.Options(), annotations.E_Http)
 				if httpAnnotation == nil {
 					continue

@@ -143,11 +143,11 @@ message TxBody {
   repeated google.protobuf.Any non_critical_extension_options = 2047;
 }
 
-// TxBodyPreUnorderedTxs is the body of a transaction that all signers sign over.
+// TxBodyCompat is the body of a transaction that all signers sign over.
 // This message is used to represent the transaction body before the unordered
 // features was added. It is used to support backwards compatibility when user a newer
 // client with an older chain.
-message TxBodyPreUnorderedTxs {
+message TxBodyCompat {
   // messages is a list of messages to be executed. The required signers of
   // those messages define the number and order of elements in AuthInfo's
   // signer_infos and Tx's signatures. Each required signer address is added to

@@ -116,8 +116,8 @@ func (w *builder) getTx() (*gogoTxWrapper, error) {
 	}
 
 	var body proto.Message
-	if !w.unordered {
-		body = &txv1beta1.TxBodyPreUnorderedTxs{
+	if !w.unordered && (w.timeoutTimestamp.IsZero() || w.timeoutTimestamp.Unix() == 0) {
+		body = &txv1beta1.TxBodyCompat{
 			Messages:                    anyMsgs,
 			Memo:                        w.memo,
 			TimeoutHeight:               w.timeoutHeight,

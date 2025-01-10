@@ -75,7 +75,7 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 // ServeHTTP implements the http.Handler interface. This method will attempt to match request URIs to its internal mapping
 // of gateway HTTP annotations. If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	g.logger.Info("received grpc-gateway request", "request_uri", request.RequestURI)
+	g.logger.Debug("received grpc-gateway request", "request_uri", request.RequestURI)
 	match := matchURL(request.URL, g.regexpToQueryMetadata)
 	if match == nil {
 		// no match cases fall back to gateway mux.
@@ -83,7 +83,7 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		return
 	}
 
-	g.logger.Info("matched request", "query_input", match.QueryInputName)
+	g.logger.Debug("matched request", "query_input", match.QueryInputName)
 
 	in, out := runtime.MarshalerForRequest(g.gateway, request)
 
@@ -128,7 +128,7 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		}
 		return
 	}
-	
+
 	// for no errors, we forward the response.
 	runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, responseMsg)
 }

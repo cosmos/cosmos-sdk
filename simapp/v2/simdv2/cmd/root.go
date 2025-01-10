@@ -8,6 +8,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -49,6 +50,22 @@ func NewRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
+	depinjectConfig := depinject.Configs(
+		depinject.Provide(ProvideClientContext),
+	)
+	if err = depinject.Inject(
+		depinject.Configs(
+			simapp.AppConfig(),
+			depinjectConfig,
+			depinject.Supply(
+				log.NewNopLogger(),
+				runtime.GlobalConfig(server.ConfigMap{}),
+			),
+		),
+		&autoCliOpts,
+	); err != nil {
+		return nil, err
+	}
 
 	if err = autoCliOpts.EnhanceRootCommand(rootCommand); err != nil {
 		return nil, err
@@ -62,13 +79,13 @@ func NewRootCmd[T transaction.Tx](
 	}
 
 	var (
-		moduleManager   *runtime.MM[T]
-		clientCtx       client.Context
-		simApp          *simapp.SimApp[T]
-		depinjectConfig = depinject.Configs(
-			depinject.Supply(logger, runtime.GlobalConfig(configMap)),
-			depinject.Provide(ProvideClientContext),
-		)
+		moduleManager *runtime.MM[T]
+		clientCtx     client.Context
+		simApp        *simapp.SimApp[T]
+	)
+	depinjectConfig = depinject.Configs(
+		depinject.Supply(logger, runtime.GlobalConfig(configMap)),
+		depinject.Provide(ProvideClientContext),
 	)
 	if serverv2.IsAppRequired(subCommand) {
 		// server construction

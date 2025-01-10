@@ -7,7 +7,7 @@ import (
 	corestoretypes "cosmossdk.io/core/store"
 	govv1 "cosmossdk.io/x/gov/types/v1"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 )
 
 var (

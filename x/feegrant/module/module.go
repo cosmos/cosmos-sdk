@@ -16,8 +16,8 @@ import (
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
 
+	"cosmossdk.io/core/codec"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -103,7 +103,11 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(feegrant.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(feegrant.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.

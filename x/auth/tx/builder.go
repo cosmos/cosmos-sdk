@@ -114,14 +114,26 @@ func (w *builder) getTx() (*gogoTxWrapper, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert messages: %w", err)
 	}
-	body := &txv1beta1.TxBody{
-		Messages:                    anyMsgs,
-		Memo:                        w.memo,
-		TimeoutHeight:               w.timeoutHeight,
-		TimeoutTimestamp:            timestamppb.New(w.timeoutTimestamp),
-		Unordered:                   w.unordered,
-		ExtensionOptions:            intoAnyV2(w.extensionOptions),
-		NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
+
+	var body proto.Message
+	if !w.unordered {
+		body = &txv1beta1.TxBodyPreUnorderedTxs{
+			Messages:                    anyMsgs,
+			Memo:                        w.memo,
+			TimeoutHeight:               w.timeoutHeight,
+			ExtensionOptions:            intoAnyV2(w.extensionOptions),
+			NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
+		}
+	} else {
+		body = &txv1beta1.TxBody{
+			Messages:                    anyMsgs,
+			Memo:                        w.memo,
+			TimeoutHeight:               w.timeoutHeight,
+			TimeoutTimestamp:            timestamppb.New(w.timeoutTimestamp),
+			Unordered:                   w.unordered,
+			ExtensionOptions:            intoAnyV2(w.extensionOptions),
+			NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
+		}
 	}
 
 	fee, err := w.getFee()

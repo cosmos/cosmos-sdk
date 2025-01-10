@@ -19,14 +19,10 @@ var (
 
 	// jsonMarshalOptions configures JSON marshaling for protobuf messages.
 	jsonMarshalOptions = protojson.MarshalOptions{
-		Indent:         "",
-		UseProtoNames:  true,
-		UseEnumNumbers: false,
-		// Do not emit unpopulated fields.
-		// It helps the client to be compatible across SDK versions.
-		// Unknown fields will still be rejected by the SDK (node).
-		// However, the client should stay as compatible as possible.
-		EmitUnpopulated: false,
+		Indent:          "",
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
 	}
 
 	// textMarshalOptions

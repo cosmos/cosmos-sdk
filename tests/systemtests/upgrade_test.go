@@ -42,7 +42,7 @@ func TestChainUpgrade(t *testing.T) {
 		upgradeName         = "v050-to-v052" // must match UpgradeName in simapp/upgrades.go
 	)
 
-	systest.Sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
+	systest.Sut.StartChain(t, fmt.Sprintf("--comet.halt-height=%d", upgradeHeight+1))
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()

@@ -11,10 +11,11 @@ require (
 	cosmossdk.io/indexer/postgres v0.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241219154748-69025c556666 // main
-	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250106081242-884a7a51c3c3 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20250109081935-cf721a654090 // main
+	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 // main
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1.0.20250109081935-cf721a654090
 	cosmossdk.io/server/v2/cometbft v1.0.0-beta.1
-	cosmossdk.io/store/v2 v2.0.0-beta.1 // main
+	cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 // main
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
 	cosmossdk.io/tools/confix v0.2.0-rc.1
 	cosmossdk.io/x/accounts v0.2.0-rc.1
@@ -38,6 +39,7 @@ require (
 	cosmossdk.io/x/staking v0.2.0-rc.1
 	cosmossdk.io/x/upgrade v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
+	github.com/cometbft/cometbft/api v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/jackc/pgx/v5 v5.7.1
@@ -45,7 +47,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 )
 
 require (
@@ -61,8 +63,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 // indirect; main
-	cosmossdk.io/server/v2/stf v1.0.0-beta.1 // indirect; main
+	cosmossdk.io/server/v2/stf v1.0.0-beta.1.0.20250109081935-cf721a654090 // indirect; main
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect; main
 	cosmossdk.io/x/tx v1.0.0 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -91,7 +92,6 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
-	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
@@ -246,11 +246,19 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require (
+	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
+	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
+	github.com/kocubinski/costor-api v1.1.1 // indirect
+)
+
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 // replace (
 // 	<temporary replace>
 // )
+replace cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 
 // Below are the long-lived replace of the SimApp
 replace (

@@ -160,6 +160,12 @@ func NewUniqueTypeRegistry() UniqueTypeRegistry {
 }
 
 func (s UniqueTypeRegistry) Add(weight uint32, f SimMsgFactoryX) {
+	if weight == 0 {
+		return
+	}
+	if f == nil {
+		panic("message factory must not be nil")
+	}
 	msgType := f.MsgType()
 	msgTypeURL := sdk.MsgTypeURL(msgType)
 	if _, exists := s[msgTypeURL]; exists {
@@ -170,8 +176,7 @@ func (s UniqueTypeRegistry) Add(weight uint32, f SimMsgFactoryX) {
 
 // Iterator returns an iterator function for a Go for loop sorted by weight desc.
 func (s UniqueTypeRegistry) Iterator() WeightedProposalMsgIter {
-	x := maps.Values(s)
-	sortedWeightedFactory := slices.SortedFunc(x, func(a, b WeightedFactory) int {
+	sortedWeightedFactory := slices.SortedFunc(maps.Values(s), func(a, b WeightedFactory) int {
 		return a.Compare(b)
 	})
 
@@ -182,6 +187,33 @@ func (s UniqueTypeRegistry) Iterator() WeightedProposalMsgIter {
 			}
 		}
 	}
+}
+
+var _ Registry = &UnorderedRegistry{}
+
+// UnorderedRegistry represents a collection of WeightedFactory elements without guaranteed order.
+// It is used to maintain factories coupled with their associated weights for simulation purposes.
+type UnorderedRegistry []WeightedFactory
+
+func NewUnorderedRegistry() *UnorderedRegistry {
+	r := make(UnorderedRegistry, 0)
+	return &r
+}
+
+// Add appends a new WeightedFactory with the provided weight and factory to the UnorderedRegistry.
+func (x *UnorderedRegistry) Add(weight uint32, f SimMsgFactoryX) {
+	if weight == 0 {
+		return
+	}
+	if f == nil {
+		panic("message factory must not be nil")
+	}
+	*x = append(*x, WeightedFactory{Weight: weight, Factory: f})
+}
+
+// Elements returns all collected elements
+func (x *UnorderedRegistry) Elements() []WeightedFactory {
+	return *x
 }
 
 // WeightedFactory is a Weight Factory tuple

@@ -354,7 +354,7 @@ func AddCommands[T types.Application, R Rollback](rootCmd *cobra.Command, appCre
 		startCmd,
 		cometCmd,
 		version.NewVersionCommand(),
-		NewRollbackCmd(appCreator, rollbackable),
+		NewRollbackCmd(appCreator),
 		ModuleHashByHeightQuery(appCreator),
 	)
 }

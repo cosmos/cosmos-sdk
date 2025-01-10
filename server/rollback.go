@@ -3,14 +3,20 @@ package server
 import (
 	"fmt"
 
-	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
+// Rollbackable is an interface that allows for rollback operations.
+// It is used to allow for custom rollback operations, such as those provided by the
+// DefaultRollbackable implementation.
+type Rollbackable interface {
+	RollbackToVersion(ctx *Context, removeBlock bool) (int64, []byte, error)
+}
+
 // NewRollbackCmd creates a command to rollback CometBFT and multistore state by one height.
-func NewRollbackCmd[T types.Application](appCreator types.AppCreator[T]) *cobra.Command {
+func NewRollbackCmd[T types.Application, R Rollbackable](appCreator types.AppCreator[T], rollbackable R) *cobra.Command {
 	var removeBlock bool
 
 	cmd := &cobra.Command{
@@ -33,7 +39,7 @@ application.
 			}
 			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 			// rollback CometBFT state
-			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)
+			height, hash, err := rollbackable.RollbackToVersion(ctx, removeBlock)
 			if err != nil {
 				return fmt.Errorf("failed to rollback CometBFT state: %w", err)
 			}

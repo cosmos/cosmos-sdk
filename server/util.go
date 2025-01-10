@@ -332,7 +332,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 }
 
 // AddCommands add server commands
-func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], opts StartCmdOptions[T]) {
+func AddCommands[T types.Application, R Rollbackable](rootCmd *cobra.Command, appCreator types.AppCreator[T], rollbackable R, opts StartCmdOptions[T]) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
 		Aliases: []string{"cometbft", "tendermint"},
@@ -354,15 +354,30 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		startCmd,
 		cometCmd,
 		version.NewVersionCommand(),
-		NewRollbackCmd(appCreator),
+		NewRollbackCmd(appCreator, rollbackable),
 		ModuleHashByHeightQuery(appCreator),
 	)
 }
 
+// DefaultRollbackable is a default implementation of the Rollbackable interface.
+type DefaultRollbackable[T types.Application] struct {
+	appCreator types.AppCreator[T]
+}
+
+// NewDefaultRollbackable creates a new DefaultRollbackable instance.
+func NewDefaultRollbackable[T types.Application](appCreator types.AppCreator[T]) *DefaultRollbackable[T] {
+	return &DefaultRollbackable[T]{appCreator}
+}
+
+// RollbackToVersion implements the Rollbackable interface.
+func (d DefaultRollbackable[T]) RollbackToVersion(ctx *Context, removeBlock bool) (int64, []byte, error) {
+	return cmtcmd.RollbackState(ctx.Config, removeBlock)
+}
+
 // AddCommandsWithStartCmdOptions adds server commands with the provided StartCmdOptions.
 // Deprecated: Use AddCommands directly instead.
-func AddCommandsWithStartCmdOptions[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], opts StartCmdOptions[T]) {
-	AddCommands(rootCmd, appCreator, opts)
+func AddCommandsWithStartCmdOptions[T types.Application, R Rollbackable](rootCmd *cobra.Command, appCreator types.AppCreator[T], rollbackable R, opts StartCmdOptions[T]) {
+	AddCommands(rootCmd, appCreator, rollbackable, opts)
 }
 
 // AddTestnetCreatorCommand allows chains to create a testnet from the state existing in their node's data directory.

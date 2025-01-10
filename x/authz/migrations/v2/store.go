@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/internal/conv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 )
 

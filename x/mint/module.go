@@ -10,13 +10,13 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/simulation"
 	"cosmossdk.io/x/mint/types"
 
-	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"

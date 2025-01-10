@@ -10,13 +10,13 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/client/cli"
 	"cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/simulation"
 
-	"cosmossdk.io/core/codec"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simsx"

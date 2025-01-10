@@ -8,13 +8,13 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
 
-	"cosmossdk.io/core/codec"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simsx"

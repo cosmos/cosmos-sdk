@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/group"
-
-	"cosmossdk.io/core/codec"
 )
 
 // InitGenesis initializes the group module's genesis state.

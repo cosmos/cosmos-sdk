@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/keeper"
 
-	"cosmossdk.io/core/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 

@@ -8,15 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
-// Rollbackable is an interface that allows for rollback operations.
-// It is used to allow for custom rollback operations, such as those provided by the
-// DefaultRollbackable implementation.
-type Rollbackable interface {
-	RollbackToVersion(ctx *Context, removeBlock bool) (int64, []byte, error)
-}
-
 // NewRollbackCmd creates a command to rollback CometBFT and multistore state by one height.
-func NewRollbackCmd[T types.Application, R Rollbackable](appCreator types.AppCreator[T], rollbackable R) *cobra.Command {
+func NewRollbackCmd[T types.Application, R Rollback](appCreator types.AppCreator[T], rollbackable R) *cobra.Command {
 	var removeBlock bool
 
 	cmd := &cobra.Command{

@@ -6,11 +6,14 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 )
 
 func TestMatchURI(t *testing.T) {
@@ -91,11 +94,13 @@ func TestMatchURI(t *testing.T) {
 		},
 	}
 
+	logger := log.NewLogger(os.Stdout)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			u, err := url.Parse(tc.uri)
 			require.NoError(t, err)
-			regexpMapping := createRegexMapping(tc.mapping)
+			regexpMapping := createRegexMapping(logger, tc.mapping)
+			require.NoError(t, err)
 			actual := matchURL(u, regexpMapping)
 			require.Equal(t, tc.expected, actual)
 		})

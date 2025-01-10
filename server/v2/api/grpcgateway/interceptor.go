@@ -54,7 +54,10 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 	if err != nil {
 		return nil, err
 	}
-	regexQueryMD := createRegexMapping(getMapping)
+	regexQueryMD := createRegexMapping(logger, getMapping)
+	if err != nil {
+		return nil, err
+	}
 	return &gatewayInterceptor[T]{
 		logger:                logger,
 		gateway:               gateway,
@@ -159,11 +162,19 @@ func getHTTPGetAnnotationMapping() (map[string]string, error) {
 
 // createRegexMapping converts the annotationMapping (HTTP annotation -> query input type name) to a
 // map of regular expressions for that HTTP annotation pattern, to queryMetadata.
-func createRegexMapping(annotationMapping map[string]string) map[*regexp.Regexp]queryMetadata {
+func createRegexMapping(logger log.Logger, annotationMapping map[string]string) map[*regexp.Regexp]queryMetadata {
 	regexQueryMD := make(map[*regexp.Regexp]queryMetadata)
+	seenPatterns := make(map[string]string)
 	for annotation, queryInputName := range annotationMapping {
 		pattern, wildcardNames := patternToRegex(annotation)
 		reg := regexp.MustCompile(pattern)
+		if otherAnnotation, ok := seenPatterns[pattern]; !ok {
+			seenPatterns[pattern] = annotation
+		} else {
+			// TODO: eventually we want this to error, but there is currently a duplicate in the protobuf.
+			// see: https://github.com/cosmos/cosmos-sdk/issues/23281
+			logger.Warn("duplicate HTTP annotation found %q and %q. query will resolve to %q", annotation, otherAnnotation, queryInputName)
+		}
 		regexQueryMD[reg] = queryMetadata{
 			queryInputProtoName: queryInputName,
 			wildcardKeyNames:    wildcardNames,

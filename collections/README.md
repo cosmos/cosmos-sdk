@@ -206,7 +206,7 @@ package collections
 import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -255,7 +255,7 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -436,7 +436,7 @@ package collections
 import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 )
@@ -506,7 +506,7 @@ package collections
 import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -928,7 +928,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -987,7 +987,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -1095,7 +1095,7 @@ package example
 import (
     "cosmossdk.io/collections"
     storetypes "cosmossdk.io/store/types"
-    "github.com/cosmos/cosmos-sdk/codec"
+    "cosmossdk.io/core/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -1144,7 +1144,7 @@ import (
 
  "cosmossdk.io/collections"
  storetypes "cosmossdk.io/store/types"
- "github.com/cosmos/cosmos-sdk/codec"
+ "cosmossdk.io/core/codec"
 )
 
 type AccAddress = string

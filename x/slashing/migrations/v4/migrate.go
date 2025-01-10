@@ -7,11 +7,11 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/slashing/types"
 
-	"cosmossdk.io/core/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

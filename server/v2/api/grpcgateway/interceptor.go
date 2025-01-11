@@ -25,6 +25,8 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 )
 
+const MaxBodySize = 1 << 20 // 1 MB
+
 var _ http.Handler = &gatewayInterceptor[transaction.Tx]{}
 
 // queryMetadata holds information related to handling gateway queries.
@@ -141,6 +143,9 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 }
 
 func (g *gatewayInterceptor[T]) createMessageFromPostRequest(_ context.Context, marshaler runtime.Marshaler, req *http.Request, input gogoproto.Message) (gogoproto.Message, error) {
+	if req.ContentLength > MaxBodySize {
+		return nil, status.Errorf(codes.InvalidArgument, "request body too large: %d bytes, max=%d", req.ContentLength, MaxBodySize)
+	}
 	newReader, err := utilities.IOReaderFactory(req.Body)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)

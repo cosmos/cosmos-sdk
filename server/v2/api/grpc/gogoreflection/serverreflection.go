@@ -474,7 +474,7 @@ func (s *serverReflectionServer) getServices(messages []string) (svcs []string, 
 
 		svc, ok := findServiceForMessage(registry, md.(protoreflect.MessageDescriptor))
 		if !ok {
-			s.log.Error("unable to find service for message", "message", messageName)
+			s.log.Warn(fmt.Sprintf("unable to find service for message %s", messageName))
 			continue
 		}
 

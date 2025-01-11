@@ -2,16 +2,16 @@
 #include <vector>
 #include <string>
 #include <limits>
-#include <algorithm> // For std::all_of
+#include <algorithm>
 
 // Token denomination constants
 namespace denom {
     const std::string ATOM = "uatom";            // Cosmos Hub token
-    const std::string IBC_BTC = "ibc/BTC_HASH"; // IBC Bitcoin token
-    const std::string IBC_ETH = "ibc/ETH_HASH"; // IBC Ethereum token
-    const std::string OSMO = "ibc/OSMO_HASH";   // IBC Osmosis token
-    const std::string JUNO = "ibc/JUNO_HASH";   // IBC Juno token
-    const std::string STARS = "ibc/STARS_HASH"; // IBC Stargaze token
+    const std::string IBC_BTC = "ibc/BTC_HASH";  // IBC Bitcoin token
+    const std::string IBC_ETH = "ibc/ETH_HASH";  // IBC Ethereum token
+    const std::string OSMO = "ibc/OSMO_HASH";    // IBC Osmosis token
+    const std::string JUNO = "ibc/JUNO_HASH";    // IBC Juno token
+    const std::string STARS = "ibc/STARS_HASH";  // IBC Stargaze token
 }
 
 // Recipient structure
@@ -20,21 +20,22 @@ struct Recipient {
     uint64_t amount;      // Amount to send (in microATOM or token denomination)
 
     bool is_valid() const {
-        // Validate bech32 address format (simple validation for Cosmos address)
-        return address.substr(0, 6) == "cosmos" && address.length() == 45 && amount > 0;
+        // Validate bech32 address format (basic check)
+        return !address.empty() && address.substr(0, 6) == "cosmos" && amount > 0;
     }
 };
 
 // Input message structure
 struct ReimburseMsg {
-    std::vector<Recipient> recipients;             // List of recipients with amounts
-    static const size_t MAX_RECIPIENTS = 100;      // Prevent excessive gas usage
+    std::vector<Recipient> recipients; // List of recipients with amounts
+    static const size_t MAX_RECIPIENTS = 100; // Prevent excessive gas usage
 
     bool is_valid() const {
-        // Validate recipient count and individual recipient validity
-        return recipients.size() <= MAX_RECIPIENTS &&
-               std::all_of(recipients.begin(), recipients.end(),
-                           [](const Recipient& r) { return r.is_valid(); });
+        if (recipients.empty() || recipients.size() > MAX_RECIPIENTS) {
+            return false;
+        }
+        return std::all_of(recipients.begin(), recipients.end(),
+            [](const Recipient& r) { return r.is_valid(); });
     }
 };
 
@@ -115,3 +116,4 @@ public:
             });
     }
 };
+

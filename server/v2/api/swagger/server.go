@@ -5,7 +5,6 @@ import (
     "fmt"
     "net/http"
 
-    "cosmossdk.io/core/server"
     "cosmossdk.io/core/transaction"
     "cosmossdk.io/log"
     serverv2 "cosmossdk.io/server/v2"
@@ -27,7 +26,7 @@ type Server[T transaction.Tx] struct {
 // New creates a new Swagger UI server
 func New[T transaction.Tx](
     logger log.Logger,
-    cfg server.ConfigMap,
+    cfg serverv2.ConfigMap,
     cfgOptions ...CfgOption,
 ) (*Server[T], error) {
     srv := &Server[T]{

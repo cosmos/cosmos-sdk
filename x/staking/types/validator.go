@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"sort"
@@ -544,4 +545,22 @@ func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShare
 func (v Validator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var pk cryptotypes.PubKey
 	return unpacker.UnpackAny(v.ConsensusPubkey, &pk)
+}
+
+// ToJSON converts the Description to a single JSON string
+func (d Description) ToJSON() (string, error) {
+	bytes, err := json.Marshal(d)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal validator description to JSON")
+	}
+	return string(bytes), nil
+}
+
+// FromJSON creates a Description from a JSON string
+func DescriptionFromJSON(jsonStr string) (Description, error) {
+	var d Description
+	if err := json.Unmarshal([]byte(jsonStr), &d); err != nil {
+		return Description{}, errors.Wrap(err, "failed to unmarshal validator description from JSON")
+	}
+	return d.Validate()
 }

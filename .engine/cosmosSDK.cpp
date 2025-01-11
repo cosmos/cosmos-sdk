@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include <algorithm> // For std::all_of
 
 // Token denomination constants
 namespace denom {
@@ -19,24 +20,21 @@ struct Recipient {
     uint64_t amount;      // Amount to send (in microATOM or token denomination)
 
     bool is_valid() const {
-        return !address.empty() && amount > 0;
+        // Validate bech32 address format (simple validation for Cosmos address)
+        return address.substr(0, 6) == "cosmos" && address.length() == 45 && amount > 0;
     }
 };
 
 // Input message structure
 struct ReimburseMsg {
-    std::vector<Recipient> recipients; // List of recipients with amounts
+    std::vector<Recipient> recipients;             // List of recipients with amounts
+    static const size_t MAX_RECIPIENTS = 100;      // Prevent excessive gas usage
 
     bool is_valid() const {
-        if (recipients.empty()) {
-            return false;
-        }
-        for (const auto& recipient : recipients) {
-            if (!recipient.is_valid()) {
-                return false;
-            }
-        }
-        return true;
+        // Validate recipient count and individual recipient validity
+        return recipients.size() <= MAX_RECIPIENTS &&
+               std::all_of(recipients.begin(), recipients.end(),
+                           [](const Recipient& r) { return r.is_valid(); });
     }
 };
 

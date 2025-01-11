@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-const maxBodySize = 1 << 20 // 1 MB
-
 // uriMatch contains information related to a URI match.
 type uriMatch struct {
 	// QueryInputName is the fully qualified name of the proto input type of the query rpc method.

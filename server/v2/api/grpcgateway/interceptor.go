@@ -2,6 +2,7 @@ package grpcgateway
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"reflect"
@@ -107,6 +108,11 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.InvalidArgument, "HTTP method was not POST or GET"))
 		return
 	}
+	if err != nil {
+		// the errors returned from the message creation methods return status errors. no need to make one here.
+		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
+		return
+	}
 
 	// get the height from the header.
 	var height uint64
@@ -140,7 +146,7 @@ func (g *gatewayInterceptor[T]) createMessageFromPostRequest(_ context.Context, 
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	if err = marshaler.NewDecoder(newReader()).Decode(input); err != nil && err != io.EOF {
+	if err = marshaler.NewDecoder(newReader()).Decode(input); err != nil && !errors.Is(err, io.EOF) {
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 

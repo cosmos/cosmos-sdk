@@ -232,7 +232,7 @@ func createRegexMapping(logger log.Logger, annotationMapping map[string]string) 
 		} else {
 			// TODO: eventually we want this to error, but there is currently a duplicate in the protobuf.
 			// see: https://github.com/cosmos/cosmos-sdk/issues/23281
-			logger.Warn("duplicate HTTP annotation found %q and %q. query will resolve to %q", annotation, otherAnnotation, queryInputName)
+			logger.Warn("duplicate HTTP annotation found", "annotation1", annotation, "annotation2", otherAnnotation, "query_input_name", queryInputName)
 		}
 		regexQueryMD[reg] = queryMetadata{
 			queryInputProtoName: queryInputName,

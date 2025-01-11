@@ -142,7 +142,7 @@ type ReaderMap interface {
 // WriterMap represents a writable actor state.
 type WriterMap interface {
 	ReaderMap
-	// GetWriter must the return a WritableState
+	// GetWriter must return a WritableState
 	// for the provided actor namespace.
 	GetWriter(actor []byte) (Writer, error)
 	// ApplyStateChanges applies all the state changes

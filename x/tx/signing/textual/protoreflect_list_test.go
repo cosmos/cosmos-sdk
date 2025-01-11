@@ -7,7 +7,7 @@ import (
 
 var _ protoreflect.List = (*genericList[proto.Message])(nil)
 
-// NewGenericList creates a empty list that satisfies the protoreflect.List
+// NewGenericList creates an empty list that satisfies the protoreflect.List
 // interface.
 func NewGenericList[T proto.Message](list []T) protoreflect.List {
 	return &genericList[T]{&list}

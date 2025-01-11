@@ -73,7 +73,7 @@ func writeConfigFile(configFilePath string, config interface{}) error {
 	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
-// getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
+// getClientConfig reads values from client.toml file and unmarshals them into ClientConfig
 func getClientConfig(configPath string, v *viper.Viper) (*Config, error) {
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")

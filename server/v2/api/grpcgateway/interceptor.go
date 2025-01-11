@@ -120,8 +120,9 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 	var height uint64
 	heightStr := request.Header.Get(GRPCBlockHeightHeader)
 	heightStr = strings.Trim(heightStr, `\"`)
-	if heightStr != "" && strings.Contains(heightStr, "latest") {
-		if height, err = strconv.ParseUint(heightStr, 10, 64); err != nil {
+	if heightStr != "" && heightStr != "latest" {
+		height, err = strconv.ParseUint(heightStr, 10, 64)
+		if err != nil {
 			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Errorf(codes.InvalidArgument, "invalid height in header: %s", heightStr))
 			return
 		}

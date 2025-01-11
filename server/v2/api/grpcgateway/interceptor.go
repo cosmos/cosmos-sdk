@@ -117,7 +117,7 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 	// get the height from the header.
 	var height uint64
 	heightStr := request.Header.Get(GRPCBlockHeightHeader)
-	if heightStr != "" {
+	if heightStr != "" && heightStr != "latest" {
 		if height, err = strconv.ParseUint(heightStr, 10, 64); err != nil {
 			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Errorf(codes.InvalidArgument, "invalid height in header: %s", heightStr))
 			return
@@ -172,7 +172,7 @@ func (g *gatewayInterceptor[T]) createMessageFromGetRequest(_ context.Context, _
 	}
 
 	// im not really sure what this filter is for, but defaulting it like so doesn't seem to break anything.
-	// pb.gw.go code uses it, but im not sure why.
+	// pb.gw.go code uses it in a few queries, but it's not clear what actual behavior is gained from this.
 	filter := &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 	err = runtime.PopulateQueryParameters(input, req.Form, filter)
 	if err != nil {

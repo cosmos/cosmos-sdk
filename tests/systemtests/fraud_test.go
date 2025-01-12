@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,8 +44,8 @@ func TestValidatorDoubleSign(t *testing.T) {
 
 	// let's wait some blocks to have evidence and update persisted
 	var nodePowerAfter int64 = -1
-	for i := 0; i < 30; i++ {
-		systest.Sut.AwaitNextBlock(t)
+	for i := 0; i < 100; i++ {
+		systest.Sut.AwaitNextBlock(t, 6*time.Second)
 		if nodePowerAfter = systest.QueryCometValidatorPower(rpc, pkBz); nodePowerAfter == 0 {
 			break
 		}

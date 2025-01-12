@@ -37,7 +37,7 @@ func TestChainUpgrade(t *testing.T) {
 
 	const (
 		upgradeHeight int64 = 22
-		upgradeName         = "v052-to-v054" // must match UpgradeName in simapp/upgrades.go
+		upgradeName         = "v052-to-v2" // must match UpgradeName in simapp/upgrades.go
 	)
 
 	systest.Sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))

@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/internal/conv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 )
 

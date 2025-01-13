@@ -257,6 +257,7 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace cosmossdk.io/api => ../../api
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (

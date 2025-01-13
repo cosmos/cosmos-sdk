@@ -186,6 +186,7 @@ func NewSimApp[T transaction.Tx](
 	if err = app.LoadLatest(); err != nil {
 		return nil, err
 	}
+
 	return app, nil
 }
 

@@ -15,6 +15,7 @@ import (
 	grpcserver "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/grpcgateway"
 	"cosmossdk.io/server/v2/api/rest"
+	swaggerv2 "cosmossdk.io/server/v2/api/swagger"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
@@ -91,6 +92,7 @@ func InitRootCmd[T transaction.Tx](
 			&telemetry.Server[T]{},
 			&rest.Server[T]{},
 			&grpcgateway.Server[T]{},
+			&swaggerv2.Server[T]{},
 		)
 	}
 
@@ -163,6 +165,15 @@ func InitRootCmd[T transaction.Tx](
 	}
 	registerGRPCGatewayRoutes[T](deps, grpcgatewayServer)
 
+	// Create Swagger server
+	swaggerServer, err := swaggerv2.New[T](
+		logger.With(log.ModuleKey, "swagger"),
+		deps.GlobalConfig,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	// wire server commands
 	return serverv2.AddCommands[T](
 		rootCmd,
@@ -176,6 +187,7 @@ func InitRootCmd[T transaction.Tx](
 		telemetryServer,
 		restServer,
 		grpcgatewayServer,
+		swaggerServer,
 	)
 }
 

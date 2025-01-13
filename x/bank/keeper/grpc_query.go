@@ -8,6 +8,7 @@ import (
 
 	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/collections"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/x/bank/types"
@@ -19,6 +20,23 @@ import (
 
 type Querier struct {
 	BaseKeeper
+}
+
+// RegisterQueryHandlers registers the query handlers to the router.
+func (q msgServer) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
+	appmodulev2.RegisterMsgHandler(router, q.Balance)
+	appmodulev2.RegisterMsgHandler(router, q.AllBalances)
+	appmodulev2.RegisterMsgHandler(router, q.SpendableBalances)
+	appmodulev2.RegisterMsgHandler(router, q.SpendableBalanceByDenom)
+	appmodulev2.RegisterMsgHandler(router, q.TotalSupply)
+	appmodulev2.RegisterMsgHandler(router, q.SupplyOf)
+	appmodulev2.RegisterMsgHandler(router, q.Params)
+	appmodulev2.RegisterMsgHandler(router, q.DenomsMetadata)
+	appmodulev2.RegisterMsgHandler(router, q.DenomMetadata)
+	appmodulev2.RegisterMsgHandler(router, q.DenomMetadataByQueryString)
+	appmodulev2.RegisterMsgHandler(router, q.DenomOwners)
+	appmodulev2.RegisterMsgHandler(router, q.SendEnabled)
+	appmodulev2.RegisterMsgHandler(router, q.DenomOwnersByQuery)
 }
 
 var _ types.QueryServer = BaseKeeper{}

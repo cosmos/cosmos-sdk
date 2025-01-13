@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/transaction"
-	
-	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 // msgTypeURL returns the TypeURL of a proto message.

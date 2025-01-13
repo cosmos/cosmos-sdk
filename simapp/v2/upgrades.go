@@ -10,6 +10,7 @@ import (
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 

@@ -18,7 +18,7 @@ func DefaultAppTomlConfig() *AppTomlConfig {
 		MinRetainBlocks: 0,
 		HaltHeight:      0,
 		HaltTime:        0,
-		Address:         "tcp://127.0.0.1:26656",
+		Address:         "tcp://127.0.0.1:26658",
 		Transport:       "socket",
 		Trace:           false,
 		Standalone:      false,

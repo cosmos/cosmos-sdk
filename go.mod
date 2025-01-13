@@ -4,7 +4,7 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1 // indirect
-	cosmossdk.io/api v0.8.0 // main
+	cosmossdk.io/api v0.8.1 // main
 	cosmossdk.io/collections v1.0.0 // main
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1 // main
@@ -184,16 +184,6 @@ require (
 // 	<temporary replace>
 // )
 
-<<<<<<< HEAD
-=======
-// TODO remove after all modules have their own go.mods
-replace (
-	cosmossdk.io/api => ./api
-	cosmossdk.io/x/bank => ./x/bank
-	cosmossdk.io/x/staking => ./x/staking
-)
-
->>>>>>> 9ca815c8d (fix: marshal old tx body if unordered not used (#22723))
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring

@@ -169,6 +169,9 @@ max-recv-msg-size = "10485760"
 # The default value is math.MaxInt32.
 max-send-msg-size = "2147483647"
 
+# SkipCheckHeader defines if the gRPC server should bypass check header.
+skip-check-header = false
+
 ###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################

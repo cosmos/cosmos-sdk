@@ -20,12 +20,24 @@ import (
 
 func Test_createRegexMapping(t *testing.T) {
 	tests := []struct {
-		name        string
-		annotations map[string]string
-		wantWarn    bool
+		name           string
+		annotations    map[string]string
+		expectedRegex  int
+		expectedSimple int
+		wantWarn       bool
 	}{
 		{
 			name: "no annotations should not warn",
+		},
+		{
+			name: "expected correct amount of regex and simple matchers",
+			annotations: map[string]string{
+				"/foo/bar/baz":   "",
+				"/foo/{bar}/baz": "",
+				"/foo/bar/bell":  "",
+			},
+			expectedRegex:  1,
+			expectedSimple: 2,
 		},
 		{
 			name: "different annotations should not warn",
@@ -33,6 +45,7 @@ func Test_createRegexMapping(t *testing.T) {
 				"/foo/bar/{baz}":     "",
 				"/crypto/{currency}": "",
 			},
+			expectedRegex: 2,
 		},
 		{
 			name: "duplicate annotations should warn",
@@ -40,19 +53,22 @@ func Test_createRegexMapping(t *testing.T) {
 				"/hello/{world}":      "",
 				"/hello/{developers}": "",
 			},
-			wantWarn: true,
+			expectedRegex: 2,
+			wantWarn:      true,
 		},
 	}
 	buf := bytes.NewBuffer(nil)
 	logger := log.NewLogger(buf)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			createRegexMapping(logger, tt.annotations)
+			regex, simple := createRegexMapping(logger, tt.annotations)
 			if tt.wantWarn {
 				require.NotEmpty(t, buf.String())
 			} else {
 				require.Empty(t, buf.String())
 			}
+			require.Equal(t, tt.expectedRegex, len(regex))
+			require.Equal(t, tt.expectedSimple, len(simple))
 		})
 	}
 }

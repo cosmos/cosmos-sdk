@@ -28,6 +28,9 @@ func TestFactory(t *testing.T) {
 	f, err = CreateRootStore(&fop)
 	require.NoError(t, err)
 	require.NotNil(t, f)
+	lv, err := f.(*Store).stateCommitment.GetLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, lv, uint64(0))
 
 	require.NoError(t, setLatestVersion(fop.SCRawDB, 1))
 	fop.Options.SCType = SCTypeIavl

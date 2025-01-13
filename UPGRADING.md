@@ -284,7 +284,7 @@ For the same instructions than for legacy app wiring to enable sign mode textual
 ### Depinject `app_config.go` / `app.yml`
 
 With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
-Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default. It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
+The 'Environment struct provides essential services](https://docs.cosmos.network/main/learn/advanced/core#environment) to modules including logging, event handling, gas metering, header access, routing, and both KV and memory store services. Given the fields of environment, this means runtime creates a kv store service for all modules by default. It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
 
 ```diff
 InitGenesis: []string{

@@ -258,7 +258,10 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
+replace (
+	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
+	cosmossdk.io/x/staking => cosmossdk.io/x/staking v0.2.0-rc.1.0.20250109101855-4c6e34be28c1
+)
 
 // Below are the long-lived replace of the SimApp
 replace (

@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -45,6 +46,7 @@ type SimApp[T transaction.Tx] struct {
 	// others keepers are all in the app
 	UpgradeKeeper *upgradekeeper.Keeper
 	StakingKeeper *stakingkeeper.Keeper
+	AuthKeeper    authkeeper.AccountKeeper
 }
 
 // AppConfig returns the default app config.
@@ -151,7 +153,9 @@ func NewSimApp[T transaction.Tx](
 		&app.txConfig,
 		&app.interfaceRegistry,
 		&app.UpgradeKeeper,
-		&app.StakingKeeper)
+		&app.StakingKeeper,
+		&app.AuthKeeper,
+	)
 
 	if err := depinject.Inject(appConfig, outputs...); err != nil {
 		return nil, err

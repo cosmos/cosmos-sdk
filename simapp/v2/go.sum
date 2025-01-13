@@ -268,8 +268,8 @@ cosmossdk.io/x/protocolpool v0.2.0-rc.1 h1:BNtRCp/TStXYSW0uc5KJTtJoTVOCaF7/P6Smx
 cosmossdk.io/x/protocolpool v0.2.0-rc.1/go.mod h1:asoCc7jX1kMqaJ9sI1U67P2evXjVKXSngTgGinAXTZo=
 cosmossdk.io/x/slashing v0.2.0-rc.1 h1:RNAV5JN7nIuyDtGclPoN1iFl92Edu71ERl/OtFSS06I=
 cosmossdk.io/x/slashing v0.2.0-rc.1/go.mod h1:uICi76DI/iwfgPbETb8sVio6dEA4Q4sv4Vqj9cxn2zI=
-cosmossdk.io/x/staking v0.2.0-rc.1 h1:AZRGddRuuTaLxxpBvC7/TR7Dmt0pjziXWk13dC1beIo=
-cosmossdk.io/x/staking v0.2.0-rc.1/go.mod h1:7K4hgQ6tn0XLFb2BJ9oe8nEc4RkfQ4qHqgQy2b0kVNc=
+cosmossdk.io/x/staking v0.2.0-rc.1.0.20250109101855-4c6e34be28c1 h1:/IEkm90NCAatqdKITvVumjsbnMRldOimcslNiQ0gJlg=
+cosmossdk.io/x/staking v0.2.0-rc.1.0.20250109101855-4c6e34be28c1/go.mod h1:eb4WWz3WB8lryUutt5pPuevwgqMSGsh0iPgr0VZr2kc=
 cosmossdk.io/x/tx v1.0.0 h1:pUUKRvHiMUZC/MnO8v747k1lUEA1DfAq0j0y0Mqrz/o=
 cosmossdk.io/x/tx v1.0.0/go.mod h1:AXYJ47btzkcWuT1OtA3M44dv1iiYbKomtopHEbQGgH4=
 cosmossdk.io/x/upgrade v0.2.0-rc.1 h1:YO865mCFIsFyjzl1fOsOr7Hw2iVGJhTGwecUC3u0YBY=

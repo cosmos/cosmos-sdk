@@ -19,7 +19,7 @@ import (
 //
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
-// v0.59.x to v0.52.x.
+// v0.50.x to v0.52.x.
 const UpgradeName = "v050-to-v052"
 
 func (app SimApp) RegisterUpgradeHandlers() {

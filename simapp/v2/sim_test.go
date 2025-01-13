@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
+	genutil "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
 
@@ -59,7 +59,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 // ExportableApp defines an interface for exporting application state and validator set.
 type ExportableApp interface {
-	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string) (v2.ExportedApp, error)
+	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string) (genutil.ExportedApp, error)
 }
 
 // Scenario:

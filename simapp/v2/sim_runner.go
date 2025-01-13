@@ -166,7 +166,8 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](
 }
 
 // InitializeChain sets up the blockchain with an initial state, validator set, and history using the provided genesis data.
-func (ti TestInstance[T]) InitializeChain(tb testing.TB,
+func (ti TestInstance[T]) InitializeChain(
+	tb testing.TB,
 	ctx context.Context,
 	chainID string,
 	genesisTimestamp time.Time,

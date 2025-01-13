@@ -156,6 +156,15 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
+	// if the latest version is 0, it means its a new datbase and no migration is needed
+	lv, err := sc.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
+	if lv == 0 {
+		isMigrating = false
+	}
+
 	var mm *migration.Manager
 	if isMigrating {
 		snapshotDB, err := snapshots.NewStore(fmt.Sprintf("%s/data/snapshots/store.db", opts.RootDir))

@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/runtime/v2 v2.0.0-20250109081935-cf721a654090 // main
-	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 // main
+	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250113101424-c79e19dfc9ca // main
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1.0.20250109081935-cf721a654090
 	cosmossdk.io/server/v2/cometbft v1.0.0-beta.1
 	cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 // main
@@ -144,7 +144,7 @@ require (
 	github.com/hashicorp/go-getter v1.7.5 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.3 // indirect
+	github.com/hashicorp/go-metrics v0.5.4 // indirect
 	github.com/hashicorp/go-plugin v1.6.2 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect

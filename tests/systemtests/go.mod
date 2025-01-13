@@ -6,13 +6,10 @@ require (
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/systemtests v1.0.0
 	github.com/cosmos/cosmos-sdk v0.50.11
-<<<<<<< HEAD
+	github.com/fullstorydev/grpcurl v1.9.2
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.14.2
 	github.com/tidwall/sjson v1.2.5
-=======
-	github.com/fullstorydev/grpcurl v1.9.2
->>>>>>> c79e19dfc (fix(server/v2/grpc): fix reflection (#23333))
 )
 
 require (
@@ -167,15 +164,9 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53 // indirect
-<<<<<<< HEAD
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241219192143-6b3ec007d9bb // indirect
-	google.golang.org/grpc v1.69.2 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
-=======
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250106144421-5f5ef82da422 // indirect
 	google.golang.org/grpc v1.69.2
 	google.golang.org/protobuf v1.36.2 // indirect
->>>>>>> c79e19dfc (fix(server/v2/grpc): fix reflection (#23333))
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect

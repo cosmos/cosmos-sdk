@@ -179,7 +179,7 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 
 	// test validator slashes grpc endpoint
 	slashURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/slashes`
-	invalidHeightOutput := `"code":"NUMBER", "details":[]interface {}{}, "message":"strconv.ParseUint: parsing \"NUMBER\": invalid syntax"`
+	invalidHeightOutput := `{"code":"NUMBER", "details":[]interface {}{}, "message":"strconv.ParseUint: parsing \"NUMBER\": invalid syntax"}`
 
 	slashTestCases := []systest.RestTestCase{
 		{

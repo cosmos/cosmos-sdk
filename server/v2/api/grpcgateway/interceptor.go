@@ -174,15 +174,24 @@ func (g *gatewayInterceptor[T]) createMessageFromGetRequest(_ context.Context, _
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	// im not really sure what this filter is for, but defaulting it like so doesn't seem to break anything.
-	// pb.gw.go code uses it in a few queries, but it's not clear what actual behavior is gained from this.
-	filter := &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter := filterFromPathParams(wildcardValues)
 	err = runtime.PopulateQueryParameters(input, req.Form, filter)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	return input, err
+}
+
+func filterFromPathParams(pathParams map[string]string) *utilities.DoubleArray {
+	var prefixPaths [][]string
+
+	for k := range pathParams {
+		prefixPaths = append(prefixPaths, []string{k})
+	}
+
+	// Pass these to NewDoubleArray using the "spread" (...) syntax.
+	return utilities.NewDoubleArray(prefixPaths)
 }
 
 // getHTTPGetAnnotationMapping returns a mapping of RPC Method HTTP GET annotation to the RPC Handler's Request Input type full name.

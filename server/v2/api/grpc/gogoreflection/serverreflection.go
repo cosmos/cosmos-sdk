@@ -488,7 +488,7 @@ func (s *serverReflectionServer) getServices(messages []string) (svcs []string, 
 		seenSvc[svc.FullName()] = struct{}{}
 	}
 
-	return
+	return svcs, fds
 }
 
 func findServiceForMessage(registry *protoregistry.Files, messageDesc protoreflect.MessageDescriptor) (protoreflect.ServiceDescriptor, bool) {

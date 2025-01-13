@@ -22,6 +22,7 @@ import (
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,6 +46,7 @@ type SimApp[T transaction.Tx] struct {
 	// others keepers are all in the app
 	UpgradeKeeper *upgradekeeper.Keeper
 	StakingKeeper *stakingkeeper.Keeper
+	AuthKeeper    authkeeper.AccountKeeper
 }
 
 // AppConfig returns the default app config.
@@ -151,7 +153,9 @@ func NewSimApp[T transaction.Tx](
 		&app.txConfig,
 		&app.interfaceRegistry,
 		&app.UpgradeKeeper,
-		&app.StakingKeeper)
+		&app.StakingKeeper,
+		&app.AuthKeeper,
+	)
 
 	if err := depinject.Inject(appConfig, outputs...); err != nil {
 		return nil, err

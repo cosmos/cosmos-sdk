@@ -170,9 +170,7 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
+replace cosmossdk.io/core/testing => ./core/testing
 
 // TODO remove after all modules have their own go.mods
 replace (

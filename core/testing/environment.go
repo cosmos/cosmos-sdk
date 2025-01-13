@@ -33,7 +33,7 @@ func NewTestEnvironment(cfg TestEnvironmentConfig) (TestContext, TestEnvironment
 	env := TestEnvironment{
 		Environment: appmodulev2.Environment{
 			Logger:             cfg.Logger,
-			BranchService:      nil,
+			BranchService:      TestBranchService{},
 			EventService:       testEventService,
 			GasService:         TestGasService{},
 			HeaderService:      testHeaderService,

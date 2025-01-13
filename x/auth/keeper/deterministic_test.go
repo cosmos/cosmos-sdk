@@ -267,7 +267,7 @@ func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.Accoun
 }
 
 func (suite *DeterministicTestSuite) setModuleAccounts(
-	ctx sdk.Context, ak keeper.AccountKeeper, maccs []string,
+	ctx context.Context, ak keeper.AccountKeeper, maccs []string,
 ) []sdk.AccountI {
 	sort.Strings(maccs)
 	moduleAccounts := make([]sdk.AccountI, 0, len(maccs))

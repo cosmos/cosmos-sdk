@@ -98,7 +98,7 @@ func (oe *OptimisticExecution) Execute(req *abci.RequestProcessProposal) {
 		ProposerAddress:    req.ProposerAddress,
 	}
 
-	oe.logger.Debug("OE started", "height", req.Height, "hash", hex.EncodeToString(req.Hash), "time", req.Time.String())
+	oe.logger.Info("OE started", "height", req.Height, "hash", hex.EncodeToString(req.Hash), "time", req.Time.String())
 	ctx, cancel := context.WithCancel(context.Background())
 	oe.cancelFunc = cancel
 	oe.initialized = true
@@ -110,7 +110,7 @@ func (oe *OptimisticExecution) Execute(req *abci.RequestProcessProposal) {
 		oe.mtx.Lock()
 
 		executionTime := time.Since(start)
-		oe.logger.Debug("OE finished", "duration", executionTime.String(), "height", oe.request.Height, "hash", hex.EncodeToString(oe.request.Hash))
+		oe.logger.Info("OE finished", "duration", executionTime.String(), "height", oe.request.Height, "hash", hex.EncodeToString(oe.request.Hash))
 		oe.response, oe.err = resp, err
 
 		close(oe.stopCh)
@@ -147,6 +147,12 @@ func (oe *OptimisticExecution) AbortIfNeeded(req *abci.RequestFinalizeBlock) boo
 func (oe *OptimisticExecution) Abort() {
 	if oe == nil || oe.cancelFunc == nil {
 		return
+	}
+
+	if oe.request != nil {
+		oe.logger.Info("OE aborted", "height", oe.request.Height, "hash", hex.EncodeToString(oe.request.Hash))
+	} else {
+		oe.logger.Info("OE aborted (oe.request is nil)")
 	}
 
 	oe.cancelFunc()

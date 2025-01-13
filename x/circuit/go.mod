@@ -3,7 +3,7 @@ module cosmossdk.io/x/circuit
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.0 // main
+	cosmossdk.io/api v0.8.1 // main
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // main
@@ -162,7 +162,7 @@ require (
 	golang.org/x/tools v0.27.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241219192143-6b3ec007d9bb // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	google.golang.org/protobuf v1.36.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect

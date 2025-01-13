@@ -3,7 +3,7 @@ module cosmossdk.io/client/v2
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.0 // main
+	cosmossdk.io/api v0.8.1 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/x/bank v0.2.0-rc.1
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
 )

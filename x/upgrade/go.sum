@@ -192,8 +192,8 @@ cloud.google.com/go/webrisk v1.4.0/go.mod h1:Hn8X6Zr+ziE2aNd8SliSDWpEnSS1u4R9+xX
 cloud.google.com/go/webrisk v1.5.0/go.mod h1:iPG6fr52Tv7sGk0H6qUFzmL3HHZev1htXuWDEEsqMTg=
 cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1Vwf+KmJENM0=
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
-cosmossdk.io/api v0.8.0 h1:E5Xifxu/3mPTLF79si9fyq4rR0wagubeVNmOz5duTUo=
-cosmossdk.io/api v0.8.0/go.mod h1:hgJ83P0ZUu0rS1SZoVM6abk6ADOkiM259BVVlYtAPP0=
+cosmossdk.io/api v0.8.1 h1:jQxx7CgUZDfgbPhPak41hW8TZzqfj06YxNI1WOulOo4=
+cosmossdk.io/api v0.8.1/go.mod h1:8Q+Je1bFwsNTCMe6qigVDDyrNmFYa7ttvG96tN/oKGw=
 cosmossdk.io/client/v2 v2.10.0-beta.1 h1:uMF5PUt6cy6QeXRnBf1tuig5Haw3dUaTqtSIYZWf/Cc=
 cosmossdk.io/client/v2 v2.10.0-beta.1/go.mod h1:EqHIw/tLdCK1vSAg+8ovNEBq3PeBenP+nQ1WhPMGq94=
 cosmossdk.io/collections v1.0.0-rc.1 h1:Mzv0YKZJ6aloy4oSnMnyl8b6PtM2dTdDlzRR/079TyM=
@@ -1413,8 +1413,8 @@ google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQ
 google.golang.org/protobuf v1.27.1/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.28.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 google.golang.org/protobuf v1.28.1/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
-google.golang.org/protobuf v1.36.1 h1:yBPeRvTftaleIgM3PZ/WBIZ7XM/eEYAaEyCwvyjq/gk=
-google.golang.org/protobuf v1.36.1/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
+google.golang.org/protobuf v1.36.2 h1:R8FeyR1/eLmkutZOM5CWghmo5itiG9z0ktFlTVLuTmU=
+google.golang.org/protobuf v1.36.2/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

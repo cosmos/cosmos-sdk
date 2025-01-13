@@ -3,7 +3,7 @@ module cosmossdk.io/x/slashing
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.0 // main
+	cosmossdk.io/api v0.8.1 // main
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // main
@@ -22,7 +22,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 	gotest.tools/v3 v3.5.1
 )
 

@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
@@ -16,7 +15,6 @@ import (
 	"cosmossdk.io/simapp/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 )
 
 func NewRootCmd[T transaction.Tx](
@@ -39,14 +37,13 @@ func NewRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
-	nodeCmds := nodeservice.NewNodeCommands()
-	autoCLIModuleOpts := make(map[string]*autocliv1.ModuleOptions)
-	autoCLIModuleOpts[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
-	autoCliOpts, err := autocli.NewAppOptionsFromConfig(
-		depinject.Configs(simapp.AppConfig(), depinject.Supply(runtime.GlobalConfig{})),
-		autoCLIModuleOpts,
-	)
-	if err != nil {
+	var autoCliOpts autocli.AppOptions
+	if err := depinject.Inject(
+		depinject.Configs(
+			simapp.AppConfig(),
+			depinject.Supply(runtime.GlobalConfig{}, log.NewNopLogger())),
+		&autoCliOpts,
+	); err != nil {
 		return nil, err
 	}
 
@@ -107,7 +104,7 @@ func NewRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
-	autoCliOpts.ModuleOptions = autoCLIModuleOpts
+
 	if err := autoCliOpts.EnhanceRootCommand(rootCommand); err != nil {
 		return nil, err
 	}

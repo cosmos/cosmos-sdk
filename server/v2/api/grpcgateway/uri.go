@@ -1,86 +1,65 @@
 package grpcgateway
 
 import (
-	"io"
-	"net/http"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
-
-	"github.com/cosmos/gogoproto/jsonpb"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/mitchellh/mapstructure"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-const maxBodySize = 1 << 20 // 1 MB
+// uriMatcher provides functionality to match HTTP request URIs.
+type uriMatcher struct {
+	// wildcardURIMatchers are used for complex URIs that involve wildcards (i.e. /foo/{bar}/baz)
+	wildcardURIMatchers map[*regexp.Regexp]queryMetadata
+	// simpleMatchers are used for simple URI's that have no wildcards (i.e. /foo/bar/baz).
+	simpleMatchers map[string]queryMetadata
+}
 
 // uriMatch contains information related to a URI match.
 type uriMatch struct {
 	// QueryInputName is the fully qualified name of the proto input type of the query rpc method.
 	QueryInputName string
 
-	// Params are any wildcard/query params found in the request.
+	// Params are any wildcard params found in the request.
 	//
-	// example:
-	// - foo/bar/{baz} - foo/bar/qux -> {baz: qux}
-	// - foo/bar?baz=qux - foo/bar -> {baz: qux}
+	// example: /foo/bar/{baz} -> /foo/bar/hello = {"baz": "hello"}
 	Params map[string]string
-}
-
-// HasParams reports whether the uriMatch has any params.
-func (uri uriMatch) HasParams() bool {
-	return len(uri.Params) > 0
 }
 
 // matchURL attempts to find a match for the given URL.
 // NOTE: if no match is found, nil is returned.
-func matchURL(u *url.URL, getPatternToQueryInputName map[string]string) *uriMatch {
+func (m uriMatcher) matchURL(u *url.URL) *uriMatch {
 	uriPath := strings.TrimRight(u.Path, "/")
-	queryParams := u.Query()
-
 	params := make(map[string]string)
-	for key, vals := range queryParams {
-		if len(vals) > 0 {
-			// url.Values contains a slice for the values as you are able to specify a key multiple times in URL.
-			// example: https://localhost:9090/do/something?color=red&color=blue&color=green
-			// We will just take the first value in the slice.
-			params[key] = vals[0]
-		}
-	}
 
-	// for simple cases where there are no wildcards, we can just do a map lookup.
-	if inputName, ok := getPatternToQueryInputName[uriPath]; ok {
+	//  see if we can get a simple match first.
+	if qmd, ok := m.simpleMatchers[uriPath]; ok {
 		return &uriMatch{
-			QueryInputName: inputName,
+			QueryInputName: qmd.queryInputProtoName,
 			Params:         params,
 		}
 	}
 
-	// attempt to find a match in the pattern map.
-	for getPattern, queryInputName := range getPatternToQueryInputName {
-		getPattern = strings.TrimRight(getPattern, "/")
-
-		regexPattern, wildcardNames := patternToRegex(getPattern)
-
-		regex := regexp.MustCompile(regexPattern)
-		matches := regex.FindStringSubmatch(uriPath)
-
-		if len(matches) > 1 {
-			// first match is the full string, subsequent matches are capture groups
-			for i, name := range wildcardNames {
+	// try the complex matchers.
+	for reg, qmd := range m.wildcardURIMatchers {
+		matches := reg.FindStringSubmatch(uriPath)
+		switch {
+		case len(matches) == 1:
+			return &uriMatch{
+				QueryInputName: qmd.queryInputProtoName,
+				Params:         params,
+			}
+		case len(matches) > 1:
+			// first match is the URI, subsequent matches are the wild card values.
+			for i, name := range qmd.wildcardKeyNames {
 				params[name] = matches[i+1]
 			}
 
 			return &uriMatch{
-				QueryInputName: queryInputName,
+				QueryInputName: qmd.queryInputProtoName,
 				Params:         params,
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -109,79 +88,4 @@ func patternToRegex(pattern string) (string, []string) {
 	})
 
 	return "^" + escaped + "$", wildcardNames
-}
-
-// createMessageFromJSON creates a message from the uriMatch given the JSON body in the http request.
-func createMessageFromJSON(match *uriMatch, r *http.Request) (gogoproto.Message, error) {
-	requestType := gogoproto.MessageType(match.QueryInputName)
-	if requestType == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request type")
-	}
-
-	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
-	if !ok {
-		return nil, status.Error(codes.Internal, "failed to cast to proto message")
-	}
-
-	defer r.Body.Close()
-	limitedReader := io.LimitReader(r.Body, maxBodySize)
-	err := jsonpb.Unmarshal(limitedReader, msg)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	return msg, nil
-}
-
-// createMessage creates a message from the given uriMatch. If the match has params, the message will be populated
-// with the value of those params. Otherwise, an empty message is returned.
-func createMessage(match *uriMatch) (gogoproto.Message, error) {
-	requestType := gogoproto.MessageType(match.QueryInputName)
-	if requestType == nil {
-		return nil, status.Error(codes.InvalidArgument, "unknown request type")
-	}
-
-	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
-	if !ok {
-		return nil, status.Error(codes.Internal, "failed to create message instance")
-	}
-
-	// if the uri match has params, we need to populate the message with the values of those params.
-	if match.HasParams() {
-		// convert flat params map to nested structure
-		nestedParams := make(map[string]any)
-		for key, value := range match.Params {
-			parts := strings.Split(key, ".")
-			current := nestedParams
-
-			// step through nested levels
-			for i, part := range parts {
-				if i == len(parts)-1 {
-					// Last part - set the value
-					current[part] = value
-				} else {
-					// continue nestedness
-					if _, exists := current[part]; !exists {
-						current[part] = make(map[string]any)
-					}
-					current = current[part].(map[string]any)
-				}
-			}
-		}
-
-		// Configure decoder to handle the nested structure
-		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-			Result:           msg,
-			TagName:          "json", // Use json tags as they're simpler
-			WeaklyTypedInput: true,
-		})
-		if err != nil {
-			return nil, status.Error(codes.Internal, "failed to create message instance")
-		}
-
-		if err := decoder.Decode(nestedParams); err != nil {
-			return nil, status.Error(codes.InvalidArgument, err.Error())
-		}
-	}
-	return msg, nil
 }

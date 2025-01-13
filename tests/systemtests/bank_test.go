@@ -263,7 +263,7 @@ func TestBankGRPCQueries(t *testing.T) {
 			"error when querying supply with height greater than block height",
 			supplyUrl,
 			map[string]string{
-				blockHeightHeader: fmt.Sprintf("%d", blockHeight+5),
+				blockHeightHeader: fmt.Sprintf("%d", blockHeight+5000),
 			},
 			http.StatusBadRequest,
 			"invalid height",

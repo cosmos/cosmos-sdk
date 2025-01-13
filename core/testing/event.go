@@ -7,29 +7,29 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
-var _ event.Service = (*MemEventsService)(nil)
+var _ event.Service = &TestEventService{}
 
-// EventsService attaches an event service to the context.
-// Adding an existing module will reset the events.
-func EventsService(ctx context.Context, moduleName string) MemEventsService {
-	unwrap(ctx).events[moduleName] = nil
-	unwrap(ctx).protoEvents[moduleName] = nil
-	return MemEventsService{moduleName: moduleName}
-}
-
-type MemEventsService struct {
+type TestEventService struct {
 	moduleName string
 }
 
-func (e MemEventsService) EventManager(ctx context.Context) event.Manager {
+// NewTestEventService attaches an event service to the context.
+// Adding an existing module will reset the events.
+func NewTestEventService(ctx context.Context, moduleName string) TestEventService {
+	unwrap(ctx).events[moduleName] = nil
+	unwrap(ctx).protoEvents[moduleName] = nil
+	return TestEventService{moduleName: moduleName}
+}
+
+func (e TestEventService) EventManager(ctx context.Context) event.Manager {
 	return eventManager{moduleName: e.moduleName, ctx: unwrap(ctx)}
 }
 
-func (e MemEventsService) GetEvents(ctx context.Context) []event.Event {
+func (e TestEventService) GetEvents(ctx context.Context) []event.Event {
 	return unwrap(ctx).events[e.moduleName]
 }
 
-func (e MemEventsService) GetProtoEvents(ctx context.Context) []transaction.Msg {
+func (e TestEventService) GetProtoEvents(ctx context.Context) []transaction.Msg {
 	return unwrap(ctx).protoEvents[e.moduleName]
 }
 

@@ -1,7 +1,9 @@
 package prompt
 
 import (
+	"bufio"
 	"fmt"
+	"strings"
 
 	"github.com/manifoldco/promptui"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -17,7 +19,7 @@ func Select(label string, options []string) (string, error) {
 
 	_, selectedProposalType, err := selectUi.Run()
 	if err != nil {
-		return "", fmt.Errorf("failed to prompt proposal types: %w", err)
+		return "", fmt.Errorf("failed to prompt select list: %w", err)
 	}
 
 	return selectedProposalType, nil
@@ -67,4 +69,26 @@ func SetDefaults(msg protoreflect.Message, defaults map[string]interface{}) {
 			}
 		}
 	}
+}
+
+// UserConfirmation prompts the user for a yes/no confirmation using the provided bufio.Reader.
+// It reads a line of input, trims whitespace, and returns true if the first character is 'y' or 'Y'.
+// Returns false for empty input or any other response. Returns an error if reading fails.
+func UserConfirmation(r *bufio.Reader) (bool, error) {
+	response, err := r.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+
+	response = strings.TrimSpace(response)
+	if len(response) == 0 {
+		return false, nil
+	}
+
+	response = strings.ToLower(response)
+	if response[0] == 'y' && len(response) <= 3 {
+		return true, nil
+	}
+
+	return false, nil
 }

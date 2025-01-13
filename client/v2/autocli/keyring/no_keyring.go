@@ -34,6 +34,6 @@ func (k NoKeyring) KeyType(name string) (uint, error) {
 	return 0, errNoKeyring
 }
 
-func (k NoKeyring) KeyInfo(name string) (string, string, uint, error) {
-	return "", "", 0, errNoKeyring
+func (k NoKeyring) KeyInfo(name string) (string, string, []byte, uint, error) {
+	return "", "", nil, 0, errNoKeyring
 }

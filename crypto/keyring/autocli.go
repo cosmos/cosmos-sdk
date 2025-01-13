@@ -27,7 +27,7 @@ type autoCLIKeyring interface {
 	KeyType(name string) (uint, error)
 
 	// KeyInfo given a key name or address returns key name, key address and key type.
-	KeyInfo(name string) (string, string, uint, error)
+	KeyInfo(name string) (string, string, []byte, uint, error)
 }
 
 // NewAutoCLIKeyring wraps the SDK keyring and makes it compatible with the AutoCLI keyring interfaces.
@@ -107,30 +107,34 @@ func (a *autoCLIKeyringAdapter) KeyType(name string) (uint, error) {
 }
 
 // KeyInfo returns key name, key address, and key type given a key name or address.
-func (a *autoCLIKeyringAdapter) KeyInfo(nameOrAddr string) (string, string, uint, error) {
+func (a *autoCLIKeyringAdapter) KeyInfo(nameOrAddr string) (string, string, []byte, uint, error) {
 	addr, err := a.ac.StringToBytes(nameOrAddr)
 	if err != nil {
 		// If conversion fails, it's likely a name, not an address
 		record, err := a.Keyring.Key(nameOrAddr)
 		if err != nil {
-			return "", "", 0, err
+			return "", "", nil, 0, err
 		}
 		addr, err = record.GetAddress()
 		if err != nil {
-			return "", "", 0, err
+			return "", "", nil, 0, err
 		}
 		addrStr, err := a.ac.BytesToString(addr)
 		if err != nil {
-			return "", "", 0, err
+			return "", "", nil, 0, err
 		}
-		return record.Name, addrStr, uint(record.GetType()), nil
+		return record.Name, addrStr, addr, uint(record.GetType()), nil
 	}
 
 	// If conversion succeeds, it's an address, get the key info by address
 	record, err := a.Keyring.KeyByAddress(addr)
 	if err != nil {
-		return "", "", 0, err
+		return "", "", nil, 0, err
+	}
+	addr, err = record.GetAddress()
+	if err != nil {
+		return "", "", nil, 0, err
 	}
 
-	return record.Name, nameOrAddr, uint(record.GetType()), nil
+	return record.Name, nameOrAddr, addr, uint(record.GetType()), nil
 }

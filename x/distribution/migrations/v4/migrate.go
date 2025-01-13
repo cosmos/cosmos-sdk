@@ -7,9 +7,9 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/store"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,6 +46,9 @@ func GetPreviousProposerConsAddr(ctx context.Context, storeService store.KVStore
 // SetPreviousProposerConsAddr set the proposer public key for this block.
 func SetPreviousProposerConsAddr(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, consAddr sdk.ConsAddress) error {
 	kvStore := storeService.OpenKVStore(ctx)
-	bz := cdc.MustMarshal(&gogotypes.BytesValue{Value: consAddr})
+	bz, err := cdc.Marshal(&gogotypes.BytesValue{Value: consAddr})
+	if err != nil {
+		panic(err)
+	}
 	return kvStore.Set(OldProposerKey, bz)
 }

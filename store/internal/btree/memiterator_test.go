@@ -1,11 +1,11 @@
-package internal
+package btree
 
 import (
 	"testing"
 )
 
 func TestMemIterator_Ascending(t *testing.T) {
-	db := NewBTree()
+	db := NewBTree[[]byte]()
 	// db.set()
 	db.Set([]byte("a"), []byte("value_a"))
 	db.Set([]byte("b"), []byte("value_b"))
@@ -32,7 +32,7 @@ func TestMemIterator_Ascending(t *testing.T) {
 }
 
 func TestMemIterator_Descending(t *testing.T) {
-	db := NewBTree()
+	db := NewBTree[[]byte]()
 
 	db.Set([]byte("a"), []byte("value_a"))
 	db.Set([]byte("b"), []byte("value_b"))
@@ -60,7 +60,7 @@ func TestMemIterator_Descending(t *testing.T) {
 }
 
 func TestMemIterator_EmptyRange(t *testing.T) {
-	db := NewBTree()
+	db := NewBTree[[]byte]()
 	db.Set([]byte("a"), []byte("value_a"))
 	db.Set([]byte("b"), []byte("value_b"))
 	db.Set([]byte("c"), []byte("value_c"))

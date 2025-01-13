@@ -3,7 +3,7 @@ module cosmossdk.io/x/epochs
 go 1.23.2
 
 require (
-	cosmossdk.io/api v0.8.0
+	cosmossdk.io/api v0.8.1
 	cosmossdk.io/collections v1.0.0
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1

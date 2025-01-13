@@ -5,7 +5,7 @@ import (
 
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 )
 
 // NewGenesisState creates a new GenesisState instance
@@ -30,7 +30,9 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+		if err := cdc.UnmarshalJSON(appState[ModuleName], &genesisState); err != nil {
+			panic(err)
+		}
 	}
 
 	return &genesisState

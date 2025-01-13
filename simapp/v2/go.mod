@@ -15,7 +15,7 @@ require (
 	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250113101424-c79e19dfc9ca // main
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1.0.20250109081935-cf721a654090
 	cosmossdk.io/server/v2/cometbft v1.0.0-beta.1
-	cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 // main
+	cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250113105648-064c9ba6385a // main
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
 	cosmossdk.io/tools/confix v0.2.0-rc.1
 	cosmossdk.io/x/accounts v0.2.0-rc.1

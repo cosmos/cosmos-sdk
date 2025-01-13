@@ -226,8 +226,8 @@ cosmossdk.io/server/v2/stf v1.0.0-beta.1.0.20250109081935-cf721a654090 h1:K0HN3T
 cosmossdk.io/server/v2/stf v1.0.0-beta.1.0.20250109081935-cf721a654090/go.mod h1:O6Njxje0LbvC0RxdgwTmvBlbGcpKOfhbkdAguyq0ntQ=
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 h1:glZ6MpmD+5AhwJYV4jzx+rn7cgUB2owHgk9o+93luz0=
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43/go.mod h1:XCWpgfueHSBY+B7Cf2Aq/CcsU+6XoFH+EmseCKglFrU=
-cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090 h1:ZXFcStI+zFuHEBvuIPaLzPUp54PCxCAmR2RUA8/1KQM=
-cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250109081935-cf721a654090/go.mod h1:G+ZRihxC4jFhLXnYt4K16tSYtkvh7ayjSaYGWJFObAo=
+cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250113105648-064c9ba6385a h1:/y3j4oI+b/yYoPmZaF1NOuvDLhE71+/1f9Xucos4g1g=
+cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250113105648-064c9ba6385a/go.mod h1:RGIGNGmCeNkX7P+1eFovbvyp9kwY8AdJ0Ue096hRY/E=
 cosmossdk.io/tools/benchmark v0.2.0-rc.1 h1:Jgk0FLvnMQJrivrSMhKQBwaTiJz6MGq5ZbaHag7Sqq0=
 cosmossdk.io/tools/benchmark v0.2.0-rc.1/go.mod h1:tnGa8L7xHFMp26FbLvU5MRlS89BFrCxSOKR8jCi7kVU=
 cosmossdk.io/tools/confix v0.2.0-rc.1 h1:sVYXR89OKW19oCnr232m9/pE3+oJllNTZlTypWhXHNI=

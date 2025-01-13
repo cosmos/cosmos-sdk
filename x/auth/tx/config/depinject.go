@@ -17,10 +17,8 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -49,7 +47,6 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	BaseAppOption       runtime.BaseAppOption // This is only useful for chains using baseapp.
 	TxConfig            client.TxConfig
 	TxConfigOptions     tx.ConfigOptions
 	TxSigningHandlerMap *txsigning.HandlerMap
@@ -86,10 +83,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	return ModuleOutputs{
-		BaseAppOption: func(app *baseapp.BaseApp) {
-			app.SetTxDecoder(txConfig.TxDecoder())
-			app.SetTxEncoder(txConfig.TxEncoder())
-		},
 		TxConfig:            txConfig,
 		TxConfigOptions:     txConfigOptions,
 		TxSigningHandlerMap: txConfig.SignModeHandler(),

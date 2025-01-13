@@ -49,21 +49,42 @@ import (
 	"google.golang.org/grpc/codes"
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 	"google.golang.org/grpc/status"
+<<<<<<< HEAD:server/grpc/gogoreflection/serverreflection.go
+=======
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	"cosmossdk.io/core/log"
+>>>>>>> c79e19dfc (fix(server/v2/grpc): fix reflection (#23333)):server/v2/api/grpc/gogoreflection/serverreflection.go
 )
 
 type serverReflectionServer struct {
 	rpb.UnimplementedServerReflectionServer
 	s *grpc.Server
 
+<<<<<<< HEAD:server/grpc/gogoreflection/serverreflection.go
+=======
+	messages []string
+
+>>>>>>> c79e19dfc (fix(server/v2/grpc): fix reflection (#23333)):server/v2/api/grpc/gogoreflection/serverreflection.go
 	initSymbols  sync.Once
 	serviceNames []string
 	symbols      map[string]*dpb.FileDescriptorProto // map of fully-qualified names to files
 }
 
 // Register registers the server reflection service on the given gRPC server.
+<<<<<<< HEAD:server/grpc/gogoreflection/serverreflection.go
 func Register(s *grpc.Server) {
 	rpb.RegisterServerReflectionServer(s, &serverReflectionServer{
 		s: s,
+=======
+func Register(s *grpc.Server, messages []string, logger log.Logger) {
+	rpb.RegisterServerReflectionServer(s, &serverReflectionServer{
+		s:        s,
+		messages: messages,
+		log:      logger,
+>>>>>>> c79e19dfc (fix(server/v2/grpc): fix reflection (#23333)):server/v2/api/grpc/gogoreflection/serverreflection.go
 	})
 }
 
@@ -77,7 +98,13 @@ type protoMessage interface {
 
 func (s *serverReflectionServer) getSymbols() (svcNames []string, symbolIndex map[string]*dpb.FileDescriptorProto) {
 	s.initSymbols.Do(func() {
+<<<<<<< HEAD:server/grpc/gogoreflection/serverreflection.go
 		serviceInfo := s.s.GetServiceInfo()
+=======
+		s.symbols = map[string]*dpb.FileDescriptorProto{}
+		services, fds := s.getServices(s.messages)
+		s.serviceNames = services
+>>>>>>> c79e19dfc (fix(server/v2/grpc): fix reflection (#23333)):server/v2/api/grpc/gogoreflection/serverreflection.go
 
 		s.symbols = map[string]*dpb.FileDescriptorProto{}
 		s.serviceNames = make([]string, 0, len(serviceInfo))
@@ -471,3 +498,66 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 		}
 	}
 }
+<<<<<<< HEAD:server/grpc/gogoreflection/serverreflection.go
+=======
+
+// getServices gets the unique list of services given a list of methods.
+func (s *serverReflectionServer) getServices(messages []string) (svcs []string, fds []*dpb.FileDescriptorProto) {
+	registry, err := gogoproto.MergedRegistry()
+	if err != nil {
+		s.log.Error("unable to load merged registry", "err", err)
+		return nil, nil
+	}
+	seenSvc := map[protoreflect.FullName]struct{}{}
+	for _, messageName := range messages {
+		md, err := registry.FindDescriptorByName(protoreflect.FullName(messageName))
+		if err != nil {
+			s.log.Error("unable to load message descriptor", "message", messageName, "err", err)
+			continue
+		}
+
+		svc, ok := findServiceForMessage(registry, md.(protoreflect.MessageDescriptor))
+		if !ok {
+			// if a service is not found for the message, simply skip
+			// this is likely the message isn't part of a service and using appmodulev2.Handler instead.
+			continue
+		}
+
+		if _, seen := seenSvc[svc.FullName()]; !seen {
+			svcs = append(svcs, string(svc.FullName()))
+			file := svc.ParentFile()
+			fds = append(fds, protodesc.ToFileDescriptorProto(file))
+		}
+
+		seenSvc[svc.FullName()] = struct{}{}
+	}
+
+	return svcs, fds
+}
+
+func findServiceForMessage(registry *protoregistry.Files, messageDesc protoreflect.MessageDescriptor) (protoreflect.ServiceDescriptor, bool) {
+	var (
+		service protoreflect.ServiceDescriptor
+		found   bool
+	)
+
+	registry.RangeFiles(func(fileDescriptor protoreflect.FileDescriptor) bool {
+		for i := 0; i < fileDescriptor.Services().Len(); i++ {
+			serviceDesc := fileDescriptor.Services().Get(i)
+
+			for j := 0; j < serviceDesc.Methods().Len(); j++ {
+				methodDesc := serviceDesc.Methods().Get(j)
+
+				if methodDesc.Input() == messageDesc || methodDesc.Output() == messageDesc {
+					service = serviceDesc
+					found = true
+					return false
+				}
+			}
+		}
+		return true
+	})
+
+	return service, found
+}
+>>>>>>> c79e19dfc (fix(server/v2/grpc): fix reflection (#23333)):server/v2/api/grpc/gogoreflection/serverreflection.go

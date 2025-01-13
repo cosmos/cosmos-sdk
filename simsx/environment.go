@@ -382,9 +382,9 @@ func (c *ChainDataSource) AccountsCount() int {
 	return len(c.accounts)
 }
 
-// AccountAt return SimAccount within the accounts slice. Reporter skip flag is set when boundaries are exceeded.
+// accountant return SimAccount within the accounts slice. Reporter skip flag is set when boundaries are exceeded.
 
-func (c *ChainDataSource) AccountAt(reporter SimulationReporter, i int) SimAccount {
+func (c *ChainDataSource) accountant(reporter SimulationReporter, i int) SimAccount {
 	if i > len(c.accounts) {
 		reporter.Skipf("account index out of range: %d", i)
 		return c.nullAccount()

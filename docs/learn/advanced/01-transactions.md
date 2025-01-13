@@ -149,6 +149,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/client/tx_config.go#L39
 * `Memo`, a note or comment to send with the transaction.
 * `FeeAmount`, the maximum amount the user is willing to pay in fees.
 * `TimeoutHeight`, block height until which the transaction is valid.
+* `TimeoutTimestamp`, timestamp until which the transaction is valid.
+* `Unordered`, whether transactions can be executed in any order. Nonce is then unevaluated (NOTE: A timeout timestamp must be set if `Unordered` is true).
 * `Signatures`, the array of signatures from all signers of the transaction.
 
 As there are currently two sign modes for signing transactions, there are also two implementations of `TxBuilder`:

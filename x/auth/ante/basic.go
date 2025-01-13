@@ -217,7 +217,7 @@ func isIncompleteSignature(data signing.SignatureData) bool {
 
 type (
 	// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
-	// tx height timeout.
+	// tx height and timestamp timeout.
 	TxTimeoutHeightDecorator struct {
 		env appmodulev2.Environment
 	}
@@ -253,6 +253,8 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ boo
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
 // height, then an error is returned.
+// Additionally, if a timestamp timeout is provided and is less than the current
+// block time, then an error is returned.
 func (txh TxTimeoutHeightDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	timeoutTx, ok := tx.(TxWithTimeoutHeight)
 	if !ok {

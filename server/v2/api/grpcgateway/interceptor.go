@@ -59,9 +59,6 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 	}
 	// convert the mapping to regular expressions for URL matching.
 	wildcardMatchers, simpleMatchers := createRegexMapping(logger, getMapping)
-	if err != nil {
-		return nil, err
-	}
 	matcher := uriMatcher{
 		wildcardURIMatchers: wildcardMatchers,
 		simpleMatchers:      simpleMatchers,

@@ -29,6 +29,7 @@ import (
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -144,14 +145,14 @@ func initFixture(t *testing.T, f authentiacteFunc) *fixture {
 	var err error
 	startupCfg := integration.DefaultStartUpConfig(t)
 
-	msgRouterService := integration.NewRouterService()
+	msgRouterService := msgrouter.NewRouterService()
 	fixture.registerMsgRouterService(msgRouterService)
 
 	var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
 		return msgRouterService
 	}
 
-	queryRouterService := integration.NewRouterService()
+	queryRouterService := msgrouter.NewRouterService()
 	fixture.registerQueryRouterService(queryRouterService)
 
 	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
@@ -188,7 +189,7 @@ func initFixture(t *testing.T, f authentiacteFunc) *fixture {
 	return fixture
 }
 
-func (f *fixture) registerMsgRouterService(router *integration.RouterService) {
+func (f *fixture) registerMsgRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 	bankSendHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		msg, ok := req.(*banktypes.MsgSend)
@@ -203,7 +204,7 @@ func (f *fixture) registerMsgRouterService(router *integration.RouterService) {
 	router.RegisterHandler(bankSendHandler, "cosmos.bank.v1beta1.MsgSend")
 }
 
-func (f *fixture) registerQueryRouterService(router *integration.RouterService) {
+func (f *fixture) registerQueryRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 	queryHandler := func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 		req, ok := msg.(*accountsv1.AccountNumberRequest)

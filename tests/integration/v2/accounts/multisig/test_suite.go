@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring``
@@ -73,14 +74,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var err error
 	startupCfg := integration.DefaultStartUpConfig(s.T())
 
-	msgRouterService := integration.NewRouterService()
+	msgRouterService := msgrouter.NewRouterService()
 	s.registerMsgRouterService(msgRouterService)
 
 	var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
 		return msgRouterService
 	}
 
-	queryRouterService := integration.NewRouterService()
+	queryRouterService := msgrouter.NewRouterService()
 	s.registerQueryRouterService(queryRouterService)
 
 	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
@@ -115,7 +116,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 }
 
-func (s *IntegrationTestSuite) registerMsgRouterService(router *integration.RouterService) {
+func (s *IntegrationTestSuite) registerMsgRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 	bankSendHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		msg, ok := req.(*banktypes.MsgSend)
@@ -142,7 +143,7 @@ func (s *IntegrationTestSuite) registerMsgRouterService(router *integration.Rout
 	router.RegisterHandler(accountsExeccHandler, "cosmos.accounts.v1.MsgExecute")
 }
 
-func (s *IntegrationTestSuite) registerQueryRouterService(router *integration.RouterService) {
+func (s *IntegrationTestSuite) registerQueryRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 	bankBalanceQueryHandler := func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 		req, ok := msg.(*banktypes.QueryBalanceRequest)

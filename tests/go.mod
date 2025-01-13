@@ -6,35 +6,32 @@ require (
 	cosmossdk.io/api v0.8.1
 	cosmossdk.io/collections v1.0.0
 	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
+	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
+	cosmossdk.io/server/v2/stf v1.0.0-beta.1
 	cosmossdk.io/store v1.10.0-rc.1
+	cosmossdk.io/store/v2 v2.0.0-beta.1
 	cosmossdk.io/x/tx v1.0.0
 	github.com/cometbft/cometbft v1.0.0
+	github.com/cometbft/cometbft/api v1.0.0
+	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/google/go-cmp v0.6.0
+	github.com/google/gofuzz v1.2.0
 	github.com/spf13/cobra v1.8.1 // indirect
+	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
+	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.69.2
 	google.golang.org/protobuf v1.36.2
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
-)
-
-require (
-	cosmossdk.io/core/testing v0.0.1
-	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
-	cosmossdk.io/server/v2/stf v1.0.0-beta.1
-	cosmossdk.io/store/v2 v2.0.0-beta.1
-	github.com/cometbft/cometbft/api v1.0.0
-	github.com/cosmos/cosmos-db v1.1.1
-	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.6.0
-	github.com/google/gofuzz v1.2.0
-	github.com/spf13/viper v1.19.0
-	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 )
 
 require (

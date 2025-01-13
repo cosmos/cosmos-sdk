@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"context"
+	"cosmossdk.io/server/v2/stf"
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -71,11 +71,20 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	queryRouter.RegisterService(&bankv1beta1.Query_ServiceDesc, &bankQueryServer{})
 	msgRouter.RegisterService(&bankv1beta1.Msg_ServiceDesc, &bankMsgServer{})
 
-	ctx := coretesting.Context()
-	ss := coretesting.KVStoreService(ctx, "test")
-	env := runtime.NewEnvironment(ss, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
-	env.EventService = eventService{}
-	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, nil, accounts...)
+	//ctx := coretesting.Context()
+	//ss := coretesting.KVStoreService(ctx, "test")
+	//env := runtime.NewEnvironment(ss, coretesting.NewNopLogger())
+
+	router := stf.NewRouterBuilder()
+
+	ctx, env := coretesting.NewTestEnvironment(coretesting.TestEnvironmentConfig{
+		ModuleName:  "test",
+		Logger:      coretesting.NewNopLogger(),
+		MsgRouter:   nil,
+		QueryRouter: nil,
+	})
+	//env.EventService = eventService{}
+	m, err := NewKeeper(codec.NewProtoCodec(ir), env.Environment, addressCodec, ir, nil, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

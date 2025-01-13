@@ -25,6 +25,7 @@ import (
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
@@ -88,14 +89,14 @@ func createTestFixture(t *testing.T) *fixture {
 	var err error
 	startupCfg := integration.DefaultStartUpConfig(t)
 
-	msgRouterService := integration.NewRouterService()
+	msgRouterService := msgrouter.NewRouterService()
 	res.registerMsgRouterService(msgRouterService)
 
 	var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
 		return msgRouterService
 	}
 
-	queryRouterService := integration.NewRouterService()
+	queryRouterService := msgrouter.NewRouterService()
 	res.registerQueryRouterService(queryRouterService)
 
 	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
@@ -139,7 +140,7 @@ func createTestFixture(t *testing.T) *fixture {
 	return &res
 }
 
-func (s *fixture) registerMsgRouterService(router *integration.RouterService) {
+func (s *fixture) registerMsgRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 	bankSendHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		msg, ok := req.(*banktypes.MsgSend)
@@ -154,6 +155,6 @@ func (s *fixture) registerMsgRouterService(router *integration.RouterService) {
 	router.RegisterHandler(bankSendHandler, "cosmos.bank.v1beta1.MsgSend")
 }
 
-func (s *fixture) registerQueryRouterService(router *integration.RouterService) {
+func (s *fixture) registerQueryRouterService(_ *msgrouter.RouterService) {
 	// register custom router service
 }

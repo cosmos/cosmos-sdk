@@ -25,6 +25,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
@@ -59,14 +60,14 @@ func initFixture(t *testing.T) *fixture {
 
 	startupCfg := integration.DefaultStartUpConfig(t)
 
-	msgRouterService := integration.NewRouterService()
+	msgRouterService := msgrouter.NewRouterService()
 	res.registerMsgRouterService(msgRouterService)
 
 	var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
 		return msgRouterService
 	}
 
-	queryRouterService := integration.NewRouterService()
+	queryRouterService := msgrouter.NewRouterService()
 	res.registerQueryRouterService(queryRouterService)
 	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
 
@@ -88,7 +89,7 @@ func initFixture(t *testing.T) *fixture {
 	return &res
 }
 
-func (f *fixture) registerMsgRouterService(router *integration.RouterService) {
+func (f *fixture) registerMsgRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 
 	govSubmitProposalHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
@@ -104,5 +105,5 @@ func (f *fixture) registerMsgRouterService(router *integration.RouterService) {
 	router.RegisterHandler(govSubmitProposalHandler, "/cosmos.gov.v1.MsgExecLegacyContent")
 }
 
-func (f *fixture) registerQueryRouterService(router *integration.RouterService) {
+func (f *fixture) registerQueryRouterService(_ *msgrouter.RouterService) {
 }

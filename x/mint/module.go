@@ -18,12 +18,7 @@ import (
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/codec"
-	simsx "github.com/cosmos/cosmos-sdk/simsx"
-=======
 	"github.com/cosmos/cosmos-sdk/simsx"
->>>>>>> bc9ce394c (chore(x/): use `cosmossdk.io/core/codec` instead of `github.com/cosmos/cosmos-sdk/codec` (#23313))
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )

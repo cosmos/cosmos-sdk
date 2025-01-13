@@ -147,7 +147,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 				BalanceSource: app.BankKeeper,
 			}
 		}
-		ti.Cfg.InitialBlockHeight = int(exported.Height)
+		ti.Cfg.InitialBlockHeight = uint64(exported.Height)
 		simsx.RunWithSeed(t, ti.Cfg, NewSimApp, importGenesisStateFactory, ti.Cfg.Seed, ti.Cfg.FuzzSeed)
 	})
 }

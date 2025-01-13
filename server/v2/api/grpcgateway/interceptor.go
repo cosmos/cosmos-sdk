@@ -250,7 +250,6 @@ func createRegexMapping(logger log.Logger, annotationMapping map[string]string) 
 		} else {
 			reg := regexp.MustCompile(pattern)
 			if otherAnnotation, ok := seenPatterns[pattern]; ok {
-
 				// TODO: eventually we want this to error, but there is currently a duplicate in the protobuf.
 				// see: https://github.com/cosmos/cosmos-sdk/issues/23281
 				logger.Warn("duplicate HTTP annotation found", "annotation1", annotation, "annotation2", otherAnnotation, "query_input_name", queryInputName)

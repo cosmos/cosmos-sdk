@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	core "cosmossdk.io/core/coin"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -39,9 +40,9 @@ type Keeper interface {
 	GetAllDenomMetaData(ctx context.Context) []types.Metadata
 	IterateAllDenomMetaData(ctx context.Context, cb func(types.Metadata) bool)
 
-	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt core.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt core.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt core.Coins) error
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
@@ -251,7 +252,7 @@ func (k BaseKeeper) SetDenomMetaData(ctx context.Context, denomMetaData types.Me
 // An error is returned if the module account does not exist or if
 // the recipient address is black-listed or if sending the tokens fails.
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
-	ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
+	ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt core.Coins,
 ) error {
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
@@ -268,7 +269,7 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 // SendCoinsFromModuleToModule transfers coins from a ModuleAccount to another.
 // An error is returned if either module accounts does not exist.
 func (k BaseKeeper) SendCoinsFromModuleToModule(
-	ctx context.Context, senderModule, recipientModule string, amt sdk.Coins,
+	ctx context.Context, senderModule, recipientModule string, amt core.Coins,
 ) error {
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
@@ -286,7 +287,7 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 // SendCoinsFromAccountToModule transfers coins from an AccAddress to a ModuleAccount.
 // An error is returned if the module account does not exist.
 func (k BaseKeeper) SendCoinsFromAccountToModule(
-	ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
+	ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt core.Coins,
 ) error {
 	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {

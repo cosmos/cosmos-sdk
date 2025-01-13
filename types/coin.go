@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode"
 
+	core "cosmossdk.io/core/coin"
 	"cosmossdk.io/math"
 )
 
@@ -28,6 +29,13 @@ func NewCoin(denom string, amount math.Int) Coin {
 	}
 
 	return coin
+}
+
+func NewCoreCoin(coin core.Coin) Coin {
+	return Coin{
+		Denom:  coin.Denom,
+		Amount: math.NewIntFromBigInt(&coin.Amount),
+	}
 }
 
 // NewInt64Coin returns a new coin with a denomination and amount. It will panic
@@ -199,6 +207,19 @@ func NewCoins(coins ...Coin) Coins {
 	}
 
 	return newCoins
+}
+
+func NewCoreCoins(coins core.Coins) Coins {
+	var res Coins
+
+	for _, coin := range coins {
+		res = append(res, Coin{
+			Denom:  coin.Denom,
+			Amount: math.NewIntFromBigInt(&coin.Amount),
+		})
+	}
+
+	return NewCoins(res...)
 }
 
 func sanitizeCoins(coins []Coin) Coins {

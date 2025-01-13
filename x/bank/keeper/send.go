@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	core "cosmossdk.io/core/coin"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -26,7 +27,7 @@ type SendKeeper interface {
 	ClearSendRestriction()
 
 	InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error
-	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt core.Coins) error
 
 	GetParams(ctx context.Context) types.Params
 	SetParams(ctx context.Context, params types.Params) error
@@ -197,7 +198,9 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
-func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, rawAmt core.Coins) error {
+	amt := sdk.NewCoreCoins(rawAmt)
+
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}

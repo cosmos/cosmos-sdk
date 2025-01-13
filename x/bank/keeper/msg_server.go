@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-
+	core "cosmossdk.io/core/coin"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/types"
 
@@ -57,7 +57,15 @@ func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	err = k.SendCoins(ctx, from, to, msg.Amount)
+	var coreAmount core.Coins
+	for _, coin := range msg.Amount {
+		coreAmount = append(coreAmount, core.Coin{
+			Denom:  coin.Denom,
+			Amount: *coin.Amount.BigInt(),
+		})
+	}
+
+	err = k.SendCoins(ctx, from, to, coreAmount)
 	if err != nil {
 		return nil, err
 	}

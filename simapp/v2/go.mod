@@ -283,6 +283,7 @@ replace (
 	cosmossdk.io/x/slashing => ../../x/slashing
 	cosmossdk.io/x/staking => ../../x/staking
 	cosmossdk.io/x/upgrade => ../../x/upgrade
+	cosmossdk.io/core => ../../core
 )
 
 // Below are the long-lived replace of the SimApp

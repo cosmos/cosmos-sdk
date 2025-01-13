@@ -44,6 +44,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
 * (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
+* (server) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Add custom rollback command option. In order to use it, you need to implement the Rollback interface and remove the default rollback command with `cmd.RemoveCommand(cmd.RollbackCmd)` and then add it back with `cmd.AddCommand(cmd.NewCustomRollbackCmd(appCreator, rollbackable))`.
 
 ### Improvements
 

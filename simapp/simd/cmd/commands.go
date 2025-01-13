@@ -45,7 +45,7 @@ func initRootCmd(
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, newApp, server.StartCmdOptions[servertypes.Application]{})
+	server.AddCommands(rootCmd, newApp, server.NewDefaultRollbackable(newApp), server.StartCmdOptions[servertypes.Application]{})
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(

@@ -166,7 +166,7 @@ jobs:
       - name: system tests v2
         if: env.GIT_DIFF
         run: |
-          COSMOS_BUILD_OPTIONS=v2 make test-system
+          make test-system
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

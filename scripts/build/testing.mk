@@ -24,8 +24,8 @@ test-all: test-unit test-integration test-ledger-mock test-race
 .PHONY: test-system
 test-system: build
 	mkdir -p ./tests/systemtests/binaries/
-	cp $(BUILDDIR)/simd$(if $(findstring v2,$(COSMOS_BUILD_OPTIONS)),v2) ./tests/systemtests/binaries/
-	$(MAKE) -C tests/systemtests test
+	cp $(BUILDDIR)/simdv2 ./tests/systemtests/binaries/
+	COSMOS_BUILD_OPTIONS=v2 $(MAKE) -C tests/systemtests test
 
 
 TEST_PACKAGES=./...

@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+// uriMatcher provides functionality to match HTTP request URIs.
+type uriMatcher struct {
+	// wildcardURIMatchers are used for complex URIs that involve wildcards (i.e. /foo/{bar}/baz)
+	wildcardURIMatchers map[*regexp.Regexp]queryMetadata
+	// simpleMatchers are used for simple URI's that have no wildcards (i.e. /foo/bar/baz).
+	simpleMatchers map[string]queryMetadata
+}
+
 // uriMatch contains information related to a URI match.
 type uriMatch struct {
 	// QueryInputName is the fully qualified name of the proto input type of the query rpc method.
@@ -19,11 +27,20 @@ type uriMatch struct {
 
 // matchURL attempts to find a match for the given URL.
 // NOTE: if no match is found, nil is returned.
-func matchURL(u *url.URL, regexpToQueryMetadata map[*regexp.Regexp]queryMetadata) *uriMatch {
+func (m uriMatcher) matchURL(u *url.URL) *uriMatch {
 	uriPath := strings.TrimRight(u.Path, "/")
 	params := make(map[string]string)
 
-	for reg, qmd := range regexpToQueryMetadata {
+	//  see if we can get a simple match first.
+	if qmd, ok := m.simpleMatchers[uriPath]; ok {
+		return &uriMatch{
+			QueryInputName: qmd.queryInputProtoName,
+			Params:         params,
+		}
+	}
+
+	// try the complex matchers.
+	for reg, qmd := range m.wildcardURIMatchers {
 		matches := reg.FindStringSubmatch(uriPath)
 		switch {
 		case len(matches) == 1:

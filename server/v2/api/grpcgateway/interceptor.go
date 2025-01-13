@@ -45,12 +45,7 @@ type gatewayInterceptor[T transaction.Tx] struct {
 	// gateway is the fallback grpc gateway mux handler.
 	gateway *runtime.ServeMux
 
-	// regexpToQueryMetadata is a mapping of regular expressions of HTTP annotations to metadata for the query.
-	// it is built from parsing the HTTP annotations obtained from the gogoproto global registry.'
-	//
-	// TODO: it might be interesting to make this a 'most frequently used' data structure, so frequently used regexp's are
-	// iterated over first.
-	regexpToQueryMetadata map[*regexp.Regexp]queryMetadata
+	matcher uriMatcher
 
 	// appManager is used to route queries to the application.
 	appManager appmanager.AppManager[T]
@@ -63,15 +58,19 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 		return nil, err
 	}
 	// convert the mapping to regular expressions for URL matching.
-	regexQueryMD := createRegexMapping(logger, getMapping)
+	wildcardMatchers, simpleMatchers := createRegexMapping(logger, getMapping)
 	if err != nil {
 		return nil, err
 	}
+	matcher := uriMatcher{
+		wildcardURIMatchers: wildcardMatchers,
+		simpleMatchers:      simpleMatchers,
+	}
 	return &gatewayInterceptor[T]{
-		logger:                logger,
-		gateway:               gateway,
-		regexpToQueryMetadata: regexQueryMD,
-		appManager:            am,
+		logger:     logger,
+		gateway:    gateway,
+		matcher:    matcher,
+		appManager: am,
 	}, nil
 }
 
@@ -79,7 +78,7 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 // of gateway HTTP annotations. If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	g.logger.Debug("received grpc-gateway request", "request_uri", request.RequestURI)
-	match := matchURL(request.URL, g.regexpToQueryMetadata)
+	match := g.matcher.matchURL(request.URL)
 	if match == nil {
 		// no match cases fall back to gateway mux.
 		g.gateway.ServeHTTP(writer, request)
@@ -228,11 +227,22 @@ func getHTTPGetAnnotationMapping() (map[string]string, error) {
 
 // createRegexMapping converts the annotationMapping (HTTP annotation -> query input type name) to a
 // map of regular expressions for that HTTP annotation pattern, to queryMetadata.
-func createRegexMapping(logger log.Logger, annotationMapping map[string]string) map[*regexp.Regexp]queryMetadata {
-	regexQueryMD := make(map[*regexp.Regexp]queryMetadata)
+func createRegexMapping(logger log.Logger, annotationMapping map[string]string) (map[*regexp.Regexp]queryMetadata, map[string]queryMetadata) {
+	wildcardMatchers := make(map[*regexp.Regexp]queryMetadata)
+	// seen patterns is a map of URI patterns to annotations. for simple queries (no wildcards) the annotation is used
+	// for the key.
 	seenPatterns := make(map[string]string)
+	simpleMatchers := make(map[string]queryMetadata)
+
 	for annotation, queryInputName := range annotationMapping {
 		pattern, wildcardNames := patternToRegex(annotation)
+		if len(wildcardNames) == 0 {
+			simpleMatchers[annotation] = queryMetadata{
+				queryInputProtoName: queryInputName,
+				wildcardKeyNames:    nil,
+			}
+			seenPatterns[annotation] = annotation
+		}
 		reg := regexp.MustCompile(pattern)
 		if otherAnnotation, ok := seenPatterns[pattern]; !ok {
 			seenPatterns[pattern] = annotation
@@ -241,10 +251,10 @@ func createRegexMapping(logger log.Logger, annotationMapping map[string]string) 
 			// see: https://github.com/cosmos/cosmos-sdk/issues/23281
 			logger.Warn("duplicate HTTP annotation found", "annotation1", annotation, "annotation2", otherAnnotation, "query_input_name", queryInputName)
 		}
-		regexQueryMD[reg] = queryMetadata{
+		wildcardMatchers[reg] = queryMetadata{
 			queryInputProtoName: queryInputName,
 			wildcardKeyNames:    wildcardNames,
 		}
 	}
-	return regexQueryMD
+	return wildcardMatchers, simpleMatchers
 }

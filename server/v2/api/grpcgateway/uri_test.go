@@ -25,6 +25,24 @@ func TestMatchURI(t *testing.T) {
 			expected: &uriMatch{QueryInputName: "query.Bank", Params: map[string]string{}},
 		},
 		{
+			name: "match with wildcard similar to simple match - simple",
+			uri:  "https://localhost:8080/bank/supply/latest",
+			mapping: map[string]string{
+				"/bank/supply/{height}": "queryBankHeight",
+				"/bank/supply/latest":   "queryBankLatest",
+			},
+			expected: &uriMatch{QueryInputName: "queryBankLatest", Params: map[string]string{}},
+		},
+		{
+			name: "match with wildcard similar to simple match - wildcard",
+			uri:  "https://localhost:8080/bank/supply/52",
+			mapping: map[string]string{
+				"/bank/supply/{height}": "queryBankHeight",
+				"/bank/supply/latest":   "queryBankLatest",
+			},
+			expected: &uriMatch{QueryInputName: "queryBankHeight", Params: map[string]string{"height": "52"}},
+		},
+		{
 			name:    "wildcard match at the end",
 			uri:     "https://localhost:8080/foo/bar/buzz",
 			mapping: map[string]string{"/foo/bar/{baz}": "bar"},
@@ -73,9 +91,14 @@ func TestMatchURI(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			u, err := url.Parse(tc.uri)
 			require.NoError(t, err)
-			regexpMapping := createRegexMapping(logger, tc.mapping)
-			require.NoError(t, err)
-			actual := matchURL(u, regexpMapping)
+
+			regexpMatchers, simpleMatchers := createRegexMapping(logger, tc.mapping)
+			matcher := uriMatcher{
+				wildcardURIMatchers: regexpMatchers,
+				simpleMatchers:      simpleMatchers,
+			}
+
+			actual := matcher.matchURL(u)
 			require.Equal(t, tc.expected, actual)
 		})
 	}

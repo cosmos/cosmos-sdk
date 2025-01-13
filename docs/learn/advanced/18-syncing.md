@@ -16,6 +16,8 @@ There are two types of syncing:
 
 ## Observing syncing progress
 
+> ### Note: This section applies to comet users.
+
 ### Block Sync Metrics
 
 - `blocksync_syncing`: Indicates whether a node is currently block syncing.
@@ -31,6 +33,7 @@ blocksync:
     version: "v0"
 ```
 
+- `version`: The version of the block sync protocol to use.
 
 ### State Sync Metrics
 
@@ -51,12 +54,39 @@ statesync:
     chunk_fetchers: "4"
 ```
 
+- `enable`: Set to true to enable state sync.
+- `rpc_servers`: Comma-separated list of RPC servers for state sync.
+- `trust_height`: Block height to trust for state sync.
+- `trust_hash`: Block hash to trust for state sync.
+- `trust_period`: Trust period for light client verification.
+- `discovery_time`: Time to spend discovering snapshots before picking one.
+- `temp_dir`: Directory for temporary state sync files.
+- `chunk_request_timeout`: Timeout for chunk requests.
+- `chunk_fetchers`: Number of concurrent chunk fetchers.
+
 ### Checking if sync is complete
 
-- Query for the node status using the REST or GRPC API
-- Check the `SyncInfo.CatchingUp` field
-- If the field is `false`, then syncing is complete
+Query for the node status using the REST or GRPC API:  
 
+REST example:  
+```bash  
+curl http://localhost:1317/cosmos/base/tendermint/v1beta1/syncing  
+```  
+
+Expected response:  
+```json  
+{  
+  "syncing": false  
+}  
+```  
+  
+GRPC example:  
+```bash  
+grpcurl -plaintext localhost:9090 cosmos.base.tendermint.v1beta1.Service/GetSyncing  
+```  
+
+The response includes `SyncInfo.CatchingUp` field  
+Syncing is complete when this field is `false`  
 
 
 

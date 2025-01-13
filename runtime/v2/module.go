@@ -32,69 +32,6 @@ import (
 	"cosmossdk.io/store/v2/root"
 )
 
-var (
-	_ appmodulev2.AppModule = appModule[transaction.Tx]{}
-	_ hasServicesV1         = appModule[transaction.Tx]{}
-)
-
-type appModule[T transaction.Tx] struct {
-	app *App[T]
-}
-
-func (m appModule[T]) IsOnePerModuleType() {}
-func (m appModule[T]) IsAppModule()        {}
-
-func (m appModule[T]) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
-	if err != nil {
-		return err
-	}
-
-	autocliv1.RegisterQueryServer(registrar, autoCliQueryService)
-
-	reflectionSvc, err := services.NewReflectionService()
-	if err != nil {
-		return err
-	}
-	reflectionv1.RegisterReflectionServiceServer(registrar, reflectionSvc)
-
-	return nil
-}
-
-func (m appModule[T]) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
-		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: appv1alpha1.Query_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-				{
-					RpcMethod: "Config",
-					Short:     "Query the current app config",
-				},
-			},
-			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
-				"autocli": {
-					Service: autocliv1.Query_ServiceDesc.ServiceName,
-					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-						{
-							RpcMethod: "AppOptions",
-							Short:     "Query the custom autocli options",
-						},
-					},
-				},
-				"reflection": {
-					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
-					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-						{
-							RpcMethod: "FileDescriptors",
-							Short:     "Query the app's protobuf file descriptors",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
 func init() {
 	appconfig.Register(&runtimev2.Module{},
 		appconfig.Provide(
@@ -117,7 +54,6 @@ func ProvideAppBuilder[T transaction.Tx](
 ) (
 	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
-	appmodulev2.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
 ) {
@@ -136,13 +72,13 @@ func ProvideAppBuilder[T transaction.Tx](
 		interfaceRegistrar: interfaceRegistrar,
 		amino:              amino,
 		msgRouterBuilder:   msgRouterBuilder,
-		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
+		queryRouterBuilder: stf.NewMsgRouterBuilder(),
 		queryHandlers:      map[string]appmodulev2.Handler{},
 		storeLoader:        DefaultStoreLoader,
 	}
 	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder, storeConfig: storeConfig}
 
-	return appBuilder, msgRouterBuilder, appModule[T]{app}, protoFiles, protoTypes
+	return appBuilder, msgRouterBuilder, protoFiles, protoTypes
 }
 
 type AppInputs struct {
@@ -173,6 +109,7 @@ func ProvideModuleManager[T transaction.Tx](
 	config *runtimev2.Module,
 	modules map[string]appmodulev2.AppModule,
 ) *MM[T] {
+	modules["runtime"] = runtimeAppModule{modules: modules}
 	return NewModuleManager[T](logger, config, modules)
 }
 
@@ -309,4 +246,70 @@ func DefaultServiceBindings() depinject.Config {
 		branchService,
 		gasService,
 	)
+}
+
+var (
+	_ appmodulev2.AppModule = runtimeAppModule{}
+	_ hasServicesV1         = runtimeAppModule{}
+)
+
+// runtimeAppModule is an appmodule that provide runtime services.
+// it registers the reflection service for file descriptors.
+// as well as the autocli query service. It has no other appmodule functionality.
+type runtimeAppModule struct {
+	modules map[string]appmodulev2.AppModule
+}
+
+func (m runtimeAppModule) IsOnePerModuleType() {}
+func (m runtimeAppModule) IsAppModule()        {}
+
+func (m runtimeAppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	autoCliQueryService, err := services.NewAutoCLIQueryService(m.modules)
+	if err != nil {
+		return err
+	}
+
+	autocliv1.RegisterQueryServer(registrar, autoCliQueryService)
+
+	reflectionSvc, err := services.NewReflectionService()
+	if err != nil {
+		return err
+	}
+	reflectionv1.RegisterReflectionServiceServer(registrar, reflectionSvc)
+
+	return nil
+}
+
+func (m runtimeAppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return &autocliv1.ModuleOptions{
+		Query: &autocliv1.ServiceCommandDescriptor{
+			Service: appv1alpha1.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Config",
+					Short:     "Query the current app config",
+				},
+			},
+			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+				"autocli": {
+					Service: autocliv1.Query_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "AppOptions",
+							Short:     "Query the custom autocli options",
+						},
+					},
+				},
+				"reflection": {
+					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "FileDescriptors",
+							Short:     "Query the app's protobuf file descriptors",
+						},
+					},
+				},
+			},
+		},
+	}
 }

@@ -9,9 +9,11 @@ import (
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/descriptorpb"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 )
@@ -142,3 +144,26 @@ func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ interf
 }
 
 var _ autocliv1.QueryServer = &AutoCLIQueryService{}
+
+// ReflectionService implements the cosmos.reflection.v1 service.
+type ReflectionService struct {
+	reflectionv1.UnimplementedReflectionServiceServer
+	files *descriptorpb.FileDescriptorSet
+}
+
+func NewReflectionService() (*ReflectionService, error) {
+	fds, err := proto.MergedGlobalFileDescriptors()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ReflectionService{files: fds}, nil
+}
+
+func (r ReflectionService) FileDescriptors(_ context.Context, _ *reflectionv1.FileDescriptorsRequest) (*reflectionv1.FileDescriptorsResponse, error) {
+	return &reflectionv1.FileDescriptorsResponse{
+		Files: r.files.File,
+	}, nil
+}
+
+var _ reflectionv1.ReflectionServiceServer = &ReflectionService{}

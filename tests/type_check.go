@@ -1,4 +1,4 @@
-package integration
+package tests
 
 import (
 	db "github.com/cosmos/cosmos-db"

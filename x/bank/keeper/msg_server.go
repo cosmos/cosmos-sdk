@@ -3,22 +3,12 @@ package keeper
 import (
 	"context"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-// RegisterMsgHandlers registers the message handlers to the router.
-func (k msgServer) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
-	appmodulev2.RegisterMsgHandler(router, k.Send)
-	appmodulev2.RegisterMsgHandler(router, k.MultiSend)
-	appmodulev2.RegisterMsgHandler(router, k.UpdateParams)
-	appmodulev2.RegisterMsgHandler(router, k.SetSendEnabled)
-	appmodulev2.RegisterMsgHandler(router, k.Burn)
-}
 
 type msgServer struct {
 	Keeper

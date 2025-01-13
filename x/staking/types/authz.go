@@ -166,10 +166,6 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 }
 
 func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress, valAddressCodec address.Codec) ([]string, []string, error) {
-	if len(allowed) == 0 && len(denied) == 0 {
-		return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("both allowed & deny list cannot be empty")
-	}
-
 	if len(allowed) > 0 && len(denied) > 0 {
 		return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("cannot set both allowed & deny list")
 	}

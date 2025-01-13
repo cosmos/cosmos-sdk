@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -101,7 +102,9 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+		if err := cdc.UnmarshalJSON(appState[ModuleName], &genesisState); err != nil {
+			panic(err)
+		}
 	}
 
 	return &genesisState

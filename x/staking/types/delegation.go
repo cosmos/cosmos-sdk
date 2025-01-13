@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +26,11 @@ func NewDelegation(delegatorAddr, validatorAddr string, shares math.LegacyDec) D
 
 // MustMarshalDelegation returns the delegation bytes. Panics if fails
 func MustMarshalDelegation(cdc codec.BinaryCodec, delegation Delegation) []byte {
-	return cdc.MustMarshal(&delegation)
+	data, err := cdc.Marshal(&delegation)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // MustUnmarshalDelegation return the unmarshaled delegation from bytes.
@@ -143,7 +147,11 @@ func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
 
 // return the unbonding delegation
 func MustMarshalUBD(cdc codec.BinaryCodec, ubd UnbondingDelegation) []byte {
-	return cdc.MustMarshal(&ubd)
+	data, err := cdc.Marshal(&ubd)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // unmarshal a unbonding delegation from a store value
@@ -234,7 +242,11 @@ func (red *Redelegation) RemoveEntry(i int64) {
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.
 func MustMarshalRED(cdc codec.BinaryCodec, red Redelegation) []byte {
-	return cdc.MustMarshal(&red)
+	data, err := cdc.Marshal(&red)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // MustUnmarshalRED unmarshals a redelegation from a store value. Panics if fails.

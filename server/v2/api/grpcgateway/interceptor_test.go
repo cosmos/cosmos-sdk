@@ -2,7 +2,6 @@ package grpcgateway
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -159,8 +158,6 @@ func TestCreateMessageFromGetRequest(t *testing.T) {
 
 			inputMsg := &DummyProto{}
 			gotMsg, err := g.createMessageFromGetRequest(
-				context.Background(),
-				&runtime.JSONPb{},
 				req,
 				inputMsg,
 				tc.wildcardValues,
@@ -255,7 +252,6 @@ func TestCreateMessageFromPostRequest(t *testing.T) {
 
 			inputMsg := &DummyProto{}
 			gotMsg, err := g.createMessageFromPostRequest(
-				context.Background(),
 				&runtime.JSONPb{}, // JSONPb marshaler
 				req,
 				inputMsg,

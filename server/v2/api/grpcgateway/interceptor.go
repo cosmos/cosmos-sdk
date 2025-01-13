@@ -1,7 +1,6 @@
 package grpcgateway
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -99,9 +98,9 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 	var err error
 	switch request.Method {
 	case http.MethodGet:
-		inputMsg, err = g.createMessageFromGetRequest(request.Context(), in, request, msg, match.Params)
+		inputMsg, err = g.createMessageFromGetRequest(request, msg, match.Params)
 	case http.MethodPost:
-		inputMsg, err = g.createMessageFromPostRequest(request.Context(), in, request, msg)
+		inputMsg, err = g.createMessageFromPostRequest(in, request, msg)
 	default:
 		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.InvalidArgument, "HTTP method was not POST or GET"))
 		return
@@ -140,7 +139,7 @@ func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *h
 	runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, responseMsg)
 }
 
-func (g *gatewayInterceptor[T]) createMessageFromPostRequest(_ context.Context, marshaler runtime.Marshaler, req *http.Request, input gogoproto.Message) (gogoproto.Message, error) {
+func (g *gatewayInterceptor[T]) createMessageFromPostRequest(marshaler runtime.Marshaler, req *http.Request, input gogoproto.Message) (gogoproto.Message, error) {
 	if req.ContentLength > MaxBodySize {
 		return nil, status.Errorf(codes.InvalidArgument, "request body too large: %d bytes, max=%d", req.ContentLength, MaxBodySize)
 	}
@@ -156,7 +155,7 @@ func (g *gatewayInterceptor[T]) createMessageFromPostRequest(_ context.Context, 
 	return input, nil
 }
 
-func (g *gatewayInterceptor[T]) createMessageFromGetRequest(_ context.Context, _ runtime.Marshaler, req *http.Request, input gogoproto.Message, wildcardValues map[string]string) (gogoproto.Message, error) {
+func (g *gatewayInterceptor[T]) createMessageFromGetRequest(req *http.Request, input gogoproto.Message, wildcardValues map[string]string) (gogoproto.Message, error) {
 	// decode the path wildcards into the message.
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result:           input,

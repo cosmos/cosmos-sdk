@@ -101,6 +101,9 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		require.NoError(t, err)
 
 		bapp := appBuilder.Build(coretesting.NewMemDB(), nil)
+		bapp.SetTxEncoder(txConfig.TxEncoder())
+		bapp.SetTxDecoder(txConfig.TxDecoder())
+
 		err = bapp.Load(true)
 		require.NoError(t, err)
 

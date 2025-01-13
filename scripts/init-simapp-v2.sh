@@ -11,7 +11,6 @@ $SIMD_BIN config set client keyring-backend test
 $SIMD_BIN config set client keyring-default-keyname alice
 $SIMD_BIN config set app rest.enable true
 $SIMD_BIN config set app telemetry.prometheus-retention-time 600
-$SIMD_BIN config set app store.options.sc-type iavl-v2
 sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' "$SIMD_HOME"/config/config.toml
 sed -i '' 's/prometheus = false/prometheus = true/' "$SIMD_HOME"/config/config.toml
 
@@ -19,7 +18,7 @@ $SIMD_BIN keys add alice --indiscreet
 $SIMD_BIN keys add bob --indiscreet
 aliases=""
 for i in $(seq 10); do
-    alias=$(dd if=/dev/urandom bs=16 count=24 2> /dev/null | base32 | head -c 32)
+    alias=$(dd if=/dev/urandom bs=16 count=24 2> /dev/null | base64 | head -c 32)
     $SIMD_BIN keys add "$alias" --indiscreet
     aliases="$aliases $alias"
 done

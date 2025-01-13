@@ -258,6 +258,12 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+<<<<<<< HEAD
+=======
+replace cosmossdk.io/api => ../../api
+
+// SimApp on main always tests the latest extracted SDK modules importing the sdk
+>>>>>>> 9ca815c8d (fix: marshal old tx body if unordered not used (#22723))
 replace (
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/x/staking => cosmossdk.io/x/staking v0.2.0-rc.1.0.20250109101855-4c6e34be28c1

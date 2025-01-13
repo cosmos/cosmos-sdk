@@ -184,6 +184,16 @@ require (
 // 	<temporary replace>
 // )
 
+<<<<<<< HEAD
+=======
+// TODO remove after all modules have their own go.mods
+replace (
+	cosmossdk.io/api => ./api
+	cosmossdk.io/x/bank => ./x/bank
+	cosmossdk.io/x/staking => ./x/staking
+)
+
+>>>>>>> 9ca815c8d (fix: marshal old tx body if unordered not used (#22723))
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring

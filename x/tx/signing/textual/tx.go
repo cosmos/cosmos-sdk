@@ -79,6 +79,8 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		FeeGranter:                  txAuthInfo.Fee.Granter,
 		GasLimit:                    txAuthInfo.Fee.GasLimit,
 		TimeoutHeight:               txBody.TimeoutHeight,
+		TimeoutTimestamp:            txBody.TimeoutTimestamp,
+		Unordered:                   txBody.Unordered,
 		ExtensionOptions:            txBody.ExtensionOptions,
 		NonCriticalExtensionOptions: txBody.NonCriticalExtensionOptions,
 		HashOfRawBytes:              getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
@@ -229,6 +231,8 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		Messages:                    envelope.Message,
 		Memo:                        envelope.Memo,
 		TimeoutHeight:               envelope.TimeoutHeight,
+		TimeoutTimestamp:            envelope.TimeoutTimestamp,
+		Unordered:                   envelope.Unordered,
 		ExtensionOptions:            envelope.ExtensionOptions,
 		NonCriticalExtensionOptions: envelope.NonCriticalExtensionOptions,
 	}

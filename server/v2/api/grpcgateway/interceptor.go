@@ -189,7 +189,6 @@ func filterFromPathParams(pathParams map[string]string) *utilities.DoubleArray {
 		prefixPaths = append(prefixPaths, []string{k})
 	}
 
-	// Pass these to NewDoubleArray using the "spread" (...) syntax.
 	return utilities.NewDoubleArray(prefixPaths)
 }
 

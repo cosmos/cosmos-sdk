@@ -182,8 +182,7 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 	invalidHeightOutput := `{"code":"NUMBER", "details":[]interface {}{}, "message":"strconv.ParseUint: parsing \"NUMBER\": invalid syntax"}`
 
 	if !systest.IsV2() {
-		invalidStartingHeightOutput = `{"code":3, "message":"strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
-		invalidEndingHeightOutput = invalidStartingHeightOutput
+		invalidHeightOutput = `{"code":3, "message":"strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
 	}
 
 	slashTestCases := []systest.RestTestCase{

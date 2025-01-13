@@ -10,10 +10,8 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/event"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/core/transaction"
-	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -32,16 +30,6 @@ type addressCodec struct{}
 func (a addressCodec) StringToBytes(text string) ([]byte, error) { return []byte(text), nil }
 func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string(bz), nil }
 
-type eventService struct{}
-
-func (e eventService) Emit(event gogoproto.Message) error { return nil }
-
-func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
-	return nil
-}
-
-func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
-
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 
@@ -59,7 +47,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 		t.Fatal(err)
 	}
 
-	ir.RegisterImplementations((*coretransaction.Msg)(nil),
+	ir.RegisterImplementations((*transaction.Msg)(nil),
 		&bankv1beta1.MsgSend{},
 		&bankv1beta1.MsgBurn{},
 		&bankv1beta1.MsgSetSendEnabled{},

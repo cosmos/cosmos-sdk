@@ -17,31 +17,23 @@ import (
 	systest "cosmossdk.io/systemtests"
 )
 
-func TestGRPCReflection(t *testing.T) {
+func TestGRPC(t *testing.T) {
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
 
 	ctx := context.Background()
 	grpcClient, err := grpc.NewClient("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
+	defer grpcClient.Close()
 
+	// test grpc reflection
 	descSource := grpcurl.DescriptorSourceFromServer(ctx, grpcreflect.NewClientAuto(ctx, grpcClient))
 	services, err := grpcurl.ListServices(descSource)
 	require.NoError(t, err)
 	require.Greater(t, len(services), 0)
 	require.Contains(t, services, "cosmos.staking.v1beta1.Query")
-}
 
-func TestGRPCQuery(t *testing.T) {
-	systest.Sut.ResetChain(t)
-	systest.Sut.StartChain(t)
-
-	ctx := context.Background()
-	grpcClient, err := grpc.NewClient("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoError(t, err)
-
-	descSource := grpcurl.DescriptorSourceFromServer(ctx, grpcreflect.NewClientAuto(ctx, grpcClient))
-
+	// test query invokation
 	rf, formatter, err := grpcurl.RequestParserAndFormatter(grpcurl.FormatText, descSource, os.Stdin, grpcurl.FormatOptions{})
 	require.NoError(t, err)
 

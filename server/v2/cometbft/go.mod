@@ -15,7 +15,7 @@ require (
 	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250113101424-c79e19dfc9ca // main
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1.0.20250109081935-cf721a654090 // main
 	cosmossdk.io/server/v2/stf v1.0.0-beta.1.0.20250109081935-cf721a654090 // main
-	cosmossdk.io/store/v2 v2.0.0-beta.1 // main
+	cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250113105648-064c9ba6385a // main
 	cosmossdk.io/x/consensus v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0
@@ -176,4 +176,10 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
-require github.com/cockroachdb/apd/v3 v3.2.1 // indirect
+require (
+	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
+	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
+	github.com/kocubinski/costor-api v1.1.1 // indirect
+)

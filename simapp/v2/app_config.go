@@ -36,10 +36,6 @@ import (
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
 	banktypes "cosmossdk.io/x/bank/types"
-<<<<<<< HEAD
-=======
-	_ "cosmossdk.io/x/bank/v2" // import for side-effects
->>>>>>> 064c9ba63 (feat(store/v2): build the migration manager in the root store factory (#22336))
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects
@@ -157,10 +153,6 @@ var (
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
-<<<<<<< HEAD
-=======
-						// bankv2types.ModuleName,
->>>>>>> 064c9ba63 (feat(store/v2): build the migration manager in the root store factory (#22336))
 						distrtypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
@@ -301,13 +293,6 @@ var (
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
-<<<<<<< HEAD
-=======
-			// {
-			// 	Name:   bankv2types.ModuleName,
-			// 	Config: appconfig.WrapAny(&bankmodulev2.Module{}),
-			// },
->>>>>>> 064c9ba63 (feat(store/v2): build the migration manager in the root store factory (#22336))
 		},
 	}
 )

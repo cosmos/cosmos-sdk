@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/x/distribution/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -18,14 +18,22 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.FeePoolKey):
 			var feePoolA, feePoolB types.FeePool
-			cdc.MustUnmarshal(kvA.Value, &feePoolA)
-			cdc.MustUnmarshal(kvB.Value, &feePoolB)
+			if err := cdc.Unmarshal(kvA.Value, &feePoolA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &feePoolB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", feePoolA, feePoolB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorOutstandingRewardsPrefix):
 			var rewardsA, rewardsB types.ValidatorOutstandingRewards
-			cdc.MustUnmarshal(kvA.Value, &rewardsA)
-			cdc.MustUnmarshal(kvB.Value, &rewardsB)
+			if err := cdc.Unmarshal(kvA.Value, &rewardsA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &rewardsB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 		case bytes.Equal(kvA.Key[:1], types.DelegatorWithdrawAddrPrefix):
@@ -33,32 +41,52 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 
 		case bytes.Equal(kvA.Key[:1], types.DelegatorStartingInfoPrefix):
 			var infoA, infoB types.DelegatorStartingInfo
-			cdc.MustUnmarshal(kvA.Value, &infoA)
-			cdc.MustUnmarshal(kvB.Value, &infoB)
+			if err := cdc.Unmarshal(kvA.Value, &infoA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &infoB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", infoA, infoB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorHistoricalRewardsPrefix):
 			var rewardsA, rewardsB types.ValidatorHistoricalRewards
-			cdc.MustUnmarshal(kvA.Value, &rewardsA)
-			cdc.MustUnmarshal(kvB.Value, &rewardsB)
+			if err := cdc.Unmarshal(kvA.Value, &rewardsA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &rewardsB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorCurrentRewardsPrefix):
 			var rewardsA, rewardsB types.ValidatorCurrentRewards
-			cdc.MustUnmarshal(kvA.Value, &rewardsA)
-			cdc.MustUnmarshal(kvB.Value, &rewardsB)
+			if err := cdc.Unmarshal(kvA.Value, &rewardsA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &rewardsB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorAccumulatedCommissionPrefix):
 			var commissionA, commissionB types.ValidatorAccumulatedCommission
-			cdc.MustUnmarshal(kvA.Value, &commissionA)
-			cdc.MustUnmarshal(kvB.Value, &commissionB)
+			if err := cdc.Unmarshal(kvA.Value, &commissionA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &commissionB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", commissionA, commissionB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorSlashEventPrefix):
 			var eventA, eventB types.ValidatorSlashEvent
-			cdc.MustUnmarshal(kvA.Value, &eventA)
-			cdc.MustUnmarshal(kvB.Value, &eventB)
+			if err := cdc.Unmarshal(kvA.Value, &eventA); err != nil {
+				panic(err)
+			}
+			if err := cdc.Unmarshal(kvB.Value, &eventB); err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", eventA, eventB)
 
 		default:

@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/schema"
@@ -19,7 +20,6 @@ import (
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -119,7 +119,11 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the staking module.
@@ -135,7 +139,9 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 // InitGenesis performs genesis initialization for the staking module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]appmodule.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
-	am.cdc.MustUnmarshalJSON(data, &genesisState)
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		panic(err)
+	}
 	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 

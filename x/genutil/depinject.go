@@ -3,11 +3,11 @@ package genutil
 import (
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 

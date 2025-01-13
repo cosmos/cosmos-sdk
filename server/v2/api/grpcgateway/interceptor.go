@@ -194,32 +194,36 @@ func getHTTPGetAnnotationMapping() (map[string]string, error) {
 		return nil, err
 	}
 
-	httpGets := make(map[string]string)
+	annotationToQueryInputName := make(map[string]string)
 	protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		for i := 0; i < fd.Services().Len(); i++ {
 			serviceDesc := fd.Services().Get(i)
 			for j := 0; j < serviceDesc.Methods().Len(); j++ {
 				methodDesc := serviceDesc.Methods().Get(j)
-				httpAnnotation := proto.GetExtension(methodDesc.Options(), annotations.E_Http)
-				if httpAnnotation == nil {
+				httpExtension := proto.GetExtension(methodDesc.Options(), annotations.E_Http)
+				if httpExtension == nil {
 					continue
 				}
 
-				httpRule, ok := httpAnnotation.(*annotations.HttpRule)
+				httpRule, ok := httpExtension.(*annotations.HttpRule)
 				if !ok || httpRule == nil {
 					continue
 				}
-				if httpRule.GetGet() == "" {
-					continue
+				queryInputName := string(methodDesc.Input().FullName())
+				annotations := append(httpRule.GetAdditionalBindings(), httpRule)
+				for _, a := range annotations {
+					if httpAnnotation := a.GetGet(); httpAnnotation != "" {
+						annotationToQueryInputName[httpAnnotation] = queryInputName
+					}
+					if httpAnnotation := a.GetPost(); httpAnnotation != "" {
+						annotationToQueryInputName[httpAnnotation] = queryInputName
+					}
 				}
-
-				httpGets[httpRule.GetGet()] = string(methodDesc.Input().FullName())
 			}
 		}
 		return true
 	})
-
-	return httpGets, nil
+	return annotationToQueryInputName, nil
 }
 
 // createRegexMapping converts the annotationMapping (HTTP annotation -> query input type name) to a

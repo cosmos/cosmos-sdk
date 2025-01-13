@@ -16,15 +16,17 @@ type historicValSet struct {
 }
 type ValSetHistory struct {
 	maxElements int
-	blockOffset int
+	blockOffset uint64
 	vals        []historicValSet
 }
 
-func NewValSetHistory(maxElements int) *ValSetHistory {
+// NewValSetHistory constructor. The maximum of historic valsets must not exceed the block or time limit for
+// valid evidence.
+func NewValSetHistory(initialHeight uint64) *ValSetHistory {
 	return &ValSetHistory{
-		maxElements: maxElements,
-		blockOffset: 1, // start at height 1
-		vals:        make([]historicValSet, 0, maxElements),
+		maxElements: 1,
+		blockOffset: initialHeight,
+		vals:        make([]historicValSet, 0, 1),
 	}
 }
 
@@ -58,7 +60,7 @@ func (h *ValSetHistory) MissBehaviour(r *rand.Rand) []comet.Evidence {
 	evidence := comet.Evidence{
 		Type:             comet.DuplicateVote,
 		Validator:        comet.Validator{Address: badVal.Address, Power: badVal.Power},
-		Height:           int64(h.blockOffset + n),
+		Height:           int64(h.blockOffset) + int64(n),
 		Time:             h.vals[n].blockTime,
 		TotalVotingPower: h.vals[n].vals.TotalPower(),
 	}
@@ -68,11 +70,12 @@ func (h *ValSetHistory) MissBehaviour(r *rand.Rand) []comet.Evidence {
 	return []comet.Evidence{evidence}
 }
 
+// SetMaxHistory sets the maximum number of historical validator sets to retain. Reduces retained history if it exceeds the limit.
 func (h *ValSetHistory) SetMaxHistory(v int) {
 	h.maxElements = v
 	if len(h.vals) > h.maxElements {
 		diff := len(h.vals) - h.maxElements
 		h.vals = h.vals[diff:]
-		h.blockOffset += diff
+		h.blockOffset += uint64(diff)
 	}
 }

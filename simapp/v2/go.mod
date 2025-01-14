@@ -243,7 +243,7 @@ require (
 	google.golang.org/genproto v0.0.0-20240814211410-ddb44dafa142 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250106144421-5f5ef82da422 // indirect
-	google.golang.org/grpc v1.69.2 // indirect
+	google.golang.org/grpc v1.69.4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
@@ -300,6 +300,7 @@ replace (
 
 // server v2 integration
 replace (
+	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/indexer/postgres => ../../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
@@ -307,4 +308,5 @@ replace (
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store/v2
+
 )

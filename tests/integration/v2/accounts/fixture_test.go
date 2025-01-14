@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -29,7 +30,6 @@ import (
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"

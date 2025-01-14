@@ -8,10 +8,6 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
-
-	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var (
@@ -19,24 +15,21 @@ var (
 	_ gogogrpc.Server     = &QueryHelper{}
 )
 
+// GRPCQueryHandler defines a function type which handles ABCI Query requests
+// using gRPC
+type GRPCQueryHandler = func(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error)
+
 // QueryHelper is a test utility for building a query client from a proto interface registry.
 type QueryHelper struct {
 	cdc    encoding.Codec
 	routes map[string]GRPCQueryHandler
 }
 
-func NewQueryHelper(interfaceRegistry codectypes.InterfaceRegistry) *QueryHelper {
-	// instantiate the codec
-	cdc := codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
-	// Once we have an interface registry, we can register the interface
-	// registry reflection gRPC service.
-
+func NewQueryHelper(cdc encoding.Codec) *QueryHelper {
 	qh := &QueryHelper{
 		cdc:    cdc,
 		routes: map[string]GRPCQueryHandler{},
 	}
-
-	reflection.RegisterReflectionServiceServer(qh, reflection.NewReflectionServiceServer(interfaceRegistry))
 
 	return qh
 }
@@ -69,10 +62,6 @@ func (q *QueryHelper) Invoke(ctx context.Context, method string, args, reply int
 func (q *QueryHelper) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	panic("not implemented")
 }
-
-// GRPCQueryHandler defines a function type which handles ABCI Query requests
-// using gRPC
-type GRPCQueryHandler = func(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error)
 
 // Route returns the GRPCQueryHandler for a given query route path or nil
 // if not found

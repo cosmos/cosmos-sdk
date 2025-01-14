@@ -11,6 +11,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
@@ -37,7 +38,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"

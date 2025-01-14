@@ -11,6 +11,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/address"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -19,7 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

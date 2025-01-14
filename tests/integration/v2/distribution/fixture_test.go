@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -29,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring

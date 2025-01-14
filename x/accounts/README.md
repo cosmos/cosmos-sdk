@@ -545,12 +545,12 @@ For example, given the following `genesis.json` file:
       "init_account_msgs": [
         {
           "sender": "account_creator_address",
-          "account_type": "lockup",
+          "account_type": "lockup_account_type",
           "message": {
-            "@type": "cosmos.accounts.defaults.lockup.MsgInitLockupAccount",
+            "@type": "/cosmos.accounts.defaults.lockup.v1.MsgInitLockupAccount",
             "owner": "some_owner",
-            "end_time": "..",
-            "start_time": ".."
+            "end_time": "2026-01-01T00:00:00Z",
+            "start_time": "2025-01-01T00:00:00Z"
           },
           "funds": [
             {

@@ -39,21 +39,10 @@ func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 			}
 
 			logger := serverv2.GetLoggerFromCmd(cmd)
-			rootStore, _, err := createRootStore(v, logger, s.storeKeys)
-			if err != nil {
-				return err
-			}
-			if height == 0 {
-				lastCommitId, err := rootStore.LastCommitID()
-				if err != nil {
-					return err
-				}
-				height = int64(lastCommitId.Version)
-			}
 
 			cmd.Printf("Exporting snapshot for height %d\n", height)
 
-			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
+			sm, err := createSnapshotsManager(cmd, v, logger, s.store)
 			if err != nil {
 				return err
 			}
@@ -94,11 +83,7 @@ func (s *Server[T]) RestoreSnapshotCmd() *cobra.Command {
 				return err
 			}
 
-			rootStore, _, err := createRootStore(v, logger, s.storeKeys)
-			if err != nil {
-				return fmt.Errorf("failed to create root store: %w", err)
-			}
-			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
+			sm, err := createSnapshotsManager(cmd, v, logger, s.store)
 			if err != nil {
 				return err
 			}

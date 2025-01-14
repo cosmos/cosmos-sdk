@@ -4,12 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	storev2 "cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/root"
 )
 
 // PrunesCmd implements the default command for pruning app history states.
@@ -38,14 +34,8 @@ Supported app-db-backend types include 'goleveldb', 'pebbledb'.`,
 			if err := vp.BindPFlags(cmd.PersistentFlags()); err != nil {
 				return err
 			}
-			logger := serverv2.GetLoggerFromCmd(cmd)
 
-			rootStore, opts, err := createRootStore(vp, logger, s.storeKeys)
-			if err != nil {
-				return fmt.Errorf("can not create root store %w", err)
-			}
-
-			latestHeight, err := rootStore.GetLatestVersion()
+			latestHeight, err := s.store.GetLatestVersion()
 			if err != nil {
 				return err
 			}
@@ -55,10 +45,7 @@ Supported app-db-backend types include 'goleveldb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			diff := latestHeight - opts.SCPruningOption.KeepRecent
-			cmd.Printf("pruning heights up to %v\n", diff)
-
-			err = rootStore.Prune(latestHeight)
+			err = s.store.Prune(latestHeight)
 			if err != nil {
 				return err
 			}
@@ -72,22 +59,4 @@ Supported app-db-backend types include 'goleveldb', 'pebbledb'.`,
 	cmd.Flags().Uint64(FlagKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 
 	return cmd
-}
-
-func createRootStore(v *viper.Viper, logger log.Logger, storeKeys []string) (storev2.RootStore, root.Options, error) {
-	storeConfig, err := UnmarshalConfig(v.AllSettings())
-	if err != nil {
-		return nil, root.Options{}, fmt.Errorf("failed to unmarshal config: %w", err)
-	}
-
-	builder := root.NewBuilder()
-	for _, key := range storeKeys {
-		builder.RegisterKey(key)
-	}
-
-	store, err := builder.Build(logger, storeConfig)
-	if err != nil {
-		return nil, root.Options{}, fmt.Errorf("failed to create store backend: %w", err)
-	}
-	return store, storeConfig.Options, nil
 }

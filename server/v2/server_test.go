@@ -56,7 +56,7 @@ func TestServer(t *testing.T) {
 	grpcServer, err := grpc.New[transaction.Tx](logger, &mockInterfaceRegistry{}, map[string]appmodulev2.Handler{}, nil, cfg)
 	require.NoError(t, err)
 
-	storeServer, err := store.New[transaction.Tx](&mockStore{}, cfg, []string{"mock-store-key"})
+	storeServer, err := store.New[transaction.Tx](&mockStore{}, cfg)
 	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}

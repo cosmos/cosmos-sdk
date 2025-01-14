@@ -98,7 +98,7 @@ func InitRootCmd[T transaction.Tx](
 	simApp := deps.SimApp
 
 	// store component (not a server)
-	storeComponent, err := serverstore.New[T](simApp.Store(), deps.GlobalConfig, simApp.App.GetStoreKeys())
+	storeComponent, err := serverstore.New[T](simApp.Store(), deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}

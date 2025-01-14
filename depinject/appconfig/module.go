@@ -17,6 +17,10 @@ var Register = RegisterModule
 // will be injected into the container and can be requested by a provider
 // function. All module initialization should be handled by the provided options.
 //
+// In some cases, a module may need to be manually overwritten from the global module
+// registry. This can be done by calling RegisterModule again with the same config,
+// but different options. This is useful when wrapping or overriding default modules.
+//
 // Protobuf message types used for module configuration should define the
 // cosmos.app.v1alpha.module option and must explicitly specify go_package
 // to make debugging easier for users.

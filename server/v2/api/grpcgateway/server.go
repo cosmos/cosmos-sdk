@@ -59,7 +59,7 @@ func New[T transaction.Tx](
 			// marshaled in unary requests.
 			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
 
-			// Custom header matcher for mapping request headers to
+			// Custom header uriMatcher for mapping request headers to
 			// GRPC metadata
 			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
 		),

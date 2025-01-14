@@ -19,7 +19,6 @@ import (
 	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,7 +31,6 @@ const govModuleName = "gov"
 type TestSuite struct {
 	preModule appmodule.HasPreBlocker
 	keeper    *keeper.Keeper
-	baseApp   *baseapp.BaseApp
 	encCfg    moduletestutil.TestEncodingConfig
 
 	ctx coretesting.TestContext
@@ -53,9 +51,6 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 
 	s.ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 	s.env = env
-
-	//s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
-	//s.baseApp.SetVersionModifier(newMockedVersionModifier(1))
 
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	require.NoError(t, err)

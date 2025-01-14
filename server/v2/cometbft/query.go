@@ -29,6 +29,7 @@ func (c *consensus[T]) handleQueryP2P(path []string) (*abci.QueryResponse, error
 				return c.idPeerFilter(arg)
 			}
 		}
+		return &abci.QueryResponse{}, nil
 	}
 
 	return nil, errorsmod.Wrap(cometerrors.ErrUnknownRequest, "expected second parameter to be 'filter'")

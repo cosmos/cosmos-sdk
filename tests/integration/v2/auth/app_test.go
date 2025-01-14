@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -22,7 +23,6 @@ import (
 	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	_ "cosmossdk.io/x/staking"   // import as blank for app wirings
 
-	"cosmossdk.io/core/testing/msgrouter"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring

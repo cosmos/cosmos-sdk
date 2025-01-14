@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -26,7 +27,6 @@ import (
 	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 
-	"cosmossdk.io/core/testing/msgrouter"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"

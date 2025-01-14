@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -25,7 +26,6 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking" // import as blank for app wirings
 
-	"cosmossdk.io/core/testing/msgrouter"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"

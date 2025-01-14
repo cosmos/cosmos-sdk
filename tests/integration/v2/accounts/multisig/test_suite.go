@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -26,7 +27,6 @@ import (
 	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 
-	"cosmossdk.io/core/testing/msgrouter"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"

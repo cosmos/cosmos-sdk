@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -17,6 +19,7 @@ import (
 	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/testing/queryclient"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -25,7 +28,7 @@ import (
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
-	"cosmossdk.io/core/testing/queryclient"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -186,7 +189,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
 	}))
 
-	queryHelper := queryclient.NewQueryHelper(encCfg.InterfaceRegistry)
+	queryHelper := queryclient.NewQueryHelper(codec.NewProtoCodec(encCfg.InterfaceRegistry).GRPCCodec())
 	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 

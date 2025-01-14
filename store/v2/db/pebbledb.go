@@ -228,6 +228,9 @@ func (itr *pebbleDBIterator) Error() error {
 }
 
 func (itr *pebbleDBIterator) Close() error {
+	if itr.source == nil {
+		return nil
+	}
 	err := itr.source.Close()
 	itr.source = nil
 	itr.valid = false

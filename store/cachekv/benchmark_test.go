@@ -1,7 +1,7 @@
 package cachekv_test
 
 import (
-	fmt "fmt"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"

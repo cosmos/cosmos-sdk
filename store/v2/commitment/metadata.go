@@ -1,9 +1,10 @@
 package commitment
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
+
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/internal/encoding"
@@ -11,9 +12,9 @@ import (
 )
 
 const (
-	commitInfoKeyFmt      = "c/%d" // c/<version>
-	latestVersionKey      = "c/latest"
-	removedStoreKeyPrefix = "c/removed/" // c/removed/<version>/<store-name>
+	commitInfoKeyFmt      = "s/%d" // s/<version>
+	latestVersionKey      = "s/latest"
+	removedStoreKeyPrefix = "s/removed/" // s/removed/<version>/<store-name>
 )
 
 // MetadataStore is a store for metadata related to the commitment store.
@@ -39,21 +40,20 @@ func (m *MetadataStore) GetLatestVersion() (uint64, error) {
 		return 0, nil
 	}
 
-	version, _, err := encoding.DecodeUvarint(value)
-	if err != nil {
+	var latestVersion int64
+	if err := gogotypes.StdInt64Unmarshal(&latestVersion, value); err != nil {
 		return 0, err
 	}
 
-	return version, nil
+	return uint64(latestVersion), nil
 }
 
 func (m *MetadataStore) setLatestVersion(version uint64) error {
-	var buf bytes.Buffer
-	buf.Grow(encoding.EncodeUvarintSize(version))
-	if err := encoding.EncodeUvarint(&buf, version); err != nil {
+	bz, err := gogotypes.StdInt64Marshal(int64(version)) // convert uint64 to int64 is safe since there will be no overflow or underflow
+	if err != nil {
 		return err
 	}
-	return m.kv.Set([]byte(latestVersionKey), buf.Bytes())
+	return m.kv.Set([]byte(latestVersionKey), bz)
 }
 
 // GetCommitInfo returns the commit info for the given version.
@@ -69,6 +69,10 @@ func (m *MetadataStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 
 	cInfo := &proof.CommitInfo{}
 	if err := cInfo.Unmarshal(value); err != nil {
+		return nil, err
+	}
+
+	if err := migrateStoreInfo(cInfo); err != nil {
 		return nil, err
 	}
 
@@ -94,12 +98,11 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 		return err
 	}
 
-	var buf bytes.Buffer
-	buf.Grow(encoding.EncodeUvarintSize(version))
-	if err := encoding.EncodeUvarint(&buf, version); err != nil {
+	bz, err := gogotypes.StdInt64Marshal(int64(version)) // convert uint64 to int64 is safe since there will be no overflow or underflow
+	if err != nil {
 		return err
 	}
-	if err := batch.Set([]byte(latestVersionKey), buf.Bytes()); err != nil {
+	if err := batch.Set([]byte(latestVersionKey), bz); err != nil {
 		return err
 	}
 
@@ -171,4 +174,24 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(
 func (m *MetadataStore) deleteCommitInfo(version uint64) error {
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	return m.kv.Delete(cInfoKey)
+}
+
+// when in migration mode, we need to add new fields to the store info
+// this will only be the case for the storev1 to storev2 migration
+func migrateStoreInfo(cInfo *proof.CommitInfo) error {
+	for _, storeInfo := range cInfo.StoreInfos {
+		if storeInfo.Structure == "" {
+			storeInfo.Structure = "iavl"
+		}
+	}
+
+	if cInfo.CommitHash == nil {
+		commitHash, _, err := cInfo.GetStoreProof([]byte{})
+		if err != nil {
+			return err
+		}
+
+		cInfo.CommitHash = commitHash
+	}
+	return nil
 }

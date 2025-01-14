@@ -83,7 +83,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 }
 
 func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, error) {
-	return reflect.Value{}, fmt.Errorf("%v is an many-per-container type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
+	return reflect.Value{}, fmt.Errorf("%v is a many-per-container type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 
 func (g *groupResolver) addNode(n *simpleProvider, i int) error {

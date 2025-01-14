@@ -25,6 +25,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v2.0.0-beta.2](https://github.com/cosmos/cosmos-sdk/releases/tag/store/v2.0.0-beta.2)
+
+* [#22336](https://github.com/cosmos/cosmos-sdk/pull/22336) Finish migration manager.
+* [#23157](https://github.com/cosmos/cosmos-sdk/pull/23157) Remove support for RocksDB.
+
 ## [v2.0.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/store/v2.0.0-beta.1)
 
 Initial tag of `cosmossdk.io/store/v2`.

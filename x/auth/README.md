@@ -165,7 +165,7 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 * `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
 
-* `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
+* `TxTimeoutHeightDecorator`: Check for a `tx` height or time-based timeout.
 
 * `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
 

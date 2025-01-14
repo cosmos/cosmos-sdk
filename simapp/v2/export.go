@@ -11,7 +11,7 @@ import (
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
-// This is a demonstation of how to export a genesis file. Export may need extended at
+// This is a demonstration of how to export a genesis file. Export may need extended at
 // the user discretion for cleaning the genesis state at the end provided with jailAllowedAddrs
 // Same applies for forZeroHeight preprocessing.
 func (app *SimApp[T]) ExportAppStateAndValidators(

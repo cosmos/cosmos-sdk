@@ -1,9 +1,9 @@
 package commitment
 
 import (
-	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/stretchr/testify/suite"
 
@@ -66,9 +66,6 @@ type CommitStoreTestSuite struct {
 //   - Checks that the restored store's Merkle tree hashes match the original
 //   - Ensures store integrity by comparing CommitInfo hashes
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
-	if s.TreeType == "iavlv2" {
-		s.T().Skip("FIXME: iavlv2 does not yet support snapshots")
-	}
 	storeKeys := []string{storeKey1, storeKey2}
 	commitStore, err := s.NewStore(dbm.NewMemDB(), s.T().TempDir(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
@@ -137,7 +134,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	for _, storeInfo := range targetCommitInfo.StoreInfos {
 		matched := false
 		for _, latestStoreInfo := range cInfo.StoreInfos {
-			if bytes.Equal(storeInfo.Name, latestStoreInfo.Name) {
+			if strings.EqualFold(storeInfo.Name, latestStoreInfo.Name) {
 				s.Require().Equal(latestStoreInfo.GetHash(), storeInfo.GetHash())
 				matched = true
 			}
@@ -179,7 +176,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 	for i := uint64(1); i <= latestVersion; i++ {
 		commitInfo, _ := targetStore.GetCommitInfo(i)
 		s.Require().NotNil(commitInfo)
-		s.Require().Equal(i, commitInfo.Version)
+		s.Require().Equal(i, uint64(commitInfo.Version))
 	}
 
 	// rollback to a previous version

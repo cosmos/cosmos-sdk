@@ -106,3 +106,8 @@ func (a *App[T]) SchemaDecoderResolver() decoding.DecoderResolver {
 func (a *App[T]) Close() error {
 	return nil
 }
+
+// GetApp return self
+func (a *App[T]) GetApp() *App[T] {
+	return a
+}

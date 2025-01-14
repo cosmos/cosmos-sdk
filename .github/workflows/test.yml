@@ -701,28 +701,11 @@ jobs:
             store/**/*.go
             store/go.mod
             store/go.sum
-      - name: Get rocksdb version
-        run: ./.github/scripts/get-rocksdb-version.sh
-      - name: Fix permissions for cache
-        run: sudo chown $(whoami) /usr/local/lib /usr/local/include
-      - name: Restore rocksdb libraries cache
-        id: cache-rocksdb
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            /usr/local/lib/librocksdb.*
-            /usr/local/include/rocksdb
-          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
-      - name: Install rocksdb deps
-        run: ./.github/scripts/install-rocksdb-deps.sh
-      - name: Install rocksdb
-        if: steps.cache-rocksdb.outputs.cache-hit != 'true'
-        run: ./.github/scripts/install-rocksdb.sh
       - name: tests
         if: env.GIT_DIFF
         run: |
           cd store
-          go test -ldflags "-r /usr/local/lib" -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb' ./...
+          go test -ldflags "-r /usr/local/lib" -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
         uses: SonarSource/sonarcloud-github-action@master
@@ -751,28 +734,11 @@ jobs:
             store/v2/**/*.go
             store/v2/go.mod
             store/v2/go.sum
-      - name: Get rocksdb version
-        run: ./.github/scripts/get-rocksdb-version.sh
-      - name: Fix permissions for cache
-        run: sudo chown $(whoami) /usr/local/lib /usr/local/include
-      - name: Restore rocksdb libraries cache
-        id: cache-rocksdb
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            /usr/local/lib/librocksdb.*
-            /usr/local/include/rocksdb
-          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
-      - name: Install rocksdb deps
-        run: ./.github/scripts/install-rocksdb-deps.sh
-      - name: Install rocksdb
-        if: steps.cache-rocksdb.outputs.cache-hit != 'true'
-        run: ./.github/scripts/install-rocksdb.sh
       - name: test & coverage report creation
         if: env.GIT_DIFF
         run: |
           cd store/v2
-          go test -ldflags "-r /usr/local/lib" -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb' ./...
+          go test -ldflags "-r /usr/local/lib" -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
         uses: SonarSource/sonarcloud-github-action@master

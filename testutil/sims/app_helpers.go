@@ -11,6 +11,7 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
@@ -24,7 +25,6 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -312,7 +312,7 @@ func (m AppOptionsMap) GetString(key string) string {
 	return v.(string)
 }
 
-func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
+func NewAppOptionsWithFlagHome(homePath string) server.DynamicConfig {
 	return AppOptionsMap{
 		flags.FlagHome: homePath,
 	}

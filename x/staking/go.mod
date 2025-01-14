@@ -153,10 +153,9 @@ require cosmossdk.io/schema v1.0.0
 
 require (
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
-	github.com/bytedance/sonic v1.12.6 // indirect
-	github.com/bytedance/sonic/loader v0.2.1 // indirect
+	github.com/bytedance/sonic v1.12.7 // indirect
+	github.com/bytedance/sonic/loader v0.2.2 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
-	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cosmos/cosmos-db v1.1.1 // indirect
@@ -164,7 +163,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	golang.org/x/arch v0.12.0 // indirect
+	golang.org/x/arch v0.13.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )

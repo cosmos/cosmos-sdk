@@ -69,6 +69,12 @@ chunk_fetchers = "4" # number of concurrent chunk fetchers
 
 ### Checking if sync is complete
 
+Query the status using the app cli:
+
+```bash
+app q consensus comet syncing
+```
+
 Query for the node status using the REST or GRPC API:  
 
 REST example:  

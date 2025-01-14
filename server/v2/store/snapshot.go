@@ -39,7 +39,7 @@ func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 			}
 
 			logger := serverv2.GetLoggerFromCmd(cmd)
-			rootStore, _, err := createRootStore(v, logger)
+			rootStore, _, err := createRootStore(v, logger, s.storeKeys)
 			if err != nil {
 				return err
 			}
@@ -94,7 +94,7 @@ func (s *Server[T]) RestoreSnapshotCmd() *cobra.Command {
 				return err
 			}
 
-			rootStore, _, err := createRootStore(v, logger)
+			rootStore, _, err := createRootStore(v, logger, s.storeKeys)
 			if err != nil {
 				return fmt.Errorf("failed to create root store: %w", err)
 			}

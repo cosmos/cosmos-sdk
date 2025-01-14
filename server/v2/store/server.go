@@ -23,18 +23,20 @@ const ServerName = "store"
 
 // Server manages store config and contains prune & snapshot commands
 type Server[T transaction.Tx] struct {
-	config *root.Config
-	store  storev2.Backend
+	config    *root.Config
+	store     storev2.Backend
+	storeKeys []string
 }
 
-func New[T transaction.Tx](store storev2.Backend, cfg server.ConfigMap) (*Server[T], error) {
+func New[T transaction.Tx](store storev2.Backend, cfg server.ConfigMap, storeKeys []string) (*Server[T], error) {
 	config, err := UnmarshalConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 	return &Server[T]{
-		store:  store,
-		config: config,
+		store:     store,
+		config:    config,
+		storeKeys: storeKeys,
 	}, nil
 }
 

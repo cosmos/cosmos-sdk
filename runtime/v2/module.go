@@ -142,6 +142,8 @@ func ProvideAppBuilder[T transaction.Tx](
 	}
 	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder, storeConfig: storeConfig}
 
+	appBuilder.app.SetStoreKeys(storeBuilder.GetStoreKeys())
+
 	return appBuilder, msgRouterBuilder, appModule[T]{app}, protoFiles, protoTypes
 }
 

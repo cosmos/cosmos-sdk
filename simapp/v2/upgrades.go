@@ -6,13 +6,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/runtime/v2"
-<<<<<<< HEAD
 	"cosmossdk.io/x/accounts"
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
-=======
-	bankv2types "cosmossdk.io/x/bank/v2/types"
->>>>>>> 5581225a9 (fix(x/upgrade): register missing implementation for SoftwareUpgradeProposal (#23179))
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -45,14 +41,11 @@ func (app *SimApp[T]) RegisterUpgradeHandlers() {
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := store.StoreUpgrades{
 			Added: []string{
-<<<<<<< HEAD
 				accounts.ModuleName,
 				epochstypes.StoreKey,
 				protocolpooltypes.ModuleName,
-=======
-				bankv2types.ModuleName,
->>>>>>> 5581225a9 (fix(x/upgrade): register missing implementation for SoftwareUpgradeProposal (#23179))
 			},
+			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}
 
 		app.SetStoreLoader(runtime.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))

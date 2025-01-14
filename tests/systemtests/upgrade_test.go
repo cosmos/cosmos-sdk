@@ -39,11 +39,7 @@ func TestChainUpgrade(t *testing.T) {
 
 	const (
 		upgradeHeight int64 = 22
-<<<<<<< HEAD
 		upgradeName         = "v050-to-v052" // must match UpgradeName in simapp/upgrades.go
-=======
-		upgradeName         = "v052-to-v2" // must match UpgradeName in simapp/upgrades.go
->>>>>>> 5581225a9 (fix(x/upgrade): register missing implementation for SoftwareUpgradeProposal (#23179))
 	)
 
 	// if v2 is enabled, we need to start the chain with a different flag

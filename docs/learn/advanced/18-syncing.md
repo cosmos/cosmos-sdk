@@ -48,7 +48,7 @@ version = "v0" # version of the block sync protocol to use
 
 ### State Sync Metrics
 
-They are defined [here](https://github.com/cometbft/cometbft/blob/main/internal/statesync/metrics.go) and are accessible from the node's metrics endpoint.
+They are defined [here](https://github.com/cometbft/cometbft/blob/main/statesync/metrics.go) and are accessible from the node's metrics endpoint.
 
 - `statesync_syncing`: Indicates whether a node is currently state syncing.
 

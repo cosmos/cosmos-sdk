@@ -37,7 +37,6 @@ type DeterministicTestSuite struct {
 
 	accountNumberLanes uint64
 
-	key            *storetypes.KVStoreKey
 	environment    appmodule.Environment
 	ctx            sdk.Context
 	queryClient    types.QueryClient
@@ -102,7 +101,6 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(suite.accountKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
-	suite.key = key
 	suite.environment = env
 	suite.maccPerms = maccPerms
 	suite.accountNumberLanes = 1

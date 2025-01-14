@@ -1,6 +1,6 @@
 module cosmossdk.io/x/accounts
 
-go 1.23.3
+go 1.23.4
 
 require (
 	cosmossdk.io/api v0.8.1
@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/bank v0.0.0-20241218110910-47409028a73d
 	cosmossdk.io/x/tx v1.0.0
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -40,8 +40,9 @@ require (
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/schema v1.0.0
-	cosmossdk.io/store v1.10.0-rc.1 // indirect
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
+	cosmossdk.io/x/accounts/defaults/lockup v0.2.0-rc.1
+	cosmossdk.io/x/staking v0.0.0-20241218110910-47409028a73d // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -142,7 +143,7 @@ require (
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b // indirect
 	gitlab.com/yawning/tuplehash v0.0.0-20230713102510-df83abbf9a02 // indirect
-	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
+	go.etcd.io/bbolt v1.4.0-alpha.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

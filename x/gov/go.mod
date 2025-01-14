@@ -27,7 +27,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53
-	google.golang.org/grpc v1.69.2
+	google.golang.org/grpc v1.69.4
 	google.golang.org/protobuf v1.36.2
 )
 
@@ -172,7 +172,10 @@ require (
 	golang.org/x/arch v0.12.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ../../.
+replace (
+	cosmossdk.io/core/testing => ../../core/testing
+	github.com/cosmos/cosmos-sdk => ../../
+)
 
 // TODO remove post spinning out all modules
 replace (

@@ -28,7 +28,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 	go.uber.org/mock v0.5.0
-	google.golang.org/grpc v1.69.2
+	google.golang.org/grpc v1.69.4
 	google.golang.org/protobuf v1.36.2
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
@@ -266,6 +266,7 @@ replace (
 
 // Below are the long-lived replace for tests.
 replace (
+	cosmossdk.io/core/testing => ../core/testing
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

@@ -26,11 +26,11 @@ import (
 	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 
+	"cosmossdk.io/core/testing/msgrouter"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring``

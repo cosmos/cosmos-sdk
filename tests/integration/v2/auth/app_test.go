@@ -22,9 +22,9 @@ import (
 	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	_ "cosmossdk.io/x/staking"   // import as blank for app wirings
 
+	"cosmossdk.io/core/testing/msgrouter"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring``

@@ -17,9 +17,9 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/tx/signing"
 
+	"cosmossdk.io/core/testing/msgrouter"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/msgrouter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

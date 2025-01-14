@@ -1,12 +1,19 @@
 package grpcgateway
 
 import (
+	"bytes"
+	"errors"
+	"io"
 	"net/http"
+	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/utilities"
+	"github.com/mitchellh/mapstructure"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,7 +25,19 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 )
 
+const MaxBodySize = 1 << 20 // 1 MB
+
 var _ http.Handler = &gatewayInterceptor[transaction.Tx]{}
+
+// queryMetadata holds information related to handling gateway queries.
+type queryMetadata struct {
+	// queryInputProtoName is the proto name of the query's input type.
+	queryInputProtoName string
+	// wildcardKeyNames are the wildcard key names from the query's HTTP annotation.
+	// for example /foo/bar/{baz}/{qux} would produce []string{"baz", "qux"}
+	// this is used for building the query's parameter map.
+	wildcardKeyNames []string
+}
 
 // gatewayInterceptor handles routing grpc-gateway queries to the app manager's query router.
 type gatewayInterceptor[T transaction.Tx] struct {
@@ -26,10 +45,7 @@ type gatewayInterceptor[T transaction.Tx] struct {
 	// gateway is the fallback grpc gateway mux handler.
 	gateway *runtime.ServeMux
 
-	// customEndpointMapping is a mapping of custom GET options on proto RPC handlers, to the fully qualified method name.
-	//
-	// example: /cosmos/bank/v1beta1/denoms_metadata -> cosmos.bank.v1beta1.Query.DenomsMetadata
-	customEndpointMapping map[string]string
+	matcher uriMatcher
 
 	// appManager is used to route queries to the application.
 	appManager appmanager.AppManager[T]
@@ -41,69 +57,145 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 	if err != nil {
 		return nil, err
 	}
+	// convert the mapping to regular expressions for URL matching.
+	wildcardMatchers, simpleMatchers := createRegexMapping(logger, getMapping)
+	matcher := uriMatcher{
+		wildcardURIMatchers: wildcardMatchers,
+		simpleMatchers:      simpleMatchers,
+	}
 	return &gatewayInterceptor[T]{
-		logger:                logger,
-		gateway:               gateway,
-		customEndpointMapping: getMapping,
-		appManager:            am,
+		logger:     logger,
+		gateway:    gateway,
+		matcher:    matcher,
+		appManager: am,
 	}, nil
 }
 
-// ServeHTTP implements the http.Handler interface. This function will attempt to match http requests to the
-// interceptors internal mapping of http annotations to query request type names.
-// If no match can be made, it falls back to the runtime gateway server mux.
+// ServeHTTP implements the http.Handler interface. This method will attempt to match request URIs to its internal mapping
+// of gateway HTTP annotations. If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	g.logger.Debug("received grpc-gateway request", "request_uri", request.RequestURI)
-	match := matchURL(request.URL, g.customEndpointMapping)
+	match := g.matcher.matchURL(request.URL)
 	if match == nil {
 		// no match cases fall back to gateway mux.
 		g.gateway.ServeHTTP(writer, request)
 		return
 	}
-	g.logger.Debug("matched request", "query_input", match.QueryInputName)
-	_, out := runtime.MarshalerForRequest(g.gateway, request)
-	var msg gogoproto.Message
-	var err error
 
+	g.logger.Debug("matched request", "query_input", match.QueryInputName)
+
+	in, out := runtime.MarshalerForRequest(g.gateway, request)
+
+	// extract the proto message type.
+	msgType := gogoproto.MessageType(match.QueryInputName)
+	msg, ok := reflect.New(msgType.Elem()).Interface().(gogoproto.Message)
+	if !ok {
+		runtime.HTTPError(request.Context(), g.gateway, out, writer, request, status.Errorf(codes.Internal, "unable to to create gogoproto message from query input name %s", match.QueryInputName))
+		return
+	}
+
+	// msg population based on http method.
+	var inputMsg gogoproto.Message
+	var err error
 	switch request.Method {
-	case http.MethodPost:
-		msg, err = createMessageFromJSON(match, request)
 	case http.MethodGet:
-		msg, err = createMessage(match)
+		inputMsg, err = g.createMessageFromGetRequest(request, msg, match.Params)
+	case http.MethodPost:
+		inputMsg, err = g.createMessageFromPostRequest(in, request, msg)
 	default:
-		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, status.Error(codes.Unimplemented, "HTTP method must be POST or GET"))
+		runtime.HTTPError(request.Context(), g.gateway, out, writer, request, status.Error(codes.InvalidArgument, "HTTP method was not POST or GET"))
 		return
 	}
 	if err != nil {
-		runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
+		// the errors returned from the message creation methods return status errors. no need to make one here.
+		runtime.HTTPError(request.Context(), g.gateway, out, writer, request, err)
 		return
 	}
 
-	// extract block height header
+	// get the height from the header.
 	var height uint64
 	heightStr := request.Header.Get(GRPCBlockHeightHeader)
-	if heightStr != "" {
+	heightStr = strings.Trim(heightStr, `\"`)
+	if heightStr != "" && heightStr != "latest" {
 		height, err = strconv.ParseUint(heightStr, 10, 64)
 		if err != nil {
-			err = status.Errorf(codes.InvalidArgument, "invalid height: %s", heightStr)
-			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
+			runtime.HTTPError(request.Context(), g.gateway, out, writer, request, status.Errorf(codes.InvalidArgument, "invalid height in header: %s", heightStr))
 			return
 		}
 	}
 
-	query, err := g.appManager.Query(request.Context(), height, msg)
+	responseMsg, err := g.appManager.Query(request.Context(), height, inputMsg)
 	if err != nil {
 		// if we couldn't find a handler for this request, just fall back to the gateway mux.
 		if strings.Contains(err.Error(), "no handler") {
 			g.gateway.ServeHTTP(writer, request)
 		} else {
 			// for all other errors, we just return the error.
-			runtime.DefaultHTTPProtoErrorHandler(request.Context(), g.gateway, out, writer, request, err)
+			runtime.HTTPError(request.Context(), g.gateway, out, writer, request, err)
 		}
 		return
 	}
+
 	// for no errors, we forward the response.
-	runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, query)
+	runtime.ForwardResponseMessage(request.Context(), g.gateway, out, writer, request, responseMsg)
+}
+
+func (g *gatewayInterceptor[T]) createMessageFromPostRequest(marshaler runtime.Marshaler, req *http.Request, input gogoproto.Message) (gogoproto.Message, error) {
+	if req.ContentLength > MaxBodySize {
+		return nil, status.Errorf(codes.InvalidArgument, "request body too large: %d bytes, max=%d", req.ContentLength, MaxBodySize)
+	}
+
+	// this block of code ensures that the body can be re-read. this is needed as if the query fails in the
+	// app's query handler, we need to pass the request back to the canonical gateway, which needs to be able to
+	// read the body again.
+	bodyBytes, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+
+	if err = marshaler.NewDecoder(bytes.NewReader(bodyBytes)).Decode(input); err != nil && !errors.Is(err, io.EOF) {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	return input, nil
+}
+
+func (g *gatewayInterceptor[T]) createMessageFromGetRequest(req *http.Request, input gogoproto.Message, wildcardValues map[string]string) (gogoproto.Message, error) {
+	// decode the path wildcards into the message.
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Result:           input,
+		TagName:          "json",
+		WeaklyTypedInput: true,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to create message decoder")
+	}
+	if err := decoder.Decode(wildcardValues); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if err = req.ParseForm(); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	filter := filterFromPathParams(wildcardValues)
+	err = runtime.PopulateQueryParameters(input, req.Form, filter)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	return input, err
+}
+
+func filterFromPathParams(pathParams map[string]string) *utilities.DoubleArray {
+	var prefixPaths [][]string
+
+	for k := range pathParams {
+		prefixPaths = append(prefixPaths, []string{k})
+	}
+
+	return utilities.NewDoubleArray(prefixPaths)
 }
 
 // getHTTPGetAnnotationMapping returns a mapping of RPC Method HTTP GET annotation to the RPC Handler's Request Input type full name.
@@ -115,31 +207,74 @@ func getHTTPGetAnnotationMapping() (map[string]string, error) {
 		return nil, err
 	}
 
-	httpGets := make(map[string]string)
+	annotationToQueryInputName := make(map[string]string)
 	protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		for i := 0; i < fd.Services().Len(); i++ {
 			serviceDesc := fd.Services().Get(i)
 			for j := 0; j < serviceDesc.Methods().Len(); j++ {
 				methodDesc := serviceDesc.Methods().Get(j)
-
-				httpAnnotation := proto.GetExtension(methodDesc.Options(), annotations.E_Http)
-				if httpAnnotation == nil {
+				httpExtension := proto.GetExtension(methodDesc.Options(), annotations.E_Http)
+				if httpExtension == nil {
 					continue
 				}
 
-				httpRule, ok := httpAnnotation.(*annotations.HttpRule)
+				httpRule, ok := httpExtension.(*annotations.HttpRule)
 				if !ok || httpRule == nil {
 					continue
 				}
-				if httpRule.GetGet() == "" {
-					continue
+				queryInputName := string(methodDesc.Input().FullName())
+				httpRules := append(httpRule.GetAdditionalBindings(), httpRule)
+				for _, rule := range httpRules {
+					if httpAnnotation := rule.GetGet(); httpAnnotation != "" {
+						annotationToQueryInputName[httpAnnotation] = queryInputName
+					}
+					if httpAnnotation := rule.GetPost(); httpAnnotation != "" {
+						annotationToQueryInputName[httpAnnotation] = queryInputName
+					}
 				}
-
-				httpGets[httpRule.GetGet()] = string(methodDesc.Input().FullName())
 			}
 		}
 		return true
 	})
+	return annotationToQueryInputName, nil
+}
 
-	return httpGets, nil
+// createRegexMapping converts the annotationMapping (HTTP annotation -> query input type name) to a
+// map of regular expressions for that HTTP annotation pattern, to queryMetadata.
+func createRegexMapping(logger log.Logger, annotationMapping map[string]string) (map[*regexp.Regexp]queryMetadata, map[string]queryMetadata) {
+	wildcardMatchers := make(map[*regexp.Regexp]queryMetadata)
+	// seen patterns is a map of URI patterns to annotations. for simple queries (no wildcards) the annotation is used
+	// for the key.
+	seenPatterns := make(map[string]string)
+	simpleMatchers := make(map[string]queryMetadata)
+
+	for annotation, queryInputName := range annotationMapping {
+		pattern, wildcardNames := patternToRegex(annotation)
+		if len(wildcardNames) == 0 {
+			if otherAnnotation, ok := seenPatterns[annotation]; ok {
+				// TODO: eventually we want this to error, but there is currently a duplicate in the protobuf.
+				// see: https://github.com/cosmos/cosmos-sdk/issues/23281
+				logger.Warn("duplicate HTTP annotation found", "annotation1", annotation, "annotation2", otherAnnotation, "query_input_name", queryInputName)
+			}
+			simpleMatchers[annotation] = queryMetadata{
+				queryInputProtoName: queryInputName,
+				wildcardKeyNames:    nil,
+			}
+			seenPatterns[annotation] = annotation
+		} else {
+			reg := regexp.MustCompile(pattern)
+			if otherAnnotation, ok := seenPatterns[pattern]; ok {
+				// TODO: eventually we want this to error, but there is currently a duplicate in the protobuf.
+				// see: https://github.com/cosmos/cosmos-sdk/issues/23281
+				logger.Warn("duplicate HTTP annotation found", "annotation1", annotation, "annotation2", otherAnnotation, "query_input_name", queryInputName)
+			}
+			wildcardMatchers[reg] = queryMetadata{
+				queryInputProtoName: queryInputName,
+				wildcardKeyNames:    wildcardNames,
+			}
+			seenPatterns[pattern] = annotation
+
+		}
+	}
+	return wildcardMatchers, simpleMatchers
 }

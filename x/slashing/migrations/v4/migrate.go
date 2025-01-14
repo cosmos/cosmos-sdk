@@ -7,11 +7,11 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/slashing/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -74,7 +74,9 @@ func iterateValidatorSigningInfos(
 	for ; iter.Valid(); iter.Next() {
 		addr := ValidatorSigningInfoAddress(iter.Key())
 		var info types.ValidatorSigningInfo
-		cdc.MustUnmarshal(iter.Value(), &info)
+		if err := cdc.Unmarshal(iter.Value(), &info); err != nil {
+			panic(err)
+		}
 
 		if cb(addr, info) {
 			break
@@ -97,7 +99,9 @@ func iterateValidatorMissedBlockBitArray(
 			continue
 		}
 
-		cdc.MustUnmarshal(bz, &missed)
+		if err := cdc.Unmarshal(bz, &missed); err != nil {
+			panic(err)
+		}
 		if cb(i, missed.Value) {
 			break
 		}

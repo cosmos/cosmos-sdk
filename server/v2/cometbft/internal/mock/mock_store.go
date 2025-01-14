@@ -37,7 +37,7 @@ func (s *MockStore) GetLatestVersion() (uint64, error) {
 		return 0, err
 	}
 
-	return lastCommitID.Version, nil
+	return uint64(lastCommitID.Version), nil
 }
 
 func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
@@ -99,7 +99,7 @@ func (s *MockStore) LastCommitID() (proof.CommitID, error) {
 	v, err := s.GetStateCommitment().GetLatestVersion()
 	bz := sha256.Sum256([]byte{})
 	return proof.CommitID{
-		Version: v,
+		Version: int64(v),
 		Hash:    bz[:],
 	}, err
 }

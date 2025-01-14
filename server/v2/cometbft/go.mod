@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0 //main
-	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250113211313-b461a3142af5 // main
+	cosmossdk.io/server/v2 v2.0.0-beta.1.0.20250114004541-b4e88cc51737 // main
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1.0.20250109081935-cf721a654090 // main
 	cosmossdk.io/server/v2/stf v1.0.0-beta.1.0.20250109081935-cf721a654090 // main
 	cosmossdk.io/store/v2 v2.0.0-beta.1.0.20250113105648-064c9ba6385a // main

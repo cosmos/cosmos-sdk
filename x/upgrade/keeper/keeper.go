@@ -34,7 +34,7 @@ type Keeper struct {
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
-	versionModifier    server.VersionModifier          // implements setting the protocol version field on BaseApp
+	versionModifier    server.VersionModifier          // implements setting the protocol version field on application
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     appmodule.VersionMap            // the module version map at init genesis
@@ -437,7 +437,7 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// incremement the app version and set it in state and baseapp
+	// incremement the app version and set it in state
 	if k.versionModifier != nil {
 		currentAppVersion, err := k.versionModifier.AppVersion(ctx)
 		if err != nil {

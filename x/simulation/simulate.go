@@ -202,11 +202,6 @@ func SimulateFromSeedX(
 		// Run the BeginBlock handler
 		logWriter.AddEntry(BeginBlockEntry(blockTime, blockHeight))
 
-		res, err := app.FinalizeBlock(finalizeBlockReq)
-		if err != nil {
-			return params, accs, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
-		}
-
 		ctx := app.NewContextLegacy(false, cmtproto.Header{
 			Height:          blockHeight,
 			Time:            blockTime,
@@ -260,6 +255,11 @@ func SimulateFromSeedX(
 			break
 		}
 
+		res, err := app.FinalizeBlock(finalizeBlockReq)
+		if err != nil {
+			return params, accs, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
+		}
+
 		// Generate a random RequestBeginBlock with the current validator set
 		// for the next block
 		finalizeBlockReq = RandomRequestFinalizeBlock(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, blockHeight, blockTime, proposerAddress)
@@ -278,6 +278,7 @@ func SimulateFromSeedX(
 			exportedParams = params
 		}
 	}
+
 	logger.Info("Simulation complete", "height", blockHeight, "block-time", blockTime, "opsCount", opCount,
 		"run-time", time.Since(startTime), "app-hash", hex.EncodeToString(app.LastCommitID().Hash))
 

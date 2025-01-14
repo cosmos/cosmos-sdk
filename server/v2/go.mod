@@ -9,7 +9,7 @@ go 1.23
 // )
 
 require (
-	cosmossdk.io/api v0.8.0
+	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/log v1.5.0

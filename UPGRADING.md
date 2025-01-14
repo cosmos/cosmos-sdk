@@ -469,9 +469,23 @@ Accounts's AccountNumber will be used as a global account number tracking replac
 ```go
 import authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper" 
 ...
-err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
-if err != nil {
-	return nil, err
+app.UpgradeKeeper.SetUpgradeHandler(planName,
+	func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
+		if err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper); err != nil {
+			return nil, err
+		}
+		return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
+	},
+)
+```
+
+Add `x/accounts` store while upgrading to v0.52.x:
+
+```go
+storetypes.StoreUpgrades{
+	Added: []string{
+		accounts.StoreKey,
+	},
 }
 ```
 

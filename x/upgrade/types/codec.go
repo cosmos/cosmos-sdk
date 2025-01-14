@@ -1,7 +1,14 @@
 package types
 
 import (
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/codec"
+=======
+	"cosmossdk.io/core/registry"
+	coretransaction "cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/gov/types/v1beta1"
+
+>>>>>>> 5581225a9 (fix(x/upgrade): register missing implementation for SoftwareUpgradeProposal (#23179))
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,6 +37,14 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgSoftwareUpgrade{},
 		&MsgCancelUpgrade{},
 	)
+<<<<<<< HEAD
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+=======
+	registrar.RegisterImplementations(
+		(*v1beta1.Content)(nil),
+		&SoftwareUpgradeProposal{},
+	)
+	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
+>>>>>>> 5581225a9 (fix(x/upgrade): register missing implementation for SoftwareUpgradeProposal (#23179))
 }

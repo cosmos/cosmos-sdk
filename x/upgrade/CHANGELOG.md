@@ -25,6 +25,28 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
+=======
+### Bug Fixes
+* (x/upgrade) [#23179](https://github.com/cosmos/cosmos-sdk/pull/23179) Register missing implementation for SoftwareUpgradeProposal to avoid no concrete type registered for type URL /cosmos.upgrade.v1beta1.SoftwareUpgradeProposal against interface *v1beta1.Content error.
+
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.2.0-rc.1) - 2024-12-18
+
+### Improvements
+
+* [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) Follow latest `cosmossdk.io/core` `PreBlock` simplification.
+
+### API Breaking Changes
+
+* [#19443](https://github.com/cosmos/cosmos-sdk/pull/19443) `NewKeeper` takes an `appmodule.Environment` instead of individual services.
+* [#21259](https://github.com/cosmos/cosmos-sdk/pull/21259) Upgrade has been migrated to cosrestore.StoreUpgrades. Renaming keys support has been removed from the upgrade module.
+* [#21480](https://github.com/cosmos/cosmos-sdk/pull/21480) ConsensusKeeper is required to be passed to the keeper. 
+
+### State Machine Breaking
+
+* (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) Upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
+
+>>>>>>> 5581225a9 (fix(x/upgrade): register missing implementation for SoftwareUpgradeProposal (#23179))
 ## [v0.1.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.4) - 2024-07-15
 
 ### Improvements

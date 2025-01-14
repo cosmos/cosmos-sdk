@@ -84,9 +84,7 @@ func (cmgr *CommitKVStoreCacheManager) Reset() {
 	// Clear the map.
 	// Please note that we are purposefully using the map clearing idiom.
 	// See https://github.com/cosmos/cosmos-sdk/issues/6681.
-	for key := range cmgr.caches {
-		delete(cmgr.caches, key)
-	}
+	clear(cmgr.caches)
 }
 
 // CacheWrap implements the CacheWrapper interface

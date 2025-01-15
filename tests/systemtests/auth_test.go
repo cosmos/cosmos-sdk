@@ -4,6 +4,7 @@ package systemtests
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -554,36 +555,42 @@ func TestAuthGatewayQueries(t *testing.T) {
 	addrBytesURLEncoded := "BrGC8eag4ptLGTPGg2c0B%2Fh9OOM%3D"
 	addrBytes := "BrGC8eag4ptLGTPGg2c0B/h9OOM="
 
-	fmt.Println(addr)
 	systest.Sut.StartChain(t)
 
 	baseurl := systest.Sut.APIAddress()
 	stringToBytesPath := baseurl + "/cosmos/auth/v1beta1/bech32/encode/%s"
 	bytesToStringPath := baseurl + "/cosmos/auth/v1beta1/bech32/%s"
+	bytesToStringPath2 := baseurl + "/cosmos/auth/v1beta1/bech32/decode/%s"
 	testCases := []systest.RestTestCase{
 		{
 			Name:    "convert string to bytes",
 			Url:     fmt.Sprintf(stringToBytesPath, addr),
-			ExpCode: 200,
+			ExpCode: http.StatusOK,
 			ExpOut:  fmt.Sprintf(`{"address_bytes":"%s"}`, addrBytes),
 		},
 		{
 			Name:    "convert bytes to string",
 			Url:     fmt.Sprintf(bytesToStringPath, addrBytesURLEncoded),
-			ExpCode: 200,
+			ExpCode: http.StatusOK,
 			ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
 		},
-		//{
-		//	Name:    "convert bytes to string other endpoint",
-		//	Url:     fmt.Sprintf(bytesToStringPath2, addrBytesURLEncoded),
-		//	ExpCode: 200,
-		//	ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
-		//},
+		{
+			Name:    "convert bytes to string other endpoint",
+			Url:     fmt.Sprintf(bytesToStringPath2, addrBytesURLEncoded),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
+		},
 		{
 			Name:    "should fail with bad address",
-			Url:     fmt.Sprintf(stringToBytesPath, "blah"),
-			ExpCode: 400,
-			ExpOut:  `{"bar":"foo"}`,
+			Url:     fmt.Sprintf(stringToBytesPath, "aslkdjglksdfhjlksdjfhlkjsdfh"),
+			ExpCode: http.StatusInternalServerError,
+			ExpOut:  `{"code":2,"message":"decoding bech32 failed: invalid separator index -1","details":[]}`,
+		},
+		{
+			Name:    "should fail with bad bytes",
+			Url:     fmt.Sprintf(bytesToStringPath, "f"),
+			ExpCode: http.StatusBadRequest,
+			ExpOut:  `{"code":3,"message":"failed to populate field address_bytes with value f: illegal base64 data at input byte 0","details":[]}`,
 		},
 	}
 	systest.RunRestQueries(t, testCases...)

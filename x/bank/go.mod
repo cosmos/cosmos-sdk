@@ -23,7 +23,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53
-	google.golang.org/grpc v1.69.2
+	google.golang.org/grpc v1.69.4
 	gotest.tools/v3 v3.5.1
 )
 

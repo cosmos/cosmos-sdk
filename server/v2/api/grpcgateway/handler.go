@@ -14,7 +14,6 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"github.com/mitchellh/mapstructure"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -82,7 +81,7 @@ func (p *protoHandler[T]) ServeHTTP(writer http.ResponseWriter, request *http.Re
 	// we clone here as handlers are concurrent.
 	msg := gogoproto.Clone(p.msg)
 
-	var params map[string]string
+	params := make(map[string]string)
 	for _, wildcardKeyName := range p.wildcardKeyNames {
 		params[wildcardKeyName] = request.PathValue(wildcardKeyName)
 	}
@@ -116,26 +115,21 @@ func (p *protoHandler[T]) ServeHTTP(writer http.ResponseWriter, request *http.Re
 	runtime.ForwardResponseMessage(request.Context(), p.gateway, out, writer, request, responseMsg)
 }
 
-func (p *protoHandler[T]) populateMessage(req *http.Request, marshaler runtime.Marshaler, input gogoproto.Message, wildcardValues map[string]string) (gogoproto.Message, error) {
-	// decode the path params first.
-	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:           input,
-		TagName:          "json",
-		WeaklyTypedInput: true,
-	})
-	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to create message decoder")
-	}
-	if err := decoder.Decode(wildcardValues); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+func (p *protoHandler[T]) populateMessage(req *http.Request, marshaler runtime.Marshaler, input gogoproto.Message, pathParams map[string]string) (gogoproto.Message, error) {
+	// see if we have path params to populate the message with.
+	if len(pathParams) > 0 {
+		for pathKey, pathValue := range pathParams {
+			runtime.PopulateFieldFromPath(input, pathKey, pathValue)
+		}
 	}
 
-	if err = req.ParseForm(); err != nil {
+	// handle query parameters.
+	if err := req.ParseForm(); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	filter := filterFromPathParams(wildcardValues)
-	err = runtime.PopulateQueryParameters(input, req.Form, filter)
+	filter := filterFromPathParams(pathParams)
+	err := runtime.PopulateQueryParameters(input, req.Form, filter)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -214,6 +208,7 @@ func newHTTPAnnotationMapping() (map[string]string, error) {
 	return annotationToQueryInputName, nil
 }
 
+// annotationsToQueryMetadata takes annotations and creates a mapping of URIs to queryMetadata.
 func annotationsToQueryMetadata(annotations map[string]string) (map[string]queryMetadata, error) {
 	annotationToMetadata := make(map[string]queryMetadata)
 	for uri, queryInputName := range annotations {

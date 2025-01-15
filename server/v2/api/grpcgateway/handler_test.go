@@ -15,6 +15,35 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
+func Test_extractWildcardKeyNames(t *testing.T) {
+	tests := []struct {
+		name string
+		uri  string
+		want []string
+	}{
+		{
+			name: "single",
+			uri:  "/foo/bar/{baz}",
+			want: []string{"baz"},
+		},
+		{
+			name: "multiple",
+			uri:  "/foo/{bar}/baz/{buzz}",
+			want: []string{"bar", "buzz"},
+		},
+		{
+			name: "none",
+			uri:  "/foo/bar",
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, extractWildcardKeyNames(tt.uri))
+		})
+	}
+}
+
 func TestPopulateMessage(t *testing.T) {
 	gogoproto.RegisterType(&DummyProto{}, dummyProtoName)
 

@@ -547,3 +547,44 @@ func TestTxWithFeePayer(t *testing.T) {
 	balance := cli.QueryBalance(feePayerAddr, authTestDenom)
 	assert.Equal(t, balance, int64(9000000))
 }
+
+func TestAuthGatewayQueries(t *testing.T) {
+	systest.Sut.ResetChain(t)
+	addr := "cosmos1q6cc9u0x5r3fkjcex0rgxee5qlu86w8rh2ypaj"
+	addrBytesURLEncoded := "BrGC8eag4ptLGTPGg2c0B%2Fh9OOM%3D"
+	addrBytes := "BrGC8eag4ptLGTPGg2c0B/h9OOM="
+
+	fmt.Println(addr)
+	systest.Sut.StartChain(t)
+
+	baseurl := systest.Sut.APIAddress()
+	stringToBytesPath := baseurl + "/cosmos/auth/v1beta1/bech32/encode/%s"
+	bytesToStringPath := baseurl + "/cosmos/auth/v1beta1/bech32/%s"
+	testCases := []systest.RestTestCase{
+		{
+			Name:    "convert string to bytes",
+			Url:     fmt.Sprintf(stringToBytesPath, addr),
+			ExpCode: 200,
+			ExpOut:  fmt.Sprintf(`{"address_bytes":"%s"}`, addrBytes),
+		},
+		{
+			Name:    "convert bytes to string",
+			Url:     fmt.Sprintf(bytesToStringPath, addrBytesURLEncoded),
+			ExpCode: 200,
+			ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
+		},
+		//{
+		//	Name:    "convert bytes to string other endpoint",
+		//	Url:     fmt.Sprintf(bytesToStringPath2, addrBytesURLEncoded),
+		//	ExpCode: 200,
+		//	ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
+		//},
+		{
+			Name:    "should fail with bad address",
+			Url:     fmt.Sprintf(stringToBytesPath, "blah"),
+			ExpCode: 400,
+			ExpOut:  `{"bar":"foo"}`,
+		},
+	}
+	systest.RunRestQueries(t, testCases...)
+}

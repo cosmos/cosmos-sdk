@@ -47,7 +47,7 @@ type Keeper struct {
 // storeKey - a store key with which to access upgrade's store
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
-// vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
+// vs - the interface implemented by an app which allows setting protocol version field
 func NewKeeper(
 	env appmodule.Environment,
 	skipUpgradeHeights map[int64]bool,

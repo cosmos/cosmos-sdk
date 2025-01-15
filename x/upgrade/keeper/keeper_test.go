@@ -281,7 +281,7 @@ func (s *KeeperTestSuite) TestDowngradeVerified() {
 }
 
 // Test that the protocol version successfully increments after an
-// upgrade and is successfully set on BaseApp's appVersion.
+// upgrade and is successfully set on application's appVersion.
 func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	oldProtocolVersion, err := s.versionModifier.AppVersion(context.Background())
 	s.Require().NoError(err)

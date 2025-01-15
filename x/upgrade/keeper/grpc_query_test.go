@@ -2,7 +2,9 @@ package keeper_test
 
 import (
 	"context"
+	"cosmossdk.io/core/testing/queryclient"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -17,7 +19,6 @@ import (
 	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -56,7 +57,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 		"bank": 0,
 	})
 	suite.Require().NoError(err)
-	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, suite.encCfg.InterfaceRegistry)
+	queryHelper := queryclient.NewQueryHelper(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry).GRPCCodec())
 	types.RegisterQueryServer(queryHelper, suite.upgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
@@ -99,7 +100,7 @@ func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {
 
 			tc.malleate()
 
-			res, err := suite.queryClient.CurrentPlan(context.Background(), req)
+			res, err := suite.queryClient.CurrentPlan(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -157,7 +158,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 
 			tc.malleate()
 
-			res, err := suite.queryClient.AppliedPlan(context.Background(), req)
+			res, err := suite.queryClient.AppliedPlan(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -207,7 +208,7 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			res, err := suite.queryClient.ModuleVersions(context.Background(), &tc.req)
+			res, err := suite.queryClient.ModuleVersions(suite.ctx, &tc.req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

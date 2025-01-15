@@ -78,7 +78,7 @@ func New[T transaction.Tx](
 	mux := http.NewServeMux()
 	err := registerGatewayToMux[T](logger, mux, s.GRPCGatewayRouter, appManager)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create grpc-gateway interceptor: %w", err)
+		return nil, fmt.Errorf("failed to register gRPC gateway annotations: %w", err)
 	}
 
 	s.server = &http.Server{

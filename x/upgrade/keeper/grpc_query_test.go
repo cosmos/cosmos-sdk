@@ -2,9 +2,7 @@ package keeper_test
 
 import (
 	"context"
-	"cosmossdk.io/core/testing/queryclient"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -13,12 +11,14 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/testing/queryclient"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"

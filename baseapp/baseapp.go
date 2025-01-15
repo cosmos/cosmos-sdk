@@ -505,6 +505,7 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 		app.finalizeBlockState = baseState
 
 	case execModeSimulate:
+		baseState.SetContext(baseState.Context().WithExecMode(sdk.ExecMode(mode)).WithMinGasPrices(app.minGasPrices))
 		app.simulateState = baseState
 
 	default:
@@ -641,6 +642,9 @@ func (app *BaseApp) getState(mode execMode) *state {
 
 	case execModeProcessProposal:
 		return app.processProposalState
+
+	case execModeSimulate:
+		return app.simulateState
 
 	default:
 		return app.checkState

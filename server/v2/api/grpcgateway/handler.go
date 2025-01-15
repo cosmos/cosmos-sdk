@@ -23,6 +23,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 )
 
@@ -45,7 +46,7 @@ type queryMetadata struct {
 }
 
 // registerGatewayToMux registers handlers for grpc gateway annotations to the httpMux.
-func registerGatewayToMux[T transaction.Tx](httpMux *http.ServeMux, gateway *runtime.ServeMux, am appmanager.AppManager[T]) error {
+func registerGatewayToMux[T transaction.Tx](logger log.Logger, httpMux *http.ServeMux, gateway *runtime.ServeMux, am appmanager.AppManager[T]) error {
 	annotationMapping, err := newHTTPAnnotationMapping()
 	if err != nil {
 		return err
@@ -54,12 +55,12 @@ func registerGatewayToMux[T transaction.Tx](httpMux *http.ServeMux, gateway *run
 	if err != nil {
 		return err
 	}
-	registerMethods[T](httpMux, am, gateway, annotationToMetadata)
+	registerMethods[T](logger, httpMux, am, gateway, annotationToMetadata)
 	return nil
 }
 
 // registerMethods registers the endpoints specified in the annotation mapping to the mux.
-func registerMethods[T transaction.Tx](mux *http.ServeMux, am appmanager.AppManager[T], gateway *runtime.ServeMux, annotationToMetadata map[string]queryMetadata) {
+func registerMethods[T transaction.Tx](logger log.Logger, mux *http.ServeMux, am appmanager.AppManager[T], gateway *runtime.ServeMux, annotationToMetadata map[string]queryMetadata) {
 	// register the fallback handler. this will run if the mux isn't able to get a match from the registrations below.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		gateway.ServeHTTP(w, r)
@@ -75,7 +76,9 @@ func registerMethods[T transaction.Tx](mux *http.ServeMux, am appmanager.AppMana
 		// that causes the registration to panic.
 		func(u string, qMD queryMetadata) {
 			defer func() {
-				_ = recover()
+				if err := recover(); err != nil {
+					logger.Warn("duplicate HTTP annotation detected", "error", err)
+				}
 			}()
 			mux.Handle(u, &protoHandler[T]{
 				msg:              qMD.msg,

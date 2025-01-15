@@ -319,18 +319,24 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 // verifySig will verify the signature of the provided signer account.
 func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2, newlyCreated bool) error {
 	execMode := svd.ak.GetEnvironment().TransactionService.ExecMode(ctx)
-	if execMode == transaction.ExecModeCheck {
-		if sig.Sequence < acc.GetSequence() {
+	unorderedTx, ok := tx.(sdk.TxWithUnordered)
+	isUnordered := ok && unorderedTx.GetUnordered()
+
+	// only check sequence if the tx is not unordered
+	if !isUnordered {
+		if execMode == transaction.ExecModeCheck {
+			if sig.Sequence < acc.GetSequence() {
+				return errorsmod.Wrapf(
+					sdkerrors.ErrWrongSequence,
+					"account sequence mismatch, expected higher than or equal to %d, got %d", acc.GetSequence(), sig.Sequence,
+				)
+			}
+		} else if sig.Sequence != acc.GetSequence() {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected higher than or equal to %d, got %d", acc.GetSequence(), sig.Sequence,
+				"account sequence mismatch: expected %d, got %d", acc.GetSequence(), sig.Sequence,
 			)
 		}
-	} else if sig.Sequence != acc.GetSequence() {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrWrongSequence,
-			"account sequence mismatch: expected %d, got %d", acc.GetSequence(), sig.Sequence,
-		)
 	}
 
 	// we're in simulation mode, or in ReCheckTx, or context is not

@@ -1,7 +1,7 @@
-buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1 h1:ETkPUd9encx5SP6yuo0BR7DOnQHDbmU0RMzHsu2dkuQ=
-buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.1-20241120201313-68e42a58b301.1/go.mod h1:HulBNxlqJNXVcysFv/RxTEWz+khiJg8SOmfgC1ktVTM=
-buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1 h1:X62BxjEhtx1/PWJPxg5BGahf1UXeFgM9dFfNpQ6kUPo=
-buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1/go.mod h1:GB5hdNJd6cahKmHcLArJo5wnV9TeZGMSz7ysK4YLvag=
+buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e42a58b301.1 h1:72N6FvGkvIAHJFuW6BFXCThbTS2qo/PlzQuw7wSjUi8=
+buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e42a58b301.1/go.mod h1:UJ1nx2WHcWAvKiaem512kYlHektAZJ/eNU032Pdar70=
+buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.2-20240130113600-88ef6483f90f.1 h1:LFgdGZ+BzNqHWsndyRvvFE1450BBZ2nFtyNEGZ9NOSg=
+buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.2-20240130113600-88ef6483f90f.1/go.mod h1:cuOHNO5SRU1J25UoI8VvPyi8dq9BpZb4gKa01Umx57Y=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5 h1:eNcayDLpip+zVLRLYafhzLvQlSmyab+RC5W7ZfmxJLA=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5/go.mod h1:hQGLpiIUloJBMdQMMWb/4wRApmI9hjHH05nefC0Ojec=
 github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fro=

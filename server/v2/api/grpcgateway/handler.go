@@ -45,8 +45,9 @@ type queryMetadata struct {
 	wildcardKeyNames []string
 }
 
-// registerGatewayToMux registers handlers for grpc gateway annotations to the httpMux.
-func registerGatewayToMux[T transaction.Tx](logger log.Logger, httpMux *http.ServeMux, gateway *runtime.ServeMux, am appmanager.AppManager[T]) error {
+// mountHTTPRoutes registers handlers for from proto HTTP annotations to the http.ServeMux, using runtime.ServeMux as a fallback/
+// last ditch effort router.
+func mountHTTPRoutes[T transaction.Tx](logger log.Logger, httpMux *http.ServeMux, fallbackRouter *runtime.ServeMux, am appmanager.AppManager[T]) error {
 	annotationMapping, err := newHTTPAnnotationMapping()
 	if err != nil {
 		return err
@@ -55,15 +56,15 @@ func registerGatewayToMux[T transaction.Tx](logger log.Logger, httpMux *http.Ser
 	if err != nil {
 		return err
 	}
-	registerMethods[T](logger, httpMux, am, gateway, annotationToMetadata)
+	registerMethods[T](logger, httpMux, am, fallbackRouter, annotationToMetadata)
 	return nil
 }
 
-// registerMethods registers the endpoints specified in the annotation mapping to the mux.
-func registerMethods[T transaction.Tx](logger log.Logger, mux *http.ServeMux, am appmanager.AppManager[T], gateway *runtime.ServeMux, annotationToMetadata map[string]queryMetadata) {
+// registerMethods registers the endpoints specified in the annotation mapping to the http.ServeMux.
+func registerMethods[T transaction.Tx](logger log.Logger, mux *http.ServeMux, am appmanager.AppManager[T], fallbackRouter *runtime.ServeMux, annotationToMetadata map[string]queryMetadata) {
 	// register the fallback handler. this will run if the mux isn't able to get a match from the registrations below.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		gateway.ServeHTTP(w, r)
+		fallbackRouter.ServeHTTP(w, r)
 	})
 
 	// register in deterministic order. we do this because of the problem mentioned below, and different nodes could
@@ -82,7 +83,7 @@ func registerMethods[T transaction.Tx](logger log.Logger, mux *http.ServeMux, am
 			}()
 			mux.Handle(u, &protoHandler[T]{
 				msg:              qMD.msg,
-				gateway:          gateway,
+				fallbackRouter:   fallbackRouter,
 				appManager:       am,
 				wildcardKeyNames: qMD.wildcardKeyNames,
 			})
@@ -96,14 +97,14 @@ type protoHandler[T transaction.Tx] struct {
 	msg gogoproto.Message
 	// wildcardKeyNames are the wildcard key names, if any, specified in the http annotation. (i.e. /foo/bar/{baz})
 	wildcardKeyNames []string
-	// gateway is the canonical gateway ServeMux to use as a fallback if the query does not have a handler in AppManager.
-	gateway *runtime.ServeMux
+	// fallbackRouter is the canonical gRPC gateway runtime.ServeMux, used as a fallback if the query does not have a handler in AppManager.
+	fallbackRouter *runtime.ServeMux
 	// appManager is used to route queries.
 	appManager appmanager.AppManager[T]
 }
 
 func (p *protoHandler[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	in, out := runtime.MarshalerForRequest(p.gateway, request)
+	in, out := runtime.MarshalerForRequest(p.fallbackRouter, request)
 
 	// we clone here as handlers are concurrent and using p.msg would trample.
 	msg := gogoproto.Clone(p.msg)
@@ -117,7 +118,7 @@ func (p *protoHandler[T]) ServeHTTP(writer http.ResponseWriter, request *http.Re
 	inputMsg, err := p.populateMessage(request, in, msg, params)
 	if err != nil {
 		// the errors returned from the message creation return status errors. no need to make one here.
-		runtime.HTTPError(request.Context(), p.gateway, out, writer, request, err)
+		runtime.HTTPError(request.Context(), p.fallbackRouter, out, writer, request, err)
 		return
 	}
 
@@ -128,24 +129,24 @@ func (p *protoHandler[T]) ServeHTTP(writer http.ResponseWriter, request *http.Re
 	if heightStr != "" && heightStr != "latest" {
 		height, err = strconv.ParseUint(heightStr, 10, 64)
 		if err != nil {
-			runtime.HTTPError(request.Context(), p.gateway, out, writer, request, status.Errorf(codes.InvalidArgument, "invalid height in header: %s", heightStr))
+			runtime.HTTPError(request.Context(), p.fallbackRouter, out, writer, request, status.Errorf(codes.InvalidArgument, "invalid height in header: %s", heightStr))
 			return
 		}
 	}
 
 	responseMsg, err := p.appManager.Query(request.Context(), height, inputMsg)
 	if err != nil {
-		// if we couldn't find a handler for this request, just fall back to the gateway mux.
+		// if we couldn't find a handler for this request, just fall back to the fallbackRouter.
 		if strings.Contains(err.Error(), "no handler") {
-			p.gateway.ServeHTTP(writer, request)
+			p.fallbackRouter.ServeHTTP(writer, request)
 		} else {
 			// for all other errors, we just return the error.
-			runtime.HTTPError(request.Context(), p.gateway, out, writer, request, err)
+			runtime.HTTPError(request.Context(), p.fallbackRouter, out, writer, request, err)
 		}
 		return
 	}
 
-	runtime.ForwardResponseMessage(request.Context(), p.gateway, out, writer, request, responseMsg)
+	runtime.ForwardResponseMessage(request.Context(), p.fallbackRouter, out, writer, request, responseMsg)
 }
 
 func (p *protoHandler[T]) populateMessage(req *http.Request, marshaler runtime.Marshaler, input gogoproto.Message, pathParams map[string]string) (gogoproto.Message, error) {
@@ -176,7 +177,7 @@ func (p *protoHandler[T]) populateMessage(req *http.Request, marshaler runtime.M
 		}
 
 		// this block of code ensures that the body can be re-read. this is needed as if the query fails in the
-		// app's query handler, we need to pass the request back to the canonical gateway, which needs to be able to
+		// app's query handler, we need to pass the request back to the fallbackRouter, which needs to be able to
 		// read the body again.
 		bodyBytes, err := io.ReadAll(req.Body)
 		if err != nil {

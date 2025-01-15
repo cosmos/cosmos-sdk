@@ -33,7 +33,7 @@ type Server[T transaction.Tx] struct {
 	GRPCGatewayRouter *runtime.ServeMux
 }
 
-// New creates a new gRPC-gateway server.
+// New creates a new gRPC-Gateway server.
 func New[T transaction.Tx](
 	logger log.Logger,
 	config server.ConfigMap,
@@ -76,7 +76,7 @@ func New[T transaction.Tx](
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 	mux := http.NewServeMux()
-	err := registerGatewayToMux[T](logger, mux, s.GRPCGatewayRouter, appManager)
+	err := mountHTTPRoutes[T](logger, mux, s.GRPCGatewayRouter, appManager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register gRPC gateway annotations: %w", err)
 	}

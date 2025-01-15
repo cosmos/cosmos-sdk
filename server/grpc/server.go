@@ -54,7 +54,7 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 			return modes
 		}(),
 		ChainID:           clientCtx.ChainID,
-		SdkConfig:         sdk.GetConfig(),
+		SdkConfig:         sdk.NewConfig(),
 		InterfaceRegistry: clientCtx.InterfaceRegistry,
 	})
 	if err != nil {

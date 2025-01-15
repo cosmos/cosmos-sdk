@@ -42,7 +42,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, errors.New("invalid derivation path")
 	}
 
-	if derivationPath[1] != sdk.GetConfig().GetCoinType() {
+	if derivationPath[1] != sdk.NewConfig().GetCoinType() {
 		return nil, errors.New("invalid derivation path")
 	}
 

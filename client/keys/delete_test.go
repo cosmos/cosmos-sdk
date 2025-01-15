@@ -33,7 +33,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
 
-	path := sdk.GetConfig().GetFullBIP44Path()
+	path := sdk.NewConfig().GetFullBIP44Path()
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
 	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})

@@ -27,7 +27,7 @@ const (
 	// You can use the specific values for your project.
 	// Add the follow lines to the `main()` of your server.
 	//
-	//	config := sdk.GetConfig()
+	//	config := sdk.NewConfig()
 	//	config.SetBech32PrefixForAccount(yourBech32PrefixAccAddr, yourBech32PrefixAccPub)
 	//	config.SetBech32PrefixForValidator(yourBech32PrefixValAddr, yourBech32PrefixValPub)
 	//	config.SetBech32PrefixForConsensusNode(yourBech32PrefixConsAddr, yourBech32PrefixConsPub)
@@ -160,11 +160,11 @@ func AccAddressFromHexUnsafe(address string) (addr AccAddress, err error) {
 
 // VerifyAddressFormat verifies that the provided bytes form a valid address
 // according to the default address rules or a custom address verifier set by
-// GetConfig().SetAddressVerifier().
+// NewConfig().SetAddressVerifier().
 // TODO make an issue to get rid of global Config
 // ref: https://github.com/cosmos/cosmos-sdk/issues/9690
 func VerifyAddressFormat(bz []byte) error {
-	verifier := GetConfig().GetAddressVerifier()
+	verifier := NewConfig().GetAddressVerifier()
 	if verifier != nil {
 		return verifier(bz)
 	}
@@ -196,7 +196,7 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return AccAddress{}, errors.New("empty address string is not allowed")
 	}
 
-	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
+	bech32PrefixAccAddr := NewConfig().GetBech32AccountAddrPrefix()
 
 	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
 	if err != nil {
@@ -312,7 +312,7 @@ func (aa AccAddress) String() string {
 			return addr.(string)
 		}
 	}
-	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
+	return cacheBech32Addr(NewConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -348,7 +348,7 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 		return ValAddress{}, errors.New("empty address string is not allowed")
 	}
 
-	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+	bech32PrefixValAddr := NewConfig().GetBech32ValidatorAddrPrefix()
 
 	bz, err := GetFromBech32(address, bech32PrefixValAddr)
 	if err != nil {
@@ -466,7 +466,7 @@ func (va ValAddress) String() string {
 			return addr.(string)
 		}
 	}
-	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
+	return cacheBech32Addr(NewConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -503,7 +503,7 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 		return ConsAddress{}, errors.New("empty address string is not allowed")
 	}
 
-	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+	bech32PrefixConsAddr := NewConfig().GetBech32ConsensusAddrPrefix()
 
 	bz, err := GetFromBech32(address, bech32PrefixConsAddr)
 	if err != nil {
@@ -626,7 +626,7 @@ func (ca ConsAddress) String() string {
 			return addr.(string)
 		}
 	}
-	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
+	return cacheBech32Addr(NewConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.

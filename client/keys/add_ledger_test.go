@@ -22,7 +22,7 @@ import (
 )
 
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
-	config := sdk.GetConfig()
+	config := sdk.NewConfig()
 
 	bech32PrefixAccAddr := "terra"
 	bech32PrefixAccPub := "terrapub"

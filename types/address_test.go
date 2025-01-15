@@ -137,7 +137,7 @@ func (s *addressTestSuite) TestAddrCache() {
 
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
-	conf := types.GetConfig()
+	conf := types.NewConfig()
 	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
 	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
 	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
@@ -174,7 +174,7 @@ func (s *addressTestSuite) TestAddrCacheDisabled() {
 
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
-	conf := types.GetConfig()
+	conf := types.NewConfig()
 	conf.SetBech32PrefixForAccount(prefix, prefix+"pub")
 	conf.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
 	conf.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valconspub")
@@ -298,7 +298,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 			prefix := RandString(length)
 
 			// Assuming that GetConfig is not sealed.
-			config := types.GetConfig()
+			config := types.NewConfig()
 			config.SetBech32PrefixForAccount(
 				prefix+types.PrefixAccount,
 				prefix+types.PrefixPublic)
@@ -410,7 +410,7 @@ func (s *addressTestSuite) TestCustomAddressVerifier() {
 	s.Require().Nil(err)
 
 	// Set a custom address verifier only accepts 20 byte addresses
-	types.GetConfig().SetAddressVerifier(func(bz []byte) error {
+	types.NewConfig().SetAddressVerifier(func(bz []byte) error {
 		n := len(bz)
 		if n == 20 {
 			return nil
@@ -429,7 +429,7 @@ func (s *addressTestSuite) TestCustomAddressVerifier() {
 	s.Require().NotNil(err)
 
 	// Reinitialize the global config to default address verifier (nil)
-	types.GetConfig().SetAddressVerifier(nil)
+	types.NewConfig().SetAddressVerifier(nil)
 }
 
 func (s *addressTestSuite) TestBech32ifyAddressBytes() {

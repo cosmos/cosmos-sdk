@@ -78,7 +78,7 @@ func newSplitAndApply(
 
 // NewWithdrawRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
 func NewWithdrawRewardsCmd(valCodec, ac address.Codec) *cobra.Command {
-	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+	bech32PrefixValAddr := sdk.NewConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards [validator-addr]",
@@ -191,7 +191,7 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 
 // NewSetWithdrawAddrCmd returns a CLI command handler for creating a MsgSetWithdrawAddress transaction.
 func NewSetWithdrawAddrCmd(ac address.Codec) *cobra.Command {
-	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	bech32PrefixAccAddr := sdk.NewConfig().GetBech32AccountAddrPrefix()
 
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",

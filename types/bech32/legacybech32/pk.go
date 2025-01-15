@@ -41,7 +41,7 @@ func MustMarshalPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) string {
 }
 
 func getPrefix(pkt Bech32PubKeyType) string {
-	cfg := sdk.GetConfig()
+	cfg := sdk.NewConfig()
 	switch pkt {
 	case AccPK:
 		return cfg.GetBech32AccountPubPrefix()

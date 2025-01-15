@@ -87,7 +87,7 @@ Example:
 	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	f.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
-	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
+	f.Uint32(flagCoinType, sdk.NewConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
 	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
@@ -266,7 +266,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if useLedger {
-		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+		bech32PrefixAccAddr := sdk.NewConfig().GetBech32AccountAddrPrefix()
 		k, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
 		if err != nil {
 			return err

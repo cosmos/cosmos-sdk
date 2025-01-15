@@ -1018,6 +1018,7 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(execModeCheck, header)
+	app.setState(execModeSimulate, header)
 
 	app.finalizeBlockState = nil
 

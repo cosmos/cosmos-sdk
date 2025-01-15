@@ -100,9 +100,10 @@ const (
 
 	// gRPC-related flags
 
-	flagGRPCOnly    = "grpc-only"
-	flagGRPCEnable  = "grpc.enable"
-	flagGRPCAddress = "grpc.address"
+	flagGRPCOnly            = "grpc-only"
+	flagGRPCEnable          = "grpc.enable"
+	flagGRPCAddress         = "grpc.address"
+	flagGRPCSkipCheckHeader = "grpc.skip-check-header"
 
 	// mempool flags
 
@@ -1028,6 +1029,7 @@ func addStartNodeFlags[T types.Application](cmd *cobra.Command, opts StartCmdOpt
 	cmd.Flags().Bool(flagGRPCOnly, false, "Start the node in gRPC query only mode (no CometBFT process is started)")
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, serverconfig.DefaultGRPCAddress, "the gRPC server address to listen on")
+	cmd.Flags().Bool(flagGRPCSkipCheckHeader, false, "Define if the gRPC server should bypass check header")
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")

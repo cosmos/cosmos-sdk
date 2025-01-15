@@ -23,6 +23,12 @@ import (
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
+	app.RegisterGRPCServerWithSkipCheckHeader(server, false)
+}
+
+// RegisterGRPCServerWithSkipCheckHeader registers gRPC services with the specified gRPC server
+// and bypass check header flag.
+func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server, skipCheckHeader bool) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
 	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
@@ -48,7 +54,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Create the sdk.Context. Passing false as 2nd arg, as we can't
 		// actually support proofs with gRPC right now.
-		sdkCtx, err := app.CreateQueryContext(height, false)
+		sdkCtx, err := app.CreateQueryContextWithCheckHeader(height, false, !skipCheckHeader)
 		if err != nil {
 			return nil, err
 		}

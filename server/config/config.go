@@ -139,6 +139,9 @@ type GRPCConfig struct {
 	// MaxSendMsgSize defines the max message size in bytes the server can send.
 	// The default value is math.MaxInt32.
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
+
+	// SkipCheckHeader defines if the gRPC server should bypass check header.
+	SkipCheckHeader bool `mapstructure:"skip-check-header"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -237,10 +240,11 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:         true,
-			Address:        DefaultGRPCAddress,
-			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
-			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
+			Enable:          true,
+			Address:         DefaultGRPCAddress,
+			MaxRecvMsgSize:  DefaultGRPCMaxRecvMsgSize,
+			MaxSendMsgSize:  DefaultGRPCMaxSendMsgSize,
+			SkipCheckHeader: false,
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,

@@ -6,7 +6,6 @@ toolchain go1.23.4
 
 require (
 	cosmossdk.io/core v1.0.0
-	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/tidwall/btree v1.7.0
 	go.uber.org/mock v0.5.0
@@ -15,7 +14,6 @@ require (
 
 require (
 	cosmossdk.io/schema v1.0.0 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect

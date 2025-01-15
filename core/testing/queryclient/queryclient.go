@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
@@ -15,9 +14,21 @@ var (
 	_ gogogrpc.Server     = &QueryHelper{}
 )
 
-// GRPCQueryHandler defines a function type which handles ABCI Query requests
+// GRPCQueryHandler defines a function type which handles mocked ABCI Query requests
 // using gRPC
-type GRPCQueryHandler = func(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error)
+type GRPCQueryHandler = func(ctx context.Context, req *QueryRequest) (*QueryResponse, error)
+
+// QueryRequest is a light mock of cometbft abci.QueryRequest.
+type QueryRequest struct {
+	Data   []byte
+	Height int64
+}
+
+// QueryResponse is a light mock of cometbft abci.QueryResponse.
+type QueryResponse struct {
+	Value  []byte
+	Height int64
+}
 
 // QueryHelper is a test utility for building a query client from a proto interface registry.
 type QueryHelper struct {
@@ -45,7 +56,7 @@ func (q *QueryHelper) Invoke(ctx context.Context, method string, args, reply int
 		return err
 	}
 
-	res, err := querier(ctx, &abci.QueryRequest{Data: reqBz})
+	res, err := querier(ctx, &QueryRequest{Data: reqBz})
 	if err != nil {
 		return err
 	}
@@ -94,7 +105,7 @@ func (q *QueryHelper) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc
 		panic(fmt.Sprintf("handler for %s already registered", fqName))
 	}
 
-	q.routes[fqName] = func(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
+	q.routes[fqName] = func(ctx context.Context, req *QueryRequest) (*QueryResponse, error) {
 		// call the method handler from the service description with the handler object,
 		// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 		res, err := methodHandler(handler, ctx, func(i interface{}) error {
@@ -112,7 +123,7 @@ func (q *QueryHelper) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc
 		}
 
 		// return the result bytes as the response value
-		return &abci.QueryResponse{
+		return &QueryResponse{
 			Height: req.Height,
 			Value:  resBytes,
 		}, nil

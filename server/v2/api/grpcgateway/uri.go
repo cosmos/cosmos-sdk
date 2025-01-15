@@ -28,8 +28,17 @@ type uriMatch struct {
 // matchURL attempts to find a match for the given URL.
 // NOTE: if no match is found, nil is returned.
 func (m uriMatcher) matchURL(u *url.URL) *uriMatch {
-	uriPath := strings.TrimRight(u.Path, "/")
-	rawURIPath := strings.TrimRight(u.RawPath, "/")
+	// the url.RawPath is non-empty when URL encoded values are detected in the path params.
+	// this requires different handling when getting path parameter values.
+	isURLEncoded := false
+	var uriPath string
+	if u.RawPath != "" {
+		isURLEncoded = true
+		uriPath = u.RawPath
+	} else {
+		uriPath = u.Path
+	}
+	uriPath = strings.TrimRight(uriPath, "/")
 	params := make(map[string]string)
 
 	//  see if we can get a simple match first.
@@ -42,7 +51,7 @@ func (m uriMatcher) matchURL(u *url.URL) *uriMatch {
 
 	// try the complex matchers.
 	for reg, qmd := range m.wildcardURIMatchers {
-		matches := reg.FindStringSubmatch(rawURIPath)
+		matches := reg.FindStringSubmatch(uriPath)
 		switch {
 		case len(matches) == 1:
 			return &uriMatch{
@@ -52,14 +61,19 @@ func (m uriMatcher) matchURL(u *url.URL) *uriMatch {
 		case len(matches) > 1:
 			// first match is the URI, subsequent matches are the wild card values.
 			for i, name := range qmd.wildcardKeyNames {
-				// check if the wildcard value was URL-encoded.
-				// we'll attempt to unescape any URL-escaping text, but if we encounter an error,
-				// we can just try the raw text that was provided.
-				if decodedMatch, err := url.QueryUnescape(matches[i+1]); err != nil {
-					params[name] = matches[i+1]
+				var matchValue string
+				if isURLEncoded {
+					// we'll try to unescape the URL encoded values,
+					// but if that doesn't work, we can just try the raw value.
+					if decodedMatch, err := url.QueryUnescape(matches[i+1]); err == nil {
+						matchValue = matches[i+1]
+					} else {
+						matchValue = decodedMatch
+					}
 				} else {
-					params[name] = decodedMatch
+					matchValue = matches[i+1]
 				}
+				params[name] = matchValue
 			}
 
 			return &uriMatch{

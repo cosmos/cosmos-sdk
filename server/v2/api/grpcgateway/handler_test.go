@@ -2,7 +2,6 @@ package grpcgateway
 
 import (
 	"bytes"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,65 +13,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 )
 
-func Test_createRegexMapping(t *testing.T) {
-	tests := []struct {
-		name           string
-		annotations    map[string]string
-		expectedRegex  int
-		expectedSimple int
-		wantWarn       bool
-	}{
-		{
-			name: "no annotations should not warn",
-		},
-		{
-			name: "expected correct amount of regex and simple matchers",
-			annotations: map[string]string{
-				"/foo/bar/baz":   "",
-				"/foo/{bar}/baz": "",
-				"/foo/bar/bell":  "",
-			},
-			expectedRegex:  1,
-			expectedSimple: 2,
-		},
-		{
-			name: "different annotations should not warn",
-			annotations: map[string]string{
-				"/foo/bar/{baz}":     "",
-				"/crypto/{currency}": "",
-			},
-			expectedRegex: 2,
-		},
-		{
-			name: "duplicate annotations should warn",
-			annotations: map[string]string{
-				"/hello/{world}":      "",
-				"/hello/{developers}": "",
-			},
-			expectedRegex: 2,
-			wantWarn:      true,
-		},
-	}
-	buf := bytes.NewBuffer(nil)
-	logger := log.NewLogger(buf)
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			regex, simple := createRegexMapping(logger, tt.annotations)
-			if tt.wantWarn {
-				require.NotEmpty(t, buf.String())
-			} else {
-				require.Empty(t, buf.String())
-			}
-			require.Equal(t, tt.expectedRegex, len(regex))
-			require.Equal(t, tt.expectedSimple, len(simple))
-		})
-	}
-}
-
-func TestCreateMessageFromGetRequest(t *testing.T) {
+func TestPopulateMessage(t *testing.T) {
 	gogoproto.RegisterType(&DummyProto{}, dummyProtoName)
 
 	testCases := []struct {
@@ -113,6 +56,27 @@ func TestCreateMessageFromGetRequest(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "simple query params and body",
+			request: func() *http.Request {
+				body := `{"denoms": ["hello", "there"]}`
+
+				req := httptest.NewRequest(
+					http.MethodGet,
+					"/foo", // this doesn't really matter
+					bytes.NewReader([]byte(body)),
+				)
+				return req
+			},
+			wildcardValues: map[string]string{
+				"foo": "wildFooValue", // from path wildcard e.g. /dummy/{foo}
+			},
+			expected: &DummyProto{
+				Foo:    "wildFooValue",
+				Denoms: []string{"hello", "there"},
+			},
+			wantErr: false,
+		},
+		{
 			name: "invalid integer in query param",
 			request: func() *http.Request {
 				req := httptest.NewRequest(
@@ -148,17 +112,17 @@ func TestCreateMessageFromGetRequest(t *testing.T) {
 		},
 	}
 
-	// We only need a minimal gatewayInterceptor instance to call createMessageFromGetRequest,
+	// We only need a minimal gatewayInterceptor instance to call populateMessage,
 	// so it's fine to leave most fields nil for this unit test.
-	g := &gatewayInterceptor[transaction.Tx]{}
+	g := &protoHandler[transaction.Tx]{}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			req := tc.request()
-
 			inputMsg := &DummyProto{}
-			gotMsg, err := g.createMessageFromGetRequest(
+			gotMsg, err := g.populateMessage(
 				req,
+				&runtime.JSONPb{},
 				inputMsg,
 				tc.wildcardValues,
 			)
@@ -172,101 +136,6 @@ func TestCreateMessageFromGetRequest(t *testing.T) {
 			} else {
 				require.NoError(t, err, "unexpected error")
 				require.Equal(t, tc.expected, gotMsg, "message contents do not match expected")
-			}
-		})
-	}
-}
-
-func TestCreateMessageFromPostRequest(t *testing.T) {
-	gogoproto.RegisterType(&DummyProto{}, dummyProtoName)
-	gogoproto.RegisterType(&Pagination{}, "pagination")
-	gogoproto.RegisterType(&Nested{}, "nested")
-
-	testCases := []struct {
-		name     string
-		body     any
-		wantErr  bool
-		errCode  codes.Code
-		expected *DummyProto
-	}{
-		{
-			name: "valid JSON body with nested fields",
-			body: map[string]any{
-				"foo":    "postFoo",
-				"bar":    true,
-				"baz":    42,
-				"denoms": []string{"atom", "osmo"},
-				"page": map[string]any{
-					"limit": 100,
-					"nest": map[string]any{
-						"foo": 999,
-					},
-				},
-			},
-			wantErr: false,
-			expected: &DummyProto{
-				Foo:    "postFoo",
-				Bar:    true,
-				Baz:    42,
-				Denoms: []string{"atom", "osmo"},
-				Page: &Pagination{
-					Limit: 100,
-					Nest: &Nested{
-						Foo: 999,
-					},
-				},
-			},
-		},
-		{
-			name: "invalid JSON structure",
-			// Provide a broken JSON string:
-			body:    `{"foo": "bad json", "extra": "not closed"`,
-			wantErr: true,
-			errCode: codes.InvalidArgument,
-		},
-		{
-			name:     "empty JSON object",
-			body:     map[string]any{},
-			wantErr:  false,
-			expected: &DummyProto{}, // all fields remain zeroed
-		},
-	}
-
-	g := &gatewayInterceptor[transaction.Tx]{}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			var reqBody []byte
-			switch typedBody := tc.body.(type) {
-			case string:
-				// This might be invalid JSON we intentionally want to test
-				reqBody = []byte(typedBody)
-			default:
-				// Marshal the given any into JSON
-				b, err := json.Marshal(typedBody)
-				require.NoError(t, err, "failed to marshal test body to JSON")
-				reqBody = b
-			}
-
-			req := httptest.NewRequest(http.MethodPost, "/dummy", bytes.NewReader(reqBody))
-
-			inputMsg := &DummyProto{}
-			gotMsg, err := g.createMessageFromPostRequest(
-				&runtime.JSONPb{}, // JSONPb marshaler
-				req,
-				inputMsg,
-			)
-
-			if tc.wantErr {
-				require.Error(t, err, "expected an error but got none")
-				// Optionally verify the gRPC status code
-				st, ok := status.FromError(err)
-				if ok && tc.errCode != codes.OK {
-					require.Equal(t, tc.errCode, st.Code())
-				}
-			} else {
-				require.NoError(t, err, "did not expect an error")
-				require.Equal(t, tc.expected, gotMsg)
 			}
 		})
 	}

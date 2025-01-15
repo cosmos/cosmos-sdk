@@ -40,7 +40,7 @@ type queryMetadata struct {
 	msg gogoproto.Message
 	// wildcardKeyNames are the wildcard key names from the query's HTTP annotation.
 	// for example /foo/bar/{baz}/{qux} would produce []string{"baz", "qux"}
-	// this is used for building the query's parameter map.
+	// this is used for building the query's path parameter map.
 	wildcardKeyNames []string
 }
 
@@ -58,8 +58,9 @@ func registerGatewayToMux[T transaction.Tx](httpMux *http.ServeMux, gateway *run
 	return nil
 }
 
+// registerMethods registers the endpoints specified in the annotation mapping to the mux.
 func registerMethods[T transaction.Tx](mux *http.ServeMux, am appmanager.AppManager[T], gateway *runtime.ServeMux, annotationToMetadata map[string]queryMetadata) {
-	// register the fallback handler. this will run if the mux isn't able to get a match.
+	// register the fallback handler. this will run if the mux isn't able to get a match from the registrations below.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		gateway.ServeHTTP(w, r)
 	})
@@ -86,19 +87,25 @@ func registerMethods[T transaction.Tx](mux *http.ServeMux, am appmanager.AppMana
 	}
 }
 
+// protoHandler handles turning data in http.Request to the gogoproto.Message
 type protoHandler[T transaction.Tx] struct {
-	msg              gogoproto.Message
+	// msg is the gogoproto message type.
+	msg gogoproto.Message
+	// wildcardKeyNames are the wildcard key names, if any, specified in the http annotation. (i.e. /foo/bar/{baz})
 	wildcardKeyNames []string
-	gateway          *runtime.ServeMux
-	appManager       appmanager.AppManager[T]
+	// gateway is the canonical gateway ServeMux to use as a fallback if the query does not have a handler in AppManager.
+	gateway *runtime.ServeMux
+	// appManager is used to route queries.
+	appManager appmanager.AppManager[T]
 }
 
 func (p *protoHandler[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	in, out := runtime.MarshalerForRequest(p.gateway, request)
 
-	// we clone here as handlers are concurrent.
+	// we clone here as handlers are concurrent and using p.msg would trample.
 	msg := gogoproto.Clone(p.msg)
 
+	// extract path parameters.
 	params := make(map[string]string)
 	for _, wildcardKeyName := range p.wildcardKeyNames {
 		params[wildcardKeyName] = request.PathValue(wildcardKeyName)

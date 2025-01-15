@@ -79,6 +79,12 @@ func TestMatchURI(t *testing.T) {
 			},
 		},
 		{
+			name:     "match with URL-encoded values",
+			uri:      "https://localhost:8080/foo/bar/BrGC8eag4ptLGTPGg2c0B%2Fh9OOM%3D+hello",
+			mapping:  map[string]string{"/foo/bar/{bytes}": "queryAddrBytes"},
+			expected: &uriMatch{QueryInputName: "queryAddrBytes", Params: map[string]string{"bytes": "BrGC8eag4ptLGTPGg2c0B/h9OOM= hello"}},
+		},
+		{
 			name:     "no match should return nil",
 			uri:      "https://localhost:8080/foo/bar",
 			mapping:  map[string]string{"/bar/foo": "bar"},

@@ -3,6 +3,7 @@ package grpcgateway
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -75,6 +76,7 @@ func newGatewayInterceptor[T transaction.Tx](logger log.Logger, gateway *runtime
 // of gateway HTTP annotations. If no match can be made, it falls back to the runtime gateway server mux.
 func (g *gatewayInterceptor[T]) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	g.logger.Debug("received grpc-gateway request", "request_uri", request.RequestURI)
+	fmt.Println("got request for: ", request.RequestURI)
 	match := g.matcher.matchURL(request.URL)
 	if match == nil {
 		// no match cases fall back to gateway mux.

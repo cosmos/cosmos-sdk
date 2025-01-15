@@ -29,6 +29,7 @@ type uriMatch struct {
 // NOTE: if no match is found, nil is returned.
 func (m uriMatcher) matchURL(u *url.URL) *uriMatch {
 	uriPath := strings.TrimRight(u.Path, "/")
+	rawURIPath := strings.TrimRight(u.RawPath, "/")
 	params := make(map[string]string)
 
 	//  see if we can get a simple match first.
@@ -41,7 +42,7 @@ func (m uriMatcher) matchURL(u *url.URL) *uriMatch {
 
 	// try the complex matchers.
 	for reg, qmd := range m.wildcardURIMatchers {
-		matches := reg.FindStringSubmatch(uriPath)
+		matches := reg.FindStringSubmatch(rawURIPath)
 		switch {
 		case len(matches) == 1:
 			return &uriMatch{
@@ -51,7 +52,14 @@ func (m uriMatcher) matchURL(u *url.URL) *uriMatch {
 		case len(matches) > 1:
 			// first match is the URI, subsequent matches are the wild card values.
 			for i, name := range qmd.wildcardKeyNames {
-				params[name] = matches[i+1]
+				// check if the wildcard value was URL-encoded.
+				// we'll attempt to unescape any URL-escaping text, but if we encounter an error,
+				// we can just try the raw text that was provided.
+				if decodedMatch, err := url.QueryUnescape(matches[i+1]); err != nil {
+					params[name] = matches[i+1]
+				} else {
+					params[name] = decodedMatch
+				}
 			}
 
 			return &uriMatch{

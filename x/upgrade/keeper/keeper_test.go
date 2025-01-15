@@ -21,7 +21,6 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -31,11 +30,13 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
+	ctx coretesting.TestContext
+	env coretesting.TestEnvironment
+
 	key              *storetypes.KVStoreKey
 	versionModifier  server.VersionModifier
 	upgradeKeeper    *keeper.Keeper
 	homeDir          string
-	ctx              sdk.Context
 	msgSrvr          types.MsgServer
 	addrs            []sdk.AccAddress
 	encodedAddrs     []string
@@ -45,12 +46,14 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	s.key = key
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 10})
+
+	ctx, env := coretesting.NewTestEnvironment(coretesting.TestEnvironmentConfig{
+		ModuleName: types.ModuleName,
+		Logger:     coretesting.NewNopLogger(),
+	})
+
+	s.ctx = ctx.WithHeaderInfo(header.Info{Height: 10})
+	s.env = env
 
 	skipUpgradeHeights := make(map[int64]bool)
 
@@ -63,7 +66,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	ctrl := gomock.NewController(s.T())
 	s.upgradeKeeper = keeper.NewKeeper(
-		env,
+		env.Environment,
 		skipUpgradeHeights,
 		s.encCfg.Codec,
 		homeDir,

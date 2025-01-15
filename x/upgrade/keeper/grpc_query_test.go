@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/core/testing/queryclient"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
@@ -21,9 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -32,7 +28,8 @@ type UpgradeTestSuite struct {
 	suite.Suite
 
 	upgradeKeeper    *keeper.Keeper
-	ctx              sdk.Context
+	ctx              coretesting.TestContext
+	env              coretesting.TestEnvironment
 	queryClient      types.QueryClient
 	encCfg           moduletestutil.TestEncodingConfig
 	encodedAuthority string
@@ -40,11 +37,14 @@ type UpgradeTestSuite struct {
 
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx
+
+	ctx, env := coretesting.NewTestEnvironment(coretesting.TestEnvironmentConfig{
+		ModuleName: types.ModuleName,
+		Logger:     coretesting.NewNopLogger(),
+	})
+
+	suite.ctx = ctx
+	suite.env = env
 
 	skipUpgradeHeights := make(map[int64]bool)
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
@@ -52,7 +52,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	suite.encodedAuthority = authority
 	ctrl := gomock.NewController(suite.T())
 	ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
-	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, ck)
+	suite.upgradeKeeper = keeper.NewKeeper(suite.env.Environment, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, ck)
 	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, appmodule.VersionMap{
 		"bank": 0,
 	})

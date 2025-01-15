@@ -43,10 +43,8 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
 
 	ctx, env := coretesting.NewTestEnvironment(coretesting.TestEnvironmentConfig{
-		ModuleName:  types.ModuleName,
-		Logger:      coretesting.NewNopLogger(),
-		MsgRouter:   nil,
-		QueryRouter: nil,
+		ModuleName: types.ModuleName,
+		Logger:     coretesting.NewNopLogger(),
 	})
 
 	s.ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})

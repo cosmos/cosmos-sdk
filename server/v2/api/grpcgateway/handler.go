@@ -67,7 +67,7 @@ func registerMethods[T transaction.Tx](mux *http.ServeMux, am appmanager.AppMana
 	// register in deterministic order. we do this because of the problem mentioned below, and different nodes could
 	// end up with one version of the handler or the other.
 	uris := slices.Sorted(maps.Keys(annotationToMetadata))
-	
+
 	for _, uri := range uris {
 		queryMD := annotationToMetadata[uri]
 		// we need to wrap this in a panic handler because cosmos SDK proto stubs contains a duplicate annotation
@@ -263,6 +263,12 @@ func annotationsToQueryMetadata(annotations map[string]string) (map[string]query
 	return annotationToMetadata, nil
 }
 
+// extractWildcardKeyNames extracts the wildcard key names from the uri annotation.
+//
+// example:
+// "/hello/{world}" -> []string{"world"}
+// "/hello/{world}/and/{friends} -> []string{"world", "friends"}
+// "/hello/world" -> []string{}
 func extractWildcardKeyNames(uri string) []string {
 	matches := wildcardRegex.FindAllStringSubmatch(uri, -1)
 	var extracted []string

@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"reflect"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -62,9 +64,25 @@ func registerMethods[T transaction.Tx](mux *http.ServeMux, am appmanager.AppMana
 		gateway.ServeHTTP(w, r)
 	})
 
-	// register the dynamic handlers.
-	for uri, queryMD := range annotationToMetadata {
-		mux.Handle(uri, &protoHandler[T]{msg: queryMD.msg, gateway: gateway, wildcardKeyNames: queryMD.wildcardKeyNames})
+	// register in deterministic order. we do this because of the problem mentioned below, and different nodes could
+	// end up with one version of the handler or the other.
+	uris := slices.Sorted(maps.Keys(annotationToMetadata))
+	
+	for _, uri := range uris {
+		queryMD := annotationToMetadata[uri]
+		// we need to wrap this in a panic handler because cosmos SDK proto stubs contains a duplicate annotation
+		// that causes the registration to panic.
+		func(u string, qMD queryMetadata) {
+			defer func() {
+				_ = recover()
+			}()
+			mux.Handle(u, &protoHandler[T]{
+				msg:              qMD.msg,
+				gateway:          gateway,
+				appManager:       am,
+				wildcardKeyNames: qMD.wildcardKeyNames,
+			})
+		}(uri, queryMD)
 	}
 }
 
@@ -107,8 +125,13 @@ func (p *protoHandler[T]) ServeHTTP(writer http.ResponseWriter, request *http.Re
 
 	responseMsg, err := p.appManager.Query(request.Context(), height, inputMsg)
 	if err != nil {
-		// for all other errors, we just return the error.
-		runtime.HTTPError(request.Context(), p.gateway, out, writer, request, err)
+		// if we couldn't find a handler for this request, just fall back to the gateway mux.
+		if strings.Contains(err.Error(), "no handler") {
+			p.gateway.ServeHTTP(writer, request)
+		} else {
+			// for all other errors, we just return the error.
+			runtime.HTTPError(request.Context(), p.gateway, out, writer, request, err)
+		}
 		return
 	}
 
@@ -119,7 +142,9 @@ func (p *protoHandler[T]) populateMessage(req *http.Request, marshaler runtime.M
 	// see if we have path params to populate the message with.
 	if len(pathParams) > 0 {
 		for pathKey, pathValue := range pathParams {
-			runtime.PopulateFieldFromPath(input, pathKey, pathValue)
+			if err := runtime.PopulateFieldFromPath(input, pathKey, pathValue); err != nil {
+				return nil, status.Error(codes.InvalidArgument, fmt.Errorf("failed to populate field %s with value %s: %w", pathKey, pathValue, err).Error())
+			}
 		}
 	}
 
@@ -195,10 +220,10 @@ func newHTTPAnnotationMapping() (map[string]string, error) {
 				httpRules := append(httpRule.GetAdditionalBindings(), httpRule)
 				for _, rule := range httpRules {
 					if httpAnnotation := rule.GetGet(); httpAnnotation != "" {
-						annotationToQueryInputName[httpAnnotation] = queryInputName
+						annotationToQueryInputName[fixCatchAll(httpAnnotation)] = queryInputName
 					}
 					if httpAnnotation := rule.GetPost(); httpAnnotation != "" {
-						annotationToQueryInputName[httpAnnotation] = queryInputName
+						annotationToQueryInputName[fixCatchAll(httpAnnotation)] = queryInputName
 					}
 				}
 			}
@@ -208,12 +233,24 @@ func newHTTPAnnotationMapping() (map[string]string, error) {
 	return annotationToQueryInputName, nil
 }
 
+var catchAllRegex = regexp.MustCompile(`\{([^=]+)=\*\*\}`)
+
+// fixCatchAll replaces grpc gateway catch all syntax with net/http syntax.
+//
+// {foo=**} -> {foo...}
+func fixCatchAll(uri string) string {
+	return catchAllRegex.ReplaceAllString(uri, `{$1...}`)
+}
+
 // annotationsToQueryMetadata takes annotations and creates a mapping of URIs to queryMetadata.
 func annotationsToQueryMetadata(annotations map[string]string) (map[string]queryMetadata, error) {
 	annotationToMetadata := make(map[string]queryMetadata)
 	for uri, queryInputName := range annotations {
 		// extract the proto message type.
 		msgType := gogoproto.MessageType(queryInputName)
+		if msgType == nil {
+			continue
+		}
 		msg, ok := reflect.New(msgType.Elem()).Interface().(gogoproto.Message)
 		if !ok {
 			return nil, fmt.Errorf("query input type %q does not implement gogoproto.Message", queryInputName)
@@ -232,7 +269,9 @@ func extractWildcardKeyNames(uri string) []string {
 	for _, match := range matches {
 		// match[0] is the full string including braces (i.e. "{bar}")
 		// match[1] is the captured group (i.e. "bar")
-		extracted = append(extracted, match[1])
+		// we also need to handle the catch-all case with URI's like "bar..." and
+		// transform them to just "bar".
+		extracted = append(extracted, strings.TrimRight(match[1], "."))
 	}
 	return extracted
 }

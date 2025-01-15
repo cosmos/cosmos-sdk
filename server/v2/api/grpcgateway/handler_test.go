@@ -15,6 +15,35 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
+func Test_fixCatchAll(t *testing.T) {
+	tests := []struct {
+		name string
+		uri  string
+		want string
+	}{
+		{
+			name: "replaces catch all",
+			uri:  "/foo/bar/{baz=**}",
+			want: "/foo/bar/{baz...}",
+		},
+		{
+			name: "returns original",
+			uri:  "/foo/bar/baz",
+			want: "/foo/bar/baz",
+		},
+		{
+			name: "doesn't tamper with normal wildcard",
+			uri:  "/foo/{baz}",
+			want: "/foo/{baz}",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, fixCatchAll(tt.uri))
+		})
+	}
+}
+
 func Test_extractWildcardKeyNames(t *testing.T) {
 	tests := []struct {
 		name string
@@ -30,6 +59,11 @@ func Test_extractWildcardKeyNames(t *testing.T) {
 			name: "multiple",
 			uri:  "/foo/{bar}/baz/{buzz}",
 			want: []string{"bar", "buzz"},
+		},
+		{
+			name: "catch-all wildcard",
+			uri:  "/foo/{buzz...}",
+			want: []string{"buzz"},
 		},
 		{
 			name: "none",

@@ -28,5 +28,6 @@ type FeegrantKeeper interface {
 }
 
 type ConsensusKeeper interface {
+	AppVersion(ctx context.Context) (uint64, error)
 	BlockParams(context.Context) (uint64, uint64, error)
 }

@@ -232,6 +232,15 @@ func newHTTPAnnotationMapping() (map[string]string, error) {
 					if httpAnnotation := rule.GetPost(); httpAnnotation != "" {
 						annotationToQueryInputName[fixCatchAll(httpAnnotation)] = queryInputName
 					}
+					if httpAnnotation := rule.GetPut(); httpAnnotation != "" {
+						annotationToQueryInputName[fixCatchAll(httpAnnotation)] = queryInputName
+					}
+					if httpAnnotation := rule.GetPatch(); httpAnnotation != "" {
+						annotationToQueryInputName[fixCatchAll(httpAnnotation)] = queryInputName
+					}
+					if httpAnnotation := rule.GetDelete(); httpAnnotation != "" {
+						annotationToQueryInputName[fixCatchAll(httpAnnotation)] = queryInputName
+					}
 				}
 			}
 		}

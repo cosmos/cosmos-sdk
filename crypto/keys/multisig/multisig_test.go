@@ -453,3 +453,99 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 		require.NoError(t, err)
 	}
 }
+
+func TestVerifyMultisignatureNMRule(t *testing.T) {
+	// Helper function to create test keys
+	makeTestKeys := func(n int) []cryptotypes.PubKey {
+		keys := make([]cryptotypes.PubKey, n)
+		for i := 0; i < n; i++ {
+			keys[i] = secp256k1.GenPrivKey().PubKey()
+		}
+		return keys
+	}
+
+	tests := []struct {
+		name      string
+		n         int    // number of keys
+		m         uint32 // threshold
+		expectErr string
+	}{
+		// {
+		// 	name:      "valid case: N=3 M=2",
+		// 	n:         3,
+		// 	m:         2,
+		// 	expectErr: "",
+		// },
+		{
+			name:      "invalid: M=0",
+			n:         3,
+			m:         0,
+			expectErr: "invalid threshold: must be > 0, got 0",
+		},
+		{
+			name:      "invalid: N=M",
+			n:         3,
+			m:         3,
+			expectErr: "invalid N-M multisig: N (3) must be > M (3)",
+		},
+		{
+			name:      "invalid: N < M",
+			n:         2,
+			m:         3,
+			expectErr: "invalid N-M multisig: N (2) must be > M (3)",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create multisig public key
+			pubKeys := makeTestKeys(tc.n)
+
+			// Create the key directly instead of using NewLegacyAminoPubKey
+			pubKeysAny := make([]*types.Any, len(pubKeys))
+			for i, key := range pubKeys {
+				anyKey, err := types.NewAnyWithValue(key)
+				require.NoError(t, err)
+				pubKeysAny[i] = anyKey
+			}
+
+			multisigKey := &kmultisig.LegacyAminoPubKey{
+				Threshold: tc.m,
+				PubKeys:   pubKeysAny,
+			}
+
+			// Create a dummy signature with a proper bit array
+			bitArray := cryptotypes.NewCompactBitArray(tc.n)
+			// Set the first M bits to simulate M signatures
+			for i := 0; i < int(tc.m) && i < tc.n; i++ {
+				bitArray.SetIndex(i, true)
+			}
+
+			sig := &signing.MultiSignatureData{
+				BitArray:   bitArray,
+				Signatures: make([]signing.SignatureData, tc.m),
+			}
+
+			// Fill in dummy signatures
+			for i := 0; i < int(tc.m); i++ {
+				sig.Signatures[i] = &signing.SingleSignatureData{
+					Signature: []byte("dummy_sig"),
+				}
+			}
+
+			// Create dummy getSignBytes function
+			getSignBytes := func(mode signing.SignMode) ([]byte, error) {
+				return []byte("test"), nil
+			}
+
+			err := multisigKey.VerifyMultisignature(getSignBytes, sig)
+
+			if tc.expectErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectErr)
+			}
+		})
+	}
+}

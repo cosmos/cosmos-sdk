@@ -184,7 +184,7 @@ func topLevelCmd(ctx context.Context, use, short string) *cobra.Command {
 var appBuildingCommands = [][]string{
 	{"start"},
 	{"genesis", "export"},
-	{"store"},
+	{"store", "restore"},
 }
 
 // IsAppRequired determines if a command requires a full application to be built by

@@ -53,12 +53,6 @@ test-sim-multi-seed-short:
 	 @cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
 		-NumBlocks=50
 
-test-sim-benchmark-invariants:
-	# @echo "Running simulation invariant benchmarks..."
-	# cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -benchmem -bench=BenchmarkInvariants -tags='sims' -run=^$ \
-	# -Enabled=true -NumBlocks=1000 -BlockSize=200 \
-	# -Commit=true -Seed=57 -v -timeout 24h
-
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-nondeterminism-streaming \
@@ -68,16 +62,15 @@ test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
-test-sim-benchmark-invariants
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 
 #? test-sim-fuzz: Run fuzz test for simapp
 test-sim-fuzz:
-#	@echo "Running application fuzz for numBlocks=2, blockSize=20. This may take awhile!"
+	@echo "Running application fuzz for numBlocks=2, blockSize=20. This may take awhile!"
 #ld flags are a quick fix to make it work on current osx
-#	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -json -tags='sims' -ldflags="-extldflags=-Wl,-ld_classic" -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
+	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -json -tags='sims' -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
 
 #? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:

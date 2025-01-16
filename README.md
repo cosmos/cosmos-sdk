@@ -62,23 +62,19 @@ The IBC module for the Cosmos SDK has its own [cosmos/ibc-go repository](https:/
 
 The version matrix below shows which versions of the Cosmos SDK, modules and libraries are compatible with each other.
 
-> [!IMPORTANT]
-> Cosmos SDK `v2` corresponds to a chain using the `runtime/v2`, `server/v2/**`, and `store/v2` packages. The `github.com/cosmos/cosmos-sdk` module has a less important role in a `v2` chain.
-
 #### Core Dependencies
 
 Core dependencies are the core libraries that an application may depend on.
 Core dependencies not mentioned here as compatible across all maintained SDK versions.
 See an exhaustive list of core dependencies at [cosmossdk.io](https://cosmossdk.io).
 
-| Version                  | v2    | 0.52.z    | 0.50.z         | 0.47.z  |
-| ------------------------ | ----- | --------- | -------------- | ------- |
-| cosmossdk.io/core        | 1.y.z | 1.y.z     | 0.11.z         | 0.5.z   |
-| cosmossdk.io/api         | 0.8.z | 0.8.z     | 0.7.z          | 0.3.z   |
-| cosmossdk.io/x/tx        | 1.y.z | 1.y.z     | < 1.y.z        | N/A     |
-| cosmossdk.io/store       | N/A   | >= 1.10.z | 1.0.0 >= 1.9.z | N/A     |
-| cosmossdk.io/store/v2    | 2.y.z | N/A       | N/A            | N/A     |
-| cosmossdk.io/collections | 1.y.z | 1.y.z     | < 1.y.z        | < 1.y.z |
+| Version                  | 0.52.z    | 0.50.z         | 0.47.z  |
+|--------------------------|-----------|----------------|---------|
+| cosmossdk.io/core        | 1.y.z     | 0.11.z         | 0.5.z   |
+| cosmossdk.io/api         | 0.8.z     | 0.7.z          | 0.3.z   |
+| cosmossdk.io/x/tx        | 1.y.z     | < 1.y.z        | N/A     |
+| cosmossdk.io/store       | >= 1.10.z | 1.0.0 >= 1.9.z | N/A     |
+| cosmossdk.io/collections | 1.y.z     | < 1.y.z        | < 1.y.z |
 
 #### Module Dependencies
 
@@ -88,24 +84,24 @@ Module Dependencies are the modules that an application may depend on and which 
 > X signals that the module was not spun out into its own go.mod file.
 > N/A signals that the module was not available in the Cosmos SDK at that time.
 
-| Cosmos SDK                  | v2    | 0.52.z | 0.50.z |
-| --------------------------- | ----- | ------ | ------ |
-| cosmossdk.io/x/accounts     | 0.2.z | 0.2.z  | N/A    |
-| cosmossdk.io/x/bank         | 0.2.z | 0.2.z  | X      |
-| cosmossdk.io/x/circuit      | 0.2.z | 0.2.z  | 0.1.z  |
-| cosmossdk.io/x/consensus    | 0.2.z | 0.2.z  | X      |
-| cosmossdk.io/x/distribution | 0.2.z | 0.2.z  | X      |
-| cosmossdk.io/x/epochs       | 0.2.z | 0.2.z  | N/A    |
-| cosmossdk.io/x/evidence     | 0.2.z | 0.2.z  | 0.1.z  |
-| cosmossdk.io/x/feegrant     | 0.2.z | 0.2.z  | 0.1.z  |
-| cosmossdk.io/x/gov          | 0.2.z | 0.2.z  | X      |
-| cosmossdk.io/x/group        | 0.2.z | 0.2.z  | X      |
-| cosmossdk.io/x/mint         | 0.2.z | 0.2.z  | X      |
-| cosmossdk.io/x/nft          | 0.2.z | 0.2.z  | 0.1.z  |
-| cosmossdk.io/x/protocolpool | 0.2.z | 0.2.z  | N/A    |
-| cosmossdk.io/x/slashing     | 0.2.z | 0.2.z  | X      |
-| cosmossdk.io/x/staking      | 0.2.z | 0.2.z  | X      |
-| cosmossdk.io/x/upgrade      | 0.2.z | 0.2.z  | 0.1.z  |
+| Cosmos SDK                  | 0.52.z | 0.50.z |
+|-----------------------------|--------|--------|
+| cosmossdk.io/x/accounts     | 0.2.z  | N/A    |
+| cosmossdk.io/x/bank         | 0.2.z  | X      |
+| cosmossdk.io/x/circuit      | 0.2.z  | 0.1.z  |
+| cosmossdk.io/x/consensus    | 0.2.z  | X      |
+| cosmossdk.io/x/distribution | 0.2.z  | X      |
+| cosmossdk.io/x/epochs       | 0.2.z  | N/A    |
+| cosmossdk.io/x/evidence     | 0.2.z  | 0.1.z  |
+| cosmossdk.io/x/feegrant     | 0.2.z  | 0.1.z  |
+| cosmossdk.io/x/gov          | 0.2.z  | X      |
+| cosmossdk.io/x/group        | 0.2.z  | X      |
+| cosmossdk.io/x/mint         | 0.2.z  | X      |
+| cosmossdk.io/x/nft          | 0.2.z  | 0.1.z  |
+| cosmossdk.io/x/protocolpool | 0.2.z  | N/A    |
+| cosmossdk.io/x/slashing     | 0.2.z  | X      |
+| cosmossdk.io/x/staking      | 0.2.z  | X      |
+| cosmossdk.io/x/upgrade      | 0.2.z  | 0.1.z  |
 
 ## Disambiguation
 

@@ -174,4 +174,17 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+<<<<<<< HEAD
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1
+=======
+replace (
+	cosmossdk.io/core/testing => ../../core/testing
+	github.com/cosmos/cosmos-sdk => ../../.
+)
+
+// TODO remove post spinning out all modules
+replace (
+	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/staking => ../staking
+)
+>>>>>>> 952db2b32 (chore: remove baseapp from `x/accounts` (#23355))

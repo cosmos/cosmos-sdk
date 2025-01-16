@@ -16,6 +16,7 @@ import (
 	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/testing/queryclient"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -23,11 +24,17 @@ import (
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
+=======
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/runtime"
+>>>>>>> 952db2b32 (chore: remove baseapp from `x/accounts` (#23355))
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -179,6 +186,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
 	}))
 
+<<<<<<< HEAD
+=======
+	queryHelper := queryclient.NewQueryHelper(codec.NewProtoCodec(encCfg.InterfaceRegistry).GRPCCodec())
+	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
+>>>>>>> 952db2b32 (chore: remove baseapp from `x/accounts` (#23355))
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)

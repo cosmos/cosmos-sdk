@@ -177,4 +177,17 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
+<<<<<<< HEAD
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1.0.20250113154334-fd651b73663b
+=======
+replace (
+	cosmossdk.io/core/testing => ../../core/testing
+	github.com/cosmos/cosmos-sdk => ./../../
+)
+
+// TODO remove post spinning out all modules
+replace (
+	cosmossdk.io/x/bank => ./../../x/bank
+	cosmossdk.io/x/staking => ./../../x/staking
+)
+>>>>>>> 952db2b32 (chore: remove baseapp from `x/accounts` (#23355))

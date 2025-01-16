@@ -172,4 +172,31 @@ require (
 
 require github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 
+<<<<<<< HEAD
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1
+=======
+require (
+	github.com/bytedance/sonic v1.12.6 // indirect
+	github.com/bytedance/sonic/loader v0.2.1 // indirect
+	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
+	github.com/cosmos/cosmos-db v1.1.1 // indirect
+	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	golang.org/x/arch v0.12.0 // indirect
+)
+
+replace (
+	cosmossdk.io/core/testing => ../../core/testing
+	github.com/cosmos/cosmos-sdk => ../../
+)
+
+// TODO remove post spinning out all modules
+replace (
+	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/staking => ../staking
+)
+>>>>>>> 952db2b32 (chore: remove baseapp from `x/accounts` (#23355))

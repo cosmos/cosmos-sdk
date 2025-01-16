@@ -3,10 +3,17 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.23.4
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.1 // main
 	cosmossdk.io/collections v1.0.0 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // main
+=======
+	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
+	cosmossdk.io/collections v1.0.0
+	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core/testing v0.0.1
+>>>>>>> 952db2b32 (chore: remove baseapp from `x/accounts` (#23355))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
@@ -34,6 +41,7 @@ require (
 )
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/store/v2 v2.0.0-20241209145349-34f407d6367a
 	cosmossdk.io/x/accounts v0.2.0-rc.1
 	cosmossdk.io/x/accounts/defaults/base v0.2.0-rc.1
@@ -48,6 +56,11 @@ require (
 	cosmossdk.io/x/mint v0.2.0-rc.1
 	cosmossdk.io/x/slashing v0.2.0-rc.1
 	cosmossdk.io/x/staking v0.2.0-rc.1
+=======
+	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
+	cosmossdk.io/server/v2/stf v1.0.0-beta.2
+	cosmossdk.io/store/v2 v2.0.0-beta.1
+>>>>>>> 952db2b32 (chore: remove baseapp from `x/accounts` (#23355))
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/google/go-cmp v0.6.0
@@ -281,8 +294,12 @@ replace (
 
 // Below are the long-lived replace for tests.
 replace (
+<<<<<<< HEAD
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
+=======
+	cosmossdk.io/core/testing => ../core/testing
+>>>>>>> 952db2b32 (chore: remove baseapp from `x/accounts` (#23355))
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

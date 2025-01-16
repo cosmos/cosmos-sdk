@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
 	cosmossdk.io/collections v1.0.0
 	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
@@ -24,7 +25,6 @@ require (
 )
 
 require (
-	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
 	cosmossdk.io/server/v2/stf v1.0.0-beta.2
 	cosmossdk.io/store/v2 v2.0.0-beta.1
@@ -270,6 +270,7 @@ replace (
 
 // Below are the long-lived replace for tests.
 replace (
+	cosmossdk.io/core/testing => ../core/testing
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

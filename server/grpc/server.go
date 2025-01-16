@@ -19,7 +19,7 @@ import (
 )
 
 type grpcApp interface {
-	RegisterGRPCServer(gogogrpc.Server)
+	RegisterGRPCServerWithSkipCheckHeader(gogogrpc.Server, bool)
 }
 
 // NewGRPCServer returns a correctly configured and initialized gRPC server.

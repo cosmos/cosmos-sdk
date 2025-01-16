@@ -30,6 +30,18 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgSoftwareUpgrade{},
 		&MsgCancelUpgrade{},
 	)
+<<<<<<< HEAD
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+=======
+	registrar.RegisterImplementations(
+		(*v1beta1.Content)(nil),
+		&SoftwareUpgradeProposal{},
+	)
+	registrar.RegisterImplementations(
+		(*v1beta1.Content)(nil),
+		&CancelSoftwareUpgradeProposal{},
+	)
+	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
+>>>>>>> 85682ac1a (fix(x/upgrade): register missing implementation for CancelSoftwareUpgradeProposal (#23378))
 }

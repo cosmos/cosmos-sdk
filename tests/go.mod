@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.1
+	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
 	cosmossdk.io/collections v1.0.0
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.1.0
@@ -26,7 +26,7 @@ require (
 require (
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
-	cosmossdk.io/server/v2/stf v1.0.0-beta.1
+	cosmossdk.io/server/v2/stf v1.0.0-beta.2
 	cosmossdk.io/store/v2 v2.0.0-beta.1
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-db v1.1.1
@@ -71,7 +71,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1 // indirect
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.2 // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

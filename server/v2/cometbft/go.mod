@@ -22,8 +22,8 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0
 	cosmossdk.io/server/v2 v2.0.0-beta.1
-	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
-	cosmossdk.io/server/v2/stf v1.0.0-beta.1
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.2
+	cosmossdk.io/server/v2/stf v1.0.0-beta.2
 	cosmossdk.io/store/v2 v2.0.0-beta.1
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0

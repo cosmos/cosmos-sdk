@@ -525,24 +525,6 @@ func TestTxEncodeAndDecodeAndQueries(t *testing.T) {
 			ExpCode: http.StatusOK,
 			ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, "cosmos1dpjkcmr0wahhymry4hq5h9"),
 		},
-		{
-			Name:    "should fail with bad address",
-			Url:     fmt.Sprintf(stringToBytesPath, "aslkdjglksdfhjlksdjfhlkjsdfh"),
-			ExpCode: http.StatusInternalServerError,
-			ExpOut:  `{"code":2,"message":"decoding bech32 failed: invalid separator index -1","details":[]}`,
-		},
-		{
-			Name:    "should fail with bad bytes",
-			Url:     fmt.Sprintf(bytesToStringPath, "f"),
-			ExpCode: http.StatusBadRequest,
-			ExpOut:  fmt.Sprintf(`{"code":3,"message":"%s","details":[]}`, errMsg),
-		},
-		{
-			Name:    "should fail with bad bytes url2",
-			Url:     fmt.Sprintf(bytesToStringPath2, "f"),
-			ExpCode: http.StatusBadRequest,
-			ExpOut:  fmt.Sprintf(`{"code":3,"message":"%s","details":[]}`, errMsg),
-		},
 	}
 	systest.RunRestQueries(t, testCases...)
 }

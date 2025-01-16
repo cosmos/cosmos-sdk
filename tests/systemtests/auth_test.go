@@ -475,7 +475,7 @@ func TestAuxSigner(t *testing.T) {
 	}
 }
 
-func TestTxEncodeandDecodeAndQueries(t *testing.T) {
+func TestTxEncodeAndDecodeAndQueries(t *testing.T) {
 	// scenario: test tx encode and decode commands
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -498,7 +498,7 @@ func TestTxEncodeandDecodeAndQueries(t *testing.T) {
 	systest.Sut.StartChain(t)
 	// Test Gateway queries
 	addr := "cosmos1q6cc9u0x5r3fkjcex0rgxee5qlu86w8rh2ypaj"
-	addrBytesURLEncoded := "BrGC8eag4ptLGTPGg2c0B%2Fh9OOM%3D"
+	// addrBytesURLEncoded := "BrGC8eag4ptLGTPGg2c0B%2Fh9OOM%3D"
 	addrBytes := "BrGC8eag4ptLGTPGg2c0B/h9OOM="
 
 	baseurl := systest.Sut.APIAddress()
@@ -512,19 +512,18 @@ func TestTxEncodeandDecodeAndQueries(t *testing.T) {
 			ExpCode: http.StatusOK,
 			ExpOut:  fmt.Sprintf(`{"address_bytes":"%s"}`, addrBytes),
 		},
-		// The test cases below are commented out due to a bug in gRPC gateway being unable to handle URL escaped path params.
-		//{
-		//	Name:    "convert bytes to string",
-		//	Url:     fmt.Sprintf(bytesToStringPath, addrBytesURLEncoded),
-		//	ExpCode: http.StatusOK,
-		//	ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
-		//},
-		//{
-		//	Name:    "convert bytes to string other endpoint",
-		//	Url:     fmt.Sprintf(bytesToStringPath2, addrBytesURLEncoded),
-		//	ExpCode: http.StatusOK,
-		//	ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
-		//},
+		{
+			Name:    "convert bytes to string",
+			Url:     fmt.Sprintf(bytesToStringPath, "aGVsbG93b3JsZA%3D%3D"),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, "cosmos1dpjkcmr0wahhymry4hq5h9"),
+		},
+		{
+			Name:    "convert bytes to string other endpoint",
+			Url:     fmt.Sprintf(bytesToStringPath2, "aGVsbG93b3JsZA%3D%3D"),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, "cosmos1dpjkcmr0wahhymry4hq5h9"),
+		},
 		{
 			Name:    "should fail with bad address",
 			Url:     fmt.Sprintf(stringToBytesPath, "aslkdjglksdfhjlksdjfhlkjsdfh"),
@@ -535,13 +534,13 @@ func TestTxEncodeandDecodeAndQueries(t *testing.T) {
 			Name:    "should fail with bad bytes",
 			Url:     fmt.Sprintf(bytesToStringPath, "f"),
 			ExpCode: http.StatusBadRequest,
-			ExpOut:  `{"code":3,"message":"failed to populate field address_bytes with value f: illegal base64 data at input byte 0","details":[]}`,
+			ExpOut:  `{"code":3,"message":"type mismatch, parameter: address_bytes, error: illegal base64 data at input byte 0","details":[]}`,
 		},
 		{
-			Name:    "should fail with bad bytes",
+			Name:    "should fail with bad bytes url2",
 			Url:     fmt.Sprintf(bytesToStringPath2, "f"),
 			ExpCode: http.StatusBadRequest,
-			ExpOut:  `{"code":3,"message":"failed to populate field address_bytes with value f: illegal base64 data at input byte 0","details":[]}`,
+			ExpOut:  `{"code":3,"message":"type mismatch, parameter: address_bytes, error: illegal base64 data at input byte 0","details":[]}`,
 		},
 	}
 	systest.RunRestQueries(t, testCases...)

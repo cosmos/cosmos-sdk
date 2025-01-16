@@ -297,6 +297,7 @@ replace (
 
 // server v2 integration
 replace (
+	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/indexer/postgres => ../../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
@@ -304,4 +305,5 @@ replace (
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store/v2
+
 )

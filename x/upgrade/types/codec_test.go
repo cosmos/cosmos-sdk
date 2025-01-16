@@ -25,9 +25,17 @@ func TestInterfaceRegistrationOfContent(t *testing.T) {
 	})
 	require.NoError(t, err)
 	RegisterInterfaces(registrar)
-	val := &gogoprotoany.Any{
-		TypeUrl: "/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
-		Value:   []byte{},
+	testCases := []struct {
+		typeUrl string
+	}{
+		{"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal"},
+		{"/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal"},
 	}
-	require.NoError(t, registrar.UnpackAny(val, new(v1beta1.Content)))
+	for _, tc := range testCases {
+		val := &gogoprotoany.Any{
+			TypeUrl: tc.typeUrl,
+			Value:   []byte{},
+		}
+		require.NoError(t, registrar.UnpackAny(val, new(v1beta1.Content)))
+	}
 }

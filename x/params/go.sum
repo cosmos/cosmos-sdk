@@ -4,15 +4,10 @@ buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88e
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.1-20240130113600-88ef6483f90f.1/go.mod h1:GB5hdNJd6cahKmHcLArJo5wnV9TeZGMSz7ysK4YLvag=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-<<<<<<< HEAD:x/params/go.sum
 cosmossdk.io/api v0.8.1 h1:jQxx7CgUZDfgbPhPak41hW8TZzqfj06YxNI1WOulOo4=
 cosmossdk.io/api v0.8.1/go.mod h1:8Q+Je1bFwsNTCMe6qigVDDyrNmFYa7ttvG96tN/oKGw=
 cosmossdk.io/collections v1.0.0-rc.1 h1:Mzv0YKZJ6aloy4oSnMnyl8b6PtM2dTdDlzRR/079TyM=
 cosmossdk.io/collections v1.0.0-rc.1/go.mod h1:nOgrEpyMFOWBy8QmSbq/T6Tgtm2IyOFvxDRWk+DI97k=
-=======
-cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391 h1:/zUUfK6fuisVGsV0p0X6KT4iDy84lwMqLRQirSUxiz4=
-cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391/go.mod h1:8Q+Je1bFwsNTCMe6qigVDDyrNmFYa7ttvG96tN/oKGw=
->>>>>>> 9a2731720 (fix(x/auth): update proto address conversion query to prevent duplicate HTTP binding (#23357)):server/v2/go.sum
 cosmossdk.io/core v1.0.0 h1:e7XBbISOytLBOXMVwpRPixThXqEkeLGlg8no/qpgS8U=
 cosmossdk.io/core v1.0.0/go.mod h1:mKIp3RkoEmtqdEdFHxHwWAULRe+79gfdOvmArrLDbDc=
 cosmossdk.io/core/testing v0.0.1 h1:gYCTaftcRrz+HoNXmK7r9KgbG1jgBJ8pNzm/Pa/erFQ=

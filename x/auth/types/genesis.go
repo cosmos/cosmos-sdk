@@ -9,7 +9,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -55,7 +56,9 @@ func GetGenesisStateFromAppState(cdc codec.Codec, appState map[string]json.RawMe
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+		if err := cdc.UnmarshalJSON(appState[ModuleName], &genesisState); err != nil {
+			panic(err)
+		}
 	}
 
 	return genesisState

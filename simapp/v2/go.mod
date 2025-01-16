@@ -3,10 +3,16 @@ module cosmossdk.io/simapp/v2
 go 1.23.4
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.1 // main
 	cosmossdk.io/client/v2 v2.10.0-beta.1
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // indirect; main
+=======
+	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
+	cosmossdk.io/client/v2 v2.0.0-beta.6
+	cosmossdk.io/core v1.0.0
+>>>>>>> 9a2731720 (fix(x/auth): update proto address conversion query to prevent duplicate HTTP binding (#23357))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/indexer/postgres v0.1.0
 	cosmossdk.io/log v1.5.0

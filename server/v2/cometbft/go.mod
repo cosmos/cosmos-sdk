@@ -5,8 +5,13 @@ go 1.23.4
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.1 // main
 	cosmossdk.io/collections v1.0.0-rc.1 // main
+=======
+	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
+	cosmossdk.io/collections v1.0.0
+>>>>>>> 9a2731720 (fix(x/auth): update proto address conversion query to prevent duplicate HTTP binding (#23357))
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/errors/v2 v2.0.0

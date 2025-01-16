@@ -3,10 +3,16 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.23.4
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.1 // main
 	cosmossdk.io/collections v1.0.0 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // main
+=======
+	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
+	cosmossdk.io/collections v1.0.0
+	cosmossdk.io/core v1.0.0
+>>>>>>> 9a2731720 (fix(x/auth): update proto address conversion query to prevent duplicate HTTP binding (#23357))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0

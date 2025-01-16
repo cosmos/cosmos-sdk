@@ -56,7 +56,25 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/auth/tx) [#23170](https://github.com/cosmos/cosmos-sdk/pull/23170) Avoid panic from newWrapperFromDecodedTx when AuthInfo.Fee is optional in decodedTx.
 * (x/auth/tx) [23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing CacheWithValue for ExtensionOptions.
 * (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
+<<<<<<< HEAD
 * (server) [#23244](https://github.com/cosmos/cosmos-sdk/pull/23244) Allow align block header with skip check header in grpc server.
+=======
+* (x/auth) [#23357](https://github.com/cosmos/cosmos-sdk/pull/23357) Fixes accessibility of the AddressStringToBytes HTTP binding and adds another binding to AddressBytesToString.
+
+### API Breaking Changes
+
+* (x/params) [#22995](https://github.com/cosmos/cosmos-sdk/pull/22995) Remove `x/params`.  Migrate to the new params system introduced in `v0.47` as demonstrated [here](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams).
+* (testutil) [#22392](https://github.com/cosmos/cosmos-sdk/pull/22392) Remove `testutil/network` package. Use the integration framework or systemtests framework instead.
+
+#### Removal of v0 components
+
+This subsection lists the API breaking changes that are [part of the removal of v0 components](https://github.com/cosmos/cosmos-sdk/issues/22904). The v0 components were deprecated in `v0.52` and are now removed.
+
+* (simapp) [#23009](https://github.com/cosmos/cosmos-sdk/pull/23009) Simapp has been removed. Check-out Simapp/v2 instead.
+* (server) [#23018](https://github.com/cosmos/cosmos-sdk/pull/23018) [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) The server package has been removed. Use server/v2 instead
+* (x/genutil) [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) Genutil commands specific to a baseapp chain have been deleted.
+* (client) [#22904](https://github.com/cosmos/cosmos-sdk/issues/22904) v1 specific client commands have been removed.
+>>>>>>> 9a2731720 (fix(x/auth): update proto address conversion query to prevent duplicate HTTP binding (#23357))
 
 ### Deprecated
 

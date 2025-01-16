@@ -534,13 +534,13 @@ func TestTxEncodeAndDecodeAndQueries(t *testing.T) {
 			Name:    "should fail with bad bytes",
 			Url:     fmt.Sprintf(bytesToStringPath, "f"),
 			ExpCode: http.StatusBadRequest,
-			ExpOut:  `{"code":3,"message":"type mismatch, parameter: address_bytes, error: illegal base64 data at input byte 0","details":[]}`,
+			ExpOut:  `{"code":3,"message":"failed to populate field address_bytes with value f: illegal base64 data at input byte 0","details":[]}`,
 		},
 		{
 			Name:    "should fail with bad bytes url2",
 			Url:     fmt.Sprintf(bytesToStringPath2, "f"),
 			ExpCode: http.StatusBadRequest,
-			ExpOut:  `{"code":3,"message":"type mismatch, parameter: address_bytes, error: illegal base64 data at input byte 0","details":[]}`,
+			ExpOut:  `{"code":3,"message":"failed to populate field address_bytes with value f: illegal base64 data at input byte 0","details":[]}`,
 		},
 	}
 	systest.RunRestQueries(t, testCases...)

@@ -15,10 +15,10 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v1.0.0
-	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
-	cosmossdk.io/server/v2/stf v1.0.0-beta.1
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.2
+	cosmossdk.io/server/v2/stf v1.0.0-beta.2
 	cosmossdk.io/store/v2 v2.0.0-beta.1
-	cosmossdk.io/x/tx v1.0.0-alpha.3
+	cosmossdk.io/x/tx v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.69.4

@@ -67,10 +67,7 @@ func registerMethods[T transaction.Tx](logger log.Logger, mux *http.ServeMux, am
 		fallbackRouter.ServeHTTP(w, r)
 	})
 
-	// register in deterministic order. we do this because of the problem mentioned below, and different nodes could
-	// end up with one version of the handler or the other.
 	uris := slices.Sorted(maps.Keys(annotationToMetadata))
-
 	for _, uri := range uris {
 		queryMD := annotationToMetadata[uri]
 		mux.Handle(uri, &protoHandler[T]{

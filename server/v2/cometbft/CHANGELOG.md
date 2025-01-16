@@ -22,7 +22,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-## [v1.0.0-beta.2](https://github.com/cosmos/cosmos-sdk/releases/tag/server/v2/cometbft/v1.0.0-beta21)
+## [v1.0.0-beta.2](https://github.com/cosmos/cosmos-sdk/releases/tag/server/v2/cometbft/v1.0.0-beta2)
 
 * [#23365](https://github.com/cosmos/cosmos-sdk/pull/23365) Align default response for filter cmd when `handleQueryP2P`.
 * [#23102](https://github.com/cosmos/cosmos-sdk/pull/23102) Pass `TxConfig` for `cosmos.tx.v1beta1.Service` handling.

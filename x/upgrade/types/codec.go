@@ -28,5 +28,9 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		(*v1beta1.Content)(nil),
 		&SoftwareUpgradeProposal{},
 	)
+	registrar.RegisterImplementations(
+		(*v1beta1.Content)(nil),
+		&CancelSoftwareUpgradeProposal{},
+	)
 	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
 }

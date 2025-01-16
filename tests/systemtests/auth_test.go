@@ -501,7 +501,6 @@ func TestTxEncodeAndDecodeAndQueries(t *testing.T) {
 	// addrBytesURLEncoded := "BrGC8eag4ptLGTPGg2c0B%2Fh9OOM%3D"
 	addrBytes := "BrGC8eag4ptLGTPGg2c0B/h9OOM="
 
-	errMsg := "type mismatch, parameter: address_bytes, error: illegal base64 data at input byte 0"
 	baseurl := systest.Sut.APIAddress()
 	stringToBytesPath := baseurl + "/cosmos/auth/v1beta1/bech32/encode/%s"
 	bytesToStringPath := baseurl + "/cosmos/auth/v1beta1/bech32/%s"

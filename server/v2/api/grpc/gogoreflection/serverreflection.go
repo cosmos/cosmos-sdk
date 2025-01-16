@@ -44,7 +44,6 @@ import (
 	"io"
 	"reflect"
 	"sort"
-	"strings"
 	"sync"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -55,6 +54,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/core/log"
 )
@@ -63,7 +63,7 @@ type serverReflectionServer struct {
 	rpb.UnimplementedServerReflectionServer
 	s *grpc.Server
 
-	methods []string
+	messages []string
 
 	initSymbols  sync.Once
 	serviceNames []string
@@ -72,11 +72,11 @@ type serverReflectionServer struct {
 }
 
 // Register registers the server reflection service on the given gRPC server.
-func Register(s *grpc.Server, methods []string, logger log.Logger) {
+func Register(s *grpc.Server, messages []string, logger log.Logger) {
 	rpb.RegisterServerReflectionServer(s, &serverReflectionServer{
-		s:       s,
-		methods: methods,
-		log:     logger,
+		s:        s,
+		messages: messages,
+		log:      logger,
 	})
 }
 
@@ -91,7 +91,7 @@ type protoMessage interface {
 func (s *serverReflectionServer) getSymbols() (svcNames []string, symbolIndex map[string]*dpb.FileDescriptorProto) {
 	s.initSymbols.Do(func() {
 		s.symbols = map[string]*dpb.FileDescriptorProto{}
-		services, fds := s.getServices(s.methods)
+		services, fds := s.getServices(s.messages)
 		s.serviceNames = services
 
 		processed := map[string]struct{}{}
@@ -458,26 +458,61 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 }
 
 // getServices gets the unique list of services given a list of methods.
-func (s *serverReflectionServer) getServices(methods []string) (svcs []string, fds []*dpb.FileDescriptorProto) {
+func (s *serverReflectionServer) getServices(messages []string) (svcs []string, fds []*dpb.FileDescriptorProto) {
 	registry, err := gogoproto.MergedRegistry()
 	if err != nil {
 		s.log.Error("unable to load merged registry", "err", err)
 		return nil, nil
 	}
 	seenSvc := map[protoreflect.FullName]struct{}{}
-	for _, methodName := range methods {
-		methodName = strings.Join(strings.Split(methodName[1:], "/"), ".")
-		md, err := registry.FindDescriptorByName(protoreflect.FullName(methodName))
+	for _, messageName := range messages {
+		md, err := registry.FindDescriptorByName(protoreflect.FullName(messageName))
 		if err != nil {
-			s.log.Error("unable to load method descriptor", "method", methodName, "err", err)
+			s.log.Error("unable to load message descriptor", "message", messageName, "err", err)
 			continue
 		}
-		svc := md.(protoreflect.MethodDescriptor).Parent()
+
+		svc, ok := findServiceForMessage(registry, md.(protoreflect.MessageDescriptor))
+		if !ok {
+			// if a service is not found for the message, simply skip
+			// this is likely the message isn't part of a service and using appmodulev2.Handler instead.
+			continue
+		}
+
 		if _, seen := seenSvc[svc.FullName()]; !seen {
 			svcs = append(svcs, string(svc.FullName()))
 			file := svc.ParentFile()
 			fds = append(fds, protodesc.ToFileDescriptorProto(file))
 		}
+
+		seenSvc[svc.FullName()] = struct{}{}
 	}
-	return
+
+	return svcs, fds
+}
+
+func findServiceForMessage(registry *protoregistry.Files, messageDesc protoreflect.MessageDescriptor) (protoreflect.ServiceDescriptor, bool) {
+	var (
+		service protoreflect.ServiceDescriptor
+		found   bool
+	)
+
+	registry.RangeFiles(func(fileDescriptor protoreflect.FileDescriptor) bool {
+		for i := 0; i < fileDescriptor.Services().Len(); i++ {
+			serviceDesc := fileDescriptor.Services().Get(i)
+
+			for j := 0; j < serviceDesc.Methods().Len(); j++ {
+				methodDesc := serviceDesc.Methods().Get(j)
+
+				if methodDesc.Input() == messageDesc || methodDesc.Output() == messageDesc {
+					service = serviceDesc
+					found = true
+					return false
+				}
+			}
+		}
+		return true
+	})
+
+	return service, found
 }

@@ -17,7 +17,6 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -149,15 +148,13 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
 			var args []string
 			args = append(args, tc.from)
 			args = append(args, tc.to...)
 			args = append(args, tc.amount.String())
 			args = append(args, tc.extraArgs...)
 
-			cmd.SetContext(ctx)
+			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
 			cmd.SetArgs(args)
 
 			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))

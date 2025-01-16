@@ -229,7 +229,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		if internal.IsMemoryStoreKey(storeKey) {
 			continue
 		}
-		si := &proof.StoreInfo{Name: []byte(storeKey)}
+		si := &proof.StoreInfo{Name: storeKey}
 		storeInfos = append(storeInfos, si)
 
 		if tree.IsConcurrentSafe() {
@@ -248,9 +248,13 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		}
 	}
 
+	// convert storeInfos to []proof.StoreInfo
+	sideref := make([]*proof.StoreInfo, 0, len(c.multiTrees))
+	sideref = append(sideref, storeInfos...)
+
 	cInfo := &proof.CommitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
+		Version:    int64(version),
+		StoreInfos: sideref,
 	}
 
 	if err := eg.Wait(); err != nil {
@@ -272,8 +276,8 @@ func (c *CommitStore) commit(tree Tree, si *proof.StoreInfo, expected uint64) er
 	if v != expected {
 		return fmt.Errorf("commit version %d does not match the target version %d", v, expected)
 	}
-	si.CommitID = &proof.CommitID{
-		Version: v,
+	si.CommitId = &proof.CommitID{
+		Version: int64(v),
 		Hash:    h,
 	}
 	return nil
@@ -596,18 +600,17 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 		if v != version {
 			return nil, fmt.Errorf("tree version %d does not match the target version %d", v, version)
 		}
-		bz := []byte(storeKey)
 		storeInfos = append(storeInfos, &proof.StoreInfo{
-			Name: bz,
-			CommitID: &proof.CommitID{
-				Version: v,
+			Name: storeKey,
+			CommitId: &proof.CommitID{
+				Version: int64(v),
 				Hash:    tree.Hash(),
 			},
 		})
 	}
 
 	ci = &proof.CommitInfo{
-		Version:    version,
+		Version:    int64(version),
 		StoreInfos: storeInfos,
 	}
 	return ci, nil

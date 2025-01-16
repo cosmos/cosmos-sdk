@@ -43,6 +43,23 @@ func AppStateFn(
 	modules []module.AppModuleSimulation,
 	genesisState map[string]json.RawMessage,
 ) simtypes.AppStateFn {
+	return AppStateFnWithExtendedCbs(cdc, addressCodec, validatorCodec, modules, genesisState, nil, nil)
+}
+
+// AppStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
+// It panics if the user provides files for both of them.
+// If a file is not given for the genesis or the sim params, it creates a randomized one.
+// genesisState is the default genesis state of the whole app.
+// moduleStateCb is the callback function to access moduleState.
+// postRawStateCb is the callback function to extend rawState.
+func AppStateFnWithExtendedCbs(
+	cdc codec.JSONCodec,
+	addressCodec, validatorCodec address.Codec,
+	modules []module.AppModuleSimulation,
+	genesisState map[string]json.RawMessage,
+	moduleStateCb func(moduleName string, genesisState interface{}),
+	postRawStateCb func(rawState map[string]json.RawMessage),
+) simtypes.AppStateFn {
 	return func(
 		r *rand.Rand,
 		accs []simtypes.Account,
@@ -143,7 +160,15 @@ func AppStateFn(
 			stakingtypes.ModuleName: stakingState,
 			testutil.BankModuleName: bankState,
 		} {
+			if moduleStateCb != nil {
+				moduleStateCb(name, state)
+			}
 			rawState[name] = cdc.MustMarshalJSON(state)
+		}
+
+		// extend state from callback function
+		if postRawStateCb != nil {
+			postRawStateCb(rawState)
 		}
 
 		// replace appstate
@@ -212,6 +237,7 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
+// Deprecated: the private keys are not matching the accounts read from app state
 func AppStateFromGenesisFileFn(_ io.Reader, cdc codec.JSONCodec, genesisFile string) (genutiltypes.AppGenesis, []simtypes.Account, error) {
 	file, err := os.Open(filepath.Clean(genesisFile))
 	if err != nil {
@@ -233,6 +259,8 @@ func AppStateFromGenesisFileFn(_ io.Reader, cdc codec.JSONCodec, genesisFile str
 	return *genesis, newAccs, nil
 }
 
+// AccountsFromAppState
+// Deprecated: the private keys are not matching the accounts read from app state
 func AccountsFromAppState(cdc codec.JSONCodec, appStateJSON json.RawMessage) ([]simtypes.Account, error) {
 	var appState map[string]json.RawMessage
 	if err := json.Unmarshal(appStateJSON, &appState); err != nil {

@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/codec"
 	corestoretypes "cosmossdk.io/core/store"
 	govv1 "cosmossdk.io/x/gov/types/v1"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (

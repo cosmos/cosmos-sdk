@@ -33,7 +33,7 @@ type Server[T transaction.Tx] struct {
 	GRPCGatewayRouter *runtime.ServeMux
 }
 
-// New creates a new gRPC-gateway server.
+// New creates a new gRPC-Gateway server.
 func New[T transaction.Tx](
 	logger log.Logger,
 	config server.ConfigMap,
@@ -59,7 +59,7 @@ func New[T transaction.Tx](
 			// marshaled in unary requests.
 			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
 
-			// Custom header matcher for mapping request headers to
+			// Custom header uriMatcher for mapping request headers to
 			// GRPC metadata
 			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
 		),
@@ -76,11 +76,10 @@ func New[T transaction.Tx](
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 	mux := http.NewServeMux()
-	interceptor, err := newGatewayInterceptor[T](logger, s.GRPCGatewayRouter, appManager)
+	err := mountHTTPRoutes[T](logger, mux, s.GRPCGatewayRouter, appManager)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create grpc-gateway interceptor: %w", err)
+		return nil, fmt.Errorf("failed to register gRPC gateway annotations: %w", err)
 	}
-	mux.Handle("/", interceptor)
 
 	s.server = &http.Server{
 		Addr:    s.config.Address,

@@ -524,7 +524,7 @@ func (c *consensus[T]) maybeHandleExternalServices(ctx context.Context, req *abc
 
 	// Handle tx service
 	if strings.HasPrefix(req.Path, "/cosmos.tx.v1beta1.Service") {
-		rpcClient, _ := client.NewClientFromNode(c.cfg.AppTomlConfig.Address)
+		rpcClient, _ := client.NewClientFromNode(c.cfg.ConfigTomlConfig.RPC.ListenAddress)
 
 		txConfig := authtx.NewTxConfig(
 			c.appCodecs.AppCodec,

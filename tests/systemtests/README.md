@@ -25,7 +25,7 @@ Or via manual steps
 ```shell
 make build
 mkdir -p ./tests/systemtests/binaries
-cp ./build/simd ./tests/systemtests/binaries/
+cp ./build/simdv2 ./tests/systemtests/binaries/
 ```
 
 ### Manual test run

@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
@@ -17,7 +18,6 @@ import (
 	"cosmossdk.io/x/feegrant/keeper"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -103,7 +103,11 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(feegrant.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(feegrant.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.

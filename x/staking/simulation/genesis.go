@@ -37,7 +37,7 @@ func getHistEntries(r *rand.Rand) uint32 {
 
 // getKeyRotationFee returns randomized keyRotationFee between 10000-1000000.
 func getKeyRotationFee(r *rand.Rand) sdk.Coin {
-	return sdk.NewInt64Coin(sdk.DefaultBondDenom, r.Int63n(types.DefaultKeyRotationFee.Amount.Int64()-10000)+10000)
+	return sdk.NewInt64Coin(sdk.DefaultBondDenom, r.Int63n(990000)+10000)
 }
 
 // RandomizedGenState generates a random GenesisState for staking

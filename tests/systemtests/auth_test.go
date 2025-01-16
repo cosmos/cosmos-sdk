@@ -4,6 +4,7 @@ package systemtests
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -474,7 +475,7 @@ func TestAuxSigner(t *testing.T) {
 	}
 }
 
-func TestTxEncodeandDecode(t *testing.T) {
+func TestTxEncodeandDecodeAndQueries(t *testing.T) {
 	// scenario: test tx encode and decode commands
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -493,6 +494,50 @@ func TestTxEncodeandDecode(t *testing.T) {
 	// check transaction decodes as expected
 	decodedTx := cli.RunCommandWithArgs("tx", "decode", encodedText)
 	require.Equal(t, gjson.Get(decodedTx, "body.memo").String(), memoText)
+
+	systest.Sut.StartChain(t)
+	// Test Gateway queries
+	addr := "cosmos1q6cc9u0x5r3fkjcex0rgxee5qlu86w8rh2ypaj"
+	addrBytesURLEncoded := "BrGC8eag4ptLGTPGg2c0B%2Fh9OOM%3D"
+	addrBytes := "BrGC8eag4ptLGTPGg2c0B/h9OOM="
+
+	baseurl := systest.Sut.APIAddress()
+	stringToBytesPath := baseurl + "/cosmos/auth/v1beta1/bech32/encode/%s"
+	bytesToStringPath := baseurl + "/cosmos/auth/v1beta1/bech32/%s"
+	bytesToStringPath2 := baseurl + "/cosmos/auth/v1beta1/bech32/decode/%s"
+	testCases := []systest.RestTestCase{
+		{
+			Name:    "convert string to bytes",
+			Url:     fmt.Sprintf(stringToBytesPath, addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"address_bytes":"%s"}`, addrBytes),
+		},
+		{
+			Name:    "convert bytes to string",
+			Url:     fmt.Sprintf(bytesToStringPath, addrBytesURLEncoded),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
+		},
+		{
+			Name:    "convert bytes to string other endpoint",
+			Url:     fmt.Sprintf(bytesToStringPath2, addrBytesURLEncoded),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"address_string":"%s"}`, addr),
+		},
+		{
+			Name:    "should fail with bad address",
+			Url:     fmt.Sprintf(stringToBytesPath, "aslkdjglksdfhjlksdjfhlkjsdfh"),
+			ExpCode: http.StatusInternalServerError,
+			ExpOut:  `{"code":2,"message":"decoding bech32 failed: invalid separator index -1","details":[]}`,
+		},
+		{
+			Name:    "should fail with bad bytes",
+			Url:     fmt.Sprintf(bytesToStringPath, "f"),
+			ExpCode: http.StatusBadRequest,
+			ExpOut:  `{"code":3,"message":"failed to populate field address_bytes with value f: illegal base64 data at input byte 0","details":[]}`,
+		},
+	}
+	systest.RunRestQueries(t, testCases...)
 }
 
 func TestTxWithFeePayer(t *testing.T) {

@@ -501,6 +501,7 @@ func TestTxEncodeAndDecodeAndQueries(t *testing.T) {
 	// addrBytesURLEncoded := "BrGC8eag4ptLGTPGg2c0B%2Fh9OOM%3D"
 	addrBytes := "BrGC8eag4ptLGTPGg2c0B/h9OOM="
 
+	errMsg := "type mismatch, parameter: address_bytes, error: illegal base64 data at input byte 0"
 	baseurl := systest.Sut.APIAddress()
 	stringToBytesPath := baseurl + "/cosmos/auth/v1beta1/bech32/encode/%s"
 	bytesToStringPath := baseurl + "/cosmos/auth/v1beta1/bech32/%s"
@@ -534,13 +535,13 @@ func TestTxEncodeAndDecodeAndQueries(t *testing.T) {
 			Name:    "should fail with bad bytes",
 			Url:     fmt.Sprintf(bytesToStringPath, "f"),
 			ExpCode: http.StatusBadRequest,
-			ExpOut:  `{"code":3,"message":"failed to populate field address_bytes with value f: illegal base64 data at input byte 0","details":[]}`,
+			ExpOut:  fmt.Sprintf(`{"code":3,"message":"%s","details":[]}`, errMsg),
 		},
 		{
 			Name:    "should fail with bad bytes url2",
 			Url:     fmt.Sprintf(bytesToStringPath2, "f"),
 			ExpCode: http.StatusBadRequest,
-			ExpOut:  `{"code":3,"message":"failed to populate field address_bytes with value f: illegal base64 data at input byte 0","details":[]}`,
+			ExpOut:  fmt.Sprintf(`{"code":3,"message":"%s","details":[]}`, errMsg),
 		},
 	}
 	systest.RunRestQueries(t, testCases...)

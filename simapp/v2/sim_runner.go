@@ -254,6 +254,7 @@ func RunWithSeed[T Tx, V SimulationApp[T]](
 
 // RunWithSeedX entrypoint for custom chain setups.
 // The function runs the full simulation test circle for the specified seed and setup function, followed by optional post-run actions.
+// when tb implements ResetTimer, the method is called after setup, before jumping into the main loop
 func RunWithSeedX[T Tx](
 	tb testing.TB,
 	tCfg simtypes.Config,
@@ -272,6 +273,10 @@ func RunWithSeedX[T Tx](
 
 	modules := testInstance.ModuleManager.Modules()
 	msgFactoriesFn := prepareSimsMsgFactories(r, modules, simsx.ParamWeightSource(emptySimParams))
+
+	if b, ok := tb.(interface{ ResetTimer() }); ok {
+		b.ResetTimer()
+	}
 
 	doMainLoop(
 		tb,

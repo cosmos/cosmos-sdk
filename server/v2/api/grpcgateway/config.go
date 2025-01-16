@@ -8,11 +8,11 @@ func DefaultConfig() *Config {
 }
 
 type Config struct {
-	// Enable defines if the gRPC-gateway should be enabled.
-	Enable bool `mapstructure:"enable" toml:"enable" comment:"Enable defines if the gRPC-gateway should be enabled."`
+	// Enable defines if the gRPC-Gateway should be enabled.
+	Enable bool `mapstructure:"enable" toml:"enable" comment:"Enable defines if the gRPC-Gateway should be enabled."`
 
-	// Address defines the address the gRPC-gateway server binds to.
-	Address string `mapstructure:"address" toml:"address" comment:"Address defines the address the gRPC-gateway server binds to."`
+	// Address defines the address the gRPC-Gateway server binds to.
+	Address string `mapstructure:"address" toml:"address" comment:"Address defines the address the gRPC-Gateway server binds to."`
 }
 
 type CfgOption func(*Config)

@@ -3,7 +3,7 @@ module cosmossdk.io/simapp/v2
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.1
+	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
 	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.1.0
@@ -12,11 +12,14 @@ require (
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2 v2.0.0-beta.1
+	cosmossdk.io/server/v2/appmanager v1.0.0-beta.2
 	cosmossdk.io/server/v2/cometbft v0.0.0-20241015140036-ee3d320eaa55
 	cosmossdk.io/store/v2 v2.0.0
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1
+	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
@@ -35,8 +38,10 @@ require (
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0
+	github.com/cometbft/cometbft/api v1.0.0
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/cobra v1.8.1
@@ -44,15 +49,6 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.2
-)
-
-require github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
-
-require (
-	cosmossdk.io/server/v2/appmanager v1.0.0-beta.1
-	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
-	github.com/cometbft/cometbft/api v1.0.0
 )
 
 require (
@@ -69,7 +65,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/server/v2/stf v1.0.0-beta.1 // indirect
+	cosmossdk.io/server/v2/stf v1.0.0-beta.2 // indirect
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
 	cosmossdk.io/x/tx v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

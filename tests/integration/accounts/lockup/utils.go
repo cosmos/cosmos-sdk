@@ -91,7 +91,7 @@ func (s *IntegrationTestSuite) setupStakingParams(ctx sdk.Context, app *simapp.S
 	require.NoError(s.T(), err)
 
 	// update unbonding time
-	params.UnbondingTime = time.Duration(time.Second * 10)
+	params.UnbondingTime = time.Second * 10
 	err = app.StakingKeeper.Params.Set(ctx, params)
 	require.NoError(s.T(), err)
 }

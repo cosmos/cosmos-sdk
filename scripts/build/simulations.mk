@@ -73,11 +73,6 @@ test-v2-sim:
 	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestSimsAppV2
 .PHONY: test-v2-sim
 
-test-sim-benchmark-invariants:
-	@echo "Running simulation invariant benchmarks..."
-	cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -benchmem -bench=BenchmarkInvariants -tags='sims' -run=^$ \
-	-Enabled=true -NumBlocks=1000 -BlockSize=200 -Commit=true -Seed=57 -v -timeout 24h
-
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-nondeterminism-streaming \
@@ -90,6 +85,7 @@ test-sim-multi-seed-long \
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
+SIM_COMMIT ?= true
 
 #? test-sim-fuzz: Run fuzz test for simapp
 test-sim-fuzz:
@@ -114,7 +110,6 @@ test-sim-benchmark-v2:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
 	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -tags='sims' -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
 		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE)
-
 
 test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"

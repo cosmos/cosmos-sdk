@@ -85,6 +85,9 @@ func (s *CLITestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.val, err = valAcc.GetAddress()
 	s.Require().NoError(err)
+	pub, err := valAcc.GetPubKey()
+	s.Require().NoError(err)
+	kb.SaveOfflineKey("newAccount", pub)
 
 	account1, _, err := kb.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
@@ -102,7 +105,8 @@ func (s *CLITestSuite) SetupSuite() {
 	_, _, err = kb.NewMnemonic("dummyAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
+	// create a 2-3 multisig
+	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub, pub1, pub2})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 

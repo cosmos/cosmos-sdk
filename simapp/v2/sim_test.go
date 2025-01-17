@@ -25,6 +25,10 @@ func TestFullAppSimulation(t *testing.T) {
 	RunWithSeeds[Tx](t, NewSimApp[Tx], AppConfig, DefaultSeeds)
 }
 
+// Scenario:
+//
+//	Run 3 times a fresh node with the same seed,
+//	then the app hash should always be the same after n blocks
 func TestAppStateDeterminism(t *testing.T) {
 	var seeds []int64
 	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
@@ -44,13 +48,14 @@ func TestAppStateDeterminism(t *testing.T) {
 		tb.Helper()
 		mx.Lock()
 		defer mx.Unlock()
-		otherHashes, ok := appHashResults[ti.Seed]
+		seed := ti.RandSource.GetSeed()
+		otherHashes, ok := appHashResults[seed]
 		if !ok {
-			appHashResults[ti.Seed] = cs.AppHash
+			appHashResults[seed] = cs.AppHash
 			return
 		}
 		if !bytes.Equal(otherHashes, cs.AppHash) {
-			tb.Fatalf("non-determinism in seed %d", ti.Seed)
+			tb.Fatalf("non-determinism in seed %d", seed)
 		}
 	}
 	// run simulations
@@ -85,7 +90,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		chainID := SimAppChainID + "_2"
 
 		importGenesisChainStateFactory := func(ctx context.Context, r *rand.Rand) (TestInstance[Tx], ChainState[Tx], []simtypes.Account) {
-			testInstance := SetupTestInstance(tb, appFactory, AppConfig, ti.Seed)
+			testInstance := SetupTestInstance(tb, appFactory, AppConfig, ti.RandSource)
 			newCs := testInstance.InitializeChain(
 				tb,
 				ctx,
@@ -97,7 +102,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			return testInstance, newCs, accs
 		}
 		// run sims with new app setup from exported genesis
-		RunWithSeedX[Tx](tb, cfg, importGenesisChainStateFactory, ti.Seed)
+		RunWithRandSourceX[Tx](tb, cfg, importGenesisChainStateFactory, ti.RandSource)
 	}
 	RunWithSeeds[Tx, *SimApp[Tx]](t, appFactory, AppConfig, DefaultSeeds, exportAndStartChainFromGenesisPostAction)
 }

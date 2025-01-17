@@ -165,7 +165,10 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ./../../
+replace (
+	cosmossdk.io/core/testing => ../../core/testing
+	github.com/cosmos/cosmos-sdk => ./../../
+)
 
 // TODO remove post spinning out all modules
 replace (

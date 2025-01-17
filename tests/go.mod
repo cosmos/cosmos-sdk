@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/tests
 
-go 1.23.3
+go 1.23.4
 
 require (
 	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
@@ -103,7 +103,7 @@ require (
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/iavl v1.3.4 // indirect
+	github.com/cosmos/iavl v1.3.5 // indirect
 	github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
@@ -244,6 +244,7 @@ replace (
 	cosmossdk.io/runtime/v2 => ../runtime/v2
 	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
 	cosmossdk.io/server/v2/stf => ../server/v2/stf
+	cosmossdk.io/store => ../store
 	cosmossdk.io/store/v2 => ../store/v2
 	cosmossdk.io/tools/benchmark => ../tools/benchmark
 	cosmossdk.io/x/accounts => ../x/accounts

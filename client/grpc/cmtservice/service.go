@@ -110,7 +110,7 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 
 	return &GetBlockByHeightResponse{
 		BlockId:  &protoBlockID,
-		Block:    &v1.Block{},// fill with empty block to reduce response size
+		Block:    &v1.Block{}, // fill with empty block to reduce response size
 		SdkBlock: sdkBlock,
 	}, nil
 }

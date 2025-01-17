@@ -10,6 +10,7 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"

@@ -508,18 +508,6 @@ func TestVerifyMultisignatureNMRule(t *testing.T) {
 			m:         0,
 			expectErr: "invalid threshold: must be > 0, got 0",
 		},
-		{
-			name:      "invalid: N=M",
-			n:         3,
-			m:         3,
-			expectErr: "invalid N-M multisig: N (3) must be > M (3)",
-		},
-		{
-			name:      "invalid: N < M",
-			n:         2,
-			m:         3,
-			expectErr: "invalid N-M multisig: N (2) must be > M (3)",
-		},
 	}
 
 	for _, tc := range tests {

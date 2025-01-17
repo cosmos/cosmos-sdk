@@ -4,14 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
-
-	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var (
@@ -19,24 +14,33 @@ var (
 	_ gogogrpc.Server     = &QueryHelper{}
 )
 
+// GRPCQueryHandler defines a function type which handles mocked ABCI Query requests
+// using gRPC
+type GRPCQueryHandler = func(ctx context.Context, req *QueryRequest) (*QueryResponse, error)
+
+// QueryRequest is a light mock of cometbft abci.QueryRequest.
+type QueryRequest struct {
+	Data   []byte
+	Height int64
+}
+
+// QueryResponse is a light mock of cometbft abci.QueryResponse.
+type QueryResponse struct {
+	Value  []byte
+	Height int64
+}
+
 // QueryHelper is a test utility for building a query client from a proto interface registry.
 type QueryHelper struct {
 	cdc    encoding.Codec
 	routes map[string]GRPCQueryHandler
 }
 
-func NewQueryHelper(interfaceRegistry codectypes.InterfaceRegistry) *QueryHelper {
-	// instantiate the codec
-	cdc := codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
-	// Once we have an interface registry, we can register the interface
-	// registry reflection gRPC service.
-
+func NewQueryHelper(cdc encoding.Codec) *QueryHelper {
 	qh := &QueryHelper{
 		cdc:    cdc,
 		routes: map[string]GRPCQueryHandler{},
 	}
-
-	reflection.RegisterReflectionServiceServer(qh, reflection.NewReflectionServiceServer(interfaceRegistry))
 
 	return qh
 }
@@ -52,7 +56,7 @@ func (q *QueryHelper) Invoke(ctx context.Context, method string, args, reply int
 		return err
 	}
 
-	res, err := querier(ctx, &abci.QueryRequest{Data: reqBz})
+	res, err := querier(ctx, &QueryRequest{Data: reqBz})
 	if err != nil {
 		return err
 	}
@@ -69,10 +73,6 @@ func (q *QueryHelper) Invoke(ctx context.Context, method string, args, reply int
 func (q *QueryHelper) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	panic("not implemented")
 }
-
-// GRPCQueryHandler defines a function type which handles ABCI Query requests
-// using gRPC
-type GRPCQueryHandler = func(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error)
 
 // Route returns the GRPCQueryHandler for a given query route path or nil
 // if not found
@@ -105,7 +105,7 @@ func (q *QueryHelper) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc
 		panic(fmt.Sprintf("handler for %s already registered", fqName))
 	}
 
-	q.routes[fqName] = func(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
+	q.routes[fqName] = func(ctx context.Context, req *QueryRequest) (*QueryResponse, error) {
 		// call the method handler from the service description with the handler object,
 		// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 		res, err := methodHandler(handler, ctx, func(i interface{}) error {
@@ -123,7 +123,7 @@ func (q *QueryHelper) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc
 		}
 
 		// return the result bytes as the response value
-		return &abci.QueryResponse{
+		return &QueryResponse{
 			Height: req.Height,
 			Value:  resBytes,
 		}, nil

@@ -106,7 +106,7 @@ type (
 
 	// TestInstance system under test
 	TestInstance[T Tx] struct {
-		Seed          int64
+		RandSource    simsxv2.RandSource
 		App           SimulationApp[T]
 		TxDecoder     transaction.Codec[T]
 		BankKeeper    BankKeeper
@@ -126,7 +126,7 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](
 	tb testing.TB,
 	appFactory AppFactory[T, V],
 	appConfigFactory AppConfigFactory,
-	seed int64,
+	randSource simsxv2.RandSource,
 ) TestInstance[T] {
 	tb.Helper()
 	vp := viper.New()
@@ -153,7 +153,7 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](
 	xapp, err := appFactory(depinject.Configs(depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(vp.AllSettings()))))
 	require.NoError(tb, err)
 	return TestInstance[T]{
-		Seed:          seed,
+		RandSource:    randSource,
 		App:           xapp,
 		BankKeeper:    bankKeeper,
 		AuthKeeper:    authKeeper,
@@ -197,7 +197,7 @@ func (ti TestInstance[T]) InitializeChain(
 	}
 }
 
-// RunWithSeeds runs a series of subtests using the default set of random seeds for deterministic simulation testing.
+// RunWithSeeds runs a series of subtests for each of the given set of seeds for deterministic simulation testing.
 func RunWithSeeds[T Tx, V SimulationApp[T]](
 	t *testing.T,
 	appFactory AppFactory[T, V],
@@ -226,11 +226,24 @@ func RunWithSeed[T Tx, V SimulationApp[T]](
 	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
 ) {
 	tb.Helper()
+	RunWithRandSource(tb, appFactory, appConfigFactory, tCfg, simsxv2.NewSeededRandSource(seed), postRunActions...)
+}
+
+// RunWithRandSource initializes and executes a simulation run with the given rand source, generating blocks and transactions.
+func RunWithRandSource[T Tx, V SimulationApp[T]](
+	tb testing.TB,
+	appFactory AppFactory[T, V],
+	appConfigFactory AppConfigFactory,
+	tCfg simtypes.Config,
+	randSource simsxv2.RandSource,
+	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
+) {
+	tb.Helper()
 	initialBlockHeight := tCfg.InitialBlockHeight
 	require.NotEmpty(tb, initialBlockHeight, "initial block height must not be 0")
 
 	setupFn := func(ctx context.Context, r *rand.Rand) (TestInstance[T], ChainState[T], []simtypes.Account) {
-		testInstance := SetupTestInstance[T, V](tb, appFactory, appConfigFactory, seed)
+		testInstance := SetupTestInstance[T, V](tb, appFactory, appConfigFactory, randSource)
 		accounts, genesisAppState, chainID, genesisTimestamp := prepareInitialGenesisState(
 			testInstance.App,
 			r,
@@ -249,20 +262,21 @@ func RunWithSeed[T Tx, V SimulationApp[T]](
 
 		return testInstance, cs, accounts
 	}
-	RunWithSeedX(tb, tCfg, setupFn, seed, postRunActions...)
+	RunWithRandSourceX(tb, tCfg, setupFn, randSource, postRunActions...)
 }
 
-// RunWithSeedX entrypoint for custom chain setups.
-// The function runs the full simulation test circle for the specified seed and setup function, followed by optional post-run actions.
-func RunWithSeedX[T Tx](
+// RunWithRandSourceX entrypoint for custom chain setups.
+// The function runs the full simulation test circle for the specified random source and setup function, followed by optional post-run actions.
+// when tb implements ResetTimer, the method is called after setup, before jumping into the main loop
+func RunWithRandSourceX[T Tx](
 	tb testing.TB,
 	tCfg simtypes.Config,
 	setupChainStateFn func(ctx context.Context, r *rand.Rand) (TestInstance[T], ChainState[T], []simtypes.Account),
-	seed int64,
+	randSource rand.Source,
 	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
 ) {
 	tb.Helper()
-	r := rand.New(rand.NewSource(seed))
+	r := rand.New(randSource)
 	rootCtx, done := context.WithCancel(context.Background())
 	defer done()
 
@@ -272,6 +286,10 @@ func RunWithSeedX[T Tx](
 
 	modules := testInstance.ModuleManager.Modules()
 	msgFactoriesFn := prepareSimsMsgFactories(r, modules, simsx.ParamWeightSource(emptySimParams))
+
+	if b, ok := tb.(interface{ ResetTimer() }); ok {
+		b.ResetTimer()
+	}
 
 	doMainLoop(
 		tb,

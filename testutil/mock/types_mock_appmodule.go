@@ -213,7 +213,7 @@ func (m *MockAppModuleWithAllExtensionsABCI) BeginBlock(arg0 context.Context) er
 }
 
 // BeginBlock indicates an expected call of BeginBlock.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) BeginBlock(arg0 interface{}) *gomock.Call {
+func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) BeginBlock(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginBlock", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).BeginBlock), arg0)
 }

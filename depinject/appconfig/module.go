@@ -17,17 +17,13 @@ var Register = RegisterModule
 // will be injected into the container and can be requested by a provider
 // function. All module initialization should be handled by the provided options.
 //
-// In some cases, a module may need to be manually overwritten from the global module
-// registry. This can be done by calling RegisterModule again with the same config,
-// but different options. This is useful when wrapping or overriding default modules.
+// Config is a protobuf message type. It should define the cosmos.app.v1alpha.module
+// option and must explicitly specify go_packageto make debugging easier for users.
 //
-// Protobuf message types used for module configuration should define the
-// cosmos.app.v1alpha.module option and must explicitly specify go_package
-// to make debugging easier for users.
+// If you want to customize an existing module, you need to overwrite by calling
+// RegisterModule again with the same config (proto API type) and new Provide or
+// Invoke options. Example:
 //
-// If you want to customize an existing module, you need to overwrite by calling RegisterModule
-// again with the same proto API type as the module you want to overwrite and new Provide or
-// Invoke options:
 // - Create a new struct and wrap the existing module inside it:
 //
 //	type MyBankAppModule struct {

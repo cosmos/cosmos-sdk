@@ -53,6 +53,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (x/params) [#22995](https://github.com/cosmos/cosmos-sdk/pull/22995) Remove `x/params`.  Migrate to the new params system introduced in `v0.47` as demonstrated [here](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams).
 * (testutil) [#22392](https://github.com/cosmos/cosmos-sdk/pull/22392) Remove `testutil/network` package. Use the integration framework or systemtests framework instead.
+* (proto) [#23437](https://github.com/cosmos/cosmos-sdk/pull/23437) Deprecate `Block` field from `GetBlockByHeightResponse` and return empty comet block for `GetBlockByHeight`.
 
 #### Removal of v0 components
 

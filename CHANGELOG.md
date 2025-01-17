@@ -57,6 +57,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/auth/tx) [23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing CacheWithValue for ExtensionOptions.
 * (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
 * (server) [#23244](https://github.com/cosmos/cosmos-sdk/pull/23244) Allow align block header with skip check header in grpc server.
+* (x/auth) [#23357](https://github.com/cosmos/cosmos-sdk/pull/23357) Fixes accessibility of the AddressStringToBytes HTTP binding and adds another binding to AddressBytesToString.
 
 ### Deprecated
 

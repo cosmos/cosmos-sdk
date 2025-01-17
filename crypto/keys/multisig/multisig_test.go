@@ -260,8 +260,8 @@ func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
 
 func TestMultiSigMigration(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
-	pkSet, sigs := generatePubKeysAndSignatures(2, msg)
-	multisignature := multisig.NewMultisig(2)
+	pkSet, sigs := generatePubKeysAndSignatures(3, msg)
+	multisignature := multisig.NewMultisig(3)
 
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
@@ -318,6 +318,22 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubK
 	return
 }
 
+// generateNestedMultiSignature creates a nested multisig structure for testing purposes.
+// It generates a top-level multisig with 'n' sub-multisigs, where each sub-multisig contains
+// 5 individual signatures.
+//
+// Parameters:
+// - n: number of nested multisigs to generate (determines the size of the top-level multisig)
+// - msg: the message to be signed
+//
+// Returns:
+// - multisig.PubKey: the top-level multisig public key containing n sub-multisig public keys
+// - *signing.MultiSignatureData: the corresponding signature data structure containing n sub-multisig signatures
+//
+// Each sub-multisig is configured with:
+// - threshold of 5 (requires all 4 signatures)
+// - 5 individual secp256k1 public keys and their corresponding signatures
+// All signature bits are set to true to simulate a fully signed multisig.
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
 	pubKeys := make([]cryptotypes.PubKey, n)
 	signatures := make([]signing.SignatureData, n)
@@ -333,10 +349,10 @@ func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.
 			Signatures: nestedSigs,
 		}
 		signatures[i] = nestedSig
-		pubKeys[i] = kmultisig.NewLegacyAminoPubKey(5, nestedPks)
+		pubKeys[i] = kmultisig.NewLegacyAminoPubKey(4, nestedPks)
 		bitArray.SetIndex(i, true)
 	}
-	return kmultisig.NewLegacyAminoPubKey(n, pubKeys), &signing.MultiSignatureData{
+	return kmultisig.NewLegacyAminoPubKey(n-1, pubKeys), &signing.MultiSignatureData{
 		BitArray:   bitArray,
 		Signatures: signatures,
 	}

@@ -25,6 +25,9 @@ func NewLegacyAminoPubKey(threshold int, pubKeys []cryptotypes.PubKey) *LegacyAm
 	if threshold <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
+	if len(pubKeys) < threshold {
+		panic("threshold k of n multisignature: len(pubKeys) < k")
+	}
 	anyPubKeys, err := packPubKeys(pubKeys)
 	if err != nil {
 		panic(err)

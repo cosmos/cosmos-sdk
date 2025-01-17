@@ -3,7 +3,7 @@ module cosmossdk.io/simapp/v2
 go 1.23.4
 
 require (
-	cosmossdk.io/api v0.8.1
+	cosmossdk.io/api v0.8.2-0.20250114014050-e279d7cec391
 	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.1.0
@@ -297,6 +297,7 @@ replace (
 
 // server v2 integration
 replace (
+	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/indexer/postgres => ../../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
@@ -304,4 +305,5 @@ replace (
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store/v2
+
 )

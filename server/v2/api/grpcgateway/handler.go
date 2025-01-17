@@ -67,27 +67,15 @@ func registerMethods[T transaction.Tx](logger log.Logger, mux *http.ServeMux, am
 		fallbackRouter.ServeHTTP(w, r)
 	})
 
-	// register in deterministic order. we do this because of the problem mentioned below, and different nodes could
-	// end up with one version of the handler or the other.
 	uris := slices.Sorted(maps.Keys(annotationToMetadata))
-
 	for _, uri := range uris {
 		queryMD := annotationToMetadata[uri]
-		// we need to wrap this in a panic handler because cosmos SDK proto stubs contains a duplicate annotation
-		// that causes the registration to panic.
-		func(u string, qMD queryMetadata) {
-			defer func() {
-				if err := recover(); err != nil {
-					logger.Warn("duplicate HTTP annotation detected", "error", err)
-				}
-			}()
-			mux.Handle(u, &protoHandler[T]{
-				msg:              qMD.msg,
-				fallbackRouter:   fallbackRouter,
-				appManager:       am,
-				wildcardKeyNames: qMD.wildcardKeyNames,
-			})
-		}(uri, queryMD)
+		mux.Handle(uri, &protoHandler[T]{
+			msg:              queryMD.msg,
+			fallbackRouter:   fallbackRouter,
+			appManager:       am,
+			wildcardKeyNames: queryMD.wildcardKeyNames,
+		})
 	}
 }
 

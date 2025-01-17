@@ -33,7 +33,7 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
-## [v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.1) - 2025-01-06
+## [v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.1) - 2025-01-17
 
 * [#23324](https://github.com/cosmos/cosmos-sdk/pull/23324) Sign over unordered and timeout timestamp fields.
 

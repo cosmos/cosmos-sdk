@@ -38,10 +38,10 @@ https://github.com/cosmos/cosmos-sdk/blob/28fa3b8/x/bank/proto/cosmos/bank/v1bet
 
 ### `transaction.Msg` Interface
 
-`transaction.Msg` is an alias of `proto.Message`. 
+`transaction.Msg` uses structural types to define the interface for a message. 
 
 ```go reference 
-https://github.com/cosmos/cosmos-sdk/blob/main/core/transaction/transaction.go#L8
+https://github.com/cosmos/cosmos-sdk/blob/main/core/transaction/transaction.go#L4-L9
 ```
 
 Signers from the `GetSigners()` call is automated via a protobuf annotation. 

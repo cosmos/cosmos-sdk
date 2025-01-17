@@ -5,8 +5,6 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
 
-Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
-It is additional to the changes described here.
 
 ### SimApp
 
@@ -33,7 +31,7 @@ clientCtx = clientCtx.
 
 **When using `depinject` / `app_di`, the client codecs can be provided directly from application config.**
 
-Refer to SimApp `root_v2.go` and `root.go` for an example with an app di and a legacy app.
+Refer to SimApp `root.go` for an example with an app di and a legacy app.
 
 Additionally, a simplification of the start command leads to the following change:
 
@@ -329,7 +327,7 @@ All modules (expect `auth`) were spun out into their own `go.mod`. Replace their
 
 ##### Core API
 
-Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
+Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with baseapp, as well as limit their dependencies on the SDK.
 
 Additionally, the `appmodule.Environment` struct is introduced to fetch different services from the application.
 This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
@@ -465,9 +463,6 @@ Existing chains using `x/distribution` module must add the new `x/protocolpool` 
 #### `x/gov`
 
 Gov v1beta1 proposal handler has been changed to take in a `context.Context` instead of `sdk.Context`.
-This change was made to allow legacy proposals to be compatible with server/v2.
-If you wish to migrate to server/v2, you should update your proposal handler to take in a `context.Context` and use services.
-On the other hand, if you wish to keep using baseapp, simply unwrap the sdk context in your proposal handler.
 
 #### `x/mint`
 
@@ -510,7 +505,7 @@ storetypes.StoreUpgrades{
 
 #### `x/validate`
 
-Introducing `x/validate` a module that is solely used for registering default ante/post handlers and global tx validators when using runtime and runtime/v2. If you wish to set your custom ante/post handlers, no need to use this module.
+Introducing `x/validate` a module that is solely used for registering default ante/post handlers and global tx validators when using runtime. If you wish to set your custom ante/post handlers, no need to use this module.
 You can however always extend them by adding extra tx validators (see `x/validate` documentation).
 
 #### `tools/benchmark`

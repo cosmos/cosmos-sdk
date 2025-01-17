@@ -9,8 +9,6 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241107153845-4e240908dd60
-	cosmossdk.io/server/v2/stf v0.0.0-20241107153845-4e240908dd60
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
 	cosmossdk.io/x/evidence v0.2.0-rc.1
@@ -33,7 +31,6 @@ require (
 )
 
 require (
-	cosmossdk.io/store/v2 v2.0.0-20241209145349-34f407d6367a
 	cosmossdk.io/x/accounts v0.2.0-rc.1
 	cosmossdk.io/x/accounts/defaults/base v0.2.0-rc.1
 	cosmossdk.io/x/accounts/defaults/lockup v0.2.0-rc.1
@@ -53,7 +50,7 @@ require (
 	github.com/google/gofuzz v1.2.0
 	github.com/jhump/protoreflect v1.17.0
 	github.com/spf13/viper v1.19.0
-	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
+	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b // indirect
 )
 
 require (
@@ -72,10 +69,8 @@ require (
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/client/v2 v2.10.0-beta.1 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/indexer/postgres v0.1.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241107153845-4e240908dd60 // indirect
 	cosmossdk.io/tools/benchmark v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/circuit v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/epochs v0.2.0-rc.1 // indirect
@@ -178,7 +173,6 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect

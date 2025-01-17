@@ -40,11 +40,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
+## [v0.52.0-rc.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-rc.2) - 2025-01-17
+
+Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
+
 ### Features
 
 * (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
 * (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
-* (server) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Add custom rollback command option. In order to use it, you need to implement the Rollback interface and remove the default rollback command with `cmd.RemoveCommand(cmd.RollbackCmd)` and then add it back with `cmd.AddCommand(cmd.NewCustomRollbackCmd(appCreator, rollbackable))`.
+* (server) [#23321](https://github.com/cosmos/cosmos-sdk/pull/23321) Add custom rollback command option. In order to use it, you need to implement the Rollback interface and remove the default rollback command with `cmd.RemoveCommand(cmd.RollbackCmd)` and then add it back with `cmd.AddCommand(cmd.NewCustomRollbackCmd(appCreator, rollbackable))`.
 
 ### Improvements
 
@@ -52,10 +56,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
-* (query) [23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
-* (x/auth/tx) [#23170](https://github.com/cosmos/cosmos-sdk/pull/23170) Avoid panic from newWrapperFromDecodedTx when AuthInfo.Fee is optional in decodedTx.
-* (x/auth/tx) [23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing CacheWithValue for ExtensionOptions.
-* (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
+* (query) [#23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
+* (x/auth/tx) [#23170](https://github.com/cosmos/cosmos-sdk/pull/23170) Avoid panic from `newWrapperFromDecodedTx` when `AuthInfo.Fee` is optional in decodedTx.
+* (x/auth/tx) [#23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing `CacheWithValue` for `ExtensionOptions`.
+* (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from `intoAnyV2` when v1.PublicKey is optional.
 * (server) [#23244](https://github.com/cosmos/cosmos-sdk/pull/23244) Allow align block header with skip check header in grpc server.
 * (x/auth) [#23357](https://github.com/cosmos/cosmos-sdk/pull/23357) Fixes accessibility of the AddressStringToBytes HTTP binding and adds another binding to AddressBytesToString.
 

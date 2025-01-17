@@ -57,6 +57,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/auth/tx) [#23170](https://github.com/cosmos/cosmos-sdk/pull/23170) Avoid panic from newWrapperFromDecodedTx when AuthInfo.Fee is optional in decodedTx.
 * (x/auth/tx) [23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing CacheWithValue for ExtensionOptions.
 * (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
+* (x/auth) [#23357](https://github.com/cosmos/cosmos-sdk/pull/23357) Fixes accessibility of the AddressStringToBytes HTTP binding and adds another binding to AddressBytesToString.
 
 ### API Breaking Changes
 

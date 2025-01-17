@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -83,14 +84,14 @@ func createTestSuite(t *testing.T) *suite {
 	var err error
 	startupCfg := integration.DefaultStartUpConfig(t)
 
-	msgRouterService := integration.NewRouterService()
+	msgRouterService := msgrouter.NewRouterService()
 	res.registerMsgRouterService(msgRouterService)
 
 	var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
 		return msgRouterService
 	}
 
-	queryRouterService := integration.NewRouterService()
+	queryRouterService := msgrouter.NewRouterService()
 	res.registerQueryRouterService(queryRouterService)
 
 	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
@@ -168,7 +169,7 @@ func createTestSuite(t *testing.T) *suite {
 	return &res
 }
 
-func (s *suite) registerMsgRouterService(router *integration.RouterService) {
+func (s *suite) registerMsgRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 	bankSendHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		msg, ok := req.(*banktypes.MsgSend)
@@ -183,7 +184,7 @@ func (s *suite) registerMsgRouterService(router *integration.RouterService) {
 	router.RegisterHandler(bankSendHandler, "cosmos.bank.v1beta1.MsgSend")
 }
 
-func (s *suite) registerQueryRouterService(router *integration.RouterService) {
+func (s *suite) registerQueryRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 	queryHandler := func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 		req, ok := msg.(*accountsv1.AccountNumberRequest)

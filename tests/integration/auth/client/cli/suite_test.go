@@ -87,7 +87,6 @@ func (s *CLITestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	pub, err := valAcc.GetPubKey()
 	s.Require().NoError(err)
-	kb.SaveOfflineKey("newAccount", pub)
 
 	account1, _, err := kb.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)

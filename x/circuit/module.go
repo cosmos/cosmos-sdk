@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/schema"
@@ -19,7 +20,6 @@ import (
 	"cosmossdk.io/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -81,7 +81,11 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // DefaultGenesis returns default genesis state as raw bytes for the circuit module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the circuit module.

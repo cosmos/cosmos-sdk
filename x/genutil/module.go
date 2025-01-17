@@ -7,9 +7,9 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/codec"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -62,7 +62,11 @@ func (AppModule) Name() string {
 
 // DefaultGenesis returns default genesis state as raw bytes for the genutil module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the genutil module.
@@ -79,7 +83,9 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 // InitGenesis is skipped in a server/v2 application as DecodeGenesisJSON takes precedence.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
-	am.cdc.MustUnmarshalJSON(data, &genesisState)
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		panic(err)
+	}
 	return InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
 }
 

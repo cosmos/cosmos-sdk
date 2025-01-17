@@ -2204,7 +2204,7 @@ func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	})
 }
 
-// TestABCI_Proposal_Reset_State ensures that state is reset between runs of
+// TestABCI_Proposal_Reset_State_Between_Calls ensures that state is reset between runs of
 // PrepareProposal and ProcessProposal in case they are called multiple times.
 // This is only valid for heights > 1, given that on height 1 we always set the
 // state to be deliverState.

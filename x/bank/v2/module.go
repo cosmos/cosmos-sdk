@@ -8,12 +8,11 @@ import (
 	"github.com/spf13/cobra"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/bank/v2/client/cli"
 	"cosmossdk.io/x/bank/v2/keeper"
 	"cosmossdk.io/x/bank/v2/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // ConsensusVersion defines the current x/bank/v2 module consensus version.
@@ -58,7 +57,11 @@ func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the bank module.
@@ -94,18 +97,13 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 // RegisterMsgHandlers registers the message handlers for the bank module.
 func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 	handlers := keeper.NewHandlers(am.keeper)
-
-	appmodulev2.RegisterMsgHandler(router, handlers.MsgUpdateParams)
-	appmodulev2.RegisterMsgHandler(router, handlers.MsgSend)
-	appmodulev2.RegisterMsgHandler(router, handlers.MsgMint)
+	handlers.RegisterMsgHandlers(router)
 }
 
 // RegisterQueryHandlers registers the query handlers for the bank module.
 func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 	handlers := keeper.NewHandlers(am.keeper)
-
-	appmodulev2.RegisterMsgHandler(router, handlers.QueryParams)
-	appmodulev2.RegisterMsgHandler(router, handlers.QueryBalance)
+	handlers.RegisterQueryHandlers(router)
 }
 
 // GetTxCmd returns the root tx command for the bank/v2 module.

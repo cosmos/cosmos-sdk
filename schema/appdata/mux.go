@@ -138,8 +138,8 @@ func ListenerMux(listeners ...Listener) Listener {
 	}
 
 	mux.onBatch = func(batch PacketBatch) error {
-		for _, listener := range listeners {
-			err := batch.apply(&listener) //nolint:gosec // aliasing is safe here
+		for i := range listeners {
+			err := batch.apply(&listeners[i])
 			if err != nil {
 				return err
 			}

@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/x/epochs/keeper"
@@ -17,7 +18,6 @@ import (
 	"cosmossdk.io/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -75,7 +75,11 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // DefaultGenesis returns the epochs module's default genesis state.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesis())
+	data, err := am.cdc.MarshalJSON(types.DefaultGenesis())
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // ValidateGenesis performs genesis state validation for the epochs module.

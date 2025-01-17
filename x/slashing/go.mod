@@ -3,7 +3,7 @@ module cosmossdk.io/x/slashing
 go 1.23.3
 
 require (
-	cosmossdk.io/api v0.8.1
+	cosmossdk.io/api v0.8.2
 	cosmossdk.io/collections v1.0.0
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1

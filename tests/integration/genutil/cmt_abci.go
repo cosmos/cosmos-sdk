@@ -4,6 +4,7 @@ import (
 	"context"
 
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 )
 

@@ -430,7 +430,7 @@ func (b *memDBBatch) Write() error {
 		}
 	}
 
-	// Make sure batch cannot be used afterwards. Callers should still call Close(), for
+	// Make sure batch cannot be used afterwards. Callers should still call Close().
 	return b.Close()
 }
 

@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+* (x/upgrade) [#23179](https://github.com/cosmos/cosmos-sdk/pull/23179) Register missing implementation for SoftwareUpgradeProposal to avoid no concrete type registered for type URL /cosmos.upgrade.v1beta1.SoftwareUpgradeProposal against interface *v1beta1.Content error.
+* (x/upgrade) [#23378](https://github.com/cosmos/cosmos-sdk/pull/23378) Register missing implementation for CancelSoftwareUpgradeProposal to avoid no concrete type registered for type URL /cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal against interface *v1beta1.Content error.
+
 ## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.2.0-rc.1) - 2024-12-18
 
 ### Improvements

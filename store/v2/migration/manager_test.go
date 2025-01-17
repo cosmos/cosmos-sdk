@@ -70,7 +70,6 @@ func TestMigrateState(t *testing.T) {
 	// expecting error for conflicting process, since Migrate trigger snapshotter create migration,
 	// which start a snapshot process already.
 	_, err = m.snapshotsManager.Create(toVersion - 1)
-	fmt.Println(1)
 	require.Error(t, err)
 
 	// check the migrated state

@@ -404,7 +404,7 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				txs := gjson.Get(string(res), "txs").Array()
-				require.Equal(t, len(txs), tc.expLen)
+				require.Equal(t, tc.expLen, len(txs))
 			}
 		})
 	}

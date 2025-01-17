@@ -127,6 +127,8 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		"Fee granter":                    {},
 		"Gas limit":                      {},
 		"Timeout height":                 {},
+		"Timeout timestamp":              {},
+		"Unordered":                      {},
 		"Other signer":                   {},
 		"Extension options":              {},
 		"Non critical extension options": {},

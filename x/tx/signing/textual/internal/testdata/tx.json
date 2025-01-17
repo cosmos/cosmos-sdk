@@ -232,6 +232,8 @@
 				],
 				"memo": "> ⚛️\\u269B⚛️     ",
 				"timeout_height": 20,
+				"unordered": true,
+				"timeout_timestamp": "2042-01-01T00:00:20Z",
 				"extension_options": [
 					{
 						"@type": "/cosmos.base.v1beta1.Coin",
@@ -385,7 +387,9 @@
 			{ "title": "Non critical extension options (1/1)", "content": "/cosmos.auth.v1beta1.Params", "indent": 1, "expert": true },
 			{ "title": "Max memo characters", "content": "10", "indent": 2, "expert": true },
 			{ "content": "End of Non critical extension options", "expert": true },
-			{ "title": "Hash of raw bytes", "content": "e7be7808de4985bd609811d2a32805cb233c168c7d247d61d37f4a6dd4cf3a2a", "expert": true }
+			{ "title": "Hash of raw bytes", "content": "9c8e99e281e501bb8778b0361dd574c764e54d96ba354a8abc9ccd2ea18e3e06", "expert": true },
+			{ "title": "Unordered", "content": "True", "expert": true },
+			{"title": "Timeout timestamp", "content": "2042-01-01T00:00:20Z", "expert": true}
 		]
 	}
 ]

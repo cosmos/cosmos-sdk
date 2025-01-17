@@ -60,9 +60,6 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 	if int(m.Threshold) <= 0 {
 		return fmt.Errorf("invalid threshold: must be > 0, got %d", m.Threshold)
 	}
-	if len(pubKeys) <= int(m.Threshold) {
-		return fmt.Errorf("invalid N-M multisig: N (%d) must be > M (%d)", len(pubKeys), m.Threshold)
-	}
 	// ensure bit array is the correct size
 	if len(pubKeys) != size {
 		return fmt.Errorf("bit array size is incorrect, expecting: %d", len(pubKeys))

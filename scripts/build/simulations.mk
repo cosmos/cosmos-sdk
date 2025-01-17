@@ -68,6 +68,7 @@ test-sim-multi-seed-short-v2:
 	 @cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
 		-NumBlocks=50
 
+<<<<<<< HEAD
 test-v2-sim:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
 	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestSimsAppV2
@@ -79,6 +80,8 @@ test-sim-benchmark-invariants:
 	cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -benchmem -bench=BenchmarkInvariants -tags='sims' -run=^$ \
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 -Commit=true -Seed=57 -v -timeout 24h
 
+=======
+>>>>>>> b8638f892 (test: add more sims tests (#23421))
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-nondeterminism-streaming \
@@ -88,29 +91,41 @@ test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
-test-sim-benchmark-invariants
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
-SIM_COMMIT ?= true
 
 #? test-sim-fuzz: Run fuzz test for simapp
 test-sim-fuzz:
 	@echo "Running application fuzz for numBlocks=2, blockSize=20. This may take awhile!"
 #ld flags are a quick fix to make it work on current osx
+<<<<<<< HEAD
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -json -tags='sims' -ldflags="-extldflags=-Wl,-ld_classic" -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
+=======
+	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -json -tags='sims' -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
+>>>>>>> b8638f892 (test: add more sims tests (#23421))
 
 #? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
+<<<<<<< HEAD
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -tags='sims' -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
+=======
+	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -tags='sims' -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE)
+>>>>>>> b8638f892 (test: add more sims tests (#23421))
 
 
 test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
+<<<<<<< HEAD
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -tags='sims' -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
+=======
+	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -tags='sims' -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -cpuprofile cpu.out -memprofile mem.out
+>>>>>>> b8638f892 (test: add more sims tests (#23421))
 
 .PHONY: test-sim-profile test-sim-benchmark test-sim-fuzz
 

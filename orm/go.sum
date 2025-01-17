@@ -2,8 +2,8 @@ buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e
 buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e42a58b301.1/go.mod h1:UJ1nx2WHcWAvKiaem512kYlHektAZJ/eNU032Pdar70=
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.2-20240130113600-88ef6483f90f.1 h1:LFgdGZ+BzNqHWsndyRvvFE1450BBZ2nFtyNEGZ9NOSg=
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.2-20240130113600-88ef6483f90f.1/go.mod h1:cuOHNO5SRU1J25UoI8VvPyi8dq9BpZb4gKa01Umx57Y=
-cosmossdk.io/api v0.8.0 h1:E5Xifxu/3mPTLF79si9fyq4rR0wagubeVNmOz5duTUo=
-cosmossdk.io/api v0.8.0/go.mod h1:hgJ83P0ZUu0rS1SZoVM6abk6ADOkiM259BVVlYtAPP0=
+cosmossdk.io/api v0.8.2 h1:klzA1RODd9tTawJ2CbBd/34RV/cB9qtd9oJN6rcRqqg=
+cosmossdk.io/api v0.8.2/go.mod h1:XJUwQrihIDjErzs3+jm1zO/9KRzKf4HMjRzXC+l+Cio=
 cosmossdk.io/core v1.0.0 h1:e7XBbISOytLBOXMVwpRPixThXqEkeLGlg8no/qpgS8U=
 cosmossdk.io/core v1.0.0/go.mod h1:mKIp3RkoEmtqdEdFHxHwWAULRe+79gfdOvmArrLDbDc=
 cosmossdk.io/core/testing v0.0.1 h1:gYCTaftcRrz+HoNXmK7r9KgbG1jgBJ8pNzm/Pa/erFQ=

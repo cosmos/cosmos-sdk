@@ -54,6 +54,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (all) [#23445](https://github.com/cosmos/cosmos-sdk/pull/23445) Remove `v2` code from codebase.
 * (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recursion limits.
+* (proto) [#23437](https://github.com/cosmos/cosmos-sdk/pull/23437) Deprecate `Block` field from `GetBlockByHeightResponse` and return empty comet block for `GetBlockByHeight`.
 
 ### Bug Fixes
 

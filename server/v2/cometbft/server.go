@@ -390,7 +390,7 @@ func (s *CometBFTServer[T]) WriteCustomConfigAt(configPath string) error {
 	return nil
 }
 
-// gRPCServiceRegistrar returns a function that registers the CometBFT gRPC service
+// GRPCServiceRegistrar returns a function that registers the CometBFT gRPC service
 // Those services are defined for backward compatibility.
 // Eventually, they will be removed in favor of the new gRPC services.
 func (s *CometBFTServer[T]) GRPCServiceRegistrar(

@@ -66,7 +66,7 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) e
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)
 }
 
-// NewMsgSubmitMultipleChoiceProposal creates a new MsgSubmitMultipleChoiceProposal.
+// NewMultipleChoiceMsgSubmitProposal creates a new MsgSubmitMultipleChoiceProposal.
 func NewMultipleChoiceMsgSubmitProposal(
 	initialDeposit sdk.Coins,
 	proposer, metadata, title, summary string,

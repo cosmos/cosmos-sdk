@@ -26,7 +26,7 @@ type Server[T transaction.Tx] struct {
 // New creates a new Swagger UI server
 func New[T transaction.Tx](
     logger log.Logger,
-    cfg serverv2.ConfigMap,
+    cfg map[string]any,
     cfgOptions ...CfgOption,
 ) (*Server[T], error) {
     srv := &Server[T]{

@@ -283,12 +283,19 @@ func GenesisStateWithValSet(
 	return genesisState, nil
 }
 
+var _ server.DynamicConfig = EmptyAppOptions{}
+
 // EmptyAppOptions is a stub implementing AppOptions
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
+}
+
+// GetString implements AppOptions
+func (ao EmptyAppOptions) GetString(o string) string {
+	return ""
 }
 
 // AppOptionsMap is a stub implementing AppOptions which can get data from a map

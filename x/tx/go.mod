@@ -3,7 +3,7 @@ module cosmossdk.io/x/tx
 go 1.23
 
 require (
-	cosmossdk.io/api v0.8.0
+	cosmossdk.io/api v0.8.2
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.5.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -14,7 +14,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tendermint/go-amino v0.16.0
-	google.golang.org/protobuf v1.36.2
+	google.golang.org/protobuf v1.36.3
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 )

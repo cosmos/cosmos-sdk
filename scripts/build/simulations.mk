@@ -32,15 +32,9 @@ test-sim-custom-genesis-fast:
 		-NumBlocks=100 -BlockSize=200 -Seed=99 -SigverifyTx=false
 
 test-sim-import-export:
-<<<<<<< HEAD
 	@echo "Running application import/export simulation. This may take several minutes..."
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 20m -tags='sims' -run TestAppImportExport \
 		-NumBlocks=50
-=======
-	 @echo "Running application import/export simulation. This may take several minutes..."
-	 @cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 20m -tags='sims' -run TestAppImportExport \
-	 	-NumBlocks=50
->>>>>>> 5359c8f9e (fix: Add sims export/import test and fix (#23462))
 
 test-sim-after-import:
 	@echo "Running application simulation-after-import. This may take several minutes..."

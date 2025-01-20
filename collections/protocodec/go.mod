@@ -8,7 +8,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/google/go-cmp v0.6.0
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.36.2
+	google.golang.org/protobuf v1.36.3
 )
 
 require (

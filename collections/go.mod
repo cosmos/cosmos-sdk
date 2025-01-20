@@ -9,7 +9,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
-	google.golang.org/protobuf v1.36.2
+	google.golang.org/protobuf v1.36.3
 	pgregory.net/rapid v1.1.0
 )
 

@@ -6,7 +6,6 @@ option go_package = "cosmossdk.io/x/mint/types";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
-import "google/protobuf/any.proto";
 
 // Minter represents the minting state.
 message Minter {

@@ -84,6 +84,7 @@ type (
 
 	ModuleManager interface {
 		Modules() map[string]appmodulev2.AppModule
+		StoreKeys() map[string]string
 	}
 
 	// SimulationApp abstract blockchain app

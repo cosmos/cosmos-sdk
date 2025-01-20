@@ -23,6 +23,7 @@ message Period {
   ];
 }
 
+// UnbondingEntries list of elements
 message UnbondingEntries {
   repeated UnbondingEntry entries = 1;
 }

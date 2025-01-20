@@ -1769,6 +1769,7 @@ func (x *Period) GetAmount() []*v1beta1.Coin {
 	return nil
 }
 
+// UnbondingEntries list of elements
 type UnbondingEntries struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

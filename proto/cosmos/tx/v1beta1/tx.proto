@@ -143,6 +143,41 @@ message TxBody {
   repeated google.protobuf.Any non_critical_extension_options = 2047;
 }
 
+// TxBodyCompat is the body of a transaction that all signers sign over.
+// This message is used to represent the transaction body before the unordered
+// features was added. It is used to support backwards compatibility when user a newer
+// client with an older chain.
+message TxBodyCompat {
+  // messages is a list of messages to be executed. The required signers of
+  // those messages define the number and order of elements in AuthInfo's
+  // signer_infos and Tx's signatures. Each required signer address is added to
+  // the list only the first time it occurs.
+  // By convention, the first required signer (usually from the first message)
+  // is referred to as the primary signer and pays the fee for the whole
+  // transaction.
+  repeated google.protobuf.Any messages = 1;
+
+  // memo is any arbitrary note/comment to be added to the transaction.
+  // WARNING: in clients, any publicly exposed text should not be called memo,
+  // but should be called `note` instead (see
+  // https://github.com/cosmos/cosmos-sdk/issues/9122).
+  string memo = 2;
+
+  // timeout_height is the block height after which this transaction will not
+  // be processed by the chain.
+  uint64 timeout_height = 3;
+
+  // extension_options are arbitrary options that can be added by chains
+  // when the default options are not sufficient. If any of these are present
+  // and can't be handled, the transaction will be rejected
+  repeated google.protobuf.Any extension_options = 1023;
+
+  // extension_options are arbitrary options that can be added by chains
+  // when the default options are not sufficient. If any of these are present
+  // and can't be handled, they will be ignored
+  repeated google.protobuf.Any non_critical_extension_options = 2047;
+}
+
 // AuthInfo describes the fee and signer modes that are used to sign a
 // transaction.
 message AuthInfo {

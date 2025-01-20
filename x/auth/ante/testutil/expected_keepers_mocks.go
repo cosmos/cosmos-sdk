@@ -202,6 +202,21 @@ func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
 	return m.recorder
 }
 
+// AppVersion mocks base method.
+func (m *MockConsensusKeeper) AppVersion(ctx context.Context) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AppVersion", ctx)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AppVersion indicates an expected call of AppVersion.
+func (mr *MockConsensusKeeperMockRecorder) AppVersion(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppVersion", reflect.TypeOf((*MockConsensusKeeper)(nil).AppVersion), ctx)
+}
+
 // BlockParams mocks base method.
 func (m *MockConsensusKeeper) BlockParams(arg0 context.Context) (uint64, uint64, error) {
 	m.ctrl.T.Helper()

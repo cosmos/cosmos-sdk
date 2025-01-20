@@ -25,6 +25,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
+=======
+### Features
+
+* [#23462](https://github.com/cosmos/cosmos-sdk/pull/23462) fixes missing data for genesis ex-/import on key rotation 
+* [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315), [#22556](https://github.com/cosmos/cosmos-sdk/pull/22556) Create metadata type and add metadata field in validator details proto
+    * Add parsing of `metadata-profile-pic-uri` in `create-validator` JSON.
+    * Add cli flag: `metadata-profile-pic-uri` to `edit-validator` cmd.
+
+### API Breaking Changes
+
+* [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
+    * New field `Metadata` introduced in `types`: `Description`.
+    * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.
+
+>>>>>>> 5359c8f9e (fix: Add sims export/import test and fix (#23462))
 ## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/staking/v0.2.0-rc.1) - 2024-12-18
 
 ### Features

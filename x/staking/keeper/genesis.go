@@ -361,7 +361,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	}
 
 	var initConsAddrs, rotatedConsAddrs []types.RotatedConsensusAddresses
-	err = k.ConsAddrToValidatorIdentifierMap.Walk(ctx, nil, func(newBz []byte, initBz []byte) (stop bool, err error) {
+	err = k.ConsAddrToValidatorIdentifierMap.Walk(ctx, nil, func(newBz, initBz []byte) (stop bool, err error) {
 		oldAddr, err2 := k.consensusAddressCodec.BytesToString(initBz)
 		if err2 != nil {
 			return true, fmt.Errorf("decode initial address %X: %w", initBz, err2)
@@ -373,7 +373,11 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		initConsAddrs = append(initConsAddrs, types.RotatedConsensusAddresses{OldAddress: oldAddr, NewAddress: newAddr})
 		return false, nil
 	})
-	err = k.OldToNewConsAddrMap.Walk(ctx, nil, func(oldBz []byte, newBz []byte) (stop bool, err error) {
+	if err != nil {
+		return nil, fmt.Errorf("cons addrs to validator ident: %w", err)
+	}
+
+	err = k.OldToNewConsAddrMap.Walk(ctx, nil, func(oldBz, newBz []byte) (stop bool, err error) {
 		oldAddr, err2 := k.consensusAddressCodec.BytesToString(oldBz)
 		if err2 != nil {
 			return true, fmt.Errorf("decode old address %X: %w", oldBz, err2)
@@ -385,6 +389,9 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		rotatedConsAddrs = append(rotatedConsAddrs, types.RotatedConsensusAddresses{OldAddress: oldAddr, NewAddress: newAddr})
 		return false, nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("old to new cons addrs: %w", err)
+	}
 
 	return &types.GenesisState{
 		Params:               params,

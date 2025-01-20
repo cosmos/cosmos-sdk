@@ -36,13 +36,13 @@ func DefaultConfig() Config {
 	defaultOptions := iavl.DefaultTreeOptions()
 
 	return Config{
-		CheckpointInterval:  defaultOptions.CheckpointInterval,
+		CheckpointInterval:  200,
 		CheckpointMemory:    defaultOptions.CheckpointMemory,
 		StateStorage:        defaultOptions.StateStorage,
-		HeightFilter:        defaultOptions.HeightFilter,
-		EvictionDepth:       defaultOptions.EvictionDepth,
+		HeightFilter:        1,
+		EvictionDepth:       22,
 		MetricsProxy:        defaultOptions.MetricsProxy,
-		PruneRatio:          defaultOptions.PruneRatio,
+		PruneRatio:          1,
 		MinimumKeepVersions: defaultOptions.MinimumKeepVersions,
 	}
 }

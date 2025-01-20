@@ -198,16 +198,6 @@ func isHighBitSet(version uint64) error {
 	return nil
 }
 
-func DefaultOptions(keepVersions int64) iavl.TreeOptions {
-	opts := iavl.DefaultTreeOptions()
-	opts.MinimumKeepVersions = keepVersions
-	opts.CheckpointInterval = 200
-	opts.PruneRatio = 1
-	opts.HeightFilter = 1
-	opts.EvictionDepth = 22
-	return opts
-}
-
 func SetGlobalPruneLimit(limit int) {
 	iavl.SetGlobalPruneLimit(limit)
 }

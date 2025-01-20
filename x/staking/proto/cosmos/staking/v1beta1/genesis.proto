@@ -47,7 +47,16 @@ message GenesisState {
   repeated ConsPubKeyRotationHistory rotation_history = 10
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
+  // RotationQueue with address and time tuples
   repeated RotationQueueRecord rotation_queue = 11 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // RotatedConsAddresses contains old and new address pairs
+  repeated RotatedConsensusAddresses rotated_cons_addresses = 12
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // InitialConsAddresses contains current to initial address pair
+  repeated RotatedConsensusAddresses initial_cons_addresses = 13
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // LastValidatorPower required for validator set update logic.
@@ -62,7 +71,20 @@ message LastValidatorPower {
   int64 power = 2;
 }
 
-message RotationIndexRecord { // contains address as bytes and time as int64
+// RotatedConsensusAddresses contains the old and new address tuple.
+message RotatedConsensusAddresses {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // OldAddress is the consensus address of the validator before rotating.
+  string old_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // NewAddress is the consensus address of the validator after rotating.
+  string new_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// RotationIndexRecord address as bytes and time as int64
+message RotationIndexRecord {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -70,6 +92,7 @@ message RotationIndexRecord { // contains address as bytes and time as int64
   google.protobuf.Timestamp time    = 6 [(gogoproto.stdtime) = true];
 }
 
+// RotationQueueRecord address time tuple
 message RotationQueueRecord {
   ValAddrsOfRotatedConsKeys val_addrs = 1;
   google.protobuf.Timestamp time      = 2 [(gogoproto.stdtime) = true];

@@ -188,6 +188,9 @@ var (
 					SkipStoreKeys: []string{
 						authtxconfig.DepinjectModuleName,
 						validate.ModuleName,
+						genutiltypes.ModuleName,
+						runtime.ModuleName,
+						vestingtypes.ModuleName,
 					},
 				}),
 			},

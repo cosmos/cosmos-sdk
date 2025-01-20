@@ -25,7 +25,7 @@ type Tree struct {
 }
 
 func NewTree(
-	treeOptions iavl.TreeOptions,
+	cfg Config,
 	dbOptions iavl.SqliteDbOptions,
 	log log.Logger,
 ) (*Tree, error) {
@@ -34,7 +34,7 @@ func NewTree(
 	if err != nil {
 		return nil, err
 	}
-	tree := iavl.NewTree(sql, pool, treeOptions)
+	tree := iavl.NewTree(sql, pool, cfg.ToTreeOptions())
 	return &Tree{tree: tree, log: log, path: dbOptions.Path}, nil
 }
 

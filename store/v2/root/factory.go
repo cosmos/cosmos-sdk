@@ -37,7 +37,7 @@ type Options struct {
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`
 	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
-	IavlV2Config    iavl_v2.TreeOptions
+	IavlV2Config    iavlv2.Config        `mapstructure:"iavl-v2-config" toml:"iavl-v2-config"`
 }
 
 // FactoryOptions are the options for creating a root store.

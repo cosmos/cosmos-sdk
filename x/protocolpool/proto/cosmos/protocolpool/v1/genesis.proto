@@ -5,7 +5,6 @@ option go_package = "cosmossdk.io/x/protocolpool/types";
 
 import "cosmos/protocolpool/v1/types.proto";
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 
 // GenesisState defines the protocolpool module's genesis state.
@@ -29,6 +28,7 @@ message GenesisState {
   Params params = 5;
 }
 
+// Distribution time with amount tuple
 message Distribution {
   // time at which this distribution was made, in order to distribute to non-expired funds only
   // and funds that existed at that time. Because we don't distribute right away, we keep track

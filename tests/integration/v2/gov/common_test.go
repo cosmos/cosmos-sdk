@@ -11,6 +11,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/testing/msgrouter"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
@@ -144,14 +145,14 @@ func createTestSuite(t *testing.T, genesisBehavior int) suite {
 
 	startupCfg := integration.DefaultStartUpConfig(t)
 
-	msgRouterService := integration.NewRouterService()
+	msgRouterService := msgrouter.NewRouterService()
 	res.registerMsgRouterService(msgRouterService)
 
 	var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
 		return msgRouterService
 	}
 
-	queryRouterService := integration.NewRouterService()
+	queryRouterService := msgrouter.NewRouterService()
 	res.registerQueryRouterService(queryRouterService)
 	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
 
@@ -173,7 +174,7 @@ func createTestSuite(t *testing.T, genesisBehavior int) suite {
 	return res
 }
 
-func (s *suite) registerMsgRouterService(router *integration.RouterService) {
+func (s *suite) registerMsgRouterService(router *msgrouter.RouterService) {
 	// register custom router service
 	bankSendHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		msg, ok := req.(*banktypes.MsgSend)
@@ -202,5 +203,5 @@ func (s *suite) registerMsgRouterService(router *integration.RouterService) {
 	router.RegisterHandler(govSubmitProposalHandler, "/cosmos.gov.v1.MsgExecLegacyContent")
 }
 
-func (f *suite) registerQueryRouterService(router *integration.RouterService) {
+func (f *suite) registerQueryRouterService(_ *msgrouter.RouterService) {
 }

@@ -11,7 +11,7 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	xtxsigning "cosmossdk.io/x/tx/signing"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -186,7 +186,7 @@ func TestMsgService(t *testing.T) {
 
 	// Second round: all signer infos are set, so each signer can sign.
 	anyPk, err := codectypes.NewAnyWithValue(priv.PubKey())
-	signerData := xtxsigning.SignerData{
+	signerData := txsigning.SignerData{
 		ChainID:       "test",
 		AccountNumber: 0,
 		Sequence:      0,

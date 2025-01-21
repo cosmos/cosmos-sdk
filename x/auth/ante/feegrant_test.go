@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
-	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

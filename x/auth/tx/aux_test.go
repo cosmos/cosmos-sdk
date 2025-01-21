@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
-	xtxsigning "cosmossdk.io/x/tx/signing"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -138,7 +139,7 @@ func TestBuilderWithAux(t *testing.T) {
 	anyPk, err := codectypes.NewAnyWithValue(feepayerPk)
 	require.NoError(t, err)
 
-	signerData := xtxsigning.SignerData{
+	signerData := txsigning.SignerData{
 		Address:       feepayerAddr.String(),
 		ChainID:       chainID,
 		AccountNumber: 11,

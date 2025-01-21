@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"math/rand"
 
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"cosmossdk.io/core/transaction"
 	txsigning "cosmossdk.io/x/tx/signing"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

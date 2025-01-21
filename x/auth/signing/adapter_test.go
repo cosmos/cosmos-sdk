@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/stretchr/testify/require"
+
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

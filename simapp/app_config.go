@@ -313,14 +313,11 @@ var (
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
-<<<<<<< HEAD:simapp/app_config.go
 			// This module is only used for testing the depinject gogo x pulsar module registration.
 			{
 				Name:   countertypes.ModuleName,
 				Config: appconfig.WrapAny(&countertypes.Module{}),
 			},
-=======
->>>>>>> f40f820ec (fix(x/protocolpool): withdraw rewards before export genesis (#23467)):simapp/v2/app_config.go
 		},
 	}
 )

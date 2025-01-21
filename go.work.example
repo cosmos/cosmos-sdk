@@ -14,7 +14,7 @@ use (
 	./log
 	./math
 	./orm
-	./simapp/v2
+	./simapp
 	./tests
 	./tests/systemtests
 	./schema

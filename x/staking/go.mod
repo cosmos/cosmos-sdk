@@ -31,11 +31,16 @@ require (
 )
 
 require (
+<<<<<<< HEAD
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.2-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/x/bank v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/tx v1.0.0 // indirect; main
+=======
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.3-20240130113600-88ef6483f90f.1 // indirect
+	cosmossdk.io/x/tx v1.0.0 // indirect
+>>>>>>> 69d8c61ab (build(deps): Bump buf.build/gen/go/cometbft/cometbft/protocolbuffers/go from 1.36.2-20241120201313-68e42a58b301.1 to 1.36.3-20241120201313-68e42a58b301.1 in /api (#23468))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -161,7 +166,22 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+<<<<<<< HEAD
 require github.com/dgraph-io/badger/v4 v4.5.0 // indirect
+=======
+require (
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.3-20241120201313-68e42a58b301.1 // indirect
+	cosmossdk.io/log v1.5.0
+	github.com/dgraph-io/badger/v4 v4.5.0 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/flatbuffers v24.3.25+incompatible // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/supranational/blst v0.3.13 // indirect
+	go.opencensus.io v0.24.0 // indirect
+)
+
+require cosmossdk.io/schema v1.0.0
+>>>>>>> 69d8c61ab (build(deps): Bump buf.build/gen/go/cometbft/cometbft/protocolbuffers/go from 1.36.2-20241120201313-68e42a58b301.1 to 1.36.3-20241120201313-68e42a58b301.1 in /api (#23468))
 
 require (
 	github.com/bytedance/sonic v1.12.6 // indirect

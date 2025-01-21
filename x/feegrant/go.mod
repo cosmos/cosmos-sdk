@@ -29,9 +29,15 @@ require (
 )
 
 require (
+<<<<<<< HEAD
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.2-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/client/v2 v2.10.0-beta.1 // indirect
+=======
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.3-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.3-20240130113600-88ef6483f90f.1 // indirect
+	cosmossdk.io/client/v2 v2.0.0-beta.6 // indirect
+>>>>>>> 69d8c61ab (build(deps): Bump buf.build/gen/go/cometbft/cometbft/protocolbuffers/go from 1.36.2-20241120201313-68e42a58b301.1 to 1.36.3-20241120201313-68e42a58b301.1 in /api (#23468))
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/x/protocolpool v0.2.0-rc.1 // indirect

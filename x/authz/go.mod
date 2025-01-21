@@ -27,10 +27,16 @@ require (
 )
 
 require (
+<<<<<<< HEAD
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.2-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect
 	cosmossdk.io/core/testing v0.0.1
+=======
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.3-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.3-20240130113600-88ef6483f90f.1 // indirect
+	cosmossdk.io/collections v1.0.0 // indirect
+>>>>>>> 69d8c61ab (build(deps): Bump buf.build/gen/go/cometbft/cometbft/protocolbuffers/go from 1.36.2-20241120201313-68e42a58b301.1 to 1.36.3-20241120201313-68e42a58b301.1 in /api (#23468))
 	cosmossdk.io/schema v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

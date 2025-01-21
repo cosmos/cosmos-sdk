@@ -9,66 +9,47 @@ require (
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
-<<<<<<< HEAD
 	cosmossdk.io/math v1.5.0
-	cosmossdk.io/store v1.10.0-rc.1
-	cosmossdk.io/x/tx v1.0.1
-=======
-	cosmossdk.io/math v1.4.0
-	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
-	cosmossdk.io/store v1.10.0-rc.1
-	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
-	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/tx v1.0.0-alpha.3
-	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
->>>>>>> parent of 4a073fa4a4 (chore: remove simapp v1 (#23009))
-	github.com/cometbft/cometbft v1.0.0
-	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/gogoproto v1.7.0
-	github.com/spf13/cobra v1.8.1 // indirect
-	github.com/stretchr/testify v1.10.0
-	go.uber.org/mock v0.5.0
-	google.golang.org/grpc v1.69.4
-	google.golang.org/protobuf v1.36.3
-	gotest.tools/v3 v3.5.1
-	pgregory.net/rapid v1.1.0
-)
-
-require (
 	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
 	cosmossdk.io/server/v2/stf v1.0.0-beta.2
+	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
+	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/store/v2 v2.0.0-beta.1
-	github.com/cometbft/cometbft/api v1.0.0
-	github.com/cosmos/cosmos-db v1.1.1
-	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.6.0
-	github.com/google/gofuzz v1.2.0
-	github.com/spf13/viper v1.19.0
-	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
-)
-
-require (
-	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/evidence v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/feegrant v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/distribution v0.0.0-20240227221813-a248d05f70f4
+	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/upgrade v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/tx v1.0.1
+	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
+	github.com/cometbft/cometbft v1.0.0
+	github.com/cometbft/cometbft/api v1.0.0
+	github.com/cosmos/cosmos-db v1.1.1
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/gogoproto v1.7.0
+	github.com/google/go-cmp v0.6.0
+	github.com/google/gofuzz v1.2.0
 	github.com/jhump/protoreflect v1.17.0
+	github.com/spf13/viper v1.19.0
+	github.com/stretchr/testify v1.10.0
+	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
+	go.uber.org/mock v0.5.0
+	google.golang.org/grpc v1.69.4
+	google.golang.org/protobuf v1.36.3
+	gotest.tools/v3 v3.5.1
+	pgregory.net/rapid v1.1.0
 )
 
 require (
@@ -85,14 +66,11 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/indexer/postgres v0.1.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.2 // indirect
-=======
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/tools/benchmark v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
->>>>>>> parent of 4a073fa4a4 (chore: remove simapp v1 (#23009))
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
+	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -146,6 +124,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -221,6 +200,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
+	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
@@ -301,12 +281,9 @@ replace (
 
 // Below are the long-lived replace for tests.
 replace (
-<<<<<<< HEAD
 	cosmossdk.io/core/testing => ../core/testing
-=======
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
->>>>>>> parent of 4a073fa4a4 (chore: remove simapp v1 (#23009))
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

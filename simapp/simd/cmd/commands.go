@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"errors"
-	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"io"
+
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

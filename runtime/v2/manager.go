@@ -84,6 +84,21 @@ func (m *MM[T]) Modules() map[string]appmodulev2.AppModule {
 	return m.modules
 }
 
+// StoreKeys returns a map containing modules to their store keys
+func (m *MM[T]) StoreKeys() map[string]string {
+	storeKeys := make(map[string]string, len(m.modules))
+	for v := range maps.Keys(m.modules) {
+		storeKeys[v] = v // set default naming convention
+	}
+	for _, v := range m.config.OverrideStoreKeys {
+		storeKeys[v.ModuleName] = v.KvStoreKey
+	}
+	for _, v := range m.config.SkipStoreKeys {
+		delete(storeKeys, v)
+	}
+	return storeKeys
+}
+
 // RegisterLegacyAminoCodec registers all module codecs
 func (m *MM[T]) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 	for _, b := range m.modules {

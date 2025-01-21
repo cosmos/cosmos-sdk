@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cd docs && sh ./pre.sh
-      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
+      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.16
         with:
           folder-path: "docs"
       - run: cd docs && sh ./post.sh

@@ -239,7 +239,7 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.Website,
 		d2.SecurityContact,
 		d2.Details,
-		d.Metadata,
+		d2.Metadata,
 	).Validate()
 }
 

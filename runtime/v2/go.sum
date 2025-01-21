@@ -23,8 +23,8 @@ cosmossdk.io/server/v2/stf v1.0.0-beta.2 h1:d4zNeDvemOOxyIr0xDBpDKxhYKZBsLcxiK28
 cosmossdk.io/server/v2/stf v1.0.0-beta.2/go.mod h1:O6Njxje0LbvC0RxdgwTmvBlbGcpKOfhbkdAguyq0ntQ=
 cosmossdk.io/store/v2 v2.0.0-beta.1 h1:p1fdZ9uNijhpXZXdqs0QS6NmXNDVPNyT4DHV4yQnF64=
 cosmossdk.io/store/v2 v2.0.0-beta.1/go.mod h1:qHQmf/9mnsXwo/Ypp2u2Zs6BmkYcx1R/Jrpyn9Ro13A=
-cosmossdk.io/x/tx v1.0.0 h1:pUUKRvHiMUZC/MnO8v747k1lUEA1DfAq0j0y0Mqrz/o=
-cosmossdk.io/x/tx v1.0.0/go.mod h1:AXYJ47btzkcWuT1OtA3M44dv1iiYbKomtopHEbQGgH4=
+cosmossdk.io/x/tx v1.0.1 h1:PomaVlERYWxhki9RKX+uTE30eJkyqIQjxc7kw1DPXUk=
+cosmossdk.io/x/tx v1.0.1/go.mod h1:dwOSom2k2BJuGgnm9YXBeFII9gbHJGN/BHZBVCbZvPg=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.5.5 h1:oWf5W7GtOLgp6bciQYDmhHHjdhYkALu6S/5Ni9ZgSvQ=
 github.com/DataDog/zstd v1.5.5/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
@@ -314,8 +314,8 @@ golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8U
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.32.0 h1:euUpcYgM8WcP71gNpTqQCn6rC2t6ULUPiOzfWaXVVfc=
 golang.org/x/crypto v0.32.0/go.mod h1:ZnnJkOaASj8g0AjIduWNlq2NRxL0PlBrbKVyZ6V/Ugc=
-golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f h1:XdNn9LlyWAhLVp6P/i8QYBW+hlyhrhei9uErw2B5GJo=
-golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f/go.mod h1:D5SMRVC3C2/4+F/DB1wZsLRnSNimn2Sp/NPsCrsv8ak=
+golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 h1:yqrTHse8TCMW1M1ZCP+VAR/l0kKxwaAIqN/il7x4voA=
+golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8/go.mod h1:tujkw807nyEEAamNbDrEGzRav+ilXA7PCRAd6xsmwiU=
 golang.org/x/mod v0.2.0/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
 golang.org/x/mod v0.3.0/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
 golang.org/x/net v0.0.0-20180724234803-3673e40ba225/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=

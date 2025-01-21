@@ -5,7 +5,13 @@ package simapp
 import (
 	"bytes"
 	"context"
+	authzkeeper "cosmossdk.io/x/authz/keeper"
+	"cosmossdk.io/x/feegrant"
+	slashingtypes "cosmossdk.io/x/slashing/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
+	"maps"
 	"math/rand"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -103,6 +109,65 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		}
 		// run sims with new app setup from exported genesis
 		RunWithRandSourceX[Tx](tb, cfg, importGenesisChainStateFactory, ti.RandSource)
+	}
+	RunWithSeeds[Tx, *SimApp[Tx]](t, appFactory, AppConfig, DefaultSeeds, exportAndStartChainFromGenesisPostAction)
+}
+
+// Scenario:
+//
+//	Start a fresh node and run n blocks, export state
+//	set up a new node instance, Init chain from exported genesis
+//	then the stored data should be the same
+func TestAppImportExport(t *testing.T) {
+	appFactory := NewSimApp[Tx]
+	cfg := simcli.NewConfigFromFlags()
+	cfg.ChainID = SimAppChainID
+
+	exportAndStartChainFromGenesisPostAction := func(tb testing.TB, cs ChainState[Tx], ti TestInstance[Tx], accs []simtypes.Account) {
+		tb.Helper()
+		tb.Log("exporting genesis...\n")
+		app, ok := ti.App.(ExportableApp)
+		require.True(tb, ok)
+		exported, err := app.ExportAppStateAndValidators(false, []string{})
+		require.NoError(tb, err)
+
+		genesisTimestamp := cs.BlockTime
+		startHeight := uint64(exported.Height) + 1
+		chainID := SimAppChainID
+		tb.Log("importing genesis...\n")
+
+		newTestInstance := SetupTestInstance(tb, appFactory, AppConfig, ti.RandSource)
+		newTestInstance.InitializeChain(
+			tb,
+			context.Background(),
+			chainID,
+			genesisTimestamp,
+			startHeight,
+			exported.AppState,
+		)
+		t.Log("comparing stores...")
+		// skip certain prefixes
+		skipPrefixes := map[string][][]byte{
+			stakingtypes.StoreKey: {
+				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
+			},
+			authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
+			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
+			slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
+		}
+		type decodeable interface {
+			RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry)
+		}
+		storeDecoders := make(simtypes.StoreDecoderRegistry)
+		for _, m := range ti.ModuleManager.Modules() {
+			if v, ok := m.(decodeable); ok {
+				v.RegisterStoreDecoder(storeDecoders)
+			}
+		}
+		storeKeys := slices.Collect(maps.Values(ti.ModuleManager.StoreKeys()))
+		slices.Sort(storeKeys)
+
+		AssertEqualStores(tb, ti.App.Store(), newTestInstance.App.Store(), storeKeys, storeDecoders, skipPrefixes)
 	}
 	RunWithSeeds[Tx, *SimApp[Tx]](t, appFactory, AppConfig, DefaultSeeds, exportAndStartChainFromGenesisPostAction)
 }

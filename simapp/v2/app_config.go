@@ -154,7 +154,6 @@ var (
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
-						// bankv2types.ModuleName,
 						distrtypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
@@ -174,7 +173,28 @@ var (
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
-					// ExportGenesis: []string{},
+					ExportGenesis: []string{
+						consensustypes.ModuleName,
+						accounts.ModuleName,
+						authtypes.ModuleName,
+						pooltypes.ModuleName, // Must be exported before bank
+						banktypes.ModuleName,
+						distrtypes.ModuleName,
+						stakingtypes.ModuleName,
+						slashingtypes.ModuleName,
+						govtypes.ModuleName,
+						minttypes.ModuleName,
+						genutiltypes.ModuleName,
+						evidencetypes.ModuleName,
+						authz.ModuleName,
+						feegrant.ModuleName,
+						nft.ModuleName,
+						group.ModuleName,
+						upgradetypes.ModuleName,
+						vestingtypes.ModuleName,
+						circuittypes.ModuleName,
+						epochstypes.ModuleName,
+					},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
 					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
@@ -188,6 +208,9 @@ var (
 					SkipStoreKeys: []string{
 						authtxconfig.DepinjectModuleName,
 						validate.ModuleName,
+						genutiltypes.ModuleName,
+						runtime.ModuleName,
+						vestingtypes.ModuleName,
 					},
 				}),
 			},
@@ -295,10 +318,6 @@ var (
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
-			// {
-			// 	Name:   bankv2types.ModuleName,
-			// 	Config: appconfig.WrapAny(&bankmodulev2.Module{}),
-			// },
 		},
 	}
 )

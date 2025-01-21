@@ -4,7 +4,9 @@ import (
 	"context"
 	"testing"
 
+	xtxsigning "cosmossdk.io/x/tx/signing"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -133,12 +135,18 @@ func TestBuilderWithAux(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	signerData := authsigning.SignerData{
+	anyPk, err := codectypes.NewAnyWithValue(feepayerPk)
+	require.NoError(t, err)
+
+	signerData := xtxsigning.SignerData{
 		Address:       feepayerAddr.String(),
 		ChainID:       chainID,
 		AccountNumber: 11,
 		Sequence:      15,
-		PubKey:        feepayerPk,
+		PubKey: &anypb.Any{
+			TypeUrl: anyPk.TypeUrl,
+			Value:   anyPk.Value,
+		},
 	}
 
 	signBz, err = authsigning.GetSignBytesAdapter(

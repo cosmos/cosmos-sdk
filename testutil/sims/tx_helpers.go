@@ -8,12 +8,15 @@ import (
 
 	types2 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/errors"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -69,12 +72,17 @@ func GenSignedMockTx(
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
-		signerData := authsign.SignerData{
+		anyPk, err := codectypes.NewAnyWithValue(p.PubKey())
+		if err != nil {
+			return nil, err
+		}
+
+		signerData := txsigning.SignerData{
 			Address:       sdk.AccAddress(p.PubKey().Address()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			PubKey:        p.PubKey(),
+			PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
 		}
 
 		signBytes, err := authsign.GetSignBytesAdapter(

@@ -10,9 +10,13 @@ import (
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -168,7 +172,7 @@ func CalculateGas(
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
 	ctx context.Context,
-	signMode signing.SignMode, signerData authsigning.SignerData,
+	signMode signing.SignMode, signerData txsigning.SignerData,
 	txBuilder client.TxBuilder, priv cryptotypes.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
 ) (signing.SignatureV2, error) {
@@ -277,12 +281,17 @@ func Sign(ctx client.Context, txf Factory, name string, txBuilder client.TxBuild
 		return err
 	}
 
-	signerData := authsigning.SignerData{
+	anyPk, err := codectypes.NewAnyWithValue(pubKey)
+	if err != nil {
+		return err
+	}
+
+	signerData := txsigning.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
-		PubKey:        pubKey,
 		Address:       addressStr,
+		PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on

@@ -6,10 +6,12 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	xtxsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -183,11 +185,15 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 
 	// Second round: all signer infos are set, so each signer can sign.
-	signerData := authsigning.SignerData{
+	anyPk, err := codectypes.NewAnyWithValue(priv.PubKey())
+	signerData := xtxsigning.SignerData{
 		ChainID:       "test",
 		AccountNumber: 0,
 		Sequence:      0,
-		PubKey:        priv.PubKey(),
+		PubKey: &anypb.Any{
+			TypeUrl: anyPk.TypeUrl,
+			Value:   anyPk.Value,
+		},
 	}
 	sigV2, err = tx.SignWithPrivKey(
 		context.TODO(), defaultSignMode, signerData,

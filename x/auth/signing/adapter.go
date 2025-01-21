@@ -27,7 +27,7 @@ func GetSignBytesAdapter(
 	ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
 	mode signing.SignMode,
-	signerData SignerData,
+	signerData txsigning.SignerData,
 	tx sdk.Tx,
 ) ([]byte, error) {
 	adaptableTx, ok := tx.(V2AdaptableTx)
@@ -36,7 +36,7 @@ func GetSignBytesAdapter(
 	}
 	txData := adaptableTx.GetSigningTxData()
 
-	txSignMode, err := internalSignModeToAPI(mode)
+	txSignMode, err := InternalSignModeToAPI(mode)
 	if err != nil {
 		return nil, err
 	}

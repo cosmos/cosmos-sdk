@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/stretchr/testify/require"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -17,7 +18,7 @@ func TestGetSignBytesAdapterNoPublicKey(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	txConfig := encodingConfig.TxConfig
 	_, _, addr := testdata.KeyTestPubAddr()
-	signerData := authsign.SignerData{
+	signerData := txsigning.SignerData{
 		Address:       addr.String(),
 		ChainID:       "test-chain",
 		AccountNumber: 11,

@@ -118,23 +118,17 @@ func printAndValidateSigs(
 				return false
 			}
 
-			signingData := authsigning.SignerData{
-				Address:       sigAddr.String(),
-				ChainID:       chainID,
-				AccountNumber: accNum,
-				Sequence:      accSeq,
-				PubKey:        pubKey,
-			}
 			anyPk, err := codectypes.NewAnyWithValue(pubKey)
 			if err != nil {
 				cmd.PrintErrf("failed to pack public key: %v", err)
 				return false
 			}
+
 			txSignerData := txsigning.SignerData{
-				ChainID:       signingData.ChainID,
-				AccountNumber: signingData.AccountNumber,
-				Sequence:      signingData.Sequence,
-				Address:       signingData.Address,
+				ChainID:       chainID,
+				AccountNumber: accNum,
+				Sequence:      accSeq,
+				Address:       sigAddr.String(),
 				PubKey: &anypb.Any{
 					TypeUrl: anyPk.TypeUrl,
 					Value:   anyPk.Value,

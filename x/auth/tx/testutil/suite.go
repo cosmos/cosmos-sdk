@@ -6,11 +6,14 @@ import (
 	"strings"
 
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/math"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -139,12 +142,15 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(sigTx.ValidateBasic())
 
 	// sign transaction
-	signerData := signing.SignerData{
+	anyPk, err := codectypes.NewAnyWithValue(pubkey)
+	s.Require().NoError(err)
+
+	signerData := txsigning.SignerData{
 		Address:       addr.String(),
 		ChainID:       "test",
 		AccountNumber: 1,
 		Sequence:      seq1,
-		PubKey:        pubkey,
+		PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
 	}
 	signBytes, err := signing.GetSignBytesAdapter(context.Background(),
 		s.TxConfig.SignModeHandler(), defaultSignMode, signerData, sigTx)
@@ -152,12 +158,15 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	sigBz, err := privKey.Sign(signBytes)
 	s.Require().NoError(err)
 
-	signerData = signing.SignerData{
+	anyPk, err = codectypes.NewAnyWithValue(multisigPk)
+	s.Require().NoError(err)
+
+	signerData = txsigning.SignerData{
 		Address:       msigAddr.String(),
 		ChainID:       "test",
 		AccountNumber: 3,
 		Sequence:      mseq,
-		PubKey:        multisigPk,
+		PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
 	}
 	mSignBytes, err := signing.GetSignBytesAdapter(context.Background(),
 		s.TxConfig.SignModeHandler(), defaultSignMode, signerData, sigTx)

@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"os"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"

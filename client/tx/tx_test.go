@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

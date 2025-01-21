@@ -74,7 +74,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 	case flags.SignModeTextual:
 		signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 	case flags.SignModeEIP191:
-		signMode = apisigning.SignMode_SIGN_MODE_EIP_191
+		signMode = apisigning.SignMode_SIGN_MODE_EIP_191 //nolint:staticcheck // We still need to check if it was called
 	}
 
 	var accNum, accSeq uint64

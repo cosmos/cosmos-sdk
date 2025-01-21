@@ -2,6 +2,7 @@ package signing
 
 import (
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 

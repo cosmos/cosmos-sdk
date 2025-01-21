@@ -182,6 +182,8 @@ func TestMsgService(t *testing.T) {
 
 	// Second round: all signer infos are set, so each signer can sign.
 	anyPk, err := codectypes.NewAnyWithValue(priv.PubKey())
+	require.NoError(t, err)
+
 	signerData := txsigning.SignerData{
 		ChainID:       "test",
 		AccountNumber: 0,

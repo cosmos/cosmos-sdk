@@ -10,8 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"github.com/cosmos/gogoproto/jsonpb"
+
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"

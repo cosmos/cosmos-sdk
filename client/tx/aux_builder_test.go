@@ -3,8 +3,9 @@ package tx_test
 import (
 	"testing"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"github.com/stretchr/testify/require"
+
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"

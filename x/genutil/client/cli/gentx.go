@@ -26,11 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-type genesisMM interface {
-	DefaultGenesis() map[string]json.RawMessage
-	ValidateGenesis(genesisData map[string]json.RawMessage) error
-}
-
 // GenTxCmd builds the application's gentx command.
 func GenTxCmd(genMM genesisMM, genBalIterator types.GenesisBalancesIterator) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()

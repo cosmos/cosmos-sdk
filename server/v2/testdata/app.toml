@@ -37,6 +37,22 @@ interval = 100
 
 [store.options.iavl-config]
 # CacheSize set the size of the iavl tree cache.
-cache-size = 100000
+cache-size = 500000
 # If true, the tree will work like no fast storage and always not upgrade fast storage.
 skip-fast-storage-upgrade = true
+
+[store.options.iavl-v2-config]
+# CheckpointInterval set the interval of the checkpoint.
+checkpoint-interval = 0
+# CheckpointMemory set the memory of the checkpoint.
+checkpoint-memory = 0
+# StateStorage set the state storage.
+state-storage = false
+# HeightFilter set the height filter.
+height-filter = 0
+# EvictionDepth set the eviction depth.
+eviction-depth = 0
+# PruneRatio set the prune ratio.
+prune-ratio = 0.0
+# MinimumKeepVersions set the minimum keep versions.
+minimum-keep-versions = 0

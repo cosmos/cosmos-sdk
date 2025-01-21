@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 func migrateDelegationsByValidatorIndex(store storetypes.KVStore) error {

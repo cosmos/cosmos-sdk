@@ -332,7 +332,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 	return options.createPubkey(compressedPublicKey), nil
 }
 
-// getPubKeyAddr reads the pubkey and the address from a ledger device.
+// getPubKeyAddrSafe reads the pubkey and the address from a ledger device.
 // This function is marked as Safe as it will require user confirmation and
 // account and index will be shown in the device.
 //

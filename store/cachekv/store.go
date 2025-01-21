@@ -104,12 +104,8 @@ func (store *Store) resetCaches() {
 		// Clear the cache using the map clearing idiom
 		// and not allocating fresh objects.
 		// Please see https://bencher.orijtech.com/perfclinic/mapclearing/
-		for key := range store.cache {
-			delete(store.cache, key)
-		}
-		for key := range store.unsortedCache {
-			delete(store.unsortedCache, key)
-		}
+		clear(store.cache)
+		clear(store.unsortedCache)
 	}
 	store.sortedCache = internal.NewBTree()
 }
@@ -369,9 +365,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) { //nolint:staticcheck // We are in store v1.
 	n := len(store.unsortedCache)
 	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
-		for key := range store.unsortedCache {
-			delete(store.unsortedCache, key)
-		}
+		clear(store.unsortedCache)
 	} else { // Otherwise, normally delete the unsorted keys from the map.
 		for _, kv := range unsorted {
 			delete(store.unsortedCache, conv.UnsafeBytesToStr(kv.Key))

@@ -13,6 +13,8 @@ import (
 )
 
 func TestBankV2SendTxCmd(t *testing.T) {
+	// bankv2 was removed from simapp
+	t.Skip()
 	// scenario: test bank send command
 	// given a running chain
 

@@ -27,7 +27,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/server/v2/appmanager"
-	cometbfttypes "cosmossdk.io/server/v2/cometbft/types"
 	storev2 "cosmossdk.io/store/v2"
 	consensustypes "cosmossdk.io/x/consensus/types"
 
@@ -51,8 +50,8 @@ type (
 
 const SimAppChainID = "simulation-app"
 
-// this list of seeds was imported from the original simulation runner: https://github.com/cosmos/tools/blob/v1.0.0/cmd/runsim/main.go#L32
-var defaultSeeds = []int64{
+// DefaultSeeds list of seeds was imported from the original simulation runner: https://github.com/cosmos/tools/blob/v1.0.0/cmd/runsim/main.go#L32
+var DefaultSeeds = []int64{
 	1, 2, 4, 7,
 	32, 123, 124, 582, 1893, 2989,
 	3012, 4728, 37827, 981928, 87821, 891823782,
@@ -85,10 +84,19 @@ type (
 
 	ModuleManager interface {
 		Modules() map[string]appmodulev2.AppModule
+		StoreKeys() map[string]string
 	}
 
 	// SimulationApp abstract blockchain app
 	SimulationApp[T Tx] interface {
+		appmanager.TransactionFuzzer[T]
+		InitGenesis(
+			ctx context.Context,
+			blockRequest *server.BlockRequest[T],
+			initGenesisJSON []byte,
+			txDecoder transaction.Codec[T],
+		) (*server.BlockResponse, store.WriterMap, error)
+
 		GetApp() *runtime.App[T]
 		TxConfig() client.TxConfig
 		AppCodec() codec.Codec
@@ -99,6 +107,7 @@ type (
 
 	// TestInstance system under test
 	TestInstance[T Tx] struct {
+		RandSource    simsxv2.RandSource
 		App           SimulationApp[T]
 		TxDecoder     transaction.Codec[T]
 		BankKeeper    BankKeeper
@@ -110,18 +119,24 @@ type (
 	}
 
 	AppFactory[T Tx, V SimulationApp[T]] func(config depinject.Config, outputs ...any) (V, error)
+	AppConfigFactory                     func() depinject.Config
 )
 
 // SetupTestInstance initializes and returns the system under test.
-func SetupTestInstance[T Tx, V SimulationApp[T]](t *testing.T, factory AppFactory[T, V], appConfig depinject.Config) TestInstance[T] {
-	t.Helper()
+func SetupTestInstance[T Tx, V SimulationApp[T]](
+	tb testing.TB,
+	appFactory AppFactory[T, V],
+	appConfigFactory AppConfigFactory,
+	randSource simsxv2.RandSource,
+) TestInstance[T] {
+	tb.Helper()
 	vp := viper.New()
 	vp.Set("store.app-db-backend", "memdb")
-	vp.Set("home", t.TempDir())
+	vp.Set("home", tb.TempDir())
 
 	depInjCfg := depinject.Configs(
 		depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(vp.AllSettings())),
-		appConfig,
+		appConfigFactory(),
 	)
 	var (
 		bankKeeper BankKeeper
@@ -134,11 +149,12 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](t *testing.T, factory AppFactor
 		&bankKeeper,
 		&stKeeper,
 	)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
-	xapp, err := factory(depinject.Configs(depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(vp.AllSettings()))))
-	require.NoError(t, err)
+	xapp, err := appFactory(depinject.Configs(depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(vp.AllSettings()))))
+	require.NoError(tb, err)
 	return TestInstance[T]{
+		RandSource:    randSource,
 		App:           xapp,
 		BankKeeper:    bankKeeper,
 		AuthKeeper:    authKeeper,
@@ -150,80 +166,147 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](t *testing.T, factory AppFactor
 	}
 }
 
-// RunWithSeeds runs a series of subtests using the default set of random seeds for deterministic simulation testing.
-func RunWithSeeds[T Tx](
+// InitializeChain sets up the blockchain with an initial state, validator set, and history using the provided genesis data.
+func (ti TestInstance[T]) InitializeChain(
+	tb testing.TB,
+	ctx context.Context,
+	chainID string,
+	genesisTimestamp time.Time,
+	initialHeight uint64,
+	genesisAppState json.RawMessage,
+) ChainState[T] {
+	tb.Helper()
+	initRsp, stateRoot := doChainInitWithGenesis(
+		tb,
+		ctx,
+		chainID,
+		genesisTimestamp,
+		initialHeight,
+		genesisAppState,
+		ti,
+	)
+	activeValidatorSet := simsxv2.NewValSet().Update(initRsp.ValidatorUpdates)
+	valsetHistory := simsxv2.NewValSetHistory(initialHeight)
+	valsetHistory.Add(genesisTimestamp, activeValidatorSet)
+	return ChainState[T]{
+		ChainID:            chainID,
+		BlockTime:          genesisTimestamp,
+		BlockHeight:        initialHeight,
+		ActiveValidatorSet: activeValidatorSet,
+		ValsetHistory:      valsetHistory,
+		AppHash:            stateRoot,
+	}
+}
+
+// RunWithSeeds runs a series of subtests for each of the given set of seeds for deterministic simulation testing.
+func RunWithSeeds[T Tx, V SimulationApp[T]](
 	t *testing.T,
+	appFactory AppFactory[T, V],
+	appConfigFactory AppConfigFactory,
 	seeds []int64,
-	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
 ) {
 	t.Helper()
 	cfg := cli.NewConfigFromFlags()
 	cfg.ChainID = SimAppChainID
-	for i := range seeds {
-		seed := seeds[i]
+	for _, seed := range seeds {
 		t.Run(fmt.Sprintf("seed: %d", seed), func(t *testing.T) {
 			t.Parallel()
-			RunWithSeed(t, NewSimApp[T], AppConfig(), cfg, seed, postRunActions...)
+			RunWithSeed(t, appFactory, appConfigFactory, cfg, seed, postRunActions...)
 		})
 	}
 }
 
 // RunWithSeed initializes and executes a simulation run with the given seed, generating blocks and transactions.
 func RunWithSeed[T Tx, V SimulationApp[T]](
-	t *testing.T,
+	tb testing.TB,
 	appFactory AppFactory[T, V],
-	appConfig depinject.Config,
+	appConfigFactory AppConfigFactory,
 	tCfg simtypes.Config,
 	seed int64,
-	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
 ) {
-	t.Helper()
-	r := rand.New(rand.NewSource(seed))
-	testInstance := SetupTestInstance[T, V](t, appFactory, appConfig)
-	accounts, genesisAppState, chainID, genesisTimestamp := prepareInitialGenesisState(testInstance.App, r, testInstance.BankKeeper, tCfg, testInstance.ModuleManager)
+	tb.Helper()
+	RunWithRandSource(tb, appFactory, appConfigFactory, tCfg, simsxv2.NewSeededRandSource(seed), postRunActions...)
+}
 
-	appManager := testInstance.AppManager
-	appStore := testInstance.App.Store()
-	txConfig := testInstance.App.TxConfig()
+// RunWithRandSource initializes and executes a simulation run with the given rand source, generating blocks and transactions.
+func RunWithRandSource[T Tx, V SimulationApp[T]](
+	tb testing.TB,
+	appFactory AppFactory[T, V],
+	appConfigFactory AppConfigFactory,
+	tCfg simtypes.Config,
+	randSource simsxv2.RandSource,
+	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
+) {
+	tb.Helper()
+	initialBlockHeight := tCfg.InitialBlockHeight
+	require.NotEmpty(tb, initialBlockHeight, "initial block height must not be 0")
+
+	setupFn := func(ctx context.Context, r *rand.Rand) (TestInstance[T], ChainState[T], []simtypes.Account) {
+		testInstance := SetupTestInstance[T, V](tb, appFactory, appConfigFactory, randSource)
+		accounts, genesisAppState, chainID, genesisTimestamp := prepareInitialGenesisState(
+			testInstance.App,
+			r,
+			testInstance.BankKeeper,
+			tCfg,
+			testInstance.ModuleManager,
+		)
+		cs := testInstance.InitializeChain(
+			tb,
+			ctx,
+			chainID,
+			genesisTimestamp,
+			initialBlockHeight,
+			genesisAppState,
+		)
+
+		return testInstance, cs, accounts
+	}
+	RunWithRandSourceX(tb, tCfg, setupFn, randSource, postRunActions...)
+}
+
+// RunWithRandSourceX entrypoint for custom chain setups.
+// The function runs the full simulation test circle for the specified random source and setup function, followed by optional post-run actions.
+// when tb implements ResetTimer, the method is called after setup, before jumping into the main loop
+func RunWithRandSourceX[T Tx](
+	tb testing.TB,
+	tCfg simtypes.Config,
+	setupChainStateFn func(ctx context.Context, r *rand.Rand) (TestInstance[T], ChainState[T], []simtypes.Account),
+	randSource rand.Source,
+	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
+) {
+	tb.Helper()
+	r := rand.New(randSource)
 	rootCtx, done := context.WithCancel(context.Background())
 	defer done()
-	initRsp, stateRoot := doChainInitWithGenesis(t, rootCtx, chainID, genesisTimestamp, appManager, testInstance.TxDecoder, genesisAppState, appStore)
-	activeValidatorSet := simsxv2.NewValSet().Update(initRsp.ValidatorUpdates)
-	valsetHistory := simsxv2.NewValSetHistory(1)
-	valsetHistory.Add(genesisTimestamp, activeValidatorSet)
+
+	testInstance, chainState, accounts := setupChainStateFn(rootCtx, r)
 
 	emptySimParams := make(map[string]json.RawMessage) // todo read sims params from disk as before
 
 	modules := testInstance.ModuleManager.Modules()
 	msgFactoriesFn := prepareSimsMsgFactories(r, modules, simsx.ParamWeightSource(emptySimParams))
 
-	cs := chainState[T]{
-		chainID:            chainID,
-		blockTime:          genesisTimestamp,
-		activeValidatorSet: activeValidatorSet,
-		valsetHistory:      valsetHistory,
-		stateRoot:          stateRoot,
-		app:                appManager,
-		appStore:           appStore,
-		txConfig:           txConfig,
+	if b, ok := tb.(interface{ ResetTimer() }); ok {
+		b.ResetTimer()
 	}
+
 	doMainLoop(
-		t,
+		tb,
 		rootCtx,
-		cs,
+		testInstance,
+		&chainState,
 		msgFactoriesFn,
 		r,
-		testInstance.AuthKeeper,
-		testInstance.BankKeeper,
+		tCfg,
 		accounts,
-		testInstance.TXBuilder,
-		testInstance.StakingKeeper,
 	)
-	require.NoError(t, testInstance.App.Close(), "closing app")
 
 	for _, step := range postRunActions {
-		step(t, testInstance, accounts)
+		step(tb, chainState, testInstance, accounts)
 	}
+	require.NoError(tb, testInstance.App.Close(), "closing app")
 }
 
 // prepareInitialGenesisState initializes the genesis state for simulation by generating accounts, app state, chain ID, and timestamp.
@@ -257,18 +340,20 @@ func prepareInitialGenesisState[T Tx](
 
 // doChainInitWithGenesis initializes the blockchain state with the provided genesis data and returns the initial block response and state root.
 func doChainInitWithGenesis[T Tx](
-	t *testing.T,
+	tb testing.TB,
 	ctx context.Context,
 	chainID string,
 	genesisTimestamp time.Time,
-	app appmanager.AppManager[T],
-	txDecoder transaction.Codec[T],
+	initialHeight uint64,
 	genesisAppState json.RawMessage,
-	appStore cometbfttypes.Store,
+	testInstance TestInstance[T],
 ) (*server.BlockResponse, store.Hash) {
-	t.Helper()
+	tb.Helper()
+	app := testInstance.App
+	txDecoder := testInstance.TxDecoder
+	appStore := testInstance.App.Store()
 	genesisReq := &server.BlockRequest[T]{
-		Height:    0,
+		Height:    initialHeight,
 		Time:      genesisTimestamp,
 		Hash:      make([]byte, 32),
 		ChainId:   chainID,
@@ -290,27 +375,25 @@ func doChainInitWithGenesis[T Tx](
 	}
 	genesisCtx := context.WithValue(ctx, corecontext.CometParamsInitInfoKey, initialConsensusParams)
 	initRsp, genesisStateChanges, err := app.InitGenesis(genesisCtx, genesisReq, genesisAppState, txDecoder)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
-	require.NoError(t, appStore.SetInitialVersion(0))
+	require.NoError(tb, appStore.SetInitialVersion(initialHeight-1))
 	changeSet, err := genesisStateChanges.GetStateChanges()
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
-	stateRoot, err := appStore.Commit(&store.Changeset{Changes: changeSet})
-	require.NoError(t, err)
+	stateRoot, err := appStore.Commit(&store.Changeset{Changes: changeSet, Version: initialHeight - 1})
+	require.NoError(tb, err)
 	return initRsp, stateRoot
 }
 
-// chainState represents the state of a blockchain during a simulation run.
-type chainState[T Tx] struct {
-	chainID            string
-	blockTime          time.Time
-	activeValidatorSet simsxv2.WeightedValidators
-	valsetHistory      *simsxv2.ValSetHistory
-	stateRoot          store.Hash
-	app                appmanager.TransactionFuzzer[T]
-	appStore           storev2.RootStore
-	txConfig           client.TxConfig
+// ChainState represents the state of a blockchain during a simulation run.
+type ChainState[T Tx] struct {
+	ChainID            string
+	BlockTime          time.Time
+	BlockHeight        uint64
+	ActiveValidatorSet simsxv2.WeightedValidators
+	ValsetHistory      *simsxv2.ValSetHistory
+	AppHash            store.Hash
 }
 
 // doMainLoop executes the main simulation loop after chain setup with genesis block.
@@ -318,34 +401,23 @@ type chainState[T Tx] struct {
 // and executed. Events like validators missing votes or double signing are included in this
 // process. The runtime tracks the validator's state and history.
 func doMainLoop[T Tx](
-	t *testing.T,
+	tb testing.TB,
 	rootCtx context.Context,
-	cs chainState[T],
+	testInstance TestInstance[T],
+	cs *ChainState[T],
 	nextMsgFactory func() simsx.SimMsgFactoryX,
 	r *rand.Rand,
-	authKeeper AuthKeeper,
-	bankKeeper simsx.BalanceSource,
+	tCfg simtypes.Config,
 	accounts []simtypes.Account,
-	txBuilder simsxv2.TXBuilder[T],
-	stakingKeeper StakingKeeper,
 ) {
-	t.Helper()
-	blockTime := cs.blockTime
-	activeValidatorSet := cs.activeValidatorSet
-	if len(activeValidatorSet) == 0 {
-		t.Fatal("no active validators in chain setup")
+	tb.Helper()
+	if len(cs.ActiveValidatorSet) == 0 {
+		tb.Fatal("no active validators in chain setup")
 		return
 	}
-	valsetHistory := cs.valsetHistory
-	stateRoot := cs.stateRoot
-	chainID := cs.chainID
-	app := cs.app
-	appStore := cs.appStore
 
-	const ( // todo: read from CLI instead
-		numBlocks     = 100 // 500 default
-		maxTXPerBlock = 200 // 200 default
-	)
+	numBlocks := tCfg.NumBlocks
+	maxTXPerBlock := tCfg.BlockSize
 
 	var (
 		txSkippedCounter int
@@ -354,39 +426,39 @@ func doMainLoop[T Tx](
 	rootReporter := simsx.NewBasicSimulationReporter()
 	futureOpsReg := simsxv2.NewFutureOpsRegistry()
 
-	for i := 0; i < numBlocks; i++ {
-		if len(activeValidatorSet) == 0 {
-			t.Skipf("run out of validators in block: %d\n", i+1)
+	for end := cs.BlockHeight + numBlocks; cs.BlockHeight < end; cs.BlockHeight++ {
+		if len(cs.ActiveValidatorSet) == 0 {
+			tb.Skipf("run out of validators in block: %d\n", cs.BlockHeight)
 			return
 		}
-		blockTime = blockTime.Add(minTimePerBlock)
-		blockTime = blockTime.Add(time.Duration(int64(r.Intn(int(timeRangePerBlock/time.Second)))) * time.Second)
-		valsetHistory.Add(blockTime, activeValidatorSet)
+		cs.BlockTime = cs.BlockTime.Add(minTimePerBlock).
+			Add(time.Duration(int64(r.Intn(int(timeRangePerBlock/time.Second)))) * time.Second)
+		cs.ValsetHistory.Add(cs.BlockTime, cs.ActiveValidatorSet)
 		blockReqN := &server.BlockRequest[T]{
-			Height:  uint64(1 + i),
-			Time:    blockTime,
-			Hash:    stateRoot,
-			AppHash: stateRoot,
-			ChainId: chainID,
+			Height:  cs.BlockHeight,
+			Time:    cs.BlockTime,
+			Hash:    cs.AppHash,
+			AppHash: cs.AppHash,
+			ChainId: cs.ChainID,
 		}
 
 		cometInfo := comet.Info{
 			ValidatorsHash:  nil,
-			Evidence:        valsetHistory.MissBehaviour(r),
-			ProposerAddress: activeValidatorSet[0].Address,
-			LastCommit:      activeValidatorSet.NewCommitInfo(r),
+			Evidence:        cs.ValsetHistory.MissBehaviour(r),
+			ProposerAddress: cs.ActiveValidatorSet[0].Address, // todo: pick random one
+			LastCommit:      cs.ActiveValidatorSet.NewCommitInfo(r),
 		}
-		fOps, pos := futureOpsReg.PopScheduledFor(blockTime), 0
-		addressCodec := cs.txConfig.SigningContext().AddressCodec()
+		fOps, pos := futureOpsReg.PopScheduledFor(cs.BlockTime), 0
+		addressCodec := testInstance.App.TxConfig().SigningContext().AddressCodec()
 		simsCtx := context.WithValue(rootCtx, corecontext.CometInfoKey, cometInfo) // required for ContextAwareCometInfoService
 		resultHandlers := make([]simsx.SimDeliveryResultHandler, 0, maxTXPerBlock)
 		var txPerBlockCounter int
-		blockRsp, updates, err := app.DeliverSims(simsCtx, blockReqN, func(ctx context.Context) iter.Seq[T] {
+		blockRsp, updates, err := testInstance.App.DeliverSims(simsCtx, blockReqN, func(ctx context.Context) iter.Seq[T] {
 			return func(yield func(T) bool) {
-				unbondingTime, err := stakingKeeper.UnbondingTime(ctx)
-				require.NoError(t, err)
-				valsetHistory.SetMaxHistory(minBlocksInUnbondingPeriod(unbondingTime))
-				testData := simsx.NewChainDataSource(ctx, r, authKeeper, bankKeeper, addressCodec, accounts...)
+				unbondingTime, err := testInstance.StakingKeeper.UnbondingTime(ctx)
+				require.NoError(tb, err)
+				cs.ValsetHistory.SetMaxHistory(minBlocksInUnbondingPeriod(unbondingTime))
+				testData := simsx.NewChainDataSource(ctx, r, testInstance.AuthKeeper, testInstance.BankKeeper, addressCodec, accounts...)
 
 				for txPerBlockCounter < maxTXPerBlock {
 					txPerBlockCounter++
@@ -407,36 +479,36 @@ func doMainLoop[T Tx](
 					signers, msg := mergedMsgFactory.Create()(ctx, testData, reporter)
 					if reporter.IsSkipped() {
 						txSkippedCounter++
-						require.NoError(t, reporter.Close())
+						require.NoError(tb, reporter.Close())
 						continue
 					}
 					resultHandlers = append(resultHandlers, mergedMsgFactory.DeliveryResultHandler())
 					reporter.Success(msg)
-					require.NoError(t, reporter.Close())
+					require.NoError(tb, reporter.Close())
 
-					tx, err := txBuilder.Build(ctx, authKeeper, signers, msg, r, chainID)
-					require.NoError(t, err)
+					tx, err := testInstance.TXBuilder.Build(ctx, testInstance.AuthKeeper, signers, msg, r, cs.ChainID)
+					require.NoError(tb, err)
 					if !yield(tx) {
 						return
 					}
 				}
 			}
 		})
-		require.NoError(t, err, "%d, %s", blockReqN.Height, blockReqN.Time)
+		require.NoError(tb, err, "%d, %s", blockReqN.Height, blockReqN.Time)
 		changeSet, err := updates.GetStateChanges()
-		require.NoError(t, err)
-		stateRoot, err = appStore.Commit(&store.Changeset{
+		require.NoError(tb, err)
+		cs.AppHash, err = testInstance.App.Store().Commit(&store.Changeset{
 			Version: blockReqN.Height,
 			Changes: changeSet,
 		})
 
-		require.NoError(t, err)
-		require.Equal(t, len(resultHandlers), len(blockRsp.TxResults), "txPerBlockCounter: %d, totalSkipped: %d", txPerBlockCounter, txSkippedCounter)
+		require.NoError(tb, err)
+		require.Equal(tb, len(resultHandlers), len(blockRsp.TxResults), "txPerBlockCounter: %d, totalSkipped: %d", txPerBlockCounter, txSkippedCounter)
 		for i, v := range blockRsp.TxResults {
-			require.NoError(t, resultHandlers[i](v.Error))
+			require.NoError(tb, resultHandlers[i](v.Error))
 		}
 		txTotalCounter += txPerBlockCounter
-		activeValidatorSet = activeValidatorSet.Update(blockRsp.ValidatorUpdates)
+		cs.ActiveValidatorSet = cs.ActiveValidatorSet.Update(blockRsp.ValidatorUpdates)
 	}
 	fmt.Println("+++ reporter:\n" + rootReporter.Summary().String())
 	fmt.Printf("Tx total: %d skipped: %d\n", txTotalCounter, txSkippedCounter)

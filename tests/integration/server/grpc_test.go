@@ -102,7 +102,19 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(s.codec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, nil, authority.String(), encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(), addresscodec.NewBech32Codec("cosmosvaloper"), nil)
+	stakingKeeper := stakingkeeper.NewKeeper(
+		s.codec,
+		runtime.NewEnvironment(
+			runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
+			log.NewNopLogger()),
+		accountKeeper,
+		bankKeeper,
+		nil,
+		authority.String(),
+		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
+		addresscodec.NewBech32Codec("cosmosvaloper"),
+		nil,
+	)
 
 	authModule := auth.NewAppModule(s.codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(s.codec, bankKeeper, accountKeeper)

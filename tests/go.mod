@@ -56,6 +56,7 @@ require (
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/upgrade v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/jhump/protoreflect v1.17.0
 )
 
 require (

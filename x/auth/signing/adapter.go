@@ -6,11 +6,11 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // V2AdaptableTx is an interface that wraps the GetSigningTxData method.
@@ -26,7 +26,7 @@ type V2AdaptableTx interface {
 func GetSignBytesAdapter(
 	ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
-	mode signing.SignMode,
+	mode apisigning.SignMode,
 	signerData txsigning.SignerData,
 	tx sdk.Tx,
 ) ([]byte, error) {
@@ -35,11 +35,6 @@ func GetSignBytesAdapter(
 		return nil, fmt.Errorf("expected tx to be V2AdaptableTx, got %T", tx)
 	}
 	txData := adaptableTx.GetSigningTxData()
-
-	txSignMode, err := InternalSignModeToAPI(mode)
-	if err != nil {
-		return nil, err
-	}
 
 	var pubKey *anypb.Any
 	if signerData.PubKey != nil {
@@ -61,5 +56,5 @@ func GetSignBytesAdapter(
 		PubKey:        pubKey,
 	}
 	// Generate the bytes to be signed.
-	return handlerMap.GetSignBytes(ctx, txSignMode, txSignerData, txData)
+	return handlerMap.GetSignBytes(ctx, mode, txSignerData, txData)
 }

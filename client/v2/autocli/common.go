@@ -13,7 +13,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/config"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/broadcast/comet"
@@ -23,7 +22,6 @@ import (
 	"cosmossdk.io/client/v2/internal/util"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 type cmdType int
@@ -284,7 +282,7 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		ConsensusAddressCodec: b.ConsensusAddressCodec,
 		Cdc:                   b.Cdc,
 		Keyring:               k,
-		EnabledSignModes:      signModesToApiSignModes(b.EnabledSignModes),
+		EnabledSignModes:      b.EnabledSignModes,
 	}
 
 	return clientcontext.SetInContext(cmd.Context(), clientCtx), nil
@@ -372,13 +370,4 @@ func getQueryClientConn(cdc codec.Codec) func(cmd *cobra.Command) (grpc.ClientCo
 
 		return grpc.NewClient(addr, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)
 	}
-}
-
-// signModesToApiSignModes converts a slice of signing.SignMode to a slice of apitxsigning.SignMode.
-func signModesToApiSignModes(modes []signing.SignMode) []apitxsigning.SignMode {
-	r := make([]apitxsigning.SignMode, len(modes))
-	for i, m := range modes {
-		r[i] = apitxsigning.SignMode(m)
-	}
-	return r
 }

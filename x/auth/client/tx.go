@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"github.com/cosmos/gogoproto/jsonpb"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -39,9 +39,9 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 	}
 
 	// Ledger and Multisigs only support LEGACY_AMINO_JSON signing.
-	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED &&
+	if txFactory.SignMode() == apisigning.SignMode_SIGN_MODE_UNSPECIFIED &&
 		(k.GetType() == keyring.TypeLedger || k.GetType() == keyring.TypeMulti) {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		txFactory = txFactory.WithSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	pubKey, err := k.GetPubKey()
@@ -75,8 +75,8 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	name string, txBuilder client.TxBuilder, offline, overwrite bool,
 ) (err error) {
 	// Multisigs only support LEGACY_AMINO_JSON signing.
-	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	if txFactory.SignMode() == apisigning.SignMode_SIGN_MODE_UNSPECIFIED {
+		txFactory = txFactory.WithSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	if !offline {

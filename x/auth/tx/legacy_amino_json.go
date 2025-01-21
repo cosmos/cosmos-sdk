@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
 
@@ -29,18 +30,18 @@ func NewSignModeLegacyAminoJSONHandler() signing.SignModeHandler {
 }
 
 // Deprecated: Please use x/tx/signing/aminojson instead.
-func (s signModeLegacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
-	return signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+func (s signModeLegacyAminoJSONHandler) DefaultMode() apisigning.SignMode {
+	return apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
 // Deprecated: Please use x/tx/signing/aminojson instead.
-func (s signModeLegacyAminoJSONHandler) Modes() []signingtypes.SignMode {
-	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
+func (s signModeLegacyAminoJSONHandler) Modes() []apisigning.SignMode {
+	return []apisigning.SignMode{apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
 // Deprecated: Please use x/tx/signing/aminojson instead.
-func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data txsigning.SignerData, tx sdk.Tx) ([]byte, error) {
-	if mode != signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode apisigning.SignMode, data txsigning.SignerData, tx sdk.Tx) ([]byte, error) {
+	if mode != apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)
 	}
 

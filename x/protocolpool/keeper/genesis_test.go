@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"time"
 
+	"go.uber.org/mock/gomock"
+
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
-	"go.uber.org/mock/gomock"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

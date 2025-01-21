@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 const (
@@ -248,6 +249,7 @@ func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData typestx.AuxSi
 	require.Equal(t, chainID, auxSignerData.SignDoc.ChainId)
 	require.Equal(t, msgAny, body.GetMessages()[0])
 	require.Equal(t, pkAny, auxSignerData.SignDoc.PublicKey)
-	require.Equal(t, signMode, auxSignerData.Mode)
+	m, _ := signing.InternalSignModeToAPI(auxSignerData.Mode)
+	require.Equal(t, signMode, m)
 	require.Equal(t, rawSig, auxSignerData.Sig)
 }

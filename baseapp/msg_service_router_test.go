@@ -6,10 +6,12 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -143,9 +144,6 @@ func TestMsgService(t *testing.T) {
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 
-	defaultSignMode, err := authsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
-	require.NoError(t, err)
-
 	testdata.RegisterInterfaces(interfaceRegistry)
 	testdata.RegisterMsgServer(
 		app.MsgServiceRouter(),
@@ -173,7 +171,7 @@ func TestMsgService(t *testing.T) {
 	sigV2 := signing.SignatureV2{
 		PubKey: priv.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  defaultSignMode,
+			SignMode:  txConfig.SignModeHandler().DefaultMode(),
 			Signature: nil,
 		},
 		Sequence: 0,
@@ -183,14 +181,20 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 
 	// Second round: all signer infos are set, so each signer can sign.
-	signerData := authsigning.SignerData{
+	anyPk, err := codectypes.NewAnyWithValue(priv.PubKey())
+	require.NoError(t, err)
+
+	signerData := txsigning.SignerData{
 		ChainID:       "test",
 		AccountNumber: 0,
 		Sequence:      0,
-		PubKey:        priv.PubKey(),
+		PubKey: &anypb.Any{
+			TypeUrl: anyPk.TypeUrl,
+			Value:   anyPk.Value,
+		},
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		context.TODO(), defaultSignMode, signerData,
+		context.TODO(), txConfig.SignModeHandler().DefaultMode(), signerData,
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)

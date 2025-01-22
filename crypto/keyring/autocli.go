@@ -5,7 +5,6 @@ import (
 	"cosmossdk.io/core/address"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // autoCLIKeyring represents the keyring interface used by the AutoCLI.
@@ -87,12 +86,7 @@ func (a *autoCLIKeyringAdapter) Sign(name string, msg []byte, signMode signingv1
 		return nil, err
 	}
 
-	sdkSignMode, err := authsigning.APISignModeToInternal(signMode)
-	if err != nil {
-		return nil, err
-	}
-
-	signBytes, _, err := a.Keyring.Sign(record.Name, msg, sdkSignMode)
+	signBytes, _, err := a.Keyring.Sign(record.Name, msg, signMode)
 	return signBytes, err
 }
 

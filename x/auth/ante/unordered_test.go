@@ -6,13 +6,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 )
@@ -162,7 +162,7 @@ func genUnorderedTx(t *testing.T, unordered bool, timestamp time.Time) (sdk.Tx, 
 	s.txBuilder.SetTimeoutTimestamp(timestamp)
 
 	privKeys, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(s.ctx, privKeys, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	tx, err := s.CreateTestTx(s.ctx, privKeys, accNums, accSeqs, s.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	txBz, err := ante.TxIdentifier(uint64(timestamp.Unix()), tx)

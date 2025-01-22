@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -99,7 +100,7 @@ func TestVerifyMultisignature(t *testing.T) {
 		sig *signing.MultiSignatureData
 	)
 	msg := []byte{1, 2, 3, 4}
-	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
+	signBytesFn := func(mode apisigning.SignMode) ([]byte, error) { return msg, nil }
 
 	testCases := []struct {
 		msg        string
@@ -132,7 +133,7 @@ func TestVerifyMultisignature(t *testing.T) {
 				pubKeys, sigs := generatePubKeysAndSignatures(8, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(k, pubKeys)
 				sig = multisig.NewMultisig(len(pubKeys))
-				signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
+				signBytesFn := func(mode apisigning.SignMode) ([]byte, error) { return msg, nil }
 
 				for i := 0; i < k-1; i++ {
 					signingIndex := signingIndices[i]
@@ -264,7 +265,7 @@ func TestMultiSigMigration(t *testing.T) {
 	multisignature := multisig.NewMultisig(3)
 
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
-	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
+	signBytesFn := func(mode apisigning.SignMode) ([]byte, error) { return msg, nil }
 
 	cdc := codec.NewLegacyAmino()
 
@@ -546,7 +547,7 @@ func TestVerifyMultisignatureNMRule(t *testing.T) {
 			}
 
 			// Create getSignBytes function that returns our test message
-			getSignBytes := func(mode signing.SignMode) ([]byte, error) {
+			getSignBytes := func(mode apisigning.SignMode) ([]byte, error) {
 				return msg, nil
 			}
 

@@ -153,7 +153,7 @@ func InitRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
-	registerGRPCGatewayRoutes[T](deps, grpcgatewayServer)
+	registerGRPCGatewayRoutes(deps.ClientContext, grpcgatewayServer)
 
 	// wire server commands
 	return serverv2.AddCommands[T](
@@ -260,14 +260,12 @@ func RootCommandPersistentPreRun(clientCtx client.Context) func(*cobra.Command, 
 }
 
 // registerGRPCGatewayRoutes registers the gRPC gateway routes for all modules and other components
-// TODO(@julienrbrt): Eventually, this should removed and directly done within the grpcgateway.Server
-// ref: https://github.com/cosmos/cosmos-sdk/pull/22701#pullrequestreview-2470651390
 func registerGRPCGatewayRoutes[T transaction.Tx](
-	deps CommandDependencies[T],
+	clientContext client.Context,
 	server *grpcgateway.Server[T],
 ) {
 	// those are the extra services that the CometBFT server implements (server/v2/cometbft/grpc.go)
-	cmtservice.RegisterGRPCGatewayRoutes(deps.ClientContext, server.GRPCGatewayRouter)
-	_ = nodeservice.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, nodeservice.NewServiceClient(deps.ClientContext))
-	_ = txtypes.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, txtypes.NewServiceClient(deps.ClientContext))
+	cmtservice.RegisterGRPCGatewayRoutes(clientContext, server.GRPCGatewayRouter)
+	_ = nodeservice.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, nodeservice.NewServiceClient(clientContext))
+	_ = txtypes.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, txtypes.NewServiceClient(clientContext))
 }

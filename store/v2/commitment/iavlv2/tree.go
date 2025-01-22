@@ -25,7 +25,7 @@ type Tree struct {
 }
 
 func NewTree(
-	treeOptions iavl.TreeOptions,
+	cfg Config,
 	dbOptions iavl.SqliteDbOptions,
 	log log.Logger,
 ) (*Tree, error) {
@@ -34,7 +34,7 @@ func NewTree(
 	if err != nil {
 		return nil, err
 	}
-	tree := iavl.NewTree(sql, pool, treeOptions)
+	tree := iavl.NewTree(sql, pool, cfg.ToTreeOptions())
 	return &Tree{tree: tree, log: log, path: dbOptions.Path}, nil
 }
 
@@ -196,16 +196,6 @@ func isHighBitSet(version uint64) error {
 		return fmt.Errorf("%d too large; uint64 with the highest bit set are not supported", version)
 	}
 	return nil
-}
-
-func DefaultOptions(keepVersions int64) iavl.TreeOptions {
-	opts := iavl.DefaultTreeOptions()
-	opts.MinimumKeepVersions = keepVersions
-	opts.CheckpointInterval = 200
-	opts.PruneRatio = 1
-	opts.HeightFilter = 1
-	opts.EvictionDepth = 22
-	return opts
 }
 
 func SetGlobalPruneLimit(limit int) {

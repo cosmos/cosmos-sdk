@@ -329,7 +329,7 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 			if sig.Sequence < acc.GetSequence() {
 				return errorsmod.Wrapf(
 					sdkerrors.ErrWrongSequence,
-					"account sequence mismatch, expected higher than or equal to %d, got %d", acc.GetSequence(), sig.Sequence,
+					"account sequence mismatch: expected higher than or equal to %d, got %d", acc.GetSequence(), sig.Sequence,
 				)
 			}
 		} else if sig.Sequence != acc.GetSequence() {

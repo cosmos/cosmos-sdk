@@ -6,6 +6,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -17,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -181,7 +181,7 @@ func mkTxBuilder(tb testing.TB, s *TxBenchmarkSuite) client.TxBuilder {
 		WithChainID(val.GetClientCtx().ChainID).
 		WithKeybase(val.GetClientCtx().Keyring).
 		WithTxConfig(val.GetClientCtx().TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+		WithSignMode(apisigning.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
 	err := authclient.SignTx(txFactory, val.GetClientCtx(), val.GetMoniker(), txBuilder, false, true)

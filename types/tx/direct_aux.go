@@ -50,10 +50,12 @@ func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
 		return signing.SignatureV2{}, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (cryptotypes.PubKey)(nil), pk)
 	}
 
+	signMode, _ := signing.InternalSignModeToAPI(a.Mode)
+
 	return signing.SignatureV2{
 		PubKey: pk,
 		Data: &signing.SingleSignatureData{
-			SignMode:  a.Mode,
+			SignMode:  signMode,
 			Signature: a.Sig,
 		},
 		Sequence: a.SignDoc.Sequence,

@@ -32,10 +32,11 @@ type SignatureV2 struct {
 func SignatureDataToProto(data SignatureData) *SignatureDescriptor_Data {
 	switch data := data.(type) {
 	case *SingleSignatureData:
+		signMode, _ := APISignModeToInternal(data.SignMode)
 		return &SignatureDescriptor_Data{
 			Sum: &SignatureDescriptor_Data_Single_{
 				Single: &SignatureDescriptor_Data_Single{
-					Mode:      data.SignMode,
+					Mode:      signMode,
 					Signature: data.Signature,
 				},
 			},
@@ -66,8 +67,9 @@ func SignatureDataToProto(data SignatureData) *SignatureDescriptor_Data {
 func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 	switch descData := descData.Sum.(type) {
 	case *SignatureDescriptor_Data_Single_:
+		signMode, _ := InternalSignModeToAPI(descData.Single.Mode)
 		return &SingleSignatureData{
-			SignMode:  descData.Single.Mode,
+			SignMode:  signMode,
 			Signature: descData.Single.Signature,
 		}
 	case *SignatureDescriptor_Data_Multi_:

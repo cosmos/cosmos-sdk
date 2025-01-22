@@ -244,6 +244,7 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace cosmossdk.io/client/v2 => ../client/v2
 
 // Below are the long-lived replace of the SimApp
 replace (

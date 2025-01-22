@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -53,7 +55,7 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"cannot set SIGN_MODE_DIRECT",
 			func() error {
-				return b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+				return b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT)
 			},
 			true, "AuxTxBuilder can only sign with SIGN_MODE_DIRECT_AUX or SIGN_MODE_LEGACY_AMINO_JSON",
 		},
@@ -105,7 +107,7 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
+				require.NoError(t, b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
 				return err
@@ -117,7 +119,7 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
-				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
+				require.NoError(t, b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
 				require.NoError(t, err)
@@ -133,7 +135,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
 				b.SetAddress(addr1Str)
-				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
+				require.NoError(t, b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX))
 
 				_, err := b.GetSignBytes()
 				require.NoError(t, err)
@@ -154,7 +156,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
 				b.SetAddress(addr1Str)
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
+				err := b.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX)
 				require.NoError(t, err)
 
 				_, err = b.GetSignBytes()
@@ -164,7 +166,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				auxSignerData, err := b.GetAuxSignerData()
 
 				// Make sure auxSignerData is correctly populated
-				checkCorrectData(t, cdc, auxSignerData, signing.SignMode_SIGN_MODE_DIRECT_AUX)
+				checkCorrectData(t, cdc, auxSignerData, apisigning.SignMode_SIGN_MODE_DIRECT_AUX)
 
 				return err
 			},
@@ -176,7 +178,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
 				b.SetAddress(addr1Str)
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+				err := b.SetSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
 
 				_, err = b.GetSignBytes()
@@ -195,7 +197,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, b.SetMsgs(msg1))
 				require.NoError(t, b.SetPubKey(pub1))
 				b.SetAddress(addr1Str)
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+				err := b.SetSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
 
 				_, err = b.GetSignBytes()
@@ -205,7 +207,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				auxSignerData, err := b.GetAuxSignerData()
 
 				// Make sure auxSignerData is correctly populated
-				checkCorrectData(t, cdc, auxSignerData, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+				checkCorrectData(t, cdc, auxSignerData, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 
 				return err
 			},
@@ -229,7 +231,7 @@ func TestAuxTxBuilder(t *testing.T) {
 }
 
 // checkCorrectData that the auxSignerData's content matches the inputs we gave.
-func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData typestx.AuxSignerData, signMode signing.SignMode) {
+func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData typestx.AuxSignerData, signMode apisigning.SignMode) {
 	t.Helper()
 	pkAny, err := codectypes.NewAnyWithValue(pub1)
 	require.NoError(t, err)
@@ -247,6 +249,7 @@ func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData typestx.AuxSi
 	require.Equal(t, chainID, auxSignerData.SignDoc.ChainId)
 	require.Equal(t, msgAny, body.GetMessages()[0])
 	require.Equal(t, pkAny, auxSignerData.SignDoc.PublicKey)
-	require.Equal(t, signMode, auxSignerData.Mode)
+	m, _ := signing.InternalSignModeToAPI(auxSignerData.Mode)
+	require.Equal(t, signMode, m)
 	require.Equal(t, rawSig, auxSignerData.Sig)
 }

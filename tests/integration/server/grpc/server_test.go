@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -30,7 +31,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -277,7 +277,7 @@ func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 		WithChainID(val.GetClientCtx().ChainID).
 		WithKeybase(val.GetClientCtx().Keyring).
 		WithTxConfig(val.GetClientCtx().TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+		WithSignMode(apisigning.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
 	err := authclient.SignTx(txFactory, val.GetClientCtx(), val.GetMoniker(), txBuilder, false, true)

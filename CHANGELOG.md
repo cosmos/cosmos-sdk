@@ -52,6 +52,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* [#23470](https://github.com/cosmos/cosmos-sdk/pull/23470) Converge to use of one single sign mode type and signer data:
+    * Use api's signmode throughout the SDK to align with `cosmossdk.io/tx`. This allows developer not to juggle between sign mode types
+    * Deprecate `authsigning.SignerData` in favor of txsigning.SignerData and replace its usage
+    * Move helpers to go from one sign mode enum to another to `types/signing` instead of `x/auth/signing` (less dependency on `x`)
 * (all) [#23445](https://github.com/cosmos/cosmos-sdk/pull/23445) Remove `v2` code from codebase.
 * (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recursion limits.
 * (proto) [#23437](https://github.com/cosmos/cosmos-sdk/pull/23437) Deprecate `Block` field from `GetBlockByHeightResponse` and return empty comet block for `GetBlockByHeight`.

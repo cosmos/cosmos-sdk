@@ -3,6 +3,7 @@ package legacytx
 import (
 	"fmt"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,9 +16,9 @@ import (
 func SignatureDataToAminoSignature(cdc *codec.LegacyAmino, data signingtypes.SignatureData) ([]byte, error) {
 	switch data := data.(type) {
 	case *signingtypes.SingleSignatureData:
-		if data.SignMode != signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+		if data.SignMode != apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 			return nil, fmt.Errorf("wrong SignMode. Expected %s, got %s",
-				signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, data.SignMode)
+				apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, data.SignMode)
 		}
 
 		return data.Signature, nil

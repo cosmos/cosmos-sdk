@@ -23,7 +23,7 @@ func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*tx.ModeInfo, []
 	case *signing.SingleSignatureData:
 		return &tx.ModeInfo{
 			Sum: &tx.ModeInfo_Single_{
-				Single: &tx.ModeInfo_Single{Mode: data.SignMode},
+				Single: &tx.ModeInfo_Single{Mode: signing.SignMode(data.SignMode)},
 			},
 		}, data.Signature
 	case *signing.MultiSignatureData:
@@ -62,7 +62,7 @@ func ModeInfoAndSigToSignatureData(modeInfoPb *txv1beta1.ModeInfo, sig []byte) (
 	switch modeInfo := modeInfoPb.Sum.(type) {
 	case *txv1beta1.ModeInfo_Single_:
 		return &signing.SingleSignatureData{
-			SignMode:  signing.SignMode(modeInfo.Single.Mode),
+			SignMode:  modeInfo.Single.Mode,
 			Signature: sig,
 		}, nil
 

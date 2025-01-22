@@ -19,7 +19,6 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -317,10 +316,4 @@ func (m AppOptionsMap) GetString(key string) string {
 	}
 
 	return v.(string)
-}
-
-func NewAppOptionsWithFlagHome(homePath string) server.DynamicConfig {
-	return AppOptionsMap{
-		flags.FlagHome: homePath,
-	}
 }

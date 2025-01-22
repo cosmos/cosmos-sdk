@@ -6,11 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-<<<<<<< HEAD
-=======
-	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/anypb"
->>>>>>> e44177843 (refactor!: simplify signing packages (#23470))
 
 	// TODO We don't need to import these API types if we use gogo's registry
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/14647

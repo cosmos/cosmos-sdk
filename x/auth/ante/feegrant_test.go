@@ -9,14 +9,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-<<<<<<< HEAD
-=======
-	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
->>>>>>> e44177843 (refactor!: simplify signing packages (#23470))
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

@@ -11,6 +11,7 @@ import (
 	"pgregory.net/rapid"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/math"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
@@ -112,7 +113,7 @@ func TestDecode(t *testing.T) {
 				sig := signing.SignatureV2{
 					PubKey: pubkey,
 					Data: &signing.SingleSignatureData{
-						SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+						SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
 						Signature: legacy.Cdc.MustMarshal(pubkey),
 					},
 					Sequence: accSeq,

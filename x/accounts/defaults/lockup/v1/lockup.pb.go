@@ -86,6 +86,7 @@ func (m *Period) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 	return nil
 }
 
+// UnbondingEntries list of elements
 type UnbondingEntries struct {
 	Entries []*UnbondingEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
 }

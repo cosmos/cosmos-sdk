@@ -22,8 +22,10 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-### Features
+## [v2.0.0-beta.2](https://github.com/cosmos/cosmos-sdk/releases/tag/server/v2.0.0-beta.2)
 
+* [#23411](https://github.com/cosmos/cosmos-sdk/pull/23411) Use only command name in `IsAppRequired()` instead of command usage
+* [#23333](https://github.com/cosmos/cosmos-sdk/pull/23333) Fix gRPC reflection
 * [#22715](https://github.com/cosmos/cosmos-sdk/pull/22941) Add custom HTTP handler for grpc-gateway that removes the need to manually register grpc-gateway services.
 
 ## [v2.0.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/server/v2.0.0-beta.1)

@@ -19,7 +19,6 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -283,12 +282,19 @@ func GenesisStateWithValSet(
 	return genesisState, nil
 }
 
+var _ server.DynamicConfig = EmptyAppOptions{}
+
 // EmptyAppOptions is a stub implementing AppOptions
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
+}
+
+// GetString implements AppOptions
+func (ao EmptyAppOptions) GetString(o string) string {
+	return ""
 }
 
 // AppOptionsMap is a stub implementing AppOptions which can get data from a map
@@ -310,10 +316,4 @@ func (m AppOptionsMap) GetString(key string) string {
 	}
 
 	return v.(string)
-}
-
-func NewAppOptionsWithFlagHome(homePath string) server.DynamicConfig {
-	return AppOptionsMap{
-		flags.FlagHome: homePath,
-	}
 }

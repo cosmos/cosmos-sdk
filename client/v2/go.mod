@@ -174,4 +174,4 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1.0.20250122113551-ad692c97166e
+replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1.0.20250122120205-bc49a8e7fd2f

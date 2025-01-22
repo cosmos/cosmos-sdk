@@ -21,11 +21,9 @@ func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*tx.ModeInfo, []
 
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
-		signMode, _ := signing.APISignModeToInternal(data.SignMode)
-
 		return &tx.ModeInfo{
 			Sum: &tx.ModeInfo_Single_{
-				Single: &tx.ModeInfo_Single{Mode: signMode},
+				Single: &tx.ModeInfo_Single{Mode: signing.SignMode(data.SignMode)},
 			},
 		}, data.Signature
 	case *signing.MultiSignatureData:

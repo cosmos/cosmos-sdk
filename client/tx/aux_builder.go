@@ -136,7 +136,7 @@ func (b *AuxTxBuilder) SetSignMode(mode apisigning.SignMode) error {
 			apisigning.SignMode_SIGN_MODE_DIRECT_AUX, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	b.auxSignerData.Mode, _ = signing.APISignModeToInternal(mode)
+	b.auxSignerData.Mode = signing.SignMode(mode)
 	return nil
 }
 

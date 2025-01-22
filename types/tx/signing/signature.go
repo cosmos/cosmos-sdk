@@ -5,6 +5,8 @@ import (
 
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -32,11 +34,10 @@ type SignatureV2 struct {
 func SignatureDataToProto(data SignatureData) *SignatureDescriptor_Data {
 	switch data := data.(type) {
 	case *SingleSignatureData:
-		signMode, _ := APISignModeToInternal(data.SignMode)
 		return &SignatureDescriptor_Data{
 			Sum: &SignatureDescriptor_Data_Single_{
 				Single: &SignatureDescriptor_Data_Single{
-					Mode:      signMode,
+					Mode:      SignMode(data.SignMode),
 					Signature: data.Signature,
 				},
 			},
@@ -67,9 +68,8 @@ func SignatureDataToProto(data SignatureData) *SignatureDescriptor_Data {
 func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 	switch descData := descData.Sum.(type) {
 	case *SignatureDescriptor_Data_Single_:
-		signMode, _ := InternalSignModeToAPI(descData.Single.Mode)
 		return &SingleSignatureData{
-			SignMode:  signMode,
+			SignMode:  signingv1beta1.SignMode(descData.Single.Mode),
 			Signature: descData.Single.Signature,
 		}
 	case *SignatureDescriptor_Data_Multi_:

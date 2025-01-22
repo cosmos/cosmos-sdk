@@ -150,10 +150,7 @@ func TestSigVerification(t *testing.T) {
 		},
 	}
 	var err error
-	suite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(
-		cdc,
-		txConfigOpts,
-	)
+	suite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(cdc, txConfigOpts)
 	require.NoError(t, err)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -181,14 +178,8 @@ func TestSigVerification(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
-	txConfigOpts = authtx.ConfigOptions{
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper),
-		EnabledSignModes:           enabledSignModes,
-		SigningOptions: &txsigning.Options{
-			AddressCodec:          cdc.InterfaceRegistry().SigningContext().AddressCodec(),
-			ValidatorAddressCodec: cdc.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
-		},
-	}
+	// override the medata query function to use the bank keeper in ante handler
+	txConfigOpts.TextualCoinMetadataQueryFn = txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper)
 	anteTxConfig, err := authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		txConfigOpts,

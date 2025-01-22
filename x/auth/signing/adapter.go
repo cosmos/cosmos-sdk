@@ -9,7 +9,6 @@ import (
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,14 +37,9 @@ func GetSignBytesAdapter(
 
 	var pubKey *anypb.Any
 	if signerData.PubKey != nil {
-		anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
 		pubKey = &anypb.Any{
-			TypeUrl: anyPk.TypeUrl,
-			Value:   anyPk.Value,
+			TypeUrl: signerData.PubKey.TypeUrl,
+			Value:   signerData.PubKey.Value,
 		}
 	}
 	txSignerData := txsigning.SignerData{

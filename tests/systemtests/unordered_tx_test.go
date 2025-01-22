@@ -14,9 +14,10 @@ import (
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {
-	// TODO: remove once unordered tx handling is working in v2
-	t.Skip("The unordered tx handling is not wired in v2")
-
+	if systest.IsV2() {
+		t.Skip("The unordered tx handling is not wired in v2")
+		return
+	}
 	// scenario: test unordered tx duplicate
 	// given a running chain with a tx in the unordered tx pool
 	// when a new tx with the same hash is broadcasted

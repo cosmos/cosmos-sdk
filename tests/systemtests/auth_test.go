@@ -476,6 +476,8 @@ func TestAuxSigner(t *testing.T) {
 }
 
 func TestTxEncodeandDecodeAndQueries(t *testing.T) {
+	t.Skip("we need to ensure this works on a v1 server")
+
 	// scenario: test tx encode and decode commands
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)

@@ -26,9 +26,18 @@ func TestSnapshots(t *testing.T) {
 	// Stop all nodes
 	systest.Sut.StopChain()
 
+	var (
+		command         string
+		restoreableDirs []string
+	)
 	node0Dir := systest.Sut.NodeDir(0)
-	command := "store"
-	restoreableDirs := []string{fmt.Sprintf("%s/data/application.db", node0Dir), fmt.Sprintf("%s/data/ss", node0Dir)}
+	if systest.IsV2() {
+		command = "store"
+		restoreableDirs = []string{fmt.Sprintf("%s/data/application.db", node0Dir), fmt.Sprintf("%s/data/ss", node0Dir)}
+	} else {
+		command = "snapshots"
+		restoreableDirs = []string{fmt.Sprintf("%s/data/application.db", node0Dir)}
+	}
 
 	// export snapshot at height 5
 	res := cli.RunCommandWithArgs(command, "export", "--height=5", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
@@ -59,7 +68,9 @@ func TestSnapshots(t *testing.T) {
 	// Remove database
 	err := os.RemoveAll(fmt.Sprintf("%s/data/application.db", node0Dir))
 	require.NoError(t, err)
-	require.NoError(t, os.RemoveAll(fmt.Sprintf("%s/data/ss", node0Dir)))
+	if systest.IsV2() {
+		require.NoError(t, os.RemoveAll(fmt.Sprintf("%s/data/ss", node0Dir)))
+	}
 
 	res = cli.RunCommandWithArgs(command, "restore", "5", "3", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	for _, dir := range restoreableDirs {
@@ -84,7 +95,12 @@ func TestPrune(t *testing.T) {
 	node0Dir := systest.Sut.NodeDir(0)
 
 	// prune
-	command := []string{"store", "prune", "--store.keep-recent=1"}
+	var command []string
+	if systest.IsV2() {
+		command = []string{"store", "prune", "--store.keep-recent=1"}
+	} else {
+		command = []string{"prune", "everything"}
+	}
 	res := cli.RunCommandWithArgs(append(command, fmt.Sprintf("--home=%s", node0Dir), disabledLog)...)
 	require.Contains(t, res, "successfully pruned the application root multi stores")
 }

@@ -27,7 +27,12 @@ func TestQueryStatus(t *testing.T) {
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	systest.Sut.StartChain(t)
 
-	resp := cli.CustomQuery("comet", "status")
+	var resp string
+	if systest.IsV2() {
+		resp = cli.CustomQuery("comet", "status")
+	} else {
+		resp = cli.CustomQuery("status")
+	}
 
 	// make sure the output has the validator moniker.
 	assert.Contains(t, resp, "\"moniker\":\"node0\"")

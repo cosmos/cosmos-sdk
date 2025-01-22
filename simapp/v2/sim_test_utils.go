@@ -33,7 +33,6 @@ func AssertEqualStores(tb testing.TB, srcRootStore, otherRootStore storev2.RootS
 		if !assert.Empty(tb, len(failedKVAs), storeKey+": "+GetSimulationLog(storeKey, storeDecoders, failedKVAs, failedKVBs)) {
 			for i, v := range failedKVAs {
 				tb.Logf("store mismatch: %q\n %q\n", v, failedKVBs[i])
-				break // todo: remove
 			}
 			tb.FailNow()
 		}

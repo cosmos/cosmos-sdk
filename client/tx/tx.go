@@ -10,9 +10,14 @@ import (
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -168,7 +173,7 @@ func CalculateGas(
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
 	ctx context.Context,
-	signMode signing.SignMode, signerData authsigning.SignerData,
+	signMode apisigning.SignMode, signerData txsigning.SignerData,
 	txBuilder client.TxBuilder, priv cryptotypes.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
 ) (signing.SignatureV2, error) {
@@ -206,7 +211,7 @@ func SignWithPrivKey(
 func countDirectSigners(data signing.SignatureData) int {
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
-		if data.SignMode == signing.SignMode_SIGN_MODE_DIRECT {
+		if data.SignMode == apisigning.SignMode_SIGN_MODE_DIRECT {
 			return 1
 		}
 
@@ -254,12 +259,9 @@ func Sign(ctx client.Context, txf Factory, name string, txBuilder client.TxBuild
 
 	var err error
 	signMode := txf.signMode
-	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+	if signMode == apisigning.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode, err = authsigning.APISignModeToInternal(txf.txConfig.SignModeHandler().DefaultMode())
-		if err != nil {
-			return err
-		}
+		signMode = txf.txConfig.SignModeHandler().DefaultMode()
 	}
 
 	k, err := txf.keybase.Key(name)
@@ -277,12 +279,17 @@ func Sign(ctx client.Context, txf Factory, name string, txBuilder client.TxBuild
 		return err
 	}
 
-	signerData := authsigning.SignerData{
+	anyPk, err := codectypes.NewAnyWithValue(pubKey)
+	if err != nil {
+		return err
+	}
+
+	signerData := txsigning.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
-		PubKey:        pubKey,
 		Address:       addressStr,
+		PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on

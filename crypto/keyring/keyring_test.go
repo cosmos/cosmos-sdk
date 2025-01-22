@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -29,7 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 const (
@@ -383,7 +384,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	d3 := []byte("feels like I forgot something...")
 
 	// try signing both data with both ..
-	s11, pub1, err := kb.Sign(n1, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s11, pub1, err := kb.Sign(n1, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
 	key1, err := kr1.GetPubKey()
@@ -391,11 +392,11 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NotNil(t, key1)
 	require.Equal(t, key1, pub1)
 
-	s12, pub1, err := kb.Sign(n1, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s12, pub1, err := kb.Sign(n1, d2, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key1, pub1)
 
-	s21, pub2, err := kb.Sign(n2, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s21, pub2, err := kb.Sign(n2, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 
 	key2, err := kr2.GetPubKey()
@@ -403,7 +404,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NotNil(t, key2)
 	require.Equal(t, key2, pub2)
 
-	s22, pub2, err := kb.Sign(n2, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s22, pub2, err := kb.Sign(n2, d2, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key2, pub2)
 
@@ -442,7 +443,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, i3.Name, n3)
 
-	_, _, err = kb.Sign(n3, d3, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	_, _, err = kb.Sign(n3, d3, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
@@ -1228,23 +1229,23 @@ func TestInMemorySignVerify(t *testing.T) {
 	d3 := []byte("feels like I forgot something...")
 
 	// try signing both data with both ..
-	s11, pub1, err := cstore.Sign(n1, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s11, pub1, err := cstore.Sign(n1, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key1, pub1)
 
-	s12, pub1, err := cstore.Sign(n1, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s12, pub1, err := cstore.Sign(n1, d2, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key1, pub1)
 
-	s21, pub2, err := cstore.Sign(n2, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s21, pub2, err := cstore.Sign(n2, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	key2, err := kr2.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key2, pub2)
 
-	s22, pub2, err := cstore.Sign(n2, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s22, pub2, err := cstore.Sign(n2, d2, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key2, pub2)
 
@@ -1284,7 +1285,7 @@ func TestInMemorySignVerify(t *testing.T) {
 	require.Equal(t, i3.Name, n3)
 
 	// Now try to sign data with a secret-less key
-	_, _, err = cstore.Sign(n3, d3, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	_, _, err = cstore.Sign(n3, d3, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
@@ -1380,7 +1381,7 @@ func ExampleNew() {
 
 	// We need to use passphrase to generate a signature
 	tx := []byte("deadbeef")
-	sig, pub, err := cstore.Sign("Bob", tx, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	sig, pub, err := cstore.Sign("Bob", tx, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	if err != nil {
 		fmt.Println("don't accept real passphrase")
 	}
@@ -1842,14 +1843,14 @@ func TestAltKeyring_Sign(t *testing.T) {
 		backend string
 		uid     string
 		msg     []byte
-		mode    signing.SignMode
+		mode    apisigning.SignMode
 	}{
 		{
 			name:    "correct sign",
 			backend: BackendTest,
 			uid:     "signKey",
 			msg:     []byte("some message"),
-			mode:    signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			mode:    apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		},
 	}
 	for _, tt := range tests {
@@ -1875,14 +1876,14 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 		backend string
 		uid     string
 		msg     []byte
-		mode    signing.SignMode
+		mode    apisigning.SignMode
 	}{
 		{
 			name:    "correct sign by address",
 			backend: BackendTest,
 			uid:     "signKey",
 			msg:     []byte("some message"),
-			mode:    signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			mode:    apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		},
 	}
 	for _, tt := range tests {

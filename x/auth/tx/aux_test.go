@@ -5,6 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -66,7 +70,7 @@ func TestBuilderWithAux(t *testing.T) {
 	require.NoError(t, err)
 	aux2Builder.SetExtensionOptions(extOptAny)
 	aux2Builder.SetNonCriticalExtensionOptions(extOptAny)
-	err = aux2Builder.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	err = aux2Builder.SetSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 	signBz, err := aux2Builder.GetSignBytes()
 	require.NoError(t, err)
@@ -133,16 +137,22 @@ func TestBuilderWithAux(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	signerData := authsigning.SignerData{
+	anyPk, err := codectypes.NewAnyWithValue(feepayerPk)
+	require.NoError(t, err)
+
+	signerData := txsigning.SignerData{
 		Address:       feepayerAddr.String(),
 		ChainID:       chainID,
 		AccountNumber: 11,
 		Sequence:      15,
-		PubKey:        feepayerPk,
+		PubKey: &anypb.Any{
+			TypeUrl: anyPk.TypeUrl,
+			Value:   anyPk.Value,
+		},
 	}
 
 	signBz, err = authsigning.GetSignBytesAdapter(
-		context.Background(), txConfig.SignModeHandler(), signing.SignMode_SIGN_MODE_DIRECT,
+		context.Background(), txConfig.SignModeHandler(), apisigning.SignMode_SIGN_MODE_DIRECT,
 		signerData, w.GetTx())
 
 	require.NoError(t, err)
@@ -152,7 +162,7 @@ func TestBuilderWithAux(t *testing.T) {
 	err = w.SetSignatures(txSigV2, aux2SigV2, signing.SignatureV2{
 		PubKey: feepayerPk,
 		Data: &signing.SingleSignatureData{
-			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+			SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
 			Signature: feepayerSig,
 		},
 		Sequence: 22,
@@ -175,17 +185,17 @@ func TestBuilderWithAux(t *testing.T) {
 	require.Len(t, sigs, 3)
 	require.Equal(t, signing.SignatureV2{
 		PubKey:   tipperPk,
-		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT_AUX, Signature: txSig},
+		Data:     &signing.SingleSignatureData{SignMode: apisigning.SignMode_SIGN_MODE_DIRECT_AUX, Signature: txSig},
 		Sequence: 2,
 	}, sigs[0])
 	require.Equal(t, signing.SignatureV2{
 		PubKey:   aux2Pk,
-		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, Signature: aux2Sig},
+		Data:     &signing.SingleSignatureData{SignMode: apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, Signature: aux2Sig},
 		Sequence: 12,
 	}, sigs[1])
 	require.Equal(t, signing.SignatureV2{
 		PubKey:   feepayerPk,
-		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT, Signature: feepayerSig},
+		Data:     &signing.SingleSignatureData{SignMode: apisigning.SignMode_SIGN_MODE_DIRECT, Signature: feepayerSig},
 		Sequence: 22,
 	}, sigs[2])
 }
@@ -207,7 +217,7 @@ func makeTxBuilder(t *testing.T) (clienttx.AuxTxBuilder, []byte) {
 	require.NoError(t, err)
 	txBuilder.SetExtensionOptions(extOptAny)
 	txBuilder.SetNonCriticalExtensionOptions(extOptAny)
-	err = txBuilder.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
+	err = txBuilder.SetSignMode(apisigning.SignMode_SIGN_MODE_DIRECT_AUX)
 	require.NoError(t, err)
 	signBz, err := txBuilder.GetSignBytes()
 	require.NoError(t, err)

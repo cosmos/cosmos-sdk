@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/x/accounts/cli"
-	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/v1"
 	v1 "cosmossdk.io/x/accounts/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,13 +52,6 @@ func (AppModule) IsAppModule() {}
 func (am AppModule) Name() string { return ModuleName }
 
 func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations((*sdk.Msg)(nil),
-		&lockuptypes.MsgDelegate{},
-		&lockuptypes.MsgUndelegate{},
-		&lockuptypes.MsgWithdrawReward{},
-		&lockuptypes.MsgSend{},
-	)
-
 	msgservice.RegisterMsgServiceDesc(registrar, v1.MsgServiceDesc())
 }
 

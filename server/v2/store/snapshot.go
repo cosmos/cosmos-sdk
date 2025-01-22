@@ -48,7 +48,7 @@ func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				height = int64(lastCommitId.Version)
+				height = lastCommitId.Version
 			}
 
 			cmd.Printf("Exporting snapshot for height %d\n", height)

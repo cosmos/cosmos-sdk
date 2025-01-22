@@ -519,7 +519,7 @@ func (c *consensus[T]) FinalizeBlock(
 	events = append(events, resp.EndBlockEvents...)
 
 	// listen to state streaming changes in accordance with the block
-	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, decodedTxs, resp.TxResults, events, stateChanges)
+	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, decodedTxs, *resp, stateChanges)
 	if err != nil {
 		return nil, err
 	}

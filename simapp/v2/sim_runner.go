@@ -2,6 +2,9 @@ package simapp
 
 import (
 	"context"
+	"cosmossdk.io/schema/appdata"
+	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/streaming"
 	"encoding/json"
 	"fmt"
 	"iter"
@@ -116,6 +119,8 @@ type (
 		TXBuilder     simsxv2.TXBuilder[T]
 		AppManager    appmanager.AppManager[T]
 		ModuleManager ModuleManager
+		StreamManager streaming.Manager
+		StreamHook    *appdata.Listener
 	}
 
 	AppFactory[T Tx, V SimulationApp[T]] func(config depinject.Config, outputs ...any) (V, error)
@@ -488,6 +493,7 @@ func doMainLoop[T Tx](
 
 					tx, err := testInstance.TXBuilder.Build(ctx, testInstance.AuthKeeper, signers, msg, r, cs.ChainID)
 					require.NoError(tb, err)
+					blockReqN.Txs = append(blockReqN.Txs, tx)
 					if !yield(tx) {
 						return
 					}
@@ -509,6 +515,22 @@ func doMainLoop[T Tx](
 		}
 		txTotalCounter += txPerBlockCounter
 		cs.ActiveValidatorSet = cs.ActiveValidatorSet.Update(blockRsp.ValidatorUpdates)
+
+		// stream data
+		strmCtx, cancel := context.WithTimeout(rootCtx, time.Second)
+		require.NoError(tb, cometbft.StreamOut[T](
+			strmCtx,
+			int64(blockReqN.Height),
+			[][]byte{},
+			blockReqN.Txs,
+			*blockRsp,
+			changeSet,
+			testInstance.StreamManager,
+			testInstance.StreamHook,
+			true,
+			tb.Logf,
+		))
+		cancel()
 	}
 	fmt.Println("+++ reporter:\n" + rootReporter.Summary().String())
 	fmt.Printf("Tx total: %d skipped: %d\n", txTotalCounter, txSkippedCounter)

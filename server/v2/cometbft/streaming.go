@@ -2,13 +2,13 @@ package cometbft
 
 import (
 	"context"
-	"cosmossdk.io/core/transaction"
 	"encoding/json"
 	"fmt"
 
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/streaming"

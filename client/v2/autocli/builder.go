@@ -4,10 +4,10 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/flag"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // Builder manages options for building CLI commands.
@@ -24,7 +24,7 @@ type Builder struct {
 	AddTxConnFlags    func(*cobra.Command)
 
 	Cdc              codec.Codec
-	EnabledSignModes []signing.SignMode
+	EnabledSignModes []apisigning.SignMode
 }
 
 // ValidateAndComplete the builder fields.

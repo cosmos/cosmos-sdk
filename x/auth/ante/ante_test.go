@@ -1415,5 +1415,4 @@ func TestAnteHandlerUnorderedTx(t *testing.T) {
 	require.NoError(t, err)
 	_, err = suite.anteHandler(bytesCtx, tx, false)
 	require.NoError(t, err)
-
 }

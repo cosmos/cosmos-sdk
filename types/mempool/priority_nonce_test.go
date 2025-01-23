@@ -1006,5 +1006,4 @@ func TestPriorityNonceMempool_UnorderedTx(t *testing.T) {
 	for i, tx := range orderedTxs {
 		require.Equal(t, txs[i].id, tx.(testTx).id)
 	}
-
 }

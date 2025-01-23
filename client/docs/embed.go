@@ -1,6 +1,8 @@
 package docs
 
-import "embed"
+import (
+	"embed"
+)
 
 //go:embed swagger-ui
 var SwaggerUI embed.FS

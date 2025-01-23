@@ -2,8 +2,8 @@ package swagger
 
 import (
 	"context"
-	"embed"
 	"fmt"
+	"io/fs"
 	"net/http"
 
 	"cosmossdk.io/core/server"
@@ -31,7 +31,7 @@ type Server[T transaction.Tx] struct {
 // New creates a new Swagger UI server
 func New[T transaction.Tx](
 	logger log.Logger,
-	swaggerUI embed.FS,
+	swaggerUI fs.FS,
 	config server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {

@@ -1,12 +1,12 @@
 package swagger
 
 import (
-	"embed"
+	"io/fs"
 	"net/http"
 )
 
 type swaggerHandler struct {
-	swaggerFS embed.FS
+	swaggerFS fs.FS
 }
 
 func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -19,5 +19,11 @@ func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.FileServer(http.FS(h.swaggerFS)).ServeHTTP(w, r)
+	root, err := fs.Sub(h.swaggerFS, "swagger-ui")
+	if err != nil {
+		http.Error(w, "failed to get swagger-ui from fs", http.StatusInternalServerError)
+	}
+
+	staticServer := http.FileServer(http.FS(root))
+	http.StripPrefix("/swagger/", staticServer).ServeHTTP(w, r)
 }

@@ -18,7 +18,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 	grpc "google.golang.org/grpc"
 )
 

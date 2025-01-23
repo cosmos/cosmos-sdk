@@ -276,56 +276,56 @@ func (mr *MockHasServicesMockRecorder) RegisterServices(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockHasServices)(nil).RegisterServices), arg0)
 }
 
-// MockhasServicesV1 is a mock of hasServicesV1 interface.
-type MockhasServicesV1 struct {
+// MockHasRegisterServices is a mock of HasRegisterServices interface.
+type MockHasRegisterServices struct {
 	ctrl     *gomock.Controller
-	recorder *MockhasServicesV1MockRecorder
+	recorder *MockHasRegisterServicesMockRecorder
 	isgomock struct{}
 }
 
-// MockhasServicesV1MockRecorder is the mock recorder for MockhasServicesV1.
-type MockhasServicesV1MockRecorder struct {
-	mock *MockhasServicesV1
+// MockHasRegisterServicesMockRecorder is the mock recorder for MockHasRegisterServices.
+type MockHasRegisterServicesMockRecorder struct {
+	mock *MockHasRegisterServices
 }
 
-// NewMockhasServicesV1 creates a new mock instance.
-func NewMockhasServicesV1(ctrl *gomock.Controller) *MockhasServicesV1 {
-	mock := &MockhasServicesV1{ctrl: ctrl}
-	mock.recorder = &MockhasServicesV1MockRecorder{mock}
+// NewMockHasRegisterServices creates a new mock instance.
+func NewMockHasRegisterServices(ctrl *gomock.Controller) *MockHasRegisterServices {
+	mock := &MockHasRegisterServices{ctrl: ctrl}
+	mock.recorder = &MockHasRegisterServicesMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockhasServicesV1) EXPECT() *MockhasServicesV1MockRecorder {
+func (m *MockHasRegisterServices) EXPECT() *MockHasRegisterServicesMockRecorder {
 	return m.recorder
 }
 
 // IsAppModule mocks base method.
-func (m *MockhasServicesV1) IsAppModule() {
+func (m *MockHasRegisterServices) IsAppModule() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IsAppModule")
 }
 
 // IsAppModule indicates an expected call of IsAppModule.
-func (mr *MockhasServicesV1MockRecorder) IsAppModule() *gomock.Call {
+func (mr *MockHasRegisterServicesMockRecorder) IsAppModule() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockhasServicesV1)(nil).IsAppModule))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockHasRegisterServices)(nil).IsAppModule))
 }
 
 // IsOnePerModuleType mocks base method.
-func (m *MockhasServicesV1) IsOnePerModuleType() {
+func (m *MockHasRegisterServices) IsOnePerModuleType() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IsOnePerModuleType")
 }
 
 // IsOnePerModuleType indicates an expected call of IsOnePerModuleType.
-func (mr *MockhasServicesV1MockRecorder) IsOnePerModuleType() *gomock.Call {
+func (mr *MockHasRegisterServicesMockRecorder) IsOnePerModuleType() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockhasServicesV1)(nil).IsOnePerModuleType))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockHasRegisterServices)(nil).IsOnePerModuleType))
 }
 
 // RegisterServices mocks base method.
-func (m *MockhasServicesV1) RegisterServices(arg0 grpc.ServiceRegistrar) error {
+func (m *MockHasRegisterServices) RegisterServices(arg0 grpc.ServiceRegistrar) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RegisterServices", arg0)
 	ret0, _ := ret[0].(error)
@@ -333,9 +333,9 @@ func (m *MockhasServicesV1) RegisterServices(arg0 grpc.ServiceRegistrar) error {
 }
 
 // RegisterServices indicates an expected call of RegisterServices.
-func (mr *MockhasServicesV1MockRecorder) RegisterServices(arg0 any) *gomock.Call {
+func (mr *MockHasRegisterServicesMockRecorder) RegisterServices(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockhasServicesV1)(nil).RegisterServices), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockHasRegisterServices)(nil).RegisterServices), arg0)
 }
 
 // MockHasABCIEndBlock is a mock of HasABCIEndBlock interface.

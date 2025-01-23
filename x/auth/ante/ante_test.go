@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -1383,4 +1384,36 @@ func TestAnteHandlerReCheck(t *testing.T) {
 
 	_, err = suite.anteHandler(suite.ctx, tx, false)
 	require.NotNil(t, err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
+}
+
+func TestAnteHandlerUnorderedTx(t *testing.T) {
+	suite := SetupTestSuite(t, false)
+	accs := suite.CreateTestAccounts(1)
+	msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
+
+	// First send a normal sequential tx with sequence 0
+	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, testdata.NewTestFeeAmount()).Return(nil).AnyTimes()
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{1000}, []uint64{0}
+	_, err := suite.DeliverMsgs(t, privs, []sdk.Msg{msg}, testdata.NewTestFeeAmount(), testdata.NewTestGasLimit(), accNums, accSeqs, suite.ctx.ChainID(), false)
+	require.NoError(t, err)
+
+	// we try to send another tx with the same sequence, it will fail
+	_, err = suite.DeliverMsgs(t, privs, []sdk.Msg{msg}, testdata.NewTestFeeAmount(), testdata.NewTestGasLimit(), accNums, accSeqs, suite.ctx.ChainID(), false)
+	require.Error(t, err)
+
+	// now we'll still use the same sequence but because it's unordered, it will be ignored and accepted anyway
+	msgs := []sdk.Msg{msg}
+	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
+	suite.txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	suite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+
+	tx, txErr := suite.CreateTestUnorderedTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT, true, time.Now().Add(time.Minute))
+	require.NoError(t, txErr)
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	bytesCtx := suite.ctx.WithTxBytes(txBytes)
+	require.NoError(t, err)
+	_, err = suite.anteHandler(bytesCtx, tx, false)
+	require.NoError(t, err)
+
 }

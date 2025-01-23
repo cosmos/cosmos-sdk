@@ -139,12 +139,6 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
 
-	senderTxs, found := snm.senders[sender]
-	if !found {
-		senderTxs = skiplist.New(skiplist.Uint64)
-		snm.senders[sender] = senderTxs
-	}
-
 	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
 	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
 		timestamp := unordered.GetTimeoutTimeStamp().Unix()
@@ -152,6 +146,12 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 			return errors.New("invalid timestamp value")
 		}
 		nonce = uint64(timestamp)
+	}
+
+	senderTxs, found := snm.senders[sender]
+	if !found {
+		senderTxs = skiplist.New(skiplist.Uint64)
+		snm.senders[sender] = senderTxs
 	}
 
 	senderTxs.Set(nonce, tx)

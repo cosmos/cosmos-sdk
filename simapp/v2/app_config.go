@@ -197,7 +197,8 @@ var (
 					},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
-					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
+					// GasConfig is used to set the gas configuration for the queries and transactions.
+					// This config is aimed to app-wide and shouldn't be overriden by individual validators.
 					GasConfig: &runtimev2.GasConfig{
 						ValidateTxGasLimit: 10_000_000,
 						QueryGasLimit:      100_000,

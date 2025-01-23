@@ -49,11 +49,11 @@ func New[T transaction.Tx](
 	s.config = serverCfg
 
 	mux := http.NewServeMux()
-	mux.Handle("/swagger", &swaggerHandler{
+	mux.Handle("/swagger/", &swaggerHandler{
 		swaggerFS: swaggerUI,
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/swagger", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/swagger/", http.StatusMovedPermanently)
 	})
 
 	s.server = &http.Server{

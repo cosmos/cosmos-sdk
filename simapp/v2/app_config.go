@@ -31,6 +31,7 @@ import (
 	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
+	runtimev2types "cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
@@ -66,7 +67,6 @@ import (
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import for side-effects
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -108,7 +108,7 @@ var (
 	ModuleConfig = &appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
-				Name: runtime.ModuleName,
+				Name: runtimev2types.ModuleName,
 				Config: appconfig.WrapAny(&runtimev2.Module{
 					AppName: "SimAppV2",
 					// NOTE: upgrade module is required to be prioritized
@@ -198,7 +198,7 @@ var (
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
 					// GasConfig is used to set the gas configuration for the queries and transactions.
-					// This config is aimed to app-wide and shouldn't be overriden by individual validators.
+					// This config is aimed to app-wide and shouldn't be overridden by individual validators.
 					GasConfig: &runtimev2.GasConfig{
 						ValidateTxGasLimit: 10_000_000,
 						QueryGasLimit:      100_000,
@@ -210,7 +210,7 @@ var (
 						authtxconfig.DepinjectModuleName,
 						validate.ModuleName,
 						genutiltypes.ModuleName,
-						runtime.ModuleName,
+						runtimev2types.ModuleName,
 						vestingtypes.ModuleName,
 					},
 				}),

@@ -27,7 +27,6 @@ var (
 	_ module.HasServices              = coreAppModuleAdaptor{}
 )
 
-// coreAppModuleAdaptor wraps the core API module as an AppModule that this version of the SDK can use.
 func newCoreAppModuleAdaptor(name string, module appmodule.AppModule) module.AppModule {
 	return coreAppModuleAdaptor{
 		name:      name,
@@ -35,6 +34,8 @@ func newCoreAppModuleAdaptor(name string, module appmodule.AppModule) module.App
 	}
 }
 
+// coreAppModuleAdaptor wraps the core API module as an AppModule that this version of the SDK can use.
+// This is only used for testing purposes.
 type coreAppModuleAdaptor struct {
 	name      string
 	appModule appmodule.AppModule

@@ -80,8 +80,8 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 		if mod, ok := appModule.(module.HasServices); ok {
 			mod.RegisterServices(a.configurator)
-		} else if module, ok := appModule.(hasServicesV1); ok {
-			if err := module.RegisterServices(a.configurator); err != nil {
+		} else if mod, ok := appModule.(module.HasRegisterServices); ok {
+			if err := mod.RegisterServices(a.configurator); err != nil {
 				return err
 			}
 		}

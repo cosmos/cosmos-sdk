@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"slices"
 
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
+
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

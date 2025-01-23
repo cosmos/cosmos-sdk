@@ -174,11 +174,6 @@ func (c *consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 // Query implements types.Application.
 // It is called by cometbft to query application state.
 func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
-	resp, isGRPC, err := c.maybeRunGRPCQuery(ctx, req)
-	if isGRPC {
-		return resp, err
-	}
-
 	// when a client did not provide a query height, manually inject the latest
 	// for modules queries, AppManager does it automatically
 	if req.Height == 0 {
@@ -187,6 +182,11 @@ func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 			return nil, err
 		}
 		req.Height = int64(latestVersion)
+	}
+
+	resp, isGRPC, err := c.maybeRunGRPCQuery(ctx, req)
+	if isGRPC {
+		return resp, err
 	}
 
 	// this error most probably means that we can't handle it with a proto message, so

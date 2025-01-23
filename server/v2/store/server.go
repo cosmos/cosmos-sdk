@@ -60,6 +60,7 @@ func (s *Server[T]) CLICommands() serverv2.CLIConfig {
 			s.DumpArchiveCmd(),
 			s.LoadArchiveCmd(),
 			s.RestoreSnapshotCmd(),
+			s.ModuleHashByHeightQuery(),
 		},
 	}
 }

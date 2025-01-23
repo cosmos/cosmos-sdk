@@ -124,7 +124,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-	a.app.AppManager = appmanager.New[T](
+	a.app.AppManager = appmanager.New(
 		appmanager.Config{
 			ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
 			QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,

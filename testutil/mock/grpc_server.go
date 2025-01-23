@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
+	"github.com/golang/mock/gomock"
 	grpc "google.golang.org/grpc"
 )
 

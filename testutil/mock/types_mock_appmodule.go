@@ -12,7 +12,7 @@ import (
 	appmodule "cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	module "github.com/cosmos/cosmos-sdk/types/module"
-	gomock "github.com/golang/mock/gomock"
+	"github.com/golang/mock/gomock"
 )
 
 // MockAppModuleWithAllExtensions is a mock of AppModuleWithAllExtensions interface.

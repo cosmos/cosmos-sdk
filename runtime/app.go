@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
@@ -305,17 +304,6 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 	return a.storeKeys[i]
 }
 
-<<<<<<< HEAD
-var _ servertypes.Application = &App{}
-
-// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
-// This API is part of core/appmodule but commented out for dependencies.
-type hasServicesV1 interface {
-	RegisterServices(grpc.ServiceRegistrar) error
-}
-
-=======
->>>>>>> 8493d4fdc (refactor: export `HasRegisterServices` (#23488))
 // ValidatorKeyProvider returns a function that generates a private key for use by comet.
 func (a *App) ValidatorKeyProvider() KeyGenF {
 	return func() (cmtcrypto.PrivKey, error) {

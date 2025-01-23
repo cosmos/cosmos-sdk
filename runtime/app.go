@@ -8,7 +8,6 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
-	"google.golang.org/grpc"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
@@ -86,8 +85,8 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 		if mod, ok := appModule.(module.HasServices); ok {
 			mod.RegisterServices(a.configurator)
-		} else if module, ok := appModule.(hasServicesV1); ok {
-			if err := module.RegisterServices(a.configurator); err != nil {
+		} else if mod, ok := appModule.(module.HasRegisterServices); ok {
+			if err := mod.RegisterServices(a.configurator); err != nil {
 				return err
 			}
 		}
@@ -306,6 +305,7 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 	return a.storeKeys[i]
 }
 
+<<<<<<< HEAD
 var _ servertypes.Application = &App{}
 
 // hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
@@ -314,6 +314,8 @@ type hasServicesV1 interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
+=======
+>>>>>>> 8493d4fdc (refactor: export `HasRegisterServices` (#23488))
 // ValidatorKeyProvider returns a function that generates a private key for use by comet.
 func (a *App) ValidatorKeyProvider() KeyGenF {
 	return func() (cmtcrypto.PrivKey, error) {

@@ -19,11 +19,5 @@ func (h *swaggerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	root, err := fs.Sub(h.swaggerFS, "swagger-ui")
-	if err != nil {
-		http.Error(w, "failed to get swagger-ui from fs", http.StatusInternalServerError)
-	}
-
-	staticServer := http.FileServer(http.FS(root))
-	http.StripPrefix("/swagger/", staticServer).ServeHTTP(w, r)
+	http.StripPrefix("/swagger/", http.FileServer(http.FS(h.swaggerFS))).ServeHTTP(w, r)
 }

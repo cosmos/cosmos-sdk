@@ -130,7 +130,7 @@ func InitRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
-	swaggerServer, err := swagger.New[T](logger, docs.SwaggerUI, deps.GlobalConfig)
+	swaggerServer, err := swagger.New[T](logger, docs.GetSwaggerFS(), deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}

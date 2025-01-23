@@ -7,13 +7,13 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm/prefixstore"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

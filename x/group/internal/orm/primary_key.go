@@ -4,9 +4,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	storetypes "cosmossdk.io/core/store"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (

@@ -522,12 +522,16 @@ func doMainLoop[T Tx](
 		txTotalCounter += txPerBlockCounter
 		cs.ActiveValidatorSet = cs.ActiveValidatorSet.Update(blockRsp.ValidatorUpdates)
 
+		if len(testInstance.StreamManager.Listeners) == 0 && testInstance.StreamHook == nil {
+			continue
+		}
 		// stream data
 		strmCtx, cancel := context.WithTimeout(rootCtx, time.Second)
+		rawTxs := simsx.Collect(blockReqN.Txs, func(a T) []byte { return a.Bytes() })
 		require.NoError(tb, cometbft.StreamOut[T](
 			strmCtx,
 			int64(blockReqN.Height),
-			[][]byte{},
+			rawTxs,
 			blockReqN.Txs,
 			*blockRsp,
 			changeSet,

@@ -22,8 +22,6 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-* [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Add DeliverSims entrypoint for sims
-
 
 ## [v1.0.0-beta.2](https://github.com/cosmos/cosmos-sdk/releases/tag/server/v2/stf%2Fv1.0.0-beta.2)
 

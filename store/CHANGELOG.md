@@ -31,10 +31,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Improvements
-
-* [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Support memDB for sims
-
 
 ## v1.10.0 (December 13, 2024)
 

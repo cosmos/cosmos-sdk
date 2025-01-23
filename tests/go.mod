@@ -67,7 +67,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/client/v2 v2.10.0-beta.1 // indirect
+	cosmossdk.io/client/v2 v2.10.0-beta.2 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/indexer/postgres v0.1.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect

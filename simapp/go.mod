@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	cosmossdk.io/api v0.8.2 // main
-	cosmossdk.io/client/v2 v2.10.0-beta.1
+	cosmossdk.io/client/v2 v2.10.0-beta.2 // main
 	cosmossdk.io/collections v1.0.0 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // main
@@ -244,7 +244,7 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace cosmossdk.io/client/v2 => ../client/v2
+// replace cosmossdk.io/client/v2 => ../client/v2
 
 // Below are the long-lived replace of the SimApp
 replace (

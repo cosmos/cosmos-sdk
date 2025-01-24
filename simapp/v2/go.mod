@@ -51,6 +51,8 @@ require (
 	google.golang.org/protobuf v1.36.3
 )
 
+require cosmossdk.io/schema v1.0.0
+
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.3-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.3-20240130113600-88ef6483f90f.1 // indirect
@@ -64,7 +66,6 @@ require (
 	cosmossdk.io/core/testing v0.0.1 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
-	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/server/v2/stf v1.0.0-beta.2 // indirect
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
 	cosmossdk.io/x/tx v1.0.1 // indirect

@@ -51,7 +51,7 @@ ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 ifeq (v2,$(findstring v2,$(COSMOS_BUILD_OPTIONS)))
-  SIMAPP = simapp/v2
+  SIMAPP = simapp
   APPNAME = simdv2
 endif
 

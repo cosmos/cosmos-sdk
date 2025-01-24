@@ -5,7 +5,6 @@ go 1.22
 require (
 	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
 	sigs.k8s.io/yaml v1.4.0
 )
 

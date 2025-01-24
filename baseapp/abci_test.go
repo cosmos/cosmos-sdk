@@ -23,8 +23,8 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"

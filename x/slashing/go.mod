@@ -16,7 +16,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/golang/mock v1.6.0
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/stretchr/testify v1.10.0
@@ -25,6 +25,8 @@ require (
 	google.golang.org/protobuf v1.36.3
 	gotest.tools/v3 v3.5.1
 )
+
+require go.uber.org/mock v0.5.0
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e42a58b301.1 // indirect

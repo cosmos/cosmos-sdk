@@ -21,7 +21,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/golang/mock v1.6.0
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/manifoldco/promptui v0.9.0 // indirect
@@ -173,6 +173,8 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+require go.uber.org/mock v0.5.0
 
 require github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 

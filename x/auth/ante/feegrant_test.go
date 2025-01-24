@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"

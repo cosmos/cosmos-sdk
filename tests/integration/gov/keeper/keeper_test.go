@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"

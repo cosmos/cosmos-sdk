@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/comet"
 	coretesting "cosmossdk.io/core/testing"

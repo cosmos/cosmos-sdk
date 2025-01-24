@@ -6,8 +6,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"

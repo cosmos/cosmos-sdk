@@ -81,14 +81,6 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/cosmos/params/v1beta1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "Params"
-        }
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/cosmos/slashing/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -174,6 +166,15 @@
     },
     {
       "url": "./tmp-swagger-gen/cosmos/app/v1alpha1/query.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/protocolpool/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ProtocolPoolParams",
+          "CommunityPool": "ProtocolPoolCommunityPool"
+        }
+      }
     }
   ]
 }

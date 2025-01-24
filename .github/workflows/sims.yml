@@ -63,9 +63,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
-      - name: test-sim-nondeterminism-streaming
+      - name: test-sim-nondeterminism
         run: |
-          make test-sim-nondeterminism-streaming
+          make test-sim-nondeterminism
 
   test-sim-multi-seed-short:
     runs-on: large-sdk-runner

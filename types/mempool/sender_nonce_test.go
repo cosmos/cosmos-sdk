@@ -227,8 +227,21 @@ func (s *MempoolTestSuite) TestUnorderedTx() {
 	orderedTxs := fetchTxs(mp.Select(ctx, nil), 100000)
 	require.Equal(t, len(txs), len(orderedTxs))
 
-	// Because the sender is selected randomly it can be either 3,1,2,0 or 1,3,0,2
-	acceptableOptions := [][]int{{3, 1, 2, 0}, {1, 3, 0, 2}}
+	// Because the sender is selected randomly it can be any of these options
+	acceptableOptions := [][]int{
+		{3, 1, 2, 0},
+		{3, 1, 0, 2},
+		{3, 2, 1, 0},
+		{1, 3, 0, 2},
+		{1, 3, 2, 0},
+		{1, 0, 3, 2},
+	}
+
+	orderedTxsIds := make([]int, len(orderedTxs))
+	for i, tx := range orderedTxs {
+		orderedTxsIds[i] = tx.(testTx).id
+	}
+
 	anyAcceptableOrder := false
 	for _, option := range acceptableOptions {
 		for i, tx := range orderedTxs {
@@ -242,5 +255,5 @@ func (s *MempoolTestSuite) TestUnorderedTx() {
 		}
 	}
 
-	require.True(t, anyAcceptableOrder)
+	require.True(t, anyAcceptableOrder, "expected any of %v but got %v", acceptableOptions, orderedTxsIds)
 }

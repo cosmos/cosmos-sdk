@@ -55,7 +55,7 @@ require (
 
 require (
 	cosmossdk.io/core/testing v0.0.1
-	github.com/golang/mock v1.6.0
+	go.uber.org/mock v0.5.0
 )
 
 require (

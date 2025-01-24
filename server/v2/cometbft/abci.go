@@ -18,7 +18,6 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -510,16 +509,8 @@ func (c *consensus[T]) FinalizeBlock(
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}
 
-	var events []event.Event
-	events = append(events, resp.PreBlockEvents...)
-	events = append(events, resp.BeginBlockEvents...)
-	for _, tx := range resp.TxResults {
-		events = append(events, tx.Events...)
-	}
-	events = append(events, resp.EndBlockEvents...)
-
 	// listen to state streaming changes in accordance with the block
-	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, decodedTxs, resp.TxResults, events, stateChanges)
+	err = c.streamDeliverBlockChanges(ctx, req.Height, req.Txs, decodedTxs, *resp, stateChanges)
 	if err != nil {
 		return nil, err
 	}

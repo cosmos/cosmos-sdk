@@ -40,40 +40,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
-<<<<<<< HEAD
-=======
-### Features
-
-* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
-* (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
-
-### Improvements
-
-* [#23470](https://github.com/cosmos/cosmos-sdk/pull/23470) Converge to use of one single sign mode type and signer data:
-    * Use api's signmode throughout the SDK to align with `cosmossdk.io/tx`. This allows developer not to juggle between sign mode types
-    * Deprecate `authsigning.SignerData` in favor of txsigning.SignerData and replace its usage
-    * Remove `APISignModeToInternal` from `x/auth` as no conversion is necessary by the user anymore
-
-### Bug Fixes
-
-* (x/auth/tx) [#23492](https://github.com/cosmos/cosmos-sdk/pull/23492) Add missing timeoutTimestamp in newBuilderFromDecodedTx.
-
-### API Breaking Changes
-
-* (x/params) [#22995](https://github.com/cosmos/cosmos-sdk/pull/22995) Remove `x/params`.  Migrate to the new params system introduced in `v0.47` as demonstrated [here](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams).
-* (testutil) [#22392](https://github.com/cosmos/cosmos-sdk/pull/22392) Remove `testutil/network` package. Use the integration framework or systemtests framework instead.
-* (proto) [#23437](https://github.com/cosmos/cosmos-sdk/pull/23437) Deprecate `Block` field from `GetBlockByHeightResponse` and return empty comet block for `GetBlockByHeight`.
-
-#### Removal of v0 components
-
-This subsection lists the API breaking changes that are [part of the removal of v0 components](https://github.com/cosmos/cosmos-sdk/issues/22904). The v0 components were deprecated in `v0.52` and are now removed.
-
-* (simapp) [#23009](https://github.com/cosmos/cosmos-sdk/pull/23009) Simapp has been removed. Check-out Simapp/v2 instead.
-* (server) [#23018](https://github.com/cosmos/cosmos-sdk/pull/23018) [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) The server package has been removed. Use server/v2 instead
-* (x/genutil) [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) Genutil commands specific to a baseapp chain have been deleted.
-* (client) [#22904](https://github.com/cosmos/cosmos-sdk/issues/22904) v1 specific client commands have been removed.
-
->>>>>>> 494389d15 (fix(x/auth/tx): add missing timeoutTimestamp in newBuilderFromDecodedTx (#23492))
 ## [v0.52.0-rc.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-rc.2) - 2025-01-17
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
@@ -96,6 +62,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+* (x/auth/tx) [#23492](https://github.com/cosmos/cosmos-sdk/pull/23492) Add missing timeoutTimestamp in newBuilderFromDecodedTx.
 * (query) [#23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
 * (x/auth/tx) [#23170](https://github.com/cosmos/cosmos-sdk/pull/23170) Avoid panic from `newWrapperFromDecodedTx` when `AuthInfo.Fee` is optional in decodedTx.
 * (x/auth/tx) [#23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing `CacheWithValue` for `ExtensionOptions`.

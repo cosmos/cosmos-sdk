@@ -169,10 +169,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require (
-	github.com/golang/mock v1.6.0
-	go.uber.org/mock v0.5.0
-)
+require go.uber.org/mock v0.5.0
 
 require github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 

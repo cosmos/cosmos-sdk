@@ -64,8 +64,6 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
-require github.com/golang/mock v1.6.0
-
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.3-20240130113600-88ef6483f90f.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

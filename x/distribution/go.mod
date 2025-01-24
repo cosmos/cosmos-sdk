@@ -27,6 +27,8 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 )
 
+require go.uber.org/mock v0.5.0
+
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.2-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.2-20240130113600-88ef6483f90f.1 // indirect

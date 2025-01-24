@@ -170,6 +170,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require go.uber.org/mock v0.5.0
+
 require github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1

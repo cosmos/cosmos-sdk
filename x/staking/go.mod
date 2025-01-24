@@ -163,6 +163,8 @@ require (
 
 require github.com/dgraph-io/badger/v4 v4.5.0 // indirect
 
+require go.uber.org/mock v0.5.0
+
 require (
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect

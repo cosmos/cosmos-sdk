@@ -10,7 +10,7 @@ package mock
 import (
 	"reflect"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )

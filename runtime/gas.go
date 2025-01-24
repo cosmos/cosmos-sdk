@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 
 	"cosmossdk.io/core/gas"
 	storetypes "cosmossdk.io/store/types"
@@ -51,54 +50,6 @@ func (cgm CoreGasmeter) Remaining() gas.Gas {
 
 func (cgm CoreGasmeter) Limit() gas.Gas {
 	return cgm.gm.Limit()
-}
-
-// SDKGasMeter is a wrapper around the SDK's GasMeter that implements the GasMeter interface.
-type SDKGasMeter struct {
-	gm gas.Meter
-}
-
-func (gm SDKGasMeter) GasConsumed() storetypes.Gas {
-	return gm.gm.Consumed()
-}
-
-func (gm SDKGasMeter) GasConsumedToLimit() storetypes.Gas {
-	if gm.IsPastLimit() {
-		return gm.gm.Limit()
-	}
-	return gm.gm.Consumed()
-}
-
-func (gm SDKGasMeter) GasRemaining() storetypes.Gas {
-	return gm.gm.Remaining()
-}
-
-func (gm SDKGasMeter) Limit() storetypes.Gas {
-	return gm.gm.Limit()
-}
-
-func (gm SDKGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
-	if err := gm.gm.Consume(amount, descriptor); err != nil {
-		panic(err)
-	}
-}
-
-func (gm SDKGasMeter) RefundGas(amount storetypes.Gas, descriptor string) {
-	if err := gm.gm.Refund(amount, descriptor); err != nil {
-		panic(err)
-	}
-}
-
-func (gm SDKGasMeter) IsPastLimit() bool {
-	return gm.gm.Remaining() <= gm.gm.Limit()
-}
-
-func (gm SDKGasMeter) IsOutOfGas() bool {
-	return gm.gm.Remaining() >= gm.gm.Limit()
-}
-
-func (gm SDKGasMeter) String() string {
-	return fmt.Sprintf("BasicGasMeter:\n  limit: %d\n  consumed: %d", gm.gm.Limit(), gm.gm.Remaining())
 }
 
 type GasConfig struct {

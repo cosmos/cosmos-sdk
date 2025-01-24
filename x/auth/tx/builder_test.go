@@ -333,3 +333,21 @@ func TestBuilderFeeGranter(t *testing.T) {
 	txBuilder.SetFeeGranter(addr1)
 	require.Equal(t, addr1.String(), sdk.AccAddress(txBuilder.GetTx().FeeGranter()).String())
 }
+
+func TestBuilderWithTimeoutTimestamp(t *testing.T) {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	interfaceRegistry := cdc.InterfaceRegistry()
+	signingCtx := interfaceRegistry.SigningContext()
+	txConfig := NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), DefaultSignModes)
+	txBuilder := txConfig.NewTxBuilder()
+	encodedTx, err := txConfig.TxJSONEncoder()(txBuilder.GetTx())
+	require.NoError(t, err)
+	file := testutil.WriteToNewTempFile(t, string(encodedTx))
+	clientCtx := client.Context{InterfaceRegistry: interfaceRegistry, TxConfig: txConfig}
+	decodedTx, err := authclient.ReadTxFromFile(clientCtx, file.Name())
+	require.NoError(t, err)
+	txBldr, err := txConfig.WrapTxBuilder(decodedTx)
+	require.NoError(t, err)
+	b := txBldr.(*builder)
+	require.False(t, b.timeoutTimestamp.IsZero())
+}

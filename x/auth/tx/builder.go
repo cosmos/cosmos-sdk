@@ -68,7 +68,24 @@ func newBuilder(cdc codec.Codec) *wrapper {
 			},
 		},
 	}
-	return w
+
+	return &builder{
+		addressCodec:                addrCodec,
+		decoder:                     decoder,
+		codec:                       codec,
+		msgs:                        decoded.Messages,
+		timeoutHeight:               decoded.GetTimeoutHeight(),
+		granter:                     decoded.FeeGranter(),
+		payer:                       payer,
+		unordered:                   decoded.GetUnordered(),
+		memo:                        decoded.GetMemo(),
+		gasLimit:                    decoded.GetGas(),
+		fees:                        decoded.GetFee(),
+		signerInfos:                 sigInfos,
+		signatures:                  signatures,
+		extensionOptions:            decoded.GetExtensionOptions(),
+		nonCriticalExtensionOptions: decoded.GetNonCriticalExtensionOptions(),
+	}, nil
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {

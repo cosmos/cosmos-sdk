@@ -62,6 +62,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+* (x/auth/tx) [#23492](https://github.com/cosmos/cosmos-sdk/pull/23492) Add missing timeoutTimestamp in newBuilderFromDecodedTx.
 * (query) [#23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
 * (x/auth/tx) [#23170](https://github.com/cosmos/cosmos-sdk/pull/23170) Avoid panic from `newWrapperFromDecodedTx` when `AuthInfo.Fee` is optional in decodedTx.
 * (x/auth/tx) [#23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing `CacheWithValue` for `ExtensionOptions`.

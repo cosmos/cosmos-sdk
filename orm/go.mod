@@ -15,7 +15,6 @@ require (
 	github.com/regen-network/gocuke v1.1.1
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
-	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 	google.golang.org/grpc v1.69.4
 	google.golang.org/protobuf v1.36.3
 	gotest.tools/v3 v3.5.1
@@ -65,6 +64,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
+	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect

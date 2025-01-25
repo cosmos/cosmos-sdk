@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 

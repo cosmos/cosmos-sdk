@@ -170,7 +170,7 @@ for nesting transactions.
 
 **Volatility** describes a message handler's behavior with respect to state and side effects.
 It is an enum value that can have one of the following values:
-* `volatile`: the handler can have side effects and send `volatile`, `radonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
+* `volatile`: the handler can have side effects and send `volatile`, `readonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
 * `readonly`: the handler cannot cause effects side effects and can only send `readonly` or `pure` messages to other accounts. Such handlers are expected to only read state.
 * `pure`: the handler cannot cause any side effects and can only call other pure handlers. Such handlers are expected to neither read nor write state.
 

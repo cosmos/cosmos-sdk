@@ -11,10 +11,12 @@ COPY core/go.mod core/go.sum /work/core/
 COPY collections/go.mod collections/go.sum /work/collections/
 COPY store/go.mod store/go.sum /work/store/
 COPY x/tx/go.mod x/tx/go.sum /work/x/tx/
+COPY x/bank/go.mod x/bank/go.sum /work/x/bank/
+COPY x/staking/go.mod x/staking/go.sum /work/x/staking/
 RUN go mod download
 
 COPY ./ /work
-RUN LEDGER_ENABLED=false make COSMOS_BUILD_OPTIONS="debug,nostrip" clean build
+RUN LEDGER_ENABLED=false make COSMOS_BUILD_OPTIONS="v2,debug,nostrip" clean build
 
 
 FROM alpine AS run
@@ -27,5 +29,5 @@ VOLUME /simd
 WORKDIR /simd
 
 COPY contrib/images/simd-dlv/wrapper.sh /usr/bin/wrapper.sh
-COPY --from=build /work/build/simd /simd/
+COPY --from=build /work/build/simdv2 /simd/
 COPY --from=build /go/bin/dlv /usr/local/bin

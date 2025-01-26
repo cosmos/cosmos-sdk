@@ -90,15 +90,16 @@ type HasInvariants interface {
 	RegisterInvariants(sdk.InvariantRegistry)
 }
 
-// HasServices is the interface for modules to register services.
+// HasServices is the interface for modules to register legacy services using the deprecated Configurator type.
+// Deprecated: use HasRegisterServices and its interface in your modules instea.
 type HasServices interface {
 	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
 }
 
-// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// HasRegisterServices is the interface for registering service in baseapp Cosmos SDK.
 // This API is part of core/appmodule but commented out for dependencies.
-type hasServicesV1 interface {
+type HasRegisterServices interface {
 	appmodulev2.AppModule
 
 	RegisterServices(grpc.ServiceRegistrar) error
@@ -406,7 +407,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 			module.RegisterServices(cfg)
 		}
 
-		if module, ok := module.(hasServicesV1); ok {
+		if module, ok := module.(HasRegisterServices); ok {
 			err := module.RegisterServices(cfg)
 			if err != nil {
 				return err
@@ -628,7 +629,7 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 //
 // Internally, RunMigrations will perform the following steps:
 // - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
-// - make a diff of `fromVM` and `udpatedVM`, and for each module:
+// - make a diff of `fromVM` and `updatedVM`, and for each module:
 //   - if the module's `fromVM` version is less than its `updatedVM` version,
 //     then run in-place store migrations for that module between those versions.
 //   - if the module does not exist in the `fromVM` (which means that it's a new module,
@@ -643,7 +644,7 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
 // foo's module version set to its latest ConsensusVersion. That way, the diff
-// between the function's `fromVM` and `udpatedVM` will be empty, hence not
+// between the function's `fromVM` and `updatedVM` will be empty, hence not
 // running anything for foo.
 //
 // Example:

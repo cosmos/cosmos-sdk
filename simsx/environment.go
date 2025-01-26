@@ -263,6 +263,9 @@ func NewChainDataSource(
 	codec address.Codec,
 	oldSimAcc ...simtypes.Account,
 ) *ChainDataSource {
+	if len(oldSimAcc) == 0 {
+		panic("empty accounts")
+	}
 	acc := make([]SimAccount, len(oldSimAcc))
 	index := make(map[string]int, len(oldSimAcc))
 	bank := contextAwareBalanceSource{ctx: ctx, bank: bk}

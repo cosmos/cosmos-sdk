@@ -754,7 +754,6 @@ func TestFormatDecNonDigits(t *testing.T) {
 	}
 
 	for _, value := range badCases {
-		value := value
 		t.Run(value, func(t *testing.T) {
 			s, err := math.FormatDec(value)
 			if err == nil {

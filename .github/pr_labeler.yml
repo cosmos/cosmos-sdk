@@ -51,8 +51,6 @@
   - x/circuit/**/*
 "C:x/consensus":
   - x/consensus/**/*
-"C:x/crisis":
-  - x/crisis/**/*
 "C:x/distribution":
   - x/distribution/**/*
 "C:x/evidence":

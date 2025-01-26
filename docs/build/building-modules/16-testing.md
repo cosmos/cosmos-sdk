@@ -61,7 +61,7 @@ The goal of these integration tests is to test how a component interacts with ot
 
 Integration tests interact with the tested module via the defined `Msg` and `Query` services. The result of the test can be verified by checking the state of the application, by checking the emitted events or the response. It is advised to combine two of these methods to verify the result of the test.
 
-The SDK provides small helpers for quickly setting up an integration tests. These helpers can be found at <https://github.com/cosmos/cosmos-sdk/blob/main/testutil/integration>.
+The SDK provides small helpers for quickly setting up an integration tests. These helpers can be found at <https://github.com/cosmos/cosmos-sdk/blob/main/testutil>.
 
 ### Example
 

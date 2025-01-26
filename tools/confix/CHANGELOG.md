@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.2.0-rc.2](https://github.com/cosmos/cosmos-sdk/releases/tag/tools/confix/v0.2.0-rc.2) - 2025-01-16
+
+* [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) Loosen `app.toml` validation for consistency between baseapp chains and v2 chains.
+
 ## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/tools/confix/v0.2.0-rc.1) - 2024-12-18
 
 * [#21052](https://github.com/cosmos/cosmos-sdk/pull/21052) Add a migration to v2 config.

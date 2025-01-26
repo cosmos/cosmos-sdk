@@ -6,8 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/server/v2/streaming"
 	"github.com/hashicorp/go-plugin"
+
+	"cosmossdk.io/server/v2/streaming"
 )
 
 // FilePlugin is the implementation of the baseapp.ABCIListener interface

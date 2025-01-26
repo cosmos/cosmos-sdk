@@ -12,7 +12,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	proto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
@@ -82,6 +82,21 @@ func NewModuleManager[T transaction.Tx](
 // Modules returns the modules registered in the module manager
 func (m *MM[T]) Modules() map[string]appmodulev2.AppModule {
 	return m.modules
+}
+
+// StoreKeys returns a map containing modules to their store keys
+func (m *MM[T]) StoreKeys() map[string]string {
+	storeKeys := make(map[string]string, len(m.modules))
+	for v := range maps.Keys(m.modules) {
+		storeKeys[v] = v // set default naming convention
+	}
+	for _, v := range m.config.OverrideStoreKeys {
+		storeKeys[v.ModuleName] = v.KvStoreKey
+	}
+	for _, v := range m.config.SkipStoreKeys {
+		delete(storeKeys, v)
+	}
+	return storeKeys
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
@@ -413,7 +428,7 @@ func (m *MM[T]) TxValidators() func(ctx context.Context, tx T) error {
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
 // foo's module version set to its latest ConsensusVersion. That way, the diff
-// between the function's `fromVM` and `udpatedVM` will be empty, hence not
+// between the function's `fromVM` and `updatedVM` will be empty, hence not
 // running anything for foo.
 //
 // Example:

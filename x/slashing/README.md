@@ -331,7 +331,7 @@ onValidatorBonded(address sdk.ValAddress)
       IndexOffset         : 0,
       JailedUntil         : time.Unix(0, 0),
       Tombstone           : false,
-      MissedBloskCounter  : 0
+      MissedBlocksCounter  : 0
     } else {
       signingInfo.StartHeight = CurrentHeight
     }

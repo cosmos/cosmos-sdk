@@ -21,7 +21,7 @@ service Msg {
 }
 
 message MsgRequest {
-  // u32 is an uint32
+  // u32 is a uint32
   uint32                                u32        = 1;
   uint64                                u64        = 2;
   string                                str        = 3;

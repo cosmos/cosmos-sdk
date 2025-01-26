@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 var (
@@ -32,11 +33,12 @@ type Server[T transaction.Tx] struct {
 	GRPCGatewayRouter *runtime.ServeMux
 }
 
-// New creates a new gRPC-gateway server.
+// New creates a new gRPC-Gateway server.
 func New[T transaction.Tx](
 	logger log.Logger,
 	config server.ConfigMap,
 	ir jsonpb.AnyResolver,
+	appManager appmanager.AppManager[T],
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
@@ -57,7 +59,7 @@ func New[T transaction.Tx](
 			// marshaled in unary requests.
 			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
 
-			// Custom header matcher for mapping request headers to
+			// Custom header uriMatcher for mapping request headers to
 			// GRPC metadata
 			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
 		),
@@ -71,12 +73,13 @@ func New[T transaction.Tx](
 		}
 	}
 
-	// TODO: register the gRPC-Gateway routes
-
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 	mux := http.NewServeMux()
-	mux.Handle("/", s.GRPCGatewayRouter)
+	err := mountHTTPRoutes(mux, s.GRPCGatewayRouter, appManager)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register gRPC gateway annotations: %w", err)
+	}
 
 	s.server = &http.Server{
 		Addr:    s.config.Address,
@@ -133,15 +136,15 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 }
 
+// GRPCBlockHeightHeader is the gRPC header for block height.
+const GRPCBlockHeightHeader = "x-cosmos-block-height"
+
 // CustomGRPCHeaderMatcher for mapping request headers to
 // GRPC metadata.
 // HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to
 // gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
 // CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
-	// GRPCBlockHeightHeader is the gRPC header for block height.
-	const GRPCBlockHeightHeader = "x-cosmos-block-height"
-
 	switch strings.ToLower(key) {
 	case GRPCBlockHeightHeader:
 		return GRPCBlockHeightHeader, true

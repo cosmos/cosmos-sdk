@@ -1,4 +1,4 @@
-cosmossdk.io/core v1.0.0-alpha.6 h1:5ukC4JcQKmemLQXcAgu/QoOvJI50hpBkIIg4ZT2EN8E=
-cosmossdk.io/core v1.0.0-alpha.6/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
+cosmossdk.io/core v1.0.0 h1:e7XBbISOytLBOXMVwpRPixThXqEkeLGlg8no/qpgS8U=
+cosmossdk.io/core v1.0.0/go.mod h1:mKIp3RkoEmtqdEdFHxHwWAULRe+79gfdOvmArrLDbDc=
 cosmossdk.io/schema v1.0.0 h1:/diH4XJjpV1JQwuIozwr+A4uFuuwanFdnw2kKeiXwwQ=
 cosmossdk.io/schema v1.0.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=

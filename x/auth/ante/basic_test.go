@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
@@ -37,7 +38,7 @@ func TestValidateBasic(t *testing.T) {
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
-	invalidTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	invalidTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	vbd := ante.NewValidateBasicDecorator(suite.accountKeeper.GetEnvironment())
@@ -47,7 +48,7 @@ func TestValidateBasic(t *testing.T) {
 	require.ErrorIs(t, err, sdkerrors.ErrNoSignatures, "Did not error on invalid tx")
 
 	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	validTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	validTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	_, err = antehandler(suite.ctx, validTx, false)
@@ -79,7 +80,7 @@ func TestValidateMemo(t *testing.T) {
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
-	invalidTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	invalidTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// require that long memos get rejected
@@ -90,7 +91,7 @@ func TestValidateMemo(t *testing.T) {
 	require.ErrorIs(t, err, sdkerrors.ErrMemoTooLarge, "Did not error on tx with high memo")
 
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-	validTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	validTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// require small memos pass ValidateMemo Decorator
@@ -131,7 +132,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
 			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
@@ -233,7 +234,7 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 			suite.txBuilder.SetTimeoutTimestamp(tc.timeoutTimestamp)
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
 			mockHeaderService.WithBlockHeight(tc.height)

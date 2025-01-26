@@ -181,7 +181,7 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 
 	fees, _ := flags.GetString(FlagFees)
 	feePayer, _ := flags.GetString(FlagFeePayer)
-	feeGrater, _ := flags.GetString(FlagFeeGranter)
+	feeGranter, _ := flags.GetString(FlagFeeGranter)
 
 	unordered, _ := flags.GetBool(FlagUnordered)
 
@@ -189,7 +189,7 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 	if err != nil {
 		return params, err
 	}
-	feeConfig, err := NewFeeConfig(fees, feePayer, feeGrater)
+	feeConfig, err := NewFeeConfig(fees, feePayer, feeGranter)
 	if err != nil {
 		return params, err
 	}

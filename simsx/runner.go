@@ -11,6 +11,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 
@@ -19,8 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -77,7 +76,7 @@ func Run[T SimulationApp](
 		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts servertypes.AppOptions,
+		appOpts server.DynamicConfig,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -103,12 +102,33 @@ func RunWithSeeds[T SimulationApp](
 		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts servertypes.AppOptions,
+		appOpts server.DynamicConfig,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+) {
+	t.Helper()
+	RunWithSeedsAndRandAcc(t, appFactory, setupStateFactory, seeds, fuzzSeed, simtypes.RandomAccounts, postRunActions...)
+}
+
+// RunWithSeedsAndRandAcc calls RunWithSeeds with randAccFn
+func RunWithSeedsAndRandAcc[T SimulationApp](
+	t *testing.T,
+	appFactory func(
+		logger log.Logger,
+		db corestore.KVStoreWithBatch,
+		traceStore io.Writer,
+		loadLatest bool,
+		appOpts server.DynamicConfig,
+		baseAppOptions ...func(*baseapp.BaseApp),
+	) T,
+	setupStateFactory func(app T) SimStateFactory,
+	seeds []int64,
+	fuzzSeed []byte,
+	randAccFn simtypes.RandomAccountFn,
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
 	t.Helper()
@@ -132,10 +152,25 @@ func RunWithSeeds[T SimulationApp](
 func RunWithSeed[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+) {
+	tb.Helper()
+	RunWithSeedAndRandAcc(tb, cfg, appFactory, setupStateFactory, seed, fuzzSeed, simtypes.RandomAccounts, postRunActions...)
+}
+
+// RunWithSeedAndRandAcc calls RunWithSeed with randAccFn
+func RunWithSeedAndRandAcc[T SimulationApp](
+	tb testing.TB,
+	cfg simtypes.Config,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	setupStateFactory func(app T) SimStateFactory,
+	seed int64,
+	fuzzSeed []byte,
+	randAccFn simtypes.RandomAccountFn,
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
 	tb.Helper()
@@ -153,7 +188,7 @@ func RunWithSeed[T SimulationApp](
 	app := testInstance.App
 	stateFactory := setupStateFactory(app)
 	ops, reporter := prepareWeightedOps(app.SimulationManager(), stateFactory, tCfg, testInstance.App.TxConfig(), runLogger)
-	simParams, accs, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, simtypes.RandomAccounts, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
+	simParams, accs, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, randAccFn, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
 	require.NoError(tb, err)
 	err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 	require.NoError(tb, err)
@@ -294,7 +329,7 @@ func prepareWeightedOps(
 func NewSimulationAppInstance[T SimulationApp](
 	tb testing.TB,
 	tCfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
 	tb.Helper()
 	workDir := tb.TempDir()
@@ -314,8 +349,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	})
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
-	appOptions[server.FlagInvCheckPeriod] = cli.FlagPeriodValue
-	opts := []func(*baseapp.BaseApp){baseapp.SetChainID(SimAppChainID)}
+	opts := []func(*baseapp.BaseApp){baseapp.SetChainID(tCfg.ChainID)}
 	if tCfg.FauxMerkle {
 		opts = append(opts, FauxMerkleModeOpt)
 	}

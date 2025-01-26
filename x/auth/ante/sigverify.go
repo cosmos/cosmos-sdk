@@ -10,6 +10,7 @@ import (
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/transaction"
@@ -69,18 +70,24 @@ type AccountAbstractionKeeper interface {
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak              AccountKeeper
-	aaKeeper        AccountAbstractionKeeper
-	signModeHandler *txsigning.HandlerMap
-	sigGasConsumer  SignatureVerificationGasConsumer
+	ak                   AccountKeeper
+	aaKeeper             AccountAbstractionKeeper
+	signModeHandler      *txsigning.HandlerMap
+	sigGasConsumer       SignatureVerificationGasConsumer
+	extraVerifyIsOnCurve func(pubKey cryptotypes.PubKey) (bool, error)
 }
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper) SigVerificationDecorator {
+	return NewSigVerificationDecoratorWithVerifyOnCurve(ak, signModeHandler, sigGasConsumer, aaKeeper, nil)
+}
+
+func NewSigVerificationDecoratorWithVerifyOnCurve(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper, verifyFn func(pubKey cryptotypes.PubKey) (bool, error)) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		aaKeeper:        aaKeeper,
-		ak:              ak,
-		signModeHandler: signModeHandler,
-		sigGasConsumer:  sigGasConsumer,
+		aaKeeper:             aaKeeper,
+		ak:                   ak,
+		signModeHandler:      signModeHandler,
+		sigGasConsumer:       sigGasConsumer,
+		extraVerifyIsOnCurve: verifyFn,
 	}
 }
 
@@ -92,7 +99,7 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.Ha
 func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:
-		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+		return v.SignMode == apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	case *signing.MultiSignatureData:
 		for _, s := range v.Signatures {
 			if !OnlyLegacyAminoSigners(s) {
@@ -105,7 +112,13 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
+func (svd SigVerificationDecorator) VerifyIsOnCurve(pubKey cryptotypes.PubKey) error {
+	if svd.extraVerifyIsOnCurve != nil {
+		handled, err := svd.extraVerifyIsOnCurve(pubKey)
+		if handled {
+			return err
+		}
+	}
 	// when simulating pubKey.Key will always be nil
 	if pubKey.Bytes() == nil {
 		return nil
@@ -134,7 +147,7 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 		pubKeysObjects := typedPubKey.GetPubKeys()
 		ok := true
 		for _, pubKeyObject := range pubKeysObjects {
-			if err := verifyIsOnCurve(pubKeyObject); err != nil {
+			if err := svd.VerifyIsOnCurve(pubKeyObject); err != nil {
 				ok = false
 				break
 			}
@@ -417,7 +430,7 @@ func (svd SigVerificationDecorator) setPubKey(ctx context.Context, acc sdk.Accou
 		return sdkerrors.ErrInvalidPubKey.Wrapf("the account %s cannot be claimed by public key with address %x", acc.GetAddress(), txPubKey.Address())
 	}
 
-	err := verifyIsOnCurve(txPubKey)
+	err := svd.VerifyIsOnCurve(txPubKey)
 	if err != nil {
 		return err
 	}

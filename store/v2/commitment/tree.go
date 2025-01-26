@@ -34,6 +34,8 @@ type Tree interface {
 	Export(version uint64) (Exporter, error)
 	Import(version uint64) (Importer, error)
 
+	IsConcurrentSafe() bool
+
 	io.Closer
 }
 

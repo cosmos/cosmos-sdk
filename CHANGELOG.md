@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
+### Bug Fixes
+
+* (codec) [#23504](https://github.com/cosmos/cosmos-sdk/pull/23504) Provide `*codec.LegacyAmino` alongside `registry.AminoRegistrar` by default in depinject provider.
+
 ## [v0.52.0-rc.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-rc.2) - 2025-01-23
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.

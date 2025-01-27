@@ -8,15 +8,15 @@ import (
 	"strings"
 	"time"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/tx/signing/aminojson"
-
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+	"cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing/aminojson"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -116,7 +116,6 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 // BuildQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
 // just a single command for a single service rpc method.
 func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	getClientConn := b.GetClientConn
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
@@ -130,13 +129,13 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		clientConn, err := getClientConn(cmd)
+		clientConn, err := b.GetClientConn(cmd)
 		if err != nil {
 			return err
 		}
 
 		output := outputType.New()
-		if err := clientConn.Invoke(cmd.Context(), methodName, input.Interface(), output.Interface()); err != nil {
+		if err := clientConn.Invoke(b.queryContext(cmd.Context(), cmd), methodName, input.Interface(), output.Interface()); err != nil {
 			return err
 		}
 
@@ -168,6 +167,25 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 	}
 
 	return cmd, nil
+}
+
+// queryContext returns a new context with metadata for block height if specified.
+// If the context already has metadata, it is returned as-is. Otherwise, if a height
+// flag is present on the command, it adds an x-cosmos-block-height metadata value
+// with the specified height.
+func (b *Builder) queryContext(ctx context.Context, cmd *cobra.Command) context.Context {
+	md, _ := metadata.FromOutgoingContext(ctx)
+	if md != nil {
+		return ctx
+	}
+
+	md = map[string][]string{}
+	if cmd.Flags().Lookup("height") != nil {
+		h, _ := cmd.Flags().GetInt64("height")
+		md["x-cosmos-block-height"] = []string{fmt.Sprintf("%d", h)}
+	}
+
+	return metadata.NewOutgoingContext(ctx, md)
 }
 
 func encoder(encoder aminojson.Encoder) aminojson.Encoder {

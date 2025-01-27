@@ -25,6 +25,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/bank/v0.2.0-rc.1) - 2024-12-18
+
 ### Features
 
 * [#17569](https://github.com/cosmos/cosmos-sdk/pull/17569) Introduce a new message type, `MsgBurn`, to burn coins.
@@ -43,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * The `SpendableBalances` query now correctly reports spendable balances when one or more denoms are negative (used to report all zeros). Also, this query now looks up only the balances for the requested page.
     * The `SpendableCoins` keeper method now returns the positive spendable balances even when one or more denoms have more locked than available (used to return an empty `Coins`).
     * The `SpendableCoin` keeper method now returns a zero coin if there's more locked than available (used to return a negative coin).
+* [#22543](https://github.com/cosmos/cosmos-sdk/pull/22543) Fix `DenomMetadata` rpc allow value with slashes
 
 ### API Breaking Changes
 

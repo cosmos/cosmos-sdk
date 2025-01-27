@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/cometbft/cometbft/crypto"
+	bls "github.com/cometbft/cometbft/crypto/bls12381"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -54,7 +55,7 @@ func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 
 // Type returns the type.
 func (PrivKey) Type() string {
-	return KeyType
+	return bls.KeyType
 }
 
 // Sign signs the given byte array. If msg is larger than
@@ -70,7 +71,7 @@ func (privKey PrivKey) MarshalAmino() ([]byte, error) {
 
 // UnmarshalAmino overrides Amino binary marshaling.
 func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
-	if len(bz) != PrivKeySize {
+	if len(bz) != bls.PrivKeySize {
 		return errors.New("invalid privkey size")
 	}
 	privKey.Key = bz
@@ -119,7 +120,7 @@ func (pubKey PubKey) Bytes() []byte {
 
 // Type returns the key's type.
 func (PubKey) Type() string {
-	return KeyType
+	return bls.KeyType
 }
 
 // Equals returns true if the other's type is the same and their bytes are deeply equal.

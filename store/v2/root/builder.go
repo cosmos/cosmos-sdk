@@ -55,6 +55,11 @@ func (sb *builder) Build(
 	if config.Home == "" {
 		return nil, fmt.Errorf("home directory is required")
 	}
+
+	if len(config.AppDBBackend) == 0 {
+		return nil, fmt.Errorf("application db backend is required")
+	}
+
 	scRawDb, err := db.NewDB(
 		db.DBType(config.AppDBBackend),
 		"application",
@@ -71,7 +76,7 @@ func (sb *builder) Build(
 	}
 
 	factoryOptions := &FactoryOptions{
-		Logger:    logger,
+		Logger:    logger.With("module", "store"),
 		RootDir:   config.Home,
 		Options:   config.Options,
 		StoreKeys: storeKeys,

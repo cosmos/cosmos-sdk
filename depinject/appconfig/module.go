@@ -17,9 +17,41 @@ var Register = RegisterModule
 // will be injected into the container and can be requested by a provider
 // function. All module initialization should be handled by the provided options.
 //
-// Protobuf message types used for module configuration should define the
-// cosmos.app.v1alpha.module option and must explicitly specify go_package
-// to make debugging easier for users.
+// Config is a protobuf message type. It should define the cosmos.app.v1alpha.module
+// option and must explicitly specify go_packageto make debugging easier for users.
+//
+// If you want to customize an existing module, you need to overwrite by calling
+// RegisterModule again with the same config (proto API type) and new Provide or
+// Invoke options. Example:
+//
+// - Create a new struct and wrap the existing module inside it:
+//
+//	type MyBankAppModule struct {
+//	  bank.AppModule // core bank module
+//	  // additional helper fields
+//	  cdc codec.Codec
+//	}
+//
+// - Overwrite function that you want to customize (eg DefaultGenesis).
+// - Create a new Provide function (to provide new Module implementation for the proto module):
+//
+//	func ProvideBankModule(in bank.ModuleInputs) BankModuleOutputs {
+//	  // original provider that initializes the bank keeper
+//	  pm := bank.ProvideModule(in)
+//	  m := NewMyBankAppModule(in.Cdc, pm.BankKeeper, in.AccountKeeper)
+//	  return BankModuleOutputs{
+//	    BankKeeper: pm.BankKeeper,
+//	    Module:     m,
+//	  }
+//	}
+//
+// - Re-register the bank module by using the original proto api module, and the new provider:
+//
+//	appconfig.RegisterModule(
+//	  &bankmodulev1.Module{}, // from cosmossdk.io/api/cosmos/bank/module/v1
+//	  appconfig.Provide(ProvideBankModule),
+//	  appconfig.Invoke(bank.InvokeSetSendRestrictions),
+//	)
 func RegisterModule(config any, options ...Option) {
 	protoConfig, ok := config.(proto.Message)
 	if !ok {

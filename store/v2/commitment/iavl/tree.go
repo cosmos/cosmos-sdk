@@ -1,6 +1,7 @@
 package iavl
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/iavl"
@@ -21,6 +22,8 @@ var (
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
 	tree *iavl.MutableTree
+	// it is only used for new store key during the migration process.
+	initialVersion uint64
 }
 
 // NewIavlTree creates a new IavlTree instance.
@@ -51,13 +54,38 @@ func (t *IavlTree) Hash() []byte {
 	return t.tree.Hash()
 }
 
+// Version returns the current version of the tree.
+func (t *IavlTree) Version() uint64 {
+	return uint64(t.tree.Version())
+}
+
 // WorkingHash returns the working hash of the tree.
+// Danger! iavl.MutableTree.WorkingHash() is a mutating operation!
+// It advances the tree version by 1.
 func (t *IavlTree) WorkingHash() []byte {
 	return t.tree.WorkingHash()
 }
 
 // LoadVersion loads the state at the given version.
 func (t *IavlTree) LoadVersion(version uint64) error {
+	if t.initialVersion > 0 {
+		// If the initial version is set and the tree is empty,
+		// we don't need to load the version.
+		latestVersion, err := t.tree.GetLatestVersion()
+		if err != nil {
+			return err
+		}
+		if latestVersion == 0 {
+			return nil
+		}
+	}
+	_, err := t.tree.LoadVersion(int64(version))
+	return err
+}
+
+// LoadVersionForOverwriting loads the state at the given version.
+// Any versions greater than targetVersion will be deleted.
+func (t *IavlTree) LoadVersionForOverwriting(version uint64) error {
 	return t.tree.LoadVersionForOverwriting(int64(version))
 }
 
@@ -69,6 +97,16 @@ func (t *IavlTree) Commit() ([]byte, uint64, error) {
 
 // GetProof returns a proof for the given key and version.
 func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
+	// the mutable tree is empty at genesis & when the storekey is removed, but the immutable tree is not but the immutable tree is not empty when the storekey is removed
+	// by checking the latest version we can determine if we are in genesis or have a key that has been removed
+	lv, err := t.tree.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
+	if lv == 0 {
+		return t.tree.GetProof(key)
+	}
+
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
@@ -79,6 +117,16 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 
 // Get implements the Reader interface.
 func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
+	// the mutable tree is empty at genesis & when the storekey is removed, but the immutable tree is not but the immutable tree is not empty when the storekey is removed
+	// by checking the latest version we can determine if we are in genesis or have a key that has been removed
+	lv, err := t.tree.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
+	if lv == 0 {
+		return t.tree.Get(key)
+	}
+
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
@@ -89,6 +137,16 @@ func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 
 // Iterator implements the Reader interface.
 func (t *IavlTree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
+	// the mutable tree is empty at genesis & when the storekey is removed, but the immutable tree is not empty when the storekey is removed
+	// by checking the latest version we can determine if we are in genesis or have a key that has been removed
+	lv, err := t.tree.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
+	if lv == 0 {
+		return t.tree.Iterator(start, end, ascending)
+	}
+
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
@@ -106,6 +164,7 @@ func (t *IavlTree) GetLatestVersion() (uint64, error) {
 // SetInitialVersion sets the initial version of the database.
 func (t *IavlTree) SetInitialVersion(version uint64) error {
 	t.tree.SetInitialVersion(version)
+	t.initialVersion = version
 	return nil
 }
 
@@ -125,6 +184,9 @@ func (t *IavlTree) PausePruning(pause bool) {
 
 // Export exports the tree exporter at the given version.
 func (t *IavlTree) Export(version uint64) (commitment.Exporter, error) {
+	if version < t.initialVersion {
+		return nil, errors.New("version is less than the initial version")
+	}
 	tree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
 		return nil, err
@@ -154,4 +216,8 @@ func (t *IavlTree) Import(version uint64) (commitment.Importer, error) {
 // Close closes the iavl tree.
 func (t *IavlTree) Close() error {
 	return t.tree.Close()
+}
+
+func (t *IavlTree) IsConcurrentSafe() bool {
+	return false
 }

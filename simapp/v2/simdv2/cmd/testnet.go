@@ -20,10 +20,12 @@ import (
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/grpcgateway"
+	"cosmossdk.io/server/v2/api/rest"
+	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/store"
 	banktypes "cosmossdk.io/x/bank/types"
-	bankv2types "cosmossdk.io/x/bank/v2/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -181,9 +183,11 @@ func initTestnetFiles[T transaction.Tx](
 		genFiles    []string
 	)
 	const (
-		rpcPort  = 26657
-		apiPort  = 1317
-		grpcPort = 9090
+		rpcPort       = 26657
+		apiPort       = 1317
+		grpcPort      = 9090
+		restPort      = 8080
+		telemetryPort = 7180
 	)
 	p2pPortStart := 26656
 
@@ -192,6 +196,10 @@ func initTestnetFiles[T transaction.Tx](
 	for i := 0; i < args.numValidators; i++ {
 		var portOffset int
 		grpcConfig := grpc.DefaultConfig()
+		grpcgatewayConfig := grpcgateway.DefaultConfig()
+		restConfig := rest.DefaultConfig()
+		telemetryConfig := telemetry.DefaultConfig()
+
 		if args.singleMachine {
 			portOffset = i
 			p2pPortStart = 16656 // use different start point to not conflict with rpc port
@@ -204,6 +212,21 @@ func initTestnetFiles[T transaction.Tx](
 				Address:        fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset),
 				MaxRecvMsgSize: grpc.DefaultConfig().MaxRecvMsgSize,
 				MaxSendMsgSize: grpc.DefaultConfig().MaxSendMsgSize,
+			}
+
+			grpcgatewayConfig = &grpcgateway.Config{
+				Enable:  true,
+				Address: fmt.Sprintf("127.0.0.1:%d", apiPort+portOffset),
+			}
+
+			restConfig = &rest.Config{
+				Enable:  true,
+				Address: fmt.Sprintf("127.0.0.1:%d", restPort+portOffset),
+			}
+
+			telemetryConfig = &telemetry.Config{
+				Enable:  true,
+				Address: fmt.Sprintf("127.0.0.1:%d", telemetryPort+portOffset),
 			}
 		}
 
@@ -295,7 +318,7 @@ func initTestnetFiles[T transaction.Tx](
 			valStr,
 			valPubKeys[i],
 			sdk.NewCoin(args.bondTokenDenom, valTokens),
-			stakingtypes.NewDescription(nodeDirName, "", "", "", "", stakingtypes.Metadata{}),
+			stakingtypes.NewDescription(nodeDirName, "", "", "", "", &stakingtypes.Metadata{}),
 			stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec()),
 			math.OneInt(),
 		)
@@ -338,7 +361,10 @@ func initTestnetFiles[T transaction.Tx](
 		cometServer := cometbft.NewWithConfigOptions[T](cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig))
 		storeServer := &store.Server[T]{}
 		grpcServer := grpc.NewWithConfigOptions[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer)
+		grpcgatewayServer := grpcgateway.NewWithConfigOptions[T](grpcgateway.OverwriteDefaultConfig(grpcgatewayConfig))
+		restServer := rest.NewWithConfigOptions[T](rest.OverwriteDefaultConfig(restConfig))
+		telemetryServer := telemetry.NewWithConfigOptions[T](telemetry.OverwriteDefaultConfig(telemetryConfig))
+		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer, grpcgatewayServer, restServer, telemetryServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err
@@ -395,13 +421,6 @@ func initGenFiles[T transaction.Tx](
 		bankGenState.Supply = bankGenState.Supply.Add(bal.Coins...)
 	}
 	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
-
-	var bankV2GenState bankv2types.GenesisState
-	clientCtx.Codec.MustUnmarshalJSON(appGenState[bankv2types.ModuleName], &bankV2GenState)
-	if len(bankV2GenState.Balances) == 0 {
-		bankV2GenState = getBankV2GenesisFromV1(bankGenState)
-	}
-	appGenState[bankv2types.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankV2GenState)
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
 	if err != nil {
@@ -504,17 +523,4 @@ func writeFile(name, dir string, contents []byte) error {
 	}
 
 	return os.WriteFile(file, contents, 0o600)
-}
-
-// getBankV2GenesisFromV1 clones bank/v1 state to bank/v2
-// since we not migrate yet
-// TODO: Remove
-func getBankV2GenesisFromV1(v1GenesisState banktypes.GenesisState) bankv2types.GenesisState {
-	var v2GenesisState bankv2types.GenesisState
-	for _, balance := range v1GenesisState.Balances {
-		v2Balance := bankv2types.Balance(balance)
-		v2GenesisState.Balances = append(v2GenesisState.Balances, v2Balance)
-		v2GenesisState.Supply = v2GenesisState.Supply.Add(balance.Coins...)
-	}
-	return v2GenesisState
 }

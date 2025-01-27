@@ -22,9 +22,8 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	authKeeper    types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	stakingKeeper types.StakingKeeper
+	authKeeper types.AccountKeeper
+	bankKeeper types.BankKeeper
 
 	cdc codec.BinaryCodec
 
@@ -35,16 +34,17 @@ type Keeper struct {
 	BudgetProposal collections.Map[sdk.AccAddress, types.Budget]
 	ContinuousFund collections.Map[sdk.AccAddress, types.ContinuousFund]
 	// RecipientFundDistribution key: RecipientAddr | value: Claimable amount
-	RecipientFundDistribution collections.Map[sdk.AccAddress, math.Int]
-	Distributions             collections.Map[time.Time, math.Int] // key: time.Time | value: amount
-	LastBalance               collections.Item[math.Int]
+	RecipientFundDistribution collections.Map[sdk.AccAddress, types.DistributionAmount]
+	Distributions             collections.Map[time.Time, types.DistributionAmount] // key: time.Time, denom | value: amounts
+	LastBalance               collections.Item[types.DistributionAmount]
+	Params                    collections.Item[types.Params]
 }
 
 const (
 	errModuleAccountNotSet = "%s module account has not been set"
 )
 
-func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
+func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -65,14 +65,14 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		Environment:               env,
 		authKeeper:                ak,
 		bankKeeper:                bk,
-		stakingKeeper:             sk,
 		cdc:                       cdc,
 		authority:                 authority,
 		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
 		ContinuousFund:            collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
-		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, sdk.IntValue),
-		Distributions:             collections.NewMap(sb, types.DistributionsKey, "distributions", sdk.TimeKey, sdk.IntValue),
-		LastBalance:               collections.NewItem(sb, types.LastBalanceKey, "last_balance", sdk.IntValue),
+		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, codec.CollValue[types.DistributionAmount](cdc)),
+		Distributions:             collections.NewMap(sb, types.DistributionsKey, "distributions", sdk.TimeKey, codec.CollValue[types.DistributionAmount](cdc)),
+		LastBalance:               collections.NewItem(sb, types.LastBalanceKey, "last_balance", codec.CollValue[types.DistributionAmount](cdc)),
+		Params:                    collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -115,34 +115,27 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
 
-func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (sdk.Coin, error) {
+func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (sdk.Coins, error) {
 	// get allocated continuous fund
 	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, types.ErrNoRecipientFound
+			return nil, types.ErrNoRecipientFound
 		}
-		return sdk.Coin{}, err
+		return nil, err
 	}
-
-	denom, err := k.stakingKeeper.BondDenom(ctx)
-	if err != nil {
-		return sdk.Coin{}, err
-	}
-
 	// Distribute funds to the recipient from pool module account
-	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
-	err = k.DistributeFromStreamFunds(ctx, sdk.NewCoins(withdrawnAmount), recipient)
+	err = k.DistributeFromStreamFunds(ctx, fundsAllocated.Amount, recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while distributing funds: %w", err)
+		return nil, fmt.Errorf("error while distributing funds: %w", err)
 	}
 
 	// reset fund distribution
-	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
+	err = k.RecipientFundDistribution.Set(ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 	if err != nil {
-		return sdk.Coin{}, err
+		return nil, err
 	}
-	return withdrawnAmount, nil
+	return fundsAllocated.Amount, nil
 }
 
 // SetToDistribute sets the amount to be distributed among recipients.
@@ -152,31 +145,37 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 	if moduleAccount == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ProtocolPoolDistrAccount)
 	}
-
-	denom, err := k.stakingKeeper.BondDenom(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err
 	}
 
-	currentBalance := k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
-	distributionBalance := currentBalance.AmountOf(denom)
+	// only take into account the balances of denoms whitelisted in EnabledDistributionDenoms
+	currentBalance := sdk.NewCoins()
+	for _, denom := range params.EnabledDistributionDenoms {
+		bal := k.bankKeeper.GetBalance(ctx, moduleAccount.GetAddress(), denom)
+		currentBalance = currentBalance.Add(bal)
+	}
 
 	// if the balance is zero, return early
-	if distributionBalance.IsZero() {
+	if currentBalance.IsZero() {
 		return nil
 	}
 
 	lastBalance, err := k.LastBalance.Get(ctx)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			lastBalance = math.ZeroInt()
+			lastBalance = types.DistributionAmount{Amount: sdk.NewCoins()}
 		} else {
 			return err
 		}
 	}
 
 	// Calculate the amount to be distributed
-	amountToDistribute := distributionBalance.Sub(lastBalance)
+	amountToDistribute, anyNegative := currentBalance.SafeSub(lastBalance.Amount...)
+	if anyNegative {
+		return errors.New("error while calculating the amount to distribute, result can't be negative")
+	}
 
 	// Check if there are any recipients to distribute to, if not, send straight to the community pool and avoid
 	// setting the distributions
@@ -191,24 +190,23 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 
 	// if there are no continuous funds, send all the funds to the community pool and reset the last balance
 	if !hasContinuousFunds {
-		poolCoins := sdk.NewCoins(sdk.NewCoin(denom, amountToDistribute))
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolCoins); err != nil {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, amountToDistribute); err != nil {
 			return err
 		}
 
-		if !lastBalance.IsZero() { // only reset if the last balance is not zero (so we leave it at zero/nil)
-			return k.LastBalance.Set(ctx, math.ZeroInt())
+		if !lastBalance.Amount.IsZero() { // only reset if the last balance is not zero (so we leave it at zero)
+			return k.LastBalance.Set(ctx, types.DistributionAmount{Amount: sdk.NewCoins()})
 		}
 
 		return nil
 	}
 
-	if err = k.Distributions.Set(ctx, k.HeaderService.HeaderInfo(ctx).Time, amountToDistribute); err != nil {
+	if err = k.Distributions.Set(ctx, k.HeaderService.HeaderInfo(ctx).Time, types.DistributionAmount{Amount: amountToDistribute}); err != nil {
 		return fmt.Errorf("error while setting Distributions: %w", err)
 	}
 
 	// Update the last balance
-	return k.LastBalance.Set(ctx, distributionBalance)
+	return k.LastBalance.Set(ctx, types.DistributionAmount{Amount: currentBalance})
 }
 
 func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
@@ -230,35 +228,37 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	}
 
 	// next we iterate over the distributions, calculate each recipient's share and the remaining pool funds
-	toDistribute := map[string]math.Int{}
-	poolFunds := math.ZeroInt()
-	fullAmountToDistribute := math.ZeroInt()
+	distributeToRecipient := map[string]sdk.Coins{}
+	effectiveDistributionAmounts := sdk.NewCoins() // amount assigned to distributions
+	totalDistributionAmounts := sdk.NewCoins()     // total amount distributed to the pool, to then calculate the remaining pool funds
 
-	if err = k.Distributions.Walk(ctx, nil, func(key time.Time, amount math.Int) (stop bool, err error) {
-		percentageToDistribute := math.LegacyZeroDec()
+	if err = k.Distributions.Walk(ctx, nil, func(key time.Time, amount types.DistributionAmount) (stop bool, err error) {
+		totalPercentageApplied := math.LegacyZeroDec()
+		totalDistributionAmounts = totalDistributionAmounts.Add(amount.Amount...)
+
 		for _, f := range funds {
 			if f.Expiry != nil && f.Expiry.Before(key) {
 				continue
 			}
 
-			percentageToDistribute = percentageToDistribute.Add(f.Percentage)
+			totalPercentageApplied = totalPercentageApplied.Add(f.Percentage)
 
-			_, ok := toDistribute[f.Recipient]
+			_, ok := distributeToRecipient[f.Recipient]
 			if !ok {
-				toDistribute[f.Recipient] = math.ZeroInt()
+				distributeToRecipient[f.Recipient] = sdk.NewCoins()
 			}
-			amountToDistribute := f.Percentage.MulInt(amount).TruncateInt()
-			toDistribute[f.Recipient] = toDistribute[f.Recipient].Add(amountToDistribute)
-			fullAmountToDistribute = fullAmountToDistribute.Add(amountToDistribute)
+
+			for _, denom := range amount.Amount.Denoms() {
+				am := sdk.NewCoin(denom, f.Percentage.MulInt(amount.Amount.AmountOf(denom)).TruncateInt())
+				distributeToRecipient[f.Recipient] = distributeToRecipient[f.Recipient].Add(am)
+				effectiveDistributionAmounts = effectiveDistributionAmounts.Add(am)
+			}
 		}
 
 		// sanity check for max percentage
-		if percentageToDistribute.GT(math.LegacyOneDec()) {
+		if totalPercentageApplied.GT(math.LegacyOneDec()) {
 			return true, errors.New("total funds percentage cannot exceed 100")
 		}
-
-		remaining := math.LegacyOneDec().Sub(percentageToDistribute).MulInt(amount).RoundInt()
-		poolFunds = poolFunds.Add(remaining)
 
 		return false, nil
 	}); err != nil {
@@ -270,33 +270,27 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		return err
 	}
 
-	if err = k.LastBalance.Set(ctx, math.ZeroInt()); err != nil {
+	if err = k.LastBalance.Set(ctx, types.DistributionAmount{Amount: sdk.NewCoins()}); err != nil {
 		return err
 	}
 
 	// send the funds to the stream account to be distributed later, and the remaining to the community pool
-	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
-	if err != nil {
-		return err
-	}
-
-	streamAmt := sdk.NewCoins(sdk.NewCoin(bondDenom, fullAmountToDistribute))
-	if !streamAmt.IsZero() {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, streamAmt); err != nil {
+	if !effectiveDistributionAmounts.IsZero() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, effectiveDistributionAmounts); err != nil {
 			return err
 		}
 	}
 
+	poolFunds := totalDistributionAmounts.Sub(effectiveDistributionAmounts...)
 	if !poolFunds.IsZero() {
-		poolCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, poolFunds))
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolCoins); err != nil {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolFunds); err != nil {
 			return err
 		}
 	}
 
 	// update the recipient fund distribution, first get the keys and sort them
-	recipients := make([]string, 0, len(toDistribute))
-	for k2 := range toDistribute {
+	recipients := make([]string, 0, len(distributeToRecipient))
+	for k2 := range distributeToRecipient {
 		recipients = append(recipients, k2)
 	}
 	sort.Strings(recipients)
@@ -311,14 +305,14 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		toClaim, err := k.RecipientFundDistribution.Get(ctx, bzAddr)
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
-				toClaim = math.ZeroInt()
+				toClaim = types.DistributionAmount{Amount: sdk.NewCoins()}
 			} else {
 				return err
 			}
 		}
 
-		amount := toClaim.Add(toDistribute[recipient])
-		if err = k.RecipientFundDistribution.Set(ctx, bzAddr, amount); err != nil {
+		toClaim.Amount = toClaim.Amount.Add(distributeToRecipient[recipient]...)
+		if err = k.RecipientFundDistribution.Set(ctx, bzAddr, toClaim); err != nil {
 			return err
 		}
 	}

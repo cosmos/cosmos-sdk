@@ -27,7 +27,7 @@ func TestField_Validate(t *testing.T) {
 				Name: "",
 				Kind: StringKind,
 			},
-			errContains: "invalid field name",
+			errContains: "name cannot be empty, might be missing the named key codec",
 		},
 		{
 			name: "invalid kind",

@@ -119,6 +119,9 @@ func TestUniqueTypeRegistry(t *testing.T) {
 	exampleFactory := SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 		return []SimAccount{}, nil
 	})
+	exampleFactory2 := SimMsgFactoryFn[*testdata.MsgCreateDog](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.MsgCreateDog) {
+		return []SimAccount{}, nil
+	})
 
 	specs := map[string]struct {
 		src    []WeightedFactory
@@ -128,6 +131,10 @@ func TestUniqueTypeRegistry(t *testing.T) {
 		"unique": {
 			src: []WeightedFactory{{Weight: 1, Factory: exampleFactory}},
 			exp: []WeightedFactoryMethod{{Weight: 1, Factory: exampleFactory.Create()}},
+		},
+		"sorted": {
+			src: []WeightedFactory{{Weight: 2, Factory: exampleFactory2}, {Weight: 1, Factory: exampleFactory}},
+			exp: []WeightedFactoryMethod{{Weight: 1, Factory: exampleFactory.Create()}, {Weight: 2, Factory: exampleFactory2.Create()}},
 		},
 		"duplicate": {
 			src:    []WeightedFactory{{Weight: 1, Factory: exampleFactory}, {Weight: 2, Factory: exampleFactory}},

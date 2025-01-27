@@ -6,6 +6,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -13,10 +14,17 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+const (
+	// flagUnsafeSkipUpgrades is a custom flag that allows the user to skip upgrades
+	// It is used in a baseapp chain.
+	flagUnsafeSkipUpgrades = "unsafe-skip-upgrades"
+	// flagUnsafeSkipUpgradesV2 is a custom flag that allows the user to skip upgrades
+	// It is used in a v2 chain.
+	flagUnsafeSkipUpgradesV2 = "server.unsafe-skip-upgrades"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -35,8 +43,9 @@ func ProvideConfig(key depinject.OwnModuleKey) coreserver.ModuleConfigMap {
 	return coreserver.ModuleConfigMap{
 		Module: depinject.ModuleKey(key).Name(),
 		Config: coreserver.ConfigMap{
-			server.FlagUnsafeSkipUpgrades: []int{},
-			flags.FlagHome:                "",
+			flagUnsafeSkipUpgrades:   []int{},
+			flagUnsafeSkipUpgradesV2: []int{},
+			flags.FlagHome:           "",
 		},
 	}
 }
@@ -66,10 +75,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	skipUpgrades, ok := in.ConfigMap[server.FlagUnsafeSkipUpgrades]
+	skipUpgrades, ok := in.ConfigMap[flagUnsafeSkipUpgradesV2] // check v2
 	if !ok || skipUpgrades == nil {
-		skipUpgrades = []int{}
+		skipUpgrades, ok = in.ConfigMap[flagUnsafeSkipUpgrades] // check v1
+		if !ok || skipUpgrades == nil {
+			skipUpgrades = []int{}
+		}
 	}
+
 	heights := cast.ToIntSlice(skipUpgrades) // safe to use cast here as we've handled nil case
 	for _, h := range heights {
 		skipUpgradeHeights[int64(h)] = true

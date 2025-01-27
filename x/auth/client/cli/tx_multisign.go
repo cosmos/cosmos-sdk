@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
 
@@ -91,8 +92,8 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 		if err != nil {
 			return err
 		}
-		if txFactory.SignMode() == signingtypes.SignMode_SIGN_MODE_UNSPECIFIED {
-			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		if txFactory.SignMode() == apisigning.SignMode_SIGN_MODE_UNSPECIFIED {
+			txFactory = txFactory.WithSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
 
 		txCfg := clientCtx.TxConfig
@@ -262,8 +263,8 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		if txFactory.SignMode() == signingtypes.SignMode_SIGN_MODE_UNSPECIFIED {
-			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		if txFactory.SignMode() == apisigning.SignMode_SIGN_MODE_UNSPECIFIED {
+			txFactory = txFactory.WithSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
 
 		// reads tx from args[0]

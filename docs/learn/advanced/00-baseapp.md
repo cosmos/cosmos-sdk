@@ -92,7 +92,7 @@ Finally, a few more important parameters:
 
 * `voteInfos`: This parameter carries the list of validators whose precommit is missing, either
   because they did not vote or because the proposer did not include their vote. This information is
-  carried by the [Context](./02-context.md) and can be used by the application for various things like
+  carried by the [Context](./17-context.md) and can be used by the application for various things like
   punishing absent validators.
 * `minGasPrices`: This parameter defines the minimum gas prices accepted by the node. This is a
   **local** parameter, meaning each full-node can set a different `minGasPrices`. It is used in the
@@ -309,7 +309,7 @@ Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 `CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to
 make the checks **lightweight** because gas fees are not charged for the resources (CPU, data load...) used during the `CheckTx`. 
 
-The [`Context`](../advanced/02-context.md), which includes a `GasMeter` that tracks how much gas is used during the execution of `Tx`, is initialized at the beginning of `CheckTx`. The user-provided amount of gas for `Tx` is referred to as `GasWanted`. If `GasConsumed`, the amount of gas used during execution, exceeds `GasWanted`, the execution is halted and the changes made to the cached copy of the state are not committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes ensure that the user-specified `gas-prices` exceed their locally defined `min-gas-prices`.
+The [`Core pkg`](../advanced/02-core.md), which includes a `GasService` that tracks how much gas is used during the execution of `Tx`, is initialized at the beginning of `CheckTx`. The user-provided amount of gas for `Tx` is referred to as `GasWanted`. If `GasConsumed`, the amount of gas used during execution, exceeds `GasWanted`, the execution is halted and the changes made to the cached copy of the state are not committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes ensure that the user-specified `gas-prices` exceed their locally defined `min-gas-prices`.
 
 In the Cosmos SDK, after [decoding transactions](./05-encoding.md), `CheckTx()` is implemented
 to do the following checks:
@@ -474,7 +474,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/baseapp/abci.go#L894
 
 * Initialize the [block gas meter](../beginner/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
 * Run the application's [`beginBlocker()`](../beginner/00-app-anatomy.md#beginblocker-and-endblocker), which mainly runs the [`BeginBlocker()`](../../build/building-modules/06-preblock-beginblock-endblock.md#beginblocker-and-endblocker) method of each of the modules.
-* Set the [`VoteInfos`](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during transaction execution and EndBlock.
+* Set the [`VoteInfos`](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./17-context.md) so that it can be used during transaction execution and EndBlock.
 
 #### Transaction Execution
 

@@ -3,6 +3,7 @@ package configurator
 import (
 	accountsmodulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
@@ -162,8 +163,9 @@ func AuthModule() ModuleOption {
 				Bech32Prefix: "cosmos",
 				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
 					{Account: "fee_collector"},
-					{Account: testutil.DistributionModuleName},
+					{Account: testutil.DistributionModuleName, Permissions: []string{"minter"}},
 					{Account: testutil.MintModuleName, Permissions: []string{"minter"}},
+					{Account: testutil.StakingModuleName, Permissions: []string{"minter"}},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", testutil.StakingModuleName}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", testutil.StakingModuleName}},
 					{Account: testutil.GovModuleName, Permissions: []string{"burner"}},
@@ -172,6 +174,18 @@ func AuthModule() ModuleOption {
 					{Account: "stream_acc"},
 					{Account: "protocolpool_distr"},
 				},
+			}),
+		}
+	}
+}
+
+func AuthModuleWithMaccPerms(maccPerms []*authmodulev1.ModuleAccountPermission) ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.AuthModuleName] = &appv1alpha1.ModuleConfig{
+			Name: testutil.AuthModuleName,
+			Config: appconfig.WrapAny(&authmodulev1.Module{
+				Bech32Prefix:             "cosmos",
+				ModuleAccountPermissions: maccPerms,
 			}),
 		}
 	}
@@ -424,6 +438,74 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 		BeginBlockers:     beginBlockers,
 		EndBlockers:       endBlockers,
 		OverrideStoreKeys: overrides,
+	}
+	if cfg.setInitGenesis {
+		runtimeConfig.InitGenesis = initGenesis
+	}
+
+	modules := []*appv1alpha1.ModuleConfig{{
+		Name:   "runtime",
+		Config: appconfig.WrapAny(runtimeConfig),
+	}}
+
+	for _, m := range cfg.ModuleConfigs {
+		modules = append(modules, m)
+	}
+
+	return appconfig.Compose(&appv1alpha1.Config{Modules: modules})
+}
+
+func NewAppV2Config(opts ...ModuleOption) depinject.Config {
+	cfg := defaultConfig()
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	preBlockers := make([]string, 0)
+	beginBlockers := make([]string, 0)
+	endBlockers := make([]string, 0)
+	initGenesis := make([]string, 0)
+	overrides := make([]*runtimev2.StoreKeyConfig, 0)
+
+	for _, s := range cfg.PreBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			preBlockers = append(preBlockers, s)
+		}
+	}
+
+	for _, s := range cfg.BeginBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			beginBlockers = append(beginBlockers, s)
+		}
+	}
+
+	for _, s := range cfg.EndBlockersOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			endBlockers = append(endBlockers, s)
+		}
+	}
+
+	for _, s := range cfg.InitGenesisOrder {
+		if _, ok := cfg.ModuleConfigs[s]; ok {
+			initGenesis = append(initGenesis, s)
+		}
+	}
+
+	if _, ok := cfg.ModuleConfigs[testutil.AuthModuleName]; ok {
+		overrides = append(overrides, &runtimev2.StoreKeyConfig{ModuleName: testutil.AuthModuleName, KvStoreKey: "acc"})
+	}
+
+	runtimeConfig := &runtimev2.Module{
+		AppName:           "TestApp",
+		PreBlockers:       preBlockers,
+		BeginBlockers:     beginBlockers,
+		EndBlockers:       endBlockers,
+		OverrideStoreKeys: overrides,
+		GasConfig: &runtimev2.GasConfig{
+			ValidateTxGasLimit: 100_000,
+			QueryGasLimit:      100_000,
+			SimulationGasLimit: 100_000,
+		},
 	}
 	if cfg.setInitGenesis {
 		runtimeConfig.InitGenesis = initGenesis

@@ -72,12 +72,6 @@ func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *lockupt
 	return cva.BaseLockup.SendCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
-func (cva *ContinuousLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
-	*lockuptypes.MsgWithdrawResponse, error,
-) {
-	return cva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, cva.GetLockedCoinsWithDenoms)
-}
-
 // GetLockCoinsInfo returns the total number of unlocked and locked coins.
 func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockTime time.Time) (unlockedCoins, lockedCoins sdk.Coins, err error) {
 	unlockedCoins = sdk.Coins{}
@@ -186,6 +180,23 @@ func (cva ContinuousLockingAccount) QueryLockupAccountInfo(ctx context.Context, 
 	return resp, nil
 }
 
+func (cva ContinuousLockingAccount) QuerySpendableTokens(ctx context.Context, req *lockuptypes.QuerySpendableAmountRequest) (
+	*lockuptypes.QuerySpendableAmountResponse, error,
+) {
+	hs := cva.headerService.HeaderInfo(ctx)
+	_, lockedCoins, err := cva.GetLockCoinsInfo(ctx, hs.Time)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := cva.BaseLockup.QuerySpendableTokens(ctx, lockedCoins)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 // Implement smart account interface
 func (cva ContinuousLockingAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, cva.Init)
@@ -194,10 +205,11 @@ func (cva ContinuousLockingAccount) RegisterInitHandler(builder *accountstd.Init
 func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, cva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, cva.SendCoins)
-	accountstd.RegisterExecuteHandler(builder, cva.WithdrawUnlockedCoins)
 	cva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (cva ContinuousLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, cva.QueryLockupAccountInfo)
+	accountstd.RegisterQueryHandler(builder, cva.QuerySpendableTokens)
+	cva.BaseLockup.RegisterQueryHandlers(builder)
 }

@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addressCodec = ac
 }
 
-func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Account() {
+func (suite *KeeperTestSuite) TestSendCoins_Account_To_Account() {
 	ctx := suite.ctx
 	require := suite.Require()
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Account() {
 	require.Equal(acc1BarBalance.Amount, math.NewInt(10))
 }
 
-func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Module() {
+func (suite *KeeperTestSuite) TestSendCoins_Account_To_Module() {
 	ctx := suite.ctx
 	require := suite.Require()
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
@@ -217,7 +217,7 @@ func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {
 	}
 	suite.bankKeeper.AppendGlobalSendRestriction(amtRestrictFunc)
 
-	// Pass the 1st but failt at the 2nd
+	// Pass the 1st but failed at the 2nd
 	err = suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt)
 	require.Error(err)
 	require.Contains(err.Error(), "Allow only one denom per one send")

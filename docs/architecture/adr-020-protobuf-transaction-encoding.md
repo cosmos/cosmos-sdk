@@ -249,7 +249,7 @@ falls short of the ideal.
 `SIGN_MODE_TEXTUAL` is intended as a placeholder for a human-readable
 encoding which will replace Amino JSON. This new encoding should be even more
 focused on readability than JSON, possibly based on formatting strings like
-[MessageFormat](http://userguide.icu-project.org/formatparse/messages).
+[MessageFormat](https://unicode-org.github.io/icu/userguide/format_parse/messages/).
 
 In order to ensure that the new human-readable format does not suffer from
 transaction malleability issues, `SIGN_MODE_TEXTUAL`

@@ -79,7 +79,7 @@ Authorize, is called by the module authority (default governance module account)
 
 ### Trip
 
-Trip, is called by an authorized account to disable message execution for a specific msgURL. If empty, all the msgs will be disabled.
+Trip, is called by an authorized account to disable message execution for a specific msgURL. If empty, depending on the permission level of the sender, the corresponding messages will be disabled. For example: if the sender permission level is `LEVEL_SOME_MSGS` then all messages that sender has permission will be disabled. If the sender is `LEVEL_SUPER_ADMIN` or `LEVEL_ALL_MSGS` then all msgs will be disabled.
 
 ```protobuf
   // TripCircuitBreaker pauses processing of Msg's in the state machine.
@@ -88,7 +88,7 @@ Trip, is called by an authorized account to disable message execution for a spec
 
 ### Reset
 
-Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, all the disabled messages will be enabled.
+Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, depending on the permission level of the sender, the corresponding disabled messages will be re-enabled. For example: if the sender permission level is `LEVEL_SOME_MSGS` all messages that sender has permission will be re-enabled. If the sender is `LEVEL_SUPER_ADMIN` or `LEVEL_ALL_MSGS` then all messages will be re-enabled.
 
 ```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that

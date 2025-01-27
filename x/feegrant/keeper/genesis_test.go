@@ -6,7 +6,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	address "cosmossdk.io/core/address"
+	"cosmossdk.io/core/address"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"

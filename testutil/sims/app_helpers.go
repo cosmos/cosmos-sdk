@@ -11,7 +11,7 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 
-	coreheader "cosmossdk.io/core/header"
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
@@ -19,13 +19,11 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -131,10 +129,7 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 	header.Time = newBlockTime
 	header.Height++
 
-	newCtx := app.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
-		Height: header.Height,
-		Time:   header.Time,
-	})
+	newCtx := app.BaseApp.NewUncachedContext(false, header)
 
 	return newCtx, nil
 }
@@ -277,7 +272,7 @@ func GenesisStateWithValSet(
 	// add bonded amount to bonded pool module account
 	balances = append(balances, banktypes.Balance{
 		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
+		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt.MulRaw(int64(len(delegations))))},
 	})
 
 	// update total supply
@@ -287,12 +282,19 @@ func GenesisStateWithValSet(
 	return genesisState, nil
 }
 
+var _ server.DynamicConfig = EmptyAppOptions{}
+
 // EmptyAppOptions is a stub implementing AppOptions
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
+}
+
+// GetString implements AppOptions
+func (ao EmptyAppOptions) GetString(o string) string {
+	return ""
 }
 
 // AppOptionsMap is a stub implementing AppOptions which can get data from a map
@@ -314,10 +316,4 @@ func (m AppOptionsMap) GetString(key string) string {
 	}
 
 	return v.(string)
-}
-
-func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
-	return AppOptionsMap{
-		flags.FlagHome: homePath,
-	}
 }

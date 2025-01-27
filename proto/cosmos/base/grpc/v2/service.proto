@@ -1,0 +1,39 @@
+syntax = "proto3";
+package cosmos.base.grpc.v2;
+
+import "google/protobuf/any.proto";
+
+option go_package = "cosmossdk.io/server/v2/api/grpc";
+
+// Service defines the gRPC service for query server for v2
+service Service {
+  // Query queries the server with a request, the request can be any sdk Msg.
+  rpc Query(QueryRequest) returns (QueryResponse) {}
+
+  // ListQueryHandlers lists all the available query handlers.
+  rpc ListQueryHandlers(ListQueryHandlersRequest) returns (ListQueryHandlersResponse) {}
+}
+
+// QueryRequest is the request for the Query method
+message QueryRequest {
+  google.protobuf.Any request = 1;
+}
+
+// QueryResponse is the response for the Query method
+message QueryResponse {
+  google.protobuf.Any response = 1;
+}
+
+// ListQueryHandlersRequest is the request for the ListQueryHandlers method
+message ListQueryHandlersRequest {}
+
+// ListQueryHandlersResponse is the response for the ListQueryHandlers method
+message ListQueryHandlersResponse {
+  repeated Handler handlers = 1;
+}
+
+// Handler defines a query handler
+message Handler {
+  string request_name  = 1;
+  string response_name = 2;
+}

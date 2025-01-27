@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/client/v2/internal/coins"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/tx/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -28,9 +29,9 @@ type HasValidateBasic interface {
 // TxParameters defines the parameters required for constructing a transaction.
 type TxParameters struct {
 	timeoutTimestamp time.Time             // timeoutTimestamp indicates a timestamp after which the transaction is no longer valid.
-	chainID          string                // chainID specifies the unique identifier of the blockchain where the transaction will be processed.
+	ChainID          string                // ChainID specifies the unique identifier of the blockchain where the transaction will be processed.
 	memo             string                // memo contains any arbitrary memo to be attached to the transaction.
-	signMode         apitxsigning.SignMode // signMode determines the signing mode to be used for the transaction.
+	SignMode         apitxsigning.SignMode // signMode determines the signing mode to be used for the transaction.
 
 	AccountConfig    // AccountConfig includes information about the transaction originator's account.
 	GasConfig        // GasConfig specifies the gas settings for the transaction.
@@ -41,15 +42,15 @@ type TxParameters struct {
 // AccountConfig defines the 'account' related fields in a transaction.
 type AccountConfig struct {
 	// accountNumber is the unique identifier for the account.
-	accountNumber uint64
+	AccountNumber uint64
 	// sequence is the sequence number of the transaction.
-	sequence uint64
+	Sequence uint64
 	// fromName is the name of the account sending the transaction.
-	fromName string
+	FromName string
 	// fromAddress is the address of the account sending the transaction.
-	fromAddress string
+	FromAddress string
 	// address is the byte representation of the account address.
-	address []byte
+	Address []byte
 }
 
 // GasConfig defines the 'gas' related fields in a transaction.
@@ -141,24 +142,27 @@ type Tx interface {
 	GetPubKeys() ([]cryptotypes.PubKey, error)
 	// GetSignatures fetches the signatures attached to the transaction.
 	GetSignatures() ([]Signature, error)
+	// GetSigningTxData returns the signing.TxData for the transaction.
+	GetSigningTxData() (signing.TxData, error)
 }
 
 // txParamsFromFlagSet extracts the transaction parameters from the provided FlagSet.
 func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac address.Codec) (params TxParameters, err error) {
-	timestampUnix, _ := flags.GetInt64(flagTimeoutTimestamp)
+	timestampUnix, _ := flags.GetInt64(FlagTimeoutTimestamp)
 	timeoutTimestamp := time.Unix(timestampUnix, 0)
-	chainID, _ := flags.GetString(flagChainID)
-	memo, _ := flags.GetString(flagNote)
-	signMode, _ := flags.GetString(flagSignMode)
+	chainID, _ := flags.GetString(FlagChainID)
+	memo, _ := flags.GetString(FlagNote)
+	signMode, _ := flags.GetString(FlagSignMode)
 
-	accNumber, _ := flags.GetUint64(flagAccountNumber)
-	sequence, _ := flags.GetUint64(flagSequence)
-	from, _ := flags.GetString(flagFrom)
+	accNumber, _ := flags.GetUint64(FlagAccountNumber)
+	sequence, _ := flags.GetUint64(FlagSequence)
+	from, _ := flags.GetString(FlagFrom)
 
 	var fromName, fromAddress string
 	var addr []byte
-	isDryRun, _ := flags.GetBool(flagDryRun)
-	if isDryRun {
+	isDryRun, _ := flags.GetBool(FlagDryRun)
+	generateOnly, _ := flags.GetBool(FlagGenerateOnly)
+	if isDryRun || generateOnly {
 		addr, err = ac.StringToBytes(from)
 	} else {
 		fromName, fromAddress, _, err = keybase.KeyInfo(from)
@@ -170,37 +174,37 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 		return params, err
 	}
 
-	gas, _ := flags.GetString(flagGas)
+	gas, _ := flags.GetString(FlagGas)
 	simulate, gasValue, _ := parseGasSetting(gas)
-	gasAdjustment, _ := flags.GetFloat64(flagGasAdjustment)
-	gasPrices, _ := flags.GetString(flagGasPrices)
+	gasAdjustment, _ := flags.GetFloat64(FlagGasAdjustment)
+	gasPrices, _ := flags.GetString(FlagGasPrices)
 
-	fees, _ := flags.GetString(flagFees)
-	feePayer, _ := flags.GetString(flagFeePayer)
-	feeGrater, _ := flags.GetString(flagFeeGranter)
+	fees, _ := flags.GetString(FlagFees)
+	feePayer, _ := flags.GetString(FlagFeePayer)
+	feeGranter, _ := flags.GetString(FlagFeeGranter)
 
-	unordered, _ := flags.GetBool(flagUnordered)
+	unordered, _ := flags.GetBool(FlagUnordered)
 
 	gasConfig, err := NewGasConfig(gasValue, gasAdjustment, gasPrices)
 	if err != nil {
 		return params, err
 	}
-	feeConfig, err := NewFeeConfig(fees, feePayer, feeGrater)
+	feeConfig, err := NewFeeConfig(fees, feePayer, feeGranter)
 	if err != nil {
 		return params, err
 	}
 
 	txParams := TxParameters{
 		timeoutTimestamp: timeoutTimestamp,
-		chainID:          chainID,
+		ChainID:          chainID,
 		memo:             memo,
-		signMode:         getSignMode(signMode),
+		SignMode:         getSignMode(signMode),
 		AccountConfig: AccountConfig{
-			accountNumber: accNumber,
-			sequence:      sequence,
-			fromName:      fromName,
-			fromAddress:   fromAddress,
-			address:       addr,
+			AccountNumber: accNumber,
+			Sequence:      sequence,
+			FromName:      fromName,
+			FromAddress:   fromAddress,
+			Address:       addr,
 		},
 		GasConfig: gasConfig,
 		FeeConfig: feeConfig,

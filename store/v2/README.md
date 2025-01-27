@@ -7,8 +7,7 @@ and [Store v2 Design](https://docs.google.com/document/d/1l6uXIjTPHOOWM5N4sUUmUf
 ## Usage
 
 The `store` package contains a `root.Store` type which is intended to act as an
-abstraction layer around it's two primary constituent components - state storage (SS)
-and state commitment (SC). It acts as the main entry point into storage for an
+abstraction layer around it's primary constituent components - state commitment (SC). It acts as the main entry point into storage for an
 application to use in server/v2. Through `root.Store`, an application can query
 and iterate over both current and historical data, commit new state, perform state
 sync, and fetch commitment proofs.
@@ -16,8 +15,7 @@ sync, and fetch commitment proofs.
 A `root.Store` is intended to be initialized with already constructed SS and SC
 backends (see relevant package documentation for instantiation details). Note,
 from the perspective of `root.Store`, there is no notion of multi or single tree/store,
-rather these are implementation details of SS and SC. For SS, we utilize store keys
-to namespace raw key/value pairs. For SC, we utilize an abstraction, `commitment.CommitStore`,
+rather these are implementation details of SC. For SC, we utilize an abstraction, `commitment.CommitStore`,
 to map store keys to a commitment trees.
 
 ## Upgrades
@@ -29,7 +27,6 @@ old ones. The `Rename` feature is not supported in store/v2.
 ```mermaid
 sequenceDiagram
     participant S as Store
-    participant SS as StateStorage
     participant SC as StateCommitment
     alt SC is a UpgradeableStore
         S->>SC: LoadVersionAndUpgrade
@@ -37,14 +34,11 @@ sequenceDiagram
         SC->>SC: Prune removed store keys
     end
     SC->>S: LoadVersion Result
-    alt SS is a UpgradableDatabase
-        S->>SS: PruneStoreKeys
-    end
 ```
 
-`PruneStoreKeys` does not remove the data from the SC and SS instantly. It only
+`PruneStoreKeys` does not remove the data from the SC instantly. It only
 marks the store keys as pruned. The actual data removal is done by the pruning
-process of the underlying SS and SC.
+process of the underlying SC.
 
 ## Migration
 
@@ -54,7 +48,7 @@ the `migration` package. See [Migration Manager](./migration/README.md) for more
 ## Pruning
 
 The `root.Store` is NOT responsible for pruning. Rather, pruning is the responsibility
-of the underlying SS and SC layers. This means pruning can be implementation specific,
+of the underlying commitment layer. This means pruning can be implementation specific,
 such as being synchronous or asynchronous. See [Pruning Manager](./pruning/README.md) for more details.
 
 

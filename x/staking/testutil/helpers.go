@@ -23,14 +23,14 @@ type Helper struct {
 	msgSrvr stakingtypes.MsgServer
 	k       *keeper.Keeper
 
-	Ctx        sdk.Context
+	Ctx        context.Context
 	Commission stakingtypes.CommissionRates
 	// Coin Denomination
 	Denom string
 }
 
 // NewHelper creates a new instance of Helper.
-func NewHelper(t *testing.T, ctx sdk.Context, k *keeper.Keeper) *Helper {
+func NewHelper(t *testing.T, ctx context.Context, k *keeper.Keeper) *Helper {
 	t.Helper()
 	return &Helper{t, keeper.NewMsgServerImpl(k), k, ctx, ZeroCommission(), sdk.DefaultBondDenom}
 }
@@ -126,19 +126,21 @@ func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondSt
 
 // TurnBlock calls EndBlocker and updates the block time
 func (sh *Helper) TurnBlock(newTime time.Time) sdk.Context {
-	sh.Ctx = sh.Ctx.WithHeaderInfo(header.Info{Time: newTime})
+	sdkCtx := sdk.UnwrapSDKContext(sh.Ctx)
+	sh.Ctx = sdkCtx.WithHeaderInfo(header.Info{Time: newTime})
 	_, err := sh.k.EndBlocker(sh.Ctx)
 	require.NoError(sh.t, err)
-	return sh.Ctx
+	return sdkCtx
 }
 
 // TurnBlockTimeDiff calls EndBlocker and updates the block time by adding the
 // duration to the current block time
 func (sh *Helper) TurnBlockTimeDiff(diff time.Duration) sdk.Context {
-	sh.Ctx = sh.Ctx.WithHeaderInfo(header.Info{Time: sh.Ctx.HeaderInfo().Time.Add(diff)})
+	sdkCtx := sdk.UnwrapSDKContext(sh.Ctx)
+	sh.Ctx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(diff)})
 	_, err := sh.k.EndBlocker(sh.Ctx)
 	require.NoError(sh.t, err)
-	return sh.Ctx
+	return sdkCtx
 }
 
 // ZeroCommission constructs a commission rates with all zeros.

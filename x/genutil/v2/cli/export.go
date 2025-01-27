@@ -17,6 +17,7 @@ import (
 
 const (
 	flagHeight           = "height"
+	flagForZeroHeight    = "for-zero-height"
 	flagJailAllowedAddrs = "jail-allowed-addrs"
 )
 
@@ -56,6 +57,7 @@ func ExportCmd(app ExportableApp) *cobra.Command {
 			}
 
 			height, _ := cmd.Flags().GetInt64(flagHeight)
+			forZeroHeight, _ := cmd.Flags().GetBool(flagForZeroHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(flagJailAllowedAddrs)
 			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 			if height != -1 {
@@ -63,7 +65,7 @@ func ExportCmd(app ExportableApp) *cobra.Command {
 					return err
 				}
 			}
-			exported, err := app.ExportAppStateAndValidators(jailAllowedAddrs)
+			exported, err := app.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %w", err)
 			}
@@ -105,6 +107,7 @@ func ExportCmd(app ExportableApp) *cobra.Command {
 		StringSlice(flagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
 	cmd.Flags().
 		String(flags.FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
+	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 
 	return cmd
 }

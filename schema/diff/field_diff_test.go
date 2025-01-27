@@ -45,7 +45,7 @@ func Test_compareField(t *testing.T) {
 				OldReferencedType: "old",
 				NewReferencedType: "new",
 			},
-			trueF: FieldDiff.ReferenceTypeChanged,
+			trueF: FieldDiff.ReferenceableTypeChanged,
 		},
 	}
 

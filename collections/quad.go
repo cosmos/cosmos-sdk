@@ -382,6 +382,16 @@ func (t quadKeyCodec[K1, K2, K3, K4]) SchemaCodec() (codec.SchemaCodec[Quad[K1, 
 
 	return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{
 		Fields: []schema.Field{field1, field2, field3, field4},
+		ToSchemaType: func(q Quad[K1, K2, K3, K4]) (any, error) {
+			return []interface{}{q.K1(), q.K2(), q.K3(), q.K4()}, nil
+		},
+		FromSchemaType: func(a any) (Quad[K1, K2, K3, K4], error) {
+			aSlice, ok := a.([]interface{})
+			if !ok || len(aSlice) != 4 {
+				return Quad[K1, K2, K3, K4]{}, fmt.Errorf("expected slice of length 4, got %T", a)
+			}
+			return Join4(aSlice[0].(K1), aSlice[1].(K2), aSlice[2].(K3), aSlice[3].(K4)), nil
+		},
 	}, nil
 }
 

@@ -77,11 +77,22 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
 }
 
-func InvokeSetMintFn(mintKeeper *keeper.Keeper, mintFn types.MintFn, stakingKeeper types.StakingKeeper) error {
-	if mintFn == nil && stakingKeeper == nil {
-		return fmt.Errorf("custom minting function or staking keeper must be supplied or available")
+func InvokeSetMintFn(
+	mintKeeper *keeper.Keeper,
+	stakingKeeper types.StakingKeeper,
+	mintFn types.MintFn,
+	inflationCalculationFn types.InflationCalculationFn,
+) error {
+	if mintFn == nil && stakingKeeper == nil && inflationCalculationFn == nil {
+		return fmt.Errorf("custom minting function, inflation calculation function or staking keeper must be supplied or available")
+	} else if mintFn != nil && inflationCalculationFn != nil {
+		return fmt.Errorf("cannot set both custom minting function and inflation calculation function")
 	} else if mintFn == nil {
-		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, mintKeeper)
+		if inflationCalculationFn != nil && stakingKeeper != nil {
+			mintFn = keeper.DefaultMintFn(inflationCalculationFn, stakingKeeper, mintKeeper)
+		} else {
+			mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, mintKeeper)
+		}
 	}
 
 	return mintKeeper.SetMintFn(mintFn)

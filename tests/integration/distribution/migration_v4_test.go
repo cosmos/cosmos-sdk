@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -75,7 +74,7 @@ func TestFundsMigration(t *testing.T) {
 		authtypes.StoreKey, banktypes.StoreKey, disttypes.StoreKey,
 	)
 	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, logger)
+	cms := moduletestutil.CreateMultiStore(keys, logger)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{}, distribution.AppModule{})
 	ctx := sdk.NewContext(cms, true, logger)
 	addressCodec := addresscodec.NewBech32Codec(sdk.Bech32MainPrefix)

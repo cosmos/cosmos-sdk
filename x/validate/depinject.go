@@ -138,14 +138,15 @@ func newBaseAppOption(in ModuleInputs) func(app *baseapp.BaseApp) {
 func newAnteHandler(in ModuleInputs) (sdk.AnteHandler, error) {
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			Environment:        in.Environment,
-			AccountKeeper:      in.AccountKeeper,
-			ConsensusKeeper:    in.ConsensusKeeper,
-			BankKeeper:         in.BankKeeper,
-			SignModeHandler:    in.TxConfig.SignModeHandler(),
-			FeegrantKeeper:     in.FeeGrantKeeper,
-			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
-			UnorderedTxManager: in.UnorderedTxManager,
+			Environment:              in.Environment,
+			AccountKeeper:            in.AccountKeeper,
+			ConsensusKeeper:          in.ConsensusKeeper,
+			BankKeeper:               in.BankKeeper,
+			SignModeHandler:          in.TxConfig.SignModeHandler(),
+			FeegrantKeeper:           in.FeeGrantKeeper,
+			SigGasConsumer:           ante.DefaultSigVerificationGasConsumer,
+			UnorderedTxManager:       in.UnorderedTxManager,
+			AccountAbstractionKeeper: in.AccountAbstractionKeeper,
 		},
 	)
 	if err != nil {

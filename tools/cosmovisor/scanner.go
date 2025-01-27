@@ -15,6 +15,8 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
+var errUntestAble = errors.New("untestable")
+
 type fileWatcher struct {
 	daemonHome string
 	filename   string // full path to a watched file
@@ -149,8 +151,8 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 	}
 
 	// file exist but too early in height
-	currentHeight, _ := fw.checkHeight()
-	if currentHeight != 0 && currentHeight < info.Height {
+	currentHeight, err := fw.checkHeight()
+	if (err != nil || currentHeight < info.Height) && !errors.Is(err, errUntestAble) { // ignore this check for tests
 		return false
 	}
 
@@ -182,7 +184,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 // checkHeight checks if the current block height
 func (fw *fileWatcher) checkHeight() (int64, error) {
 	if testing.Testing() { // we cannot test the command in the test environment
-		return 0, nil
+		return 0, errUntestAble
 	}
 
 	result, err := exec.Command(fw.currentBin, "status", "--home", fw.daemonHome).CombinedOutput() //nolint:gosec // we want to execute the status command

@@ -10,8 +10,9 @@ func prefix(f string) string {
 }
 
 var (
-	FlagMinGasPrices = prefix("minimum-gas-prices")
-	FlagCPUProfiling = prefix("cpu-profile")
+	FlagMinGasPrices       = prefix("minimum-gas-prices")
+	FlagCPUProfiling       = prefix("cpu-profile")
+	FlagUnsafeSkipUpgrades = prefix("unsafe-skip-upgrades")
 )
 
 const (

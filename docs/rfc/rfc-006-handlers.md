@@ -10,7 +10,7 @@ The Cosmos SDK has a very powerful and flexible module system that has been test
 and proven to be very good in production. The design of how messages are handled
 is built around Protobuf services and gRPC. This design was proposed and implemented
 during a time when we migrated from Amino to Protocol Buffers. This design has
-fulfilled the needs of users today. While this design is useful it has caused a
+fulfilled the needs of users today. While this design is useful it has caused an
 elevated learning curve to be adopted by users. Today, these services are the
 only way to write a module. This RFC proposes a new design that simplifies the
 design and enables new use cases we are seeing today.

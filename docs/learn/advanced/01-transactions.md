@@ -16,7 +16,7 @@ sidebar_position: 1
 
 ## Transactions
 
-Transactions are comprised of metadata held in [contexts](./02-context.md) and [`sdk.Msg`s](../../build/building-modules/02-messages-and-queries.md) that trigger state changes within a module through the module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md).
+Transactions are comprised of metadata held in [contexts](./17-context.md) and [`sdk.Msg`s](../../build/building-modules/02-messages-and-queries.md) that trigger state changes within a module through the module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md).
 
 When users want to interact with an application and make state changes (e.g. sending coins), they create transactions. Each of a transaction's `sdk.Msg` must be signed using the private key associated with the appropriate account(s), before the transaction is broadcasted to the network. A transaction must then be included in a block, validated, and approved by the network through the consensus process. To read more about the lifecycle of a transaction, click [here](../beginner/01-tx-lifecycle.md).
 
@@ -149,6 +149,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/client/tx_config.go#L39
 * `Memo`, a note or comment to send with the transaction.
 * `FeeAmount`, the maximum amount the user is willing to pay in fees.
 * `TimeoutHeight`, block height until which the transaction is valid.
+* `TimeoutTimestamp`, timestamp until which the transaction is valid.
+* `Unordered`, whether transactions can be executed in any order. Nonce is then unevaluated (NOTE: A timeout timestamp must be set if `Unordered` is true).
 * `Signatures`, the array of signatures from all signers of the transaction.
 
 As there are currently two sign modes for signing transactions, there are also two implementations of `TxBuilder`:

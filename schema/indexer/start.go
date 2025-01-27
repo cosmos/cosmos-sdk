@@ -120,7 +120,7 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 
 		targetCfg.Config, err = unmarshalIndexerCustomConfig(targetCfg.Config, init.ConfigType)
 		if err != nil {
-			return IndexingTarget{}, fmt.Errorf("failed to unmarshal indexer config for target %q: %v", targetName, err)
+			return IndexingTarget{}, fmt.Errorf("failed to unmarshal indexer config for target %q: %v", targetName, err) //nolint:errorlint // we support go 1.12, so no error wrapping
 		}
 
 		initRes, err := init.InitFunc(InitParams{

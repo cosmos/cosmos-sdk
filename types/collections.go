@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
+	"cosmossdk.io/schema"
 )
 
 var (
@@ -44,7 +45,7 @@ var (
 	// Deprecated: exists only for state compatibility reasons, should not
 	// be used for new storage keys using time. Please use the time KeyCodec
 	// provided in the collections package.
-	TimeKey collcodec.KeyCodec[time.Time] = timeKeyCodec{}
+	TimeKey collcodec.NameableKeyCodec[time.Time] = timeKeyCodec{}
 
 	// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
 	// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
@@ -56,7 +57,7 @@ var (
 	// Deprecated: exists only for state compatibility reasons, should not be
 	// used for new storage keys using []byte. Please use the BytesKey provided
 	// in the collections package.
-	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
+	LengthPrefixedBytesKey collcodec.NameableKeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
 )
 
 const (
@@ -120,6 +121,28 @@ func (a genericAddressKey[T]) SizeNonTerminal(key T) int {
 	return collections.BytesKey.SizeNonTerminal(key)
 }
 
+func (a genericAddressKey[T]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
+	return collcodec.SchemaCodec[T]{
+		Fields: []schema.Field{{Kind: schema.AddressKind}},
+		ToSchemaType: func(t T) (any, error) {
+			if len(t) == 0 {
+				return nil, fmt.Errorf("invalid empty address")
+			}
+			return t, nil
+		},
+		FromSchemaType: func(s any) (T, error) {
+			addr, ok := s.([]byte)
+			if !ok {
+				return nil, fmt.Errorf("expected []byte, got %T", s)
+			}
+			if len(addr) == 0 {
+				return nil, fmt.Errorf("invalid empty address")
+			}
+			return T(addr), nil
+		},
+	}, nil
+}
+
 // Deprecated: lengthPrefixedAddressKey is a special key codec used to retain state backwards compatibility
 // when a generic address key (be: AccAddress, ValAddress, ConsAddress), is used as an index key.
 // More docs can be found in the LengthPrefixedAddressKey function.
@@ -139,6 +162,10 @@ func (g lengthPrefixedAddressKey[T]) Size(key T) int { return g.SizeNonTerminal(
 
 func (g lengthPrefixedAddressKey[T]) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
 
+func (g lengthPrefixedAddressKey[T]) WithName(name string) collcodec.KeyCodec[T] {
+	return collcodec.NamedKeyCodec[T]{KeyCodec: g, Name: name}
+}
+
 // Deprecated: LengthPrefixedAddressKey implements an SDK backwards compatible indexing key encoder
 // for addresses.
 // The status quo in the SDK is that address keys are length prefixed even when they're the
@@ -148,7 +175,7 @@ func (g lengthPrefixedAddressKey[T]) KeyType() string { return "index_key/" + g.
 // byte to the string, then when you know when the string part finishes, it's logical that the
 // part which remains is the address key. In the SDK instead we prepend to the address key its
 // length too.
-func LengthPrefixedAddressKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) collcodec.KeyCodec[T] {
+func LengthPrefixedAddressKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) collcodec.NameableKeyCodec[T] {
 	return lengthPrefixedAddressKey[T]{
 		keyCodec,
 	}
@@ -174,6 +201,10 @@ func (g lengthPrefixedBytesKey) Size(key []byte) int {
 
 func (g lengthPrefixedBytesKey) KeyType() string {
 	return "index_key/" + g.KeyCodec.KeyType()
+}
+
+func (g lengthPrefixedBytesKey) WithName(name string) collcodec.KeyCodec[[]byte] {
+	return collcodec.NamedKeyCodec[[]byte]{KeyCodec: g, Name: name}
 }
 
 // Collection Codecs
@@ -212,6 +243,26 @@ func (i intValueCodec) Stringify(value math.Int) string {
 
 func (i intValueCodec) ValueType() string {
 	return Int
+}
+
+func (i intValueCodec) SchemaCodec() (collcodec.SchemaCodec[math.Int], error) {
+	return collcodec.SchemaCodec[math.Int]{
+		Fields: []schema.Field{{Kind: schema.IntegerKind}},
+		ToSchemaType: func(t math.Int) (any, error) {
+			return t.String(), nil
+		},
+		FromSchemaType: func(s any) (math.Int, error) {
+			sz, ok := s.(string)
+			if !ok {
+				return math.Int{}, fmt.Errorf("expected string, got %T", s)
+			}
+			t, ok := math.NewIntFromString(sz)
+			if !ok {
+				return math.Int{}, fmt.Errorf("failed to parse Int from string: %s", sz)
+			}
+			return t, nil
+		},
+	}, nil
 }
 
 type uintValueCodec struct{}
@@ -328,6 +379,10 @@ func (t timeKeyCodec) DecodeNonTerminal(buffer []byte) (int, time.Time, error) {
 	return t.Decode(buffer[:timeSize])
 }
 func (t timeKeyCodec) SizeNonTerminal(key time.Time) int { return t.Size(key) }
+
+func (t timeKeyCodec) WithName(name string) collcodec.KeyCodec[time.Time] {
+	return collcodec.NamedKeyCodec[time.Time]{KeyCodec: t, Name: name}
+}
 
 type leUint64Key struct{}
 

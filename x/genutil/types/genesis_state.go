@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/core/codec"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -47,7 +47,9 @@ func NewGenesisStateFromTx(txJSONEncoder sdk.TxEncoder, genTxs []sdk.Tx) *Genesi
 func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 	if appState[ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+		if err := cdc.UnmarshalJSON(appState[ModuleName], &genesisState); err != nil {
+			panic(err)
+		}
 	}
 	return &genesisState
 }
@@ -56,7 +58,10 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 func SetGenesisStateInAppState(
 	cdc codec.JSONCodec, appState map[string]json.RawMessage, genesisState *GenesisState,
 ) map[string]json.RawMessage {
-	genesisStateBz := cdc.MustMarshalJSON(genesisState)
+	genesisStateBz, err := cdc.MarshalJSON(genesisState)
+	if err != nil {
+		panic(err)
+	}
 	appState[ModuleName] = genesisStateBz
 	return appState
 }

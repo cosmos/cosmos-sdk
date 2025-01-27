@@ -14,8 +14,6 @@ import (
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/pruning"
-	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
 type UpgradeStoreTestSuite struct {
@@ -43,21 +41,17 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 		multiTrees[storeKey], _ = newTreeFn(storeKey)
 	}
 
-	// create storage and commitment stores
-	sqliteDB, err := sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, testLog)
 	sc, err := commitment.NewCommitStore(multiTrees, nil, s.commitDB, testLog)
 	s.Require().NoError(err)
-	pm := pruning.NewManager(sc, ss, nil, nil)
-	s.rootStore, err = New(s.commitDB, testLog, ss, sc, pm, nil, nil)
+	pm := pruning.NewManager(sc, nil)
+	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	// commit changeset
 	toVersion := uint64(20)
 	keyCount := 10
 	for version := uint64(1); version <= toVersion; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
@@ -91,8 +85,8 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 
 	sc, err := commitment.NewCommitStore(multiTrees, oldTrees, s.commitDB, testLog)
 	s.Require().NoError(err)
-	pm := pruning.NewManager(sc, s.rootStore.GetStateStorage().(store.Pruner), nil, nil)
-	s.rootStore, err = New(s.commitDB, testLog, s.rootStore.GetStateStorage(), sc, pm, nil, nil)
+	pm := pruning.NewManager(sc, nil)
+	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil, nil)
 	s.Require().NoError(err)
 }
 
@@ -112,7 +106,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 
 	keyCount := 10
 	// check old store keys are queryable
-	oldStoreKeys := []string{"store1", "store3"}
+	oldStoreKeys := []string{"store1", "store2", "store3"}
 	for _, storeKey := range oldStoreKeys {
 		for version := uint64(1); version <= v; version++ {
 			for i := 0; i < keyCount; i++ {
@@ -127,7 +121,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 	newStoreKeys := []string{"newStore1", "newStore2"}
 	toVersion := uint64(40)
 	for version := v + 1; version <= toVersion; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range newStoreKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)

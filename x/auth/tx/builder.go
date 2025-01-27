@@ -14,10 +14,10 @@ import (
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,7 +46,7 @@ func newBuilderFromDecodedTx(
 		modeInfoV1 := new(tx.ModeInfo)
 		fromV2ModeInfo(sigInfo.ModeInfo, modeInfoV1)
 		sigInfos[i] = &tx.SignerInfo{
-			PublicKey: intoAnyV1([]*anypb.Any{sigInfo.PublicKey})[0],
+			PublicKey: intoAnyV1(codec, []*anypb.Any{sigInfo.PublicKey})[0],
 			ModeInfo:  modeInfoV1,
 			Sequence:  sigInfo.Sequence,
 		}
@@ -63,6 +63,7 @@ func newBuilderFromDecodedTx(
 		codec:                       codec,
 		msgs:                        decoded.Messages,
 		timeoutHeight:               decoded.GetTimeoutHeight(),
+		timeoutTimestamp:            decoded.GetTimeoutTimeStamp(),
 		granter:                     decoded.FeeGranter(),
 		payer:                       payer,
 		unordered:                   decoded.GetUnordered(),
@@ -114,14 +115,26 @@ func (w *builder) getTx() (*gogoTxWrapper, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert messages: %w", err)
 	}
-	body := &txv1beta1.TxBody{
-		Messages:                    anyMsgs,
-		Memo:                        w.memo,
-		TimeoutHeight:               w.timeoutHeight,
-		TimeoutTimestamp:            timestamppb.New(w.timeoutTimestamp),
-		Unordered:                   w.unordered,
-		ExtensionOptions:            intoAnyV2(w.extensionOptions),
-		NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
+
+	var body proto.Message
+	if !w.unordered && (w.timeoutTimestamp.IsZero() || w.timeoutTimestamp.Unix() == 0) {
+		body = &txv1beta1.TxBodyCompat{
+			Messages:                    anyMsgs,
+			Memo:                        w.memo,
+			TimeoutHeight:               w.timeoutHeight,
+			ExtensionOptions:            intoAnyV2(w.extensionOptions),
+			NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
+		}
+	} else {
+		body = &txv1beta1.TxBody{
+			Messages:                    anyMsgs,
+			Memo:                        w.memo,
+			TimeoutHeight:               w.timeoutHeight,
+			TimeoutTimestamp:            timestamppb.New(w.timeoutTimestamp),
+			Unordered:                   w.unordered,
+			ExtensionOptions:            intoAnyV2(w.extensionOptions),
+			NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
+		}
 	}
 
 	fee, err := w.getFee()
@@ -293,9 +306,11 @@ func intoV2SignerInfo(v1s []*tx.SignerInfo) []*txv1beta1.SignerInfo {
 		modeInfoV2 := new(txv1beta1.ModeInfo)
 		intoV2ModeInfo(v1.ModeInfo, modeInfoV2)
 		v2 := &txv1beta1.SignerInfo{
-			PublicKey: intoAnyV2([]*codectypes.Any{v1.PublicKey})[0],
-			ModeInfo:  modeInfoV2,
-			Sequence:  v1.Sequence,
+			ModeInfo: modeInfoV2,
+			Sequence: v1.Sequence,
+		}
+		if v1.PublicKey != nil {
+			v2.PublicKey = intoAnyV2([]*codectypes.Any{v1.PublicKey})[0]
 		}
 		v2s[i] = v2
 	}

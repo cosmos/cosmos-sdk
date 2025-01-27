@@ -12,10 +12,10 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -152,7 +152,11 @@ func (v Validators) UnpackInterfaces(c gogoprotoany.AnyUnpacker) error {
 
 // return the redelegation
 func MustMarshalValidator(cdc codec.BinaryCodec, validator *Validator) []byte {
-	return cdc.MustMarshal(validator)
+	data, err := cdc.Marshal(validator)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // unmarshal a redelegation from a store value
@@ -189,7 +193,7 @@ func (v Validator) IsUnbonding() bool {
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
-func NewDescription(moniker, identity, website, securityContact, details string, metadata Metadata) Description {
+func NewDescription(moniker, identity, website, securityContact, details string, metadata *Metadata) Description {
 	return Description{
 		Moniker:         moniker,
 		Identity:        identity,
@@ -223,8 +227,10 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.Details = d.Details
 	}
 
-	if d2.Metadata.ProfilePicUri == DoNotModifyDesc {
-		d2.Metadata.ProfilePicUri = d.Metadata.ProfilePicUri
+	if d2.Metadata != nil {
+		if d2.Metadata.ProfilePicUri == DoNotModifyDesc {
+			d2.Metadata.ProfilePicUri = d.Metadata.ProfilePicUri
+		}
 	}
 
 	return NewDescription(
@@ -233,7 +239,7 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.Website,
 		d2.SecurityContact,
 		d2.Details,
-		d.Metadata,
+		d2.Metadata,
 	).Validate()
 }
 
@@ -264,13 +270,15 @@ func (d Description) EnsureLength() (Description, error) {
 
 func (d Description) IsEmpty() bool {
 	return d.Moniker == "" && d.Details == "" && d.Identity == "" && d.Website == "" && d.SecurityContact == "" &&
-		d.Metadata.ProfilePicUri == "" && len(d.Metadata.SocialHandleUris) == 0
+		(d.Metadata == nil || d.Metadata.ProfilePicUri == "" && len(d.Metadata.SocialHandleUris) == 0)
 }
 
 // Validate calls metadata.Validate() description.EnsureLength()
 func (d Description) Validate() (Description, error) {
-	if err := d.Metadata.Validate(); err != nil {
-		return d, err
+	if d.Metadata != nil {
+		if err := d.Metadata.Validate(); err != nil {
+			return d, err
+		}
 	}
 
 	return d.EnsureLength()

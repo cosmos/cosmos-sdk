@@ -58,7 +58,7 @@ func (o CodecOptions) NewCodec() *codec.ProtoCodec {
 	return codec.NewProtoCodec(o.NewInterfaceRegistry())
 }
 
-// GetAddressCodec returns the address codec. If not address codec was provided it'll create a new one based on the
+// GetAddressCodec returns the address codec. If no address codec was provided it'll create a new one based on the
 // bech32 prefix.
 func (o CodecOptions) GetAddressCodec() coreaddress.Codec {
 	if o.AddressCodec != nil {

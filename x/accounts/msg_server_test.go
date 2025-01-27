@@ -24,24 +24,46 @@ func TestMsgServer(t *testing.T) {
 		Sender:      "sender",
 		AccountType: "test",
 		Message:     initMsg,
+		AddressSeed: []byte("seed"),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, initResp)
 
-	// execute
-	executeMsg := &wrapperspb.StringValue{
-		Value: "10",
-	}
-	executeMsgAny, err := implementation.PackAny(executeMsg)
-	require.NoError(t, err)
+	t.Run("success", func(t *testing.T) {
+		// execute
+		executeMsg := &wrapperspb.StringValue{
+			Value: "10",
+		}
+		executeMsgAny, err := implementation.PackAny(executeMsg)
+		require.NoError(t, err)
 
-	execResp, err := s.Execute(ctx, &v1.MsgExecute{
-		Sender:  "sender",
-		Target:  initResp.AccountAddress,
-		Message: executeMsgAny,
+		execResp, err := s.Execute(ctx, &v1.MsgExecute{
+			Sender:  "sender",
+			Target:  initResp.AccountAddress,
+			Message: executeMsgAny,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, execResp)
 	})
-	require.NoError(t, err)
-	require.NotNil(t, execResp)
+
+	t.Run("fail initting same account twice", func(t *testing.T) {
+		_, err := s.Init(ctx, &v1.MsgInit{
+			Sender:      "sender",
+			AccountType: "test",
+			Message:     initMsg,
+			AddressSeed: []byte("seed"),
+		})
+		require.ErrorIs(t, err, ErrAccountAlreadyExists)
+	})
+
+	t.Run("initting without seed", func(t *testing.T) {
+		_, err := s.Init(ctx, &v1.MsgInit{
+			Sender:      "sender",
+			AccountType: "test",
+			Message:     initMsg,
+		})
+		require.NoError(t, err)
+	})
 }
 
 func TestMsgServer_BundlingDisabled(t *testing.T) {

@@ -113,7 +113,7 @@ func (k BaseSendKeeper) GetAuthority() string {
 
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx context.Context) (params types.Params) {
-	p, _ := k.Params.Get(ctx)
+	p, _ := k.Params.Get(ctx) // TODO: pretty bad, as it will just return empty params if it fails!
 	return p
 }
 

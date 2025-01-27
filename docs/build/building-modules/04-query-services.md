@@ -5,7 +5,7 @@ sidebar_position: 1
 # Query Services
 
 :::note Synopsis
-A Protobuf Query service processes [`queries`](./02-messages-and-queries.md#queries). Query services are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `BaseApp`'s [`Query` method](../../learn/advanced/00-baseapp.md#query).
+A Protobuf Query service processes [`queries`](./02-messages-and-queries.md#queries). Query services are specific to the module in which they are defined, and only process `queries` defined within said module.
 :::
 
 :::note Pre-requisite Readings
@@ -28,18 +28,17 @@ type QueryServer interface {
 }
 ```
 
-These custom queries methods should be implemented by a module's keeper, typically in `./keeper/grpc_query.go`. The first parameter of these methods is a generic `context.Context`. Therefore, the Cosmos SDK provides a function `sdk.UnwrapSDKContext` to retrieve the `context.Context` from the provided
-`context.Context`.
+These custom queries methods should be implemented by a module's keeper, typically in `./keeper/grpc_query.go`.
 
 Here's an example implementation for the bank module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/grpc_query.go
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/bank/keeper/grpc_query.go#L20-L48
 ```
 
 ### Calling queries from the State Machine
 
-The Cosmos SDK v0.47 introduces a new `cosmos.query.v1.module_query_safe` Protobuf annotation which is used to state that a query that is safe to be called from within the state machine, for example:
+The `cosmos.query.v1.module_query_safe` protobuf annotation is used to state that a query that is safe to be called from within the state machine, for example:
 
 * a Keeper's query function can be called from another module's Keeper,
 * ADR-033 intermodule query calls,
@@ -53,5 +52,4 @@ If the `module_query_safe` annotation set to `true`, it means:
 If you are a module developer and want to use `module_query_safe` annotation for your own query, you have to ensure the following things:
 
 * the query is deterministic and won't introduce state-machine-breaking changes without coordinated upgrades
-* it has its gas tracked, to avoid the attack vector where no gas is accounted for
- on potentially high-computation queries.
+* it has its gas tracked, to avoid the attack vector where no gas is accounted for on potentially high-computation queries.

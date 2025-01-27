@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	corelog "cosmossdk.io/core/log"
-	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
@@ -38,8 +37,6 @@ type Manager struct {
 	opts  SnapshotOptions
 	// commitSnapshotter is the snapshotter for the commitment state.
 	commitSnapshotter CommitSnapshotter
-	// storageSnapshotter is the snapshotter for the storage state.
-	storageSnapshotter StorageSnapshotter
 
 	logger corelog.Logger
 
@@ -76,17 +73,16 @@ const (
 var ErrOptsZeroSnapshotInterval = errors.New("snapshot-interval must not be 0")
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger corelog.Logger) *Manager {
+func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnapshotter, extensions map[string]ExtensionSnapshotter, logger corelog.Logger) *Manager {
 	if extensions == nil {
 		extensions = map[string]ExtensionSnapshotter{}
 	}
 	return &Manager{
-		store:              store,
-		opts:               opts,
-		commitSnapshotter:  commitSnapshotter,
-		storageSnapshotter: storageSnapshotter,
-		extensions:         extensions,
-		logger:             logger,
+		store:             store,
+		opts:              opts,
+		commitSnapshotter: commitSnapshotter,
+		extensions:        extensions,
+		logger:            logger,
 	}
 }
 
@@ -398,23 +394,10 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		return payload.Payload, nil
 	}
 
-	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
-	chStorage := make(chan *corestore.StateChanges, defaultStorageChannelBufferSize)
-
-	storageErrs := make(chan error, 1)
-	go func() {
-		defer close(storageErrs)
-		err := m.storageSnapshotter.Restore(snapshot.Height, chStorage)
-		if err != nil {
-			storageErrs <- err
-		}
-	}()
-
-	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)
+	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader)
 	if err != nil {
 		return errorsmod.Wrap(err, "multistore restore")
 	}
-	close(chStorage)
 
 	for {
 		if nextItem.Item == nil {
@@ -443,11 +426,6 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		} else {
 			break
 		}
-	}
-
-	// wait for storage snapshotter to complete
-	if err := <-storageErrs; err != nil {
-		return errorsmod.Wrap(err, "storage snapshotter")
 	}
 
 	return nil

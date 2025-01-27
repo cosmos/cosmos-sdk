@@ -40,7 +40,8 @@ func Middleware(target appdata.Listener, resolver DecoderResolver, opts Middlewa
 				var err error
 				moduleName, err = resolver.DecodeModuleName(kvUpdate.Actor)
 				if err != nil {
-					return err
+					// we don't have a codec for this module so continue
+					continue
 				}
 
 				moduleNames[string(kvUpdate.Actor)] = moduleName

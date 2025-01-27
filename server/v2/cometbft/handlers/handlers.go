@@ -13,16 +13,16 @@ import (
 type (
 	// PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations
 	// over the list of proposed transactions. It can return a modified list of txs to include in the proposal.
-	PrepareHandler[T transaction.Tx] func(context.Context, AppManager[T], transaction.Codec[T], *abci.PrepareProposalRequest) ([]T, error)
+	PrepareHandler[T transaction.Tx] func(ctx context.Context, app AppManager[T], cdc transaction.Codec[T], req *abci.PrepareProposalRequest, chainID string) ([]T, error)
 
 	// ProcessHandler is a function that takes a list of transactions and returns a boolean and an error.
 	// If the verification of a transaction fails, the boolean is false and the error is non-nil.
-	ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], transaction.Codec[T], *abci.ProcessProposalRequest) error
+	ProcessHandler[T transaction.Tx] func(ctx context.Context, app AppManager[T], cdc transaction.Codec[T], req *abci.ProcessProposalRequest, chainID string) error
 
-	// VerifyVoteExtensionhandler is a function type that handles the verification of a vote extension request.
+	// VerifyVoteExtensionHandler is a function type that handles the verification of a vote extension request.
 	// It takes a context, a store reader map, and a request to verify a vote extension.
 	// It returns a response to verify the vote extension and an error if any.
-	VerifyVoteExtensionhandler func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
+	VerifyVoteExtensionHandler func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
 
 	// ExtendVoteHandler is a function type that handles the extension of a vote.
 	// It takes a context, a store reader map, and a request to extend a vote.

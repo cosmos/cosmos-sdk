@@ -52,7 +52,8 @@ func CheckCometError(err error, tx cmttypes.Tx) *sdk.TxResponse {
 	txHash := fmt.Sprintf("%X", tx.Hash())
 
 	switch {
-	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())):
+	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())) ||
+		strings.Contains(errStr, strings.ToLower(sdkerrors.ErrTxInMempoolCache.Error())):
 		return &sdk.TxResponse{
 			Code:      sdkerrors.ErrTxInMempoolCache.ABCICode(),
 			Codespace: sdkerrors.ErrTxInMempoolCache.Codespace(),
@@ -70,6 +71,13 @@ func CheckCometError(err error, tx cmttypes.Tx) *sdk.TxResponse {
 		return &sdk.TxResponse{
 			Code:      sdkerrors.ErrTxTooLarge.ABCICode(),
 			Codespace: sdkerrors.ErrTxTooLarge.Codespace(),
+			TxHash:    txHash,
+		}
+
+	case strings.Contains(errStr, "no signatures supplied"):
+		return &sdk.TxResponse{
+			Code:      sdkerrors.ErrNoSignatures.ABCICode(),
+			Codespace: sdkerrors.ErrNoSignatures.Codespace(),
 			TxHash:    txHash,
 		}
 

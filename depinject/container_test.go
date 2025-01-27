@@ -213,7 +213,7 @@ func TestUnexportedField(t *testing.T) {
 		"depinject.Out struct",
 	)
 
-	require.ErrorContains(t,
+	require.NoError(t,
 		depinject.Inject(
 			scenarioConfigDependency,
 			&handlers,
@@ -221,7 +221,6 @@ func TestUnexportedField(t *testing.T) {
 			&a,
 			&c,
 		),
-		"depinject.In struct",
 	)
 
 	require.ErrorContains(t,

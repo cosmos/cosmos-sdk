@@ -1,8 +1,10 @@
 package client
 
 import (
+	"errors"
 	"time"
 
+	"cosmossdk.io/core/transaction"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -47,11 +49,17 @@ type (
 		SetSignatures(signatures ...signingtypes.SignatureV2) error
 		SetMemo(memo string)
 		SetFeeAmount(amount sdk.Coins)
+		// SetFeePayer sets the address of who will pay the fees for this transaction.
+		// Note: The fee payer must sign the transaction in addition to any other required signers.
 		SetFeePayer(feePayer sdk.AccAddress)
 		SetGasLimit(limit uint64)
 		SetTimeoutHeight(height uint64)
 		SetTimeoutTimestamp(timestamp time.Time)
 		SetUnordered(v bool)
+		// SetFeeGranter sets the address of the fee granter for this transaction.
+		// A fee granter is an account that has given permission (via the feegrant module)
+		// to pay fees on behalf of another account. Unlike the fee payer, the fee granter
+		// does not need to sign the transaction.
 		SetFeeGranter(feeGranter sdk.AccAddress)
 		AddAuxSignerData(tx.AuxSignerData) error
 	}
@@ -62,3 +70,44 @@ type (
 		SetExtensionOptions(extOpts ...*codectypes.Any)
 	}
 )
+
+var _ transaction.Codec[transaction.Tx] = &DefaultTxDecoder[transaction.Tx]{}
+
+// DefaultTxDecoder is a generic transaction decoder that implements the transaction.Codec interface.
+type DefaultTxDecoder[T transaction.Tx] struct {
+	TxConfig TxConfig
+}
+
+// Decode decodes a binary transaction into type T using the TxConfig's TxDecoder.
+func (t *DefaultTxDecoder[T]) Decode(bz []byte) (T, error) {
+	var out T
+	tx, err := t.TxConfig.TxDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
+}
+
+// DecodeJSON decodes a JSON transaction into type T using the TxConfig's TxJSONDecoder.
+func (t *DefaultTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
+	var out T
+	tx, err := t.TxConfig.TxJSONDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
+}

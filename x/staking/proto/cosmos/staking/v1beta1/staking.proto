@@ -79,7 +79,7 @@ message Description {
   // details define other optional details.
   string details = 5;
   // metadata defines extra information about the validator.
-  Metadata metadata = 6 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  Metadata metadata = 6 [(gogoproto.nullable) = true, (amino.dont_omitempty) = false];
 }
 
 // Metadata defines extra information about the validator.
@@ -259,7 +259,7 @@ message UnbondingDelegationEntry {
     (gogoproto.nullable)   = false
   ];
   // Incrementing id that uniquely identifies this entry
-  uint64 unbonding_id = 5;
+  uint64 unbonding_id = 5 [deprecated = true];
 
   // Strictly positive if this entry's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 6;

@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -303,10 +302,10 @@ func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbond
 
 	unbond, err := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if err != nil {
-		return nil, status.Errorf(
+		return nil, errorsmod.Wrap(err, status.Errorf(
 			codes.NotFound,
 			"unbonding delegation with delegator %s not found for validator %s",
-			req.DelegatorAddr, req.ValidatorAddr)
+			req.DelegatorAddr, req.ValidatorAddr).Error())
 	}
 
 	return &types.QueryUnbondingDelegationResponse{Unbond: unbond}, nil
@@ -429,14 +428,13 @@ func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegation
 	var pageRes *query.PageResponse
 	var err error
 
-	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
 	switch {
 	case req.DelegatorAddr != "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr != "":
 		redels, err = queryRedelegation(ctx, k, req)
 	case req.DelegatorAddr == "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr == "":
 		redels, pageRes, err = queryRedelegationsFromSrcValidator(ctx, k, req)
 	default:
-		redels, pageRes, err = queryAllRedelegations(ctx, store, k, req)
+		redels, pageRes, err = queryAllRedelegations(ctx, k, req)
 	}
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -557,7 +555,7 @@ func queryRedelegationsFromSrcValidator(ctx context.Context, k Querier, req *typ
 	}, query.WithCollectionPaginationTriplePrefix[[]byte, []byte, []byte](valAddr))
 }
 
-func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryAllRedelegations(ctx context.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, nil, err
@@ -650,7 +648,6 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 				entry.SharesDst,
 				entry.InitialBalance,
 				val.TokensFromShares(entry.SharesDst).TruncateInt(),
-				entry.UnbondingId,
 			)
 		}
 

@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "0 12 * * *"
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,11 +19,10 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get install codespell -y
-          codespell -w --skip="*.pulsar.go,*.pb.go,*.pb.gw.go,*.cosmos_orm.go,*.json,*.git,*.js,crypto/keys,fuzz,*.h,proto/tendermint,*.bin,go.sum,go.mod" --ignore-words=.github/.codespellignore
+          codespell -w --skip="*.pulsar.go,*.pb.go,*.pb.gw.go,*.cosmos_orm.go,*.json,*.git,*.js,crypto/keys,fuzz,*.h,proto/tendermint,*.bin,go.sum,go.mod,.github" --ignore-words=.github/.codespellignore
       - uses: peter-evans/create-pull-request@v7
         if: github.event_name != 'pull_request'
         with:
-          token: ${{ secrets.PRBOT_PAT }}
           commit-message: "chore: spelling errors fixes"
           title: "chore: fix spelling errors"
           branch: "bot/fix-typos"

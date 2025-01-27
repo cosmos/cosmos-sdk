@@ -20,7 +20,7 @@ type genesisMM interface {
 }
 
 type ExportableApp interface {
-	ExportAppStateAndValidators([]string) (v2.ExportedApp, error)
+	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string) (v2.ExportedApp, error)
 	LoadHeight(uint64) error
 }
 

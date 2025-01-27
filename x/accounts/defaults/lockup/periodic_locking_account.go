@@ -81,12 +81,6 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		if err != nil {
 			return nil, err
 		}
-
-		// Set initial value for all withdrawed token
-		err = pva.WithdrawedCoins.Set(ctx, coin.Denom, math.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	bondDenom, err := getStakingDenom(ctx)
@@ -132,12 +126,6 @@ func (pva *PeriodicLockingAccount) SendCoins(ctx context.Context, msg *lockuptyp
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
 	return pva.BaseLockup.SendCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
-}
-
-func (pva *PeriodicLockingAccount) WithdrawUnlockedCoins(ctx context.Context, msg *lockuptypes.MsgWithdraw) (
-	*lockuptypes.MsgWithdrawResponse, error,
-) {
-	return pva.BaseLockup.WithdrawUnlockedCoins(ctx, msg, pva.GetLockedCoinsWithDenoms)
 }
 
 // IteratePeriods iterates over all the Periods entries.
@@ -336,11 +324,11 @@ func (pva PeriodicLockingAccount) RegisterInitHandler(builder *accountstd.InitBu
 func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, pva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, pva.SendCoins)
-	accountstd.RegisterExecuteHandler(builder, pva.WithdrawUnlockedCoins)
 	pva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, pva.QueryLockupAccountInfo)
 	accountstd.RegisterQueryHandler(builder, pva.QueryLockingPeriods)
+	pva.BaseLockup.RegisterQueryHandlers(builder)
 }

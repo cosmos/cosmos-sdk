@@ -2,12 +2,12 @@
 package math
 
 import (
-	"errors"
+	"fmt"
 
-	"github.com/cockroachdb/apd/v2"
+	"github.com/cockroachdb/apd/v3"
 
 	errorsmod "cosmossdk.io/errors"
-	grouperrors "cosmossdk.io/x/group/errors"
+	"cosmossdk.io/x/group/errors"
 )
 
 // Dec is a wrapper struct around apd.Decimal that does no mutation of apd.Decimal's when performing
@@ -23,10 +23,10 @@ type Dec struct {
 func NewPositiveDecFromString(s string) (Dec, error) {
 	d, err := NewDecFromString(s)
 	if err != nil {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrap(err.Error())
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
 	if !d.IsPositive() {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrapf("expected a positive decimal, got %s", s)
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a positive decimal, got %s", s)
 	}
 	return d, nil
 }
@@ -34,10 +34,10 @@ func NewPositiveDecFromString(s string) (Dec, error) {
 func NewNonNegativeDecFromString(s string) (Dec, error) {
 	d, err := NewDecFromString(s)
 	if err != nil {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrap(err.Error())
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
 	if d.IsNegative() {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrapf("expected a non-negative decimal, got %s", s)
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a non-negative decimal, got %s", s)
 	}
 	return d, nil
 }
@@ -51,11 +51,11 @@ func (x Dec) IsPositive() bool {
 func NewDecFromString(s string) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
 	if err != nil {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrap(err.Error())
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
 
 	if d.Form != apd.Finite {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrapf("expected a finite decimal, got %s", s)
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a finite decimal, got %s", s)
 	}
 
 	return Dec{*d}, nil
@@ -136,7 +136,7 @@ func SubNonNegative(x, y Dec) (Dec, error) {
 	}
 
 	if z.IsNegative() {
-		return z, errors.New("result negative during non-negative subtraction")
+		return z, fmt.Errorf("result negative during non-negative subtraction")
 	}
 
 	return z, nil

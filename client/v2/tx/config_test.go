@@ -111,7 +111,7 @@ func Test_newHandlerMap(t *testing.T) {
 				Decoder:               decoder,
 				Cdc:                   cdc,
 				ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
-				EnablesSignModes:      []apitxsigning.SignMode{apitxsigning.SignMode_SIGN_MODE_DIRECT},
+				EnabledSignModes:      []apitxsigning.SignMode{apitxsigning.SignMode_SIGN_MODE_DIRECT},
 			},
 		},
 		{
@@ -136,7 +136,7 @@ func Test_newHandlerMap(t *testing.T) {
 			handlerMap, err := newHandlerMap(tt.opts, signingCtx)
 			require.NoError(t, err)
 			require.NotNil(t, handlerMap)
-			require.Equal(t, len(handlerMap.SupportedModes()), len(tt.opts.EnablesSignModes)+len(tt.opts.CustomSignModes))
+			require.Equal(t, len(handlerMap.SupportedModes()), len(tt.opts.EnabledSignModes)+len(tt.opts.CustomSignModes))
 		})
 	}
 }

@@ -1,10 +1,15 @@
 package keyring
 
 import (
-	"context"
+	"io"
+
+	"github.com/spf13/pflag"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/core/address"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -20,9 +25,32 @@ type KeyringImpl struct {
 	k Keyring
 }
 
-// NewKeyringInContext returns a new context with the keyring set.
-func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
-	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k))
+// NewKeyringFromFlags creates a new Keyring instance based on command-line flags.
+// It retrieves the keyring backend and directory from flags, creates a new keyring,
+// and wraps it with an AutoCLI-compatible interface.
+func NewKeyringFromFlags(flagSet *pflag.FlagSet, ac address.Codec, input io.Reader, cdc codec.Codec, opts ...keyring.Option) (Keyring, error) {
+	backEnd, err := flagSet.GetString("keyring-backend")
+	if err != nil {
+		return nil, err
+	}
+
+	keyringDir, err := flagSet.GetString("keyring-dir")
+	if err != nil {
+		return nil, err
+	}
+	if keyringDir == "" {
+		keyringDir, err = flagSet.GetString("home")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	k, err := keyring.New("autoclikeyring", backEnd, keyringDir, input, cdc, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return keyring.NewAutoCLIKeyring(k, ac)
 }
 
 func NewKeyringImpl(k Keyring) *KeyringImpl {

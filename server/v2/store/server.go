@@ -23,8 +23,8 @@ const ServerName = "store"
 
 // Server manages store config and contains prune & snapshot commands
 type Server[T transaction.Tx] struct {
-	config  *root.Config
-	backend storev2.Backend
+	config *root.Config
+	store  storev2.Backend
 }
 
 func New[T transaction.Tx](store storev2.Backend, cfg server.ConfigMap) (*Server[T], error) {
@@ -33,8 +33,8 @@ func New[T transaction.Tx](store storev2.Backend, cfg server.ConfigMap) (*Server
 		return nil, err
 	}
 	return &Server[T]{
-		backend: store,
-		config:  config,
+		store:  store,
+		config: config,
 	}, nil
 }
 
@@ -60,6 +60,7 @@ func (s *Server[T]) CLICommands() serverv2.CLIConfig {
 			s.DumpArchiveCmd(),
 			s.LoadArchiveCmd(),
 			s.RestoreSnapshotCmd(),
+			s.ModuleHashByHeightQuery(),
 		},
 	}
 }
@@ -78,9 +79,7 @@ func (s *Server[T]) Config() any {
 // An empty home directory *is* permitted at this stage, but attempting to build
 // the store with an empty home directory will fail.
 func UnmarshalConfig(cfg map[string]any) (*root.Config, error) {
-	config := &root.Config{
-		Options: root.DefaultStoreOptions(),
-	}
+	config := root.DefaultConfig()
 	if err := serverv2.UnmarshalSubConfig(cfg, ServerName, config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal store config: %w", err)
 	}

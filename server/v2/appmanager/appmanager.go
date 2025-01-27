@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"iter"
 
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
@@ -16,6 +17,8 @@ import (
 // It is responsible for interacting with stf and store.
 // Runtime/v2 is an extension of this interface.
 type AppManager[T transaction.Tx] interface {
+	TransactionFuzzer[T]
+
 	// InitGenesis initializes the genesis state of the application.
 	InitGenesis(
 		ctx context.Context,
@@ -53,6 +56,17 @@ type AppManager[T transaction.Tx] interface {
 	// independently of the db state. For example, it can be used to process a query with temporary
 	// and uncommitted state
 	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error)
+}
+
+// TransactionFuzzer defines an interface for processing simulated transactions and generating responses with state changes.
+type TransactionFuzzer[T transaction.Tx] interface {
+	// DeliverSims processes simulated transactions for a block and generates a response with potential state changes.
+	// The simsBuilder generates simulated transactions.
+	DeliverSims(
+		ctx context.Context,
+		block *server.BlockRequest[T],
+		simsBuilder func(ctx context.Context) iter.Seq[T],
+	) (*server.BlockResponse, corestore.WriterMap, error)
 }
 
 // Store defines the underlying storage behavior needed by AppManager.
@@ -107,7 +121,7 @@ func (a appManager[T]) InitGenesis(
 	txDecoder transaction.Codec[T],
 ) (*server.BlockResponse, corestore.WriterMap, error) {
 	var genTxs []T
-	genesisState, err := a.initGenesis(
+	genesisState, valUpdates, err := a.initGenesis(
 		ctx,
 		bytes.NewBuffer(initGenesisJSON),
 		func(jsonTx json.RawMessage) error {
@@ -122,6 +136,7 @@ func (a appManager[T]) InitGenesis(
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
 	}
+
 	// run block
 	blockRequest.Txs = genTxs
 
@@ -139,6 +154,17 @@ func (a appManager[T]) InitGenesis(
 	err = genesisState.ApplyStateChanges(stateChanges)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to apply block zero state changes to genesis state: %w", err)
+	}
+
+	// override validator updates with the ones from the init genesis state
+	// this triggers only when x/staking or another module that returns validator updates in InitGenesis
+	// otherwise, genutil validator updates takes precedence (returned from executing the genesis txs (as it implements appmodule.GenesisDecoder) in the end block)
+	if len(valUpdates) > 0 && len(blockResponse.ValidatorUpdates) > 0 {
+		return nil, nil, errors.New("validator updates returned from InitGenesis and genesis transactions, only one can be used")
+	}
+
+	if len(valUpdates) > 0 {
+		blockResponse.ValidatorUpdates = valUpdates
 	}
 
 	return blockResponse, genesisState, err
@@ -170,6 +196,29 @@ func (a appManager[T]) DeliverBlock(
 	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
 	if err != nil {
 		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
+	}
+
+	return blockResponse, newState, nil
+}
+
+// DeliverSims same as DeliverBlock for sims only.
+func (a appManager[T]) DeliverSims(
+	ctx context.Context,
+	block *server.BlockRequest[T],
+	simsBuilder func(ctx context.Context) iter.Seq[T],
+) (*server.BlockResponse, corestore.WriterMap, error) {
+	latestVersion, currentState, err := a.db.StateLatest()
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+	}
+
+	if latestVersion+1 != block.Height {
+		return nil, nil, fmt.Errorf("invalid DeliverSims height wanted %d, got %d", latestVersion+1, block.Height)
+	}
+
+	blockResponse, newState, err := a.stf.DeliverSims(ctx, block, currentState, simsBuilder)
+	if err != nil {
+		return nil, nil, fmt.Errorf("sims delivery failed: %w", err)
 	}
 
 	return blockResponse, newState, nil
@@ -207,19 +256,18 @@ func (a appManager[T]) SimulateWithState(ctx context.Context, state corestore.Re
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
 func (a appManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
+	var (
+		queryState corestore.ReaderMap
+		err        error
+	)
 	// if version is provided attempt to do a height query.
 	if version != 0 {
-		queryState, err := a.db.StateAt(version)
-		if err != nil {
-			return nil, err
-		}
-		return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
+		queryState, err = a.db.StateAt(version)
+	} else { // otherwise rely on latest available state.
+		_, queryState, err = a.db.StateLatest()
 	}
-
-	// otherwise rely on latest available state.
-	_, queryState, err := a.db.StateLatest()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid height: %w", err)
 	}
 	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 }

@@ -5,7 +5,7 @@ module cosmossdk.io/core
 
 go 1.23
 
-require cosmossdk.io/schema v0.3.0
+require cosmossdk.io/schema v1.0.0
 
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
 )
 
@@ -21,7 +22,7 @@ type (
 		ctx context.Context,
 		src io.Reader,
 		txHandler func(json.RawMessage) error,
-	) (store.WriterMap, error)
+	) (store.WriterMap, []appmodulev2.ValidatorUpdate, error)
 
 	// ExportGenesis is a function type that represents the export of the genesis state.
 	ExportGenesis func(ctx context.Context, version uint64) ([]byte, error)

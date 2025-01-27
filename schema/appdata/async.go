@@ -46,6 +46,13 @@ func AsyncListener(opts AsyncListenerOptions, listener Listener) Listener {
 	done := ctx.Done()
 
 	go func() {
+		defer func() {
+			close(packetChan)
+			if opts.DoneWaitGroup != nil {
+				opts.DoneWaitGroup.Done()
+			}
+		}()
+
 		if opts.DoneWaitGroup != nil {
 			opts.DoneWaitGroup.Add(1)
 		}
@@ -74,10 +81,6 @@ func AsyncListener(opts AsyncListenerOptions, listener Listener) Listener {
 				}
 
 			case <-done:
-				close(packetChan)
-				if opts.DoneWaitGroup != nil {
-					opts.DoneWaitGroup.Done()
-				}
 				return
 			}
 		}

@@ -39,7 +39,7 @@ func NewMockReader(v uint64, rs *MockStore, actor []byte) *MockReader {
 }
 
 func (roa *MockReader) Has(key []byte) (bool, error) {
-	val, err := roa.store.GetStateStorage().Has(roa.actor, roa.version, key)
+	val, err := roa.store.GetStateCommitment().Has(roa.actor, roa.version, key)
 	if err != nil {
 		return false, err
 	}
@@ -48,7 +48,7 @@ func (roa *MockReader) Has(key []byte) (bool, error) {
 }
 
 func (roa *MockReader) Get(key []byte) ([]byte, error) {
-	result, err := roa.store.GetStateStorage().Get(roa.actor, roa.version, key)
+	result, err := roa.store.GetStateCommitment().Get(roa.actor, roa.version, key)
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +57,9 @@ func (roa *MockReader) Get(key []byte) ([]byte, error) {
 }
 
 func (roa *MockReader) Iterator(start, end []byte) (corestore.Iterator, error) {
-	return roa.store.GetStateStorage().Iterator(roa.actor, roa.version, start, end)
+	return roa.store.GetStateCommitment().Iterator(roa.actor, roa.version, start, end)
 }
 
 func (roa *MockReader) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
-	return roa.store.GetStateStorage().ReverseIterator(roa.actor, roa.version, start, end)
+	return roa.store.GetStateCommitment().ReverseIterator(roa.actor, roa.version, start, end)
 }

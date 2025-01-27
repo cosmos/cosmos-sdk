@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 const (
@@ -29,8 +31,8 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 	// scenario: test authz grant command
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address which will be used as granter
 	granterAddr := cli.GetKeyAddr("node0")
@@ -49,7 +51,7 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 	grantee6Addr := cli.AddKey("grantee6")
 	require.NotEqual(t, granterAddr, grantee6Addr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// query validator operator address
 	rsp := cli.CustomQuery("q", "staking", "validators")
@@ -202,7 +204,7 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			if tc.expErrMsg != "" {
 				if tc.queryTx {
 					rsp := cli.Run(cmd...)
-					RequireTxFailure(t, rsp)
+					systest.RequireTxFailure(t, rsp)
 					require.Contains(t, rsp, tc.expErrMsg)
 				} else {
 					assertErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
@@ -216,7 +218,7 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 				return
 			}
 			rsp := cli.RunAndWait(cmd...)
-			RequireTxSuccess(t, rsp)
+			systest.RequireTxSuccess(t, rsp)
 
 			// query granter-grantee grants
 			resp := cli.CustomQuery("q", "authz", "grants", granterAddr, tc.grantee)
@@ -237,8 +239,8 @@ func TestAuthzExecSendAuthorization(t *testing.T) {
 	// scenario: test authz exec send authorization
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address which will be used as granter
 	granterAddr := cli.GetKeyAddr("node0")
@@ -256,12 +258,12 @@ func TestAuthzExecSendAuthorization(t *testing.T) {
 
 	var initialAmount int64 = 10000000
 	initialBalance := fmt.Sprintf("%d%s", initialAmount, testDenom)
-	sut.ModifyGenesisCLI(t,
+	systest.Sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", granteeAddr, initialBalance},
 		[]string{"genesis", "add-genesis-account", allowedAddr, initialBalance},
 		[]string{"genesis", "add-genesis-account", newAccount, initialBalance},
 	)
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// query balances
 	granterBal := cli.QueryBalance(granterAddr, testDenom)
@@ -271,7 +273,7 @@ func TestAuthzExecSendAuthorization(t *testing.T) {
 	require.Equal(t, initialAmount, allowedAddrBal)
 
 	var spendLimitAmount int64 = 1000
-	expirationTime := time.Now().Add(time.Second * 10).Unix()
+	expirationTime := time.Now().Add(systest.Sut.BlockTime() * 10)
 
 	// test exec send authorization
 
@@ -279,10 +281,10 @@ func TestAuthzExecSendAuthorization(t *testing.T) {
 	rsp := cli.RunAndWait("tx", "authz", "grant", granteeAddr, "send",
 		"--spend-limit="+fmt.Sprintf("%d%s", spendLimitAmount, testDenom),
 		"--allow-list="+allowedAddr,
-		"--expiration="+fmt.Sprintf("%d", expirationTime),
+		"--expiration="+fmt.Sprintf("%d", expirationTime.Unix()),
 		"--fees=1"+testDenom,
 		"--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	// reduce fees of above tx from granter balance
 	granterBal--
 
@@ -329,12 +331,12 @@ func TestAuthzExecSendAuthorization(t *testing.T) {
 			cmd := msgSendExec(t, granterAddr, tc.grantee, tc.toAddr, testDenom, tc.amount)
 			if tc.expErrMsg != "" {
 				rsp := cli.Run(cmd...)
-				RequireTxFailure(t, rsp)
+				systest.RequireTxFailure(t, rsp)
 				require.Contains(t, rsp, tc.expErrMsg)
 				return
 			}
 			rsp := cli.RunAndWait(cmd...)
-			RequireTxSuccess(t, rsp)
+			systest.RequireTxSuccess(t, rsp)
 
 			// check granter balance equals to granterBal - transferredAmount
 			expGranterBal := granterBal - tc.amount
@@ -349,11 +351,15 @@ func TestAuthzExecSendAuthorization(t *testing.T) {
 	}
 
 	// test grant expiry
-	time.Sleep(time.Second * 10)
+	require.Eventually(t, func() bool {
+		resp := cli.CustomQuery("q", "authz", "grants", granterAddr, granteeAddr)
+		grants := gjson.Get(resp, "grants").Array()
+		return len(grants) == 0
+	}, 10*systest.Sut.BlockTime(), 200*time.Millisecond)
 
 	execSendCmd := msgSendExec(t, granterAddr, granteeAddr, allowedAddr, testDenom, 10)
 	rsp = cli.Run(execSendCmd...)
-	RequireTxFailure(t, rsp)
+	systest.RequireTxFailure(t, rsp)
 	require.Contains(t, rsp, "authorization not found")
 }
 
@@ -369,30 +375,33 @@ func TestAuthzExecGenericAuthorization(t *testing.T) {
 	// query balances
 	granterBal := cli.QueryBalance(granterAddr, testDenom)
 
-	expirationTime := time.Now().Add(time.Second * 5).Unix()
-	execSendCmd := msgSendExec(t, granterAddr, granteeAddr, allowedAddr, testDenom, 10)
+	expirationTime := time.Now().Add(systest.Sut.BlockTime() * 5)
 
 	// create generic authorization grant
-	rsp := cli.RunAndWait("tx", "authz", "grant", granteeAddr, "generic",
+	_ = cli.RunAndWait("tx", "authz", "grant", granteeAddr, "generic",
 		"--msg-type="+msgSendTypeURL,
-		"--expiration="+fmt.Sprintf("%d", expirationTime),
+		"--expiration="+fmt.Sprintf("%d", expirationTime.Unix()),
 		"--fees=1"+testDenom,
 		"--from", granterAddr)
-	RequireTxSuccess(t, rsp)
 	granterBal--
 
-	rsp = cli.RunAndWait(execSendCmd...)
-	RequireTxSuccess(t, rsp)
+	execSendCmd := msgSendExec(t, granterAddr, granteeAddr, allowedAddr, testDenom, 10)
+	_ = cli.RunAndWait(execSendCmd...)
 	// check granter balance equals to granterBal - transferredAmount
 	expGranterBal := granterBal - 10
 	require.Equal(t, expGranterBal, cli.QueryBalance(granterAddr, testDenom))
 
-	time.Sleep(time.Second * 5)
-
-	// check grants after expiration
-	resp := cli.CustomQuery("q", "authz", "grants", granterAddr, granteeAddr)
-	grants := gjson.Get(resp, "grants").Array()
-	require.Len(t, grants, 0)
+	// wait until block after expired has passed
+	maxWait := max(expirationTime.Sub(time.Now()), time.Nanosecond) + 5*systest.Sut.BlockTime()
+	require.Eventually(t, func() bool {
+		resp := cli.CustomQuery("q", "authz", "grants", granterAddr, granteeAddr)
+		grants := gjson.Get(resp, "grants").Array()
+		if len(grants) != 0 {
+			t.Log(time.Now().Format(time.RFC3339))
+			t.Log(resp)
+		}
+		return len(grants) == 0
+	}, maxWait, 200*time.Millisecond)
 }
 
 func TestAuthzExecDelegateAuthorization(t *testing.T) {
@@ -419,7 +428,7 @@ func TestAuthzExecDelegateAuthorization(t *testing.T) {
 		"--allowed-validators="+val1Addr,
 		"--fees=1"+testDenom,
 		"--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	// reduce fees of above tx from granter balance
 	granterBal--
 
@@ -478,12 +487,12 @@ func TestAuthzExecDelegateAuthorization(t *testing.T) {
 			cmd := append(append(execCmdArgs, execMsg.Name()), "--from="+tc.grantee)
 			if tc.expErrMsg != "" {
 				rsp := cli.Run(cmd...)
-				RequireTxFailure(t, rsp)
+				systest.RequireTxFailure(t, rsp)
 				require.Contains(t, rsp, tc.expErrMsg)
 				return
 			}
 			rsp := cli.RunAndWait(cmd...)
-			RequireTxSuccess(t, rsp)
+			systest.RequireTxSuccess(t, rsp)
 
 			// check granter balance equals to granterBal - transferredAmount
 			expGranterBal := granterBal - tc.amount
@@ -508,7 +517,7 @@ func TestAuthzExecUndelegateAuthorization(t *testing.T) {
 
 	// delegate some tokens
 	rsp = cli.RunAndWait("tx", "staking", "delegate", val1Addr, "10000"+testDenom, "--from="+granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// query delegated tokens count
 	resp := cli.CustomQuery("q", "staking", "delegation", granterAddr, val1Addr)
@@ -518,7 +527,7 @@ func TestAuthzExecUndelegateAuthorization(t *testing.T) {
 		"--allowed-validators="+val1Addr,
 		"--fees=1"+testDenom,
 		"--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	undelegateTestCases := []struct {
 		name      string
@@ -552,12 +561,12 @@ func TestAuthzExecUndelegateAuthorization(t *testing.T) {
 			cmd := []string{"tx", "authz", "exec", execMsg.Name(), "--from=" + tc.grantee}
 			if tc.expErrMsg != "" {
 				rsp := cli.Run(cmd...)
-				RequireTxFailure(t, rsp)
+				systest.RequireTxFailure(t, rsp)
 				require.Contains(t, rsp, tc.expErrMsg)
 				return
 			}
 			rsp := cli.RunAndWait(cmd...)
-			RequireTxSuccess(t, rsp)
+			systest.RequireTxSuccess(t, rsp)
 
 			// query delegation and check balance reduced
 			expectedAmount := delegatedAmount - tc.amount
@@ -569,7 +578,7 @@ func TestAuthzExecUndelegateAuthorization(t *testing.T) {
 
 	// revoke existing grant
 	rsp = cli.RunAndWait("tx", "authz", "revoke", granteeAddr, msgUndelegateTypeURL, "--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// check grants between granter and grantee after revoking
 	resp = cli.CustomQuery("q", "authz", "grants", granterAddr, granteeAddr)
@@ -592,14 +601,14 @@ func TestAuthzExecRedelegateAuthorization(t *testing.T) {
 
 	// delegate some tokens
 	rsp = cli.RunAndWait("tx", "staking", "delegate", val1Addr, "10000"+testDenom, "--from="+granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// test exec redelegate authorization
 	rsp = cli.RunAndWait("tx", "authz", "grant", granteeAddr, "redelegate",
 		fmt.Sprintf("--allowed-validators=%s,%s", val1Addr, val2Addr),
 		"--fees=1"+testDenom,
 		"--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	var redelegationAmount int64 = 10
 
@@ -609,7 +618,7 @@ func TestAuthzExecRedelegateAuthorization(t *testing.T) {
 
 	redelegateCmd := []string{"tx", "authz", "exec", execMsg.Name(), "--from=" + granteeAddr, "--gas=500000", "--fees=10stake"}
 	rsp = cli.RunAndWait(redelegateCmd...)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// query new delegation and check balance increased
 	resp := cli.CustomQuery("q", "staking", "delegation", granterAddr, val2Addr)
@@ -618,7 +627,7 @@ func TestAuthzExecRedelegateAuthorization(t *testing.T) {
 
 	// revoke all existing grants
 	rsp = cli.RunAndWait("tx", "authz", "revoke-all", "--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// check grants after revoking
 	resp = cli.CustomQuery("q", "authz", "grants-by-granter", granterAddr)
@@ -640,28 +649,28 @@ func TestAuthzGRPCQueries(t *testing.T) {
 	rsp := cli.RunAndWait("tx", "authz", "grant", grantee1Addr, "send",
 		"--spend-limit=10000"+testDenom,
 		"--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	grant1 := fmt.Sprintf(`"authorization":{"@type":"%s","spend_limit":[{"denom":"%s","amount":"10000"}],"allow_list":[]},"expiration":null`, sendAuthzTypeURL, testDenom)
 
 	rsp = cli.RunAndWait("tx", "authz", "grant", grantee2Addr, "send",
 		"--spend-limit=1000"+testDenom,
 		"--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	grant2 := fmt.Sprintf(`"authorization":{"@type":"%s","spend_limit":[{"denom":"%s","amount":"1000"}],"allow_list":[]},"expiration":null`, sendAuthzTypeURL, testDenom)
 
 	rsp = cli.RunAndWait("tx", "authz", "grant", grantee2Addr, "generic",
 		"--msg-type="+msgVoteTypeURL,
 		"--from", granterAddr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	grant3 := fmt.Sprintf(`"authorization":{"@type":"%s","msg":"%s"},"expiration":null`, genericAuthzTypeURL, msgVoteTypeURL)
 
 	rsp = cli.RunAndWait("tx", "authz", "grant", grantee2Addr, "generic",
 		"--msg-type="+msgDelegateTypeURL,
 		"--from", grantee1Addr)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	grant4 := fmt.Sprintf(`"authorization":{"@type":"%s","msg":"%s"},"expiration":null`, genericAuthzTypeURL, msgDelegateTypeURL)
 
-	baseurl := sut.APIAddress()
+	baseurl := systest.Sut.APIAddress()
 
 	// test query grant grpc endpoint
 	grantURL := baseurl + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
@@ -671,84 +680,84 @@ func TestAuthzGRPCQueries(t *testing.T) {
 	invalidMsgTypeOutput := `{"code":2, "message":"codespace authz code 2: authorization not found: authorization not found for invalidMsg type", "details":[]}`
 	expGrantOutput := fmt.Sprintf(`{"grants":[{%s}],"pagination":null}`, grant1)
 
-	grantTestCases := []RestTestCase{
+	grantTestCases := []systest.RestTestCase{
 		{
-			"invalid granter address",
-			fmt.Sprintf(grantURL, "invalid_granter", grantee1Addr, msgSendTypeURL),
-			http.StatusInternalServerError,
-			bech32FailOutput,
+			Name:       "invalid granter address",
+			Url:        fmt.Sprintf(grantURL, "invalid_granter", grantee1Addr, msgSendTypeURL),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     bech32FailOutput,
 		},
 		{
-			"invalid grantee address",
-			fmt.Sprintf(grantURL, granterAddr, "invalid_grantee", msgSendTypeURL),
-			http.StatusInternalServerError,
-			bech32FailOutput,
+			Name:       "invalid grantee address",
+			Url:        fmt.Sprintf(grantURL, granterAddr, "invalid_grantee", msgSendTypeURL),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     bech32FailOutput,
 		},
 		{
-			"with empty granter",
-			fmt.Sprintf(grantURL, "", grantee1Addr, msgSendTypeURL),
-			http.StatusInternalServerError,
-			emptyStrOutput,
+			Name:       "with empty granter",
+			Url:        fmt.Sprintf(grantURL, "", grantee1Addr, msgSendTypeURL),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     emptyStrOutput,
 		},
 		{
-			"with empty grantee",
-			fmt.Sprintf(grantURL, granterAddr, "", msgSendTypeURL),
-			http.StatusInternalServerError,
-			emptyStrOutput,
+			Name:       "with empty grantee",
+			Url:        fmt.Sprintf(grantURL, granterAddr, "", msgSendTypeURL),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     emptyStrOutput,
 		},
 		{
-			"invalid msg-type",
-			fmt.Sprintf(grantURL, granterAddr, grantee1Addr, "invalidMsg"),
-			http.StatusInternalServerError,
-			invalidMsgTypeOutput,
+			Name:    "invalid msg-type",
+			Url:     fmt.Sprintf(grantURL, granterAddr, grantee1Addr, "invalidMsg"),
+			ExpCode: http.StatusInternalServerError,
+			ExpOut:  invalidMsgTypeOutput,
 		},
 		{
-			"valid grant query",
-			fmt.Sprintf(grantURL, granterAddr, grantee1Addr, msgSendTypeURL),
-			http.StatusOK,
-			expGrantOutput,
+			Name:    "valid grant query",
+			Url:     fmt.Sprintf(grantURL, granterAddr, grantee1Addr, msgSendTypeURL),
+			ExpCode: http.StatusOK,
+			ExpOut:  expGrantOutput,
 		},
 	}
 
-	RunRestQueries(t, grantTestCases)
+	systest.RunRestQueriesIgnoreNumbers(t, grantTestCases...)
 
 	// test query grants grpc endpoint
 	grantsURL := baseurl + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 
-	grantsTestCases := []RestTestCase{
+	grantsTestCases := []systest.RestTestCase{
 		{
-			"expect single grant",
-			fmt.Sprintf(grantsURL, granterAddr, grantee1Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"1"}}`, grant1),
+			Name:    "expect single grant",
+			Url:     fmt.Sprintf(grantsURL, granterAddr, grantee1Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"1"}}`, grant1),
 		},
 		{
-			"expect two grants",
-			fmt.Sprintf(grantsURL, granterAddr, grantee2Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"2"}}`, grant2, grant3),
+			Name:    "expect two grants",
+			Url:     fmt.Sprintf(grantsURL, granterAddr, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"2"}}`, grant2, grant3),
 		},
 		{
-			"expect single grant with pagination",
-			fmt.Sprintf(grantsURL+"&pagination.limit=1", granterAddr, grantee2Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":"L2Nvc21vcy5nb3YudjEuTXNnVm90ZQ==","total":"0"}}`, grant2),
+			Name:    "expect single grant with pagination",
+			Url:     fmt.Sprintf(grantsURL+"&pagination.limit=1", granterAddr, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":"L2Nvc21vcy5nb3YudjEuTXNnVm90ZQ==","total":"0"}}`, grant2),
 		},
 		{
-			"expect single grant with pagination limit and offset",
-			fmt.Sprintf(grantsURL+"&pagination.limit=1&pagination.offset=1", granterAddr, grantee2Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant3),
+			Name:    "expect single grant with pagination limit and offset",
+			Url:     fmt.Sprintf(grantsURL+"&pagination.limit=1&pagination.offset=1", granterAddr, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant3),
 		},
 		{
-			"expect two grants with pagination",
-			fmt.Sprintf(grantsURL+"&pagination.limit=2", granterAddr, grantee2Addr),
-			http.StatusOK,
-			fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant2, grant3),
+			Name:    "expect two grants with pagination",
+			Url:     fmt.Sprintf(grantsURL+"&pagination.limit=2", granterAddr, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant2, grant3),
 		},
 	}
 
-	RunRestQueries(t, grantsTestCases)
+	systest.RunRestQueries(t, grantsTestCases...)
 
 	// test query grants by granter grpc endpoint
 	grantsByGranterURL := baseurl + "/cosmos/authz/v1beta1/grants/granter/%s"
@@ -757,64 +766,64 @@ func TestAuthzGRPCQueries(t *testing.T) {
 	granterQueryOutput := fmt.Sprintf(`{"grants":[{"granter":"%s","grantee":"%s",%s}],"pagination":{"next_key":null,"total":"1"}}`,
 		grantee1Addr, grantee2Addr, grant4)
 
-	granterTestCases := []RestTestCase{
+	granterTestCases := []systest.RestTestCase{
 		{
-			"invalid granter account address",
-			fmt.Sprintf(grantsByGranterURL, "invalid address"),
-			http.StatusInternalServerError,
-			decodingFailedOutput,
+			Name:       "invalid granter account address",
+			Url:        fmt.Sprintf(grantsByGranterURL, "invalid address"),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     decodingFailedOutput,
 		},
 		{
-			"no authorizations found from granter",
-			fmt.Sprintf(grantsByGranterURL, grantee2Addr),
-			http.StatusOK,
-			noAuthorizationsOutput,
+			Name:    "no authorizations found from granter",
+			Url:     fmt.Sprintf(grantsByGranterURL, grantee2Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  noAuthorizationsOutput,
 		},
 		{
-			"valid granter query",
-			fmt.Sprintf(grantsByGranterURL, grantee1Addr),
-			http.StatusOK,
-			granterQueryOutput,
+			Name:    "valid granter query",
+			Url:     fmt.Sprintf(grantsByGranterURL, grantee1Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  granterQueryOutput,
 		},
 	}
 
-	RunRestQueries(t, granterTestCases)
+	systest.RunRestQueriesIgnoreNumbers(t, granterTestCases...)
 
 	// test query grants by grantee grpc endpoint
 	grantsByGranteeURL := baseurl + "/cosmos/authz/v1beta1/grants/grantee/%s"
 	grantee1GrantsOutput := fmt.Sprintf(`{"grants":[{"granter":"%s","grantee":"%s",%s}],"pagination":{"next_key":null,"total":"1"}}`, granterAddr, grantee1Addr, grant1)
 
-	granteeTestCases := []RestTestCase{
+	granteeTestCases := []systest.RestTestCase{
 		{
-			"invalid grantee account address",
-			fmt.Sprintf(grantsByGranteeURL, "invalid address"),
-			http.StatusInternalServerError,
-			decodingFailedOutput,
+			Name:       "invalid grantee account address",
+			Url:        fmt.Sprintf(grantsByGranteeURL, "invalid address"),
+			ExpCodeGTE: http.StatusBadRequest,
+			ExpOut:     decodingFailedOutput,
 		},
 		{
-			"no authorizations found from grantee",
-			fmt.Sprintf(grantsByGranteeURL, granterAddr),
-			http.StatusOK,
-			noAuthorizationsOutput,
+			Name:    "no authorizations found from grantee",
+			Url:     fmt.Sprintf(grantsByGranteeURL, granterAddr),
+			ExpCode: http.StatusOK,
+			ExpOut:  noAuthorizationsOutput,
 		},
 		{
-			"valid grantee query",
-			fmt.Sprintf(grantsByGranteeURL, grantee1Addr),
-			http.StatusOK,
-			grantee1GrantsOutput,
+			Name:    "valid grantee query",
+			Url:     fmt.Sprintf(grantsByGranteeURL, grantee1Addr),
+			ExpCode: http.StatusOK,
+			ExpOut:  grantee1GrantsOutput,
 		},
 	}
 
-	RunRestQueries(t, granteeTestCases)
+	systest.RunRestQueriesIgnoreNumbers(t, granteeTestCases...)
 }
 
-func setupChain(t *testing.T) (*CLIWrapper, string, string) {
+func setupChain(t *testing.T) (*systest.CLIWrapper, string, string) {
 	t.Helper()
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
-	require.GreaterOrEqual(t, cli.nodesCount, 2)
+	require.GreaterOrEqual(t, systest.Sut.NodesCount(), 2)
 
 	// get validators' address which will be used as granter and grantee
 	granterAddr := cli.GetKeyAddr("node0")
@@ -822,7 +831,7 @@ func setupChain(t *testing.T) (*CLIWrapper, string, string) {
 	granteeAddr := cli.GetKeyAddr("node1")
 	require.NotEmpty(t, granteeAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	return cli, granterAddr, granteeAddr
 }

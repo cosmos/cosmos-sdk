@@ -29,7 +29,7 @@ simd keys add owner
 Normally the creator must have enough token to grant to the lockup account during the lockup account init process. The owner wallet should be associated with the individual that the creator want to grant the fund to.
 
 Now, the creator can craft the lockup account init messages. This message depend on what type of lockup account the creator want to create.
-For continous, delayed, permanent locking account:
+For continuous, delayed, permanent locking account:
 
 ```json
 {
@@ -40,7 +40,7 @@ For continous, delayed, permanent locking account:
 ```
 
 :::info
-`start_time` is only needed for continous locking account init process. For the other two, you dont have to set it in. Error will returned if `start_time` is not provided when creating continous locking account*
+`start_time` is only needed for continuous locking account init process. For the other two, you dont have to set it in. Error will returned if `start_time` is not provided when creating continuous locking account*
 :::
  
 For periodic locking account:
@@ -215,7 +215,7 @@ simd tx accounts query <account_address> <query-request-type-url> $querycontents
 
 The query request type url for this query is `cosmos.accounts.defaults.lockup.QueryLockupAccountInfoRequest`. And query json file can be an empty object since `QueryLockupAccountInfoRequest` does not required an input.
 
-Account informations including:
+Account information including:
 
 * original locked amount
 

@@ -27,7 +27,7 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * All links must point to their respective pull request.
     * The `CHANGELOG.md` must contain only the changes of that specific released version. All other changelog entries must be deleted and linked to the `main` branch changelog ([example](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md#previous-versions)).
     * Create release notes, in `RELEASE_NOTES.md`, highlighting the new features and changes in the version. This is needed so the bot knows which entries to add to the release page on GitHub.
-    * Additionally verify that the `UPGRADING.md` file is up to date and contains all the necessary information for upgrading to the new version.
+    * Additionally verify that the `UPGRADING.md` file is up-to-date and contains all the necessary information for upgrading to the new version.
 * Remove GitHub workflows that should not be in the release branch
     * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests`, SDK and modules tests).
         * These packages are tracked and tested directly on main.
@@ -57,7 +57,7 @@ A _patch release_ is an increment of the patch number (eg: `v1.2.0` → `v1.2.1`
 
 **Patch release must not break API nor consensus.**
 
-Updates to the release branch should come from `main` by backporting PRs (usually done by automatic cherry pick followed by a PRs to the release branch). The backports must be marked using `backport/Y` label in PR for main.
+Updates to the release branch should come from `main` by backporting PRs (usually done by automatic cherry-pick followed by PRs to the release branch). The backports must be marked using `backport/Y` label in PR for main.
 It is the PR author's responsibility to fix merge conflicts, update changelog entries, and
 ensure CI passes. If a PR originates from an external contributor, a core team member assumes
 responsibility to perform this process instead of the original author.
@@ -236,6 +236,10 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 * When a module is supposed to be used in an app (e.g `x/` modules), due to the dependency on the SDK, tagging a new version of a module must be done from a Cosmos SDK release branch. A compatibility matrix must be provided in the `README.md` of that module with the corresponding versions.
 * Modules that import the SDK but do not need to be imported in an app (`e.g. cosmovisor`) must be released from the `main` branch and follow the process defined below.
 
+> [!IMPORTANT]  
+> A module depending on a non stabilized version of `github.com/cosmos/cosmos-sdk` (any version prior to the removal of baseapp, runtime, server) SHOULD NOT be tagged following semver.
+> For instance, modules are still using 0ver until the main `github.com/cosmos/cosmos-sdk` has stabilized.
+
 ### Modules that do not depend on the Cosmos SDK
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
@@ -246,7 +250,9 @@ The Cosmos SDK uses a monorepo structure with multiple Go modules. Some componen
 
 Here's the strategy for managing this structure:
 
-All modules that do not depend on the Cosmos SDK and tagged from main in a release branch must be removed from the release branch.
+All modules that do not depend on the Cosmos SDK and tagged from main in a release branch **must be removed from the release branch**.
+
+There are two exceptions to this rule, due to the stabilization of core v1: `cosmossdk.io/x/tx` and `cosmossdk.io/store` are still tagged from the `release/v0.50.x` branch for `v0.50.x` releases.
 
 ### Rationale
 

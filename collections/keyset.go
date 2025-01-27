@@ -21,7 +21,17 @@ func WithKeySetUncheckedValue() func(opt *keySetOptions) {
 	}
 }
 
-type keySetOptions struct{ uncheckedValue bool }
+// WithKeySetSecondaryIndex changes the behavior of the KeySet to be a secondary index.
+func WithKeySetSecondaryIndex() func(opt *keySetOptions) {
+	return func(opt *keySetOptions) {
+		opt.isSecondaryIndex = true
+	}
+}
+
+type keySetOptions struct {
+	uncheckedValue   bool
+	isSecondaryIndex bool
+}
 
 // KeySet builds on top of a Map and represents a collection retaining only a set
 // of keys and no value. It can be used, for example, in an allow list.
@@ -44,7 +54,7 @@ func NewKeySet[K any](
 	if o.uncheckedValue {
 		vc = codec.NewAltValueCodec(vc, func(_ []byte) (NoValue, error) { return NoValue{}, nil })
 	}
-	return (KeySet[K])(NewMap(schema, prefix, name, keyCodec, vc))
+	return (KeySet[K])(NewMap(schema, prefix, name, keyCodec, vc, withMapSecondaryIndex(o.isSecondaryIndex)))
 }
 
 // Set adds the key to the KeySet. Errors on encoding problems.

@@ -57,6 +57,10 @@ func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		}
 	}
 
+	if a.feeTxValidator == nil {
+		panic("feeTxValidator cannot be nil")
+	}
+
 	if err := a.feeTxValidator.ValidateTx(ctx, tx); err != nil {
 		return err
 	}

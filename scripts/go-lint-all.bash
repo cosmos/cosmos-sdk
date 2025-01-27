@@ -2,13 +2,10 @@
 
 set -e
 
-REPO_ROOT="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &>/dev/null && pwd)"
 export REPO_ROOT
 
 LINT_TAGS="e2e,ledger,test_ledger_mock"
-if [[ ! -z "${ROCKSDB:-}" ]]; then
-  LINT_TAGS+=",rocksdb"
-fi
 export LINT_TAGS
 
 lint_module() {
@@ -21,11 +18,6 @@ lint_module() {
   fi
   echo "linting $(grep "^module" go.mod) [$(date -Iseconds -u)]"
   golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=${LINT_TAGS}
-
-  # always lint simapp with app_v1 build tag, otherwise it never gets linted
-  if [[ "$(grep "^module" go.mod)" == "module cosmossdk.io/simapp" ]]; then
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=app_v1
-  fi
 }
 export -f lint_module
 

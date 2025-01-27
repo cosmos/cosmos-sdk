@@ -1,91 +1,165 @@
 package tx
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
+	"github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/broadcast"
 	"cosmossdk.io/client/v2/broadcast/comet"
+	clientcontext "cosmossdk.io/client/v2/context"
 	"cosmossdk.io/client/v2/internal/account"
+	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/core/transaction"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// GenerateOrBroadcastTxCLIWithBroadcaster will either generate and print an unsigned transaction
+// GenerateAndBroadcastTxCLIWithBroadcaster will either generate and print an unsigned transaction
 // or sign it and broadcast it with the specified broadcaster returning an error upon failure.
-func GenerateOrBroadcastTxCLIWithBroadcaster(ctx client.Context, flagSet *pflag.FlagSet, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
-	if err := validateMessages(msgs...); err != nil {
-		return err
-	}
-
-	txf, err := newFactory(ctx, flagSet)
+func GenerateAndBroadcastTxCLIWithBroadcaster(
+	ctx context.Context,
+	conn grpc.ClientConn,
+	broadcaster broadcast.Broadcaster,
+	msgs ...transaction.Msg,
+) ([]byte, error) {
+	txf, err := initFactory(ctx, conn, msgs...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	genOnly, _ := flagSet.GetBool(flagGenerateOnly)
-	if genOnly {
-		return generateOnly(ctx, txf, msgs...)
+	err = generateTx(txf, msgs...)
+	if err != nil {
+		return nil, err
 	}
 
-	isDryRun, _ := flagSet.GetBool(flagDryRun)
-	if isDryRun {
-		return dryRun(txf, msgs...)
-	}
-
-	return BroadcastTx(ctx, txf, broadcaster, msgs...)
+	return BroadcastTx(ctx, txf, broadcaster)
 }
 
-// GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
+// GenerateAndBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it using default CometBFT broadcaster, returning an error upon failure.
-func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
-	cometBroadcaster, err := getCometBroadcaster(ctx, flagSet)
+func GenerateAndBroadcastTxCLI(ctx context.Context, conn grpc.ClientConn, msgs ...transaction.Msg) ([]byte, error) {
+	cBroadcaster, err := cometBroadcaster(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return GenerateOrBroadcastTxCLIWithBroadcaster(ctx, flagSet, cometBroadcaster, msgs...)
+	return GenerateAndBroadcastTxCLIWithBroadcaster(ctx, conn, cBroadcaster, msgs...)
+}
+
+// GenerateAndBroadcastTxCLIWithPrompt generates, signs and broadcasts a transaction after prompting the user for confirmation.
+// It takes a context, gRPC client connection, prompt function for user confirmation, and transaction messages.
+// The prompt function receives the unsigned transaction bytes and returns a boolean indicating user confirmation and any error.
+// Returns the broadcast response bytes and any error encountered.
+func GenerateAndBroadcastTxCLIWithPrompt(
+	ctx context.Context,
+	conn grpc.ClientConn,
+	prompt func([]byte) (bool, error),
+	msgs ...transaction.Msg,
+) ([]byte, error) {
+	txf, err := initFactory(ctx, conn, msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = generateTx(txf, msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	confirmed, err := askConfirmation(txf, prompt)
+	if err != nil {
+		return nil, err
+	}
+	if !confirmed {
+		return nil, nil
+	}
+
+	cBroadcaster, err := cometBroadcaster(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return BroadcastTx(ctx, txf, cBroadcaster)
+}
+
+// GenerateOnly generates an unsigned transaction without broadcasting it.
+// It initializes a transaction factory using the provided context, connection and messages,
+// then generates an unsigned transaction.
+// Returns the unsigned transaction bytes and any error encountered.
+func GenerateOnly(ctx context.Context, conn grpc.ClientConn, msgs ...transaction.Msg) ([]byte, error) {
+	txf, err := initFactory(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	return generateOnly(txf, msgs...)
+}
+
+// DryRun simulates a transaction without broadcasting it to the network.
+// It initializes a transaction factory using the provided context, connection and messages,
+// then performs a dry run simulation of the transaction.
+// Returns the simulation response bytes and any error encountered.
+func DryRun(ctx context.Context, conn grpc.ClientConn, msgs ...transaction.Msg) ([]byte, error) {
+	txf, err := initFactory(ctx, conn, msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	return dryRun(txf, msgs...)
+}
+
+// initFactory initializes a new transaction Factory and validates the provided messages.
+// It retrieves the client v2 context from the provided context, validates all messages,
+// and creates a new transaction Factory using the client context and connection.
+// Returns the initialized Factory and any error encountered.
+func initFactory(ctx context.Context, conn grpc.ClientConn, msgs ...transaction.Msg) (Factory, error) {
+	clientCtx, err := clientcontext.ClientContextFromGoContext(ctx)
+	if err != nil {
+		return Factory{}, err
+	}
+
+	if err := validateMessages(msgs...); err != nil {
+		return Factory{}, err
+	}
+
+	txf, err := newFactory(*clientCtx, conn)
+	if err != nil {
+		return Factory{}, err
+	}
+
+	return txf, nil
 }
 
 // getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.
-func getCometBroadcaster(ctx client.Context, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
-	url, _ := flagSet.GetString("node")
-	mode, _ := flagSet.GetString("broadcast-mode")
-	return comet.NewCometBFTBroadcaster(url, mode, ctx.Codec)
+func getCometBroadcaster(cdc codec.Codec, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
+	url, _ := flagSet.GetString(flags.FlagNode)
+	mode, _ := flagSet.GetString(flags.FlagBroadcastMode)
+	return comet.NewCometBFTBroadcaster(url, mode, cdc)
 }
 
 // newFactory creates a new transaction Factory based on the provided context and flag set.
 // It initializes a new CLI keyring, extracts transaction parameters from the flag set,
 // configures transaction settings, and sets up an account retriever for the transaction Factory.
-func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
-	k, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
-	if err != nil {
-		return Factory{}, err
-	}
-
+func newFactory(ctx clientcontext.Context, conn grpc.ClientConn) (Factory, error) {
 	txConfig, err := NewTxConfig(ConfigOptions{
 		AddressCodec:          ctx.AddressCodec,
-		Cdc:                   ctx.Codec,
+		Cdc:                   ctx.Cdc,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
-		EnablesSignModes:      ctx.TxConfig.SignModeHandler().SupportedModes(),
+		EnabledSignModes:      ctx.EnabledSignModes,
 	})
 	if err != nil {
 		return Factory{}, err
 	}
 
-	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
+	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, conn, ctx.Cdc.InterfaceRegistry())
 
-	txf, err := NewFactoryFromFlagSet(flagSet, k, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx)
+	txf, err := NewFactoryFromFlagSet(ctx.Flags, ctx.Keyring, ctx.Cdc, accRetriever, txConfig, ctx.AddressCodec, conn)
 	if err != nil {
 		return Factory{}, err
 	}
@@ -115,30 +189,29 @@ func validateMessages(msgs ...transaction.Msg) error {
 // generateOnly prepares the transaction and prints the unsigned transaction string.
 // It first calls Prepare on the transaction factory to set up any necessary pre-conditions.
 // If preparation is successful, it generates an unsigned transaction string using the provided messages.
-func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
+func generateOnly(txf Factory, msgs ...transaction.Msg) ([]byte, error) {
 	uTx, err := txf.UnsignedTxString(msgs...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return ctx.PrintString(uTx)
+	return []byte(uTx), nil
 }
 
 // dryRun performs a dry run of the transaction to estimate the gas required.
 // It prepares the transaction factory and simulates the transaction with the provided messages.
-func dryRun(txf Factory, msgs ...transaction.Msg) error {
+func dryRun(txf Factory, msgs ...transaction.Msg) ([]byte, error) {
 	_, gas, err := txf.Simulate(msgs...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: gas})
-	return err
+	return []byte(fmt.Sprintf(`{"gas_estimate": %d}`, gas)), nil
 }
 
 // SimulateTx simulates a tx and returns the simulation response obtained by the query.
-func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) (proto.Message, error) {
-	txf, err := newFactory(ctx, flagSet)
+func SimulateTx(ctx clientcontext.Context, conn grpc.ClientConn, msgs ...transaction.Msg) (proto.Message, error) {
+	txf, err := newFactory(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
@@ -147,10 +220,10 @@ func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.
 	return simulation, err
 }
 
-// BroadcastTx attempts to generate, sign and broadcast a transaction with the
-// given set of messages. It will also simulate gas requirements if necessary.
-// It will return an error upon failure.
-func BroadcastTx(clientCtx client.Context, txf Factory, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
+// generateTx generates an unsigned transaction using the provided transaction factory and messages.
+// If simulation and execution are enabled, it first calculates the gas requirements.
+// It then builds the unsigned transaction with the provided messages.
+func generateTx(txf Factory, msgs ...transaction.Msg) error {
 	if txf.simulateAndExecute() {
 		err := txf.calculateGas(msgs...)
 		if err != nil {
@@ -158,58 +231,29 @@ func BroadcastTx(clientCtx client.Context, txf Factory, broadcaster broadcast.Br
 		}
 	}
 
-	err := txf.BuildUnsignedTx(msgs...)
-	if err != nil {
-		return err
+	return txf.BuildUnsignedTx(msgs...)
+}
+
+// BroadcastTx attempts to sign and broadcast a transaction using the provided factory and broadcaster.
+// GenerateTx must be called first to prepare the transaction for signing.
+// This function then signs the transaction using the factory's signing capabilities, encodes it,
+// and finally broadcasts it using the provided broadcaster.
+func BroadcastTx(ctx context.Context, txf Factory, broadcaster broadcast.Broadcaster) ([]byte, error) {
+	if len(txf.tx.msgs) == 0 {
+		return nil, errors.New("no messages to broadcast")
 	}
 
-	if !clientCtx.SkipConfirm {
-		encoder := txf.txConfig.TxJSONEncoder()
-		if encoder == nil {
-			return errors.New("failed to encode transaction: tx json encoder is nil")
-		}
-
-		unsigTx, err := txf.getTx()
-		if err != nil {
-			return err
-		}
-		txBytes, err := encoder(unsigTx)
-		if err != nil {
-			return fmt.Errorf("failed to encode transaction: %w", err)
-		}
-
-		if err := clientCtx.PrintRaw(txBytes); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: %v\n%s\n", err, txBytes)
-		}
-
-		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncanceled transaction\n", err)
-			return err
-		}
-		if !ok {
-			_, _ = fmt.Fprintln(os.Stderr, "canceled transaction")
-			return nil
-		}
-	}
-
-	signedTx, err := txf.sign(clientCtx.CmdContext, true)
+	signedTx, err := txf.sign(ctx, true)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	txBytes, err := txf.txConfig.TxEncoder()(signedTx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	res, err := broadcaster.Broadcast(context.Background(), txBytes)
-	if err != nil {
-		return err
-	}
-
-	return clientCtx.PrintString(string(res))
+	return broadcaster.Broadcast(ctx, txBytes)
 }
 
 // countDirectSigners counts the number of DIRECT signers in a signature data.
@@ -231,6 +275,38 @@ func countDirectSigners(sigData SignatureData) int {
 	default:
 		panic("unreachable case")
 	}
+}
+
+// cometBroadcaster returns a broadcast.Broadcaster implementation that uses the CometBFT RPC client.
+// It extracts the client context from the provided context and uses it to create a CometBFT broadcaster.
+func cometBroadcaster(ctx context.Context) (broadcast.Broadcaster, error) {
+	c, err := clientcontext.ClientContextFromGoContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return getCometBroadcaster(c.Cdc, c.Flags)
+}
+
+// askConfirmation encodes the transaction as JSON and prompts the user for confirmation using the provided prompter function.
+// It returns the user's confirmation response and any error that occurred during the process.
+func askConfirmation(txf Factory, prompter func([]byte) (bool, error)) (bool, error) {
+	encoder := txf.txConfig.TxJSONEncoder()
+	if encoder == nil {
+		return false, errors.New("failed to encode transaction: tx json encoder is nil")
+	}
+
+	tx, err := txf.getTx()
+	if err != nil {
+		return false, err
+	}
+
+	txBytes, err := encoder(tx)
+	if err != nil {
+		return false, fmt.Errorf("failed to encode transaction: %w", err)
+	}
+
+	return prompter(txBytes)
 }
 
 // getSignMode returns the corresponding apitxsigning.SignMode based on the provided mode string.

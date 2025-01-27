@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/tx/decode"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -94,6 +95,16 @@ func (w wrappedTx) GetSignatures() ([]Signature, error) {
 	}
 
 	return signatures, nil
+}
+
+func (w wrappedTx) GetSigningTxData() (signing.TxData, error) {
+	return signing.TxData{
+		Body:                       w.Tx.Body,
+		AuthInfo:                   w.Tx.AuthInfo,
+		BodyBytes:                  w.TxRaw.BodyBytes,
+		AuthInfoBytes:              w.TxRaw.AuthInfoBytes,
+		BodyHasUnknownNonCriticals: w.TxBodyHasUnknownNonCriticals,
+	}, nil
 }
 
 // decodeAny decodes a protobuf Any message into a concrete proto.Message.

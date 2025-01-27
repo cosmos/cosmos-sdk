@@ -74,3 +74,7 @@ func (a MinimalAbstractedAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 func (a MinimalAbstractedAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QueryAuthenticateMethods) // implements account_abstraction
 }
+
+func ProvideAccount() accountstd.DepinjectAccount {
+	return accountstd.DIAccount("aa_minimal", NewMinimalAbstractedAccount)
+}

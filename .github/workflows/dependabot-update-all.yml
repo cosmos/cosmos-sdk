@@ -2,6 +2,7 @@ name: Dependabot Update All Go Modules
 on: pull_request
 
 permissions:
+  contents: write
   pull-requests: write
 
 env:
@@ -12,12 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
+      - name: Generate Token
+        uses: actions/create-github-app-token@c1a285145b9d317df6ced56c09f525b5c2b6f755 # v1
+        id: app-token
+        with:
+          app-id: "${{ secrets.APP_ID }}"
+          private-key: "${{ secrets.APP_PRIVATE_KEY }}"
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
-          # Secret to be added in the repo under Settings > Secrets > Dependabot
-          token: ${{ secrets.PRBOT_PAT }}
+          token: "${{ steps.app-token.outputs.token }}"
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23"

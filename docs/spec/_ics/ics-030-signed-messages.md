@@ -92,11 +92,11 @@ However, this will change and evolve to support additional application-specific
 structures that are human-readable and machine-verifiable.
 
 Thus, we can have a canonical JSON structure for signing Cosmos messages using
-the [JSON schema](http://json-schema.org/) specification as such:
+the [JSON schema](https://json-schema.org/) specification as such:
 
 ```json
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "https://json-schema.org/draft-04/schema#",
   "$id": "cosmos/signing/typeData/schema",
   "title": "The Cosmos signed message typed data schema.",
   "type": "object",

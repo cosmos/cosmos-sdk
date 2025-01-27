@@ -15,9 +15,9 @@ import (
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
 	"cosmossdk.io/x/group/keeper"
-	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1817,7 +1817,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		"with try exec": {
 			preRun: func(msgs []sdk.Msg) {
 				for i := 0; i < len(msgs); i++ {
-					s.bankKeeper.EXPECT().Send(gomock.Any(), msgs[i]).Return(nil, nil)
+					s.bankKeeper.EXPECT().Send(gomock.Any(), msgs[i]).Return(&banktypes.MsgSendResponse{}, nil)
 				}
 			},
 			req: &group.MsgSubmitProposal{
@@ -2054,8 +2054,8 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
-	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, testutil.MintModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
+	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, testutil.MintModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	req := &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
@@ -2154,7 +2154,7 @@ func (s *TestSuite) TestVote() {
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			doBefore: func(ctx context.Context) {
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msg).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msg).Return(&banktypes.MsgSendResponse{}, nil)
 			},
 			postRun: func(sdkCtx sdk.Context) {
 				s.bankKeeper.EXPECT().GetAllBalances(gomock.Any(), groupPolicy).Return(sdk.NewCoins(sdk.NewInt64Coin("test", 9900)))
@@ -2344,7 +2344,7 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msg).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msg).Return(&banktypes.MsgSendResponse{}, nil)
 
 				_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
@@ -2556,7 +2556,7 @@ func (s *TestSuite) TestExecProposal() {
 	}{
 		"proposal executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, nil)
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2574,7 +2574,7 @@ func (s *TestSuite) TestExecProposal() {
 		"proposal with multiple messages executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(2)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, nil).MaxTimes(2)
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2660,7 +2660,7 @@ func (s *TestSuite) TestExecProposal() {
 		"exec proposal at exactly MinExecutionPeriod should pass": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, nil)
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
 			srcBlockTime:      s.blockTime.Add(5 * time.Second), // min execution date is 5s later after s.blockTime
@@ -2674,7 +2674,7 @@ func (s *TestSuite) TestExecProposal() {
 		"prevent double execution when successful": {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, nil)
 
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -2696,7 +2696,7 @@ func (s *TestSuite) TestExecProposal() {
 		"rollback all msg updates on failure": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend2}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, nil)
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, errors.New("error"))
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
@@ -2716,10 +2716,10 @@ func (s *TestSuite) TestExecProposal() {
 				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)}) // MinExecutionPeriod is 5s
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, errors.New("error"))
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[0], ProposalId: myProposalID})
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(&banktypes.MsgSendResponse{}, nil)
 
 				s.Require().NoError(err)
-				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, testutil.MintModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 				return myProposalID
 			},
@@ -2793,7 +2793,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 101)},
 				}
 				msgs := []sdk.Msg{msgSend1}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, nil)
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
 			expErrMsg:         "load proposal: not found",
@@ -2806,7 +2806,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 102)},
 				}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(2)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, nil).MaxTimes(2)
 
 				msgs := []sdk.Msg{msgSend1, msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
@@ -2891,7 +2891,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				}
 
 				msgs := []sdk.Msg{msgSend1, msgSend2}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, errors.New("error"))
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, errors.New("error"))
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2915,7 +2915,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)})
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[0], ProposalId: myProposalID})
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(&banktypes.MsgSendResponse{}, nil)
 
 				s.Require().NoError(err)
 				return myProposalID
@@ -3194,7 +3194,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				}
 
 				// the proposal will pass and be executed
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(1)
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(&banktypes.MsgSendResponse{}, nil).MaxTimes(1)
 
 				msgs := []sdk.Msg{msgSend1}
 				proposalReq := &group.MsgSubmitProposal{

@@ -2,7 +2,7 @@ package types
 
 import (
 	"testing"
-	time "time"
+	"time"
 
 	"github.com/stretchr/testify/require"
 

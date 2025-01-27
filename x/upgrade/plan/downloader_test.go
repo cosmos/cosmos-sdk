@@ -133,7 +133,7 @@ func requireFileEquals(t *testing.T, path string, tf *TestFile) {
 	require.Equal(t, string(tf.Contents), string(file), "file contents")
 }
 
-// makeFileUrl converts the given path to a URL with the correct checksum query parameter.
+// makeFileURL converts the given path to a URL with the correct checksum query parameter.
 func makeFileURL(t *testing.T, path string) string {
 	t.Helper()
 	f, err := os.Open(path)

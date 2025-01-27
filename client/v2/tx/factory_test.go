@@ -35,7 +35,7 @@ func TestFactory_prepareTxParams(t *testing.T) {
 			name: "no error",
 			txParams: TxParameters{
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 			},
 		},
@@ -66,9 +66,9 @@ func TestFactory_BuildUnsignedTx(t *testing.T) {
 		{
 			name: "no error",
 			txParams: TxParameters{
-				chainID: "demo",
+				ChainID: "demo",
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 			},
 			msgs: []transaction.Msg{
@@ -81,9 +81,9 @@ func TestFactory_BuildUnsignedTx(t *testing.T) {
 		{
 			name: "fees and gas price provided",
 			txParams: TxParameters{
-				chainID: "demo",
+				ChainID: "demo",
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 				GasConfig: GasConfig{
 					gasPrices: []*base.DecCoin{
@@ -133,9 +133,9 @@ func TestFactory_calculateGas(t *testing.T) {
 		{
 			name: "no error",
 			txParams: TxParameters{
-				chainID: "demo",
+				ChainID: "demo",
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 				GasConfig: GasConfig{
 					gasAdjustment: 1,
@@ -175,9 +175,9 @@ func TestFactory_Simulate(t *testing.T) {
 		{
 			name: "no error",
 			txParams: TxParameters{
-				chainID: "demo",
+				ChainID: "demo",
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 				GasConfig: GasConfig{
 					gasAdjustment: 1,
@@ -219,9 +219,9 @@ func TestFactory_BuildSimTx(t *testing.T) {
 		{
 			name: "no error",
 			txParams: TxParameters{
-				chainID: "demo",
+				ChainID: "demo",
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 			},
 		},
@@ -251,10 +251,10 @@ func TestFactory_Sign(t *testing.T) {
 		{
 			name: "no error",
 			txParams: TxParameters{
-				chainID: "demo",
+				ChainID: "demo",
 				AccountConfig: AccountConfig{
-					fromName: "alice",
-					address:  addr,
+					FromName: "alice",
+					Address:  addr,
 				},
 			},
 		},
@@ -299,19 +299,19 @@ func TestFactory_getSignBytesAdapter(t *testing.T) {
 		{
 			name: "no error",
 			txParams: TxParameters{
-				chainID:  "demo",
-				signMode: apitxsigning.SignMode_SIGN_MODE_DIRECT,
+				ChainID:  "demo",
+				SignMode: apitxsigning.SignMode_SIGN_MODE_DIRECT,
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 			},
 		},
 		{
 			name: "signMode not specified",
 			txParams: TxParameters{
-				chainID: "demo",
+				ChainID: "demo",
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 			},
 			error: true,
@@ -341,7 +341,7 @@ func TestFactory_getSignBytesAdapter(t *testing.T) {
 
 			signerData := signing.SignerData{
 				Address:       addr,
-				ChainID:       f.txParams.chainID,
+				ChainID:       f.txParams.ChainID,
 				AccountNumber: 0,
 				Sequence:      0,
 				PubKey: &anypb.Any{
@@ -401,7 +401,7 @@ func TestFactory_WithFunctions(t *testing.T) {
 			name: "with gas",
 			txParams: TxParameters{
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 			},
 			withFunc: func(f *Factory) {
@@ -415,28 +415,28 @@ func TestFactory_WithFunctions(t *testing.T) {
 			name: "with sequence",
 			txParams: TxParameters{
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 			},
 			withFunc: func(f *Factory) {
 				f.WithSequence(10)
 			},
 			checkFunc: func(f *Factory) bool {
-				return f.txParams.AccountConfig.sequence == 10
+				return f.txParams.AccountConfig.Sequence == 10
 			},
 		},
 		{
 			name: "with account number",
 			txParams: TxParameters{
 				AccountConfig: AccountConfig{
-					address: addr,
+					Address: addr,
 				},
 			},
 			withFunc: func(f *Factory) {
 				f.WithAccountNumber(123)
 			},
 			checkFunc: func(f *Factory) bool {
-				return f.txParams.AccountConfig.accountNumber == 123
+				return f.txParams.AccountConfig.AccountNumber == 123
 			},
 		},
 	}

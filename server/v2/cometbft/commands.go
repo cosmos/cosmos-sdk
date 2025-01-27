@@ -388,7 +388,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 				return err
 			}
 			if height == 0 {
-				height, err = s.Consensus.store.GetLatestVersion()
+				height, err = s.store.GetLatestVersion()
 				if err != nil {
 					return err
 				}

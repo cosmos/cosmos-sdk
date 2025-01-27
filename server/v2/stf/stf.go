@@ -2,8 +2,11 @@ package stf
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"iter"
+	"strings"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
@@ -82,6 +85,16 @@ func New[T transaction.Tx](
 	}, nil
 }
 
+// DeliverSims entrypoint to processes sims transactions similar to DeliverBlock.
+func (s STF[T]) DeliverSims(
+	ctx context.Context,
+	block *server.BlockRequest[T],
+	state store.ReaderMap,
+	simsBuilder func(ctx context.Context) iter.Seq[T],
+) (blockResult *server.BlockResponse, newState store.WriterMap, err error) {
+	return s.deliverBlock(ctx, block, state, s.doSimsTXs(simsBuilder))
+}
+
 // DeliverBlock is our state transition function.
 // It takes a read only view of the state to apply the block to,
 // executes the block and returns the block results and the new state.
@@ -89,6 +102,23 @@ func (s STF[T]) DeliverBlock(
 	ctx context.Context,
 	block *server.BlockRequest[T],
 	state store.ReaderMap,
+) (blockResult *server.BlockResponse, newState store.WriterMap, err error) {
+	return s.deliverBlock(ctx, block, state, s.doDeliverTXs)
+}
+
+// common code path for DeliverSims and DeliverBlock
+type doInBlockDeliveryFn[T transaction.Tx] func(
+	ctx context.Context,
+	txs []T,
+	newState store.WriterMap,
+	hi header.Info,
+) ([]server.TxResult, error)
+
+func (s STF[T]) deliverBlock(
+	ctx context.Context,
+	block *server.BlockRequest[T],
+	state store.ReaderMap,
+	doInBlockDelivery doInBlockDeliveryFn[T],
 ) (blockResult *server.BlockResponse, newState store.WriterMap, err error) {
 	// creates a new branchFn state, from the readonly view of the state
 	// that can be written to.
@@ -139,14 +169,9 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// execute txs
-	txResults := make([]server.TxResult, len(block.Txs))
-	// TODO: skip first tx if vote extensions are enabled (marko)
-	for i, txBytes := range block.Txs {
-		// check if we need to return early or continue delivering txs
-		if err = isCtxCancelled(ctx); err != nil {
-			return nil, nil, err
-		}
-		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1))
+	txResults, err := doInBlockDelivery(exCtx, block.Txs, newState, hi)
+	if err != nil {
+		return nil, nil, err
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -163,6 +188,25 @@ func (s STF[T]) DeliverBlock(
 		TxResults:        txResults,
 		EndBlockEvents:   endBlockEvents,
 	}, newState, nil
+}
+
+func (s STF[T]) doDeliverTXs(
+	exCtx context.Context,
+	txs []T,
+	newState store.WriterMap,
+	hi header.Info,
+) ([]server.TxResult, error) {
+	// execute txs
+	txResults := make([]server.TxResult, len(txs))
+	// TODO: skip first tx if vote extensions are enabled (marko)
+	for i, txBytes := range txs {
+		// check if we need to return early or continue delivering txs
+		if err := isCtxCancelled(exCtx); err != nil {
+			return nil, err
+		}
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1))
+	}
+	return txResults, nil
 }
 
 // deliverTx executes a TX and returns the result.
@@ -204,6 +248,7 @@ func (s STF[T]) deliverTx(
 	events := make([]event.Event, 0)
 	// set the event indexes, set MsgIndex to 0 in validation events
 	for i, e := range validationEvents {
+		e.BlockNumber = uint64(hi.Height)
 		e.BlockStage = appdata.TxProcessingStage
 		e.TxIndex = txIndex
 		e.MsgIndex = 0
@@ -214,6 +259,7 @@ func (s STF[T]) deliverTx(
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
 	// set the TxIndex in the exec events
 	for _, e := range execEvents {
+		e.BlockNumber = uint64(hi.Height)
 		e.BlockStage = appdata.TxProcessingStage
 		e.TxIndex = txIndex
 		events = append(events, e)
@@ -356,10 +402,51 @@ func (s STF[T]) runTxMsgs(
 			e.EventIndex = int32(j + 1)
 			events = append(events, e)
 		}
+
+		// add message event
+		events = append(events, createMessageEvent(msg, int32(i+1), int32(len(execCtx.events)+1)))
 	}
 
 	consumed := execCtx.meter.Limit() - execCtx.meter.Remaining()
 	return msgResps, consumed, events, nil
+}
+
+// Create a message event, with two kv: action, the type url of the message
+// and module, the module of the message.
+func createMessageEvent(msg transaction.Msg, msgIndex, eventIndex int32) event.Event {
+	// Assumes that module name is the second element of the msg type URL
+	// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
+	// It returns an empty string if the input is not a valid type URL
+	getModuleNameFromTypeURL := func(input string) string {
+		moduleName := strings.Split(input, ".")
+		if len(moduleName) > 1 {
+			return moduleName[1]
+		}
+
+		return ""
+	}
+
+	return event.Event{
+		MsgIndex:   msgIndex,
+		EventIndex: eventIndex,
+		Type:       "message",
+		Attributes: func() ([]appdata.EventAttribute, error) {
+			typeURL := msgTypeURL(msg)
+			return []appdata.EventAttribute{
+				{Key: "action", Value: "/" + typeURL},
+				{Key: "module", Value: getModuleNameFromTypeURL(typeURL)},
+			}, nil
+		},
+		Data: func() (json.RawMessage, error) {
+			typeURL := msgTypeURL(msg)
+			attrs := []appdata.EventAttribute{
+				{Key: "action", Value: "/" + typeURL},
+				{Key: "module", Value: getModuleNameFromTypeURL(typeURL)},
+			}
+
+			return json.Marshal(attrs)
+		},
+	}
 }
 
 // preBlock executes the pre block logic.
@@ -373,6 +460,7 @@ func (s STF[T]) preBlock(
 	}
 
 	for i := range ctx.events {
+		ctx.events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		ctx.events[i].BlockStage = appdata.PreBlockStage
 		ctx.events[i].EventIndex = int32(i + 1)
 	}
@@ -390,6 +478,7 @@ func (s STF[T]) beginBlock(
 	}
 
 	for i := range ctx.events {
+		ctx.events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		ctx.events[i].BlockStage = appdata.BeginBlockStage
 		ctx.events[i].EventIndex = int32(i + 1)
 	}
@@ -413,6 +502,7 @@ func (s STF[T]) endBlock(
 	}
 	events = append(events, ctx.events...)
 	for i := range events {
+		events[i].BlockNumber = uint64(ctx.headerInfo.Height)
 		events[i].BlockStage = appdata.EndBlockStage
 		events[i].EventIndex = int32(i + 1)
 	}

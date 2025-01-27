@@ -5,6 +5,7 @@ import "cosmos/accounts/defaults/lockup/v1/lockup.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/x/accounts/defaults/lockup/v1";
 
@@ -43,6 +44,17 @@ message QueryLockupAccountInfoResponse {
   string owner = 8;
 }
 
+// QueryUnbondingEntriesRequest is used to query the lockup account unbonding entries.
+message QueryUnbondingEntriesRequest {
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
+// QueryUnbondingEntriesResponse returns the lockup account unbonding entries.
+message QueryUnbondingEntriesResponse {
+  // UnbondingEntry defines the list of unbonding entries.
+  repeated UnbondingEntry unbonding_entries = 1;
+}
+
 // QueryLockingPeriodsRequest is used to query the periodic lockup account locking periods.
 message QueryLockingPeriodsRequest {}
 
@@ -50,4 +62,13 @@ message QueryLockingPeriodsRequest {}
 message QueryLockingPeriodsResponse {
   // lockup_periods defines the value of the periodic lockup account locking periods.
   repeated Period locking_periods = 1;
+}
+
+// QuerySpendableAmountRequest is used to query the lockup account total spendable tokens.
+message QuerySpendableAmountRequest {}
+
+// QuerySpendableAmountResponse returns lockup account total spendable tokens.
+message QuerySpendableAmountResponse {
+  repeated cosmos.base.v1beta1.Coin spendable_tokens = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

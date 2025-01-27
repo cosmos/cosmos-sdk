@@ -48,7 +48,7 @@ In the past, validators [have had issues](https://github.com/cosmos/cosmos-sdk/i
 
 ### Firewall
 
-Nodes should not have all ports open to the public, this is a simple way to get DDOS'd. Secondly it is recommended by [CometBFT](github.com/cometbft/cometbft) to never expose ports that are not required to operate a node. 
+Nodes should not have all ports open to the public, this is a simple way to get DDOS'd. Secondly it is recommended by [CometBFT](https://github.com/cometbft/cometbft) to never expose ports that are not required to operate a node. 
 
 When setting up a firewall there are a few ports that can be open when operating a Cosmos SDK node. There is the CometBFT json-RPC, prometheus, p2p, remote signer and Cosmos SDK GRPC and REST. If the node is being operated as a node that does not offer endpoints to be used for submission or querying then a max of three endpoints are needed.
 
@@ -196,7 +196,7 @@ tmkms softsign import $HOME/tmkms/config/secrets/priv_validator_key.json $HOME/t
 
 At this point, it is necessary to delete the `priv_validator_key.json` from the validator node and the tmkms node. Since the key has been imported into tmkms (above) it is no longer necessary on the nodes. The key can be safely stored offline. 
 
-4. Modifiy the `tmkms.toml`. 
+4. Modify the `tmkms.toml`. 
 
 ```bash
 vim $HOME/tmkms/config/tmkms.toml

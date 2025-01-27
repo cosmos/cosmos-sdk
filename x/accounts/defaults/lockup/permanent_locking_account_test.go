@@ -40,7 +40,7 @@ func TestPermanentAccountDelegate(t *testing.T) {
 	acc := setupPermanentAccount(t, sdkCtx, ss)
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
 		Sender:           "owner",
-		ValidatorAddress: "val_address",
+		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
@@ -60,7 +60,7 @@ func TestPermanentAccountUndelegate(t *testing.T) {
 	// Delegate first
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
 		Sender:           "owner",
-		ValidatorAddress: "val_address",
+		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
@@ -72,10 +72,23 @@ func TestPermanentAccountUndelegate(t *testing.T) {
 	// Undelegate
 	_, err = acc.Undelegate(sdkCtx, &lockuptypes.MsgUndelegate{
 		Sender:           "owner",
-		ValidatorAddress: "val_address",
+		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
+
+	// sequence should be the previous one
+	entries, err := acc.UnbondEntries.Get(sdkCtx, valAddress)
+	require.NoError(t, err)
+	require.Len(t, entries.Entries, 1)
+	require.True(t, entries.Entries[0].Amount.Amount.Equal(math.NewInt(1)))
+	require.True(t, entries.Entries[0].ValidatorAddress == valAddress)
+
+	err = acc.checkUnbondingEntriesMature(sdkCtx)
+	require.NoError(t, err)
+
+	_, err = acc.UnbondEntries.Get(sdkCtx, valAddress)
+	require.Error(t, err)
 
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
 	require.NoError(t, err)

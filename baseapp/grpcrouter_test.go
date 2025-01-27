@@ -95,6 +95,31 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 		}
 		assertRouterBehaviour(helper)
 	})
+
+	t.Run("any cached value is not dropped", func(t *testing.T) {
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/22779
+		qr := baseapp.NewGRPCQueryRouter()
+		interfaceRegistry := testdata.NewTestInterfaceRegistry()
+		testdata.RegisterInterfaces(interfaceRegistry)
+		qr.SetInterfaceRegistry(interfaceRegistry)
+		testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
+		helper := &baseapp.QueryServiceTestHelper{
+			GRPCQueryRouter: qr,
+			Ctx:             sdk.Context{}.WithContext(context.Background()),
+		}
+
+		anyMsg, err := types.NewAnyWithValue(&testdata.Dog{})
+		require.NoError(t, err)
+
+		handler := qr.HybridHandlerByRequestName("testpb.TestAnyRequest")[0]
+
+		resp := new(testdata.TestAnyResponse)
+		err = handler(helper.Ctx, &testdata.TestAnyRequest{
+			AnyAnimal: anyMsg,
+		}, resp)
+		require.NoError(t, err)
+		require.NotNil(t, resp.HasAnimal.Animal.GetCachedValue())
+	})
 }
 
 func TestRegisterQueryServiceTwice(t *testing.T) {

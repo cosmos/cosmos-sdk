@@ -8,12 +8,6 @@ type StateCommitter interface {
 	store.Pruner
 	store.PausablePruner
 	store.UpgradeableStore
-}
-
-// StateStorage is a mock of store.VersionedWriter
-type StateStorage interface {
-	store.VersionedWriter
+	store.VersionedReader
 	store.UpgradableDatabase
-	store.Pruner
-	store.PausablePruner
 }

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	gocontext "context"
 	"fmt"
 	"time"
 
@@ -84,7 +83,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			res, err := queryClient.Balance(gocontext.Background(), tc.req)
+			res, err := queryClient.Balance(ctx, tc.req)
 			if tc.expectErrMsg == "" {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
@@ -102,7 +101,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
-	_, err := queryClient.AllBalances(gocontext.Background(), &types.QueryAllBalancesRequest{})
+	_, err := queryClient.AllBalances(ctx, &types.QueryAllBalancesRequest{})
 	suite.Require().Error(err)
 
 	addrStr, err := suite.addrCdc.BytesToString(addr)
@@ -114,65 +113,86 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 		CountTotal: false,
 	}
 	req := types.NewQueryAllBalancesRequest(addrStr, pageReq, false)
-	res, err := queryClient.AllBalances(gocontext.Background(), req)
+	res, err := queryClient.AllBalances(ctx, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.True(res.Balances.IsZero())
 
-	fooCoins := newFooCoin(50)
 	barCoins := newBarCoin(30)
+	incompleteCoin := newIncompleteMetadataCoin(40)
+	fooCoins := newFooCoin(50)
 	ibcCoins := newIbcCoin(20)
 
-	origCoins := sdk.NewCoins(fooCoins, barCoins, ibcCoins)
+	// NewCoins will sort the Coins, so we prepare in alphabetical order to avoid confusion
+	origCoins := sdk.NewCoins(barCoins, incompleteCoin, fooCoins, ibcCoins)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
 
 	addIBCMetadata(ctx, suite.bankKeeper)
 
-	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	res, err = queryClient.AllBalances(ctx, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(barCoins.Denom, res.Balances[0].Denom)
 	suite.NotNil(res.Pagination.NextKey)
 
-	suite.T().Log("query second page with nextkey")
+	addIncompleteMetadata(ctx, suite.bankKeeper)
+	suite.T().Log("query second page with nextkey and resolve denom with incomplete metadata")
+	pageReq = &query.PageRequest{
+		Key:        res.Pagination.NextKey,
+		Limit:      1,
+		CountTotal: true,
+	}
+	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, true)
+	testFunc := func() {
+		res, err = queryClient.AllBalances(ctx, req)
+	}
+	suite.Require().NotPanics(testFunc, "AllBalances with resolve denom + incomplete metadata")
+	suite.Require().NoError(err)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(incompleteCoin.Denom, res.Balances[0].Denom)
+	suite.NotNil(res.Pagination.NextKey)
+
+	suite.T().Log("query third page with nextkey")
 	pageReq = &query.PageRequest{
 		Key:        res.Pagination.NextKey,
 		Limit:      1,
 		CountTotal: true,
 	}
 	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, false)
-	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	res, err = queryClient.AllBalances(ctx, req)
 	suite.Require().NoError(err)
-	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(fooCoins.Denom, res.Balances[0].Denom)
 	suite.NotNil(res.Pagination.NextKey)
 
-	pageThree := res.Pagination.NextKey
+	pageFour := res.Pagination.NextKey
 
-	suite.T().Log("query third page with nextkey")
+	suite.T().Log("query fourth page with nextkey")
 	pageReq = &query.PageRequest{
-		Key:        pageThree,
+		Key:        pageFour,
 		Limit:      1,
 		CountTotal: true,
 	}
 	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, false)
-	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	res, err = queryClient.AllBalances(ctx, req)
 	suite.Require().NoError(err)
-	suite.Equal(res.Balances.Len(), 1)
-	suite.Equal(res.Balances[0].Denom, ibcCoins.Denom)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(ibcCoins.Denom, res.Balances[0].Denom)
 
-	suite.T().Log("query third page with nextkey and resolve ibc denom")
+	suite.T().Log("query fourth page with nextkey and resolve ibc denom")
 	pageReq = &query.PageRequest{
-		Key:        pageThree,
+		Key:        pageFour,
 		Limit:      1,
 		CountTotal: true,
 	}
 	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, true)
-	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	res, err = queryClient.AllBalances(ctx, req)
 	suite.Require().NoError(err)
-	suite.Equal(res.Balances.Len(), 1)
-	suite.Equal(res.Balances[0].Denom, ibcPath+"/"+ibcBaseDenom)
+	suite.Equal(1, res.Balances.Len())
+	suite.Equal(ibcPath+"/"+ibcBaseDenom, res.Balances[0].Denom)
 	suite.Nil(res.Pagination.NextKey)
 }
 
@@ -181,9 +201,9 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	queryClient := suite.mockQueryClient(ctx)
+	queryClient := suite.queryClient
 
 	_, err = queryClient.SpendableBalances(ctx, &types.QuerySpendableBalancesRequest{})
 	suite.Require().Error(err)
@@ -205,12 +225,14 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	fooCoins := newFooCoin(50)
 	barCoins := newBarCoin(30)
 
+	currentBlockTime := suite.env.HeaderService().HeaderInfo(ctx).Time
+
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
 	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
-		ctx.HeaderInfo().Time.Unix(),
-		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
+		currentBlockTime.Unix(),
+		currentBlockTime.Add(time.Hour).Unix(),
 	)
 	suite.Require().NoError(err)
 
@@ -218,8 +240,8 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for some tokens to vest
-	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(30 * time.Minute)})
-	queryClient = suite.mockQueryClient(ctx)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: currentBlockTime.Add(30 * time.Minute)})
+	queryClient = suite.queryClient
 
 	suite.mockSpendableCoins(ctx, vacc)
 	res, err = queryClient.SpendableBalances(ctx, req)
@@ -233,10 +255,10 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 
 func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	_, _, addr := testdata.KeyTestPubAddr()
+	ctx := suite.ctx
 
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	queryClient := suite.mockQueryClient(ctx)
+	queryClient := suite.queryClient
 
 	_, err := queryClient.SpendableBalanceByDenom(ctx, &types.QuerySpendableBalanceByDenomRequest{})
 	suite.Require().Error(err)
@@ -256,12 +278,14 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	fooCoins := newFooCoin(100)
 	barCoins := newBarCoin(30)
 
+	currentBlockTime := suite.env.HeaderService().HeaderInfo(ctx).Time
+
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
 	vacc, err := vestingtypes.NewContinuousVestingAccount(
 		acc,
 		sdk.NewCoins(fooCoins),
-		ctx.HeaderInfo().Time.Unix(),
-		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
+		currentBlockTime.Unix(),
+		currentBlockTime.Add(time.Hour).Unix(),
 	)
 	suite.Require().NoError(err)
 
@@ -269,8 +293,8 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
 
 	// move time forward for half of the tokens to vest
-	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(30 * time.Minute)})
-	queryClient = suite.mockQueryClient(ctx)
+	ctx = ctx.WithHeaderInfo(header.Info{Time: currentBlockTime.Add(30 * time.Minute)})
+	queryClient = suite.queryClient
 
 	// check fooCoins first, it has some vested and some vesting
 	suite.mockSpendableCoins(ctx, vacc)
@@ -290,7 +314,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 
 func (suite *KeeperTestSuite) TestQueryTotalSupply() {
 	ctx, queryClient := suite.ctx, suite.queryClient
-	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
+	res, err := queryClient.TotalSupply(ctx, &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	genesisSupply := res.Supply
@@ -299,7 +323,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupply() {
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, testCoins))
 
-	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
+	res, err = queryClient.TotalSupply(ctx, &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
@@ -318,32 +342,33 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedTotalSupply))
 
-	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
+	_, err := queryClient.SupplyOf(ctx, &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)
 
-	res, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{Denom: test1Supply.Denom})
+	res, err := queryClient.SupplyOf(ctx, &types.QuerySupplyOfRequest{Denom: test1Supply.Denom})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Require().Equal(test1Supply, res.Amount)
 
 	// total supply bogus denom
-	res, err = queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{Denom: "bogus"})
+	res, err = queryClient.SupplyOf(ctx, &types.QuerySupplyOfRequest{Denom: "bogus"})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Require().Equal(sdk.NewInt64Coin("bogus", 0), res.Amount)
 }
 
 func (suite *KeeperTestSuite) TestQueryParams() {
-	res, err := suite.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	ctx, queryClient := suite.ctx, suite.queryClient
+	res, err := queryClient.Params(ctx, &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Require().Equal(suite.bankKeeper.GetParams(suite.ctx), res.GetParams())
+	suite.Require().Equal(suite.bankKeeper.GetParams(ctx), res.GetParams())
 }
 
 func (suite *KeeperTestSuite) TestQueryDenomsMetadata() {
 	var (
 		req         *types.QueryDenomsMetadataRequest
-		expMetadata = []types.Metadata(nil)
+		expMetadata []types.Metadata
 	)
 
 	testCases := []struct {
@@ -760,7 +785,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 
 	for name, tc := range testCases {
 		suite.Run(name, func() {
-			resp, err := suite.queryClient.DenomOwners(gocontext.Background(), tc.req)
+			resp, err := suite.queryClient.DenomOwners(suite.ctx, tc.req)
 			if tc.expPass {
 				suite.NoError(err)
 				suite.NotNil(resp)
@@ -892,7 +917,7 @@ func (suite *KeeperTestSuite) TestQuerySendEnabled() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			resp, err := suite.queryClient.SendEnabled(gocontext.Background(), tc.req)
+			resp, err := suite.queryClient.SendEnabled(ctx, tc.req)
 			suite.Require().NoError(err)
 			if !suite.Assert().Equal(tc.exp, resp) {
 				if !suite.Assert().Len(resp.SendEnabled, len(tc.exp.SendEnabled)) {
@@ -998,7 +1023,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
 
 	for name, tc := range testCases {
 		suite.Run(name, func() {
-			resp, err := suite.queryClient.DenomOwnersByQuery(gocontext.Background(), tc.req)
+			resp, err := suite.queryClient.DenomOwnersByQuery(suite.ctx, tc.req)
 			if tc.expPass {
 				suite.NoError(err)
 				suite.NotNil(resp)

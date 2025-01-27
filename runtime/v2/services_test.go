@@ -39,8 +39,11 @@ func TestRegisterServices(t *testing.T) {
 		},
 	}
 
-	mockModule.On("RegisterMsgHandlers", app.msgRouterBuilder).Once()
-	mockModule.On("RegisterQueryHandlers", app.queryRouterBuilder).Once()
+	msgWrapper := newStfRouterWrapper(app.msgRouterBuilder)
+	queryWrapper := newStfRouterWrapper(app.queryRouterBuilder)
+
+	mockModule.On("RegisterMsgHandlers", &msgWrapper).Once()
+	mockModule.On("RegisterQueryHandlers", &queryWrapper).Once()
 
 	err := mm.RegisterServices(app)
 

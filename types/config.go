@@ -34,7 +34,7 @@ var (
 	initConfig sync.Once
 )
 
-// New returns a new Config with default values.
+// NewConfig returns a new Config with default values.
 func NewConfig() *Config {
 	return &Config{
 		sealedch: make(chan struct{}),

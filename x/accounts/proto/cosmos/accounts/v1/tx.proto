@@ -7,7 +7,6 @@ option go_package = "cosmossdk.io/x/accounts/v1";
 import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/tx/v1beta1/tx.proto";
 import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service for the x/accounts module.
@@ -39,6 +38,9 @@ message MsgInit {
   // send alongside the request.
   repeated cosmos.base.v1beta1.Coin funds = 4
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  // address_seed can be used to deterministically create the address of the account.
+  // If not present the address will be generated based on its associated account number.
+  bytes address_seed = 5;
 }
 
 // MsgInitResponse defines the Create response type for the Msg/Create RPC method.

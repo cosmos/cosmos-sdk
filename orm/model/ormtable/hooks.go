@@ -29,7 +29,7 @@ type ValidateHooks interface {
 // may be called but the enclosing transaction may still fail. The context
 // is provided in each method to help coordinate this.
 type WriteHooks interface {
-	// OnInsert is called after an message is inserted into the store.
+	// OnInsert is called after a message is inserted into the store.
 	OnInsert(context.Context, proto.Message)
 
 	// OnUpdate is called after the entity is updated in the store.

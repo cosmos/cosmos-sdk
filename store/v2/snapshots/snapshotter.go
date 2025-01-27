@@ -3,7 +3,6 @@ package snapshots
 import (
 	protoio "github.com/cosmos/gogoproto/io"
 
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
 
@@ -14,13 +13,7 @@ type CommitSnapshotter interface {
 	Snapshot(version uint64, protoWriter protoio.Writer) error
 
 	// Restore restores the commitment state from the snapshot reader.
-	Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges) (types.SnapshotItem, error)
-}
-
-// StorageSnapshotter defines an API for restoring snapshots of the storage state.
-type StorageSnapshotter interface {
-	// Restore restores the storage state from the given channel.
-	Restore(version uint64, chStorage <-chan *corestore.StateChanges) error
+	Restore(version uint64, format uint32, protoReader protoio.Reader) (types.SnapshotItem, error)
 }
 
 // ExtensionPayloadReader read extension payloads,

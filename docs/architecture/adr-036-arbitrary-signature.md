@@ -33,7 +33,7 @@ The aim is being able to sign arbitrary messages, even using Ledger or similar H
 
 As a result signed messages should look roughly like Cosmos SDK messages but **must not** be a valid on-chain transaction. `chain-id`, `account_number` and `sequence` can all be assigned invalid values.
 
-Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SIGN_MODES.
+Cosmos SDK 0.40 also introduces a concept of "auth_info" this can specify SIGN_MODES.
 
 A spec should include an `auth_info` that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
 
@@ -43,7 +43,7 @@ An offchain transaction follows these rules:
 
 * the memo must be empty
 * nonce, sequence number must be equal to 0
-* chain-id must be equal to “”
+* chain-id must be equal to ""
 * fee gas must be equal to 0
 * fee amount must be an empty array
 

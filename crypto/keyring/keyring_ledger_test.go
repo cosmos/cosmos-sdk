@@ -11,12 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
@@ -71,10 +72,10 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	require.Equal(t, "key", k.Name)
 
 	d1 := []byte("my first message")
-	s1, pub1, err := kb.Sign("key", d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s1, pub1, err := kb.Sign("key", d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
-	s2, pub2, err := SignWithLedger(k, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s2, pub2, err := SignWithLedger(k, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
 	require.True(t, pub1.Equals(pub2))
@@ -91,7 +92,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 
 	k, _, err = kb.NewMnemonic("test", English, types.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = SignWithLedger(k, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	_, _, err = SignWithLedger(k, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Error(t, err)
 	require.Equal(t, "not a ledger object", err.Error())
 }
@@ -189,7 +190,7 @@ func TestSignWithLedger(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sig, pub, err := SignWithLedger(tc.record, tc.msg, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+			sig, pub, err := SignWithLedger(tc.record, tc.msg, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 			assert.Equal(t, tc.wantSig, sig)
 			assert.Equal(t, tc.wantPub, pub)
 			if tc.wantErr {

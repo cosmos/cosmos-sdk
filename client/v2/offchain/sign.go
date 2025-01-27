@@ -2,18 +2,16 @@ package offchain
 
 import (
 	"context"
+	"fmt"
 
-	"google.golang.org/protobuf/types/known/anypb"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	clientcontext "cosmossdk.io/client/v2/context"
+	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/client/v2/internal/offchain"
-	txsigning "cosmossdk.io/x/tx/signing"
+	clitx "cosmossdk.io/client/v2/tx"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -24,58 +22,64 @@ const (
 	ExpectedAccountNumber = 0
 	// ExpectedSequence defines the sequence number an off-chain message must have
 	ExpectedSequence = 0
-
-	signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 )
 
-type signerData struct {
-	Address       string
-	ChainID       string
-	AccountNumber uint64
-	Sequence      uint64
-	PubKey        cryptotypes.PubKey
+var enabledSignModes = []apisigning.SignMode{
+	apisigning.SignMode_SIGN_MODE_DIRECT,
+	apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 }
 
 // Sign signs given bytes using the specified encoder and SignMode.
-func Sign(ctx client.Context, rawBytes []byte, fromName, indent, encoding, output string, emitUnpopulated bool) (string, error) {
-	encoder, err := getEncoder(encoding)
+func Sign(
+	ctx clientcontext.Context,
+	rawBytes []byte,
+	conn gogogrpc.ClientConn,
+	fromName, encoding, signMode, output string,
+) (string, error) {
+	digest, err := encodeDigest(encoding, rawBytes)
 	if err != nil {
 		return "", err
 	}
 
-	digest, err := encoder(rawBytes)
+	txConfig, err := clitx.NewTxConfig(clitx.ConfigOptions{
+		AddressCodec:          ctx.AddressCodec,
+		Cdc:                   ctx.Cdc,
+		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
+		EnabledSignModes:      enabledSignModes,
+	})
 	if err != nil {
 		return "", err
 	}
 
-	tx, err := sign(ctx, fromName, digest)
+	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, conn, ctx.Cdc.InterfaceRegistry())
+
+	sm, err := getSignMode(signMode)
+	if err != nil {
+		return "", err
+	}
+	params := clitx.TxParameters{
+		ChainID:  ExpectedChainID,
+		SignMode: sm,
+		AccountConfig: clitx.AccountConfig{
+			AccountNumber: ExpectedAccountNumber,
+			Sequence:      ExpectedSequence,
+			FromName:      fromName,
+		},
+	}
+
+	txf, err := clitx.NewFactory(ctx.Keyring, ctx.Cdc, accRetriever, txConfig, ctx.AddressCodec, conn, params)
 	if err != nil {
 		return "", err
 	}
 
-	txMarshaller, err := getMarshaller(output, indent, emitUnpopulated)
+	pubKey, err := ctx.Keyring.GetPubKey(fromName)
 	if err != nil {
 		return "", err
-	}
-
-	return marshalOffChainTx(tx, txMarshaller)
-}
-
-// sign signs a digest with provided key and SignMode.
-func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
-	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
-	if err != nil {
-		return nil, err
-	}
-
-	pubKey, err := keybase.GetPubKey(fromName)
-	if err != nil {
-		return nil, err
 	}
 
 	addr, err := ctx.AddressCodec.BytesToString(pubKey.Address())
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	msg := &offchain.MsgSignArbitraryData{
@@ -84,84 +88,38 @@ func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
 		Data:      digest,
 	}
 
-	txBuilder := newBuilder(ctx.Codec)
-	err = txBuilder.setMsgs(msg)
+	signedTx, err := txf.BuildsSignedTx(context.Background(), msg)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	signerData := signerData{
-		Address:       addr,
-		ChainID:       ExpectedChainID,
-		AccountNumber: ExpectedAccountNumber,
-		Sequence:      ExpectedSequence,
-		PubKey:        pubKey,
-	}
-
-	sigData := &SingleSignatureData{
-		SignMode:  signMode,
-		Signature: nil,
-	}
-
-	sig := OffchainSignature{
-		PubKey:   pubKey,
-		Data:     sigData,
-		Sequence: ExpectedSequence,
-	}
-
-	sigs := []OffchainSignature{sig}
-	err = txBuilder.SetSignatures(sigs...)
+	bz, err := encode(output, signedTx, txConfig)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	bytesToSign, err := getSignBytes(
-		context.Background(), ctx.TxConfig.SignModeHandler(), signerData, txBuilder)
-	if err != nil {
-		return nil, err
-	}
-
-	signedBytes, err := keybase.Sign(fromName, bytesToSign, signMode)
-	if err != nil {
-		return nil, err
-	}
-
-	sigData.Signature = signedBytes
-
-	err = txBuilder.SetSignatures(sig)
-	if err != nil {
-		return nil, err
-	}
-
-	return txBuilder.GetTx(), nil
+	return string(bz), nil
 }
 
-// getSignBytes gets the bytes to be signed for the given Tx and SignMode.
-func getSignBytes(ctx context.Context,
-	handlerMap *txsigning.HandlerMap,
-	signerData signerData,
-	tx *builder,
-) ([]byte, error) {
-	txData, err := tx.GetSigningTxData()
-	if err != nil {
-		return nil, err
+func encode(output string, tx clitx.Tx, config clitx.TxConfig) ([]byte, error) {
+	switch output {
+	case "json":
+		return config.TxJSONEncoder()(tx)
+	case "text":
+		return config.TxTextEncoder()(tx)
+	default:
+		return nil, fmt.Errorf("unsupported output type: %s", output)
+	}
+}
+
+// getSignMode returns the corresponding apisigning.SignMode based on the provided mode string.
+func getSignMode(mode string) (apisigning.SignMode, error) {
+	switch mode {
+	case "direct":
+		return apisigning.SignMode_SIGN_MODE_DIRECT, nil
+	case "amino-json":
+		return apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, nil
 	}
 
-	anyPk, err := codectypes.NewAnyWithValue(signerData.PubKey)
-	if err != nil {
-		return nil, err
-	}
-
-	txSignerData := txsigning.SignerData{
-		ChainID:       signerData.ChainID,
-		AccountNumber: signerData.AccountNumber,
-		Sequence:      signerData.Sequence,
-		Address:       signerData.Address,
-		PubKey: &anypb.Any{
-			TypeUrl: anyPk.TypeUrl,
-			Value:   anyPk.Value,
-		},
-	}
-
-	return handlerMap.GetSignBytes(ctx, signMode, txSignerData, txData)
+	return apisigning.SignMode_SIGN_MODE_UNSPECIFIED, fmt.Errorf("unsupported sign mode: %s", mode)
 }

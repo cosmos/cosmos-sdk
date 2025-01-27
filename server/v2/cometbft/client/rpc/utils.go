@@ -6,8 +6,6 @@ import (
 	cmttypes "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // formatBlockResults parses the indexed blocks into a slice of BlockResponse objects.
@@ -17,7 +15,7 @@ func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*cmttypes.Block, 
 		out = make([]*cmttypes.Block, len(resBlocks))
 	)
 	for i := range resBlocks {
-		out[i], err = NewResponseResultBlock(resBlocks[i])
+		out[i], err = responseResultBlock(resBlocks[i])
 		if err != nil {
 			return nil, fmt.Errorf("unable to create response block from comet result block: %v: %w", resBlocks[i], err)
 		}
@@ -29,20 +27,8 @@ func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*cmttypes.Block, 
 	return out, nil
 }
 
-func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*cmttypes.Block) *sdk.SearchBlocksResult {
-	totalPages := calcTotalPages(totalCount, limit)
-	return &sdk.SearchBlocksResult{
-		TotalCount: totalCount,
-		Count:      count,
-		PageNumber: page,
-		PageTotal:  totalPages,
-		Limit:      limit,
-		Blocks:     blocks,
-	}
-}
-
-// NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
-func NewResponseResultBlock(res *coretypes.ResultBlock) (*cmttypes.Block, error) {
+// responseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
+func responseResultBlock(res *coretypes.ResultBlock) (*cmttypes.Block, error) {
 	blkProto, err := res.Block.ToProto()
 	if err != nil {
 		return nil, err

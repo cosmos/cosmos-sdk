@@ -10,4 +10,6 @@ var (
 	ErrBundlerPayment = errors.New(ModuleName, 2, "bundler payment failed")
 	// ErrExecution is returned when the execution fails.
 	ErrExecution = errors.New(ModuleName, 3, "execution failed")
+	// ErrAccountAlreadyExists is returned when the account already exists in state.
+	ErrAccountAlreadyExists = errors.New(ModuleName, 4, "account already exists")
 )

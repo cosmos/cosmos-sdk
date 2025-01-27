@@ -27,6 +27,17 @@ type Map[K, V any] struct {
 	isSecondaryIndex bool
 }
 
+// withMapSecondaryIndex changes the behavior of the Map to be a secondary index.
+func withMapSecondaryIndex(isSecondaryIndex bool) func(opt *mapOptions) {
+	return func(opt *mapOptions) {
+		opt.isSecondaryIndex = isSecondaryIndex
+	}
+}
+
+type mapOptions struct {
+	isSecondaryIndex bool
+}
+
 // NewMap returns a Map given a StoreKey, a Prefix, human-readable name and the relative value and key encoders.
 // Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
 // else this method will panic.
@@ -36,13 +47,19 @@ func NewMap[K, V any](
 	name string,
 	keyCodec codec.KeyCodec[K],
 	valueCodec codec.ValueCodec[V],
+	options ...func(opt *mapOptions),
 ) Map[K, V] {
+	o := new(mapOptions)
+	for _, opt := range options {
+		opt(o)
+	}
 	m := Map[K, V]{
-		kc:     keyCodec,
-		vc:     valueCodec,
-		sa:     schemaBuilder.schema.storeAccessor,
-		prefix: prefix.Bytes(),
-		name:   name,
+		kc:               keyCodec,
+		vc:               valueCodec,
+		sa:               schemaBuilder.schema.storeAccessor,
+		prefix:           prefix.Bytes(),
+		name:             name,
+		isSecondaryIndex: o.isSecondaryIndex,
 	}
 	schemaBuilder.addCollection(collectionImpl[K, V]{m})
 	return m

@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -77,7 +77,9 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			case "/cosmos.staking.v1beta1.MsgDelegate":
 				return &stakingtypes.MsgDelegateResponse{}, nil
 			case "/cosmos.staking.v1beta1.MsgUndelegate":
-				return &stakingtypes.MsgUndelegate{}, nil
+				return &stakingtypes.MsgUndelegateResponse{
+					Amount: sdk.NewCoin("test", math.NewInt(1)),
+				}, nil
 			case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
 				return &distrtypes.MsgWithdrawDelegatorRewardResponse{}, nil
 			case "/cosmos.bank.v1beta1.MsgSend":
@@ -86,23 +88,43 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 				return nil, errors.New("unrecognized request type")
 			}
 		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
-			_, ok := req.(*banktypes.QueryBalanceRequest)
-			if !ok {
-				_, ok = req.(*stakingtypes.QueryParamsRequest)
-				require.True(t, ok)
+			typeUrl := sdk.MsgTypeURL(req)
+			switch typeUrl {
+			case "/cosmos.staking.v1beta1.QueryParamsRequest":
 				return &stakingtypes.QueryParamsResponse{
 					Params: stakingtypes.Params{
 						BondDenom: "test",
 					},
 				}, nil
+			case "/cosmos.staking.v1beta1.QueryUnbondingDelegationRequest":
+				return &stakingtypes.QueryUnbondingDelegationResponse{
+					Unbond: stakingtypes.UnbondingDelegation{
+						DelegatorAddress: "sender",
+						ValidatorAddress: valAddress,
+						Entries: []stakingtypes.UnbondingDelegationEntry{
+							{
+								CreationHeight: 1,
+								CompletionTime: time.Now(),
+								Balance:        math.NewInt(1),
+							},
+							{
+								CreationHeight: 1,
+								CompletionTime: time.Now().Add(time.Hour),
+								Balance:        math.NewInt(1),
+							},
+						},
+					},
+				}, nil
+			case "/cosmos.bank.v1beta1.QueryBalanceRequest":
+				return &banktypes.QueryBalanceResponse{
+					Balance: &(sdk.Coin{
+						Denom:  "test",
+						Amount: TestFunds.AmountOf("test"),
+					}),
+				}, nil
+			default:
+				return nil, errors.New("unrecognized request type")
 			}
-
-			return &banktypes.QueryBalanceResponse{
-				Balance: &(sdk.Coin{
-					Denom:  "test",
-					Amount: TestFunds.AmountOf("test"),
-				}),
-			}, nil
 		},
 	)
 }

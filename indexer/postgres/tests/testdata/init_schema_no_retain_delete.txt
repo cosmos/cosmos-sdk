@@ -6,7 +6,7 @@ DEBUG: Creating enum type
   sql: CREATE TYPE "test_my_enum" AS ENUM ('a', 'b', 'c');
 DEBUG: Creating enum type
   sql: CREATE TYPE "test_vote_type" AS ENUM ('yes', 'no', 'abstain');
-DEBUG: Creating table %s
+DEBUG: Creating table
   table: test_all_kinds
   sql: CREATE TABLE IF NOT EXISTS "test_all_kinds" (
 	"id" BIGINT NOT NULL,
@@ -36,7 +36,7 @@ DEBUG: Creating table %s
 	PRIMARY KEY ("id", "ts_nanos")
 );
 GRANT SELECT ON TABLE "test_all_kinds" TO PUBLIC;
-DEBUG: Creating table %s
+DEBUG: Creating table
   table: test_singleton
   sql: CREATE TABLE IF NOT EXISTS "test_singleton" (
 	_id INTEGER NOT NULL CHECK (_id = 1),
@@ -46,7 +46,7 @@ DEBUG: Creating table %s
 	PRIMARY KEY (_id)
 );
 GRANT SELECT ON TABLE "test_singleton" TO PUBLIC;
-DEBUG: Creating table %s
+DEBUG: Creating table
   table: test_vote
   sql: CREATE TABLE IF NOT EXISTS "test_vote" (
 	"proposal" BIGINT NOT NULL,

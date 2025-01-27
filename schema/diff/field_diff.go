@@ -3,7 +3,7 @@ package diff
 import "cosmossdk.io/schema"
 
 // FieldDiff represents the difference between two fields.
-// The KindChanged, NullableChanged, and ReferenceTypeChanged methods can be used to determine
+// The KindChanged, NullableChanged, and ReferenceableTypeChanged methods can be used to determine
 // what specific changes were made to the field.
 type FieldDiff struct {
 	// Name is the name of the field.
@@ -22,11 +22,11 @@ type FieldDiff struct {
 	NewNullable bool
 
 	// OldReferencedType is the name of the old referenced type.
-	// It will be empty if the field is not a reference type or if there was no change.
+	// It will be empty if the field is not a referenceable type or if there was no change.
 	OldReferencedType string
 
 	// NewReferencedType is the name of the new referenced type.
-	// It will be empty if the field is not a reference type or if there was no change.
+	// It will be empty if the field is not a referenceable type or if there was no change.
 	NewReferencedType string
 }
 
@@ -52,7 +52,7 @@ func compareField(oldField, newField schema.Field) FieldDiff {
 
 // Empty returns true if the field diff has no changes.
 func (d FieldDiff) Empty() bool {
-	return !d.KindChanged() && !d.NullableChanged() && !d.ReferenceTypeChanged()
+	return !d.KindChanged() && !d.NullableChanged() && !d.ReferenceableTypeChanged()
 }
 
 // KindChanged returns true if the field kind changed.
@@ -65,7 +65,7 @@ func (d FieldDiff) NullableChanged() bool {
 	return d.OldNullable != d.NewNullable
 }
 
-// ReferenceTypeChanged returns true if the referenced type changed.
-func (d FieldDiff) ReferenceTypeChanged() bool {
+// ReferenceableTypeChanged returns true if the referenced type changed.
+func (d FieldDiff) ReferenceableTypeChanged() bool {
 	return d.OldReferencedType != d.NewReferencedType
 }

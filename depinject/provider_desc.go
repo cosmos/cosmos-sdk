@@ -3,10 +3,9 @@ package depinject
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"unicode"
-
-	"golang.org/x/exp/slices"
 )
 
 // providerDescriptor defines a special provider type that is defined by
@@ -32,6 +31,7 @@ type providerDescriptor struct {
 type providerInput struct {
 	Type     reflect.Type
 	Optional bool
+	Ignored  bool
 }
 
 type providerOutput struct {

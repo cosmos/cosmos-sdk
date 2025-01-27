@@ -53,7 +53,7 @@ func (o StateObjectType) Validate(typeSet TypeSet) error {
 
 	for _, field := range o.KeyFields {
 		if err := field.Validate(typeSet); err != nil {
-			return fmt.Errorf("invalid key field %q: %v", field.Name, err) //nolint:errorlint // false positive due to using go1.12
+			return fmt.Errorf("invalid key field %q in type %q: %v", field.Name, o.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 
 		if !field.Kind.ValidKeyKind() {
@@ -65,7 +65,7 @@ func (o StateObjectType) Validate(typeSet TypeSet) error {
 		}
 
 		if fieldNames[field.Name] {
-			return fmt.Errorf("duplicate field name %q", field.Name)
+			return fmt.Errorf("duplicate key field name %q for stateObjectType: %s", field.Name, o.Name)
 		}
 		fieldNames[field.Name] = true
 	}
@@ -76,7 +76,7 @@ func (o StateObjectType) Validate(typeSet TypeSet) error {
 		}
 
 		if fieldNames[field.Name] {
-			return fmt.Errorf("duplicate field name %q", field.Name)
+			return fmt.Errorf("duplicate field name %q for stateObjectType: %s", field.Name, o.Name)
 		}
 		fieldNames[field.Name] = true
 	}

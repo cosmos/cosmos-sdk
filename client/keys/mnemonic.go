@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
@@ -18,7 +17,7 @@ const (
 	mnemonicEntropySize = 256
 )
 
-// MnemonicKeyCommand computes the bip39 memonic for input entropy.
+// MnemonicKeyCommand computes the bip39 mnemonic for input entropy.
 func MnemonicKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mnemonic",
@@ -69,7 +68,7 @@ func MnemonicKeyCommand() *cobra.Command {
 			}
 			indiscreet, _ := cmd.Flags().GetBool(flagIndiscreet)
 			if !indiscreet {
-				return printDiscreetly(client.GetClientContextFromCmd(cmd), cmd.ErrOrStderr(), "**Important** write this mnemonic phrase in a safe place. Do not share it to anyone.", mnemonic)
+				return printDiscreetly(cmd.ErrOrStderr(), "**Important** write this mnemonic phrase in a safe place. Do not share it to anyone.", mnemonic)
 			}
 			cmd.Println(mnemonic)
 			return nil

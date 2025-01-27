@@ -7,12 +7,14 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/schema"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
@@ -64,7 +66,11 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 // App module genesis
 
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(&v1.GenesisState{})
+	data, err := am.cdc.MarshalJSON(&v1.GenesisState{})
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 func (am AppModule) ValidateGenesis(message json.RawMessage) error {
@@ -105,3 +111,9 @@ func (AppModule) GetQueryCmd() *cobra.Command {
 }
 
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+// ModuleCodec implements `schema.HasModuleCodec` interface.
+// It allows the indexer to decode the module's KVPairUpdate.
+func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
+	return am.k.Schema.ModuleCodec(collections.IndexingOptions{})
+}

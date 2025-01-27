@@ -22,7 +22,7 @@ var cdc = testutil.CodecOptions{}.NewCodec()
 func TestNewCometBftBroadcaster(t *testing.T) {
 	tests := []struct {
 		name    string
-		cdc     codec.JSONCodec
+		cdc     codec.Codec
 		mode    string
 		want    *CometBFTBroadcaster
 		wantErr bool

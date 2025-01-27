@@ -3,6 +3,7 @@ syntax = "proto3";
 package cosmos.autocli.v1;
 
 import "cosmos_proto/cosmos.proto";
+
 option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 
 // ModuleOptions describes the CLI options for a Cosmos SDK module.
@@ -16,7 +17,6 @@ message ModuleOptions {
 
 // ServiceCommandDescriptor describes a CLI command based on a protobuf service.
 message ServiceCommandDescriptor {
-
   // service is the fully qualified name of the protobuf service to build
   // the command from. It can be left empty if sub_commands are used instead
   // which may be the case if a module provides multiple tx and/or query services.
@@ -103,7 +103,6 @@ message RpcCommandOptions {
 // kebab-case name of the field. Fields can be turned into positional arguments
 // instead by using RpcCommandOptions.positional_args.
 message FlagOptions {
-
   // name is an alternate name to use for the field flag.
   string name = 1;
 

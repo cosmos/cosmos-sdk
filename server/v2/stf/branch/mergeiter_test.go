@@ -7,6 +7,52 @@ import (
 	corestore "cosmossdk.io/core/store"
 )
 
+func TestMergedIterator_Validity(t *testing.T) {
+	panics := func(f func()) {
+		defer func() {
+			r := recover()
+			if r == nil {
+				t.Error("panic expected")
+			}
+		}()
+
+		f()
+	}
+
+	t.Run("panics when calling key on invalid iter", func(t *testing.T) {
+		parent, err := newMemState().Iterator(nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cache, err := newMemState().Iterator(nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		it := mergeIterators(parent, cache, true)
+		panics(func() {
+			it.Key()
+		})
+	})
+
+	t.Run("panics when calling value on invalid iter", func(t *testing.T) {
+		parent, err := newMemState().Iterator(nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cache, err := newMemState().Iterator(nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		it := mergeIterators(parent, cache, true)
+
+		panics(func() {
+			it.Value()
+		})
+	})
+}
+
 func TestMergedIterator_Next(t *testing.T) {
 	specs := map[string]struct {
 		setup func() corestore.Iterator
@@ -19,7 +65,7 @@ func TestMergedIterator_Next(t *testing.T) {
 				return mergeIterators(must(parent.Iterator(nil, nil)), must(cache.Iterator(nil, nil)), true)
 			},
 		},
-		"parent iterator has one item, cache is empty": {
+		"parent iterator has one item, child is empty": {
 			setup: func() corestore.Iterator {
 				parent := newMemState()
 				if err := parent.Set([]byte("k1"), []byte("1")); err != nil {
@@ -30,7 +76,7 @@ func TestMergedIterator_Next(t *testing.T) {
 			},
 			exp: [][2]string{{"k1", "1"}},
 		},
-		"cache has one item, parent is empty": {
+		"child has one item, parent is empty": {
 			setup: func() corestore.Iterator {
 				parent := newMemState()
 				cache := newMemState()
@@ -41,21 +87,21 @@ func TestMergedIterator_Next(t *testing.T) {
 			},
 			exp: [][2]string{{"k1", "1"}},
 		},
-		"both iterators have same key, cache preferred": {
+		"both iterators have same key, child preferred": {
 			setup: func() corestore.Iterator {
 				parent := newMemState()
 				if err := parent.Set([]byte("k1"), []byte("parent-val")); err != nil {
 					t.Fatal(err)
 				}
 				cache := newMemState()
-				if err := cache.Set([]byte("k1"), []byte("cache-val")); err != nil {
+				if err := cache.Set([]byte("k1"), []byte("child-val")); err != nil {
 					t.Fatal(err)
 				}
 				return mergeIterators(must(parent.Iterator(nil, nil)), must(cache.Iterator(nil, nil)), true)
 			},
-			exp: [][2]string{{"k1", "cache-val"}},
+			exp: [][2]string{{"k1", "child-val"}},
 		},
-		"both iterators have same key, but cache value is nil": {
+		"both iterators have same key, but child value is nil": {
 			setup: func() corestore.Iterator {
 				parent := newMemState()
 				if err := parent.Set([]byte("k1"), []byte("1")); err != nil {
@@ -68,7 +114,7 @@ func TestMergedIterator_Next(t *testing.T) {
 				return mergeIterators(must(parent.Iterator(nil, nil)), must(cache.Iterator(nil, nil)), true)
 			},
 		},
-		"parent and cache are ascending": {
+		"parent and child are ascending": {
 			setup: func() corestore.Iterator {
 				parent := newMemState()
 				if err := parent.Set([]byte("k2"), []byte("v2")); err != nil {
@@ -88,7 +134,7 @@ func TestMergedIterator_Next(t *testing.T) {
 			},
 			exp: [][2]string{{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}},
 		},
-		"parent and cache are descending": {
+		"parent and child are descending": {
 			setup: func() corestore.Iterator {
 				parent := newMemState()
 				if err := parent.Set([]byte("k3"), []byte("v3")); err != nil {

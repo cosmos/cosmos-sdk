@@ -5,7 +5,8 @@
 # Warning: make init-simapp will remove all data in simapp home directory
 #? init-simapp: Initializes a single local node network
 init-simapp:
-	./scripts/init-simapp.sh
+	@echo "No more simapp v1 on this branch"
+	@echo "Use make init-simapp-v2 instead"
 init-simapp-v2:
 	./scripts/init-simapp-v2.sh
 
@@ -23,8 +24,8 @@ test-all: test-unit test-integration test-ledger-mock test-race
 .PHONY: test-system
 test-system: build
 	mkdir -p ./tests/systemtests/binaries/
-	cp $(BUILDDIR)/simd$(if $(findstring v2,$(COSMOS_BUILD_OPTIONS)),v2) ./tests/systemtests/binaries/
-	$(MAKE) -C tests/systemtests test
+	cp $(BUILDDIR)/simdv2 ./tests/systemtests/binaries/
+	COSMOS_BUILD_OPTIONS=v2 $(MAKE) -C tests/systemtests test
 
 
 TEST_PACKAGES=./...

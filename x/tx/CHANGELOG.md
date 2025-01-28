@@ -33,9 +33,11 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
-## [v0.13.7](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.7) - 2024-12-16
+## [v0.13.8](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.8) - 2025-01-28
 
-### Bug Fixes
+* [#23513](https://github.com/cosmos/cosmos-sdk/pull/23513), [#23539](https://github.com/cosmos/cosmos-sdk/pull/23539) Add map marshalling support (as option) to Amino JSON encoder. 
+
+## [v0.13.7](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.7) - 2024-12-16
 
 * Fix [ABS-0043](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm) Limit recursion depth for unknown field detection
 

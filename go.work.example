@@ -5,7 +5,6 @@ use (
 	./api
 	./client/v2
 	./collections
-	./collections/protocodec
 	./core
 	./core/testing
 	./depinject

@@ -61,11 +61,8 @@ test-sim-benchmark-invariants:
 
 .PHONY: \
 test-sim-nondeterminism \
-test-sim-nondeterminism-streaming \
-test-sim-custom-genesis-fast \
 test-sim-import-export \
 test-sim-after-import \
-test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
 

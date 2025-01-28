@@ -8,6 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
@@ -15,6 +16,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
 	_ "cosmossdk.io/x/accounts"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -190,10 +192,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 }
 
 func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []cryptotypes.PrivKey, accNums, accSeqs []uint64, chainID string) (xauthsigning.Tx, []byte, error) {
-	defaultSignMode, err := xauthsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
-	if err != nil {
-		return nil, nil, err
-	}
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -201,7 +199,7 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  defaultSignMode,
+				SignMode:  txConfig.SignModeHandler().DefaultMode(),
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -209,7 +207,7 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	err = txBuilder.SetSignatures(sigsV2...)
+	err := txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -217,15 +215,20 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
-		signerData := xauthsigning.SignerData{
+		anyPk, err := codectypes.NewAnyWithValue(priv.PubKey())
+		if err != nil {
+			return nil, nil, err
+		}
+
+		signerData := txsigning.SignerData{
 			Address:       sdk.AccAddress(priv.PubKey().Bytes()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			PubKey:        priv.PubKey(),
+			PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			context.TODO(), defaultSignMode, signerData,
+			context.TODO(), txConfig.SignModeHandler().DefaultMode(), signerData,
 			txBuilder, priv, txConfig, accSeqs[i])
 		if err != nil {
 			return nil, nil, err

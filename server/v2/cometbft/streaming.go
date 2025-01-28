@@ -3,10 +3,12 @@ package cometbft
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/streaming"
@@ -18,14 +20,69 @@ func (c *consensus[T]) streamDeliverBlockChanges(
 	height int64,
 	txs [][]byte,
 	decodedTxs []T,
-	txResults []server.TxResult,
-	events []event.Event,
+	blockResp server.BlockResponse,
 	stateChanges []store.StateChanges,
 ) error {
+	return StreamOut(ctx, height, txs, decodedTxs, blockResp, stateChanges, c.streamingManager, c.listener, c.cfg.AppTomlConfig.Trace, c.logger.Error)
+}
+
+// StreamOut stream all the changes happened during deliver block.
+func StreamOut[T transaction.Tx](
+	ctx context.Context,
+	height int64,
+	rawTXs [][]byte,
+	decodedTXs []T,
+	blockRsp server.BlockResponse,
+	stateChanges []store.StateChanges,
+	streamingManager streaming.Manager,
+	listener *appdata.Listener,
+	traceErrs bool,
+	logErrFn func(msg string, keyVals ...any),
+) error {
+	var events []event.Event
+	events = append(events, blockRsp.PreBlockEvents...)
+	events = append(events, blockRsp.BeginBlockEvents...)
+	for _, tx := range blockRsp.TxResults {
+		events = append(events, tx.Events...)
+	}
+	events = append(events, blockRsp.EndBlockEvents...)
+	txResults := blockRsp.TxResults
+
+	err := doServeStreamListeners(
+		ctx,
+		height,
+		rawTXs,
+		txResults,
+		traceErrs,
+		streamingManager,
+		events,
+		logErrFn,
+		stateChanges,
+	)
+	if err != nil {
+		return err
+	}
+	return doServeHookListener(listener, height, rawTXs, decodedTXs, events, stateChanges)
+}
+
+func doServeStreamListeners(
+	ctx context.Context,
+	height int64,
+	rawTXs [][]byte,
+	txResults []server.TxResult,
+	traceErrs bool,
+	streamingManager streaming.Manager,
+	events []event.Event,
+	logErrFn func(msg string, keyVals ...any),
+	stateChanges []store.StateChanges,
+) error {
+	if len(streamingManager.Listeners) == 0 {
+		return nil
+	}
 	// convert txresults to streaming txresults
 	streamingTxResults := make([]*streaming.ExecTxResult, len(txResults))
 	for i, txResult := range txResults {
-		space, code, log := errorsmod.ABCIInfo(txResult.Error, c.cfg.AppTomlConfig.Trace)
+		space, code, log := errorsmod.ABCIInfo(txResult.Error, traceErrs)
 
 		events, err := streaming.IntoStreamingEvents(txResult.Events)
 		if err != nil {
@@ -42,31 +99,47 @@ func (c *consensus[T]) streamDeliverBlockChanges(
 		}
 	}
 
-	for _, streamingListener := range c.streamingManager.Listeners {
+	for _, streamingListener := range streamingManager.Listeners {
 		events, err := streaming.IntoStreamingEvents(events)
 		if err != nil {
 			return err
 		}
 		if err := streamingListener.ListenDeliverBlock(ctx, streaming.ListenDeliverBlockRequest{
 			BlockHeight: height,
-			Txs:         txs,
+			Txs:         rawTXs,
 			TxResults:   streamingTxResults,
 			Events:      events,
 		}); err != nil {
-			c.logger.Error("ListenDeliverBlock listening hook failed", "height", height, "err", err)
+			if streamingManager.StopNodeOnErr {
+				return fmt.Errorf("listen deliver block: %w", err)
+			}
+			logErrFn("ListenDeliverBlock listening hook failed", "height", height, "err", err)
 		}
 
 		if err := streamingListener.ListenStateChanges(ctx, intoStreamingKVPairs(stateChanges)); err != nil {
-			c.logger.Error("ListenStateChanges listening hook failed", "height", height, "err", err)
+			if streamingManager.StopNodeOnErr {
+				return fmt.Errorf("listen state changes: %w", err)
+			}
+			logErrFn("ListenStateChanges listening hook failed", "height", height, "err", err)
 		}
 	}
+	return nil
+}
 
-	if c.listener == nil {
+func doServeHookListener[T transaction.Tx](
+	listener *appdata.Listener,
+	height int64,
+	rawTXs [][]byte,
+	decodedTXs []T,
+	events []event.Event,
+	stateChanges []store.StateChanges,
+) error {
+	if listener == nil {
 		return nil
 	}
 	// stream the StartBlockData to the listener.
-	if c.listener.StartBlock != nil {
-		if err := c.listener.StartBlock(appdata.StartBlockData{
+	if listener.StartBlock != nil {
+		if err := listener.StartBlock(appdata.StartBlockData{
 			Height:      uint64(height),
 			HeaderBytes: nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
 			HeaderJSON:  nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
@@ -75,14 +148,14 @@ func (c *consensus[T]) streamDeliverBlockChanges(
 		}
 	}
 	// stream the TxData to the listener.
-	if c.listener.OnTx != nil {
-		for i, tx := range txs {
-			if err := c.listener.OnTx(appdata.TxData{
+	if listener.OnTx != nil {
+		for i, tx := range rawTXs {
+			if err := listener.OnTx(appdata.TxData{
 				BlockNumber: uint64(height),
 				TxIndex:     int32(i),
 				Bytes:       func() ([]byte, error) { return tx, nil },
 				JSON: func() (json.RawMessage, error) {
-					return json.Marshal(decodedTxs[i])
+					return json.Marshal(decodedTXs[i])
 				},
 			}); err != nil {
 				return err
@@ -90,20 +163,20 @@ func (c *consensus[T]) streamDeliverBlockChanges(
 		}
 	}
 	// stream the EventData to the listener.
-	if c.listener.OnEvent != nil {
-		if err := c.listener.OnEvent(appdata.EventData{Events: events}); err != nil {
+	if listener.OnEvent != nil {
+		if err := listener.OnEvent(appdata.EventData{Events: events}); err != nil {
 			return err
 		}
 	}
 	// stream the KVPairData to the listener.
-	if c.listener.OnKVPair != nil {
-		if err := c.listener.OnKVPair(appdata.KVPairData{Updates: stateChanges}); err != nil {
+	if listener.OnKVPair != nil {
+		if err := listener.OnKVPair(appdata.KVPairData{Updates: stateChanges}); err != nil {
 			return err
 		}
 	}
 	// stream the CommitData to the listener.
-	if c.listener.Commit != nil {
-		if completionCallback, err := c.listener.Commit(appdata.CommitData{}); err != nil {
+	if listener.Commit != nil {
+		if completionCallback, err := listener.Commit(appdata.CommitData{}); err != nil {
 			return err
 		} else if completionCallback != nil {
 			if err := completionCallback(); err != nil {

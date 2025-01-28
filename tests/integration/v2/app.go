@@ -13,6 +13,7 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	corebranch "cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
@@ -33,9 +34,11 @@ import (
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -384,23 +387,20 @@ func (a *App) SignCheckDeliver(
 	// create a random length memo
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	signMode, err := authsign.APISignModeToInternal(a.txConfig.SignModeHandler().DefaultMode())
-	require.NoError(t, err)
-
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
 	for i, p := range privateKeys {
 		sigs[i] = signing.SignatureV2{
 			PubKey: p.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode: signMode,
+				SignMode: a.txConfig.SignModeHandler().DefaultMode(),
 			},
 			Sequence: accSeqs[i],
 		}
 	}
 
 	txBuilder := a.txConfig.NewTxBuilder()
-	err = txBuilder.SetMsgs(msgs...)
+	err := txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigs...)
 	require.NoError(t, err)
@@ -410,16 +410,19 @@ func (a *App) SignCheckDeliver(
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range privateKeys {
-		signerData := authsign.SignerData{
+		anyPk, err := codectypes.NewAnyWithValue(p.PubKey())
+		require.NoError(t, err)
+
+		signerData := txsigning.SignerData{
 			Address:       sdk.AccAddress(p.PubKey().Address()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			PubKey:        p.PubKey(),
+			PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
 		}
 
 		signBytes, err := authsign.GetSignBytesAdapter(
-			ctx, a.txConfig.SignModeHandler(), signMode, signerData,
+			ctx, a.txConfig.SignModeHandler(), a.txConfig.SignModeHandler().DefaultMode(), signerData,
 			// todo why fetch twice?
 			txBuilder.GetTx())
 		require.NoError(t, err)

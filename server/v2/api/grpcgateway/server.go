@@ -76,7 +76,7 @@ func New[T transaction.Tx](
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 	mux := http.NewServeMux()
-	err := mountHTTPRoutes[T](logger, mux, s.GRPCGatewayRouter, appManager)
+	err := mountHTTPRoutes(mux, s.GRPCGatewayRouter, appManager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register gRPC gateway annotations: %w", err)
 	}

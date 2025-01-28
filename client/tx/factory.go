@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -47,7 +48,7 @@ type Factory struct {
 	feePayer           sdk.AccAddress
 	gasPrices          sdk.DecCoins
 	extOptions         []*codectypes.Any
-	signMode           signing.SignMode
+	signMode           apisigning.SignMode
 	simulateAndExecute bool
 	preprocessTxHook   client.PreprocessTxFn
 }
@@ -62,18 +63,18 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
 	}
 
-	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+	signMode := apisigning.SignMode_SIGN_MODE_UNSPECIFIED
 	switch clientCtx.SignModeStr {
 	case flags.SignModeDirect:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT
+		signMode = apisigning.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
-		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+		signMode = apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	case flags.SignModeDirectAux:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
+		signMode = apisigning.SignMode_SIGN_MODE_DIRECT_AUX
 	case flags.SignModeTextual:
-		signMode = signing.SignMode_SIGN_MODE_TEXTUAL
+		signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 	case flags.SignModeEIP191:
-		signMode = signing.SignMode_SIGN_MODE_EIP_191
+		signMode = apisigning.SignMode_SIGN_MODE_EIP_191 //nolint:staticcheck // We still need to check if it was called
 	}
 
 	var accNum, accSeq uint64
@@ -237,12 +238,12 @@ func (f Factory) WithSimulateAndExecute(sim bool) Factory {
 }
 
 // SignMode returns the sign mode configured in the Factory
-func (f Factory) SignMode() signing.SignMode {
+func (f Factory) SignMode() apisigning.SignMode {
 	return f.signMode
 }
 
 // WithSignMode returns a copy of the Factory with an updated sign mode value.
-func (f Factory) WithSignMode(mode signing.SignMode) Factory {
+func (f Factory) WithSignMode(mode apisigning.SignMode) Factory {
 	f.signMode = mode
 	return f
 }

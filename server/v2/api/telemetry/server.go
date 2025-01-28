@@ -29,7 +29,7 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new telemetry server.
-func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTelemetry func(), cfgOptions ...CfgOption) (*Server[T], error) {
+func New[T transaction.Tx](logger log.Logger, enableTelemetry func(), cfg server.ConfigMap, cfgOptions ...CfgOption) (*Server[T], error) {
 	srv := &Server[T]{}
 	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {

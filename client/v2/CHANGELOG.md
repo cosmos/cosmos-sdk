@@ -37,7 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 * [#23325](https://github.com/cosmos/cosmos-sdk/pull/23325) Remove `NewAppOptionsFromConfig` that isn't needed in normal wiring.
-* []() Support map in queries for autocli.
+* [#23544](https://github.com/cosmos/cosmos-sdk/pull/23544) Support map in queries for autocli.
 
 ## [v2.10.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/client/v2/v2.10.0-beta.1) - 2024-12-18
 

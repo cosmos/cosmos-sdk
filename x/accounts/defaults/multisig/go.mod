@@ -3,7 +3,7 @@ module cosmossdk.io/x/accounts/defaults/multisig
 go 1.23.3
 
 require (
-	cosmossdk.io/collections v1.0.0
+	cosmossdk.io/collections v1.1.0
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000

@@ -15,7 +15,7 @@ replace (
 
 require (
 	cosmossdk.io/api v0.8.2
-	cosmossdk.io/collections v1.0.0
+	cosmossdk.io/collections v1.1.0
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/errors/v2 v2.0.0

@@ -237,6 +237,23 @@ func (enc Encoder) marshal(value protoreflect.Value, fd protoreflect.FieldDescri
 		return err
 
 	case protoreflect.Map:
+<<<<<<< HEAD
+=======
+		if enc.marshalMappings {
+			if !val.IsValid() {
+				_, err := io.WriteString(writer, "null")
+				return err
+			}
+
+			mapData := make(map[string]interface{})
+			val.Range(func(k protoreflect.MapKey, v protoreflect.Value) bool {
+				mapData[k.String()] = v.Interface()
+				return true
+			})
+
+			return jsonMarshal(writer, mapData)
+		}
+>>>>>>> aef1a2a06 (fix(x/tx): add an option to encode maps using amino json (ref #23513) (#23539))
 		return errors.New("maps are not supported")
 
 	case protoreflect.List:

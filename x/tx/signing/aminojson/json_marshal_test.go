@@ -265,7 +265,6 @@ func TestIndent(t *testing.T) {
 
 	bz, err := encoder.Marshal(msg)
 	require.NoError(t, err)
-	fmt.Println(string(bz))
 	require.Equal(t, `{
 	"type": "ABitOfEverything",
 	"value": {
@@ -324,7 +323,6 @@ func TestEnumAsString(t *testing.T) {
 
 	bz, err := encoder.Marshal(msg)
 	require.NoError(t, err)
-	fmt.Println(string(bz))
 	require.Equal(t, `{
 	"type": "ABitOfEverything",
 	"value": {
@@ -383,7 +381,6 @@ func TestAminoNameAsTypeURL(t *testing.T) {
 
 	bz, err := encoder.Marshal(msg)
 	require.NoError(t, err)
-	fmt.Println(string(bz))
 	require.Equal(t, `{
 	"type": "/testpb.ABitOfEverything",
 	"value": {
@@ -414,3 +411,62 @@ func TestAminoNameAsTypeURL(t *testing.T) {
 	}
 }`, string(bz))
 }
+<<<<<<< HEAD
+=======
+
+func TestMarshalMappings(t *testing.T) {
+	// valid
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{Indent: "	", MarshalMappings: true})
+
+	msg := &testpb.WithAMap{
+		StrMap: map[string]string{
+			"foo": "bar",
+			"baz": "qux",
+		},
+	}
+
+	bz, err := encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, `{
+	"str_map": {
+		"baz": "qux",
+		"foo": "bar"
+	}
+}`, string(bz))
+
+	// invalid
+	encoder = aminojson.NewEncoder(aminojson.EncoderOptions{Indent: "	", MarshalMappings: false})
+	_, err = encoder.Marshal(msg)
+	require.Error(t, err)
+}
+
+func TestCustomBytesEncoder(t *testing.T) {
+	cdc := amino.NewCodec()
+	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	bz := sha256.Sum256([]byte("test"))
+
+	msg := &testpb.ABitOfEverything{
+		Bytes:       bz[:],
+		PrettyBytes: bz[:],
+	}
+
+	legacyJSON, err := cdc.MarshalJSON(msg)
+	require.NoError(t, err)
+	aminoJSON, err := encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, string(legacyJSON), string(aminoJSON))
+
+	encoder.DefineFieldEncoding(
+		"hex",
+		func(enc *aminojson.Encoder, v protoreflect.Value, w io.Writer) error {
+			_, err := fmt.Fprintf(w, "\"%x\"", v.Bytes())
+			return err
+		})
+	aminoJSON, err = encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.NotEqual(t, string(legacyJSON), string(aminoJSON))
+	t.Logf("hex encoded bytes: %s", string(aminoJSON))
+}
+>>>>>>> aef1a2a06 (fix(x/tx): add an option to encode maps using amino json (ref #23513) (#23539))

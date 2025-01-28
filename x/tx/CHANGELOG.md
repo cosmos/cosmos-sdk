@@ -33,11 +33,31 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ## [v0.13.7](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.7) - 2024-12-16
+=======
+## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.1.0) - 2025-01-28
+
+* [#23513](https://github.com/cosmos/cosmos-sdk/pull/23513), [#23539](https://github.com/cosmos/cosmos-sdk/pull/23539) Add map marshalling support (as option) to Amino JSON encoder. 
+
+## [v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.1) - 2025-01-17
+
+* [#23324](https://github.com/cosmos/cosmos-sdk/pull/23324) Sign over unordered and timeout timestamp fields.
+
+## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0) - 2025-01-06
+
+Identical to v1.0.0-alpha.3.
+
+## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.3) - 2024-12-16
+>>>>>>> aef1a2a06 (fix(x/tx): add an option to encode maps using amino json (ref #23513) (#23539))
 
 ### Bug Fixes
 
 * Fix [ABS-0043](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm) Limit recursion depth for unknown field detection
+
+## [v0.13.7](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.7) - 2025-01-28
+
+* [#23513](https://github.com/cosmos/cosmos-sdk/pull/23513), [#23539](https://github.com/cosmos/cosmos-sdk/pull/23539) Add map marshalling support (as option) to Amino JSON encoder. 
 
 ## [v0.13.6](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.6) - 2024-12-12
 

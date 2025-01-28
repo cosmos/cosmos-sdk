@@ -38,6 +38,8 @@ type EncoderOptions struct {
 	// It is useful when using the Amino JSON encoder for non Amino purposes,
 	// such as JSON RPC.
 	AminoNameAsTypeURL bool
+	// MarshalMappings when set will use the Amino JSON encoder to marshal maps.
+	MarshalMappings bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver signing.TypeResolver
 	// FileResolver is used to resolve protobuf file descriptors TypeURL when TypeResolver fails.
@@ -57,6 +59,7 @@ type Encoder struct {
 	indent                    string
 	enumsAsString             bool
 	aminoNameAsTypeURL        bool
+	marshalMappings           bool
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -93,6 +96,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 		indent:             options.Indent,
 		enumsAsString:      options.EnumAsString,
 		aminoNameAsTypeURL: options.AminoNameAsTypeURL,
+		marshalMappings:    options.MarshalMappings,
 	}
 	return enc
 }
@@ -237,8 +241,6 @@ func (enc Encoder) marshal(value protoreflect.Value, fd protoreflect.FieldDescri
 		return err
 
 	case protoreflect.Map:
-<<<<<<< HEAD
-=======
 		if enc.marshalMappings {
 			if !val.IsValid() {
 				_, err := io.WriteString(writer, "null")
@@ -253,7 +255,6 @@ func (enc Encoder) marshal(value protoreflect.Value, fd protoreflect.FieldDescri
 
 			return jsonMarshal(writer, mapData)
 		}
->>>>>>> aef1a2a06 (fix(x/tx): add an option to encode maps using amino json (ref #23513) (#23539))
 		return errors.New("maps are not supported")
 
 	case protoreflect.List:

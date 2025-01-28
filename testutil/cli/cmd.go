@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // ExecTestCLICmd builds the client context, mocks the output and executes the command.
@@ -86,7 +86,7 @@ func SubmitTestTx(clientCtx client.Context, msg proto.Message, from sdk.AccAddre
 		WithChainID(clientCtx.ChainID).
 		WithKeybase(clientCtx.Keyring).
 		WithTxConfig(clientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+		WithSignMode(apisigning.SignMode_SIGN_MODE_DIRECT)
 
 	if config.Offline {
 		txFactory = txFactory.

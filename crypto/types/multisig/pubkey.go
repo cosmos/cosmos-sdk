@@ -1,6 +1,8 @@
 package multisig
 
 import (
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -24,4 +26,4 @@ type PubKey interface {
 // GetSignBytesFunc defines a function type which returns sign bytes for a given SignMode or an error.
 // It will generally be implemented as a closure which wraps whatever signable object signatures are
 // being verified against.
-type GetSignBytesFunc func(mode signing.SignMode) ([]byte, error)
+type GetSignBytesFunc func(mode apisigning.SignMode) ([]byte, error)

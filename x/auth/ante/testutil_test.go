@@ -6,19 +6,23 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	// TODO We don't need to import these API types if we use gogo's registry
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/14647
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -188,7 +192,7 @@ func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKe
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx, txErr := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, chainID, signing.SignMode_SIGN_MODE_DIRECT)
+	tx, txErr := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, chainID, apisigning.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, txErr)
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 	bytesCtx := suite.ctx.WithTxBytes(txBytes)
@@ -205,7 +209,7 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 	// Theoretically speaking, ante handler unit tests should only test
 	// ante handlers, but here we sometimes also test the tx creation
 	// process.
-	tx, txErr := suite.CreateTestTx(suite.ctx, args.privs, args.accNums, args.accSeqs, args.chainID, signing.SignMode_SIGN_MODE_DIRECT)
+	tx, txErr := suite.CreateTestTx(suite.ctx, args.privs, args.accNums, args.accSeqs, args.chainID, apisigning.SignMode_SIGN_MODE_DIRECT)
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	bytesCtx := suite.ctx.WithTxBytes(txBytes)
@@ -237,7 +241,7 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 func (suite *AnteTestSuite) CreateTestTx(
 	ctx sdk.Context, privs []cryptotypes.PrivKey,
 	accNums, accSeqs []uint64,
-	chainID string, signMode signing.SignMode,
+	chainID string, signMode apisigning.SignMode,
 ) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
@@ -262,12 +266,17 @@ func (suite *AnteTestSuite) CreateTestTx(
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
-		signerData := xauthsigning.SignerData{
+		anyPk, err := codectypes.NewAnyWithValue(priv.PubKey())
+		if err != nil {
+			return nil, err
+		}
+
+		signerData := txsigning.SignerData{
 			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			PubKey:        priv.PubKey(),
+			PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			ctx, signMode, signerData,

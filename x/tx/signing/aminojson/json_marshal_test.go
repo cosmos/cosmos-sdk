@@ -266,7 +266,6 @@ func TestIndent(t *testing.T) {
 
 	bz, err := encoder.Marshal(msg)
 	require.NoError(t, err)
-	fmt.Println(string(bz))
 	require.Equal(t, `{
 	"type": "ABitOfEverything",
 	"value": {
@@ -325,7 +324,6 @@ func TestEnumAsString(t *testing.T) {
 
 	bz, err := encoder.Marshal(msg)
 	require.NoError(t, err)
-	fmt.Println(string(bz))
 	require.Equal(t, `{
 	"type": "ABitOfEverything",
 	"value": {
@@ -384,7 +382,6 @@ func TestAminoNameAsTypeURL(t *testing.T) {
 
 	bz, err := encoder.Marshal(msg)
 	require.NoError(t, err)
-	fmt.Println(string(bz))
 	require.Equal(t, `{
 	"type": "/testpb.ABitOfEverything",
 	"value": {
@@ -414,6 +411,32 @@ func TestAminoNameAsTypeURL(t *testing.T) {
 		"u64": "4759492485"
 	}
 }`, string(bz))
+}
+
+func TestMarshalMappings(t *testing.T) {
+	// valid
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{Indent: "	", MarshalMappings: true})
+
+	msg := &testpb.WithAMap{
+		StrMap: map[string]string{
+			"foo": "bar",
+			"baz": "qux",
+		},
+	}
+
+	bz, err := encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, `{
+	"str_map": {
+		"baz": "qux",
+		"foo": "bar"
+	}
+}`, string(bz))
+
+	// invalid
+	encoder = aminojson.NewEncoder(aminojson.EncoderOptions{Indent: "	", MarshalMappings: false})
+	_, err = encoder.Marshal(msg)
+	require.Error(t, err)
 }
 
 func TestCustomBytesEncoder(t *testing.T) {

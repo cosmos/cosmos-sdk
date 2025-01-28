@@ -242,7 +242,18 @@ func (enc Encoder) marshal(value protoreflect.Value, fd protoreflect.FieldDescri
 
 	case protoreflect.Map:
 		if enc.marshalMappings {
-			return jsonMarshal(writer, value)
+			if !val.IsValid() {
+				_, err := io.WriteString(writer, "null")
+				return err
+			}
+
+			mapData := make(map[string]interface{})
+			val.Range(func(k protoreflect.MapKey, v protoreflect.Value) bool {
+				mapData[k.String()] = v.Interface()
+				return true
+			})
+
+			return jsonMarshal(writer, mapData)
 		}
 		return errors.New("maps are not supported")
 

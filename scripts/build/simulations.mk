@@ -73,18 +73,18 @@ SIM_BLOCK_SIZE ?= 200
 test-sim-fuzz:
 	@echo "Running application fuzz for numBlocks=2, blockSize=20. This may take awhile!"
 #ld flags are a quick fix to make it work on current osx
-	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -json -tags='sims' -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -json -tags='sims' -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
 
 #? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -tags='sims' -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -tags='sims' -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
 		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE)
 
 
 test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -tags='sims' -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -tags='sims' -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
 		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -cpuprofile cpu.out -memprofile mem.out
 
 .PHONY: test-sim-profile test-sim-benchmark test-sim-fuzz

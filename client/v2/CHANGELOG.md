@@ -39,7 +39,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [v2.10.0-beta.2](https://github.com/cosmos/cosmos-sdk/releases/tag/client/v2/v2.10.0-beta.2) - 2025-01-22
 
 * [#23325](https://github.com/cosmos/cosmos-sdk/pull/23325) Remove `NewAppOptionsFromConfig` that isn't needed in normal wiring.
+<<<<<<< HEAD
 * [#23470](https://github.com/cosmos/cosmos-sdk/pull/23470) Accept sign mode from `cosmossdk.io/api`.
+=======
+* [#23544](https://github.com/cosmos/cosmos-sdk/pull/23544) Support map in queries for autocli.
+>>>>>>> d8ea6a952 (feat(client/v2): add map support (#23544))
 
 ## [v2.10.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/client/v2/v2.10.0-beta.1) - 2024-12-18
 
@@ -112,7 +116,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20083](https://github.com/cosmos/cosmos-sdk/pull/20083) Integrate latest version of cosmos-proto and improve version filtering.
 * [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Marshal enum as string in queries.
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
-    * Note, the given command must have a `client.Context` in its context.
+  * Note, the given command must have a `client.Context` in its context.
 * [#19216](https://github.com/cosmos/cosmos-sdk/pull/19216) Do not overwrite TxConfig, use directly the one provided in context. TxConfig should always be set in the `client.Context` in `root.go` of an app.
 * [#20266](https://github.com/cosmos/cosmos-sdk/pull/20266) Add ability to override the short description in AutoCLI-generated top-level commands.
 

@@ -6,8 +6,13 @@ require (
 	cosmossdk.io/api v0.8.2 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/depinject v1.1.0
+<<<<<<< HEAD
 	cosmossdk.io/x/bank v0.2.0-rc.1
 	cosmossdk.io/x/tx v1.0.1
+=======
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/tx v1.1.0
+>>>>>>> d8ea6a952 (feat(client/v2): add map support (#23544))
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/spf13/cobra v1.8.1

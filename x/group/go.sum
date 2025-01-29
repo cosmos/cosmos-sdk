@@ -24,6 +24,7 @@ cosmossdk.io/math v1.5.0 h1:sbOASxee9Zxdjd6OkzogvBZ25/hP929vdcYcBJQbkLc=
 cosmossdk.io/math v1.5.0/go.mod h1:AAwwBmUhqtk2nlku174JwSll+/DepUXW3rWIXN5q+Nw=
 cosmossdk.io/schema v1.0.0 h1:/diH4XJjpV1JQwuIozwr+A4uFuuwanFdnw2kKeiXwwQ=
 cosmossdk.io/schema v1.0.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+<<<<<<< HEAD
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 h1:glZ6MpmD+5AhwJYV4jzx+rn7cgUB2owHgk9o+93luz0=
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43/go.mod h1:XCWpgfueHSBY+B7Cf2Aq/CcsU+6XoFH+EmseCKglFrU=
 cosmossdk.io/x/bank v0.0.0-20241218143637-d2dd93535113 h1:Y6gBupazGQ1lDN0iWykoFo9IwnlveVUNKJPxM/kB0nc=
@@ -36,6 +37,14 @@ cosmossdk.io/x/staking v0.2.0-rc.1 h1:AZRGddRuuTaLxxpBvC7/TR7Dmt0pjziXWk13dC1beI
 cosmossdk.io/x/staking v0.2.0-rc.1/go.mod h1:7K4hgQ6tn0XLFb2BJ9oe8nEc4RkfQ4qHqgQy2b0kVNc=
 cosmossdk.io/x/tx v1.0.1 h1:PomaVlERYWxhki9RKX+uTE30eJkyqIQjxc7kw1DPXUk=
 cosmossdk.io/x/tx v1.0.1/go.mod h1:dwOSom2k2BJuGgnm9YXBeFII9gbHJGN/BHZBVCbZvPg=
+=======
+cosmossdk.io/store v1.10.0-rc.1 h1:/YVPJLre7lt/QDbl90k95TLt+IvafF1sHaU6WHd/rpc=
+cosmossdk.io/store v1.10.0-rc.1/go.mod h1:eZNgZKvZRlDUk8CE3LTDVMAcSM7zLOet2S8fByQkF3s=
+cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 h1:XQJj9Dv9Gtze0l2TF79BU5lkP6MkUveTUuKICmxoz+o=
+cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190/go.mod h1:7WUGupOvmlHJoIMBz1JbObQxeo6/TDiuDBxmtod8HRg=
+cosmossdk.io/x/tx v1.1.0 h1:5C5XGNGYzbOTKbcf47oBI/VLObb5bmcMqH/C6H/sp1E=
+cosmossdk.io/x/tx v1.1.0/go.mod h1:QF15QyTcGH4wfKawfRdSihWwutf4OhgiA+HIwWhjle0=
+>>>>>>> d8ea6a952 (feat(client/v2): add map support (#23544))
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 h1:/vQbFIOMbk2FiG/kXiLl8BRyzTWDw7gX/Hz7Dd5eDMs=

@@ -34,9 +34,15 @@ require (
 	cosmossdk.io/client/v2 v2.10.0-beta.1 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/x/protocolpool v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/staking v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/tx v1.0.1 // indirect; main
+=======
+	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/tx v1.1.0 // indirect
+>>>>>>> d8ea6a952 (feat(client/v2): add map support (#23544))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

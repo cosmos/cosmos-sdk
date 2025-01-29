@@ -9,6 +9,7 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
+<<<<<<< HEAD
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
 	cosmossdk.io/x/evidence v0.2.0-rc.1
@@ -17,6 +18,10 @@ require (
 	cosmossdk.io/x/protocolpool v0.2.0-rc.1
 	cosmossdk.io/x/tx v1.0.1
 	cosmossdk.io/x/upgrade v0.2.0-rc.1
+=======
+	cosmossdk.io/store v1.10.0-rc.1
+	cosmossdk.io/x/tx v1.1.0
+>>>>>>> d8ea6a952 (feat(client/v2): add map support (#23544))
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

@@ -9,19 +9,14 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
-<<<<<<< HEAD
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
 	cosmossdk.io/x/evidence v0.2.0-rc.1
 	cosmossdk.io/x/feegrant v0.2.0-rc.1
 	cosmossdk.io/x/nft v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/protocolpool v0.2.0-rc.1
-	cosmossdk.io/x/tx v1.0.1
-	cosmossdk.io/x/upgrade v0.2.0-rc.1
-=======
-	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/x/tx v1.1.0
->>>>>>> d8ea6a952 (feat(client/v2): add map support (#23544))
+	cosmossdk.io/x/upgrade v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
@@ -64,8 +59,8 @@ require (
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.3-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.3-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
 	cloud.google.com/go v0.115.0 // indirect
 	cloud.google.com/go/auth v0.5.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
@@ -238,7 +233,7 @@ require (
 	google.golang.org/api v0.185.0 // indirect
 	google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241202173237-19429a94021a // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250106144421-5f5ef82da422 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250122153221-138b5a5a4fd4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect

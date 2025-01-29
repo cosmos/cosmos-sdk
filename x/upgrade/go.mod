@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/store v1.10.0-rc.1
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
-	cosmossdk.io/x/tx v1.0.1
+	cosmossdk.io/x/tx v1.1.0
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

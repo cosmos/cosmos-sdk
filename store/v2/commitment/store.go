@@ -509,76 +509,93 @@ func (c *CommitStore) Restore(
 	format uint32,
 	protoReader protoio.Reader,
 ) (snapshotstypes.SnapshotItem, error) {
-	var (
-		importer     Importer
-		snapshotItem snapshotstypes.SnapshotItem
-	)
+	var importer Importer
+	defer func() {
+		if importer != nil {
+			importer.Close()
+		}
+	}()
 
-loop:
 	for {
-		snapshotItem = snapshotstypes.SnapshotItem{}
-		err := protoReader.ReadMsg(&snapshotItem)
-		if errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
+		snapshotItem := snapshotstypes.SnapshotItem{}
+		if err := protoReader.ReadMsg(&snapshotItem); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
 			return snapshotstypes.SnapshotItem{}, fmt.Errorf("invalid protobuf message: %w", err)
 		}
 
 		switch item := snapshotItem.Item.(type) {
 		case *snapshotstypes.SnapshotItem_Store:
-			if importer != nil {
-				if err := importer.Commit(); err != nil {
-					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
-				}
-				if err := importer.Close(); err != nil {
-					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
-				}
+			if err := handleStoreItem(c, version, &importer, item.Store); err != nil {
+				return snapshotstypes.SnapshotItem{}, err
 			}
-			tree := c.multiTrees[item.Store.Name]
-			if tree == nil {
-				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", item.Store.Name)
-			}
-			importer, err = tree.Import(version)
-			if err != nil {
-				return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to import tree for version %d: %w", version, err)
-			}
-			defer importer.Close()
 
 		case *snapshotstypes.SnapshotItem_IAVL:
-			if importer == nil {
-				return snapshotstypes.SnapshotItem{}, errors.New("received IAVL node item before store item")
+			if err := handleIAVLItem(importer, item.IAVL); err != nil {
+				return snapshotstypes.SnapshotItem{}, err
 			}
-			node := item.IAVL
-			if node.Height > int32(math.MaxInt8) {
-				return snapshotstypes.SnapshotItem{}, fmt.Errorf("node height %v cannot exceed %v",
-					item.IAVL.Height, math.MaxInt8)
-			}
-			// Protobuf does not differentiate between []byte{} and nil, but fortunately IAVL does
-			// not allow nil keys nor nil values for leaf nodes, so we can always set them to empty.
-			if node.Key == nil {
-				node.Key = []byte{}
-			}
-			if node.Height == 0 {
-				if node.Value == nil {
-					node.Value = []byte{}
-				}
-			}
-			err := importer.Add(node)
-			if err != nil {
-				return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to add node to importer: %w", err)
-			}
+
 		default:
-			break loop
+			// Return the unhandled item for the caller to process
+			return snapshotItem, c.LoadVersion(version)
 		}
 	}
 
 	if importer != nil {
 		if err := importer.Commit(); err != nil {
-			return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
+			return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit final importer: %w", err)
 		}
 	}
 
-	return snapshotItem, c.LoadVersion(version)
+	return snapshotstypes.SnapshotItem{}, c.LoadVersion(version)
+}
+
+func handleStoreItem(c *CommitStore, version uint64, importer *Importer, store *snapshotstypes.SnapshotStoreItem) error {
+	// Commit and close previous importer if it exists
+	if *importer != nil {
+		if err := (*importer).Commit(); err != nil {
+			return fmt.Errorf("failed to commit importer: %w", err)
+		}
+		if err := (*importer).Close(); err != nil {
+			return fmt.Errorf("failed to close importer: %w", err)
+		}
+	}
+
+	// Create new importer for the store
+	tree := c.multiTrees[store.Name]
+	if tree == nil {
+		return fmt.Errorf("store %s not found", store.Name)
+	}
+
+	var err error
+	*importer, err = tree.Import(version)
+	if err != nil {
+		return fmt.Errorf("failed to import tree for version %d: %w", version, err)
+	}
+
+	return nil
+}
+
+func handleIAVLItem(importer Importer, node *snapshotstypes.SnapshotIAVLItem) error {
+	if importer == nil {
+		return errors.New("received IAVL node item before store item")
+	}
+
+	if node.Height > int32(math.MaxInt8) {
+		return fmt.Errorf("node height %v cannot exceed %v", node.Height, math.MaxInt8)
+	}
+
+	// Protobuf does not differentiate between []byte{} and nil, but fortunately IAVL does
+	// not allow nil keys nor nil values for leaf nodes, so we can always set them to empty.
+	if node.Key == nil {
+		node.Key = []byte{}
+	}
+	if node.Height == 0 && node.Value == nil {
+		node.Value = []byte{}
+	}
+
+	return importer.Add(node)
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {

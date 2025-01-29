@@ -938,7 +938,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 }
 
 // Restore implements snapshottypes.Snapshotter.
-// returns next snapshot item and error.
+// Returns next snapshot item and error.
 func (rs *Store) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshottypes.SnapshotItem, error) {
@@ -946,77 +946,111 @@ func (rs *Store) Restore(
 	// a SnapshotStoreItem, telling us which store to import into. The following items will contain
 	// SnapshotNodeItem (i.e. ExportNode) until we reach the next SnapshotStoreItem or EOF.
 	var importer *iavltree.Importer
-	var snapshotItem snapshottypes.SnapshotItem
-loop:
+	defer func() {
+		if importer != nil {
+			importer.Close()
+		}
+	}()
+
 	for {
-		snapshotItem = snapshottypes.SnapshotItem{}
-		err := protoReader.ReadMsg(&snapshotItem)
-		if errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
+		snapshotItem := snapshottypes.SnapshotItem{}
+		if err := protoReader.ReadMsg(&snapshotItem); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
 			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
 		}
 
 		switch item := snapshotItem.Item.(type) {
 		case *snapshottypes.SnapshotItem_Store:
-			if importer != nil {
-				err = importer.Commit()
-				if err != nil {
-					return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL commit failed")
-				}
-				importer.Close()
+			if err := rs.handleStoreItem(height, &importer, item.Store); err != nil {
+				return snapshottypes.SnapshotItem{}, err
 			}
-			store, ok := rs.GetStoreByName(item.Store.Name).(*iavl.Store)
-			if !ok || store == nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrapf(types.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
-			}
-			importer, err = store.Import(int64(height))
-			if err != nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "import failed")
-			}
-			defer importer.Close()
-			// Importer height must reflect the node height (which usually matches the block height, but not always)
-			rs.logger.Debug("restoring snapshot", "store", item.Store.Name)
 
 		case *snapshottypes.SnapshotItem_IAVL:
-			if importer == nil {
-				rs.logger.Error("failed to restore; received IAVL node item before store item")
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(types.ErrLogic, "received IAVL node item before store item")
-			}
-			if item.IAVL.Height > math.MaxInt8 {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrapf(types.ErrLogic, "node height %v cannot exceed %v",
-					item.IAVL.Height, math.MaxInt8)
-			}
-			node := &iavltree.ExportNode{
-				Key:     item.IAVL.Key,
-				Value:   item.IAVL.Value,
-				Height:  int8(item.IAVL.Height),
-				Version: item.IAVL.Version,
-			}
-			// Protobuf does not differentiate between []byte{} as nil, but fortunately IAVL does
-			// not allow nil keys nor nil values for leaf nodes, so we can always set them to empty.
-			if node.Key == nil {
-				node.Key = []byte{}
-			}
-			if node.Height == 0 && node.Value == nil {
-				node.Value = []byte{}
-			}
-			err := importer.Add(node)
-			if err != nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL node import failed")
+			if err := rs.handleIAVLItem(importer, item.IAVL); err != nil {
+				return snapshottypes.SnapshotItem{}, err
 			}
 
 		default:
-			break loop
+			// Return unhandled item for caller to process
+			return rs.finalizeRestore(height, importer, snapshotItem)
 		}
 	}
 
+	return rs.finalizeRestore(height, importer, snapshottypes.SnapshotItem{})
+}
+
+// handleStoreItem processes a store snapshot item and sets up the importer
+func (rs *Store) handleStoreItem(height uint64, importer **iavltree.Importer, storeItem *snapshottypes.SnapshotStoreItem) error {
+	if *importer != nil {
+		if err := (*importer).Commit(); err != nil {
+			return errorsmod.Wrap(err, "IAVL commit failed")
+		}
+	}
+
+	store, ok := rs.GetStoreByName(storeItem.Name).(*iavl.Store)
+	if !ok || store == nil {
+		return errorsmod.Wrapf(types.ErrLogic, "cannot import into non-IAVL store %q", storeItem.Name)
+	}
+
+	var err error
+	*importer, err = store.Import(int64(height))
+	if err != nil {
+		return errorsmod.Wrap(err, "import failed")
+	}
+
+	rs.logger.Debug("restoring snapshot", "store", storeItem.Name)
+	return nil
+}
+
+// handleIAVLItem processes an IAVL node snapshot item
+func (rs *Store) handleIAVLItem(importer *iavltree.Importer, iavlItem *snapshottypes.SnapshotIAVLItem) error {
+	if importer == nil {
+		rs.logger.Error("failed to restore; received IAVL node item before store item")
+		return errorsmod.Wrap(types.ErrLogic, "received IAVL node item before store item")
+	}
+
+	if iavlItem.Height > math.MaxInt8 {
+		return errorsmod.Wrapf(types.ErrLogic, "node height %v cannot exceed %v",
+			iavlItem.Height, math.MaxInt8)
+	}
+
+	node := createExportNode(iavlItem)
+	if err := importer.Add(node); err != nil {
+		return errorsmod.Wrap(err, "IAVL node import failed")
+	}
+
+	return nil
+}
+
+// createExportNode creates an ExportNode from a SnapshotIAVLItem
+func createExportNode(item *snapshottypes.SnapshotIAVLItem) *iavltree.ExportNode {
+	node := &iavltree.ExportNode{
+		Key:     item.Key,
+		Value:   item.Value,
+		Height:  int8(item.Height),
+		Version: item.Version,
+	}
+
+	// Protobuf does not differentiate between []byte{} and nil, but fortunately IAVL does
+	// not allow nil keys nor nil values for leaf nodes, so we can always set them to empty.
+	if node.Key == nil {
+		node.Key = []byte{}
+	}
+	if node.Height == 0 && node.Value == nil {
+		node.Value = []byte{}
+	}
+
+	return node
+}
+
+// finalizeRestore commits any remaining imports and updates store metadata
+func (rs *Store) finalizeRestore(height uint64, importer *iavltree.Importer, snapshotItem snapshottypes.SnapshotItem) (snapshottypes.SnapshotItem, error) {
 	if importer != nil {
-		err := importer.Commit()
-		if err != nil {
+		if err := importer.Commit(); err != nil {
 			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL commit failed")
 		}
-		importer.Close()
 	}
 
 	rs.flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)))

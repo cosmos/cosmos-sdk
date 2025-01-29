@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/server/v2/appmanager v1.0.0-beta.2
 	cosmossdk.io/server/v2/stf v1.0.0-beta.2
 	cosmossdk.io/store/v2 v2.0.0-beta.1
-	cosmossdk.io/x/tx v1.0.1
+	cosmossdk.io/x/tx v1.1.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.70.0

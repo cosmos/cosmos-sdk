@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v2.0.0-beta.8] - 2025-01-29
+
+* [#23544](https://github.com/cosmos/cosmos-sdk/pull/23544) Support map in queries for autocli.
+
 ## [v2.0.0-beta.7] - 2024-12-10
 
 ### Bug Fixes

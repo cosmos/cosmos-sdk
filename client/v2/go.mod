@@ -3,20 +3,12 @@ module cosmossdk.io/client/v2
 go 1.21
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/x/tx v0.13.5
+	cosmossdk.io/x/tx v0.13.8
 	github.com/cockroachdb/errors v1.11.3
-=======
-	cosmossdk.io/api v0.8.2
-	cosmossdk.io/core v1.0.0
-	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v1.1.0
->>>>>>> d8ea6a952 (feat(client/v2): add map support (#23544))
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/spf13/cobra v1.8.1

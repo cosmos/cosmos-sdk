@@ -39,38 +39,6 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [v0.13.7](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.7) - 2024-12-16
 
-<<<<<<< HEAD
-* Fix [ABS-0043](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm) Limit recursion depth for unknown field detection
-=======
-* [#23324](https://github.com/cosmos/cosmos-sdk/pull/23324) Sign over unordered and timeout timestamp fields.
-
-## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0) - 2025-01-06
-
-Identical to v1.0.0-alpha.3.
-
-## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.3) - 2024-12-16
-
-### Bug Fixes
-
-* [#22852](https://github.com/cosmos/cosmos-sdk/pull/22852) Fallback to injected resolver for placeholder descriptors.
-
-## [v1.0.0-alpha.2](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.2) - 2024-11-01
-
-* [#22311](https://github.com/cosmos/cosmos-sdk/pull/22311) Fix add feePayer as signer.
-
-## [v1.0.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.0.0-alpha.1) - 2024-10-17
-
-* [#21782](https://github.com/cosmos/cosmos-sdk/pull/21782) Fix JSON attribute sort order on messages with oneof fields.
-* [#21825](https://github.com/cosmos/cosmos-sdk/pull/21825) Fix decimal encoding and field ordering in Amino JSON encoder.
-* [#21850](https://github.com/cosmos/cosmos-sdk/pull/21850) Support bytes field as signer.
-
-## [v0.13.8](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.8) - 2025-01-28
-
-* [#23513](https://github.com/cosmos/cosmos-sdk/pull/23513), [#23539](https://github.com/cosmos/cosmos-sdk/pull/23539) Add map marshalling support (as option) to Amino JSON encoder. 
->>>>>>> d8ea6a952 (feat(client/v2): add map support (#23544))
-
-## [v0.13.7](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.7) - 2024-12-16
-
 * Fix [ABS-0043](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm) Limit recursion depth for unknown field detection
 
 ## [v0.13.6](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.6) - 2024-12-12

@@ -49,5 +49,3 @@ jobs:
         run: GOARCH=${{ matrix.go-arch }} make cosmovisor
       - name: Build Confix
         run: GOARCH=${{ matrix.go-arch }} make confix
-      - name: Build Hubl
-        run: GOARCH=${{ matrix.go-arch }} make hubl

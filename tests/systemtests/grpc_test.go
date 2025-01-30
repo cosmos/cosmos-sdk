@@ -50,7 +50,9 @@ func TestGRPC(t *testing.T) {
 }
 
 func TestGRPCQueryAutoCLIOptions(t *testing.T) {
-	t.Skip() // TODO(@julienrbrt): re-add autocli query in v2 in follow-up
+	if systest.IsV2() {
+		t.Skip() // TODO(@julienrbrt): re-add autocli query in v2 in follow-up
+	}
 
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)

@@ -181,6 +181,10 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 	slashURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/slashes`
 	invalidHeightOutput := `{"code":"NUMBER", "details":[], "message":"strconv.ParseUint: parsing \"NUMBER\": invalid syntax"}`
 
+	if !systest.IsV2() {
+		invalidHeightOutput = `{"code":3, "message":"strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
+	}
+
 	slashTestCases := []systest.RestTestCase{
 		{
 			Name:    "invalid start height",

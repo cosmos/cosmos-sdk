@@ -401,7 +401,7 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				txs := gjson.Get(string(res), "txs").Array()
-				require.Equal(t, tc.expLen, len(txs))
+				require.Equal(t, len(txs), tc.expLen)
 			}
 		})
 	}
@@ -1089,6 +1089,10 @@ func readTestAminoTxBinary(t *testing.T, aminoCodec *codec.LegacyAmino) ([]byte,
 }
 
 func TestSimulateTx_GasImprovements(t *testing.T) {
+	if !systest.IsV2() {
+		t.Skip("This test was made for testing gas improvements for v2. It doesn't work as is for v1, because of how the v1 handles out of gas issues compared to v2 (server error instead of proper response). This makes this test not compatible with v1.")
+	}
+
 	systest.Sut.ResetChain(t)
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)

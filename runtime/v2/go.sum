@@ -23,8 +23,8 @@ cosmossdk.io/server/v2/stf v1.0.0-beta.2 h1:d4zNeDvemOOxyIr0xDBpDKxhYKZBsLcxiK28
 cosmossdk.io/server/v2/stf v1.0.0-beta.2/go.mod h1:O6Njxje0LbvC0RxdgwTmvBlbGcpKOfhbkdAguyq0ntQ=
 cosmossdk.io/store/v2 v2.0.0-beta.1 h1:p1fdZ9uNijhpXZXdqs0QS6NmXNDVPNyT4DHV4yQnF64=
 cosmossdk.io/store/v2 v2.0.0-beta.1/go.mod h1:qHQmf/9mnsXwo/Ypp2u2Zs6BmkYcx1R/Jrpyn9Ro13A=
-cosmossdk.io/x/tx v1.0.1 h1:PomaVlERYWxhki9RKX+uTE30eJkyqIQjxc7kw1DPXUk=
-cosmossdk.io/x/tx v1.0.1/go.mod h1:dwOSom2k2BJuGgnm9YXBeFII9gbHJGN/BHZBVCbZvPg=
+cosmossdk.io/x/tx v1.1.0 h1:5C5XGNGYzbOTKbcf47oBI/VLObb5bmcMqH/C6H/sp1E=
+cosmossdk.io/x/tx v1.1.0/go.mod h1:QF15QyTcGH4wfKawfRdSihWwutf4OhgiA+HIwWhjle0=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.5.5 h1:oWf5W7GtOLgp6bciQYDmhHHjdhYkALu6S/5Ni9ZgSvQ=
 github.com/DataDog/zstd v1.5.5/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=

@@ -45,7 +45,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.4
@@ -68,7 +68,7 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/server/v2/stf v1.0.0-beta.2 // indirect
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 // indirect
-	cosmossdk.io/x/tx v1.0.1 // indirect
+	cosmossdk.io/x/tx v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

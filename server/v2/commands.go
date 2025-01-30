@@ -185,6 +185,7 @@ var appBuildingCommands = [][]string{
 	{"start"},
 	{"genesis", "export"},
 	{"store", "restore"},
+	{"store", "prune"},
 }
 
 // IsAppRequired determines if a command requires a full application to be built by

@@ -41,9 +41,6 @@ type App[T transaction.Tx] struct {
 	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
 	queryHandlers      map[string]appmodulev2.Handler // queryHandlers defines the query handlers
-
-	// storeKeys
-	storeKeys []string
 }
 
 // Name returns the app name.
@@ -113,14 +110,4 @@ func (a *App[T]) Close() error {
 // GetApp return self
 func (a *App[T]) GetApp() *App[T] {
 	return a
-}
-
-// SetStoreKeys sets the store keys.
-func (a *App[T]) SetStoreKeys(keys []string) {
-	a.storeKeys = keys
-}
-
-// GetStoreKeys returns the store keys that have been registered.
-func (a *App[T]) GetStoreKeys() []string {
-	return a.storeKeys
 }

@@ -51,7 +51,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Removed
 
-* (tools/hub) []() Remove `tools/hubl`. A similar tool will be maintained in [ignite](https://www.github.com/ignite/cli).
+* (tools/hub) [#23562](https://github.com/cosmos/cosmos-sdk/pull/23562) Remove `tools/hubl`. A similar tool will be maintained in [ignite](https://www.github.com/ignite/cli).
 
 ### API Breaking Changes
 

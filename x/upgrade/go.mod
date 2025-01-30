@@ -21,12 +21,21 @@ require (
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.1
+<<<<<<< HEAD
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240311132316-a219d84964c2
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.34.2
+=======
+	github.com/spf13/pflag v1.0.6
+	github.com/stretchr/testify v1.10.0
+	go.uber.org/mock v0.5.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20250106144421-5f5ef82da422
+	google.golang.org/grpc v1.70.0
+	google.golang.org/protobuf v1.36.4
+>>>>>>> 97c61cfb2 (build(deps): Bump github.com/spf13/pflag from 1.0.5 to 1.0.6 (#23555))
 )
 
 require (

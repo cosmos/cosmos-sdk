@@ -12,10 +12,17 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/spf13/cobra v1.8.1
+<<<<<<< HEAD
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.34.2
+=======
+	github.com/spf13/pflag v1.0.6
+	go.uber.org/mock v0.5.0
+	google.golang.org/grpc v1.70.0
+	google.golang.org/protobuf v1.36.4
+>>>>>>> 97c61cfb2 (build(deps): Bump github.com/spf13/pflag from 1.0.5 to 1.0.6 (#23555))
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
 )

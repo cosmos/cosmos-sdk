@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
+	coreserver "cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -110,7 +111,7 @@ func NewSimApp(
 	db corestore.KVStoreWithBatch,
 	traceStore io.Writer,
 	loadLatest bool,
-	appOpts servertypes.AppOptions,
+	appOpts coreserver.DynamicConfig,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 	var (

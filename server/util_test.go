@@ -16,6 +16,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	coreserver "cosmossdk.io/core/server"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -501,4 +503,4 @@ func (m mapGetter) GetString(key string) string {
 	return str.(string)
 }
 
-var _ servertypes.AppOptions = mapGetter{}
+var _ coreserver.DynamicConfig = mapGetter{}

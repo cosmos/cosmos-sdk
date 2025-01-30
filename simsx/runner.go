@@ -11,6 +11,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 
@@ -19,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -76,7 +76,7 @@ func Run[T SimulationApp](
 		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts servertypes.AppOptions,
+		appOpts server.DynamicConfig,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -102,7 +102,7 @@ func RunWithSeeds[T SimulationApp](
 		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts servertypes.AppOptions,
+		appOpts server.DynamicConfig,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -122,7 +122,7 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts servertypes.AppOptions,
+		appOpts server.DynamicConfig,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -152,7 +152,7 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 func RunWithSeed[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -166,7 +166,7 @@ func RunWithSeed[T SimulationApp](
 func RunWithSeedAndRandAcc[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -329,7 +329,7 @@ func prepareWeightedOps(
 func NewSimulationAppInstance[T SimulationApp](
 	tb testing.TB,
 	tCfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
 	tb.Helper()
 	workDir := tb.TempDir()

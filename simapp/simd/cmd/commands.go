@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	coreserver "cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
@@ -118,7 +119,7 @@ func newApp(
 	logger log.Logger,
 	db corestore.KVStoreWithBatch,
 	traceStore io.Writer,
-	appOpts servertypes.AppOptions,
+	appOpts coreserver.DynamicConfig,
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	return simapp.NewSimApp(
@@ -136,7 +137,7 @@ func appExport(
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions,
+	appOpts coreserver.DynamicConfig,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	viperAppOpts, ok := appOpts.(*viper.Viper)

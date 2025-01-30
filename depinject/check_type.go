@@ -3,10 +3,9 @@ package depinject
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"unicode"
-
-	"golang.org/x/exp/slices"
 )
 
 // isExportedType checks if the type is exported and not in an internal

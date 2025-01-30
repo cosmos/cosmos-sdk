@@ -37,13 +37,16 @@ func NewStoreDecoderFuncFromCollectionsSchema(schema collections.Schema) func(kv
 				if err != nil {
 					panic(err)
 				}
-				vAString, err := vc.Stringify(vA)
-				if err != nil {
-					panic(err)
+				vAString, vBString := "<nil>", "<nil>"
+				if vA != nil {
+					if vAString, err = vc.Stringify(vA); err != nil {
+						panic(err)
+					}
 				}
-				vBString, err := vc.Stringify(vB)
-				if err != nil {
-					panic(err)
+				if vB != nil {
+					if vBString, err = vc.Stringify(vB); err != nil {
+						panic(err)
+					}
 				}
 				return vAString + "\n" + vBString
 			}

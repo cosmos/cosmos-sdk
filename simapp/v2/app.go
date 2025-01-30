@@ -226,7 +226,8 @@ func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg.Options.IavlV2Config = iavlv2.DefaultOptions(int64(cfg.Options.SCPruningOption.KeepRecent))
+	cfg.Options.IavlV2Config = iavlv2.DefaultConfig()
+	cfg.Options.IavlV2Config.MinimumKeepVersions = int64(cfg.Options.SCPruningOption.KeepRecent)
 	iavlv2.SetGlobalPruneLimit(1)
 	return cfg, err
 }

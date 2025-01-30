@@ -63,21 +63,25 @@ service Query {
   // AddressBytesToString converts Account Address bytes to string
   rpc AddressBytesToString(AddressBytesToStringRequest) returns (AddressBytesToStringResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
-    option (google.api.http).get          = "/cosmos/auth/v1beta1/bech32/{address_bytes}";
-  }
+    option (google.api.http)              = {
+      get: "/cosmos/auth/v1beta1/bech32/{address_bytes}";
+  additional_bindings:
+    [{get: "/cosmos/auth/v1beta1/bech32/decode/{address_bytes}"}]
+  };
+}
 
-  // AddressStringToBytes converts Address string to bytes
-  rpc AddressStringToBytes(AddressStringToBytesRequest) returns (AddressStringToBytesResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
-    option (google.api.http).get          = "/cosmos/auth/v1beta1/bech32/{address_string}";
-  }
+// AddressStringToBytes converts Address string to bytes
+rpc AddressStringToBytes(AddressStringToBytesRequest) returns (AddressStringToBytesResponse) {
+  option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
+  option (google.api.http).get          = "/cosmos/auth/v1beta1/bech32/encode/{address_string}";
+}
 
-  // AccountInfo queries account info which is common to all account types.
-  rpc AccountInfo(QueryAccountInfoRequest) returns (QueryAccountInfoResponse) {
-    option (cosmos_proto.method_added_in)      = "cosmos-sdk 0.47";
-    option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get               = "/cosmos/auth/v1beta1/account_info/{address}";
-  }
+// AccountInfo queries account info which is common to all account types.
+rpc AccountInfo(QueryAccountInfoRequest) returns (QueryAccountInfoResponse) {
+  option (cosmos_proto.method_added_in)      = "cosmos-sdk 0.47";
+  option (cosmos.query.v1.module_query_safe) = true;
+  option (google.api.http).get               = "/cosmos/auth/v1beta1/account_info/{address}";
+}
 }
 
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.

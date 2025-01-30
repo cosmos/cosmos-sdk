@@ -1,4 +1,4 @@
-package module
+package module_test
 
 import (
 	"context"
@@ -14,34 +14,36 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 var (
 	_ appmodule.AppModule = coreAppModuleAdaptor{}
 
-	_ HasAminoCodec                   = coreAppModuleAdaptor{}
-	_ HasGRPCGateway                  = coreAppModuleAdaptor{}
+	_ module.HasAminoCodec            = coreAppModuleAdaptor{}
+	_ module.HasGRPCGateway           = coreAppModuleAdaptor{}
 	_ appmodule.HasRegisterInterfaces = coreAppModuleAdaptor{}
-	_ HasABCIGenesis                  = coreAppModuleAdaptor{}
-	_ HasServices                     = coreAppModuleAdaptor{}
+	_ module.HasABCIGenesis           = coreAppModuleAdaptor{}
+	_ module.HasServices              = coreAppModuleAdaptor{}
 )
 
-// CoreAppModuleAdaptor wraps the core API module as an AppModule that this version of the SDK can use.
-func CoreAppModuleAdaptor(name string, module appmodule.AppModule) AppModule {
+func newCoreAppModuleAdaptor(name string, module appmodule.AppModule) module.AppModule {
 	return coreAppModuleAdaptor{
-		name:   name,
-		module: module,
+		name:      name,
+		appModule: module,
 	}
 }
 
+// coreAppModuleAdaptor wraps the core API module as an AppModule that this version of the SDK can use.
+// This is only used for testing purposes.
 type coreAppModuleAdaptor struct {
-	name   string
-	module appmodule.AppModule
+	name      string
+	appModule appmodule.AppModule
 }
 
 // DefaultGenesis implements HasGenesis
 func (c coreAppModuleAdaptor) DefaultGenesis() json.RawMessage {
-	if mod, ok := c.module.(appmodule.HasGenesisAuto); ok {
+	if mod, ok := c.appModule.(appmodule.HasGenesisAuto); ok {
 		target := genesis.RawJSONTarget{}
 		err := mod.DefaultGenesis(target.Target())
 		if err != nil {
@@ -56,11 +58,11 @@ func (c coreAppModuleAdaptor) DefaultGenesis() json.RawMessage {
 		return res
 	}
 
-	if mod, ok := c.module.(HasGenesisBasics); ok {
+	if mod, ok := c.appModule.(module.HasGenesisBasics); ok {
 		return mod.DefaultGenesis()
 	}
 
-	if mod, ok := c.module.(HasGenesis); ok {
+	if mod, ok := c.appModule.(module.HasGenesis); ok {
 		return mod.DefaultGenesis()
 	}
 
@@ -69,7 +71,7 @@ func (c coreAppModuleAdaptor) DefaultGenesis() json.RawMessage {
 
 // ValidateGenesis implements HasGenesis
 func (c coreAppModuleAdaptor) ValidateGenesis(bz json.RawMessage) error {
-	if mod, ok := c.module.(appmodule.HasGenesisAuto); ok {
+	if mod, ok := c.appModule.(appmodule.HasGenesisAuto); ok {
 		source, err := genesis.SourceFromRawJSON(bz)
 		if err != nil {
 			return err
@@ -80,11 +82,11 @@ func (c coreAppModuleAdaptor) ValidateGenesis(bz json.RawMessage) error {
 		}
 	}
 
-	if mod, ok := c.module.(HasGenesisBasics); ok {
+	if mod, ok := c.appModule.(module.HasGenesisBasics); ok {
 		return mod.ValidateGenesis(bz)
 	}
 
-	if mod, ok := c.module.(HasGenesis); ok {
+	if mod, ok := c.appModule.(module.HasGenesis); ok {
 		return mod.ValidateGenesis(bz)
 	}
 
@@ -93,7 +95,7 @@ func (c coreAppModuleAdaptor) ValidateGenesis(bz json.RawMessage) error {
 
 // ExportGenesis implements HasGenesis
 func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	if module, ok := c.module.(appmodule.HasGenesisAuto); ok {
+	if module, ok := c.appModule.(appmodule.HasGenesisAuto); ok {
 		ctx := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 		target := genesis.RawJSONTarget{}
 		err := module.ExportGenesis(ctx, target.Target())
@@ -109,11 +111,11 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) (json.RawMessag
 		return rawJSON, nil
 	}
 
-	if mod, ok := c.module.(HasABCIGenesis); ok {
+	if mod, ok := c.appModule.(module.HasABCIGenesis); ok {
 		return mod.ExportGenesis(ctx)
 	}
 
-	if mod, ok := c.module.(HasGenesis); ok {
+	if mod, ok := c.appModule.(module.HasGenesis); ok {
 		eg, err := mod.ExportGenesis(ctx)
 		if err != nil {
 			return nil, err
@@ -126,8 +128,8 @@ func (c coreAppModuleAdaptor) ExportGenesis(ctx context.Context) (json.RawMessag
 }
 
 // InitGenesis implements HasGenesis
-func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessage) ([]ValidatorUpdate, error) {
-	if module, ok := c.module.(appmodule.HasGenesisAuto); ok {
+func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessage) ([]module.ValidatorUpdate, error) {
+	if module, ok := c.appModule.(appmodule.HasGenesisAuto); ok {
 		// core API genesis
 		source, err := genesis.SourceFromRawJSON(bz)
 		if err != nil {
@@ -139,11 +141,11 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessag
 		}
 	}
 
-	if mod, ok := c.module.(HasABCIGenesis); ok {
+	if mod, ok := c.appModule.(module.HasABCIGenesis); ok {
 		return mod.InitGenesis(ctx, bz)
 	}
 
-	if mod, ok := c.module.(HasGenesis); ok {
+	if mod, ok := c.appModule.(module.HasGenesis); ok {
 		if err := mod.InitGenesis(ctx, bz); err != nil {
 			return nil, err
 		}
@@ -159,7 +161,7 @@ func (c coreAppModuleAdaptor) Name() string {
 }
 
 func (c coreAppModuleAdaptor) GetQueryCmd() *cobra.Command {
-	if mod, ok := c.module.(interface {
+	if mod, ok := c.appModule.(interface {
 		GetQueryCmd() *cobra.Command
 	}); ok {
 		return mod.GetQueryCmd()
@@ -169,7 +171,7 @@ func (c coreAppModuleAdaptor) GetQueryCmd() *cobra.Command {
 }
 
 func (c coreAppModuleAdaptor) GetTxCmd() *cobra.Command {
-	if mod, ok := c.module.(interface {
+	if mod, ok := c.appModule.(interface {
 		GetTxCmd() *cobra.Command
 	}); ok {
 		return mod.GetTxCmd()
@@ -180,7 +182,7 @@ func (c coreAppModuleAdaptor) GetTxCmd() *cobra.Command {
 
 // RegisterGRPCGatewayRoutes implements HasGRPCGateway
 func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
-	if mod, ok := c.module.(interface {
+	if mod, ok := c.appModule.(interface {
 		RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux)
 	}); ok {
 		mod.RegisterGRPCGatewayRoutes(ctx, mux)
@@ -189,7 +191,7 @@ func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux 
 
 // RegisterInterfaces implements HasRegisterInterfaces
 func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.InterfaceRegistrar) {
-	if mod, ok := c.module.(interface {
+	if mod, ok := c.appModule.(interface {
 		RegisterInterfaces(registry.InterfaceRegistrar)
 	}); ok {
 		mod.RegisterInterfaces(reg)
@@ -198,7 +200,7 @@ func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.InterfaceRegistrar
 
 // RegisterLegacyAminoCodec implements HasAminoCodec
 func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino registry.AminoRegistrar) {
-	if mod, ok := c.module.(interface {
+	if mod, ok := c.appModule.(interface {
 		RegisterLegacyAminoCodec(amino registry.AminoRegistrar)
 	}); ok {
 		mod.RegisterLegacyAminoCodec(amino)
@@ -206,15 +208,15 @@ func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino registry.AminoRegis
 }
 
 // RegisterServices implements HasServices
-func (c coreAppModuleAdaptor) RegisterServices(cfg Configurator) {
-	if module, ok := c.module.(hasServicesV1); ok {
+func (c coreAppModuleAdaptor) RegisterServices(cfg module.Configurator) {
+	if module, ok := c.appModule.(module.HasRegisterServices); ok {
 		err := module.RegisterServices(cfg)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	if module, ok := c.module.(appmodule.HasMigrations); ok {
+	if module, ok := c.appModule.(appmodule.HasMigrations); ok {
 		err := module.RegisterMigrations(cfg)
 		if err != nil {
 			panic(err)

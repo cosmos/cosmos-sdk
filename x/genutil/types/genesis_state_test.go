@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

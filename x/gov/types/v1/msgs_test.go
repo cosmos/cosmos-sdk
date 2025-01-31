@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	banktypes "cosmossdk.io/x/bank/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

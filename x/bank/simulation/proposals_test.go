@@ -7,8 +7,8 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/x/bank/simulation"
-	"cosmossdk.io/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/types/address"

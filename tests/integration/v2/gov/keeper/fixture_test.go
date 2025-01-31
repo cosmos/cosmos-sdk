@@ -13,8 +13,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/bank"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/gov"
 	govkeeper "cosmossdk.io/x/gov/keeper"
@@ -23,6 +21,8 @@ import (
 	_ "cosmossdk.io/x/protocolpool"
 	_ "cosmossdk.io/x/staking"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"

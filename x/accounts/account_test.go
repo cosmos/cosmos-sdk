@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
-	banktypes "cosmossdk.io/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -17,10 +17,6 @@ import (
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	types "cosmossdk.io/x/accounts/defaults/lockup/v1"
-	_ "cosmossdk.io/x/bank" // import as blank for app wiring
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	"cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/distribution" // import as blank for app wiring
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
@@ -28,6 +24,10 @@ import (
 	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	_ "github.com/cosmos/cosmos-sdk/x/bank" // import as blank for app wiring
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"

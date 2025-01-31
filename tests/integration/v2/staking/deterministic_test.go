@@ -13,11 +13,11 @@ import (
 
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/math"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktestutil "cosmossdk.io/x/bank/testutil"
 	minttypes "cosmossdk.io/x/mint/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

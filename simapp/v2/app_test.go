@@ -23,7 +23,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	serverv2store "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/db"
-	banktypes "cosmossdk.io/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"

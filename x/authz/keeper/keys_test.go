@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	bank "cosmossdk.io/x/bank/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"

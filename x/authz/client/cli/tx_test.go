@@ -15,8 +15,8 @@ import (
 	"cosmossdk.io/x/authz/client/cli"
 	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
 	authz "cosmossdk.io/x/authz/module"
-	"cosmossdk.io/x/bank"
-	banktypes "cosmossdk.io/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

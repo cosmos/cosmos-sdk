@@ -6,8 +6,8 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/runtime/v2"
-	bankv2types "cosmossdk.io/x/bank/v2/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	bankv2types "github.com/cosmos/cosmos-sdk/x/bank/v2/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade

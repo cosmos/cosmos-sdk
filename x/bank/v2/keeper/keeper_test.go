@@ -14,9 +14,9 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/bank/v2/keeper"
-	banktestutil "cosmossdk.io/x/bank/v2/testutil"
-	banktypes "cosmossdk.io/x/bank/v2/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/v2/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/v2/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/v2/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"

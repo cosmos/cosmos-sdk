@@ -7,9 +7,9 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

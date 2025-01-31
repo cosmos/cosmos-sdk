@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"cosmossdk.io/core/address"
-	bank "cosmossdk.io/x/bank/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	bankexported "cosmossdk.io/x/bank/exported"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

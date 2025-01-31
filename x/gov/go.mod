@@ -155,10 +155,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require (
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-)
+require cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/bytedance/sonic v1.12.8 // indirect
@@ -179,7 +176,6 @@ replace (
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/staking => ../staking
 )

@@ -12,7 +12,7 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
-	banktypes "cosmossdk.io/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

@@ -28,10 +28,7 @@ require (
 
 require github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 
-require (
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/gov v0.0.0-00010101000000-000000000000
-)
+require cosmossdk.io/x/gov v0.0.0-00010101000000-000000000000
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
@@ -175,7 +172,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/staking => ../staking

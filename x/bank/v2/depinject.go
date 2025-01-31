@@ -10,9 +10,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/bank/v2/keeper"
-	"cosmossdk.io/x/bank/v2/types"
-	moduletypes "cosmossdk.io/x/bank/v2/types/module"
+	"github.com/cosmos/cosmos-sdk/x/bank/v2/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/v2/types"
+	moduletypes "github.com/cosmos/cosmos-sdk/x/bank/v2/types/module"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"

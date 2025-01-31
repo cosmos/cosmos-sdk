@@ -8,11 +8,11 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/accounts"  // import as blank for app wiring
-	_ "cosmossdk.io/x/bank"      // import as blank for app wiring
 	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	_ "cosmossdk.io/x/mint"      // import as blank for app wiring
 	"cosmossdk.io/x/mint/types"
-	_ "cosmossdk.io/x/staking" // import as blank for app wiring
+	_ "cosmossdk.io/x/staking"              // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank" // import as blank for app wiring
 
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"

@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	_ "cosmossdk.io/x/accounts"
-	banktestutil "cosmossdk.io/x/bank/testutil"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/distribution"
 	_ "cosmossdk.io/x/protocolpool"
@@ -20,6 +19,7 @@ import (
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

@@ -6,9 +6,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	"cosmossdk.io/x/bank/testutil"
-	"cosmossdk.io/x/bank/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

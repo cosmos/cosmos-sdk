@@ -13,8 +13,8 @@ import (
 	"cosmossdk.io/x/authz"
 	v2 "cosmossdk.io/x/authz/migrations/v2"
 	authzmodule "cosmossdk.io/x/authz/module"
-	"cosmossdk.io/x/bank"
-	banktypes "cosmossdk.io/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

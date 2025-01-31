@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/x/authz"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/authz/simulation"
-	banktypes "cosmossdk.io/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/types/module"

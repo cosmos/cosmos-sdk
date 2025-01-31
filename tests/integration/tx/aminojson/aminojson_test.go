@@ -20,8 +20,6 @@ import (
 	"cosmossdk.io/math"
 	authztypes "cosmossdk.io/x/authz"
 	authzmodule "cosmossdk.io/x/authz/module"
-	"cosmossdk.io/x/bank"
-	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/distribution"
 	disttypes "cosmossdk.io/x/distribution/types"
@@ -38,6 +36,8 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/upgrade"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/x/bank/v2/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/v2/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

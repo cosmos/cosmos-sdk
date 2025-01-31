@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
-	banktypes "cosmossdk.io/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

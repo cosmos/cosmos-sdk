@@ -31,10 +31,10 @@ import (
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	txsigning "cosmossdk.io/x/tx/signing"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

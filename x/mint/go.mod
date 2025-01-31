@@ -148,7 +148,6 @@ require (
 )
 
 require (
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	github.com/bytedance/sonic v1.12.8 // indirect
 	github.com/bytedance/sonic/loader v0.2.3 // indirect
@@ -167,7 +166,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
-	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/epochs => ../epochs
 	cosmossdk.io/x/staking => ../staking
 )

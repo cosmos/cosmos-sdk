@@ -11,10 +11,10 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/header"
-	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
 	"cosmossdk.io/x/group/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"

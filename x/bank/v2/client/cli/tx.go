@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/x/bank/v2/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/v2/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

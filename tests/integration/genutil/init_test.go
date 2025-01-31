@@ -15,9 +15,9 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/bank"
 	_ "cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

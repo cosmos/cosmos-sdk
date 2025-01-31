@@ -7,7 +7,7 @@ import (
 	v1 "cosmossdk.io/api/cosmos/gov/v1"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/authz"
-	banktypes "cosmossdk.io/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

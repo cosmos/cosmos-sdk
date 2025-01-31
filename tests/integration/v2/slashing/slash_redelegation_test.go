@@ -9,10 +9,10 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktestutil "cosmossdk.io/x/bank/testutil"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"

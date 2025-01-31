@@ -150,7 +150,6 @@ require (
 
 require (
 	cosmossdk.io/core/testing v0.0.1
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 )
 
@@ -173,7 +172,4 @@ replace (
 )
 
 // TODO remove post spinning out all modules
-replace (
-	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/staking => ../staking
-)
+replace cosmossdk.io/x/staking => ../staking

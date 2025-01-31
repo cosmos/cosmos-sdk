@@ -17,15 +17,15 @@ import (
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
-	_ "cosmossdk.io/x/bank" // import as blank for app wiring
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	"cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/distribution" // import as blank for app wiring
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/bank" // import as blank for app wiring
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

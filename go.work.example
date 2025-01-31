@@ -32,7 +32,6 @@ use (
 	./x/accounts/defaults/multisig
 	./x/auth
 	./x/authz
-	./x/bank
 	./x/circuit
 	./x/consensus
 	./x/distribution

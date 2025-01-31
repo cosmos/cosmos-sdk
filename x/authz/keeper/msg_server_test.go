@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/authz"
-	banktypes "cosmossdk.io/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

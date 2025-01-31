@@ -11,7 +11,6 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/store v1.10.0-rc.1
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -173,7 +172,6 @@ replace (
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking
 )

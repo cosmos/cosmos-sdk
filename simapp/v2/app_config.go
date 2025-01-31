@@ -35,10 +35,7 @@ import (
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
-	_ "cosmossdk.io/x/bank"         // import for side-effects
-	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/bank/v2" // import for side-effects
-	_ "cosmossdk.io/x/circuit" // import for side-effects
+	_ "cosmossdk.io/x/circuit"      // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects
 	consensustypes "cosmossdk.io/x/consensus/types"
@@ -66,6 +63,9 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	_ "github.com/cosmos/cosmos-sdk/x/bank" // import for side-effects
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/bank/v2" // import for side-effects
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import for side-effects
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"

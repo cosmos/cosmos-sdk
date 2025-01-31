@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/core/header"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 	counterv1 "cosmossdk.io/x/accounts/testing/counter/v1"
-	"cosmossdk.io/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"

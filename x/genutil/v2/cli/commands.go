@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/transaction"
-	banktypes "cosmossdk.io/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"

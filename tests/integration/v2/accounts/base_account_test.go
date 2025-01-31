@@ -10,9 +10,9 @@ import (
 
 	"cosmossdk.io/x/accounts"
 	baseaccountv1 "cosmossdk.io/x/accounts/defaults/base/v1"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	"cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

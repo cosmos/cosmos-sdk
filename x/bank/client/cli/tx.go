@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -3,7 +3,7 @@ package testutil
 import (
 	"context"
 
-	"cosmossdk.io/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

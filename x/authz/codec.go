@@ -3,8 +3,8 @@ package authz
 import (
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
-	bank "cosmossdk.io/x/bank/types"
 	staking "cosmossdk.io/x/staking/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"

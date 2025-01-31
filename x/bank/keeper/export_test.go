@@ -1,6 +1,6 @@
 package keeper
 
-import "cosmossdk.io/x/bank/types"
+import "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 // This file exists in the keeper package to expose some private things
 // for the purpose of testing in the keeper_test package.

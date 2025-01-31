@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/group"
 	groupmodule "cosmossdk.io/x/group/module"
 	"cosmossdk.io/x/group/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/types/module"

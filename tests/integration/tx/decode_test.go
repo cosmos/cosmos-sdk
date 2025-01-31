@@ -14,7 +14,6 @@ import (
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/math"
 	authzmodule "cosmossdk.io/x/authz/module"
-	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/evidence"
@@ -27,6 +26,7 @@ import (
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

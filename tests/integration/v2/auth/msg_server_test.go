@@ -10,8 +10,8 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"

@@ -10,9 +10,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
-	_ "cosmossdk.io/x/bank"     // import as blank for app wiring
-	bankkeeper "cosmossdk.io/x/bank/keeper"
+	_ "cosmossdk.io/x/accounts"     // import as blank for app wiring
 	_ "cosmossdk.io/x/consensus"    // import as blank for app wiring
 	_ "cosmossdk.io/x/distribution" // import as blank for app wiring
 	_ "cosmossdk.io/x/mint"         // import as blank for app wiring
@@ -22,6 +20,8 @@ import (
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/bank" // import as blank for app wiring
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"

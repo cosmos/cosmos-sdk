@@ -9,10 +9,10 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/bank/testutil"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

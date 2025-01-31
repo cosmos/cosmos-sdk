@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	_ "cosmossdk.io/x/bank"
-	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

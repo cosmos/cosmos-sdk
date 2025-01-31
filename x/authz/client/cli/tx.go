@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/x/authz"
-	bank "cosmossdk.io/x/bank/types"
 	staking "cosmossdk.io/x/staking/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -14,7 +14,7 @@ import (
 	json "encoding/json"
 	reflect "reflect"
 
-	exported "cosmossdk.io/x/bank/exported"
+	exported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"

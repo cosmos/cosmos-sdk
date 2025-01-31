@@ -12,9 +12,9 @@ import (
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/module"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

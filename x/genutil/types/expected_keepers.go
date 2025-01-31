@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	bankexported "cosmossdk.io/x/bank/exported"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

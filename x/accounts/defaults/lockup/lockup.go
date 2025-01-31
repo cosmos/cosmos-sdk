@@ -16,9 +16,9 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/v1"
-	banktypes "cosmossdk.io/x/bank/types"
 	distrtypes "cosmossdk.io/x/distribution/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

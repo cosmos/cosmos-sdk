@@ -8,10 +8,10 @@ import (
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/gov"
 	v5 "cosmossdk.io/x/gov/migrations/v5"
 	v1 "cosmossdk.io/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"

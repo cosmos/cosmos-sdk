@@ -13,7 +13,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz/keeper"
 	authzmodule "cosmossdk.io/x/authz/module"
-	bank "cosmossdk.io/x/bank/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

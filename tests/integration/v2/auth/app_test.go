@@ -17,11 +17,11 @@ import (
 	"cosmossdk.io/x/accounts"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
-	_ "cosmossdk.io/x/bank" // import as blank for app wiring
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
-	_ "cosmossdk.io/x/staking"   // import as blank for app wirings
+	_ "cosmossdk.io/x/consensus"            // import as blank for app wiring
+	_ "cosmossdk.io/x/staking"              // import as blank for app wirings
+	_ "github.com/cosmos/cosmos-sdk/x/bank" // import as blank for app wiring
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"

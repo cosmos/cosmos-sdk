@@ -9,9 +9,9 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/math"
-	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/staking/types"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -10,9 +10,9 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/x/bank/v2/client/cli"
-	"cosmossdk.io/x/bank/v2/keeper"
-	"cosmossdk.io/x/bank/v2/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/v2/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/bank/v2/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/v2/types"
 )
 
 // ConsensusVersion defines the current x/bank/v2 module consensus version.

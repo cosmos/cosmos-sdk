@@ -19,12 +19,12 @@ import (
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	counteraccount "cosmossdk.io/x/accounts/testing/counter"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
-	"cosmossdk.io/x/bank"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking" // import as blank for app wirings
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

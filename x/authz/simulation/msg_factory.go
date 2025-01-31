@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
-	banktype "cosmossdk.io/x/bank/types"
+	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"

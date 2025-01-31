@@ -31,7 +31,7 @@ Welcome to the Cosmos SDK's team roadmap.
 * [x] Multi-chain command **(Done)**
     * Release a cmd line tool that can be pointed a grpc endpoint which then can produce cmd lines to interact with the chain
 * [x] Auto-cli tx support 
-    * Tx support for auto-cli/hubl
+    * Tx support for auto-cli
         * This would fully remove the need for application developers to write cli commands for their modules
 * [ ] [Consensus Key Rotation](https://github.com/cosmos/cosmos-sdk/issues/5231)
 
@@ -121,9 +121,8 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 ### Client UX
 
-* [ ] Hubl/AutoCLI
+* [ ] AutoCLI
     * Objective:
-        * Allow users to sign and submit transactions using hubl
         * Add module support for autocli
         * Deprecate/remove legacy cli (optional)
     * Progress:

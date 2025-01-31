@@ -3,11 +3,11 @@ package codegen
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 
 	"github.com/iancoleman/strcase"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -57,8 +57,7 @@ func (g queryProtoGen) gen() error {
 	outBuf.F("package %s;", g.Desc.Package())
 	outBuf.F("")
 
-	imports := maps.Keys(g.imports)
-	slices.Sort(imports)
+	imports := slices.Sorted(maps.Keys(g.imports))
 	for _, i := range imports {
 		outBuf.F(`import "%s";`, i)
 	}

@@ -42,21 +42,16 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
-* (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
 * (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
-* (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
 
 ### Improvements
 
-* (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recursion limits.
-
 ### Bug Fixes
 
-* (query) [23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
-* (x/auth/tx) [#23170](https://github.com/cosmos/cosmos-sdk/pull/23170) Avoid panic from newWrapperFromDecodedTx when AuthInfo.Fee is optional in decodedTx.
-* (x/auth/tx) [23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing CacheWithValue for ExtensionOptions.
-* (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from intoAnyV2 when v1.PublicKey is optional.
+### Removed
+
+* (tools/hub) [#23562](https://github.com/cosmos/cosmos-sdk/pull/23562) Remove `tools/hubl`. A similar tool will be maintained in [ignite](https://www.github.com/ignite/cli).
 
 ### API Breaking Changes
 
@@ -71,6 +66,37 @@ This subsection lists the API breaking changes that are [part of the removal of 
 * (server) [#23018](https://github.com/cosmos/cosmos-sdk/pull/23018) [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) The server package has been removed. Use server/v2 instead
 * (x/genutil) [#23238](https://github.com/cosmos/cosmos-sdk/pull/23238) Genutil commands specific to a baseapp chain have been deleted.
 * (client) [#22904](https://github.com/cosmos/cosmos-sdk/issues/22904) v1 specific client commands have been removed.
+
+## [v0.52.0-rc.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-rc.2) - 2025-01-23
+
+Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
+
+### Features
+
+* (sims) [#23013](https://github.com/cosmos/cosmos-sdk/pull/23013) Integration with app v2
+* (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
+* (server) [#23321](https://github.com/cosmos/cosmos-sdk/pull/23321) Add custom rollback command option. In order to use it, you need to implement the Rollback interface and remove the default rollback command with `cmd.RemoveCommand(cmd.RollbackCmd)` and then add it back with `cmd.AddCommand(cmd.NewCustomRollbackCmd(appCreator, rollbackable))`.
+
+### Improvements
+
+* [#23470](https://github.com/cosmos/cosmos-sdk/pull/23470) Converge to use of one single sign mode type and signer data:
+  * Use api's signmode throughout the SDK to align with `cosmossdk.io/tx`. This allows developer not to juggle between sign mode types
+  * Deprecate `authsigning.SignerData` in favor of txsigning.SignerData and replace its usage
+  * Remove `APISignModeToInternal` from `x/auth` as no conversion is necessary by the user anymore
+* (all) [#23445](https://github.com/cosmos/cosmos-sdk/pull/23445) Remove `v2` code from codebase.
+* (codec) [#22988](https://github.com/cosmos/cosmos-sdk/pull/22988) Improve edge case handling for recursion limits.
+* (proto) [#23437](https://github.com/cosmos/cosmos-sdk/pull/23437) Deprecate `Block` field from `GetBlockByHeightResponse` and return empty comet block for `GetBlockByHeight`.
+* (module) [#23488](https://github.com/cosmos/cosmos-sdk/pull/23488) Remove CoreAppModuleAdaptor which is no longer used and add HasRegisterServices public interface.
+
+### Bug Fixes
+
+* (x/auth/tx) [#23492](https://github.com/cosmos/cosmos-sdk/pull/23492) Add missing timeoutTimestamp in newBuilderFromDecodedTx.
+* (query) [#23002](https://github.com/cosmos/cosmos-sdk/pull/23002) Fix collection filtered pagination.
+* (x/auth/tx) [#23170](https://github.com/cosmos/cosmos-sdk/pull/23170) Avoid panic from `newWrapperFromDecodedTx` when `AuthInfo.Fee` is optional in decodedTx.
+* (x/auth/tx) [#23144](https://github.com/cosmos/cosmos-sdk/pull/23144) Add missing `CacheWithValue` for `ExtensionOptions`.
+* (x/auth/tx) [#23148](https://github.com/cosmos/cosmos-sdk/pull/23148) Avoid panic from `intoAnyV2` when v1.PublicKey is optional.
+* (server) [#23244](https://github.com/cosmos/cosmos-sdk/pull/23244) Allow align block header with skip check header in grpc server.
+* (x/auth) [#23357](https://github.com/cosmos/cosmos-sdk/pull/23357) Fixes accessibility of the AddressStringToBytes HTTP binding and adds another binding to AddressBytesToString.
 
 ### Deprecated
 

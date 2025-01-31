@@ -8,6 +8,7 @@ import (
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"sigs.k8s.io/yaml"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -153,7 +154,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 	multiPK, ok := key.(multisig.PubKey)
 	if !ok {
 		return &signing.SingleSignatureData{
-			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			SignMode:  apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: sig,
 		}, nil
 	}

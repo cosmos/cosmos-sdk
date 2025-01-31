@@ -206,8 +206,7 @@ func IsAppRequired(cmd *cobra.Command, required ...[]string) bool {
 	}
 	cmdPath := make([]string, 0, 5) // Pre-allocate with reasonable capacity
 	for {
-		cmdName := cmd.Name()
-		cmdPath = append(cmdPath, cmdName)
+		cmdPath = append(cmdPath, cmd.Name())
 		if _, ok := m[strings.Join(cmdPath, "")]; ok {
 			return true
 		}

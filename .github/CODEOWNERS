@@ -35,7 +35,6 @@
 /store/ @cosmos/sdk-core-dev
 /store/v2/ @cosmos/sdk-core-dev
 /types/mempool/ @cosmos/sdk-core-dev
-/tools/hubl @julienrbrt @JulianToledano @cosmos/sdk-core-dev
 /tools/cosmovisor @julienrbrt @cosmos/sdk-core-dev
 /tools/confix @julienrbrt @cosmos/sdk-core-dev
 /tests/integration/aminojson @cosmos/sdk-core-dev

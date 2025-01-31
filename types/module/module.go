@@ -90,15 +90,16 @@ type HasInvariants interface {
 	RegisterInvariants(sdk.InvariantRegistry)
 }
 
-// HasServices is the interface for modules to register services.
+// HasServices is the interface for modules to register legacy services using the deprecated Configurator type.
+// Deprecated: use HasRegisterServices and its interface in your modules instea.
 type HasServices interface {
 	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
 }
 
-// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// HasRegisterServices is the interface for registering service in baseapp Cosmos SDK.
 // This API is part of core/appmodule but commented out for dependencies.
-type hasServicesV1 interface {
+type HasRegisterServices interface {
 	appmodulev2.AppModule
 
 	RegisterServices(grpc.ServiceRegistrar) error
@@ -406,7 +407,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 			module.RegisterServices(cfg)
 		}
 
-		if module, ok := module.(hasServicesV1); ok {
+		if module, ok := module.(HasRegisterServices); ok {
 			err := module.RegisterServices(cfg)
 			if err != nil {
 				return err

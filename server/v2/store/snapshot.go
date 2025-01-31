@@ -39,6 +39,17 @@ func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 			}
 
 			logger := serverv2.GetLoggerFromCmd(cmd)
+			rootStore, _, err := createRootStore(v, logger)
+			if err != nil {
+				return err
+			}
+			if height == 0 {
+				lastCommitId, err := rootStore.LastCommitID()
+				if err != nil {
+					return err
+				}
+				height = lastCommitId.Version
+			}
 
 			cmd.Printf("Exporting snapshot for height %d\n", height)
 

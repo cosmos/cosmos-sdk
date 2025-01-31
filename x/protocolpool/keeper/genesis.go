@@ -77,6 +77,21 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 }
 
 func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
+	// refresh all funds
+	if err := k.IterateAndUpdateFundsDistribution(ctx); err != nil {
+		return nil, err
+	}
+
+	// withdraw all rewards before exporting genesis
+	if err := k.RecipientFundDistribution.Walk(ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
+		if _, err := k.withdrawRecipientFunds(ctx, key.Bytes()); err != nil {
+			return true, err
+		}
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+
 	var cf []*types.ContinuousFund
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)

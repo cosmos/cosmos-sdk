@@ -25,7 +25,7 @@ func TestCommitterSuite(t *testing.T) {
 			multiTrees := make(map[string]commitment.Tree)
 			mountTreeFn := func(storeKey string) (commitment.Tree, error) {
 				path := fmt.Sprintf("%s/%s", dbDir, storeKey)
-				tree, err := NewTree(iavl.DefaultTreeOptions(), iavl.SqliteDbOptions{Path: path}, logger)
+				tree, err := NewTree(DefaultConfig(), iavl.SqliteDbOptions{Path: path}, logger)
 				require.NoError(t, err)
 				return tree, nil
 			}

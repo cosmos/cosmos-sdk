@@ -25,8 +25,6 @@ type Builder interface {
 	RegisterKey(string)
 	// Get returns the Store.  Build should be called before calling Get or the result will be nil.
 	Get() store.RootStore
-	// GetStoreKeys returns the store keys that have been registered.
-	GetStoreKeys() []string
 }
 
 var _ Builder = (*builder)(nil)
@@ -99,12 +97,4 @@ func (sb *builder) Get() store.RootStore {
 
 func (sb *builder) RegisterKey(key string) {
 	sb.storeKeys[key] = struct{}{}
-}
-
-func (sb *builder) GetStoreKeys() []string {
-	keys := make([]string, 0, len(sb.storeKeys))
-	for key := range sb.storeKeys {
-		keys = append(keys, key)
-	}
-	return keys
 }

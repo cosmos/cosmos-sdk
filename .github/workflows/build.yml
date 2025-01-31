@@ -39,8 +39,3 @@ jobs:
       - name: Build with Secp_cgo
         if: matrix.go-arch == 'amd64'
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=secp make build
-        ###################
-        ## Build Tooling ##
-        ###################
-      - name: Build Confix
-        run: GOARCH=${{ matrix.go-arch }} make confix

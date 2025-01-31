@@ -970,3 +970,40 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	iter := mp.Select(ctx, nil)
 	require.Equal(t, txs[3], iter.Tx())
 }
+
+func TestPriorityNonceMempool_UnorderedTx(t *testing.T) {
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+
+	mp := mempool.DefaultPriorityMempool()
+
+	now := time.Now()
+	oneHour := now.Add(1 * time.Hour)
+	thirtyMin := now.Add(30 * time.Minute)
+	twoHours := now.Add(2 * time.Hour)
+	fifteenMin := now.Add(15 * time.Minute)
+
+	txs := []testTx{
+		{id: 1, priority: 0, address: sa, timeout: &thirtyMin, unordered: true},
+		{id: 0, priority: 0, address: sa, timeout: &oneHour, unordered: true},
+		{id: 3, priority: 0, address: sb, timeout: &fifteenMin, unordered: true},
+		{id: 2, priority: 0, address: sb, timeout: &twoHours, unordered: true},
+	}
+
+	for _, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		require.NoError(t, mp.Insert(c, tx))
+	}
+
+	require.Equal(t, 4, mp.CountTx())
+
+	orderedTxs := fetchTxs(mp.Select(ctx, nil), 100000)
+	require.Equal(t, len(txs), len(orderedTxs))
+
+	// check order
+	for i, tx := range orderedTxs {
+		require.Equal(t, txs[i].id, tx.(testTx).id)
+	}
+}

@@ -139,19 +139,19 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
 
+	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		timestamp := unordered.GetTimeoutTimeStamp().Unix()
+		if timestamp < 0 {
+			return errors.New("invalid timestamp value")
+		}
+		nonce = uint64(timestamp)
+	}
+
 	senderTxs, found := snm.senders[sender]
 	if !found {
 		senderTxs = skiplist.New(skiplist.Uint64)
 		snm.senders[sender] = senderTxs
-	}
-
-	// if it's an unordered tx, we use the gas instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		gasLimit, err := unordered.GetGasLimit()
-		nonce = gasLimit
-		if err != nil {
-			return err
-		}
 	}
 
 	senderTxs.Set(nonce, tx)
@@ -236,13 +236,13 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
 
-	// if it's an unordered tx, we use the gas instead of the nonce
+	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
 	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		gasLimit, err := unordered.GetGasLimit()
-		nonce = gasLimit
-		if err != nil {
-			return err
+		timestamp := unordered.GetTimeoutTimeStamp().Unix()
+		if timestamp < 0 {
+			return errors.New("invalid timestamp value")
 		}
+		nonce = uint64(timestamp)
 	}
 
 	senderTxs, found := snm.senders[sender]

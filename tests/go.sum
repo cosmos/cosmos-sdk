@@ -214,6 +214,7 @@ cosmossdk.io/schema v1.0.0 h1:/diH4XJjpV1JQwuIozwr+A4uFuuwanFdnw2kKeiXwwQ=
 cosmossdk.io/schema v1.0.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43 h1:glZ6MpmD+5AhwJYV4jzx+rn7cgUB2owHgk9o+93luz0=
 cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43/go.mod h1:XCWpgfueHSBY+B7Cf2Aq/CcsU+6XoFH+EmseCKglFrU=
+cosmossdk.io/tools/benchmark v0.2.0-rc.1 h1:Jgk0FLvnMQJrivrSMhKQBwaTiJz6MGq5ZbaHag7Sqq0=
 cosmossdk.io/tools/benchmark v0.2.0-rc.1/go.mod h1:tnGa8L7xHFMp26FbLvU5MRlS89BFrCxSOKR8jCi7kVU=
 cosmossdk.io/x/tx v1.1.0 h1:5C5XGNGYzbOTKbcf47oBI/VLObb5bmcMqH/C6H/sp1E=
 cosmossdk.io/x/tx v1.1.0/go.mod h1:QF15QyTcGH4wfKawfRdSihWwutf4OhgiA+HIwWhjle0=

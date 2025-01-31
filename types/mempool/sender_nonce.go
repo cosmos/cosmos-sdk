@@ -4,6 +4,7 @@ import (
 	"context"
 	crand "crypto/rand" // #nosec // crypto/rand is used for seed generation
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
 	"sync"

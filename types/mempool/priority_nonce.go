@@ -2,6 +2,7 @@ package mempool
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sync"

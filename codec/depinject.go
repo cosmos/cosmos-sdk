@@ -51,8 +51,9 @@ func ProvideInterfaceRegistry(
 	return interfaceRegistry, interfaceRegistry, nil
 }
 
-func ProvideLegacyAmino() registry.AminoRegistrar {
-	return NewLegacyAmino()
+func ProvideLegacyAmino() (registry.AminoRegistrar, *LegacyAmino) {
+	amino := NewLegacyAmino()
+	return amino, amino
 }
 
 func ProvideProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {

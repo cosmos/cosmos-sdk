@@ -3,7 +3,6 @@
 find build/modules ! -name '_category_.json' -type f -exec rm -rf {} +
 rm -rf build/tooling/01-cosmovisor.md
 rm -rf build/tooling/02-confix.md
-rm -rf build/tooling/03-hubl.md
 rm -rf build/packages/01-depinject.md
 rm -rf build/packages/02-collections.md
 rm -rf build/packages/03-orm.md

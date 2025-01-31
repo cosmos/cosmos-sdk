@@ -1236,8 +1236,6 @@ For example, assuming you put all your proto files in subfolders inside your roo
 
 If you are using a custom folder structure for your proto files, please reorganize them so that their OS path matches their proto package name.
 
-This is to allow the proto FileDescriptSets to be correctly registered, and this standardized OS import paths allows [Hubl](https://github.com/cosmos/cosmos-sdk/tree/main/tools/hubl) to reflectively talk to any chain.
-
 #### `{accepts,implements}_interface` proto annotations
 
 The SDK is normalizing the strings inside the Protobuf `accepts_interface` and `implements_interface` annotations. We require them to be fully-scoped names. They will soon be used by code generators like Pulsar and Telescope to match which messages can or cannot be packed inside `Any`s.

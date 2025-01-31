@@ -94,7 +94,7 @@ The keyring is then converted to the `client/v2/autocli/keyring` interface.
 If no keyring is provided, the `autocli` generated command will not be able to sign transactions, but will still be able to query the chain.
 
 :::tip
-The Cosmos SDK keyring and Hubl keyring both implement the `client/v2/autocli/keyring` interface, thanks to the following wrapper:
+The Cosmos SDK keyring implements the `client/v2/autocli/keyring` interface, thanks to the following wrapper:
 
 ```go
 keyring.NewAutoCLIKeyring(kb)
@@ -282,10 +282,6 @@ According to the [Cobra documentation](https://pkg.go.dev/github.com/spf13/cobra
 ### Summary
 
 `autocli` lets you generate CLI to your Cosmos SDK-based applications without any cobra boilerplate. It allows you to easily generate CLI commands and flags from your protobuf messages, and provides many options for customising the behavior of your CLI application.
-
-To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `hubl`. `hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With `hubl`, you can easily configure a new chain and query modules with just a few simple commands.
-
-For more information on `hubl`, including how to configure a new chain and query a module, see the [Hubl documentation](https://docs.cosmos.network/main/build/tooling/hubl).
 
 # Off-Chain
 

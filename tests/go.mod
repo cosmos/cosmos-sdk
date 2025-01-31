@@ -250,7 +250,6 @@ replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08
-	cosmossdk.io/tools/benchmark => ../tools/benchmark
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

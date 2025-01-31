@@ -1,12 +1,6 @@
 "C:CLI":
   - client/**/*
   - x/*/client/**/*
-"C:Confix":
-  - tools/confix/**/*
-"C:Cosmovisor":
-  - tools/cosmovisor/**/*
-"C:Hubl":
-  - tools/hubl/**/*
 "C:Keys":
   - client/keys/**/*
 "C:Simulations":
@@ -14,7 +8,6 @@
   - x/simulation/**/*
   - x/*/simulation/**/*
   - simsx/**/*
-  - tools/benchmark/**/*
 "C:Store":
   - store/**/*
 "C:collections":

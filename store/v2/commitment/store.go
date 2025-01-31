@@ -563,6 +563,9 @@ loop:
 					node.Value = []byte{}
 				}
 			}
+			if node.Version == 0 {
+				node.Version = int64(version)
+			}
 			err := importer.Add(node)
 			if err != nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to add node to importer: %w", err)

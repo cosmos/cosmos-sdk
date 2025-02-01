@@ -2409,7 +2409,7 @@ func skipGrpc(dAtA []byte) (n int, err error) {
 }
 
 var (
-	ErrInvalidLengthGrpc        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrInvalidLengthGrpc        = fmt.Errorf("proto: negative length found during unmarshalling")
 	ErrIntOverflowGrpc          = fmt.Errorf("proto: integer overflow")
 	ErrUnexpectedEndOfGroupGrpc = fmt.Errorf("proto: unexpected end of group")
 )

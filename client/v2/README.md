@@ -252,7 +252,7 @@ Off-chain is a `client/v2` package providing functionalities for allowing to sig
 * `sign-file` for signing a file.
 * `verify-file` for verifying a previously signed file.
 
-Signing a file will result in a Tx with a `MsgSignArbitraryData` as described in the [Off-chain CIP](https://github.com/cosmos/cips/blob/main/cips/cip-X.md).
+Signing a file will result in a Tx with a `MsgSignArbitraryData` as described in the [Off-chain CIP](https://github.com/cosmos/chips/blob/main/chips/cip-X.md).
 
 ## Sign a file
 

@@ -13,8 +13,6 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
-rocksdb_version=v9.6.1
-
 ifeq ($(findstring .,$(VERSION)),)
 	VERSION := 0.0.0
 endif

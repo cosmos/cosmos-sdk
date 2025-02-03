@@ -25,29 +25,22 @@ func TestChainUpgrade(t *testing.T) {
 	// then the chain upgrades successfully
 	systest.Sut.StopChain()
 
-	legacyBinary := FetchExecutable(t, "v0.50")
+	legacyBinary := FetchExecutable(t, "0.52.0-rc.2")
 	t.Logf("+++ legacy binary: %s\n", legacyBinary)
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
 	systest.Sut.SetExecBinary(legacyBinary)
-	// the v0.50 binary needs a different initializer than later versions.
-	// some startup flags were renamed
-	systest.Sut.SetTestnetInitializer(systest.NewModifyConfigYamlInitializer(legacyBinary, systest.Sut))
+	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
 
 	const (
 		upgradeHeight int64 = 22
-		upgradeName         = "v050-to-v052" // must match UpgradeName in simapp/upgrades.go
+		upgradeName         = "v052-to-v1" // must match UpgradeName in simapp/upgrades.go
 	)
 
-	// if v2 is enabled, we need to start the chain with a different flag
-	if systest.IsV2() {
-		systest.Sut.StartChain(t, fmt.Sprintf("--comet.halt-height=%d", upgradeHeight+1))
-	} else {
-		systest.Sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
-	}
+	systest.Sut.StartChain(t, fmt.Sprintf("--comet.halt-height=%d", upgradeHeight+1))
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()

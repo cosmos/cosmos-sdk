@@ -16,6 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const valAddress = "val_address"
+
 func setupContinuousAccount(t *testing.T, ctx context.Context, ss store.KVStoreService) *ContinuousLockingAccount {
 	t.Helper()
 	deps := makeMockDependencies(ss)
@@ -34,8 +36,6 @@ func setupContinuousAccount(t *testing.T, ctx context.Context, ss store.KVStoreS
 }
 
 func TestContinuousAccountDelegate(t *testing.T) {
-	const valAddress = "val_address"
-
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
@@ -78,8 +78,6 @@ func TestContinuousAccountDelegate(t *testing.T) {
 }
 
 func TestContinuousAccountUndelegate(t *testing.T) {
-	const valAddress = "val_address"
-
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),

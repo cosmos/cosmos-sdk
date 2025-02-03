@@ -47,8 +47,6 @@ func setupPeriodicAccount(t *testing.T, ctx context.Context, ss store.KVStoreSer
 }
 
 func TestPeriodicAccountDelegate(t *testing.T) {
-	const valAddress = "val_address"
-
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
@@ -111,8 +109,6 @@ func TestPeriodicAccountDelegate(t *testing.T) {
 }
 
 func TestPeriodicAccountUndelegate(t *testing.T) {
-	const valAddress = "val_address"
-
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),

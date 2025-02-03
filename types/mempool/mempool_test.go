@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -55,6 +56,21 @@ type testTx struct {
 	address  sdk.AccAddress
 	// useful for debugging
 	strAddress string
+	unordered  bool
+	timeout    *time.Time
+}
+
+// GetTimeoutTimeStamp implements types.TxWithUnordered.
+func (tx testTx) GetTimeoutTimeStamp() time.Time {
+	if tx.timeout == nil {
+		return time.Time{}
+	}
+	return *tx.timeout
+}
+
+// GetUnordered implements types.TxWithUnordered.
+func (tx testTx) GetUnordered() bool {
+	return tx.unordered
 }
 
 func (tx testTx) GetSigners() ([][]byte, error) { panic("not implemented") }
@@ -73,6 +89,7 @@ func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 
 var (
 	_ sdk.Tx                  = (*testTx)(nil)
+	_ sdk.TxWithUnordered     = (*testTx)(nil)
 	_ signing.SigVerifiableTx = (*testTx)(nil)
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )

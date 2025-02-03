@@ -5,8 +5,6 @@
   - tools/confix/**/*
 "C:Cosmovisor":
   - tools/cosmovisor/**/*
-"C:Hubl":
-  - tools/hubl/**/*
 "C:Keys":
   - client/keys/**/*
 "C:Simulations":

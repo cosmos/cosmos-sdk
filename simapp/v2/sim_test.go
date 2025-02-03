@@ -96,7 +96,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		chainID := SimAppChainID + "_2"
 
 		importGenesisChainStateFactory := func(ctx context.Context, r *rand.Rand) (TestInstance[Tx], ChainState[Tx], []simtypes.Account) {
-			testInstance := SetupTestInstance(tb, appFactory, AppConfig, ti.RandSource)
+			testInstance := SetupTestInstance(tb, appFactory, AppConfig, ti.RandSource, cfg.DBBackend)
 			newCs := testInstance.InitializeChain(
 				tb,
 				ctx,
@@ -136,7 +136,7 @@ func TestAppImportExport(t *testing.T) {
 		chainID := SimAppChainID
 		tb.Log("importing genesis...\n")
 
-		newTestInstance := SetupTestInstance(tb, appFactory, AppConfig, ti.RandSource)
+		newTestInstance := SetupTestInstance(tb, appFactory, AppConfig, ti.RandSource, cfg.DBBackend)
 		newTestInstance.InitializeChain(
 			tb,
 			context.Background(),

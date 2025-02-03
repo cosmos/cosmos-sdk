@@ -135,10 +135,11 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](
 	appFactory AppFactory[T, V],
 	appConfigFactory AppConfigFactory,
 	randSource simsxv2.RandSource,
+	dbBackend string,
 ) TestInstance[T] {
 	tb.Helper()
 	vp := viper.New()
-	vp.Set("store.app-db-backend", "memdb")
+	vp.Set("store.app-db-backend", dbBackend)
 	vp.Set("home", tb.TempDir())
 
 	depInjCfg := depinject.Configs(
@@ -251,7 +252,7 @@ func RunWithRandSource[T Tx, V SimulationApp[T]](
 	require.NotEmpty(tb, initialBlockHeight, "initial block height must not be 0")
 
 	setupFn := func(ctx context.Context, r *rand.Rand) (TestInstance[T], ChainState[T], []simtypes.Account) {
-		testInstance := SetupTestInstance[T, V](tb, appFactory, appConfigFactory, randSource)
+		testInstance := SetupTestInstance[T, V](tb, appFactory, appConfigFactory, randSource, tCfg.DBBackend)
 		accounts, genesisAppState, chainID, genesisTimestamp := prepareInitialGenesisState(
 			testInstance.App,
 			r,

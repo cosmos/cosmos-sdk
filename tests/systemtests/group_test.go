@@ -63,8 +63,8 @@ func TestGroupCommands(t *testing.T) {
 		rsp = cli.RunAndWait(policyCmd...)
 		systest.RequireTxSuccess(t, rsp)
 
-		groupPoliciesResp = string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", baseurl, groupId)))
-		policyAddrQuery = fmt.Sprintf("group_policies.#(decision_policy.threshold==%d).address", threshold)
+		groupPoliciesResp := string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/group_policies_by_group/%s", baseurl, groupId)))
+		policyAddrQuery := fmt.Sprintf("group_policies.#(decision_policy.threshold==%d).address", threshold)
 		require.Equal(t, gjson.Get(groupPoliciesResp, "pagination.total").Int(), int64(threshold))
 		policyAddr := gjson.Get(groupPoliciesResp, policyAddrQuery).String()
 		require.NotEmpty(t, policyAddr)
@@ -114,6 +114,6 @@ func TestGroupCommands(t *testing.T) {
 	rsp = cli.RunAndWait("tx", "group", "vote", proposalId, valAddr, "yes", validMetadata)
 	systest.RequireTxSuccess(t, rsp)
 
-	voteResp = string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/%s/%s", baseurl, proposalId, valAddr)))
+	voteResp := string(systest.GetRequest(t, fmt.Sprintf("%s/cosmos/group/v1/vote_by_proposal_voter/%s/%s", baseurl, proposalId, valAddr)))
 	require.Equal(t, "VOTE_OPTION_YES", gjson.Get(voteResp, "vote.option").String())
 }

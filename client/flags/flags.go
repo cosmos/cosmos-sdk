@@ -83,6 +83,7 @@ const (
 	FlagTip              = "tip"
 	FlagAux              = "aux"
 	FlagInitHeight       = "initial-height"
+	FlagInvCheckPeriod   = "inv-check-period"
 	// FlagOutput is the flag to set the output format.
 	// This differs from FlagOutputDocument that is used to set the output file.
 	FlagOutput = "output"
@@ -90,6 +91,7 @@ const (
 	FlagLogLevel   = "log_level"
 	FlagLogFormat  = "log_format"
 	FlagLogNoColor = "log_no_color"
+	FlagTrace      = "trace"
 )
 
 // List of supported output formats

@@ -151,7 +151,7 @@ func TestContinuousAccountSendCoins(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestContinousAccountGetLockCoinInfo(t *testing.T) {
+func TestContinuousAccountGetLockCoinInfo(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),

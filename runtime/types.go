@@ -2,7 +2,7 @@ package runtime
 
 import (
 	"encoding/json"
-	
+
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 

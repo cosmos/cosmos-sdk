@@ -1,4 +1,5 @@
-go 1.21
+go 1.22.11
+
 module github.com/cosmos/cosmos-sdk
 
 require (

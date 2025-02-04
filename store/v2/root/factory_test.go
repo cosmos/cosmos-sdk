@@ -34,7 +34,6 @@ func TestFactory(t *testing.T) {
 	f, err = CreateRootStore(&fop)
 	require.NoError(t, err)
 	require.NotNil(t, f)
-	require.False(t, f.(*Store).isMigrating)
 }
 
 func setLatestVersion(db corestore.KVStoreWithBatch, version int64) error {

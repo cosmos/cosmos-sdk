@@ -44,7 +44,7 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 	sc, err := commitment.NewCommitStore(multiTrees, nil, s.commitDB, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, nil)
-	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil, nil)
+	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil)
 	s.Require().NoError(err)
 
 	// commit changeset
@@ -86,7 +86,7 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 	sc, err := commitment.NewCommitStore(multiTrees, oldTrees, s.commitDB, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, nil)
-	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil, nil)
+	s.rootStore, err = New(s.commitDB, testLog, sc, pm, nil)
 	s.Require().NoError(err)
 }
 

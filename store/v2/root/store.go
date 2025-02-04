@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sync"
 	"time"
 
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
-	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
 )
@@ -43,17 +41,6 @@ type Store struct {
 
 	// pruningManager reflects the pruning manager used to prune state of the SS and SC backends
 	pruningManager *pruning.Manager
-
-	// Migration related fields
-	// migrationManager reflects the migration manager used to migrate state from v1 to v2
-	migrationManager *migration.Manager
-	// chChangeset reflects the channel used to send the changeset to the migration manager
-	chChangeset chan *migration.VersionedChangeset
-	// chDone reflects the channel used to signal the migration manager that the migration
-	// is done
-	chDone chan struct{}
-	// isMigrating reflects whether the store is currently migrating
-	isMigrating bool
 }
 
 // New creates a new root Store instance.
@@ -64,17 +51,14 @@ func New(
 	logger corelog.Logger,
 	sc store.Committer,
 	pm *pruning.Manager,
-	mm *migration.Manager,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	return &Store{
-		dbCloser:         dbCloser,
-		logger:           logger,
-		stateCommitment:  sc,
-		pruningManager:   pm,
-		migrationManager: mm,
-		telemetry:        m,
-		isMigrating:      mm != nil,
+		dbCloser:        dbCloser,
+		logger:          logger,
+		stateCommitment: sc,
+		pruningManager:  pm,
+		telemetry:       m,
 	}, nil
 }
 
@@ -233,10 +217,6 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version_and_upgrade")
 	}
 
-	if s.isMigrating {
-		return errors.New("cannot upgrade while migrating")
-	}
-
 	if err := s.loadVersion(version, upgrades, true); err != nil {
 		return err
 	}
@@ -271,11 +251,6 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades, overrid
 		return fmt.Errorf("failed to get commit info for version %d: %w", v, err)
 	}
 
-	// if we're migrating, we need to start the migration process
-	if s.isMigrating {
-		s.startMigration()
-	}
-
 	return nil
 }
 
@@ -289,10 +264,6 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 		defer func() {
 			s.telemetry.MeasureSince(now, "root_store", "commit")
 		}()
-	}
-
-	if err := s.handleMigration(cs); err != nil {
-		return nil, err
 	}
 
 	// signal to the pruning manager that a new version is about to be committed
@@ -323,63 +294,6 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	}
 
 	return s.lastCommitInfo.Hash(), nil
-}
-
-// startMigration starts a migration process to migrate the RootStore/v1 to the
-// SS and SC backends of store/v2 and initializes the channels.
-// It runs in a separate goroutine and replaces the current RootStore with the
-// migrated new backends once the migration is complete.
-//
-// NOTE: This method should only be called once after loadVersion.
-func (s *Store) startMigration() {
-	// buffer at most 1 changeset, if the receiver is behind attempting to buffer
-	// more than 1 will block.
-	s.chChangeset = make(chan *migration.VersionedChangeset, 1)
-	// it is used to signal the migration manager that the migration is done
-	s.chDone = make(chan struct{})
-
-	mtx := sync.Mutex{}
-	mtx.Lock()
-	go func() {
-		version := s.lastCommitInfo.Version
-		s.logger.Info("starting migration", "version", version)
-		mtx.Unlock()
-		if err := s.migrationManager.Start(uint64(version), s.chChangeset, s.chDone); err != nil {
-			s.logger.Error("failed to start migration", "err", err)
-		}
-	}()
-
-	// wait for the migration manager to start
-	mtx.Lock()
-	defer mtx.Unlock()
-}
-
-func (s *Store) handleMigration(cs *corestore.Changeset) error {
-	if s.isMigrating {
-		// if the migration manager has already migrated to the version, close the
-		// channels and replace the state commitment
-		if s.migrationManager.GetMigratedVersion() == uint64(s.lastCommitInfo.Version) {
-			close(s.chDone)
-			close(s.chChangeset)
-			s.isMigrating = false
-			newStateCommitment := s.migrationManager.GetStateCommitment()
-			if newStateCommitment != nil {
-				// close the old state commitment and replace it with the new one
-				if err := s.stateCommitment.Close(); err != nil {
-					return fmt.Errorf("failed to close the old SC store: %w", err)
-				}
-				s.stateCommitment = newStateCommitment
-			}
-			if err := s.migrationManager.Close(); err != nil {
-				return fmt.Errorf("failed to close migration manager: %w", err)
-			}
-			s.logger.Info("migration completed", "version", s.lastCommitInfo.Version)
-		} else {
-			// queue the next changeset to the migration manager
-			s.chChangeset <- &migration.VersionedChangeset{Version: uint64(s.lastCommitInfo.Version + 1), Changeset: cs}
-		}
-	}
-	return nil
 }
 
 func (s *Store) Prune(version uint64) error {

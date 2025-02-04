@@ -149,10 +149,6 @@ cosmovisor:
 confix:
 	$(MAKE) -C tools/confix confix
 
-#? hubl: Build hubl
-hubl:
-	$(MAKE) -C tools/hubl hubl
-
 .PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
 
 #? mocks: Generate mock file

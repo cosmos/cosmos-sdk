@@ -52,6 +52,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+### Removed
+
+* (tools/hub) [#23562](https://github.com/cosmos/cosmos-sdk/pull/23562) Remove `tools/hubl`. A similar tool will be maintained in [ignite](https://www.github.com/ignite/cli).
+
 ### API Breaking Changes
 
 * (x/params) [#22995](https://github.com/cosmos/cosmos-sdk/pull/22995) Remove `x/params`.  Migrate to the new params system introduced in `v0.47` as demonstrated [here](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams).

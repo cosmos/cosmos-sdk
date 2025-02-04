@@ -366,7 +366,7 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 		mode = execModeReCheck
 
 	default:
-		return nil, fmt.Errorf("unknown CheckTx type: %v", req.Type)
+		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
 	if app.checkTxHandler == nil {

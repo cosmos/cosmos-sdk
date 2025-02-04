@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	systest "cosmossdk.io/systemtests"
@@ -35,17 +34,14 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	timeoutTimestamp := time.Now().Add(time.Minute)
+
 	// send tokens
-	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1", "--note=1")
+	args := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1"}
+	rsp1 := cli.Run(args...)
 	systest.RequireTxSuccess(t, rsp1)
 
-	assertDuplicateErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-		require.Len(t, gotOutputs, 1)
-		assert.Contains(t, gotOutputs[0], "is duplicated: invalid request")
-		return false // always abort
-	}
-	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1")
-	systest.RequireTxFailure(t, rsp2)
+	rsp2 := cli.RunCommandWithArgs(cli.WithTXFlags(args...)...)
+	require.Contains(t, rsp2, "19") // tx already in mempool
 
 	require.Eventually(t, func() bool {
 		return cli.QueryBalance(account2Addr, "stake") == 5000

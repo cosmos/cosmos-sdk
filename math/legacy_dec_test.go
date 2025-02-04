@@ -1308,12 +1308,12 @@ func TestRoundIntLimits(t *testing.T) {
 func BenchmarkIsInValidRange(b *testing.B) {
 	maxValid, ok := new(big.Int).SetString(maxValidDecNumber, 10)
 	require.True(b, ok)
-	souceMax := math.LegacyNewDecFromBigIntWithPrec(maxValid, 18)
+	sourceMax := math.LegacyNewDecFromBigIntWithPrec(maxValid, 18)
 	b.ResetTimer()
 	specs := map[string]math.LegacyDec{
-		"max":         souceMax,
+		"max":         sourceMax,
 		"greater max": math.LegacyNewDecFromBigIntWithPrec(maxValid, 16),
-		"min":         souceMax.Neg(),
+		"min":         sourceMax.Neg(),
 		"lower min":   math.LegacyNewDecFromBigIntWithPrec(new(big.Int).Neg(maxValid), 16),
 		"zero":        math.LegacyZeroDec(),
 		"one":         math.LegacyOneDec(),

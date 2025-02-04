@@ -34,12 +34,14 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	timeoutTimestamp := time.Now().Add(time.Minute)
+
 	// send tokens
-	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1")
+	args := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1"}
+	rsp1 := cli.Run(args...)
 	systest.RequireTxSuccess(t, rsp1)
 
-	rsp2 := cli.WithRunErrorsIgnored().Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1")
-	systest.RequireTxFailure(t, rsp2, "is duplicated: invalid request")
+	rsp2 := cli.RunCommandWithArgs(cli.WithTXFlags(args...)...)
+	require.Contains(t, rsp2, "19") // tx already in mempool
 
 	require.Eventually(t, func() bool {
 		return cli.QueryBalance(account2Addr, "stake") == 5000

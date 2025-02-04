@@ -250,7 +250,73 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
+<<<<<<< HEAD
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+=======
+func (svd SigVerificationDecorator) VerifyIsOnCurve(pubKey cryptotypes.PubKey) error {
+	if svd.extraVerifyIsOnCurve != nil {
+		handled, err := svd.extraVerifyIsOnCurve(pubKey)
+		if handled {
+			return err
+		}
+	}
+	// when simulating pubKey.Key will always be nil
+	if pubKey.Bytes() == nil {
+		return nil
+	}
+
+	switch typedPubKey := pubKey.(type) {
+	case *ed25519.PubKey:
+		if !typedPubKey.IsOnCurve() {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ed25519 key is not on curve")
+		}
+	case *secp256k1.PubKey:
+		pubKeyObject, err := secp256k1dcrd.ParsePubKey(typedPubKey.Bytes())
+		if err != nil {
+			if errors.Is(err, secp256k1dcrd.ErrPubKeyNotOnCurve) {
+				return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256k1 key is not on curve")
+			}
+			return err
+		}
+		if !pubKeyObject.IsOnCurve() {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256k1 key is not on curve")
+		}
+
+	case *secp256r1.PubKey:
+		pubKeyObject := typedPubKey.Key.PublicKey
+		if !pubKeyObject.IsOnCurve(pubKeyObject.X, pubKeyObject.Y) {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "secp256r1 key is not on curve")
+		}
+
+	case multisig.PubKey:
+		pubKeysObjects := typedPubKey.GetPubKeys()
+		ok := true
+		for _, pubKeyObject := range pubKeysObjects {
+			if err := svd.VerifyIsOnCurve(pubKeyObject); err != nil {
+				ok = false
+				break
+			}
+		}
+		if !ok {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "some keys are not on curve")
+		}
+
+	default:
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unsupported key type: %T", typedPubKey)
+	}
+
+	return nil
+}
+
+func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if err := svd.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+	return next(ctx, tx, false)
+}
+
+func (svd SigVerificationDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
+>>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -437,8 +503,12 @@ func DefaultSigVerificationGasConsumer(
 	pubkey := sig.PubKey
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
+<<<<<<< HEAD
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 		return nil
+=======
+		return meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519")
+>>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 
 	case *secp256k1.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")

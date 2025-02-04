@@ -10,9 +10,19 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
+<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1
 	cosmossdk.io/x/tx v0.13.7
 	github.com/99designs/keyring v1.2.1
+=======
+	cosmossdk.io/schema v1.0.0
+	cosmossdk.io/store v1.10.0-rc.1
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/tx v1.1.0
+	filippo.io/edwards25519 v1.1.0
+	github.com/99designs/keyring v1.2.2
+>>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.22.0
 	github.com/chzyer/readline v1.5.1
@@ -65,7 +75,12 @@ require (
 )
 
 require (
+<<<<<<< HEAD
 	filippo.io/edwards25519 v1.1.0 // indirect
+=======
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
+>>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.6 // indirect

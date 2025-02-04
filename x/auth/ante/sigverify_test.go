@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -103,11 +104,55 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		gasConsumed uint64
 		shouldErr   bool
 	}{
+<<<<<<< HEAD
 		{"PubKeyEd25519", args{storetypes.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, false},
 		{"PubKeySecp256k1", args{storetypes.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
 		{"PubKeySecp256r1", args{storetypes.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
 		{"Multisig", args{storetypes.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
 		{"unknown key", args{storetypes.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
+=======
+		{
+			"PubKeyEd25519",
+			args{nil, ed25519.GenPrivKey().PubKey(), params, func(mm *gastestutil.MockMeter) {
+				mm.EXPECT().Consume(p.SigVerifyCostED25519, "ante verify: ed25519").Times(1)
+			}},
+			false,
+		},
+		{
+			"PubKeySecp256k1",
+			args{nil, secp256k1.GenPrivKey().PubKey(), params, func(mm *gastestutil.MockMeter) {
+				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(1)
+			}},
+			false,
+		},
+		{
+			"PubKeySecp256r1",
+			args{nil, skR1.PubKey(), params, func(mm *gastestutil.MockMeter) {
+				mm.EXPECT().Consume(p.SigVerifyCostSecp256r1(), "ante verify: secp256r1").Times(1)
+			}},
+			false,
+		},
+		{
+			"Multisig",
+			args{multisignature1, multisigKey1, params, func(mm *gastestutil.MockMeter) {
+				// 5 signatures
+				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(5)
+			}},
+			false,
+		},
+		{
+			"Multisig simulation",
+			args{multisigSimulationSignature, multisigKey1, params, func(mm *gastestutil.MockMeter) {
+				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(int(multisigKey1.Threshold))
+			}},
+			false,
+		},
+		{
+			"unknown key",
+			args{nil, nil, params, func(mm *gastestutil.MockMeter) {}},
+			true,
+		},
+>>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 	}
 	for _, tt := range tests {
 		sigV2 := signing.SignatureV2{
@@ -394,20 +439,85 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 		},
 	}
 
+<<<<<<< HEAD
 	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			beforeSeq := suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence()
+=======
+	anteTxConfig, err := authtx.NewTxConfigWithOptions(
+		cdc,
+		txConfigOpts,
+	)
+	require.NoError(t, err)
+
+	// make block height non-zero to ensure account numbers part of signBytes
+	suite.ctx = suite.ctx.WithBlockHeight(1)
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddrSecp256R1(t)
+	priv3, _, addr3 := testdata.KeyTestPubAddrED25519()
+
+	addrs := []sdk.AccAddress{addr1, addr2, addr3}
+
+	msgs := make([]sdk.Msg, len(addrs))
+	accs := make([]sdk.AccountI, len(addrs))
+	// set accounts and create msg for each address
+	for i, addr := range addrs {
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		require.NoError(t, acc.SetAccountNumber(uint64(i)+1000))
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
+		msgs[i] = testdata.NewTestMsg(addr)
+		accs[i] = acc
+	}
+
+	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer, nil)
+
+	anteHandler := sdk.ChainAnteDecorators(sigVerificationDecorator)
+
+	type testCase struct {
+		name    string
+		privs   []cryptotypes.PrivKey
+		msg     sdk.Msg
+		accNums []uint64
+		accSeqs []uint64
+	}
+
+	// Secp256r1 keys that are not on curve will fail before even doing any operation i.e when trying to get the pubkey
+	testCases := []testCase{
+		{"secp256k1_onCurve", []cryptotypes.PrivKey{priv1}, msgs[0], []uint64{accs[0].GetAccountNumber()}, []uint64{0}},
+		{"secp256r1_onCurve", []cryptotypes.PrivKey{priv2}, msgs[1], []uint64{accs[1].GetAccountNumber()}, []uint64{0}},
+		{"ed255619", []cryptotypes.PrivKey{priv3}, msgs[2], []uint64{accs[2].GetAccountNumber()}, []uint64{2}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%s key", tc.name), func(t *testing.T) {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
+>>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 
 			_, err := antehandler(tc.ctx, tc.createTx(), tc.simulate)
 			require.NoError(t, err, "unexpected error; tc #%d, %v", i, tc)
 
 			afterSeq := suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence()
 
+<<<<<<< HEAD
 			if tc.expectSeqInc {
 				require.Equal(t, beforeSeq+1, afterSeq)
 			} else {
 				require.Equal(t, beforeSeq, afterSeq)
 			}
+=======
+			tx, err := suite.CreateTestTx(suite.ctx, tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
+			require.NoError(t, err)
+
+			txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+			require.NoError(t, err)
+
+			byteCtx := suite.ctx.WithTxBytes(txBytes)
+			_, err = anteHandler(byteCtx, tx, true)
+
+			assert.NoError(t, err)
+>>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 		})
 	}
 }

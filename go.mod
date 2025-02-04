@@ -1,4 +1,4 @@
-go 1.23.2
+go 1.23.5
 
 module github.com/cosmos/cosmos-sdk
 
@@ -16,9 +16,10 @@ require (
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v1.1.0
+	filippo.io/edwards25519 v1.1.0
 	github.com/99designs/keyring v1.2.2
 	github.com/bgentry/speakeasy v0.2.0
-	github.com/cometbft/cometbft v1.0.0
+	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.1
@@ -61,7 +62,6 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.6 // indirect
@@ -84,8 +84,8 @@ require (
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/dgraph-io/badger/v4 v4.5.0 // indirect
-	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
+	github.com/dgraph-io/badger/v4 v4.5.1 // indirect
+	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
@@ -99,7 +99,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.3 // indirect
-	github.com/google/flatbuffers v24.3.25+incompatible // indirect
+	github.com/google/flatbuffers v24.12.23+incompatible // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect

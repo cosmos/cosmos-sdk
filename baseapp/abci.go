@@ -365,11 +365,6 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 	case req.Type == abci.CHECK_TX_TYPE_RECHECK:
 		mode = execModeReCheck
 
-	switch req.Type {
-	case abci.CheckTxType_NEW:
-		mode = runTxModeCheck
-	case abci.CheckTxType_RECHECK:
-		mode = runTxModeReCheck
 	default:
 		return nil, fmt.Errorf("unknown CheckTx type: %v", req.Type)
 	}

@@ -13,18 +13,10 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/schema v1.0.0
-<<<<<<< HEAD
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43
 	cosmossdk.io/x/bank v0.2.0-rc.1
 	cosmossdk.io/x/staking v0.2.0-rc.1
 	cosmossdk.io/x/tx v1.1.0 // main
-=======
-	cosmossdk.io/store v1.10.0-rc.1
-	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v1.1.0
-	filippo.io/edwards25519 v1.1.0
->>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 	github.com/99designs/keyring v1.2.2
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/cometbft/cometbft v1.0.1
@@ -71,6 +63,8 @@ require (
 	pgregory.net/rapid v1.1.0
 	sigs.k8s.io/yaml v1.4.0
 )
+
+require filippo.io/edwards25519 v1.1.0
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect

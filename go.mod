@@ -64,9 +64,10 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
+require filippo.io/edwards25519 v1.1.0
+
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.6 // indirect

@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
+### Features
+
+* (x/auth/ante) [#23283](https://github.com/cosmos/cosmos-sdk/pull/23283) Allow ed25519 transaction signatures.
+
 ### Bug Fixes
 
 * (codec) [#23504](https://github.com/cosmos/cosmos-sdk/pull/23504) Provide `*codec.LegacyAmino` alongside `registry.AminoRegistrar` by default in depinject provider.

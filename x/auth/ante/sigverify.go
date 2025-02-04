@@ -125,6 +125,10 @@ func (svd SigVerificationDecorator) VerifyIsOnCurve(pubKey cryptotypes.PubKey) e
 	}
 
 	switch typedPubKey := pubKey.(type) {
+	case *ed25519.PubKey:
+		if !typedPubKey.IsOnCurve() {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ed25519 key is not on curve")
+		}
 	case *secp256k1.PubKey:
 		pubKeyObject, err := secp256k1dcrd.ParsePubKey(typedPubKey.Bytes())
 		if err != nil {
@@ -535,10 +539,7 @@ func DefaultSigVerificationGasConsumer(meter gas.Meter, sig signing.SignatureV2,
 
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
-		if err := meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519"); err != nil {
-			return err
-		}
-		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
+		return meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519")
 
 	case *secp256k1.PubKey:
 		return meter.Consume(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")

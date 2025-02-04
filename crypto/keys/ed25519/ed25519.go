@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"filippo.io/edwards25519"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/hdevalence/ed25519consensus"
@@ -18,7 +19,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-//-------------------------------------
+// -------------------------------------
 
 const (
 	PrivKeyName = "tendermint/PrivKeyEd25519"
@@ -153,7 +154,7 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 	return &PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
 }
 
-//-------------------------------------
+// -------------------------------------
 
 var (
 	_ cryptotypes.PubKey   = &PubKey{}
@@ -229,4 +230,35 @@ func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAminoJSON overrides Amino JSON marshaling.
 func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
+}
+
+// identityPoint is the “neutral element” in the ed25519 group, where
+// point addition with identityPoint leaves the other point unchanged.
+// It corresponds to coordinates (0, 1) in Edwards form and is not a valid public key
+var identityPoint = edwards25519.NewIdentityPoint()
+
+// IsOnCurve checks that a 32B ed25519 public key is on the curve.
+// The check fails for ed25519 identity points
+func (pubKey *PubKey) IsOnCurve() bool {
+	// Make sure the public key is exactly 32B
+	if len(pubKey.Key) != ed25519.PublicKeySize {
+		// Invalid key size
+		return false
+	}
+
+	// Make sure the public key bytes decodes into an ed25519 point
+	point, err := new(edwards25519.Point).SetBytes(pubKey.Key)
+	if err != nil || point == nil {
+		// Not a valid point on the curve
+		return false
+	}
+
+	// Make sure the public key is not the identity point (all zeroes)
+	if point.Equal(identityPoint) == 1 {
+		// Public key is the identity point (useless)
+		return false
+	}
+
+	// Public key is a valid point on the ed25519 curve
+	return true
 }

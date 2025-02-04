@@ -40,6 +40,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
+<<<<<<< HEAD
+=======
+### Features
+
+* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+* (client/keys) [#21829](https://github.com/cosmos/cosmos-sdk/pull/21829) Add support for importing hex key using standard input.
+* (x/auth/ante) [#23128](https://github.com/cosmos/cosmos-sdk/pull/23128) Allow custom verifyIsOnCurve when validate tx for public key like ethsecp256k1.
+* (x/auth/ante) [#23283](https://github.com/cosmos/cosmos-sdk/pull/23283) Allow ed25519 transaction signatures.
+
+
+### Improvements
+
+>>>>>>> d3e059dd2 (feat: add support for `ed25519` tx signature verification (#23283))
 ### Bug Fixes
 
 * (codec) [#23504](https://github.com/cosmos/cosmos-sdk/pull/23504) Provide `*codec.LegacyAmino` alongside `registry.AminoRegistrar` by default in depinject provider.

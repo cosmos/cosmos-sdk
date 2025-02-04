@@ -356,7 +356,14 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.ApplySnapshotChunkRequest) (*ab
 // will contain relevant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, error) {
-	var mode runTxMode
+	var mode execMode
+
+	switch {
+	case req.Type == abci.CHECK_TX_TYPE_CHECK:
+		mode = execModeCheck
+
+	case req.Type == abci.CHECK_TX_TYPE_RECHECK:
+		mode = execModeReCheck
 
 	switch req.Type {
 	case abci.CheckTxType_NEW:

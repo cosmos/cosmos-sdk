@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/x/tx v1.1.0 // main
 	github.com/99designs/keyring v1.2.2
 	github.com/bgentry/speakeasy v0.2.0
-	github.com/cometbft/cometbft v1.0.0
+	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.1

@@ -356,17 +356,15 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.ApplySnapshotChunkRequest) (*ab
 // will contain relevant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, error) {
-	var mode execMode
+	var mode runTxMode
 
-	switch {
-	case req.Type == abci.CHECK_TX_TYPE_CHECK:
-		mode = execModeCheck
-
-	case req.Type == abci.CHECK_TX_TYPE_RECHECK:
-		mode = execModeReCheck
-
+	switch req.Type {
+	case abci.CheckTxType_NEW:
+		mode = runTxModeCheck
+	case abci.CheckTxType_RECHECK:
+		mode = runTxModeReCheck
 	default:
-		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
+		return nil, fmt.Errorf("unknown CheckTx type: %v", req.Type)
 	}
 
 	if app.checkTxHandler == nil {
@@ -376,8 +374,8 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 		}
 
 		return &abci.CheckTxResponse{
-			GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-			GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+			GasWanted: uint64(gInfo.GasWanted),
+			GasUsed:   uint64(gInfo.GasUsed),
 			Log:       result.Log,
 			Data:      result.Data,
 			Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),

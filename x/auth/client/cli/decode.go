@@ -59,7 +59,7 @@ func decodeTxAndGetJSON(clientCtx client.Context, txBytes []byte) ([]byte, error
 	// Fallback to direct unmarshaling
 	var sdkTx sdktx.Tx
 	if err := clientCtx.Codec.Unmarshal(txBytes, &sdkTx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to directly unmarshal txBytes: %w", err)
 	}
 
 	return clientCtx.Codec.MarshalJSON(&sdkTx)

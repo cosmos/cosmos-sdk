@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 const flagHex = "hex"
@@ -32,12 +33,7 @@ func GetDecodeCommand() *cobra.Command {
 				return err
 			}
 
-			tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
-			if err != nil {
-				return err
-			}
-
-			json, err := clientCtx.TxConfig.TxJSONEncoder()(tx)
+			json, err := decodeTxAndGetJSON(clientCtx, txBytes)
 			if err != nil {
 				return err
 			}
@@ -51,4 +47,20 @@ func GetDecodeCommand() *cobra.Command {
 	_ = cmd.Flags().MarkHidden(flags.FlagOutput) // decoding makes sense to output only json
 
 	return cmd
+}
+
+func decodeTxAndGetJSON(clientCtx client.Context, txBytes []byte) ([]byte, error) {
+	// First try decoding with TxDecoder
+	tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
+	if err == nil {
+		return clientCtx.TxConfig.TxJSONEncoder()(tx)
+	}
+
+	// Fallback to direct unmarshaling
+	var sdkTx sdktx.Tx
+	if err := clientCtx.Codec.Unmarshal(txBytes, &sdkTx); err != nil {
+		return nil, err
+	}
+
+	return clientCtx.Codec.MarshalJSON(&sdkTx)
 }

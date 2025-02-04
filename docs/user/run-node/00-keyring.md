@@ -29,12 +29,14 @@ is a list of the most popular operating systems and their respective passwords m
 * GNU/Linux:
     * [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
     * [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
+    * [keyctl](https://www.kernel.org/doc/html/latest/security/keys/core.html)
 
 GNU/Linux distributions that use GNOME as default desktop environment typically come with
 [Seahorse](https://wiki.gnome.org/Apps/Seahorse). Users of KDE based distributions are
 commonly provided with [KDE Wallet Manager](https://userbase.kde.org/KDE_Wallet_Manager).
 Whilst the former is in fact a `libsecret` convenient frontend, the latter is a `kwallet`
-client.
+client. `keyctl` is a secure backend leverages the Linux's kernel security key management system
+to store cryptographic keys securely in memory.
 
 `os` is the default option since operating system's default credentials managers are
 designed to meet users' most common needs and provide them with a comfortable
@@ -92,6 +94,15 @@ The `kwallet` backend uses `KDE Wallet Manager`, which comes installed by defaul
 GNU/Linux distributions that ships KDE as default desktop environment. Please refer to
 [KWallet Handbook](https://docs.kde.org/stable5/en/kwalletmanager/kwallet5/index.html) for more
 information.
+
+### The `keyctl` backend
+
+The *Kernel Key Retention Service*  is a security facility that
+has been added to the Linux kernel relatively recently. It allows sensitive
+cryptographic data such as passwords, private key, authentication tokens, etc
+to be stored securely in memory.
+
+The `keyctl` backend is available on Linux platforms only.
 
 ### The `test` backend
 

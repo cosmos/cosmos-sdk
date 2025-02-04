@@ -63,6 +63,7 @@ func newBuilderFromDecodedTx(
 		codec:                       codec,
 		msgs:                        decoded.Messages,
 		timeoutHeight:               decoded.GetTimeoutHeight(),
+		timeoutTimestamp:            decoded.GetTimeoutTimeStamp(),
 		granter:                     decoded.FeeGranter(),
 		payer:                       payer,
 		unordered:                   decoded.GetUnordered(),

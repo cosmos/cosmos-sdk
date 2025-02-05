@@ -13,24 +13,13 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 )
 
 // AutoCLIQueryService implements the cosmos.autocli.v1.Query service.
 type AutoCLIQueryService struct {
 	autocliv1.UnimplementedQueryServer
 
-	moduleOptions map[string]*autocliv1.ModuleOptions
-}
-
-// NewAutoCLIQueryService returns a AutoCLIQueryService for the provided modules.
-func NewAutoCLIQueryService(appModules map[string]appmodulev2.AppModule) (*AutoCLIQueryService, error) {
-	moduleOptions, err := ExtractAutoCLIOptions(appModules)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AutoCLIQueryService{moduleOptions: moduleOptions}, nil
+	ModuleOptions map[string]*autocliv1.ModuleOptions
 }
 
 // ExtractAutoCLIOptions extracts autocli ModuleOptions from the provided app modules.
@@ -91,7 +80,7 @@ func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) (map[strin
 
 func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRequest) (*autocliv1.AppOptionsResponse, error) {
 	return &autocliv1.AppOptionsResponse{
-		ModuleOptions: a.moduleOptions,
+		ModuleOptions: a.ModuleOptions,
 	}, nil
 }
 

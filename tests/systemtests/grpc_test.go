@@ -33,7 +33,7 @@ func TestGRPC(t *testing.T) {
 	require.Greater(t, len(services), 0)
 	require.Contains(t, services, "cosmos.staking.v1beta1.Query")
 
-	// test query invokation
+	// test query invocation
 	rf, formatter, err := grpcurl.RequestParserAndFormatter(grpcurl.FormatText, descSource, os.Stdin, grpcurl.FormatOptions{})
 	require.NoError(t, err)
 
@@ -50,8 +50,6 @@ func TestGRPC(t *testing.T) {
 }
 
 func TestGRPCQueryAutoCLIOptions(t *testing.T) {
-	t.Skip() // TODO(@julienrbrt): re-add autocli query in v2 in follow-up
-
 	systest.Sut.ResetChain(t)
 	systest.Sut.StartChain(t)
 

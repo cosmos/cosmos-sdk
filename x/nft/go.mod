@@ -24,8 +24,13 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/core/testing v0.0.1 // indirect
+=======
+	cosmossdk.io/collections v1.1.0 // indirect
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47 // indirect
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/x/bank v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/staking v0.2.0-rc.1 // indirect

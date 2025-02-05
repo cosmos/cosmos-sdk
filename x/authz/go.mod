@@ -170,8 +170,26 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+<<<<<<< HEAD
 require go.uber.org/mock v0.5.0
+=======
+require (
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
+)
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))
 
 require github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 
+<<<<<<< HEAD
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1
+=======
+replace github.com/cosmos/cosmos-sdk => ../../
+
+// TODO remove post spinning out all modules
+replace (
+	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/staking => ../staking
+)
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))

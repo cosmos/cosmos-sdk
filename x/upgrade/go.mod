@@ -3,6 +3,7 @@ module cosmossdk.io/x/upgrade
 go 1.23.5
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.2 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // main
@@ -13,6 +14,18 @@ require (
 	cosmossdk.io/x/gov v0.2.0-rc.1
 	github.com/cometbft/cometbft v1.0.0
 	github.com/cometbft/cometbft/api v1.0.0
+=======
+	cosmossdk.io/api v0.8.2
+	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47
+	cosmossdk.io/depinject v1.1.0
+	cosmossdk.io/errors v1.0.1
+	cosmossdk.io/log v1.5.0
+	cosmossdk.io/store v1.10.0-rc.1
+	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
+	cosmossdk.io/x/tx v1.1.0
+	github.com/cometbft/cometbft v1.0.1
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -69,7 +82,12 @@ require (
 	github.com/cockroachdb/pebble v1.1.4 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
+<<<<<<< HEAD
 	github.com/cometbft/cometbft-db v1.0.2 // indirect
+=======
+	github.com/cometbft/cometbft-db v1.0.1 // indirect
+	github.com/cometbft/cometbft/api v1.0.0 // indirect
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect

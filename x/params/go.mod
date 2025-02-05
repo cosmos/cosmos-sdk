@@ -27,9 +27,19 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
+<<<<<<< HEAD:x/params/go.mod
 	cosmossdk.io/collections v1.0.0-rc.1 // indirect; main
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/x/tx v1.1.0 // indirect; main
+=======
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47 // indirect
+	cosmossdk.io/depinject v1.1.0 // indirect
+	cosmossdk.io/math v1.5.0 // indirect
+	cosmossdk.io/store v1.10.0-rc.1 // indirect
+	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/tx v1.1.0 // indirect
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396)):server/v2/cometbft/go.mod
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

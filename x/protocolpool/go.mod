@@ -3,10 +3,17 @@ module cosmossdk.io/x/protocolpool
 go 1.23.5
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.2 // main
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.1 // main
+=======
+	cosmossdk.io/api v0.8.2
+	cosmossdk.io/collections v1.1.0
+	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.5.0

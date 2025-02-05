@@ -11,18 +11,15 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/core/testing/queryclient"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -31,7 +28,8 @@ type UpgradeTestSuite struct {
 	suite.Suite
 
 	upgradeKeeper    *keeper.Keeper
-	ctx              sdk.Context
+	ctx              coretesting.TestContext
+	env              coretesting.TestEnvironment
 	queryClient      types.QueryClient
 	encCfg           moduletestutil.TestEncodingConfig
 	encodedAuthority string
@@ -39,11 +37,14 @@ type UpgradeTestSuite struct {
 
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx
+
+	ctx, env := coretesting.NewTestEnvironment(coretesting.TestEnvironmentConfig{
+		ModuleName: types.ModuleName,
+		Logger:     coretesting.NewNopLogger(),
+	})
+
+	suite.ctx = ctx
+	suite.env = env
 
 	skipUpgradeHeights := make(map[int64]bool)
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
@@ -51,12 +52,12 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	suite.encodedAuthority = authority
 	ctrl := gomock.NewController(suite.T())
 	ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
-	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, ck)
+	suite.upgradeKeeper = keeper.NewKeeper(suite.env.Environment, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, ck)
 	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, appmodule.VersionMap{
 		"bank": 0,
 	})
 	suite.Require().NoError(err)
-	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, suite.encCfg.InterfaceRegistry)
+	queryHelper := queryclient.NewQueryHelper(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry).GRPCCodec())
 	types.RegisterQueryServer(queryHelper, suite.upgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
@@ -99,7 +100,7 @@ func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {
 
 			tc.malleate()
 
-			res, err := suite.queryClient.CurrentPlan(context.Background(), req)
+			res, err := suite.queryClient.CurrentPlan(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -157,7 +158,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 
 			tc.malleate()
 
-			res, err := suite.queryClient.AppliedPlan(context.Background(), req)
+			res, err := suite.queryClient.AppliedPlan(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -207,7 +208,7 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			res, err := suite.queryClient.ModuleVersions(context.Background(), &tc.req)
+			res, err := suite.queryClient.ModuleVersions(suite.ctx, &tc.req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

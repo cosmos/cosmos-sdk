@@ -22,8 +22,13 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/collections v1.0.0 // indirect
 	cosmossdk.io/core/testing v0.0.1 // indirect
+=======
+	cosmossdk.io/collections v1.1.0 // indirect
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47 // indirect
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/math v1.5.0
@@ -174,4 +179,14 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
+<<<<<<< HEAD
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1.0.20250122120205-bc49a8e7fd2f
+=======
+replace github.com/cosmos/cosmos-sdk => ./../../
+
+// TODO remove post spinning out all modules
+replace (
+	cosmossdk.io/x/bank => ./../../x/bank
+	cosmossdk.io/x/staking => ./../../x/staking
+)
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))

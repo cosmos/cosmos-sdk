@@ -31,9 +31,15 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/schema v1.0.0
 	cosmossdk.io/x/staking v0.2.0-rc.1 // indirect
 	cosmossdk.io/x/tx v1.1.0 // indirect; main
+=======
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/tx v1.1.0 // indirect
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -173,4 +179,11 @@ require go.uber.org/mock v0.5.0
 
 require github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 
+<<<<<<< HEAD
 replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.52.0-rc.1
+=======
+replace github.com/cosmos/cosmos-sdk => ../../.
+
+// TODO remove post spinning out all modules
+replace cosmossdk.io/x/staking => ../staking
+>>>>>>> 9ea03a3c4 (chore: remove baseapp and `sdk.Context` fully from x/upgrade (#23396))

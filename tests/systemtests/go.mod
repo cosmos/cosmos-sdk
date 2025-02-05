@@ -2,16 +2,13 @@ module github.com/cosmos/cosmos-sdk/tests/systemtests
 
 go 1.23
 
+replace cosmossdk.io/systemtests => ../../systemtests
+
 require (
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/systemtests v1.0.0
 	github.com/cosmos/cosmos-sdk v0.50.11
 	github.com/fullstorydev/grpcurl v1.9.2
-)
-
-require (
-	golang.org/x/arch v0.13.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
 )
 
 require (
@@ -58,7 +55,7 @@ require (
 	github.com/cosmos/iavl v1.2.2 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
-	github.com/creachadair/tomledit v0.0.26 // indirect
+	github.com/creachadair/tomledit v0.0.27 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
@@ -161,6 +158,8 @@ require (
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/arch v0.13.0 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect

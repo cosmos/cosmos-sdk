@@ -149,7 +149,7 @@ require (
 )
 
 require (
-	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 )
@@ -167,10 +167,7 @@ require (
 	golang.org/x/arch v0.13.0 // indirect
 )
 
-replace (
-	cosmossdk.io/core/testing => ../../core/testing
-	github.com/cosmos/cosmos-sdk => ../../
-)
+replace github.com/cosmos/cosmos-sdk => ../../
 
 // TODO remove post spinning out all modules
 replace (

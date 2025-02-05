@@ -41,7 +41,7 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/core/testing v0.0.1 // indirect
+	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/math v1.5.0 // indirect
 	cosmossdk.io/store v1.10.0-rc.1 // indirect

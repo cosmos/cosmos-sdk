@@ -149,7 +149,7 @@ require (
 )
 
 require (
-	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47
+	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 )

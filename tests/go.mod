@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.8.2
 	cosmossdk.io/collections v1.1.0
 	cosmossdk.io/core v1.0.0
-	cosmossdk.io/core/testing v0.0.2-0.20250203133933-bc60d1009f47
+	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
@@ -33,7 +33,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
-	github.com/spf13/viper v1.19.0
+	github.com/spf13/viper v1.19.0 // indirect
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 )
 

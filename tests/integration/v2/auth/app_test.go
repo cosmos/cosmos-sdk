@@ -21,7 +21,6 @@ import (
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/bank"
-	_ "cosmossdk.io/x/bank" // import as blank for app wiring
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
@@ -41,7 +40,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring``
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"   // import as blank for app wiring

@@ -92,7 +92,7 @@ func AddGenesisAccountsWithGenesis(
 	}
 
 	// check if provided accounts aren't duplicated
-	var mapAddr = make(map[string]struct{}, len(accounts))
+	mapAddr := make(map[string]struct{}, len(accounts))
 	for _, acc := range accounts {
 		if _, ok := mapAddr[acc.Address]; ok {
 			return nil, fmt.Errorf("duplicate account address provided in arguments: %s", acc.Address)

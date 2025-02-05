@@ -764,10 +764,10 @@ func TestSignWithMultiSignersAminoJSON(t *testing.T) {
 }
 
 func TestAuxSigner(t *testing.T) {
-	f := createTestSuite(t)
-
 	t.Skip("re-enable this when we bring back sign mode aux client testing")
 	val0Coin := sdk.NewCoin("testtoken", math.NewInt(10))
+
+	f := createTestSuite(t)
 
 	testCases := []struct {
 		name      string
@@ -1066,6 +1066,8 @@ func TestAuxToFeeWithTips(t *testing.T) {
 }
 
 func getBalances(t *testing.T, clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
+	t.Helper()
+
 	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", clientCtx.NodeURI, addr.String(), denom))
 	require.NoError(t, err)
 

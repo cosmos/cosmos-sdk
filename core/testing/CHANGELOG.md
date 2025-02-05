@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 > Testing suite for the core module. Should stay in 0ver. 
 
+## [v0.0.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core/testing%2Fv0.0.2)
+
+* [#23396](https://github.com/cosmos/cosmos-sdk/pull/23396) Add branch service mock.
+
 ## [v0.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core/testing%2Fv0.0.1)
 
 * Initial tag.

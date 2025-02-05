@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -15,19 +14,13 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/server"
 	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -38,21 +31,68 @@ const govModuleName = "gov"
 type TestSuite struct {
 	preModule appmodule.HasPreBlocker
 	keeper    *keeper.Keeper
-	ctx       sdk.Context
-	baseApp   *baseapp.BaseApp
 	encCfg    moduletestutil.TestEncodingConfig
 
-	key storetypes.StoreKey
-	env appmodule.Environment
+	ctx coretesting.TestContext
+	env coretesting.TestEnvironment
+}
+
+func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
+	t.Helper()
+	s := TestSuite{}
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
+
+	ctx, env := coretesting.NewTestEnvironment(coretesting.TestEnvironmentConfig{
+		ModuleName: types.ModuleName,
+		Logger:     coretesting.NewNopLogger(),
+	})
+
+	s.ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
+	s.env = env
+
+	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
+	require.NoError(t, err)
+
+	ctrl := gomock.NewController(t)
+	ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
+	s.keeper = keeper.NewKeeper(
+		s.env.Environment,
+		skip,
+		s.encCfg.Codec,
+		t.TempDir(),
+		newMockedVersionModifier(1),
+		authority,
+		ck)
+
+	s.preModule = upgrade.NewAppModule(s.keeper)
+	return &s
+}
+
+func newMockedVersionModifier(startingVersion uint64) server.VersionModifier {
+	return &mockedVersionModifier{version: startingVersion}
+}
+
+type mockedVersionModifier struct {
+	version uint64
+}
+
+func (m *mockedVersionModifier) SetAppVersion(_ context.Context, u uint64) error {
+	m.version = u
+	return nil
+}
+
+func (m *mockedVersionModifier) AppVersion(_ context.Context) (uint64, error) {
+	return m.version, nil
 }
 
 func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
 	t.Helper()
 	t.Log("Verify that a panic happens at the upgrade height")
-	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: height + 1, Time: time.Now()})
 
 	err := s.preModule.PreBlock(newCtx)
-	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
+	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height:")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
 	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
@@ -65,7 +105,7 @@ func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
 	s.VerifyCleared(t, newCtx)
 }
 
-func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
+func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx context.Context, proposalName string) {
 	t.Helper()
 	t.Log("Verify that a panic happens at the upgrade height")
 
@@ -83,14 +123,14 @@ func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, pro
 	s.VerifyCleared(t, newCtx)
 }
 
-func (s *TestSuite) VerifyCleared(t *testing.T, newCtx sdk.Context) {
+func (s *TestSuite) VerifyCleared(t *testing.T, newCtx context.Context) {
 	t.Helper()
 	t.Log("Verify that the upgrade plan has been cleared")
 	_, err := s.keeper.GetUpgradePlan(newCtx)
 	require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
 }
 
-func (s *TestSuite) VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
+func (s *TestSuite) VerifyNotDone(t *testing.T, newCtx context.Context, name string) {
 	t.Helper()
 	t.Log("Verify that upgrade was not done")
 	height, err := s.keeper.GetDoneHeight(newCtx, name)
@@ -98,7 +138,7 @@ func (s *TestSuite) VerifyNotDone(t *testing.T, newCtx sdk.Context, name string)
 	require.NoError(t, err)
 }
 
-func (s *TestSuite) VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
+func (s *TestSuite) VerifyDone(t *testing.T, newCtx context.Context, name string) {
 	t.Helper()
 	t.Log("Verify that the upgrade plan has been executed")
 	height, err := s.keeper.GetDoneHeight(newCtx, name)
@@ -115,61 +155,10 @@ func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 	}
 }
 
-func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
-	t.Helper()
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	s := TestSuite{
-		key: key,
-	}
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
-
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	s.baseApp = baseapp.NewBaseApp(
-		"upgrade",
-		log.NewNopLogger(),
-		testCtx.DB,
-		s.encCfg.TxConfig.TxDecoder(),
-	)
-
-	storeService := runtime.NewKVStoreService(key)
-	s.env = runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()))
-
-	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
-	s.baseApp.SetVersionModifier(newMockedVersionModifier(1))
-
-	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
-	require.NoError(t, err)
-
-	ctrl := gomock.NewController(t)
-	ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
-	s.keeper = keeper.NewKeeper(s.env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority, ck)
-
-	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
-
-	s.preModule = upgrade.NewAppModule(s.keeper)
-	return &s
-}
-
-func newMockedVersionModifier(startingVersion uint64) server.VersionModifier {
-	return &mockedVersionModifier{version: startingVersion}
-}
-
-type mockedVersionModifier struct {
-	version uint64
-}
-
-func (m *mockedVersionModifier) SetAppVersion(ctx context.Context, u uint64) error {
-	m.version = u
-	return nil
-}
-
-func (m *mockedVersionModifier) AppVersion(ctx context.Context) (uint64, error) {
-	return m.version, nil
-}
-
 func TestRequireFutureBlock(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height - 1})
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height - 1})
 	require.Error(t, err)
 	require.True(t, errors.Is(err, sdkerrors.ErrInvalidRequest), err)
 }
@@ -177,7 +166,8 @@ func TestRequireFutureBlock(t *testing.T) {
 func TestDoHeightUpgrade(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify can schedule an upgrade")
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height + 1})
 	require.NoError(t, err)
 
 	s.VerifyDoUpgrade(t)
@@ -186,9 +176,10 @@ func TestDoHeightUpgrade(t *testing.T) {
 func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Can overwrite plan")
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "bad_test", Height: s.ctx.HeaderInfo().Height + 10})
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "bad_test", Height: height + 10})
 	require.NoError(t, err)
-	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height + 1})
 	require.NoError(t, err)
 
 	s.VerifyDoUpgrade(t)
@@ -203,13 +194,14 @@ func TestHaltIfTooNew(t *testing.T) {
 		return vm, nil
 	})
 
-	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: height + 1, Time: time.Now()})
 	err := s.preModule.PreBlock(newCtx)
 	require.NoError(t, err)
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we error if we have a registered handler ahead of time")
-	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "future", Height: s.ctx.HeaderInfo().Height + 3})
+	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "future", Height: height + 3})
 	require.NoError(t, err)
 	err = s.preModule.PreBlock(newCtx)
 	require.EqualError(t, err, "BINARY UPDATED BEFORE TRIGGER! UPGRADE \"future\" - in binary but not executed on chain. Downgrade your binary")
@@ -217,7 +209,7 @@ func TestHaltIfTooNew(t *testing.T) {
 
 	t.Log("Verify we no longer panic if the plan is on time")
 
-	futCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 3, Time: time.Now()})
+	futCtx := s.ctx.WithHeaderInfo(header.Info{Height: height + 3, Time: time.Now()})
 	err = s.preModule.PreBlock(futCtx)
 	require.NoError(t, err)
 	require.Equal(t, 1, called)
@@ -228,7 +220,8 @@ func TestHaltIfTooNew(t *testing.T) {
 func TestCanClear(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify upgrade is scheduled")
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 100})
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height + 100})
 	require.NoError(t, err)
 
 	err = s.keeper.ClearUpgradePlan(s.ctx)
@@ -239,7 +232,7 @@ func TestCanClear(t *testing.T) {
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	height := s.ctx.HeaderInfo().Height + 1
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
 	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height})
 	require.NoError(t, err)
 	s.VerifyDoUpgrade(t)
@@ -382,8 +375,9 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 
 func TestUpgradeWithoutSkip(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1, Time: time.Now()})
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height + 1})
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: height + 1, Time: time.Now()})
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height + 1})
 	require.NoError(t, err)
 	t.Log("Verify if upgrade happens without skip upgrade")
 	err = s.preModule.PreBlock(newCtx)
@@ -395,33 +389,33 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	require := require.New(t)
 
 	// require no error when the upgrade info file does not exist
 	_, err := s.keeper.ReadUpgradeInfoFromDisk()
-	require.NoError(err)
+	require.NoError(t, err)
 
-	planHeight := s.ctx.HeaderInfo().Height + 1
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	planHeight := height + 1
 	plan := types.Plan{
 		Name:   "test",
 		Height: 0, // this should be overwritten by DumpUpgradeInfoToFile
 	}
 	t.Log("verify if upgrade height is dumped to file")
 	err = s.keeper.DumpUpgradeInfoToDisk(planHeight, plan)
-	require.Nil(err)
+	require.Nil(t, err)
 
 	upgradeInfo, err := s.keeper.ReadUpgradeInfoFromDisk()
-	require.NoError(err)
+	require.NoError(t, err)
 
 	t.Log("Verify upgrade height from file matches ")
-	require.Equal(upgradeInfo.Height, planHeight)
-	require.Equal(upgradeInfo.Name, plan.Name)
+	require.Equal(t, upgradeInfo.Height, planHeight)
+	require.Equal(t, upgradeInfo.Name, plan.Name)
 
 	// clear the test file
 	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
-	require.Nil(err)
+	require.Nil(t, err)
 	err = os.Remove(upgradeInfoFilePath)
-	require.Nil(err)
+	require.Nil(t, err)
 }
 
 // TODO: add testcase to for `no upgrade handler is present for last applied upgrade`.
@@ -431,24 +425,25 @@ func TestBinaryVersion(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		preRun      func() sdk.Context
+		preRun      func() context.Context
 		expectError bool
 	}{
 		{
 			"test not panic: no scheduled upgrade or applied upgrade is present",
-			func() sdk.Context {
+			func() context.Context {
 				return s.ctx
 			},
 			false,
 		},
 		{
 			"test not panic: upgrade handler is present for last applied upgrade",
-			func() sdk.Context {
+			func() context.Context {
 				s.keeper.SetUpgradeHandler("test0", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 					return vm, nil
 				})
 
-				err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test0", Height: s.ctx.HeaderInfo().Height + 2})
+				height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+				err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test0", Height: height + 2})
 				require.NoError(t, err)
 
 				newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 12})
@@ -463,7 +458,7 @@ func TestBinaryVersion(t *testing.T) {
 		},
 		{
 			"test panic: upgrade needed",
-			func() sdk.Context {
+			func() context.Context {
 				err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test2", Height: 13})
 				require.NoError(t, err)
 
@@ -490,9 +485,10 @@ func TestDowngradeVerification(t *testing.T) {
 
 	// submit a plan.
 	planName := "downgrade"
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: planName, Height: s.ctx.HeaderInfo().Height + 1})
+	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: planName, Height: height + 1})
 	require.NoError(t, err)
-	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1})
+	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: height + 1})
 
 	// set the handler.
 	s.keeper.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
@@ -502,22 +498,25 @@ func TestDowngradeVerification(t *testing.T) {
 	// successful upgrade.
 	err = s.preModule.PreBlock(s.ctx)
 	require.NoError(t, err)
-	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1})
+
+	height = s.env.HeaderService().HeaderInfo(s.ctx).Height
+	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: height + 1})
 
 	testCases := map[string]struct {
-		preRun      func(*keeper.Keeper, sdk.Context, string)
+		preRun      func(*keeper.Keeper, context.Context, string)
 		expectError bool
 	}{
 		"valid binary": {
-			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
+			preRun: func(k *keeper.Keeper, ctx context.Context, name string) {
 				k.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 					return vm, nil
 				})
 			},
 		},
 		"downgrade with an active plan": {
-			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
-				err := k.ScheduleUpgrade(ctx, types.Plan{Name: "another" + planName, Height: ctx.HeaderInfo().Height + 1})
+			preRun: func(k *keeper.Keeper, ctx context.Context, name string) {
+				height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+				err := k.ScheduleUpgrade(ctx, types.Plan{Name: "another" + planName, Height: height + 1})
 				require.NoError(t, err, name)
 			},
 			expectError: true,
@@ -528,7 +527,7 @@ func TestDowngradeVerification(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		ctx, _ := s.ctx.CacheContext()
+		ctx := s.ctx
 
 		authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 		require.NoError(t, err)
@@ -537,7 +536,7 @@ func TestDowngradeVerification(t *testing.T) {
 		// downgrade. now keeper does not have the handler.
 		ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
 		ck.EXPECT().AppVersion(gomock.Any()).Return(uint64(0), nil).AnyTimes()
-		k := keeper.NewKeeper(s.env, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority, ck)
+		k := keeper.NewKeeper(s.env.Environment, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority, ck)
 		m := upgrade.NewAppModule(k)
 
 		// assertions

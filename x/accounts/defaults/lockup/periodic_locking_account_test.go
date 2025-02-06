@@ -54,7 +54,6 @@ func TestPeriodicAccountDelegate(t *testing.T) {
 
 	acc := setupPeriodicAccount(t, sdkCtx, ss)
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
@@ -73,7 +72,6 @@ func TestPeriodicAccountDelegate(t *testing.T) {
 	})
 
 	_, err = acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(5)),
 	})
@@ -93,7 +91,6 @@ func TestPeriodicAccountDelegate(t *testing.T) {
 	})
 
 	_, err = acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(4)),
 	})
@@ -117,7 +114,6 @@ func TestPeriodicAccountUndelegate(t *testing.T) {
 	acc := setupPeriodicAccount(t, sdkCtx, ss)
 	// Delegate first
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
@@ -129,7 +125,6 @@ func TestPeriodicAccountUndelegate(t *testing.T) {
 
 	// Undelegate
 	_, err = acc.Undelegate(sdkCtx, &lockuptypes.MsgUndelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
@@ -161,7 +156,6 @@ func TestPeriodicAccountSendCoins(t *testing.T) {
 
 	acc := setupPeriodicAccount(t, sdkCtx, ss)
 	_, err := acc.SendCoins(sdkCtx, &lockuptypes.MsgSend{
-		Sender:    "owner",
 		ToAddress: "receiver",
 		Amount:    sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
 	})
@@ -176,7 +170,6 @@ func TestPeriodicAccountSendCoins(t *testing.T) {
 	})
 
 	_, err = acc.SendCoins(sdkCtx, &lockuptypes.MsgSend{
-		Sender:    "owner",
 		ToAddress: "receiver",
 		Amount:    sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
 	})
@@ -216,4 +209,36 @@ func TestPeriodicAccountGetLockCoinInfo(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, unlocked.AmountOf("test").Equal(math.NewInt(10)))
 	require.True(t, locked.AmountOf("test").Equal(math.ZeroInt()))
+}
+
+func TestPeriodicAccountSendCoinsUnauthorized(t *testing.T) {
+	ctx, ss := newMockContext(t)
+	// Initialize context with current time.
+	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
+		Time: time.Now(),
+	})
+
+	// Create a periodic locking account for the "owner".
+	acc := setupPeriodicAccount(t, sdkCtx, ss)
+
+	// Fast-forward block time so that all tokens are unlocked.
+	startTime, err := acc.StartTime.Get(sdkCtx)
+	require.NoError(t, err)
+	// In our setup, the total locking periods add up to 3 minutes.
+	sdkCtx = sdkCtx.WithHeaderInfo(header.Info{
+		Time: startTime.Add(3 * time.Minute),
+	})
+
+	// Verify that the tokens are fully unlocked.
+	unlocked, locked, err := acc.GetLockCoinsInfo(sdkCtx, sdkCtx.HeaderInfo().Time)
+	require.NoError(t, err)
+	require.True(t, unlocked.AmountOf("test").Equal(math.NewInt(10)), "expected all tokens to be unlocked")
+	require.True(t, locked.AmountOf("test").Equal(math.ZeroInt()), "expected no locked tokens")
+
+	// Attempt to send coins using an unauthorized sender "hacker" instead of "owner".
+	_, err = acc.SendCoins(sdkCtx, &lockuptypes.MsgSend{
+		ToAddress: "receiver",
+		Amount:    sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
+	})
+	require.Error(t, err, "non-owner should not be able to send coins")
 }

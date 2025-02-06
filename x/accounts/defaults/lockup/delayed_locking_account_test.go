@@ -40,7 +40,6 @@ func TestDelayedAccountDelegate(t *testing.T) {
 
 	acc := setupDelayedAccount(t, sdkCtx, ss)
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
@@ -59,7 +58,6 @@ func TestDelayedAccountDelegate(t *testing.T) {
 	})
 
 	_, err = acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(5)),
 	})
@@ -83,7 +81,6 @@ func TestDelayedAccountUndelegate(t *testing.T) {
 	acc := setupDelayedAccount(t, sdkCtx, ss)
 	// Delegate first
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
@@ -95,7 +92,6 @@ func TestDelayedAccountUndelegate(t *testing.T) {
 
 	// Undelegate
 	_, err = acc.Undelegate(sdkCtx, &lockuptypes.MsgUndelegate{
-		Sender:           "owner",
 		ValidatorAddress: valAddress,
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
@@ -126,7 +122,6 @@ func TestDelayedAccountSendCoins(t *testing.T) {
 
 	acc := setupDelayedAccount(t, sdkCtx, ss)
 	_, err := acc.SendCoins(sdkCtx, &lockuptypes.MsgSend{
-		Sender:    "owner",
 		ToAddress: "receiver",
 		Amount:    sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
 	})
@@ -141,7 +136,6 @@ func TestDelayedAccountSendCoins(t *testing.T) {
 	})
 
 	_, err = acc.SendCoins(sdkCtx, &lockuptypes.MsgSend{
-		Sender:    "owner",
 		ToAddress: "receiver",
 		Amount:    sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
 	})

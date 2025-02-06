@@ -165,6 +165,9 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		if err != nil {
 			return err
 		}
+		if k.BlockedAddr(outAddress) {
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "address %s is blocked", out.Address)
+		}
 
 		sending = append(sending, toSend{
 			Address:    outAddress,

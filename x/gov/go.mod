@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.10.0-beta.1
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0 // main
-	cosmossdk.io/core/testing v0.0.1 // main
+	cosmossdk.io/core/testing v0.0.2 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0

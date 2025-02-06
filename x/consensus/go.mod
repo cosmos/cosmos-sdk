@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.8.2 // main
 	cosmossdk.io/collections v1.0.0-rc.1 // main
 	cosmossdk.io/core v1.0.0 // main
-	cosmossdk.io/core/testing v0.0.1 // main
+	cosmossdk.io/core/testing v0.0.2 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/schema v1.0.0
 	cosmossdk.io/store v1.10.0-rc.1.0.20241218084712-ca559989da43

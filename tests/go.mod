@@ -54,7 +54,7 @@ require (
 )
 
 require (
-	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/core/testing v0.0.2
 	go.uber.org/mock v0.5.0
 )
 

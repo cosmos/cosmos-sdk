@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -286,7 +285,6 @@ func (bva *BaseLockup) SendCoins(
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	fmt.Println("SendCoins")
 	sender := accountstd.Sender(ctx)
 	err := bva.checkSender(ctx, sender)
 	if err != nil {

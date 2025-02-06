@@ -52,6 +52,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+* (server/v2) [#23618](https://github.com/cosmos/cosmos-sdk/pull/23618) Add rollback command
+
 ### Removed
 
 * (tools/hub) [#23562](https://github.com/cosmos/cosmos-sdk/pull/23562) Remove `tools/hubl`. A similar tool will be maintained in [ignite](https://www.github.com/ignite/cli).

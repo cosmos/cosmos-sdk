@@ -266,7 +266,7 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 }
 
 // SendCoinsFromModuleToModule transfers coins from a ModuleAccount to another.
-// An error is returned if either module accounts does not exist.
+// An error is returned if either module accounts does not exist or if the recipient address is blocked.
 func (k BaseKeeper) SendCoinsFromModuleToModule(
 	ctx context.Context, senderModule, recipientModule string, amt sdk.Coins,
 ) error {

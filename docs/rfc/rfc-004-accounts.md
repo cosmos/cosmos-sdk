@@ -83,7 +83,7 @@ management system that is better suited to address the requirements of the Cosmo
 
 #### Standardization
 
-With `x/accounts` allowing a modular api there becomes a need for standardization of accounts or the interfaces wallets and other clients should expect to use. For this reason we will be using the [`CIP` repo](https://github.com/cosmos/cips) in order to standardize interfaces in order for wallets to know what to expect when interacting with accounts.
+With `x/accounts` allowing a modular api there becomes a need for standardization of accounts or the interfaces wallets and other clients should expect to use. For this reason we will be using the [`CIP` repo](https://github.com/cosmos/chips) in order to standardize interfaces in order for wallets to know what to expect when interacting with accounts.
 
 ## Implementation
 

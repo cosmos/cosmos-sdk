@@ -142,7 +142,7 @@ func (c *consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	}
 
 	// if height is 0, we dont know the consensus params
-	var appVersion = InitialAppVersion
+	appVersion := InitialAppVersion
 	if version > 0 {
 		cp, err := GetConsensusParams(ctx, c.app)
 		// if the consensus params are not found, we set the app version to 0

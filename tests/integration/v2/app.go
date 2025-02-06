@@ -10,7 +10,6 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
@@ -276,7 +275,7 @@ func NewApp(
 	ctx := context.WithValue(
 		context.Background(),
 		corecontext.CometParamsInitInfoKey,
-		&v1.ConsensusParams{
+		&cmtproto.ConsensusParams{
 			Block:     DefaultConsensusParams.Block,
 			Evidence:  DefaultConsensusParams.Evidence,
 			Validator: DefaultConsensusParams.Validator,

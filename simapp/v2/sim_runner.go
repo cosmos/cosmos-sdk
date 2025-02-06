@@ -13,7 +13,6 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -372,7 +371,7 @@ func doChainInitWithGenesis[T Tx](
 		IsGenesis: true,
 	}
 
-	initialConsensusParams := &v1.ConsensusParams{
+	initialConsensusParams := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
 			MaxBytes: 200000,
 			MaxGas:   100_000_000,

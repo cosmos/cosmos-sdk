@@ -73,7 +73,11 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 	// Store the consensus params in the BaseApp's param store. Note, this must be
 	// done after the finalizeBlockState and context have been set as it's persisted
 	// to state.
-	if req.ConsensusParams != nil {
+	if cp := req.ConsensusParams; cp != nil {
+		if cp.Version != nil && cp.Version.App == 0 {
+			cp.Version.App = InitialAppVersion
+		}
+
 		err := app.StoreConsensusParams(app.finalizeBlockState.Context(), *req.ConsensusParams)
 		if err != nil {
 			return nil, err

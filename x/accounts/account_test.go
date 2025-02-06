@@ -26,7 +26,6 @@ func NewTestAccount(d accountstd.Dependencies) (*TestAccount, error) {
 
 type TestAccount struct {
 	Counter collections.Sequence
-	owner   string
 }
 
 func (t TestAccount) RegisterInitHandler(builder *implementation.InitBuilder) {

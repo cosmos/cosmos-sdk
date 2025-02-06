@@ -10,6 +10,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -293,8 +294,10 @@ func (c *consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	}
 
 	if cp := req.ConsensusParams; cp != nil {
-		if cp.Version != nil && cp.Version.App == 0 {
-			cp.Version.App = InitialAppVersion
+		if cp.Version == nil || (cp.Version != nil && cp.Version.App == 0) {
+			cp.Version = &v1.VersionParams{
+				App: InitialAppVersion,
+			}
 		}
 
 		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, cp)

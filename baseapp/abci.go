@@ -74,8 +74,10 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 	// done after the finalizeBlockState and context have been set as it's persisted
 	// to state.
 	if cp := req.ConsensusParams; cp != nil {
-		if cp.Version != nil && cp.Version.App == 0 {
-			cp.Version.App = InitialAppVersion
+		if cp.Version == nil || (cp.Version != nil && cp.Version.App == 0) {
+			cp.Version = &cmtproto.VersionParams{
+				App: InitialAppVersion,
+			}
 		}
 
 		err := app.StoreConsensusParams(app.finalizeBlockState.Context(), *req.ConsensusParams)

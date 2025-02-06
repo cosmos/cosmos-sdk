@@ -353,6 +353,7 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 			s.BootstrapStateCmd(),
 			cmtcmd.ResetAllCmd,
 			cmtcmd.ResetStateCmd,
+			cmtcmd.RollbackStateCmd,
 		},
 		Queries: []*cobra.Command{
 			QueryBlockCmd(),

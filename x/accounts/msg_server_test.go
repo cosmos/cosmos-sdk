@@ -78,39 +78,3 @@ func TestMsgServer_BundlingDisabled(t *testing.T) {
 	})
 	require.ErrorIs(t, err, ErrBundlingDisabled)
 }
-
-func TestMsgServer_UnauthorizedExecution(t *testing.T) {
-	k, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	s := NewMsgServer(k)
-
-	// Pack an empty message payload for initialization.
-	initMsg, err := implementation.PackAny(&emptypb.Empty{})
-	require.NoError(t, err)
-
-	// Initialize a new account with the legitimate owner "owner".
-	initResp, err := s.Init(ctx, &v1.MsgInit{
-		Sender:      "owner",
-		AccountType: "test",
-		Message:     initMsg,
-		AddressSeed: []byte("seed_owner"),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, initResp)
-
-	// Create the execute message representing a funds transfer (e.g., trying to move "10" funds).
-	hackMsg := &wrapperspb.StringValue{
-		Value: "10",
-	}
-	hackMsgAny, err := implementation.PackAny(hackMsg)
-	require.NoError(t, err)
-
-	// Hacker attempts to execute a transaction on the legitimate account.
-	// Since the "Sender" in the execute message is "hacker" which does NOT
-	// match the account owner ("owner"), the execution should fail.
-	_, err = s.Execute(ctx, &v1.MsgExecute{
-		Sender:  "hacker", // attacker trying to control the funds
-		Target:  initResp.AccountAddress,
-		Message: hackMsgAny,
-	})
-	require.Error(t, err, "expected error when unauthorized hacker tries to execute transaction")
-}

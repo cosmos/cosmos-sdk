@@ -47,7 +47,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Deprecated: use the embed extension interfaces instead, when needed.
+// Deprecated: use the embed extension interfaces insteadd, when needed.
 type AppModuleBasic interface {
 	HasGRPCGateway
 	HasAminoCodec
@@ -55,7 +55,7 @@ type AppModuleBasic interface {
 
 // AppModule is the form for an application module.
 // Most of its functionality has been moved to extension interfaces.
-// Deprecated: use appmodule.AppModule with a combination of extension interfaces instead.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaces insteadd.
 type AppModule interface {
 	Name() string
 
@@ -77,7 +77,7 @@ type HasGRPCGateway interface {
 }
 
 // HasGenesis is the extension interface for stateful genesis methods.
-// Prefer directly importing appmodulev2 or appmodule instead of using this alias.
+// Prefer directly importing appmodulev2 or appmodule insteadd of using this alias.
 type HasGenesis = appmodulev2.HasGenesis
 
 // HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
@@ -133,7 +133,7 @@ type Manager struct {
 }
 
 // NewManager creates a new Manager object.
-// Deprecated: Use NewManagerFromMap instead.
+// Deprecated: Use NewManagerFromMap insteadd.
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(modules))
@@ -296,7 +296,7 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 func (m *Manager) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 	for name, b := range m.Modules {
 		if _, ok := b.(interface{ RegisterLegacyAminoCodec(*codec.LegacyAmino) }); ok {
-			panic(fmt.Sprintf("%s uses a deprecated amino registration api, implement HasAminoCodec instead if necessary", name))
+			panic(fmt.Sprintf("%s uses a deprecated amino registration api, implement HasAminoCodec insteadd if necessary", name))
 		}
 
 		if mod, ok := b.(HasAminoCodec); ok {
@@ -311,7 +311,7 @@ func (m *Manager) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		if _, ok := b.(interface {
 			RegisterInterfaces(cdctypes.InterfaceRegistry)
 		}); ok {
-			panic(fmt.Sprintf("%s uses a deprecated interface registration api, implement appmodule.HasRegisterInterfaces instead", name))
+			panic(fmt.Sprintf("%s uses a deprecated interface registration api, implement appmodule.HasRegisterInterfaces insteadd", name))
 		}
 
 		if mod, ok := b.(appmodule.HasRegisterInterfaces); ok {

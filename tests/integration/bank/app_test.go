@@ -106,9 +106,16 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
+		startupCfg,
+		&res.BankKeeper,
+		&res.AccountKeeper,
+		&res.DistributionKeeper,
+		&res.TxConfig,
+	)
 
 	res.App = app
+	res.App.SetTxEncoder(res.TxConfig.TxEncoder())
+	res.App.SetTxDecoder(res.TxConfig.TxDecoder())
 
 	require.NoError(t, err)
 	return res

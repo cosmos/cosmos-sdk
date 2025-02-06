@@ -30,7 +30,7 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -164,10 +164,7 @@ require (
 	golang.org/x/arch v0.13.0 // indirect
 )
 
-replace (
-	cosmossdk.io/core/testing => ../../core/testing
-	github.com/cosmos/cosmos-sdk => ../../.
-)
+replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace cosmossdk.io/x/staking => ../staking

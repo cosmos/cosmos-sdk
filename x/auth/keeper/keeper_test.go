@@ -9,16 +9,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/core/testing/queryclient"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -42,7 +39,7 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
+	ctx context.Context
 
 	queryClient    types.QueryClient
 	accountKeeper  keeper.AccountKeeper
@@ -54,11 +51,11 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+	ctx, env := coretesting.NewTestEnvironment(coretesting.TestEnvironmentConfig{
+		ModuleName: types.ModuleName,
+		Logger:     coretesting.NewNopLogger(),
+	})
+	suite.ctx = ctx
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -81,7 +78,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		env,
+		env.Environment,
 		suite.encCfg.Codec,
 		types.ProtoBaseAccount,
 		acctsModKeeper,
@@ -91,7 +88,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		types.NewModuleAddress("gov").String(),
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
+	queryHelper := queryclient.NewQueryHelper(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry).GRPCCodec())
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(suite.accountKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }

@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.6
 	cosmossdk.io/collections v1.1.0
 	cosmossdk.io/core v1.0.0
-	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
@@ -171,10 +171,7 @@ require (
 	golang.org/x/arch v0.13.0 // indirect
 )
 
-replace (
-	cosmossdk.io/core/testing => ../../core/testing
-	github.com/cosmos/cosmos-sdk => ../../
-)
+replace github.com/cosmos/cosmos-sdk => ../../
 
 // TODO remove post spinning out all modules
 replace (

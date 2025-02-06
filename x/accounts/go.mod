@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.8.2
 	cosmossdk.io/collections v1.1.0
 	cosmossdk.io/core v1.0.0
-	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v1.1.0
@@ -164,10 +164,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace (
-	cosmossdk.io/core/testing => ../../core/testing
-	github.com/cosmos/cosmos-sdk => ../../.
-)
+replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (

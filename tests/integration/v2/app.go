@@ -10,6 +10,7 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,6 @@ import (
 	"cosmossdk.io/store/v2/root"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -276,8 +276,7 @@ func NewApp(
 	ctx := context.WithValue(
 		context.Background(),
 		corecontext.CometParamsInitInfoKey,
-		&consensustypes.MsgUpdateParams{
-			Authority: "consensus",
+		&v1.ConsensusParams{
 			Block:     DefaultConsensusParams.Block,
 			Evidence:  DefaultConsensusParams.Evidence,
 			Validator: DefaultConsensusParams.Validator,

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -32,7 +33,6 @@ import (
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/streaming"
 	storev2 "cosmossdk.io/store/v2"
-	consensustypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -372,7 +372,7 @@ func doChainInitWithGenesis[T Tx](
 		IsGenesis: true,
 	}
 
-	initialConsensusParams := &consensustypes.MsgUpdateParams{
+	initialConsensusParams := &v1.ConsensusParams{
 		Block: &cmtproto.BlockParams{
 			MaxBytes: 200000,
 			MaxGas:   100_000_000,

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -57,18 +58,26 @@ func (k *Keeper) GetAuthority() string {
 
 // InitGenesis initializes the initial state of the module
 func (k *Keeper) InitGenesis(ctx context.Context) error {
-	value, ok := ctx.Value(corecontext.CometParamsInitInfoKey).(*types.MsgUpdateParams)
+	value, ok := ctx.Value(corecontext.CometParamsInitInfoKey).(*v1.ConsensusParams)
 	if !ok || value == nil {
 		// no error for appv1 and appv2
 		return nil
 	}
 
-	consensusParams, err := value.ToProtoConsensusParams()
-	if err != nil {
+	// validate the consensus params
+	// this avoids to duplicate the validation in here as well
+	if _, err := (&types.MsgUpdateParams{
+		Block:     value.Block,
+		Evidence:  value.Evidence,
+		Validator: value.Validator,
+		Abci:      value.Abci,
+		Synchrony: value.Synchrony,
+		Feature:   value.Feature,
+	}).ToProtoConsensusParams(); err != nil {
 		return err
 	}
 
-	nextParams, err := k.paramCheck(ctx, consensusParams)
+	nextParams, err := k.paramCheck(ctx, *value)
 	if err != nil {
 		return err
 	}
@@ -142,6 +151,11 @@ func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.Consens
 	}
 
 	nextParams := params.Update(&consensusParams)
+
+	// do not override the version params
+	// the consensusParams.Version always has DefaultConsensusParams version
+	// as app version is updated by x/upgrade during migrations
+	nextParams.Version = params.Version
 
 	if err := nextParams.ValidateBasic(); err != nil {
 		return nil, err

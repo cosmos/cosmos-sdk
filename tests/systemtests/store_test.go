@@ -15,8 +15,6 @@ import (
 const disabledLog = "--log_level=disabled"
 
 func TestSnapshots(t *testing.T) {
-	t.Skip("Not persisting properly on CI")
-
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	systest.Sut.StartChain(t)
@@ -28,7 +26,9 @@ func TestSnapshots(t *testing.T) {
 
 	node0Dir := systest.Sut.NodeDir(0)
 	command := "store"
-	restoreableDirs := []string{fmt.Sprintf("%s/data/application.db", node0Dir), fmt.Sprintf("%s/data/ss", node0Dir)}
+	restoreableDirs := []string{
+		fmt.Sprintf("%s/data/application.db", node0Dir),
+	}
 
 	// export snapshot at height 5
 	res := cli.RunCommandWithArgs(command, "export", "--height=5", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
@@ -52,24 +52,21 @@ func TestSnapshots(t *testing.T) {
 	res = cli.RunCommandWithArgs(command, "load", fmt.Sprintf("%s/5-3.tar.gz", node0Dir), fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	require.DirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", node0Dir))
 
-	// Restore from snapshots
+	// Remove database
 	for _, dir := range restoreableDirs {
 		require.NoError(t, os.RemoveAll(dir))
 	}
-	// Remove database
-	err := os.RemoveAll(fmt.Sprintf("%s/data/application.db", node0Dir))
-	require.NoError(t, err)
-	require.NoError(t, os.RemoveAll(fmt.Sprintf("%s/data/ss", node0Dir)))
 
+	// Restore from snapshots
 	res = cli.RunCommandWithArgs(command, "restore", "5", "3", fmt.Sprintf("--home=%s", node0Dir), disabledLog)
 	for _, dir := range restoreableDirs {
 		require.DirExists(t, dir)
 	}
+	systest.Sut.StartChain(t)
+	systest.Sut.AwaitNBlocks(t, 2)
 }
 
 func TestPrune(t *testing.T) {
-	t.Skip("Not persisting properly on CI")
-
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 

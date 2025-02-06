@@ -23,7 +23,6 @@ func newTestRootStore(sc store.Committer) *Store {
 		telemetry:       metrics.Metrics{},
 		stateCommitment: sc,
 		pruningManager:  pm,
-		isMigrating:     false,
 	}
 }
 
@@ -61,13 +60,6 @@ func TestQuery(t *testing.T) {
 	sc.EXPECT().GetProof(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 	_, err = rs.Query(nil, 0, nil, true)
 	require.Error(t, err)
-
-	// Query with Migration
-
-	rs.isMigrating = true
-	sc.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte("value"), nil)
-	_, err = rs.Query(nil, 0, nil, false)
-	require.NoError(t, err)
 }
 
 func TestLoadVersion(t *testing.T) {
@@ -93,11 +85,6 @@ func TestLoadVersion(t *testing.T) {
 	// LoadVersionUpgrade
 	v := &corestore.StoreUpgrades{}
 	sc.EXPECT().LoadVersionAndUpgrade(uint64(2), v).Return(errors.New("error"))
-	err = rs.LoadVersionAndUpgrade(uint64(2), v)
-	require.Error(t, err)
-
-	// LoadVersionUpgrade with Migration
-	rs.isMigrating = true
 	err = rs.LoadVersionAndUpgrade(uint64(2), v)
 	require.Error(t, err)
 }

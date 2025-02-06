@@ -4,7 +4,6 @@ docs/architecture
 docs/rfc
 docs/tooling/01-cosmovisor.md
 docs/tooling/02-confix.md
-docs/tooling/03-hubl.md
 docs/core/17-autocli.md
 docs/packages/01-depinject.md
 docs/packages/02-collections.md

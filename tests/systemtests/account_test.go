@@ -155,3 +155,54 @@ func TestAccountsMigration(t *testing.T) {
 		"--fees=1stake")
 	systest.RequireTxSuccess(t, rsp)
 }
+
+func TestVestingAccountHacker(t *testing.T) {
+	// Reset the chain and create a CLI wrapper.
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+
+	// Create a new key for the vesting account.
+	vestingAccName := "vesting-account"
+	vestingAccAddr := cli.AddKey(vestingAccName)
+	require.NotEmpty(t, vestingAccAddr)
+
+	// Modify the genesis to fund the vesting account with 1,000,000 stake.
+	// (Here we use a CLI command "add-genesis-vesting-account" that accepts vesting parameters.)
+	systest.Sut.ModifyGenesisCLI(t, []string{
+		"genesis", "add-genesis-vesting-account", vestingAccAddr, "1000000stake",
+		"--vesting-start=1", "--vesting-end=10",
+	})
+
+	// Start the chain.
+	systest.Sut.StartChain(t)
+
+	// Unlock tokens by submitting a vesting unlock transaction.
+	// (We assume that the "tx vesting unlock" command will compute and release any unlockable funds.)
+	unlockRsp := cli.RunAndWait("tx", "vesting", "unlock", vestingAccAddr,
+		fmt.Sprintf("--from=%s", vestingAccAddr),
+		"--fees=1stake")
+	systest.RequireTxSuccess(t, unlockRsp)
+
+	// Query the vesting account balance to verify that some tokens have been unlocked.
+	balance := cli.QueryBalance(vestingAccAddr, "stake")
+	require.True(t, balance > 0, "expected some unlocked funds in vesting account, got %d", balance)
+
+	// Create a separate hacker account.
+	hackerAccName := "hacker"
+	hackerAddr := cli.AddKey(hackerAccName)
+	require.NotEmpty(t, hackerAddr)
+
+	// Now, have the hacker attempt to send funds from the vesting account to their own account.
+	// Since the hacker does not hold the vesting account's key, the transaction should fail.
+	assertUnauthorized := func(t assert.TestingT, err error, msgAndArgs ...interface{}) bool {
+		errMsg := err.Error()
+		return strings.Contains(errMsg, "unauthorized") ||
+			strings.Contains(errMsg, "signature verification failed")
+	}
+
+	hackTxRsp := cli.WithRunErrorMatcher(assertUnauthorized).RunAndWait("tx", "bank", "send",
+		vestingAccAddr, hackerAddr, "500stake",
+		fmt.Sprintf("--from=%s", hackerAddr),
+		"--fees=1stake")
+	systest.RequireTxFailure(t, hackTxRsp)
+}

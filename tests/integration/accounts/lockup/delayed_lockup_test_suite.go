@@ -45,7 +45,6 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 
 	t.Run("error - execute message, wrong sender", func(t *testing.T) {
 		msg := &types.MsgSend{
-			Sender:    addr,
 			ToAddress: addr,
 			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
 		}
@@ -54,7 +53,6 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 	})
 	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
-			Sender:    ownerAddrStr,
 			ToAddress: addr,
 			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
 		}
@@ -63,7 +61,6 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 	})
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
-			Sender:           ownerAddrStr,
 			ValidatorAddress: val.OperatorAddress,
 			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
 		}
@@ -86,7 +83,6 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 	})
 	t.Run("ok - execute withdraw reward message", func(t *testing.T) {
 		msg := &types.MsgWithdrawReward{
-			Sender:           ownerAddrStr,
 			ValidatorAddress: val.OperatorAddress,
 		}
 		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
@@ -97,7 +93,6 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 		require.NoError(t, err)
 		val := vals[0]
 		msg := &types.MsgUndelegate{
-			Sender:           ownerAddrStr,
 			ValidatorAddress: val.OperatorAddress,
 			Amount:           sdk.NewCoin("stake", math.NewInt(100)),
 		}
@@ -133,7 +128,6 @@ func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 	// Check if token is sendable after unlock
 	t.Run("ok - execute send message", func(t *testing.T) {
 		msg := &types.MsgSend{
-			Sender:    ownerAddrStr,
 			ToAddress: addr,
 			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
 		}

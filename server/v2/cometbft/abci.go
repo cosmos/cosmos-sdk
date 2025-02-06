@@ -287,14 +287,17 @@ func (c *consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// note the app version is not read from genesis
 	// user can update InitialAppVersion to that value if needed
 	// from height 1, we will query the app for the version
-
 	c.initialHeight = uint64(req.InitialHeight)
 	if c.initialHeight == 0 { // If initial height is 0, set it to 1
 		c.initialHeight = 1
 	}
 
-	if req.ConsensusParams != nil {
-		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, req.ConsensusParams)
+	if cp := req.ConsensusParams; cp != nil {
+		if cp.Version != nil && cp.Version.App == 0 {
+			cp.Version.App = InitialAppVersion
+		}
+
+		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, cp)
 	}
 
 	ci, err := c.store.LastCommitID()

@@ -22,6 +22,8 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+* [#23618](https://github.com/cosmos/cosmos-sdk/pull/23618) Add rollback command
+
 * [#23486](https://github.com/cosmos/cosmos-sdk/pull/23486) Add `server/v2/api/swagger` server component.
 
 ## [v2.0.0-beta.2](https://github.com/cosmos/cosmos-sdk/releases/tag/server/v2.0.0-beta.2)

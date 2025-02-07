@@ -82,6 +82,7 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 	if err != nil {
 		return nil, err
 	}
+
 	return &v1.MsgExecuteResponse{
 		Response: respAny,
 	}, nil

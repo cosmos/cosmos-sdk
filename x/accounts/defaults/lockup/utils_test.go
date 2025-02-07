@@ -70,7 +70,7 @@ func (h headerService) HeaderInfo(ctx context.Context) header.Info {
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("lockup_account"), []byte("sender"), TestFunds,
+		0, []byte("lockup_account"), []byte("owner"), TestFunds,
 		func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			typeUrl := sdk.MsgTypeURL(msg)
 			switch typeUrl {

@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	cosmossdk.io/core v1.0.0
-	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/schema v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/google/go-cmp v0.6.0

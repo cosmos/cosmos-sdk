@@ -1,7 +1,7 @@
 cosmossdk.io/core v1.0.0 h1:e7XBbISOytLBOXMVwpRPixThXqEkeLGlg8no/qpgS8U=
 cosmossdk.io/core v1.0.0/go.mod h1:mKIp3RkoEmtqdEdFHxHwWAULRe+79gfdOvmArrLDbDc=
-cosmossdk.io/core/testing v0.0.1 h1:gYCTaftcRrz+HoNXmK7r9KgbG1jgBJ8pNzm/Pa/erFQ=
-cosmossdk.io/core/testing v0.0.1/go.mod h1:2VDNz/25qtxgPa0+j8LW5e8Ev/xObqoJA7QuJS9/wIQ=
+cosmossdk.io/core/testing v0.0.2 h1:TXAmsnHa1C5lLiVN1z+rnkiyNS6sNwcGJCb6OouaNv8=
+cosmossdk.io/core/testing v0.0.2/go.mod h1:6Y3QaoNXsgeHiV4+9oYF/IqMFqCK5cJClonw/OXxHlY=
 cosmossdk.io/schema v1.0.0 h1:/diH4XJjpV1JQwuIozwr+A4uFuuwanFdnw2kKeiXwwQ=
 cosmossdk.io/schema v1.0.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
 github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fro=

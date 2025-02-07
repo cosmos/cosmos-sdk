@@ -465,6 +465,64 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	require.Equal(t, rPath, currentBin)
 }
 
+// TestPlanCustomDataLocation will detect upgrade when chain data dir is not located in the default path
+// the custom path should be provided as an absolute path to the configs
+func TestPlanCustomDataLocation(t *testing.T) {
+	// binaries from testdata/validate directory
+
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/custom-data-path"),
+		cosmovisor.Config{
+			Name:                  "dummyd",
+			AllowDownloadBinaries: true,
+			PollInterval:          100,
+			UnsafeSkipBackup:      true,
+		},
+	)
+	cfg.DataPath = filepath.Join(cfg.Home, "custom-location/data")
+	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
+
+	// should run the genesis binary and produce expected output
+	stdin, _ := os.Open(os.DevNull)
+	stdout, stderr := newBuffer(), newBuffer()
+	currentBin, err := cfg.CurrentBin()
+	require.NoError(t, err)
+
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	require.NoError(t, err)
+
+	upgradeFile := cfg.UpgradeInfoFilePath()
+
+	args := []string{"foo", "bar", "1234", upgradeFile}
+	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	require.NoError(t, err)
+	require.True(t, doUpgrade)
+	require.Equal(t, "", stderr.String())
+	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
+
+	// ensure this is upgraded now and produces new output
+	currentBin, err = cfg.CurrentBin()
+	require.NoError(t, err)
+
+	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+	args = []string{"second", "run", "--verbose"}
+	stdout.Reset()
+	stderr.Reset()
+
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
+	require.NoError(t, err)
+	require.False(t, doUpgrade)
+	require.Equal(t, "", stderr.String())
+	require.Equal(t, "chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
+
+	// ended without other upgrade
+	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+}
+
 // TestSkipUpgrade tests heights that are identified to be skipped and return if upgrade height matches the skip heights
 func TestSkipUpgrade(t *testing.T) {
 	cases := []struct {

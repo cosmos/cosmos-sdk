@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#21971](https://github.com/cosmos/cosmos-sdk/pull/21971) Support Custom path to application data directory
+
 ## v1.7.0 - 2024-11-18
 
 ### Features

@@ -128,7 +128,8 @@ func (bva *BaseLockup) Delegate(
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	err := bva.checkSender(ctx, msg.Sender)
+	sender := accountstd.Sender(ctx)
+	err := bva.checkSender(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +184,8 @@ func (bva *BaseLockup) Undelegate(
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	err := bva.checkSender(ctx, msg.Sender)
+	sender := accountstd.Sender(ctx)
+	err := bva.checkSender(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +257,8 @@ func (bva *BaseLockup) WithdrawReward(
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	err := bva.checkSender(ctx, msg.Sender)
+	sender := accountstd.Sender(ctx)
+	err := bva.checkSender(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +285,8 @@ func (bva *BaseLockup) SendCoins(
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
-	err := bva.checkSender(ctx, msg.Sender)
+	sender := accountstd.Sender(ctx)
+	err := bva.checkSender(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
@@ -321,16 +325,12 @@ func (bva *BaseLockup) SendCoins(
 	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
-func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
+func (bva *BaseLockup) checkSender(ctx context.Context, sender []byte) error {
 	owner, err := bva.Owner.Get(ctx)
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err.Error())
 	}
-	senderBytes, err := bva.addressCodec.StringToBytes(sender)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err.Error())
-	}
-	if !bytes.Equal(owner, senderBytes) {
+	if !bytes.Equal(owner, sender) {
 		return errors.New("sender is not the owner of this vesting account")
 	}
 

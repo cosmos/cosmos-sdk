@@ -41,12 +41,7 @@ func TestContinuousAccountDelegate(t *testing.T) {
 
 	acc := setupContinuousAccount(t, sdkCtx, ss)
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-<<<<<<< HEAD
-		Sender:           "owner",
 		ValidatorAddress: "val_address",
-=======
-		ValidatorAddress: valAddress,
->>>>>>> 5cedd5048 (fix(accounts): lockup check sender in context not in message (#23621))
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
@@ -64,12 +59,7 @@ func TestContinuousAccountDelegate(t *testing.T) {
 	})
 
 	_, err = acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-<<<<<<< HEAD
-		Sender:           "owner",
 		ValidatorAddress: "val_address",
-=======
-		ValidatorAddress: valAddress,
->>>>>>> 5cedd5048 (fix(accounts): lockup check sender in context not in message (#23621))
 		Amount:           sdk.NewCoin("test", math.NewInt(5)),
 	})
 	require.NoError(t, err)

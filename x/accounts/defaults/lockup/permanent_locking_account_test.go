@@ -39,12 +39,7 @@ func TestPermanentAccountDelegate(t *testing.T) {
 
 	acc := setupPermanentAccount(t, sdkCtx, ss)
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-<<<<<<< HEAD
-		Sender:           "owner",
 		ValidatorAddress: "val_address",
-=======
-		ValidatorAddress: valAddress,
->>>>>>> 5cedd5048 (fix(accounts): lockup check sender in context not in message (#23621))
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
@@ -63,12 +58,7 @@ func TestPermanentAccountUndelegate(t *testing.T) {
 	acc := setupPermanentAccount(t, sdkCtx, ss)
 	// Delegate first
 	_, err := acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-<<<<<<< HEAD
-		Sender:           "owner",
 		ValidatorAddress: "val_address",
-=======
-		ValidatorAddress: valAddress,
->>>>>>> 5cedd5048 (fix(accounts): lockup check sender in context not in message (#23621))
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)
@@ -79,12 +69,7 @@ func TestPermanentAccountUndelegate(t *testing.T) {
 
 	// Undelegate
 	_, err = acc.Undelegate(sdkCtx, &lockuptypes.MsgUndelegate{
-<<<<<<< HEAD
-		Sender:           "owner",
 		ValidatorAddress: "val_address",
-=======
-		ValidatorAddress: valAddress,
->>>>>>> 5cedd5048 (fix(accounts): lockup check sender in context not in message (#23621))
 		Amount:           sdk.NewCoin("test", math.NewInt(1)),
 	})
 	require.NoError(t, err)

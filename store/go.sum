@@ -1,8 +1,8 @@
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cosmossdk.io/core v1.0.0 h1:e7XBbISOytLBOXMVwpRPixThXqEkeLGlg8no/qpgS8U=
 cosmossdk.io/core v1.0.0/go.mod h1:mKIp3RkoEmtqdEdFHxHwWAULRe+79gfdOvmArrLDbDc=
-cosmossdk.io/core/testing v0.0.1 h1:gYCTaftcRrz+HoNXmK7r9KgbG1jgBJ8pNzm/Pa/erFQ=
-cosmossdk.io/core/testing v0.0.1/go.mod h1:2VDNz/25qtxgPa0+j8LW5e8Ev/xObqoJA7QuJS9/wIQ=
+cosmossdk.io/core/testing v0.0.2 h1:TXAmsnHa1C5lLiVN1z+rnkiyNS6sNwcGJCb6OouaNv8=
+cosmossdk.io/core/testing v0.0.2/go.mod h1:6Y3QaoNXsgeHiV4+9oYF/IqMFqCK5cJClonw/OXxHlY=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=
 cosmossdk.io/errors v1.0.1/go.mod h1:MeelVSZThMi4bEakzhhhE/CKqVv3nOJDA25bIqRDu/U=
 cosmossdk.io/log v1.5.0 h1:dVdzPJW9kMrnAYyMf1duqacoidB9uZIl+7c6z0mnq0g=

@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	cosmossdk.io/core v1.0.0
-	cosmossdk.io/core/testing v0.0.1
+	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0

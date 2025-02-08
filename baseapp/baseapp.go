@@ -121,6 +121,7 @@ type BaseApp struct {
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
 	// previous block's state. This state is committed.
 	checkState           *state
+	simulateState        *state
 	prepareProposalState *state
 	processProposalState *state
 	finalizeBlockState   *state
@@ -503,6 +504,10 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 	case execModeFinalize:
 		app.finalizeBlockState = baseState
 
+	case execModeSimulate:
+		baseState.SetContext(baseState.Context().WithExecMode(sdk.ExecMode(mode)).WithMinGasPrices(app.minGasPrices))
+		app.simulateState = baseState
+
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
@@ -637,6 +642,9 @@ func (app *BaseApp) getState(mode execMode) *state {
 
 	case execModeProcessProposal:
 		return app.processProposalState
+
+	case execModeSimulate:
+		return app.simulateState
 
 	default:
 		return app.checkState
@@ -1025,7 +1033,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []proto
 		}
 
 		// ADR 031 request type routing
-		msgResult, err := handler(ctx, msg)
+		msgResult, err := handler(ctx.WithExecMode(sdk.ExecMode(mode)), msg)
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}

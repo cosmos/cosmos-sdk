@@ -113,8 +113,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 h1:zuQyyAK
 github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
 github.com/cometbft/cometbft v1.0.1 h1:JNVgbpL76sA4kXmBnyZ7iPjFAxi6HVp2l+rdT2RXVUs=
 github.com/cometbft/cometbft v1.0.1/go.mod h1:r9fEwrbU6Oxs11I2bLsfAiG37OMn0Vip0w9arYU0Nw0=
-github.com/cometbft/cometbft-db v1.0.2 h1:NOTbAPH+p7QsAGf6wJsFSrYY/6YNlPS23Z/XxjrIZWM=
-github.com/cometbft/cometbft-db v1.0.2/go.mod h1:2g+ybmumolNyuPdCHK2+oHObgxZS2CbWaNtrl/fNpCM=
+github.com/cometbft/cometbft-db v1.0.3 h1:r14sw/ALiiT70btJ8dl1w5eWhPUOe6ZjMflUyuOJrPw=
+github.com/cometbft/cometbft-db v1.0.3/go.mod h1:mt5LIFwMQwioKxJ8+eZPyMscmAc7lbSoNMmW+xP1hvo=
 github.com/cometbft/cometbft/api v1.0.0 h1:gGBwvsJi/gnHJEtwYfjPIGs2AKg/Vfa1ZuKCPD1/Ko4=
 github.com/cometbft/cometbft/api v1.0.0/go.mod h1:EkQiqVSu/p2ebrZEnB2z6Re7r8XNe//M7ylR0qEwWm0=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=

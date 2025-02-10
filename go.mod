@@ -1,5 +1,4 @@
 go 1.23.5
-
 module github.com/cosmos/cosmos-sdk
 
 require (
@@ -86,7 +85,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.4 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft-db v1.0.2 // indirect
+	github.com/cometbft/cometbft-db v1.0.3 // indirect
 	github.com/cosmos/iavl v1.3.5 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect

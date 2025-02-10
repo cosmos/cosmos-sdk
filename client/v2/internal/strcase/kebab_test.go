@@ -8,8 +8,7 @@ import (
 	"cosmossdk.io/client/v2/internal/strcase"
 )
 
-func toKebab(tb testing.TB) {
-	tb.Helper()
+func toKebab(t testing.TB) {
 	cases := [][]string{
 		{"testCase", "test-case"},
 		{"TestCase", "test-case"},
@@ -29,7 +28,7 @@ func toKebab(tb testing.TB) {
 		in := i[0]
 		out := i[1]
 		result := strcase.ToKebab(in)
-		assert.Equal(tb, out, result, "ToKebab(%s) = %s, want %s", in, result, out)
+		assert.Equal(t, out, result, "ToKebab(%s) = %s, want %s", in, result, out)
 	}
 }
 

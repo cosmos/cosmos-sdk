@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -14,15 +15,6 @@ import (
 func WithCollectionPaginationPairPrefix[K1, K2 any](prefix K1) func(o *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
 	return func(o *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
 		prefix := collections.PairPrefix[K1, K2](prefix)
-		o.Prefix = &prefix
-	}
-}
-
-// WithCollectionPaginationTriplePrefix applies a prefix to a collection, whose key is a collection.Triple,
-// being paginated that needs prefixing.
-func WithCollectionPaginationTriplePrefix[K1, K2, K3 any](prefix K1) func(o *CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
-	return func(o *CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
-		prefix := collections.TriplePrefix[K1, K2, K3](prefix)
 		o.Prefix = &prefix
 	}
 }
@@ -86,7 +78,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V], T any](
 	reverse := pageReq.Reverse
 
 	if offset > 0 && key != nil {
-		return nil, nil, errors.New("invalid request, either offset or key is expected, got both")
+		return nil, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
 	}
 
 	opt := new(CollectionsPaginateOptions[K])
@@ -265,59 +257,53 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V], T any](
 	defer iterator.Close()
 
 	var (
-		count       uint64
-		nextKey     []byte
-		transformed T
+		count   uint64
+		nextKey []byte
 	)
 
 	for ; iterator.Valid(); iterator.Next() {
+		// if we reached the specified limit
+		// then we get the next key, and we exit the iteration.
+		if count == limit {
+			concreteKey, err := iterator.Key()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			nextKey, err = encodeCollKey[K, V](coll, concreteKey)
+			if err != nil {
+				return nil, nil, err
+			}
+			break
+		}
+
 		kv, err := iterator.KeyValue()
 		if err != nil {
 			return nil, nil, err
 		}
-
-		include := false
 		// if no predicate is specified then we just append the result
 		if predicateFunc == nil {
-			transformed, err = transformFunc(kv.Key, kv.Value)
+			transformed, err := transformFunc(kv.Key, kv.Value)
 			if err != nil {
 				return nil, nil, err
 			}
-			include = true
+			results = append(results, transformed)
 			// if predicate is applied we execute the predicate function
 			// and append only if predicateFunc yields true.
 		} else {
-			include, err = predicateFunc(kv.Key, kv.Value)
+			include, err := predicateFunc(kv.Key, kv.Value)
 			if err != nil {
 				return nil, nil, err
 			}
 			if include {
-				transformed, err = transformFunc(kv.Key, kv.Value)
+				transformed, err := transformFunc(kv.Key, kv.Value)
 				if err != nil {
 					return nil, nil, err
 				}
+				results = append(results, transformed)
 			}
 		}
-
-		if include {
-			// if we reached the specified limit
-			// then we get the next key, and we exit the iteration.
-			if count == limit {
-				concreteKey, err := iterator.Key()
-				if err != nil {
-					return nil, nil, err
-				}
-
-				nextKey, err = encodeCollKey[K, V](coll, concreteKey)
-				if err != nil {
-					return nil, nil, err
-				}
-				break
-			}
-
-			results = append(results, transformed)
-			count++
-		}
+		count++
 	}
 
 	return results, &PageResponse{

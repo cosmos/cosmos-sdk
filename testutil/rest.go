@@ -42,15 +42,15 @@ func GetRequestWithHeaders(url string, headers map[string]string) ([]byte, error
 // GetRequest defines a wrapper around an HTTP GET request with a provided URL.
 // An error is returned if the request or reading the body fails.
 func GetRequest(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	res, err := http.Get(url) //nolint:gosec // only used for testing
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		_ = resp.Body.Close()
+		_ = res.Body.Close()
 	}()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -61,15 +61,15 @@ func GetRequest(url string) ([]byte, error) {
 // PostRequest defines a wrapper around an HTTP POST request with a provided URL and data.
 // An error is returned if the request or reading the body fails.
 func PostRequest(url, contentType string, data []byte) ([]byte, error) {
-	resp, err := http.Post(url, contentType, bytes.NewBuffer(data))
+	res, err := http.Post(url, contentType, bytes.NewBuffer(data)) //nolint:gosec // only used	for testing
 	if err != nil {
 		return nil, fmt.Errorf("error while sending post request: %w", err)
 	}
 	defer func() {
-		_ = resp.Body.Close()
+		_ = res.Body.Close()
 	}()
 
-	bz, err := io.ReadAll(resp.Body)
+	bz, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}

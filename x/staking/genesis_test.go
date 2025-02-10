@@ -6,12 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking"
-	"cosmossdk.io/x/staking/testutil"
-	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestValidateGenesis(t *testing.T) {
@@ -44,6 +44,8 @@ func TestValidateGenesis(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
 			genesisState := types.DefaultGenesisState()
 			tt.mutate(genesisState)

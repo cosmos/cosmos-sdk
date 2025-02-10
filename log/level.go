@@ -35,7 +35,7 @@ func ParseLogLevel(levelStr string) (FilterFunc, error) {
 	}
 
 	// parse and validate the levels
-	filterMap := make(map[string]zerolog.Level)
+	filterMap := make(map[string]string)
 	list := strings.Split(l, ",")
 	for _, item := range list {
 		moduleAndLevel := strings.Split(item, ":")
@@ -50,25 +50,29 @@ func ParseLogLevel(levelStr string) (FilterFunc, error) {
 			return nil, fmt.Errorf("duplicate module %s in log level list %s", module, list)
 		}
 
-		zllevel, err := zerolog.ParseLevel(level)
-		if err != nil {
+		if _, err := zerolog.ParseLevel(level); err != nil {
 			return nil, fmt.Errorf("invalid log level %s in log level list %s", level, list)
 		}
 
-		filterMap[module] = zllevel
+		filterMap[module] = level
 	}
 
 	filterFunc := func(key, lvl string) bool {
-		zllevel, ok := filterMap[key]
+		level, ok := filterMap[key]
 		if !ok { // no level filter for this key
 			// check if there is a default level filter
-			zllevel, ok = filterMap[defaultLogLevelKey]
+			level, ok = filterMap[defaultLogLevelKey]
 			if !ok {
 				return false
 			}
 		}
 
 		zllvl, err := zerolog.ParseLevel(lvl)
+		if err != nil {
+			panic(err)
+		}
+
+		zllevel, err := zerolog.ParseLevel(level)
 		if err != nil {
 			panic(err)
 		}

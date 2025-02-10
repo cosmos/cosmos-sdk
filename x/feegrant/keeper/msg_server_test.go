@@ -3,18 +3,21 @@ package keeper_test
 import (
 	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/core/header"
+	"github.com/golang/mock/gomock"
+
 	"cosmossdk.io/x/feegrant"
 
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *KeeperTestSuite) TestGrantAllowance() {
-	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
-	yesterday := ctx.HeaderInfo().Time.AddDate(0, 0, -1)
+	ctx := suite.ctx.WithBlockTime(time.Now())
+	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
+	yesterday := ctx.BlockTime().AddDate(0, 0, -1)
+
+	addressCodec := codecaddress.NewBech32Codec("cosmos")
 
 	testCases := []struct {
 		name      string
@@ -23,109 +26,120 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 		errMsg    string
 	}{
 		{
-			name: "invalid granter address",
-			req: func() *feegrant.MsgGrantAllowance {
+			"invalid granter address",
+			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{})
 				suite.Require().NoError(err)
 				invalid := "invalid-granter"
 				return &feegrant.MsgGrantAllowance{
 					Granter:   invalid,
-					Grantee:   suite.encodedAddrs[1],
+					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
 			},
-			expectErr: true,
-			errMsg:    "decoding bech32 failed",
+			true,
+			"decoding bech32 failed",
 		},
 		{
-			name: "invalid grantee address",
-			req: func() *feegrant.MsgGrantAllowance {
+			"invalid grantee address",
+			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{})
 				suite.Require().NoError(err)
 				invalid := "invalid-grantee"
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[0],
+					Granter:   suite.addrs[0].String(),
 					Grantee:   invalid,
 					Allowance: any,
 				}
 			},
-			expectErr: true,
-			errMsg:    "decoding bech32 failed",
+			true,
+			"decoding bech32 failed",
 		},
 		{
-			name: "valid: grantee account doesn't exist",
-			req: func() *feegrant.MsgGrantAllowance {
+			"valid: grantee account doesn't exist",
+			func() *feegrant.MsgGrantAllowance {
 				grantee := "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"
+				granteeAccAddr, err := addressCodec.StringToBytes(grantee)
+				suite.Require().NoError(err)
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
 
+				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAccAddr).Return(nil).AnyTimes()
+
+				acc := authtypes.NewBaseAccountWithAddress(granteeAccAddr)
+				add, err := addressCodec.StringToBytes(grantee)
+				suite.Require().NoError(err)
+
+				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), add).Return(acc).AnyTimes()
+				suite.accountKeeper.EXPECT().SetAccount(gomock.Any(), acc).Return()
+
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[0],
+					Granter:   suite.addrs[0].String(),
 					Grantee:   grantee,
 					Allowance: any,
 				}
 			},
-			expectErr: false,
-			errMsg:    "",
+			false,
+			"",
 		},
 		{
-			name: "invalid: past expiry",
-			req: func() *feegrant.MsgGrantAllowance {
+			"invalid: past expiry",
+			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &yesterday,
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[0],
-					Grantee:   suite.encodedAddrs[1],
+					Granter:   suite.addrs[0].String(),
+					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
 			},
-			expectErr: true,
-			errMsg:    "expiration is before current block time",
+			true,
+			"expiration is before current block time",
 		},
 		{
-			name: "valid: basic fee allowance",
-			req: func() *feegrant.MsgGrantAllowance {
+			"valid: basic fee allowance",
+			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[0],
-					Grantee:   suite.encodedAddrs[1],
+					Granter:   suite.addrs[0].String(),
+					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
 			},
-			expectErr: false,
-			errMsg:    "",
+			false,
+			"",
 		},
 		{
-			name: "fail: fee allowance exists",
-			req: func() *feegrant.MsgGrantAllowance {
+			"fail: fee allowance exists",
+			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[0],
-					Grantee:   suite.encodedAddrs[1],
+					Granter:   suite.addrs[0].String(),
+					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
 			},
-			expectErr: true,
-			errMsg:    "fee allowance already exists",
+			true,
+			"fee allowance already exists",
 		},
 		{
-			name: "valid: periodic fee allowance",
-			req: func() *feegrant.MsgGrantAllowance {
+			"valid: periodic fee allowance",
+			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
@@ -135,39 +149,17 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[1],
-					Grantee:   suite.encodedAddrs[2],
+					Granter:   suite.addrs[1].String(),
+					Grantee:   suite.addrs[2].String(),
 					Allowance: any,
 				}
 			},
-			expectErr: false,
-			errMsg:    "",
+			false,
+			"",
 		},
 		{
-			name: "valid: with period reset",
-			req: func() *feegrant.MsgGrantAllowance {
-				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
-					Basic: feegrant.BasicAllowance{
-						SpendLimit: suite.atom,
-						Expiration: &oneYear,
-					},
-					Period:           time.Hour,
-					PeriodSpendLimit: suite.atom,
-					PeriodReset:      oneYear,
-				})
-				suite.Require().NoError(err)
-				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[1],
-					Grantee:   suite.encodedAddrs[2],
-					Allowance: any,
-				}
-			},
-			expectErr: false,
-			errMsg:    "",
-		},
-		{
-			name: "error: fee allowance exists",
-			req: func() *feegrant.MsgGrantAllowance {
+			"error: fee allowance exists",
+			func() *feegrant.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
@@ -177,13 +169,13 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				})
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[1],
-					Grantee:   suite.encodedAddrs[2],
+					Granter:   suite.addrs[1].String(),
+					Grantee:   suite.addrs[2].String(),
 					Allowance: any,
 				}
 			},
-			expectErr: true,
-			errMsg:    "fee allowance already exists",
+			true,
+			"fee allowance already exists",
 		},
 	}
 	for _, tc := range testCases {
@@ -198,8 +190,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestRevokeAllowance() {
-	suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	oneYear := suite.ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	oneYear := suite.ctx.BlockTime().AddDate(1, 0, 0)
 
 	testCases := []struct {
 		name      string
@@ -209,48 +200,48 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 		errMsg    string
 	}{
 		{
-			name: "error: invalid granter",
-			request: &feegrant.MsgRevokeAllowance{
+			"error: invalid granter",
+			&feegrant.MsgRevokeAllowance{
 				Granter: invalidGranter,
-				Grantee: suite.encodedAddrs[1],
+				Grantee: suite.addrs[1].String(),
 			},
-			preRun:    func() {},
-			expectErr: true,
-			errMsg:    "decoding bech32 failed",
+			func() {},
+			true,
+			"decoding bech32 failed",
 		},
 		{
-			name: "error: invalid grantee",
-			request: &feegrant.MsgRevokeAllowance{
-				Granter: suite.encodedAddrs[0],
+			"error: invalid grantee",
+			&feegrant.MsgRevokeAllowance{
+				Granter: suite.addrs[0].String(),
 				Grantee: invalidGrantee,
 			},
-			preRun:    func() {},
-			expectErr: true,
-			errMsg:    "decoding bech32 failed",
+			func() {},
+			true,
+			"decoding bech32 failed",
 		},
 		{
-			name: "error: fee allowance not found",
-			request: &feegrant.MsgRevokeAllowance{
-				Granter: suite.encodedAddrs[0],
-				Grantee: suite.encodedAddrs[1],
+			"error: fee allowance not found",
+			&feegrant.MsgRevokeAllowance{
+				Granter: suite.addrs[0].String(),
+				Grantee: suite.addrs[1].String(),
 			},
-			preRun:    func() {},
-			expectErr: true,
-			errMsg:    "not found",
+			func() {},
+			true,
+			"fee-grant not found",
 		},
 		{
-			name: "success: revoke fee allowance",
-			request: &feegrant.MsgRevokeAllowance{
-				Granter: suite.encodedAddrs[0],
-				Grantee: suite.encodedAddrs[1],
+			"success: revoke fee allowance",
+			&feegrant.MsgRevokeAllowance{
+				Granter: suite.addrs[0].String(),
+				Grantee: suite.addrs[1].String(),
 			},
-			preRun: func() {
+			func() {
 				// removing fee allowance from previous tests if exists
-				_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
-					Granter: suite.encodedAddrs[0],
-					Grantee: suite.encodedAddrs[1],
+				suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
+					Granter: suite.addrs[0].String(),
+					Grantee: suite.addrs[1].String(),
 				})
-				suite.Require().Error(err)
+
 				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
 					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
@@ -260,25 +251,25 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 				})
 				suite.Require().NoError(err)
 				req := &feegrant.MsgGrantAllowance{
-					Granter:   suite.encodedAddrs[0],
-					Grantee:   suite.encodedAddrs[1],
+					Granter:   suite.addrs[0].String(),
+					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
 				_, err = suite.msgSrvr.GrantAllowance(suite.ctx, req)
 				suite.Require().NoError(err)
 			},
-			expectErr: false,
-			errMsg:    "",
+			false,
+			"",
 		},
 		{
-			name: "error: check fee allowance revoked",
-			request: &feegrant.MsgRevokeAllowance{
-				Granter: suite.encodedAddrs[0],
-				Grantee: suite.encodedAddrs[1],
+			"error: check fee allowance revoked",
+			&feegrant.MsgRevokeAllowance{
+				Granter: suite.addrs[0].String(),
+				Grantee: suite.addrs[1].String(),
 			},
-			preRun:    func() {},
-			expectErr: true,
-			errMsg:    "not found",
+			func() {},
+			true,
+			"fee-grant not found",
 		},
 	}
 
@@ -295,17 +286,17 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestPruneAllowances() {
-	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
+	ctx := suite.ctx.WithBlockTime(time.Now())
+	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 
 	// We create 76 allowances, all expiring in one year
 	count := 0
-	for i := 0; i < len(suite.encodedAddrs); i++ {
-		for j := 0; j < len(suite.encodedAddrs); j++ {
+	for i := 0; i < len(suite.addrs); i++ {
+		for j := 0; j < len(suite.addrs); j++ {
 			if count == 76 {
 				break
 			}
-			if suite.encodedAddrs[i] == suite.encodedAddrs[j] {
+			if suite.addrs[i].String() == suite.addrs[j].String() {
 				continue
 			}
 
@@ -315,8 +306,8 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 			})
 			suite.Require().NoError(err)
 			req := &feegrant.MsgGrantAllowance{
-				Granter:   suite.encodedAddrs[i],
-				Grantee:   suite.encodedAddrs[j],
+				Granter:   suite.addrs[i].String(),
+				Grantee:   suite.addrs[j].String(),
 				Allowance: any,
 			}
 
@@ -332,16 +323,16 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// we have 76 allowances
 	count = 0
-	err := suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+	err := suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		count++
-		return false, nil
+		return false
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(76, count)
 
 	// after a year and one day passes, they are all expired
-	oneYearAndADay := ctx.HeaderInfo().Time.AddDate(1, 0, 1)
-	ctx = suite.ctx.WithHeaderInfo(header.Info{Time: oneYearAndADay})
+	oneYearAndADay := ctx.BlockTime().AddDate(1, 0, 1)
+	ctx = suite.ctx.WithBlockTime(oneYearAndADay)
 
 	// we prune them, but currently only 75 will be pruned
 	_, err = suite.msgSrvr.PruneAllowances(ctx, &feegrant.MsgPruneAllowances{})
@@ -349,10 +340,9 @@ func (suite *KeeperTestSuite) TestPruneAllowances() {
 
 	// we have 1 allowance left
 	count = 0
-	err = suite.feegrantKeeper.FeeAllowance.Walk(ctx, nil, func(key collections.Pair[types.AccAddress, types.AccAddress], value feegrant.Grant) (stop bool, err error) {
+	err = suite.feegrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		count++
-
-		return false, nil
+		return false
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(1, count)

@@ -6,18 +6,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 var _ Indexable = &nilRowGetterBuilder{}
@@ -34,7 +30,7 @@ func TestNewIndex(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	myTable, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
+	myTable, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 	indexer := func(val interface{}) ([]interface{}, error) {
 		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
@@ -92,7 +88,7 @@ func TestIndexPrefixScan(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
+	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 	idx, err := NewIndex(tb, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
 		i := []interface{}{val.(*testdata.TableModel).Metadata}
@@ -105,9 +101,8 @@ func TestIndexPrefixScan(t *testing.T) {
 	}, testdata.TableModel{}.Name)
 	require.NoError(t, err)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	ctx := NewMockContext()
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	g1 := testdata.TableModel{
 		Id:       1,
@@ -125,6 +120,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		Metadata: []byte("metadata-b"),
 	}
 	for _, g := range []testdata.TableModel{g1, g2, g3} {
+		g := g
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}
@@ -134,7 +130,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
 		expError   *errorsmod.Error
-		method     func(store corestore.KVStore, start, end interface{}) (Iterator, error)
+		method     func(store storetypes.KVStore, start, end interface{}) (Iterator, error)
 	}{
 		"exact match with a single result": {
 			start:     []byte("metadata-a"),
@@ -297,17 +293,16 @@ func TestIndexPrefixScan(t *testing.T) {
 func TestUniqueIndex(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	ac := address.NewBech32Codec("cosmos")
-	myTable, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc, ac)
+
+	myTable, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 	uniqueIdx, err := NewUniqueIndex(myTable, 0x10, func(val interface{}) (interface{}, error) {
 		return []byte{val.(*testdata.TableModel).Metadata[0]}, nil
 	}, []byte{})
 	require.NoError(t, err)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	ctx := NewMockContext()
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	m := testdata.TableModel{
 		Id:       1,
@@ -330,7 +325,7 @@ func TestUniqueIndex(t *testing.T) {
 	var loaded testdata.TableModel
 	rowID, err := it.LoadNext(&loaded)
 	require.NoError(t, err)
-	require.Equal(t, RowID(PrimaryKey(&m, ac)), rowID)
+	require.Equal(t, RowID(PrimaryKey(&m)), rowID)
 	require.Equal(t, m, loaded)
 
 	// GetPaginated
@@ -357,7 +352,7 @@ func TestUniqueIndex(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, RowID(PrimaryKey(&m, ac)), rowID)
+				require.Equal(t, RowID(PrimaryKey(&m)), rowID)
 				require.Equal(t, m, loaded)
 			}
 		})
@@ -368,7 +363,7 @@ func TestUniqueIndex(t *testing.T) {
 	require.NoError(t, err)
 	rowID, err = it.LoadNext(&loaded)
 	require.NoError(t, err)
-	require.Equal(t, RowID(PrimaryKey(&m, ac)), rowID)
+	require.Equal(t, RowID(PrimaryKey(&m)), rowID)
 	require.Equal(t, m, loaded)
 
 	// PrefixScan no match
@@ -382,7 +377,7 @@ func TestUniqueIndex(t *testing.T) {
 	require.NoError(t, err)
 	rowID, err = it.LoadNext(&loaded)
 	require.NoError(t, err)
-	require.Equal(t, RowID(PrimaryKey(&m, ac)), rowID)
+	require.Equal(t, RowID(PrimaryKey(&m)), rowID)
 	require.Equal(t, m, loaded)
 
 	// ReversePrefixScan no match

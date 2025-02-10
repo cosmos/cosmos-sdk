@@ -5,7 +5,14 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// NewVote creates a new Vote instance.
+func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
+	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
+}
 
 // Empty returns whether a vote is empty.
 func (v Vote) Empty() bool {
@@ -113,8 +120,8 @@ func ValidVoteOption(option VoteOption) bool {
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		_, _ = s.Write([]byte(vo.String()))
+		s.Write([]byte(vo.String()))
 	default:
-		_, _ = s.Write([]byte(fmt.Sprintf("%v", byte(vo))))
+		s.Write([]byte(fmt.Sprintf("%v", byte(vo))))
 	}
 }

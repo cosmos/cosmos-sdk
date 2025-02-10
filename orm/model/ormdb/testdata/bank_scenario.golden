@@ -1,0 +1,64 @@
+GET 010200666f6f 
+    PK testpb.Supply foo -> {"denom":"foo"}
+GET 010200666f6f 
+    PK testpb.Supply foo -> {"denom":"foo"}
+ORM BEFORE INSERT testpb.Supply {"denom":"foo","amount":100}
+SET 010200666f6f 1064
+    PK testpb.Supply foo -> {"denom":"foo","amount":100}
+ORM AFTER INSERT testpb.Supply {"denom":"foo","amount":100}
+GET 010100626f6200666f6f 
+    PK testpb.Balance bob/foo -> {"address":"bob","denom":"foo"}
+GET 010100626f6200666f6f 
+    PK testpb.Balance bob/foo -> {"address":"bob","denom":"foo"}
+ORM BEFORE INSERT testpb.Balance {"address":"bob","denom":"foo","amount":100}
+SET 010100626f6200666f6f 1864
+    PK testpb.Balance bob/foo -> {"address":"bob","denom":"foo","amount":100}
+SET 010101666f6f00626f62 
+    IDX testpb.Balance denom/address : foo/bob -> bob/foo
+ORM AFTER INSERT testpb.Balance {"address":"bob","denom":"foo","amount":100}
+GET 010100626f6200666f6f 1864
+    PK testpb.Balance bob/foo -> {"address":"bob","denom":"foo","amount":100}
+GET 010200666f6f 1064
+    PK testpb.Supply foo -> {"denom":"foo","amount":100}
+GET 010100626f6200666f6f 1864
+    PK testpb.Balance bob/foo -> {"address":"bob","denom":"foo","amount":100}
+GET 010100626f6200666f6f 1864
+    PK testpb.Balance bob/foo -> {"address":"bob","denom":"foo","amount":100}
+ORM BEFORE UPDATE testpb.Balance {"address":"bob","denom":"foo","amount":100} -> {"address":"bob","denom":"foo","amount":70}
+SET 010100626f6200666f6f 1846
+    PK testpb.Balance bob/foo -> {"address":"bob","denom":"foo","amount":70}
+ORM AFTER UPDATE testpb.Balance {"address":"bob","denom":"foo","amount":100} -> {"address":"bob","denom":"foo","amount":70}
+GET 01010073616c6c7900666f6f 
+    PK testpb.Balance sally/foo -> {"address":"sally","denom":"foo"}
+GET 01010073616c6c7900666f6f 
+    PK testpb.Balance sally/foo -> {"address":"sally","denom":"foo"}
+ORM BEFORE INSERT testpb.Balance {"address":"sally","denom":"foo","amount":30}
+SET 01010073616c6c7900666f6f 181e
+    PK testpb.Balance sally/foo -> {"address":"sally","denom":"foo","amount":30}
+SET 010101666f6f0073616c6c79 
+    IDX testpb.Balance denom/address : foo/sally -> sally/foo
+ORM AFTER INSERT testpb.Balance {"address":"sally","denom":"foo","amount":30}
+GET 010100626f6200666f6f 1846
+    PK testpb.Balance bob/foo -> {"address":"bob","denom":"foo","amount":70}
+GET 01010073616c6c7900666f6f 181e
+    PK testpb.Balance sally/foo -> {"address":"sally","denom":"foo","amount":30}
+GET 010200666f6f 1064
+    PK testpb.Supply foo -> {"denom":"foo","amount":100}
+GET 010200666f6f 1064
+    PK testpb.Supply foo -> {"denom":"foo","amount":100}
+ORM BEFORE UPDATE testpb.Supply {"denom":"foo","amount":100} -> {"denom":"foo","amount":97}
+SET 010200666f6f 1061
+    PK testpb.Supply foo -> {"denom":"foo","amount":97}
+ORM AFTER UPDATE testpb.Supply {"denom":"foo","amount":100} -> {"denom":"foo","amount":97}
+GET 01010073616c6c7900666f6f 181e
+    PK testpb.Balance sally/foo -> {"address":"sally","denom":"foo","amount":30}
+GET 01010073616c6c7900666f6f 181e
+    PK testpb.Balance sally/foo -> {"address":"sally","denom":"foo","amount":30}
+ORM BEFORE UPDATE testpb.Balance {"address":"sally","denom":"foo","amount":30} -> {"address":"sally","denom":"foo","amount":27}
+SET 01010073616c6c7900666f6f 181b
+    PK testpb.Balance sally/foo -> {"address":"sally","denom":"foo","amount":27}
+ORM AFTER UPDATE testpb.Balance {"address":"sally","denom":"foo","amount":30} -> {"address":"sally","denom":"foo","amount":27}
+GET 01010073616c6c7900666f6f 181b
+    PK testpb.Balance sally/foo -> {"address":"sally","denom":"foo","amount":27}
+GET 010200666f6f 1061
+    PK testpb.Supply foo -> {"denom":"foo","amount":97}

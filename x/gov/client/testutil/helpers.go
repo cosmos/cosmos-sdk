@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-	govcli "cosmossdk.io/x/gov/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 var commonArgs = []string{
@@ -20,11 +20,13 @@ var commonArgs = []string{
 }
 
 // MsgSubmitLegacyProposal creates a tx for submit legacy proposal
+//
+//nolint:staticcheck // we are intentionally using a deprecated flag here.
 func MsgSubmitLegacyProposal(clientCtx client.Context, from, title, description, proposalType string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := append([]string{
 		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
-		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),   //nolint:staticcheck // we are intentionally using a deprecated flag here.
-		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),
+		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
 	}, commonArgs...)
 
@@ -44,4 +46,17 @@ func MsgVote(clientCtx client.Context, from, id, vote string, extraArgs ...strin
 	args = append(args, extraArgs...)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdWeightedVote(), args)
+}
+
+// MsgDeposit deposits on a proposal
+func MsgDeposit(clientCtx client.Context, from, id, deposit string, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := append([]string{
+		id,
+		deposit,
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
+	}, commonArgs...)
+
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdDeposit(), args)
 }

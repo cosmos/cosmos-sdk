@@ -1,10 +1,9 @@
 package multisig
 
 import (
-	"fmt"
+	fmt "fmt"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -13,8 +12,8 @@ import (
 )
 
 var (
-	_ multisigtypes.PubKey                 = &LegacyAminoPubKey{}
-	_ gogoprotoany.UnpackInterfacesMessage = &LegacyAminoPubKey{}
+	_ multisigtypes.PubKey          = &LegacyAminoPubKey{}
+	_ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 )
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
@@ -55,11 +54,6 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 	sigs := sig.Signatures
 	size := bitarray.Count()
 	pubKeys := m.GetPubKeys()
-
-	// N-M rule verification
-	if int(m.Threshold) <= 0 {
-		return fmt.Errorf("invalid threshold: must be > 0, got %d", m.Threshold)
-	}
 	// ensure bit array is the correct size
 	if len(pubKeys) != size {
 		return fmt.Errorf("bit array size is incorrect, expecting: %d", len(pubKeys))
@@ -155,7 +149,7 @@ func (m *LegacyAminoPubKey) Type() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
 		var pk cryptotypes.PubKey
 		err := unpacker.UnpackAny(any, &pk)

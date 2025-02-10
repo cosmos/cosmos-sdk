@@ -3,7 +3,6 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"fmt"
 	"hash"
 	"io"
 	"math"
@@ -12,9 +11,9 @@ import (
 	"strconv"
 	"sync"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -27,7 +26,7 @@ const (
 
 // Store is a snapshot store, containing snapshot metadata and binary chunks.
 type Store struct {
-	db  corestore.KVStoreWithBatch
+	db  db.DB
 	dir string
 
 	mtx    sync.Mutex
@@ -35,7 +34,7 @@ type Store struct {
 }
 
 // NewStore creates a new snapshot store.
-func NewStore(db corestore.KVStoreWithBatch, dir string) (*Store, error) {
+func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, errors.Wrap(storetypes.ErrLogic, "snapshot directory not given")
 	}
@@ -60,7 +59,7 @@ func (s *Store) Delete(height uint64, format uint32) error {
 		return errors.Wrapf(storetypes.ErrConflict,
 			"snapshot for height %v format %v is currently being saved", height, format)
 	}
-	err := s.db.Delete(encodeKey(height, format))
+	err := s.db.DeleteSync(encodeKey(height, format))
 	if err != nil {
 		return errors.Wrapf(err, "failed to delete snapshot for height %v format %v",
 			height, format)
@@ -92,7 +91,7 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	return snapshot, nil
 }
 
-// GetLatest fetches the latest snapshot from the database, if any.
+// Get fetches the latest snapshot from the database, if any.
 func (s *Store) GetLatest() (*types.Snapshot, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {
@@ -141,7 +140,6 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 	}
 
 	ch := make(chan io.ReadCloser)
-
 	go func() {
 		defer close(ch)
 		for i := uint32(0); i < snapshot.Chunks; i++ {
@@ -152,19 +150,14 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 				_ = pw.CloseWithError(err)
 				return
 			}
-			err = func() error {
-				defer chunk.Close()
-
-				if _, err := io.Copy(pw, chunk); err != nil {
-					_ = pw.CloseWithError(err)
-					return fmt.Errorf("failed to copy chunk %d: %w", i, err)
-				}
-
-				return pw.Close()
-			}()
+			defer chunk.Close()
+			_, err = io.Copy(pw, chunk)
 			if err != nil {
+				_ = pw.CloseWithError(err)
 				return
 			}
+			chunk.Close()
+			pw.Close()
 		}
 	}()
 
@@ -334,7 +327,7 @@ func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode snapshot metadata")
 	}
-	err = s.db.Set(encodeKey(snapshot.Height, snapshot.Format), value)
+	err = s.db.SetSync(encodeKey(snapshot.Height, snapshot.Format), value)
 	return errors.Wrap(err, "failed to store snapshot")
 }
 

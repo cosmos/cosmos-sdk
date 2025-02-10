@@ -3,11 +3,9 @@ package ed25519
 import (
 	"crypto/ed25519"
 	"crypto/subtle"
-	"errors"
 	"fmt"
 	"io"
 
-	"filippo.io/edwards25519"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/hdevalence/ed25519consensus"
@@ -16,26 +14,26 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// -------------------------------------
+//-------------------------------------
 
 const (
 	PrivKeyName = "tendermint/PrivKeyEd25519"
 	PubKeyName  = "tendermint/PubKeyEd25519"
-	// PubKeySize is the size, in bytes, of public keys as used in this package.
+	// PubKeySize is is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.
 	PrivKeySize = 64
-	// SignatureSize the size of an Edwards25519 signature. Namely the size of a compressed
+	// Size of an Edwards25519 signature. Namely the size of a compressed
 	// Edwards25519 point, and a field element. Both of which are 32 bytes.
 	SignatureSize = 64
 	// SeedSize is the size, in bytes, of private key seeds. These are the
 	// private key representations used by RFC 8032.
 	SeedSize = 32
 
-	KeyType = "ed25519"
+	keyType = "ed25519"
 )
 
 var (
@@ -93,7 +91,7 @@ func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 }
 
 func (privKey *PrivKey) Type() string {
-	return KeyType
+	return keyType
 }
 
 // MarshalAmino overrides Amino binary marshaling.
@@ -104,7 +102,7 @@ func (privKey PrivKey) MarshalAmino() ([]byte, error) {
 // UnmarshalAmino overrides Amino binary marshaling.
 func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PrivKeySize {
-		return errors.New("invalid privkey size")
+		return fmt.Errorf("invalid privkey size")
 	}
 	privKey.Key = bz
 
@@ -154,7 +152,7 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 	return &PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
 }
 
-// -------------------------------------
+//-------------------------------------
 
 var (
 	_ cryptotypes.PubKey   = &PubKey{}
@@ -194,7 +192,7 @@ func (pubKey *PubKey) String() string {
 }
 
 func (pubKey *PubKey) Type() string {
-	return KeyType
+	return keyType
 }
 
 func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
@@ -213,7 +211,7 @@ func (pubKey PubKey) MarshalAmino() ([]byte, error) {
 // UnmarshalAmino overrides Amino binary marshaling.
 func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PubKeySize {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "invalid pubkey size")
+		return errorsmod.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
 	}
 	pubKey.Key = bz
 
@@ -230,35 +228,4 @@ func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAminoJSON overrides Amino JSON marshaling.
 func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
-}
-
-// identityPoint is the “neutral element” in the ed25519 group, where
-// point addition with identityPoint leaves the other point unchanged.
-// It corresponds to coordinates (0, 1) in Edwards form and is not a valid public key
-var identityPoint = edwards25519.NewIdentityPoint()
-
-// IsOnCurve checks that a 32B ed25519 public key is on the curve.
-// The check fails for ed25519 identity points
-func (pubKey *PubKey) IsOnCurve() bool {
-	// Make sure the public key is exactly 32B
-	if len(pubKey.Key) != ed25519.PublicKeySize {
-		// Invalid key size
-		return false
-	}
-
-	// Make sure the public key bytes decodes into an ed25519 point
-	point, err := new(edwards25519.Point).SetBytes(pubKey.Key)
-	if err != nil || point == nil {
-		// Not a valid point on the curve
-		return false
-	}
-
-	// Make sure the public key is not the identity point (all zeroes)
-	if point.Equal(identityPoint) == 1 {
-		// Public key is the identity point (useless)
-		return false
-	}
-
-	// Public key is a valid point on the ed25519 curve
-	return true
 }

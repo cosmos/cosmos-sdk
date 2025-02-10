@@ -13,12 +13,11 @@ private
 
 # Build
 vendor
-/build
+build
 dist
 tools-stamp
 buf-stamp
 artifacts
-simapp/simd/simd
 
 # Go
 go.work
@@ -63,4 +62,3 @@ debug_container.log
 *.synctex.gz
 /x/genutil/config/priv_validator_key.json
 /x/genutil/data/priv_validator_state.json
-simapp/simapp.test

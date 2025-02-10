@@ -1,7 +1,6 @@
 package collections
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -20,22 +19,6 @@ type Map[K, V any] struct {
 	sa     func(context.Context) store.KVStore
 	prefix []byte
 	name   string
-
-	// isSecondaryIndex indicates that this map represents a secondary index
-	// on another collection and that it should be skipped when generating
-	// a user facing schema
-	isSecondaryIndex bool
-}
-
-// withMapSecondaryIndex changes the behavior of the Map to be a secondary index.
-func withMapSecondaryIndex(isSecondaryIndex bool) func(opt *mapOptions) {
-	return func(opt *mapOptions) {
-		opt.isSecondaryIndex = isSecondaryIndex
-	}
-}
-
-type mapOptions struct {
-	isSecondaryIndex bool
 }
 
 // NewMap returns a Map given a StoreKey, a Prefix, human-readable name and the relative value and key encoders.
@@ -47,19 +30,13 @@ func NewMap[K, V any](
 	name string,
 	keyCodec codec.KeyCodec[K],
 	valueCodec codec.ValueCodec[V],
-	options ...func(opt *mapOptions),
 ) Map[K, V] {
-	o := new(mapOptions)
-	for _, opt := range options {
-		opt(o)
-	}
 	m := Map[K, V]{
-		kc:               keyCodec,
-		vc:               valueCodec,
-		sa:               schemaBuilder.schema.storeAccessor,
-		prefix:           prefix.Bytes(),
-		name:             name,
-		isSecondaryIndex: o.isSecondaryIndex,
+		kc:     keyCodec,
+		vc:     valueCodec,
+		sa:     schemaBuilder.schema.storeAccessor,
+		prefix: prefix.Bytes(),
+		name:   name,
 	}
 	schemaBuilder.addCollection(collectionImpl[K, V]{m})
 	return m
@@ -83,11 +60,12 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 
 	valueBytes, err := m.vc.Encode(value)
 	if err != nil {
-		return fmt.Errorf("%w: value encode: %w", ErrEncoding, err)
+		return fmt.Errorf("%w: value encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 
 	kvStore := m.sa(ctx)
-	return kvStore.Set(bytesKey, valueBytes)
+	kvStore.Set(bytesKey, valueBytes)
+	return nil
 }
 
 // Get returns the value associated with the provided key,
@@ -110,7 +88,7 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
 
 	v, err = m.vc.Decode(valueBytes)
 	if err != nil {
-		return v, fmt.Errorf("%w: value decode: %w", ErrEncoding, err)
+		return v, fmt.Errorf("%w: value decode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 	return v, nil
 }
@@ -171,58 +149,6 @@ func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key
 	return nil
 }
 
-// Clear clears the collection contained within the provided key range.
-// A nil ranger equals to clearing the whole collection.
-// NOTE: this API needs to be used with care, considering that as of today
-// cosmos-sdk stores the deletion records to be committed in a memory cache,
-// clearing a lot of data might make the node go OOM.
-func (m Map[K, V]) Clear(ctx context.Context, ranger Ranger[K]) error {
-	startBytes, endBytes, _, err := parseRangeInstruction(m.prefix, m.kc, ranger)
-	if err != nil {
-		return err
-	}
-	return deleteDomain(m.sa(ctx), startBytes, endBytes)
-}
-
-const clearBatchSize = 10000
-
-// deleteDomain deletes the domain of an iterator, the key difference
-// is that it uses batches to clear the store meaning that it will read
-// the keys within the domain close the iterator and then delete them.
-func deleteDomain(s store.KVStore, start, end []byte) error {
-	for {
-		iter, err := s.Iterator(start, end)
-		if err != nil {
-			return err
-		}
-
-		keys := make([][]byte, 0, clearBatchSize)
-		for ; iter.Valid() && len(keys) < clearBatchSize; iter.Next() {
-			keys = append(keys, iter.Key())
-		}
-
-		// we close the iterator here instead of deferring
-		err = iter.Close()
-		if err != nil {
-			return err
-		}
-
-		for _, key := range keys {
-			err = s.Delete(key)
-			if err != nil {
-				return err
-			}
-		}
-
-		// If we've retrieved less than the batchSize, we're done.
-		if len(keys) < clearBatchSize {
-			break
-		}
-	}
-
-	return nil
-}
-
 // IterateRaw iterates over the collection. The iteration range is untyped, it uses raw
 // bytes. The resulting Iterator is typed.
 // A nil start iterates from the first key contained in the collection.
@@ -236,10 +162,6 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 		prefixedEnd = nextBytesPrefixKey(m.prefix)
 	} else {
 		prefixedEnd = append(m.prefix, end...)
-	}
-
-	if bytes.Compare(prefixedStart, prefixedEnd) == 1 {
-		return Iterator[K, V]{}, ErrInvalidIterator
 	}
 
 	s := m.sa(ctx)
@@ -259,6 +181,9 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 		return Iterator[K, V]{}, err
 	}
 
+	if !storeIter.Valid() {
+		return Iterator[K, V]{}, ErrInvalidIterator
+	}
 	return Iterator[K, V]{
 		kc:           m.kc,
 		vc:           m.vc,
@@ -284,7 +209,7 @@ func EncodeKeyWithPrefix[K any](prefix []byte, kc codec.KeyCodec[K], key K) ([]b
 	// put key
 	_, err := kc.Encode(keyBytes[prefixLen:], key)
 	if err != nil {
-		return nil, fmt.Errorf("%w: key encode: %w", ErrEncoding, err)
+		return nil, fmt.Errorf("%w: key encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 	return keyBytes, nil
 }

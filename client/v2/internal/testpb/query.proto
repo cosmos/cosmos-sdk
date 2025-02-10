@@ -13,11 +13,6 @@ service Query {
   rpc Echo(EchoRequest) returns (EchoResponse);
 }
 
-message AMessage {
-  string bar = 1;
-  int32  baz = 2;
-}
-
 message EchoRequest {
   // u32 is an uint32
   uint32                                u32        = 1;
@@ -63,6 +58,11 @@ enum Enum {
   ENUM_TWO         = 2;
   ENUM_FIVE        = 5;
   ENUM_NEG_THREE   = -3;
+}
+
+message AMessage {
+  string bar = 1;
+  int32  baz = 2;
 }
 
 message EchoResponse {

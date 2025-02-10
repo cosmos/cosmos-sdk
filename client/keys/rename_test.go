@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -28,13 +27,12 @@ func Test_runRenameCmd(t *testing.T) {
 	yesF, _ := cmd.Flags().GetBool(flagYes)
 	require.False(t, yesF)
 
-	invalidName := ""
 	fakeKeyName1 := "runRenameCmd_Key1"
 	fakeKeyName2 := "runRenameCmd_Key2"
 
-	path := sdk.GetFullBIP44Path()
+	path := sdk.GetConfig().GetFullBIP44Path()
 
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
@@ -48,10 +46,7 @@ func Test_runRenameCmd(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-	cmd.SetArgs([]string{fakeKeyName1, invalidName, fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})
-	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the new name cannot be empty or consist solely of whitespace")
-
-	// rename a key 'blah' which doesn't exist
+	// rename a key 'blah' which doesnt exist
 	cmd.SetArgs([]string{"blah", "blaah", fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
@@ -101,7 +96,7 @@ func Test_runRenameCmd(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, oldAddr, renamedAddr)
 
-	// try to rename key1 but it doesn't exist anymore so error
+	// try to rename key1 but it doesnt exist anymore so error
 	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fakeKeyName2,

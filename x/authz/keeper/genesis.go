@@ -1,67 +1,52 @@
 package keeper
 
 import (
-	"context"
-	"errors"
-
-	"cosmossdk.io/x/authz"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // InitGenesis initializes new authz genesis
-func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) error {
-	now := k.HeaderService.HeaderInfo(ctx).Time
+func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
+	now := ctx.BlockTime()
 	for _, entry := range data.Authorization {
 		// ignore expired authorizations
 		if entry.Expiration != nil && entry.Expiration.Before(now) {
 			continue
 		}
 
-		grantee, err := k.addrCdc.StringToBytes(entry.Grantee)
+		grantee, err := k.authKeeper.AddressCodec().StringToBytes(entry.Grantee)
 		if err != nil {
-			return err
+			panic(err)
 		}
-		granter, err := k.addrCdc.StringToBytes(entry.Granter)
+		granter, err := k.authKeeper.AddressCodec().StringToBytes(entry.Granter)
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
 		if !ok {
-			return errors.New("expected authorization")
+			panic("expected authorization")
 		}
 
 		err = k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)
 		if err != nil {
-			return err
+			panic(err)
 		}
 	}
-	return nil
 }
 
 // ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx context.Context) (*authz.GenesisState, error) {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
 	var entries []authz.GrantAuthorization
-	err := k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
-		granterAddr, err := k.addrCdc.BytesToString(granter)
-		if err != nil {
-			return false, err
-		}
-		granteeAddr, err := k.addrCdc.BytesToString(grantee)
-		if err != nil {
-			return false, err
-		}
+	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		entries = append(entries, authz.GrantAuthorization{
-			Granter:       granterAddr,
-			Grantee:       granteeAddr,
+			Granter:       granter.String(),
+			Grantee:       grantee.String(),
 			Expiration:    grant.Expiration,
 			Authorization: grant.Authorization,
 		})
-		return false, nil
+		return false
 	})
-	if err != nil {
-		return nil, err
-	}
-	return authz.NewGenesisState(entries), nil
+
+	return authz.NewGenesisState(entries)
 }

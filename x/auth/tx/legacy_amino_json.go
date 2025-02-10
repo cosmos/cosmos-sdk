@@ -3,9 +3,7 @@ package tx
 import (
 	"fmt"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	errorsmod "cosmossdk.io/errors"
-	txsigning "cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -30,31 +28,31 @@ func NewSignModeLegacyAminoJSONHandler() signing.SignModeHandler {
 }
 
 // Deprecated: Please use x/tx/signing/aminojson instead.
-func (s signModeLegacyAminoJSONHandler) DefaultMode() apisigning.SignMode {
-	return apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+func (s signModeLegacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
+	return signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
 // Deprecated: Please use x/tx/signing/aminojson instead.
-func (s signModeLegacyAminoJSONHandler) Modes() []apisigning.SignMode {
-	return []apisigning.SignMode{apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
+func (s signModeLegacyAminoJSONHandler) Modes() []signingtypes.SignMode {
+	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
 // Deprecated: Please use x/tx/signing/aminojson instead.
-func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode apisigning.SignMode, data txsigning.SignerData, tx sdk.Tx) ([]byte, error) {
-	if mode != apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+	if mode != signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)
 	}
 
-	protoTx, ok := tx.(*gogoTxWrapper)
+	protoTx, ok := tx.(*wrapper)
 	if !ok {
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
-	if protoTx.TxBodyHasUnknownNonCriticals {
+	if protoTx.txBodyHasUnknownNonCriticals {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, aminoNonCriticalFieldsError)
 	}
 
-	body := protoTx.Tx.Body
+	body := protoTx.tx.Body
 
 	if len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s does not support protobuf extension options", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
@@ -70,8 +68,8 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode apisigning.SignMode, d
 		legacytx.StdFee{
 			Amount:  protoTx.GetFee(),
 			Gas:     protoTx.GetGas(),
-			Payer:   protoTx.Tx.AuthInfo.Fee.Payer,
-			Granter: protoTx.Tx.AuthInfo.Fee.Granter,
+			Payer:   protoTx.tx.AuthInfo.Fee.Payer,
+			Granter: protoTx.tx.AuthInfo.Fee.Granter,
 		},
 		tx.GetMsgs(), protoTx.GetMemo(),
 	), nil

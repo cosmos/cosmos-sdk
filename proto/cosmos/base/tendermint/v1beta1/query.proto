@@ -1,17 +1,16 @@
 syntax = "proto3";
 package cosmos.base.tendermint.v1beta1;
 
-import "amino/amino.proto";
-import "cometbft/crypto/v1/proof.proto";
-import "cometbft/p2p/v1/types.proto";
-import "cometbft/types/v1/block.proto";
-import "cometbft/types/v1/types.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "tendermint/p2p/types.proto";
+import "tendermint/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
-import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
-import "google/protobuf/any.proto";
+import "tendermint/types/block.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
 
@@ -50,17 +49,17 @@ service Service {
   // ABCIQuery defines a query handler that supports ABCI queries directly to the
   // application, bypassing Tendermint completely. The ABCI query must contain
   // a valid and supported path, including app, custom, p2p, and store.
+  //
+  // Since: cosmos-sdk 0.46
   rpc ABCIQuery(ABCIQueryRequest) returns (ABCIQueryResponse) {
-    option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/abci_query";
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
+    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/abci_query";
   }
 }
 
 // GetValidatorSetByHeightRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
 message GetValidatorSetByHeightRequest {
   int64 height = 1;
-  // pagination defines an pagination for the request. offset and limit are used for pagination, next_key is not
-  // supported for this query.
+  // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
@@ -68,8 +67,7 @@ message GetValidatorSetByHeightRequest {
 message GetValidatorSetByHeightResponse {
   int64              block_height = 1;
   repeated Validator validators   = 2;
-  // pagination defines an pagination for the response. offset and limit are used for pagination, next_key is not
-  // supported for this query.
+  // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
@@ -83,8 +81,7 @@ message GetLatestValidatorSetRequest {
 message GetLatestValidatorSetResponse {
   int64              block_height = 1;
   repeated Validator validators   = 2;
-  // pagination defines an pagination for the response. offset and limit are used for pagination, next_key is not
-  // supported for this query.
+  // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
@@ -103,12 +100,13 @@ message GetBlockByHeightRequest {
 
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
 message GetBlockByHeightResponse {
-  .cometbft.types.v1.BlockID block_id = 1;
+  .tendermint.types.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .cometbft.types.v1.Block block = 2 [deprecated = true];
+  .tendermint.types.Block block = 2;
 
-  Block sdk_block = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
+  // Since: cosmos-sdk 0.47
+  Block sdk_block = 3;
 }
 
 // GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC method.
@@ -116,12 +114,13 @@ message GetLatestBlockRequest {}
 
 // GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
 message GetLatestBlockResponse {
-  .cometbft.types.v1.BlockID block_id = 1;
+  .tendermint.types.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .cometbft.types.v1.Block block = 2;
+  .tendermint.types.Block block = 2;
 
-  Block sdk_block = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
+  // Since: cosmos-sdk 0.47
+  Block sdk_block = 3;
 }
 
 // GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
@@ -137,23 +136,21 @@ message GetNodeInfoRequest {}
 
 // GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
-  .cometbft.p2p.v1.DefaultNodeInfo default_node_info   = 1;
-  VersionInfo                      application_version = 2;
+  .tendermint.p2p.DefaultNodeInfo default_node_info   = 1;
+  VersionInfo                     application_version = 2;
 }
 
 // VersionInfo is the type for the GetNodeInfoResponse message.
 message VersionInfo {
-  string          name                 = 1;
-  string          app_name             = 2;
-  string          version              = 3;
-  string          git_commit           = 4;
-  string          build_tags           = 5;
-  string          go_version           = 6;
-  repeated Module build_deps           = 7;
-  string          cosmos_sdk_version   = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
-  string          comet_server_version = 9 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.52"];
-  string          runtime_version      = 10 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.52"];
-  string          stf_version          = 11 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.52"];
+  string          name       = 1;
+  string          app_name   = 2;
+  string          version    = 3;
+  string          git_commit = 4;
+  string          build_tags = 5;
+  string          go_version = 6;
+  repeated Module build_deps = 7;
+  // Since: cosmos-sdk 0.43
+  string cosmos_sdk_version = 8;
 }
 
 // Module is the type for VersionInfo
@@ -180,18 +177,16 @@ message ABCIQueryRequest {
 // Tendermint.
 message ABCIQueryResponse {
   uint32 code = 1;
-  // Deprecated: use "value" instead
+  // DEPRECATED: use "value" instead
   reserved 2;
-  string log   = 3; // nondeterministic
-  string info  = 4; // nondeterministic
-  int64  index = 5;
-  bytes  key   = 6;
-  bytes  value = 7;
-  // deprecated in favor of comet proof type
-  reserved 8;
-  int64                        height    = 9;
-  string                       codespace = 10;
-  .cometbft.crypto.v1.ProofOps proof_ops = 11;
+  string   log       = 3; // nondeterministic
+  string   info      = 4; // nondeterministic
+  int64    index     = 5;
+  bytes    key       = 6;
+  bytes    value     = 7;
+  ProofOps proof_ops = 8;
+  int64    height    = 9;
+  string   codespace = 10;
 }
 
 // ProofOp defines an operation used for calculating Merkle root. The data could
@@ -200,16 +195,14 @@ message ABCIQueryResponse {
 //
 // Note: This type is a duplicate of the ProofOp proto type defined in Tendermint.
 message ProofOp {
-  option deprecated = true;
-  string type       = 1;
-  bytes  key        = 2;
-  bytes  data       = 3;
+  string type = 1;
+  bytes  key  = 2;
+  bytes  data = 3;
 }
 
 // ProofOps is Merkle proof defined by the list of ProofOps.
 //
 // Note: This type is a duplicate of the ProofOps proto type defined in Tendermint.
 message ProofOps {
-  option           deprecated = true;
-  repeated ProofOp ops        = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated ProofOp ops = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

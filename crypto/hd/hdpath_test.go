@@ -107,7 +107,9 @@ func TestCreateHDPath(t *testing.T) {
 		{"m/44'/114'/1'/1/0", args{114, 1, 1}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 1, AddressIndex: 1}},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
 			require.Equal(t, tt.want, *hd.CreateHDPath(tt.args.coinType, tt.args.account, tt.args.index))
 		})
 	}
@@ -168,6 +170,7 @@ func TestDeriveHDPathRange(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.path, func(t *testing.T) {
 			master, ch := hd.ComputeMastersFromSeed(seed)
 			_, err := hd.DerivePrivateKeyForPath(master, ch, tt.path)
@@ -294,6 +297,7 @@ func TestDerivePrivateKeyForPathDoNotCrash(t *testing.T) {
 	}
 
 	for _, path := range paths {
+		path := path
 		t.Run(path, func(t *testing.T) {
 			_, _ = hd.DerivePrivateKeyForPath([32]byte{}, [32]byte{}, path)
 		})

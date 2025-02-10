@@ -10,7 +10,6 @@ import (
 )
 
 func mustReadConfig(t *testing.T, path string) []byte {
-	t.Helper()
 	f, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("failed to open file: %v", err)
@@ -34,6 +33,9 @@ func TestCheckValid(t *testing.T) {
 
 	err = confix.CheckValid("client.toml", []byte{})
 	assert.Error(t, err, "client config invalid: chain-id is empty")
+
+	err = confix.CheckValid("app.toml", []byte{})
+	assert.ErrorContains(t, err, "server config invalid")
 
 	err = confix.CheckValid("app.toml", mustReadConfig(t, "data/v0.45-app.toml"))
 	assert.NilError(t, err)

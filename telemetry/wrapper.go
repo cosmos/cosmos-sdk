@@ -8,9 +8,11 @@ import (
 
 // Common metric key constants
 const (
-	MetricKeyBeginBlocker = "begin_blocker"
-	MetricKeyEndBlocker   = "end_blocker"
-	MetricLabelNameModule = "module"
+	MetricKeyBeginBlocker       = "begin_blocker"
+	MetricKeyEndBlocker         = "end_blocker"
+	MetricKeyPrepareCheckStater = "prepare_check_stater"
+	MetricKeyPrecommiter        = "precommiter"
+	MetricLabelNameModule       = "module"
 )
 
 // NewLabel creates a new instance of Label with name and value
@@ -88,7 +90,7 @@ func SetGaugeWithLabels(keys []string, val float32, labels []metrics.Label) {
 	metrics.SetGaugeWithLabels(keys, val, append(labels, globalLabels...))
 }
 
-// MeasureSince provides a wrapper functionality for emitting a time measure
+// MeasureSince provides a wrapper functionality for emitting a a time measure
 // metric with global labels (if any).
 func MeasureSince(start time.Time, keys ...string) {
 	if !IsTelemetryEnabled() {

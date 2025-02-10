@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package testpb;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/orm/v1/orm.proto";
+
+message ExampleTable {
+  // clang-format off
+  option (cosmos.orm.v1.table) = {
+    id: 1;
+    primary_key: {
+      fields:
+          "u32,i64,str"
+    }
+    index: {
+      id:
+          1;
+      fields:
+          "u64,str" unique: true
+    }
+    index: {
+      id:
+          2;
+      fields:
+          "str,u32"
+    }
+    index: {
+      id:
+          3;
+      fields:
+          "bz,str"
+    }
+  };
+// clang-format on
+
+// Valid key fields:
+uint32                    u32  = 1;
+uint64                    u64  = 2;
+string                    str  = 3;
+bytes                     bz   = 4;
+google.protobuf.Timestamp ts   = 5;
+google.protobuf.Duration  dur  = 6;
+int32                     i32  = 7;
+sint32                    s32  = 8;
+sfixed32                  sf32 = 9;
+int64                     i64  = 10;
+sint64                    s64  = 11;
+sfixed64                  sf64 = 12;
+fixed32                   f32  = 13;
+fixed64                   f64  = 14;
+bool                      b    = 15;
+Enum                      e    = 16;
+
+// Invalid key fields:
+repeated uint32     repeated = 17;
+map<string, uint32> map      = 18;
+ExampleMessage      msg      = 19;
+oneof               sum {
+  uint32 oneof = 20;
+}
+
+message ExampleMessage {
+  string foo = 1;
+  int32  bar = 2;
+}
+}
+
+enum Enum {
+  ENUM_UNSPECIFIED = 0;
+  ENUM_ONE         = 1;
+  ENUM_TWO         = 2;
+  ENUM_FIVE        = 5;
+  ENUM_NEG_THREE   = -3;
+}
+
+message ExampleAutoIncrementTable {
+  option (cosmos.orm.v1.table) = {
+    id: 3
+    primary_key: {fields: "id" auto_increment: true}
+    index: {id: 1 fields: "x" unique: true}
+  };
+
+  uint64 id = 1;
+  string x  = 2;
+  int32  y  = 3;
+}
+
+message ExampleSingleton {
+  option (cosmos.orm.v1.singleton) = {
+    id: 2
+  };
+  string foo = 1;
+  int32  bar = 2;
+}
+
+message ExampleTimestamp {
+  option (cosmos.orm.v1.table) = {
+    id: 4
+    primary_key: {fields: "id" auto_increment: true}
+    index: {id: 1 fields: "ts"}
+  };
+
+  uint64                    id   = 1;
+  string                    name = 2;
+  google.protobuf.Timestamp ts   = 3;
+}
+
+message ExampleDuration {
+  option (cosmos.orm.v1.table) = {
+    id: 4
+    primary_key: {fields: "id" auto_increment: true}
+    index: {id: 1 fields: "dur"}
+  };
+
+  uint64                   id   = 1;
+  string                   name = 2;
+  google.protobuf.Duration dur  = 3;
+}
+
+message SimpleExample {
+  option (cosmos.orm.v1.table) = {
+    id: 5
+    primary_key: {fields: "name"}
+    index: {id: 1, fields: "unique", unique: true}
+  };
+
+  string name       = 1;
+  string unique     = 2;
+  string not_unique = 3;
+}
+
+// ExampleAutoIncFieldName is a table for testing InsertReturning<FieldName>.
+message ExampleAutoIncFieldName {
+  option (cosmos.orm.v1.table) = {
+    id: 6
+    primary_key: {fields: "foo" auto_increment: true}
+  };
+  uint64 foo = 1;
+  uint64 bar = 2;
+}

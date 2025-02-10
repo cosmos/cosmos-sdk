@@ -1,10 +1,7 @@
 package tx
 
 import (
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -24,7 +21,7 @@ func (s *SignDocDirectAux) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (s *SignDocDirectAux) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (s *SignDocDirectAux) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(s.PublicKey, new(cryptotypes.PubKey))
 }
 
@@ -45,7 +42,7 @@ func (a *AuxSignerData) ValidateBasic() error {
 	return a.GetSignDoc().ValidateBasic()
 }
 
-// GetSignatureV2 gets the SignatureV2 of the aux signer.
+// GetSignaturesV2 gets the SignatureV2 of the aux signer.
 func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
 	pk, ok := a.SignDoc.PublicKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
@@ -55,7 +52,7 @@ func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
 	return signing.SignatureV2{
 		PubKey: pk,
 		Data: &signing.SingleSignatureData{
-			SignMode:  apisigning.SignMode(a.Mode),
+			SignMode:  a.Mode,
 			Signature: a.Sig,
 		},
 		Sequence: a.SignDoc.Sequence,
@@ -63,6 +60,6 @@ func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (a *AuxSignerData) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (a *AuxSignerData) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return a.GetSignDoc().UnpackInterfaces(unpacker)
 }

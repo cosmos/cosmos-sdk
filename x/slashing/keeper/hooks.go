@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/slashing/types"
+	"github.com/cometbft/cometbft/crypto"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 var _ types.StakingHooks = Hooks{}
@@ -25,34 +26,32 @@ func (k Keeper) Hooks() Hooks {
 
 // AfterValidatorBonded updates the signing info start height or create a new signing info
 func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
-	signingInfo, err := h.k.ValidatorSigningInfo.Get(ctx, consAddr)
-	blockHeight := h.k.HeaderService.HeaderInfo(ctx).Height
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	signingInfo, err := h.k.GetValidatorSigningInfo(ctx, consAddr)
 	if err == nil {
-		signingInfo.StartHeight = blockHeight
+		signingInfo.StartHeight = sdkCtx.BlockHeight()
 	} else {
-		consStr, err := h.k.sk.ConsensusAddressCodec().BytesToString(consAddr)
-		if err != nil {
-			return err
-		}
 		signingInfo = types.NewValidatorSigningInfo(
-			consStr,
-			blockHeight,
+			consAddr,
+			sdkCtx.BlockHeight(),
+			0,
 			time.Unix(0, 0),
 			false,
 			0,
 		)
 	}
 
-	return h.k.ValidatorSigningInfo.Set(ctx, consAddr, signingInfo)
+	return h.k.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
 }
 
 // AfterValidatorRemoved deletes the address-pubkey relation when a validator is removed,
 func (h Hooks) AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) error {
-	return h.k.AddrPubkeyRelation.Remove(ctx, consAddr)
+	return h.k.deleteAddrPubkeyRelation(ctx, crypto.Address(consAddr))
 }
 
 // AfterValidatorCreated adds the address-pubkey relation when a validator is created.
 func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validator, err := h.k.sk.Validator(ctx, valAddr)
 	if err != nil {
 		return err
@@ -63,7 +62,7 @@ func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress
 		return err
 	}
 
-	return h.k.AddrPubkeyRelation.Set(ctx, consPk.Address(), consPk)
+	return h.k.AddPubkey(sdkCtx, consPk)
 }
 
 func (h Hooks) AfterValidatorBeginUnbonding(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
@@ -95,18 +94,5 @@ func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdk
 }
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
-	return nil
-}
-
-// AfterConsensusPubKeyUpdate handles the rotation of signing info and updates the address-pubkey relation after a consensus key update.
-func (h Hooks) AfterConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey, _ sdk.Coin) error {
-	if err := h.k.performConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey); err != nil {
-		return err
-	}
-
-	if err := h.k.AddrPubkeyRelation.Remove(ctx, oldPubKey.Address()); err != nil {
-		return err
-	}
-
 	return nil
 }

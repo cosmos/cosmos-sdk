@@ -2,17 +2,21 @@ package types_test
 
 import (
 	"encoding/hex"
-	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtt "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmt "github.com/cometbft/cometbft/types"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -39,13 +43,14 @@ func (s *resultTestSuite) TestParseABCILog() {
 }
 
 func (s *resultTestSuite) TestABCIMessageLog() {
+	cdc := codec.NewLegacyAmino()
 	events := sdk.Events{
 		sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo")),
 		sdk.NewEvent("transfer", sdk.NewAttribute("sender", "bar")),
 	}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
 	msgLogs := sdk.ABCIMessageLogs{msgLog}
-	bz, err := json.Marshal(msgLogs)
+	bz, err := cdc.MarshalJSON(msgLogs)
 
 	s.Require().NoError(err)
 	s.Require().Equal(string(bz), msgLogs.String())
@@ -172,4 +177,34 @@ func (s *resultTestSuite) TestResponseResultBlock() {
 	}
 
 	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestampStr))
+}
+
+func TestWrapServiceResult(t *testing.T) {
+	ctx := sdk.Context{}
+
+	res, err := sdk.WrapServiceResult(ctx, nil, fmt.Errorf("test"))
+	require.Nil(t, res)
+	require.NotNil(t, err)
+
+	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Empty(t, res.Events)
+
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	ctx.EventManager().EmitEvent(sdk.NewEvent("test"))
+	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Len(t, res.Events, 1)
+
+	spot := testdata.Dog{Name: "spot"}
+	res, err = sdk.WrapServiceResult(ctx, &spot, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Len(t, res.Events, 1)
+	var spot2 testdata.Dog
+	err = proto.Unmarshal(res.Data, &spot2)
+	require.NoError(t, err)
+	require.Equal(t, spot, spot2)
 }

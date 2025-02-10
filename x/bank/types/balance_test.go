@@ -1,17 +1,15 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	bank "cosmossdk.io/x/bank/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestBalanceValidate(t *testing.T) {
@@ -105,6 +103,7 @@ func TestBalanceValidate(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.balance.Validate()
 
@@ -128,6 +127,7 @@ func TestBalance_GetAddress(t *testing.T) {
 		{"valid address", "cosmos1vy0ga0klndqy92ceqehfkvgmn4t94eteq4hmqv", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			b := bank.Balance{Address: tt.Address}
 			if !tt.err {
@@ -146,19 +146,15 @@ func TestSanitizeBalances(t *testing.T) {
 	coins := sdk.Coins{coin}
 	addrs, _ := makeRandomAddressesAndPublicKeys(20)
 
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	var balances []bank.Balance
 	for _, addr := range addrs {
-		addrStr, err := ac.BytesToString(addr)
-		require.NoError(t, err)
 		balances = append(balances, bank.Balance{
-			Address: addrStr,
+			Address: addr.String(),
 			Coins:   coins,
 		})
 	}
 	// 2. Sort the values.
-	sorted, err := bank.SanitizeGenesisBalances(balances, ac)
-	require.NoError(t, err)
+	sorted := bank.SanitizeGenesisBalances(balances)
 
 	// 3. Compare and ensure that all the values are sorted in ascending order.
 	// Invariant after sorting:
@@ -173,50 +169,6 @@ func TestSanitizeBalances(t *testing.T) {
 			}
 		}
 	}
-}
-
-func TestSanitizeBalancesDuplicates(t *testing.T) {
-	// 1. Generate balances
-	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
-	coin := sdk.NewCoin("benchcoin", tokens)
-	coins := sdk.Coins{coin}
-	addrs, _ := makeRandomAddressesAndPublicKeys(13)
-
-	var balances []bank.Balance
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	for _, addr := range addrs {
-		addrStr, err := ac.BytesToString(addr)
-		require.NoError(t, err)
-		balances = append(balances, bank.Balance{
-			Address: addrStr,
-			Coins:   coins,
-		})
-	}
-
-	// 2. Add duplicate
-	dupIdx := 3
-	balances = append(balances, balances[dupIdx])
-	addr, _ := ac.StringToBytes(balances[dupIdx].Address)
-	expectedError := fmt.Sprintf("genesis state has a duplicate account: %q aka %x", balances[dupIdx].Address, addr)
-
-	// 3. Add more balances
-	coin2 := sdk.NewCoin("coinbench", tokens)
-	coins2 := sdk.Coins{coin2, coin}
-	addrs2, _ := makeRandomAddressesAndPublicKeys(31)
-	for _, addr := range addrs2 {
-		addrStr, err := ac.BytesToString(addr)
-		require.NoError(t, err)
-		balances = append(balances, bank.Balance{
-			Address: addrStr,
-			Coins:   coins2,
-		})
-	}
-
-	// 4. Execute SanitizeGenesisBalances and expect an error
-	require.PanicsWithValue(t, expectedError, func() {
-		_, err := bank.SanitizeGenesisBalances(balances, ac)
-		require.NoError(t, err)
-	}, "SanitizeGenesisBalances should panic with duplicate accounts")
 }
 
 func makeRandomAddressesAndPublicKeys(n int) (accL []sdk.AccAddress, pkL []*ed25519.PubKey) {
@@ -239,7 +191,6 @@ func BenchmarkSanitizeBalances1000(b *testing.B) {
 }
 
 func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
-	b.Helper()
 	b.ReportAllocs()
 	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
 	coin := sdk.NewCoin("benchcoin", tokens)
@@ -247,20 +198,15 @@ func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
 	addrs, _ := makeRandomAddressesAndPublicKeys(nAddresses)
 
 	b.ResetTimer()
-	var err error
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	for i := 0; i < b.N; i++ {
 		var balances []bank.Balance
 		for _, addr := range addrs {
-			addrStr, err := ac.BytesToString(addr)
-			require.NoError(b, err)
 			balances = append(balances, bank.Balance{
-				Address: addrStr,
+				Address: addr.String(),
 				Coins:   coins,
 			})
 		}
-		sink, err = bank.SanitizeGenesisBalances(balances, ac)
-		require.NoError(b, err)
+		sink = bank.SanitizeGenesisBalances(balances)
 	}
 	if sink == nil {
 		b.Fatal("Benchmark did not run")

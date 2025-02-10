@@ -3,12 +3,14 @@ package depinject
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/cockroachdb/errors"
 )
 
 // In can be embedded in another struct to inform the container that the
 // fields of the struct should be treated as dependency inputs.
 // This allows a struct to be used to specify dependencies rather than
-// positional parameters.  Unexpected fields will be ignored.
+// positional parameters.
 //
 // Fields of the struct may support the following tags:
 //
@@ -119,14 +121,13 @@ func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 			if optTag == "true" {
 				optional = true
 			} else {
-				return nil, fmt.Errorf("bad optional tag %q (should be \"true\") in %v", optTag, typ)
+				return nil, errors.Errorf("bad optional tag %q (should be \"true\") in %v", optTag, typ)
 			}
 		}
 
 		res = append(res, providerInput{
 			Type:     f.Type,
 			Optional: optional,
-			Ignored:  !f.IsExported(),
 		})
 	}
 	return res, nil
@@ -167,14 +168,12 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, erro
 	j := 0
 	res := reflect.New(typ)
 	for i := 0; i < numFields; i++ {
-		if !res.Elem().Field(i).CanSet() {
-			// private field, skip
-			j++
-			continue
-		}
 		f := typ.Field(i)
 		if f.Type.AssignableTo(isInType) {
 			continue
+		}
+		if !res.Elem().Field(i).CanSet() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.In struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
 		}
 		if !values[j].CanInterface() {
 			return reflect.Value{}, 0, fmt.Errorf("depinject.Out struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)

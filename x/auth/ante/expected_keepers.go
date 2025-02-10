@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -17,17 +16,10 @@ type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 	GetModuleAddress(moduleName string) sdk.AccAddress
-	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	AddressCodec() address.Codec
-	GetEnvironment() appmodule.Environment
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.
 type FeegrantKeeper interface {
 	UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
-}
-
-type ConsensusKeeper interface {
-	AppVersion(ctx context.Context) (uint64, error)
-	BlockParams(context.Context) (uint64, uint64, error)
 }

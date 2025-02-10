@@ -3,7 +3,6 @@ package cmd_test
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -18,7 +17,6 @@ import (
 
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T) (client.Context, func()) {
-	t.Helper()
 	home := t.TempDir()
 	chainID := "test-chain"
 	clientCtx := client.Context{}.
@@ -28,8 +26,6 @@ func initClientContext(t *testing.T) (client.Context, func()) {
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	assert.NilError(t, err)
 	assert.Equal(t, clientCtx.ChainID, chainID)
-
-	_ = os.Link(filepath.Join(home, "config", "client.toml"), filepath.Join(home, "config", "unsupported.toml"))
 	return clientCtx, func() { _ = os.RemoveAll(home) }
 }
 

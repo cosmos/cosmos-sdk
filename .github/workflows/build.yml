@@ -1,4 +1,5 @@
 name: Build SimApp
+#  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
 on:
   pull_request:
   merge_group:
@@ -18,31 +19,42 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-arch: ["amd64", "arm64"] # drop 32 bit support for now (and maybe forever)
+        go-arch: ["amd64", "arm", "arm64"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: "1.23"
+          go-version: "1.21"
           check-latest: true
-      - name: install aarch64-gcc
-        if: matrix.go-arch == 'arm64'
-        run: sudo apt-get install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
         ###################
         #### Build App ####
         ###################
-      - name: Build with sqlite backend
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,sqlite make build
-      - name: Build with BLS12381
-        if: matrix.go-arch == 'amd64'
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,bls12381 make build
-      - name: Build with Secp_cgo
-        if: matrix.go-arch == 'amd64'
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,secp make build
+      - name: Build
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make build
+      - name: Build Legacy
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
         ###################
         ## Build Tooling ##
         ###################
       - name: Build Cosmovisor
+        if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} make cosmovisor
       - name: Build Confix
+        if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} make confix
+      - name: Build Hubl
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make hubl

@@ -8,7 +8,6 @@ import (
 	"sort"
 
 	"github.com/cosmos/gogoproto/proto"
-	"go.uber.org/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -136,7 +135,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
-			suite.acctsModKeeper.EXPECT().IsAccountsModuleAccount(gomock.Any(), gomock.Any()).Return(false).AnyTimes()
 
 			tc.malleate()
 			res, err := suite.queryClient.Account(suite.ctx, req)
@@ -509,7 +507,7 @@ func (suite *KeeperTestSuite) TestQueryAccountInfo() {
 	suite.Require().NoError(acc.SetSequence(10))
 	suite.accountKeeper.SetAccount(suite.ctx, acc)
 
-	res, err := suite.queryClient.AccountInfo(suite.ctx, &types.QueryAccountInfoRequest{
+	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
 		Address: addr.String(),
 	})
 
@@ -528,7 +526,7 @@ func (suite *KeeperTestSuite) TestQueryAccountInfoWithoutPubKey() {
 	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.accountKeeper.SetAccount(suite.ctx, acc)
 
-	res, err := suite.queryClient.AccountInfo(suite.ctx, &types.QueryAccountInfoRequest{
+	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
 		Address: addr.String(),
 	})
 

@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -14,7 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -65,20 +63,6 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {
 			app.logger.Error("failed to set gRPC header", "err", err)
 		}
-
-		app.logger.Debug("gRPC query received of type: " + fmt.Sprintf("%#v", req))
-
-		// Catch an OutOfGasPanic caused in the query handlers
-		defer func() {
-			if r := recover(); r != nil {
-				switch rType := r.(type) {
-				case storetypes.ErrorOutOfGas:
-					err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "Query gas limit exceeded: %v, out of gas in location: %v", sdkCtx.GasMeter().Limit(), rType.Descriptor)
-				default:
-					panic(r)
-				}
-			}
-		}()
 
 		return handler(grpcCtx, req)
 	}

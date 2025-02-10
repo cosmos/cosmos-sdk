@@ -16,10 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -31,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 const (
@@ -225,7 +223,7 @@ func TestNewKey(t *testing.T) {
 			_, err = kb.KeyByAddress(addr)
 			require.NoError(t, err)
 
-			addr, err = codectestutil.CodecOptions{}.GetAddressCodec().StringToBytes("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+			addr, err = sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 			require.NoError(t, err)
 			_, err = kb.KeyByAddress(addr)
 			require.NotNil(t, err)
@@ -384,7 +382,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	d3 := []byte("feels like I forgot something...")
 
 	// try signing both data with both ..
-	s11, pub1, err := kb.Sign(n1, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s11, pub1, err := kb.Sign(n1, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
 	key1, err := kr1.GetPubKey()
@@ -392,11 +390,11 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NotNil(t, key1)
 	require.Equal(t, key1, pub1)
 
-	s12, pub1, err := kb.Sign(n1, d2, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s12, pub1, err := kb.Sign(n1, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key1, pub1)
 
-	s21, pub2, err := kb.Sign(n2, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s21, pub2, err := kb.Sign(n2, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 
 	key2, err := kr2.GetPubKey()
@@ -404,7 +402,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NotNil(t, key2)
 	require.Equal(t, key2, pub2)
 
-	s22, pub2, err := kb.Sign(n2, d2, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s22, pub2, err := kb.Sign(n2, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key2, pub2)
 
@@ -443,7 +441,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, i3.Name, n3)
 
-	_, _, err = kb.Sign(n3, d3, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	_, _, err = kb.Sign(n3, d3, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
@@ -893,35 +891,35 @@ func TestImportPubKey(t *testing.T) {
 		uid         string
 		backend     string
 		armor       string
-		expectedErr string
+		expectedErr error
 	}{
 		{
 			name:        "correct import",
 			uid:         "correctTest",
 			backend:     BackendTest,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: "",
+			expectedErr: nil,
 		},
 		{
 			name:        "modified armor",
 			uid:         "modified",
 			backend:     BackendTest,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW8zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: "couldn't unarmor bytes: openpgp: invalid data: armor invalid",
+			expectedErr: fmt.Errorf("couldn't unarmor bytes: openpgp: invalid data: armor invalid"),
 		},
 		{
 			name:        "empty armor",
 			uid:         "empty",
 			backend:     BackendTest,
 			armor:       "",
-			expectedErr: "couldn't unarmor bytes: EOF",
+			expectedErr: fmt.Errorf("couldn't unarmor bytes: EOF"),
 		},
 		{
 			name:        "correct in memory import",
 			uid:         "inMemory",
 			backend:     BackendMemory,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: "",
+			expectedErr: nil,
 		},
 	}
 	for _, tt := range tests {
@@ -929,10 +927,10 @@ func TestImportPubKey(t *testing.T) {
 			kb, err := New("keybasename", tt.backend, t.TempDir(), nil, cdc)
 			require.NoError(t, err)
 			err = kb.ImportPubKey(tt.uid, tt.armor)
-			if tt.expectedErr == "" {
+			if tt.expectedErr == nil {
 				require.NoError(t, err)
 			} else {
-				require.ErrorContains(t, err, tt.expectedErr)
+				require.Equal(t, err, tt.expectedErr)
 			}
 		})
 	}
@@ -1121,7 +1119,7 @@ func TestNewAccount(t *testing.T) {
 			bip39Passphrease: "",
 			algo:             hd.Secp256k1,
 			mnemonic:         "fresh enact fresh ski large bicycle marine abandon motor end pact mixture annual elite bind fan write warrior adapt common manual cool happy dutch",
-			expectedErr:      errors.New("invalid byte at position"),
+			expectedErr:      fmt.Errorf("Invalid byte at position"),
 		},
 		{
 			name:             "in memory invalid mnemonic",
@@ -1131,7 +1129,7 @@ func TestNewAccount(t *testing.T) {
 			bip39Passphrease: "",
 			algo:             hd.Secp256k1,
 			mnemonic:         "malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
-			expectedErr:      errors.New("invalid mnemonic"),
+			expectedErr:      fmt.Errorf("Invalid mnemonic"),
 		},
 	}
 	for _, tt := range tests {
@@ -1229,23 +1227,23 @@ func TestInMemorySignVerify(t *testing.T) {
 	d3 := []byte("feels like I forgot something...")
 
 	// try signing both data with both ..
-	s11, pub1, err := cstore.Sign(n1, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s11, pub1, err := cstore.Sign(n1, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key1, pub1)
 
-	s12, pub1, err := cstore.Sign(n1, d2, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s12, pub1, err := cstore.Sign(n1, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key1, pub1)
 
-	s21, pub2, err := cstore.Sign(n2, d1, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s21, pub2, err := cstore.Sign(n2, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	key2, err := kr2.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key2, pub2)
 
-	s22, pub2, err := cstore.Sign(n2, d2, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	s22, pub2, err := cstore.Sign(n2, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key2, pub2)
 
@@ -1285,7 +1283,7 @@ func TestInMemorySignVerify(t *testing.T) {
 	require.Equal(t, i3.Name, n3)
 
 	// Now try to sign data with a secret-less key
-	_, _, err = cstore.Sign(n3, d3, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	_, _, err = cstore.Sign(n3, d3, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
@@ -1381,7 +1379,7 @@ func ExampleNew() {
 
 	// We need to use passphrase to generate a signature
 	tx := []byte("deadbeef")
-	sig, pub, err := cstore.Sign("Bob", tx, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	sig, pub, err := cstore.Sign("Bob", tx, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	if err != nil {
 		fmt.Println("don't accept real passphrase")
 	}
@@ -1843,14 +1841,14 @@ func TestAltKeyring_Sign(t *testing.T) {
 		backend string
 		uid     string
 		msg     []byte
-		mode    apisigning.SignMode
+		mode    signing.SignMode
 	}{
 		{
 			name:    "correct sign",
 			backend: BackendTest,
 			uid:     "signKey",
 			msg:     []byte("some message"),
-			mode:    apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			mode:    signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		},
 	}
 	for _, tt := range tests {
@@ -1876,14 +1874,14 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 		backend string
 		uid     string
 		msg     []byte
-		mode    apisigning.SignMode
+		mode    signing.SignMode
 	}{
 		{
 			name:    "correct sign by address",
 			backend: BackendTest,
 			uid:     "signKey",
 			msg:     []byte("some message"),
-			mode:    apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			mode:    signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		},
 	}
 	for _, tt := range tests {
@@ -1974,14 +1972,14 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "can't rename a key that doesn't exist",
+			name: "cant rename a key that doesnt exist",
 			run: func(kr Keyring) {
 				err := kr.Rename("bogus", "bogus2")
 				require.Error(t, err)
 			},
 		},
 		{
-			name: "can't rename a key to an already existing key name",
+			name: "cant rename a key to an already existing key name",
 			run: func(kr Keyring) {
 				key1, key2 := "existingKey", "existingKey2" // create 2 keys
 				newKeyRecord(t, kr, key1)
@@ -1992,7 +1990,7 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "can't rename key to itself",
+			name: "cant rename key to itself",
 			run: func(kr Keyring) {
 				keyName := "keyName"
 				newKeyRecord(t, kr, keyName)
@@ -2004,7 +2002,7 @@ func TestRenameKey(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-
+		tc := tc
 		kr := newKeyring(t, "testKeyring")
 		t.Run(tc.name, func(t *testing.T) {
 			tc.run(kr)
@@ -2039,7 +2037,6 @@ func TestChangeBcrypt(t *testing.T) {
 }
 
 func requireEqualRenamedKey(t *testing.T, key, mnemonic *Record, nameMatch bool) {
-	t.Helper()
 	if nameMatch {
 		require.Equal(t, key.Name, mnemonic.Name)
 	}
@@ -2058,7 +2055,6 @@ func requireEqualRenamedKey(t *testing.T, key, mnemonic *Record, nameMatch bool)
 }
 
 func newKeyring(t *testing.T, name string) Keyring {
-	t.Helper()
 	cdc := getCodec()
 	kr, err := New(name, "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -2066,14 +2062,12 @@ func newKeyring(t *testing.T, name string) Keyring {
 }
 
 func newKeyRecord(t *testing.T, kr Keyring, name string) *Record {
-	t.Helper()
 	k, _, err := kr.NewMnemonic(name, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 	return k
 }
 
 func assertKeysExist(t *testing.T, kr Keyring, names ...string) {
-	t.Helper()
 	for _, n := range names {
 		_, err := kr.Key(n)
 		require.NoError(t, err)

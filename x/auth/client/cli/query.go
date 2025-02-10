@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -78,7 +77,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 // QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tx --type={hash|acc_seq|signature} <hash|acc_seq|signature>",
+		Use:   "tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature]",
 		Short: "Query for a transaction by hash, \"<addr>/<seq>\" combination or comma-separated signatures in a committed block",
 		Long: strings.TrimSpace(fmt.Sprintf(`
 Example:
@@ -101,7 +100,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 			switch typ {
 			case TypeHash:
 				if args[0] == "" {
-					return errors.New("argument should be a tx hash")
+					return fmt.Errorf("argument should be a tx hash")
 				}
 
 				// if hash is given, then query the tx by hash
@@ -135,19 +134,19 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 				}
 
 				if len(txs.Txs) == 0 {
-					return errors.New("found no txs matching given signatures")
+					return fmt.Errorf("found no txs matching given signatures")
 				}
 				if len(txs.Txs) > 1 {
 					// This case means there's a bug somewhere else in the code as this
 					// should not happen.
-					return sdkerrors.ErrLogic.Wrapf("found %d txs matching given signatures", len(txs.Txs))
+					return errors.ErrLogic.Wrapf("found %d txs matching given signatures", len(txs.Txs))
 				}
 
 				return clientCtx.PrintProto(txs.Txs[0])
 
 			case TypeAccSeq:
 				if args[0] == "" {
-					return errors.New("`acc_seq` type takes an argument '<addr>/<seq>'")
+					return fmt.Errorf("`acc_seq` type takes an argument '<addr>/<seq>'")
 				}
 
 				query := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeyAccountSequence, args[0])
@@ -158,7 +157,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 				}
 
 				if len(txs.Txs) == 0 {
-					return errors.New("found no txs matching given address and sequence combination")
+					return fmt.Errorf("found no txs matching given address and sequence combination")
 				}
 				if len(txs.Txs) > 1 {
 					// This case means there's a bug somewhere else in the code as this
@@ -183,7 +182,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 // ParseSigArgs parses comma-separated signatures from the CLI arguments.
 func ParseSigArgs(args []string) ([]string, error) {
 	if len(args) != 1 || args[0] == "" {
-		return nil, errors.New("argument should be comma-separated signatures")
+		return nil, fmt.Errorf("argument should be comma-separated signatures")
 	}
 
 	return strings.Split(args[0], ","), nil

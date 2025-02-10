@@ -21,7 +21,7 @@ and JSON object encoding over the wire bringing parity between logical objects a
 From the Amino docs:
 
 > Amino is an object encoding specification. It is a subset of Proto3 with an extension for interface
-> support. See the [Proto3 spec](https://protobuf.dev/programming-guides/proto3/) for more
+> support. See the [Proto3 spec](https://developers.google.com/protocol-buffers/docs/proto3) for more
 > information on Proto3, which Amino is largely compatible with (but not with Proto2).
 >
 > The goal of the Amino encoding protocol is to bring parity into logic objects and persistence objects.
@@ -56,7 +56,7 @@ made to address client-side encoding.
 
 ## Decision
 
-We will adopt [Protocol Buffers](https://protobuf.dev) for serializing
+We will adopt [Protocol Buffers](https://developers.google.com/protocol-buffers) for serializing
 persisted structured data in the Cosmos SDK while providing a clean mechanism and developer UX for
 applications wishing to continue to use Amino. We will provide this mechanism by updating modules to
 accept a codec interface, `Marshaler`, instead of a concrete Amino codec. Furthermore, the Cosmos SDK
@@ -150,7 +150,7 @@ and client developer UX.
 ### Safe usage of `Any`
 
 By default, the [gogo protobuf implementation of `Any`](https://pkg.go.dev/github.com/cosmos/gogoproto/types)
-uses [global type registration](https://github.com/cosmos/gogoproto/blob/v1.7.0/proto/properties.go#L546)
+uses [global type registration]( https://github.com/cosmos/gogoproto/blob/master/proto/properties.go#L540)
 to decode values packed in `Any` into concrete
 go types. This introduces a vulnerability where any malicious module
 in the dependency tree could register a type with the global protobuf registry

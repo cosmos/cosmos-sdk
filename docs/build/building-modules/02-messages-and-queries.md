@@ -57,14 +57,14 @@ If there is a need for custom signers then there is an alternative path which ca
 func ProvideCustomMsgTransactionGetSigners() signing.CustomGetSigner {
 	// Extract the signer from the signature.
 	signer, err := coretypes.LatestSigner(Tx).Sender(ethTx)
-    if err != nil {
+	if err != nil {
 		return nil, err
 	}
 
 	// Return the signer in the required format.
 	return signing.CustomGetSigner{
 		MsgType: gogoproto.MessageName(&types.CustomMsg{}),
-		Fn: func(proto.Message) ([][]byte, error) {
+		Fn: func(msg proto.Message) ([][]byte, error) {
 			return [][]byte{signer}, nil
 		}
 	}

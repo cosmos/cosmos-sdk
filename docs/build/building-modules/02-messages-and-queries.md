@@ -66,10 +66,15 @@ func ProvideBankSendTransactionGetSigners() signing.CustomGetSigner {
 }
 ```
 
-This can be provided to the application using depinject's `Provide` method in the application's `app.go`:
+This can be provided to the application using depinject's `Provide` method in the module that defines the type:
 
-```go
-depinject.Provide(banktypes.ProvideBankSendTransactionGetSigners)
+```diff
+func init() {
+	appconfig.RegisterModule(&modulev1.Module{},
+-		appconfig.Provide(ProvideModule),
++		appconfig.Provide(ProvideModule, ProvideBankSendTransactionGetSigners),
+	)
+}
 ```
 
 The Cosmos SDK uses Protobuf definitions to generate client and server code:

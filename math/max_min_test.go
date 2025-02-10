@@ -13,7 +13,7 @@ func TestMax(t *testing.T) {
 	require.Equal(t, -11_000_000, minInt, "invalid min for int")
 
 	maxf64 := Max(10.1, -10.1, 20.8, 1_000_000.9, 10.5, 8.4, -11_000_000.9, 20.7)
-	require.Equal(t, 1_000_000.9, maxf64, "invalid max for float64")
+	require.InDelta(t, 1_000_000.9, maxf64, 1e-9, "invalid max for float64")
 	minf64 := Min(10.1, -10.1, 20.8, 1_000_000.9, 10.5, 8.4, -11_000_000.9, 20.7)
-	require.Equal(t, -11_000_000.9, minf64, "invalid min for float64")
+	require.InDelta(t, -11_000_000.9, minf64, 1e-9, "invalid min for float64")
 }

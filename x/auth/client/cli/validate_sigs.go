@@ -2,7 +2,7 @@ package cli
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -20,7 +20,7 @@ import (
 
 func GetValidateSignaturesCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validate-signatures <file>",
+		Use:   "validate-signatures [file]",
 		Short: "validate transactions signatures",
 		Long: `Print the addresses that must sign the transaction, those who have already
 signed it, and make sure that signatures are in the correct order.
@@ -52,7 +52,7 @@ func makeValidateSignaturesCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		if !printAndValidateSigs(cmd, clientCtx, txBldr.ChainID(), stdTx, clientCtx.Offline) {
-			return errors.New("signatures validation failed")
+			return fmt.Errorf("signatures validation failed")
 		}
 
 		return nil
@@ -118,17 +118,23 @@ func printAndValidateSigs(
 				return false
 			}
 
+			signingData := authsigning.SignerData{
+				Address:       sigAddr.String(),
+				ChainID:       chainID,
+				AccountNumber: accNum,
+				Sequence:      accSeq,
+				PubKey:        pubKey,
+			}
 			anyPk, err := codectypes.NewAnyWithValue(pubKey)
 			if err != nil {
 				cmd.PrintErrf("failed to pack public key: %v", err)
 				return false
 			}
-
 			txSignerData := txsigning.SignerData{
-				ChainID:       chainID,
-				AccountNumber: accNum,
-				Sequence:      accSeq,
-				Address:       sigAddr.String(),
+				ChainID:       signingData.ChainID,
+				AccountNumber: signingData.AccountNumber,
+				Sequence:      signingData.Sequence,
+				Address:       signingData.Address,
 				PubKey: &anypb.Any{
 					TypeUrl: anyPk.TypeUrl,
 					Value:   anyPk.Value,

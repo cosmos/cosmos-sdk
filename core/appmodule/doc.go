@@ -1,4 +1,5 @@
-// Package appmodule defines what is needed for a module to be used in the Cosmos SDK (runtime).
-// It is equivalent to the appmodulev2 package, but less flexible to stay compatible with baseapp instead of server/v2.
-// If you are looking at integrating dependency injection into your module please see depinject appconfig documentation.
+// Package appmodule defines the functionality for registering Cosmos SDK app
+// modules that are assembled using the cosmossdk.io/depinject
+// dependency injection system and the declarative app configuration format
+// handled by the appconfig package.
 package appmodule

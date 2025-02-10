@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -45,7 +44,7 @@ func TestStdSignBytes(t *testing.T) {
 		Amount:   []*basev1beta1.Coin{{Denom: "atom", Amount: "150"}},
 		GasLimit: 100000,
 	}
-	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"decField":"0.000000000000000000","signers":["%s"]}}`, addr)
+	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"signers":["%s"]}}`, addr)
 	tests := []struct {
 		name string
 		args args
@@ -91,6 +90,7 @@ func TestStdSignBytes(t *testing.T) {
 		FileResolver: proto.HybridResolver,
 	})
 	for i, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			anyMsgs := make([]*anypb.Any, len(tc.args.msgs))
 			for j, msg := range tc.args.msgs {
@@ -137,7 +137,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, pubKey, sigV2.PubKey)
 	require.Equal(t, &signing.SingleSignatureData{
-		SignMode:  apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		Signature: dummy,
 	}, sigV2.Data)
 
@@ -158,11 +158,11 @@ func TestSignatureV2Conversions(t *testing.T) {
 		BitArray: bitArray,
 		Signatures: []signing.SignatureData{
 			&signing.SingleSignatureData{
-				SignMode:  apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 				Signature: dummy,
 			},
 			&signing.SingleSignatureData{
-				SignMode:  apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 				Signature: dummy2,
 			},
 		},
@@ -198,7 +198,7 @@ func TestGetSignaturesV2(t *testing.T) {
 
 	require.Equal(t, cdc.MustMarshal(sigs[0].PubKey), cdc.MustMarshal(sig.GetPubKey()))
 	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
-		SignMode:  apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		Signature: sig.GetSignature(),
 	})
 }

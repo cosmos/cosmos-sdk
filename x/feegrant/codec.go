@@ -1,33 +1,33 @@
 package feegrant
 
 import (
-	"cosmossdk.io/core/registry"
-	coretransaction "cosmossdk.io/core/transaction"
-
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/feegrant interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
-	legacy.RegisterAminoMsg(registrar, &MsgGrantAllowance{}, "cosmos-sdk/MsgGrantAllowance")
-	legacy.RegisterAminoMsg(registrar, &MsgRevokeAllowance{}, "cosmos-sdk/MsgRevokeAllowance")
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	legacy.RegisterAminoMsg(cdc, &MsgGrantAllowance{}, "cosmos-sdk/MsgGrantAllowance")
+	legacy.RegisterAminoMsg(cdc, &MsgRevokeAllowance{}, "cosmos-sdk/MsgRevokeAllowance")
 
-	registrar.RegisterInterface((*FeeAllowanceI)(nil), nil)
-	registrar.RegisterConcrete(&BasicAllowance{}, "cosmos-sdk/BasicAllowance")
-	registrar.RegisterConcrete(&PeriodicAllowance{}, "cosmos-sdk/PeriodicAllowance")
-	registrar.RegisterConcrete(&AllowedMsgAllowance{}, "cosmos-sdk/AllowedMsgAllowance")
+	cdc.RegisterInterface((*FeeAllowanceI)(nil), nil)
+	cdc.RegisterConcrete(&BasicAllowance{}, "cosmos-sdk/BasicAllowance", nil)
+	cdc.RegisterConcrete(&PeriodicAllowance{}, "cosmos-sdk/PeriodicAllowance", nil)
+	cdc.RegisterConcrete(&AllowedMsgAllowance{}, "cosmos-sdk/AllowedMsgAllowance", nil)
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry
-func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgGrantAllowance{},
 		&MsgRevokeAllowance{},
 	)
 
-	registrar.RegisterInterface(
+	registry.RegisterInterface(
 		"cosmos.feegrant.v1beta1.FeeAllowanceI",
 		(*FeeAllowanceI)(nil),
 		&BasicAllowance{},
@@ -35,5 +35,5 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&AllowedMsgAllowance{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

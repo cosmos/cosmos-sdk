@@ -1,10 +1,9 @@
 package depinject
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
-	"runtime"
+
+	"github.com/cockroachdb/errors"
 )
 
 // Config is a functional configuration of a container.
@@ -34,7 +33,7 @@ func Provide(providers ...interface{}) Config {
 func ProvideInModule(moduleName string, providers ...interface{}) Config {
 	return containerConfig(func(ctr *container) error {
 		if moduleName == "" {
-			return errors.New("expected non-empty module name")
+			return errors.Errorf("expected non-empty module name")
 		}
 
 		return provide(ctr, ctr.moduleKeyContext.createOrGetModuleKey(moduleName), providers)
@@ -45,11 +44,11 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 	for _, c := range providers {
 		rc, err := extractProviderDescriptor(c)
 		if err != nil {
-			return fmt.Errorf("%w\n%s", err, getStackTrace())
+			return errors.WithStack(err)
 		}
 		_, err = ctr.addNode(&rc, key)
 		if err != nil {
-			return fmt.Errorf("%w\n%s", err, getStackTrace())
+			return errors.WithStack(err)
 		}
 	}
 	return nil
@@ -81,7 +80,7 @@ func Invoke(invokers ...interface{}) Config {
 func InvokeInModule(moduleName string, invokers ...interface{}) Config {
 	return containerConfig(func(ctr *container) error {
 		if moduleName == "" {
-			return errors.New("expected non-empty module name")
+			return errors.Errorf("expected non-empty module name")
 		}
 
 		return invoke(ctr, ctr.moduleKeyContext.createOrGetModuleKey(moduleName), invokers)
@@ -92,7 +91,7 @@ func invoke(ctr *container, key *moduleKey, invokers []interface{}) error {
 	for _, c := range invokers {
 		rc, err := extractInvokerDescriptor(c)
 		if err != nil {
-			return fmt.Errorf("%w\n%s", err, getStackTrace())
+			return errors.WithStack(err)
 		}
 		err = ctr.addInvoker(&rc, key)
 		if err != nil {
@@ -152,7 +151,7 @@ func Supply(values ...interface{}) Config {
 		for _, v := range values {
 			err := ctr.supply(reflect.ValueOf(v), loc)
 			if err != nil {
-				return fmt.Errorf("%w\n%s", err, getStackTrace())
+				return errors.WithStack(err)
 			}
 		}
 		return nil
@@ -163,7 +162,7 @@ func Supply(values ...interface{}) Config {
 // fail immediately.
 func Error(err error) Config {
 	return containerConfig(func(*container) error {
-		return fmt.Errorf("%w\n%s", err, getStackTrace())
+		return errors.WithStack(err)
 	})
 }
 
@@ -173,7 +172,7 @@ func Configs(opts ...Config) Config {
 		for _, opt := range opts {
 			err := opt.apply(ctr)
 			if err != nil {
-				return fmt.Errorf("%w\n%s", err, getStackTrace())
+				return errors.WithStack(err)
 			}
 		}
 		return nil
@@ -187,9 +186,3 @@ func (c containerConfig) apply(ctr *container) error {
 }
 
 var _ Config = (*containerConfig)(nil)
-
-func getStackTrace() string {
-	var stack [4096]byte
-	n := runtime.Stack(stack[:], false)
-	return string(stack[:n])
-}

@@ -1,60 +1,47 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
-	"maps"
-	"path/filepath"
-	"slices"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/tools/confix"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
-// DiffCommand creates a new command for comparing configuration files
 func DiffCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "diff [target-version] <config-path>",
-		Short: "Outputs all config values that are different from the default.",
-		Long:  "This command compares the specified configuration file (app.toml or client.toml) with the defaults and outputs any differences.",
+	return &cobra.Command{
+		Use:   "diff [target-version] <app-toml-path>",
+		Short: "Outputs all config values that are different from the app.toml defaults.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var configPath string
+			var filename string
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			switch {
-			case len(args) > 1:
-				configPath = args[1]
-			case clientCtx.HomeDir != "":
-				configPath = filepath.Join(clientCtx.HomeDir, "config", "app.toml")
-			default:
-				return errors.New("must provide a path to the app.toml or client.toml")
-			}
 
-			configType := confix.AppConfigType
-			if ok, _ := cmd.Flags().GetBool(confix.ClientConfigType); ok {
-				configPath = strings.ReplaceAll(configPath, "app.toml", "client.toml") // for the case we are using the home dir of client ctx
-				configType = confix.ClientConfigType
-			} else if strings.HasSuffix(configPath, "client.toml") {
-				return errors.New("app.toml file expected, got client.toml, use --client flag to diff client.toml")
+			case len(args) > 1:
+				filename = args[1]
+			case clientCtx.HomeDir != "":
+				filename = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
+			default:
+				return fmt.Errorf("must provide a path to the app.toml file")
 			}
 
 			targetVersion := args[0]
 			if _, ok := confix.Migrations[targetVersion]; !ok {
-				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, slices.Collect(maps.Keys(confix.Migrations)))
+				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, maps.Keys(confix.Migrations))
 			}
 
-			targetVersionFile, err := confix.LoadLocalConfig(targetVersion, configType)
+			targetVersionFile, err := confix.LoadLocalConfig(targetVersion)
 			if err != nil {
-				return fmt.Errorf("failed to load internal config: %w", err)
+				panic(fmt.Errorf("failed to load internal config: %w", err))
 			}
 
-			rawFile, err := confix.LoadConfig(configPath)
+			rawFile, err := confix.LoadConfig(filename)
 			if err != nil {
-				return fmt.Errorf("failed to load config: %w", err)
+				return fmt.Errorf("failed to load config: %v", err)
 			}
 
 			diff := confix.DiffValues(rawFile, targetVersionFile)
@@ -70,8 +57,4 @@ func DiffCommand() *cobra.Command {
 			return nil
 		},
 	}
-
-	cmd.Flags().Bool(confix.ClientConfigType, false, "diff client.toml instead of app.toml")
-
-	return cmd
 }

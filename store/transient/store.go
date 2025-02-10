@@ -1,7 +1,8 @@
 package transient
 
 import (
-	coretesting "cosmossdk.io/core/testing"
+	dbm "github.com/cosmos/cosmos-db"
+
 	"cosmossdk.io/store/dbadapter"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/types"
@@ -12,20 +13,20 @@ var (
 	_ types.KVStore   = (*Store)(nil)
 )
 
-// Store is a wrapper for a MemDB with Committer implementation
+// Store is a wrapper for a MemDB with Commiter implementation
 type Store struct {
 	dbadapter.Store
 }
 
-// NewStore constructs new MemDB adapter
+// Constructs new MemDB adapter
 func NewStore() *Store {
-	return &Store{Store: dbadapter.Store{DB: coretesting.NewMemDB()}}
+	return &Store{Store: dbadapter.Store{DB: dbm.NewMemDB()}}
 }
 
-// Commit cleans up Store.
 // Implements CommitStore
+// Commit cleans up Store.
 func (ts *Store) Commit() (id types.CommitID) {
-	ts.Store = dbadapter.Store{DB: coretesting.NewMemDB()}
+	ts.Store = dbadapter.Store{DB: dbm.NewMemDB()}
 	return
 }
 
@@ -37,21 +38,16 @@ func (ts *Store) GetPruning() pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
 }
 
-// LastCommitID implements CommitStore
+// Implements CommitStore
 func (ts *Store) LastCommitID() types.CommitID {
 	return types.CommitID{}
-}
-
-// LatestVersion implements Committer
-func (ts *Store) LatestVersion() int64 {
-	return 0
 }
 
 func (ts *Store) WorkingHash() []byte {
 	return []byte{}
 }
 
-// GetStoreType implements Store.
+// Implements Store.
 func (ts *Store) GetStoreType() types.StoreType {
 	return types.StoreTypeTransient
 }

@@ -10,14 +10,9 @@ import (
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
-	"google.golang.org/protobuf/types/known/anypb"
-
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,6 +28,7 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 	if err != nil {
 		return err
 	}
+
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
@@ -130,7 +126,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	if err = Sign(clientCtx, txf, clientCtx.FromName, tx, true); err != nil {
+	if err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
 		return err
 	}
 
@@ -173,7 +169,7 @@ func CalculateGas(
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
 	ctx context.Context,
-	signMode apisigning.SignMode, signerData txsigning.SignerData,
+	signMode signing.SignMode, signerData authsigning.SignerData,
 	txBuilder client.TxBuilder, priv cryptotypes.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
 ) (signing.SignatureV2, error) {
@@ -211,7 +207,7 @@ func SignWithPrivKey(
 func countDirectSigners(data signing.SignatureData) int {
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
-		if data.SignMode == apisigning.SignMode_SIGN_MODE_DIRECT {
+		if data.SignMode == signing.SignMode_SIGN_MODE_DIRECT {
 			return 1
 		}
 
@@ -246,22 +242,25 @@ func checkMultipleSigners(tx authsigning.Tx) error {
 	return nil
 }
 
-// Sign signs a given tx with a named key. The bytes signed over are canonical.
+// Sign signs a given tx with a named key. The bytes signed over are canconical.
 // The resulting signature will be added to the transaction builder overwriting the previous
 // ones if overwrite=true (otherwise, the signature will be appended).
-// Signing a transaction with multiple signers in the DIRECT mode is not supported and will
+// Signing a transaction with mutltiple signers in the DIRECT mode is not supprted and will
 // return an error.
 // An error is returned upon failure.
-func Sign(ctx client.Context, txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
+func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
 
 	var err error
 	signMode := txf.signMode
-	if signMode == apisigning.SignMode_SIGN_MODE_UNSPECIFIED {
+	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode = txf.txConfig.SignModeHandler().DefaultMode()
+		signMode, err = authsigning.APISignModeToInternal(txf.txConfig.SignModeHandler().DefaultMode())
+		if err != nil {
+			return err
+		}
 	}
 
 	k, err := txf.keybase.Key(name)
@@ -274,22 +273,12 @@ func Sign(ctx client.Context, txf Factory, name string, txBuilder client.TxBuild
 		return err
 	}
 
-	addressStr, err := ctx.AddressCodec.BytesToString(pubKey.Address())
-	if err != nil {
-		return err
-	}
-
-	anyPk, err := codectypes.NewAnyWithValue(pubKey)
-	if err != nil {
-		return err
-	}
-
-	signerData := txsigning.SignerData{
+	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
-		Address:       addressStr,
-		PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
+		PubKey:        pubKey,
+		Address:       sdk.AccAddress(pubKey.Address()).String(),
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
@@ -333,7 +322,7 @@ func Sign(ctx client.Context, txf Factory, name string, txBuilder client.TxBuild
 		return err
 	}
 
-	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx.CmdContext, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
@@ -388,12 +377,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		return tx.AuxSignerData{}, err
 	}
 
-	fromAddrStr, err := clientCtx.AddressCodec.BytesToString(fromAddress)
-	if err != nil {
-		return tx.AuxSignerData{}, err
-	}
-
-	b.SetAddress(fromAddrStr)
+	b.SetAddress(fromAddress.String())
 	if clientCtx.Offline {
 		b.SetAccountNumber(f.accountNumber)
 		b.SetSequence(f.sequence)

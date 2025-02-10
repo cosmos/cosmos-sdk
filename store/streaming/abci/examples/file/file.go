@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/hashicorp/go-plugin"
 
 	streamingabci "cosmossdk.io/store/streaming/abci"
@@ -43,7 +43,7 @@ func (a *FilePlugin) writeToFile(file string, data []byte) error {
 	return nil
 }
 
-func (a *FilePlugin) ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+func (a *FilePlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
 	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
 	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
 	if err := a.writeToFile("finalize-block-req", d1); err != nil {
@@ -55,7 +55,7 @@ func (a *FilePlugin) ListenFinalizeBlock(ctx context.Context, req abci.FinalizeB
 	return nil
 }
 
-func (a *FilePlugin) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*store.StoreKVPair) error {
+func (a *FilePlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error {
 	fmt.Printf("listen-commit: block_height=%d data=%v", res.RetainHeight, changeSet)
 	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
 	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, changeSet))

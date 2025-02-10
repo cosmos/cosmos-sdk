@@ -3,11 +3,11 @@ package authz
 import (
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	errorsmod "cosmossdk.io/errors"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -22,7 +22,7 @@ func NewGrant(blockTime time.Time, a Authorization, expiration *time.Time) (Gran
 	if !ok {
 		return Grant{}, sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", a)
 	}
-	any, err := gogoprotoany.NewAnyWithCacheWithValue(msg)
+	any, err := cdctypes.NewAnyWithValue(msg)
 	if err != nil {
 		return Grant{}, err
 	}
@@ -32,10 +32,10 @@ func NewGrant(blockTime time.Time, a Authorization, expiration *time.Time) (Gran
 	}, nil
 }
 
-var _ gogoprotoany.UnpackInterfacesMessage = &Grant{}
+var _ cdctypes.UnpackInterfacesMessage = &Grant{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g Grant) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (g Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	var authorization Authorization
 	return unpacker.UnpackAny(g.Authorization, &authorization)
 }

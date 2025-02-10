@@ -5,8 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/core/codec"
-
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -102,9 +101,7 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
-		if err := cdc.UnmarshalJSON(appState[ModuleName], &genesisState); err != nil {
-			panic(err)
-		}
+		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	}
 
 	return &genesisState
@@ -115,7 +112,7 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 // Params.SendEnabled slice is empty, this is a noop.
 //
 // If the main SendEnabled slice already has entries, the Params.SendEnabled
-// entries are added. In case of the same denom in both, preference is given to
+// entries are added. In case of the same demon in both, preference is given to
 // the existing (main GenesisState field) entry.
 func (gs *GenesisState) MigrateSendEnabled() {
 	gs.SendEnabled = gs.GetAllSendEnabled()

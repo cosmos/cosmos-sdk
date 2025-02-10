@@ -6,7 +6,7 @@
 
 ## Status
 
-ACCEPTED
+Proposed
 
 ## Context
 

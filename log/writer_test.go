@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/log"
 )
 
@@ -13,19 +15,13 @@ func TestFilteredWriter(t *testing.T) {
 
 	level := "consensus:debug,mempool:debug,*:error"
 	filter, err := log.ParseLogLevel(level)
-	if err != nil {
-		t.Fatalf("failed to parse log level: %v", err)
-	}
+	assert.NilError(t, err)
 
 	logger := log.NewLogger(buf, log.FilterOption(filter))
 	logger.Debug("this log line should be displayed", log.ModuleKey, "consensus")
-	if !strings.Contains(buf.String(), "this log line should be displayed") {
-		t.Errorf("expected log line to be displayed, but it was not")
-	}
+	assert.Check(t, strings.Contains(buf.String(), "this log line should be displayed"))
 	buf.Reset()
 
 	logger.Debug("this log line should be filtered", log.ModuleKey, "server")
-	if buf.Len() != 0 {
-		t.Errorf("expected log line to be filtered, but it was not")
-	}
+	assert.Check(t, buf.Len() == 0)
 }

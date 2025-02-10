@@ -2,16 +2,15 @@ package keeper
 
 import (
 	"bytes"
-	"context"
-	"fmt"
-	"slices"
+	context "context"
+	fmt "fmt"
 	"strings"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/circuit/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -59,24 +58,20 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "permissions cannot be nil")
 	}
 
-	err = msg.Permissions.Validation()
-	if err != nil {
-		return nil, err
-	}
-
 	// Append the account in the msg to the store's set of authorized super admins
 	if err = srv.Permissions.Set(ctx, grantee, *msg.Permissions); err != nil {
 		return nil, err
 	}
 
-	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
-		"authorize_circuit_breaker",
-		event.NewAttribute("granter", msg.Granter),
-		event.NewAttribute("grantee", msg.Grantee),
-		event.NewAttribute("permission", msg.Permissions.String()),
-	); err != nil {
-		return nil, err
-	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"authorize_circuit_breaker",
+			sdk.NewAttribute("granter", msg.Granter),
+			sdk.NewAttribute("grantee", msg.Grantee),
+			sdk.NewAttribute("permission", msg.Permissions.String()),
+		),
+	})
 
 	return &types.MsgAuthorizeCircuitBreakerResponse{
 		Success: true,
@@ -95,8 +90,7 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 		return nil, err
 	}
 
-	msgTypeUrls := types.MsgTypeURLValidation(msg.MsgTypeUrls)
-	for _, msgTypeURL := range msgTypeUrls {
+	for _, msgTypeURL := range msg.MsgTypeUrls {
 		// check if the message is in the list of allowed messages
 		isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
 		if err != nil {
@@ -127,13 +121,14 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 
 	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
 
-	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
-		"trip_circuit_breaker",
-		event.NewAttribute("authority", msg.Authority),
-		event.NewAttribute("msg_url", urls),
-	); err != nil {
-		return nil, err
-	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"trip_circuit_breaker",
+			sdk.NewAttribute("authority", msg.Authority),
+			sdk.NewAttribute("msg_url", urls),
+		),
+	})
 
 	return &types.MsgTripCircuitBreakerResponse{
 		Success: true,
@@ -141,10 +136,9 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 }
 
 // ResetCircuitBreaker resumes processing of Msg's in the state machine that
-// have been paused using TripCircuitBreaker.
+// have been been paused using TripCircuitBreaker.
 func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgResetCircuitBreaker) (*types.MsgResetCircuitBreakerResponse, error) {
 	keeper := srv.Keeper
-	msgTypeUrls := types.MsgTypeURLValidation(msg.MsgTypeUrls)
 	address, err := srv.addressCodec.StringToBytes(msg.Authority)
 	if err != nil {
 		return nil, err
@@ -156,36 +150,7 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 		return nil, err
 	}
 
-	// check if msgURL is empty
-	if len(msgTypeUrls) == 0 {
-		switch {
-		case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
-			// if the sender is a super admin or the module authority, will remove all disabled msgs
-			err := srv.DisableList.Walk(ctx, nil, func(msgUrl string) (stop bool, err error) {
-				msgTypeUrls = append(msgTypeUrls, msgUrl)
-				return false, nil
-			})
-			if err != nil {
-				return nil, err
-			}
-
-		case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
-			// if the sender has permission for some messages, will remove all disabled msgs that in the perms.LimitTypeUrls
-			err := srv.DisableList.Walk(ctx, nil, func(msgUrl string) (stop bool, err error) {
-				if slices.Contains(perms.LimitTypeUrls, msgUrl) {
-					msgTypeUrls = append(msgTypeUrls, msgUrl)
-				}
-				return false, nil
-			})
-			if err != nil {
-				return nil, err
-			}
-		default:
-			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker")
-		}
-	}
-
-	for _, msgTypeURL := range msgTypeUrls {
+	for _, msgTypeURL := range msg.MsgTypeUrls {
 		// check if the message is in the list of allowed messages
 		isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
 		if err != nil {
@@ -213,15 +178,16 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 		}
 	}
 
-	urls := strings.Join(msgTypeUrls, ",")
+	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
 
-	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
-		"reset_circuit_breaker",
-		event.NewAttribute("authority", msg.Authority),
-		event.NewAttribute("msg_url", urls),
-	); err != nil {
-		return nil, err
-	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"reset_circuit_breaker",
+			sdk.NewAttribute("authority", msg.Authority),
+			sdk.NewAttribute("msg_url", urls),
+		),
+	})
 
 	return &types.MsgResetCircuitBreakerResponse{Success: true}, nil
 }

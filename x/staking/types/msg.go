@@ -1,10 +1,7 @@
 package types
 
 import (
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-
 	"cosmossdk.io/core/address"
-	coretransaction "cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -15,14 +12,14 @@ import (
 )
 
 var (
-	_ coretransaction.Msg                  = &MsgCreateValidator{}
-	_ gogoprotoany.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
-	_ coretransaction.Msg                  = &MsgEditValidator{}
-	_ coretransaction.Msg                  = &MsgDelegate{}
-	_ coretransaction.Msg                  = &MsgUndelegate{}
-	_ coretransaction.Msg                  = &MsgBeginRedelegate{}
-	_ coretransaction.Msg                  = &MsgCancelUnbondingDelegation{}
-	_ coretransaction.Msg                  = &MsgUpdateParams{}
+	_ sdk.Msg                            = &MsgCreateValidator{}
+	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
+	_ sdk.Msg                            = &MsgEditValidator{}
+	_ sdk.Msg                            = &MsgDelegate{}
+	_ sdk.Msg                            = &MsgUndelegate{}
+	_ sdk.Msg                            = &MsgBeginRedelegate{}
+	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
+	_ sdk.Msg                            = &MsgUpdateParams{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -64,7 +61,7 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
 	}
 
-	if msg.Description.IsEmpty() {
+	if msg.Description == (Description{}) {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
@@ -90,13 +87,8 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 	return nil
 }
 
-// GetMoniker returns the moniker of the validator
-func (msg MsgCreateValidator) GetMoniker() string {
-	return msg.Description.GetMoniker()
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgCreateValidator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(msg.Pubkey, &pubKey)
 }
@@ -149,36 +141,4 @@ func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int
 		Amount:           amount,
 		CreationHeight:   creationHeight,
 	}
-}
-
-// NewMsgRotateConsPubKey creates a new MsgRotateConsPubKey instance.
-func NewMsgRotateConsPubKey(valAddr string, pubKey cryptotypes.PubKey) (*MsgRotateConsPubKey, error) {
-	var pkAny *codectypes.Any
-	if pubKey != nil {
-		var err error
-		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
-			return nil, err
-		}
-	}
-	return &MsgRotateConsPubKey{
-		ValidatorAddress: valAddr,
-		NewPubkey:        pkAny,
-	}, nil
-}
-
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgRotateConsPubKey) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
-	var pubKey cryptotypes.PubKey
-	return unpacker.UnpackAny(msg.NewPubkey, &pubKey)
-}
-
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (hi ConsPubKeyRotationHistory) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
-	var oldPubKey cryptotypes.PubKey
-	err := unpacker.UnpackAny(hi.OldConsPubkey, &oldPubKey)
-	if err != nil {
-		return err
-	}
-	var newPubKey cryptotypes.PubKey
-	return unpacker.UnpackAny(hi.NewConsPubkey, &newPubKey)
 }

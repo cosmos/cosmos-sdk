@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/evidence/exported"
@@ -131,7 +130,7 @@ func TestUnpackInterfaces(t *testing.T) {
 
 	testCases := []struct {
 		msg      string
-		unpacker gogoprotoany.AnyUnpacker
+		unpacker codectypes.AnyUnpacker
 		expPass  bool
 	}{
 		{

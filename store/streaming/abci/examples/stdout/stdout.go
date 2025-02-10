@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/hashicorp/go-plugin"
 
 	streamingabci "cosmossdk.io/store/streaming/abci"
@@ -17,14 +17,14 @@ type StdoutPlugin struct {
 	BlockHeight int64
 }
 
-func (a *StdoutPlugin) ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+func (a *StdoutPlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
 	a.BlockHeight = req.Height
 	// process tx messages (i.e: sent to external system)
 	fmt.Printf("listen-finalize-block: block-height=%d req=%v res=%v", a.BlockHeight, req, res)
 	return nil
 }
 
-func (a *StdoutPlugin) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*store.StoreKVPair) error {
+func (a *StdoutPlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error {
 	// process block commit messages (i.e: sent to external system)
 	fmt.Printf("listen-commit: block_height=%d res=%v data=%v", a.BlockHeight, res, changeSet)
 	return nil

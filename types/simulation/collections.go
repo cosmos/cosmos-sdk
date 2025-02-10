@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-// NewStoreDecoderFuncFromCollectionsSchema returns a function that decodes two kv pairs when the module fully uses collections
 func NewStoreDecoderFuncFromCollectionsSchema(schema collections.Schema) func(kvA, kvB kv.Pair) string {
 	colls := schema.ListCollections()
 	prefixes := make([][]byte, len(colls))
@@ -37,16 +36,13 @@ func NewStoreDecoderFuncFromCollectionsSchema(schema collections.Schema) func(kv
 				if err != nil {
 					panic(err)
 				}
-				vAString, vBString := "<nil>", "<nil>"
-				if vA != nil {
-					if vAString, err = vc.Stringify(vA); err != nil {
-						panic(err)
-					}
+				vAString, err := vc.Stringify(vA)
+				if err != nil {
+					panic(err)
 				}
-				if vB != nil {
-					if vBString, err = vc.Stringify(vB); err != nil {
-						panic(err)
-					}
+				vBString, err := vc.Stringify(vB)
+				if err != nil {
+					panic(err)
 				}
 				return vAString + "\n" + vBString
 			}

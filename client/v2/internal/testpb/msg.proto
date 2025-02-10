@@ -16,12 +16,12 @@ service Msg {
   };
 
   rpc Clawback(MsgClawbackRequest) returns (MsgClawbackResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.53.0 ";
+    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.51.0";
   }
 }
 
 message MsgRequest {
-  // u32 is a uint32
+  // u32 is an uint32
   uint32                                u32        = 1;
   uint64                                u64        = 2;
   string                                str        = 3;

@@ -7,7 +7,7 @@ import (
 	"errors"
 
 	"github.com/cometbft/cometbft/crypto"
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 )
 
@@ -21,7 +21,7 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	return sig[1:], nil
 }
 
-// VerifySignature verifies a signature of the form R || S.
+// VerifyBytes verifies a signature of the form R || S.
 // It rejects signatures which are not in lower-S form.
 func (pubKey *PubKey) VerifySignature(msg, sigStr []byte) bool {
 	if len(sigStr) != 64 {

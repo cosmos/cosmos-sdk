@@ -3,30 +3,30 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
-	"slices"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/registry"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/config"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
-
-// KeyGenF is a function that generates a private key for use by comet.
-type KeyGenF = func() (cmtcrypto.PrivKey, error)
 
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
 // app.go/app config scenarios or directly as a servertypes.Application instance.
@@ -40,18 +40,18 @@ type KeyGenF = func() (cmtcrypto.PrivKey, error)
 type App struct {
 	*baseapp.BaseApp
 
-	ModuleManager      *module.Manager
-	UnorderedTxManager *unorderedtx.Manager
-
-	configurator      module.Configurator //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+	ModuleManager     *module.Manager
+	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
-	amino             registry.AminoRegistrar
+	amino             *codec.LegacyAmino
+	basicManager      module.BasicManager
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	grpcQueryRouter   *baseapp.GRPCQueryRouter
+	appConfig         *appv1alpha1.Config
 	logger            log.Logger
 	// initChainer is the init chainer function defined by the app config.
 	// this is only required if the chain wants to add special InitChainer logic.
@@ -68,19 +68,19 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 			return fmt.Errorf("AppModule named %q already exists", name)
 		}
 
+		if _, ok := a.basicManager[name]; ok {
+			return fmt.Errorf("AppModuleBasic named %q already exists", name)
+		}
+
 		a.ModuleManager.Modules[name] = appModule
-		if mod, ok := appModule.(appmodule.HasRegisterInterfaces); ok {
-			mod.RegisterInterfaces(a.interfaceRegistry)
-		}
+		a.basicManager[name] = appModule
+		appModule.RegisterInterfaces(a.interfaceRegistry)
+		appModule.RegisterLegacyAminoCodec(a.amino)
 
-		if mod, ok := appModule.(module.HasAminoCodec); ok {
-			mod.RegisterLegacyAminoCodec(a.amino)
-		}
-
-		if mod, ok := appModule.(module.HasServices); ok {
-			mod.RegisterServices(a.configurator)
-		} else if mod, ok := appModule.(module.HasRegisterServices); ok {
-			if err := mod.RegisterServices(a.configurator); err != nil {
+		if module, ok := appModule.(module.HasServices); ok {
+			module.RegisterServices(a.configurator)
+		} else if module, ok := appModule.(appmodule.HasServices); ok {
+			if err := module.RegisterServices(a.configurator); err != nil {
 				return err
 			}
 		}
@@ -91,7 +91,7 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // RegisterStores registers the provided store keys.
 // This method should only be used for registering extra stores
-// which is necessary for modules that not registered using the app config.
+// wiich is necessary for modules that not registered using the app config.
 // To be used in combination of RegisterModules.
 func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 	a.storeKeys = append(a.storeKeys, keys...)
@@ -155,25 +155,8 @@ func (a *App) Load(loadLatest bool) error {
 	return nil
 }
 
-// Close closes all necessary application resources.
-// It implements servertypes.Application.
-func (a *App) Close() error {
-	// the unordered tx manager could be nil (unlikely but possible)
-	// if the app has no app options supplied.
-	if a.UnorderedTxManager != nil {
-		if err := a.UnorderedTxManager.Close(); err != nil {
-			return err
-		}
-	}
-
-	return a.BaseApp.Close()
-}
-
 // PreBlocker application updates every pre block
-func (a *App) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {
-	if a.UnorderedTxManager != nil {
-		a.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
-	}
+func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 	return a.ModuleManager.PreBlock(ctx)
 }
 
@@ -189,25 +172,38 @@ func (a *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 
 // Precommiter application updates every commit
 func (a *App) Precommiter(ctx sdk.Context) {
-	if err := a.ModuleManager.Precommit(ctx); err != nil {
-		panic(err)
-	}
+	a.ModuleManager.Precommit(ctx)
 }
 
 // PrepareCheckStater application updates every commit
 func (a *App) PrepareCheckStater(ctx sdk.Context) {
-	if err := a.ModuleManager.PrepareCheckState(ctx); err != nil {
-		panic(err)
-	}
+	a.ModuleManager.PrepareCheckState(ctx)
 }
 
 // InitChainer initializes the chain.
-func (a *App) InitChainer(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
+func (a *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
-		return nil, err
+		panic(err)
 	}
-	return a.ModuleManager.InitGenesis(ctx, genesisState)
+	return a.ModuleManager.InitGenesis(ctx, a.cdc, genesisState)
+}
+
+// RegisterAPIRoutes registers all application module routes with the provided
+// API server.
+func (a *App) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConfig) {
+	clientCtx := apiSvr.ClientCtx
+	// Register new tx routes from grpc-gateway.
+	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register new CometBFT queries routes from grpc-gateway.
+	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register grpc-gateway routes for all modules.
+	a.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
@@ -215,8 +211,24 @@ func (a *App) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(a.GRPCQueryRouter(), clientCtx, a.Simulate, a.interfaceRegistry)
 }
 
+// RegisterTendermintService implements the Application.RegisterTendermintService method.
+func (a *App) RegisterTendermintService(clientCtx client.Context) {
+	cmtApp := server.NewCometABCIWrapper(a)
+	cmtservice.RegisterTendermintService(
+		clientCtx,
+		a.GRPCQueryRouter(),
+		a.interfaceRegistry,
+		cmtApp.Query,
+	)
+}
+
+// RegisterNodeService registers the node gRPC service on the app gRPC router.
+func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter(), cfg)
+}
+
 // Configurator returns the app's configurator.
-func (a *App) Configurator() module.Configurator { //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+func (a *App) Configurator() module.Configurator {
 	return a.configurator
 }
 
@@ -225,16 +237,9 @@ func (a *App) LoadHeight(height int64) error {
 	return a.LoadVersion(height)
 }
 
-// DefaultGenesis returns a default genesis from the registered AppModule's.
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.ModuleManager.DefaultGenesis()
-}
-
-// SetInitChainer sets the init chainer function
-// It wraps `BaseApp.SetInitChainer` to allow setting a custom init chainer from an app.
-func (a *App) SetInitChainer(initChainer sdk.InitChainer) {
-	a.initChainer = initChainer
-	a.BaseApp.SetInitChainer(initChainer)
+	return a.basicManager.DefaultGenesis(a.cdc)
 }
 
 // GetStoreKeys returns all the stored store keys.
@@ -242,16 +247,11 @@ func (a *App) GetStoreKeys() []storetypes.StoreKey {
 	return a.storeKeys
 }
 
-// GetKey returns the KVStoreKey for the provided store key.
-//
-// NOTE: This should only be used in testing.
-func (a *App) GetKey(storeKey string) *storetypes.KVStoreKey {
-	sk := a.UnsafeFindStoreKey(storeKey)
-	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
-	if !ok {
-		return nil
-	}
-	return kvStoreKey
+// SetInitChainer sets the init chainer function
+// It wraps `BaseApp.SetInitChainer` to allow setting a custom init chainer from an app.
+func (a *App) SetInitChainer(initChainer sdk.InitChainer) {
+	a.initChainer = initChainer
+	a.BaseApp.SetInitChainer(initChainer)
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
@@ -266,9 +266,4 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 	return a.storeKeys[i]
 }
 
-// ValidatorKeyProvider returns a function that generates a private key for use by comet.
-func (a *App) ValidatorKeyProvider() KeyGenF {
-	return func() (cmtcrypto.PrivKey, error) {
-		return cmted25519.GenPrivKey(), nil
-	}
-}
+var _ servertypes.Application = &App{}

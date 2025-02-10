@@ -1,8 +1,6 @@
 package ante
 
 import (
-	"context"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -34,7 +32,7 @@ type RejectExtensionOptionsDecorator struct {
 // options which can optionally be included in protobuf transactions that don't pass the checker.
 // Users that need extension options should pass a custom checker that returns true for the
 // needed extension options.
-func NewExtensionOptionsDecorator(checker ExtensionOptionChecker) RejectExtensionOptionsDecorator {
+func NewExtensionOptionsDecorator(checker ExtensionOptionChecker) sdk.AnteDecorator {
 	if checker == nil {
 		checker = rejectExtensionOption
 	}
@@ -44,17 +42,14 @@ func NewExtensionOptionsDecorator(checker ExtensionOptionChecker) RejectExtensio
 
 var _ sdk.AnteDecorator = RejectExtensionOptionsDecorator{}
 
-func (r RejectExtensionOptionsDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
-	return checkExtOpts(tx, r.checker)
-}
-
 // AnteHandle implements the AnteDecorator.AnteHandle method
-func (r RejectExtensionOptionsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	if err := r.ValidateTx(ctx, tx); err != nil {
+func (r RejectExtensionOptionsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	err = checkExtOpts(tx, r.checker)
+	if err != nil {
 		return ctx, err
 	}
 
-	return next(ctx, tx, false)
+	return next(ctx, tx, simulate)
 }
 
 func checkExtOpts(tx sdk.Tx, checker ExtensionOptionChecker) error {

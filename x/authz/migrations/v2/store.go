@@ -3,13 +3,15 @@ package v2
 import (
 	"context"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/codec"
+	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
-	"cosmossdk.io/x/authz"
-	"cosmossdk.io/x/authz/internal/conv"
+	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // MigrateStore performs in-place store migrations from v0.45 to v0.46. The
@@ -17,8 +19,10 @@ import (
 //
 // - pruning expired authorizations
 // - create secondary index for pruning expired authorizations
-func MigrateStore(ctx context.Context, env appmodule.Environment, cdc codec.BinaryCodec) error {
-	err := addExpiredGrantsIndex(ctx, env, cdc)
+func MigrateStore(ctx context.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec) error {
+	store := storeService.OpenKVStore(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	err := addExpiredGrantsIndex(sdkCtx, runtime.KVStoreAdapter(store), cdc)
 	if err != nil {
 		return err
 	}
@@ -26,15 +30,14 @@ func MigrateStore(ctx context.Context, env appmodule.Environment, cdc codec.Bina
 	return nil
 }
 
-func addExpiredGrantsIndex(ctx context.Context, env appmodule.Environment, cdc codec.BinaryCodec) error {
-	store := runtime.KVStoreAdapter(env.KVStoreService.OpenKVStore(ctx))
+func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	grantsStore := prefix.NewStore(store, GrantPrefix)
 
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()
 
 	queueItems := make(map[string][]string)
-	now := env.HeaderService.HeaderInfo(ctx).Time
+	now := ctx.BlockTime()
 	for ; grantsIter.Valid(); grantsIter.Next() {
 		var grant authz.Grant
 		bz := grantsIter.Value()

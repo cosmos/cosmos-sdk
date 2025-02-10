@@ -24,7 +24,7 @@ Spec version: 0.
 
 ## Abstract
 
-This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targeted at signing with hardware devices.
+This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targetted at signing with hardware devices.
 
 ## Context
 
@@ -72,7 +72,7 @@ or needs to be present only for signature integrity (see below).
 We require that the rendering of the transaction be invertible:
 there must be a parsing function such that for every transaction,
 when rendered to the textual representation,
-parsing that representation yields a proto message equivalent
+parsing that representation yeilds a proto message equivalent
 to the original under proto equality.
 
 Note that this inverse function does not need to perform correct
@@ -145,7 +145,7 @@ type SignDocTextual struct {
 ```
 
 We do not plan to use protobuf serialization to form the sequence of bytes
-that will be transmitted and signed, in order to keep the decoder simple.
+that will be tranmitted and signed, in order to keep the decoder simple.
 We will use [CBOR](https://cbor.io) ([RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html)) instead.
 The encoding is defined by the following CDDL ([RFC 8610](https://www.rfc-editor.org/rfc/rfc8610)):
 
@@ -285,7 +285,7 @@ Moreover, the renderer must provide 2 functions: one for formatting from Protobu
 
 ### Require signing over the `TxBody` and `AuthInfo` raw bytes
 
-Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.tx.v1beta1#cosmos.tx.v1beta1.TxRaw), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
+Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](hhttps://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.tx.v1beta1#cosmos.tx.v1beta1.TxRaw), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
 
 ```
 *Hash of raw bytes: <HEX(sha256(len(body_bytes) ++ body_bytes ++ len(auth_info_bytes) ++ auth_info_bytes))>
@@ -310,7 +310,7 @@ The current specification is not set in stone, and future iterations are to be e
 1. Updates that require changes of the hardware device embedded application.
 2. Updates that only modify the envelope and the value renderers.
 
-Updates in the 1st category include changes of the `Screen` struct or its corresponding CBOR encoding. This type of updates require a modification of the hardware signer application, to be able to decode and parse the new types. Backwards-compatibility must also be guaranteed, so that the new hardware application works with existing versions of the SDK. These updates require the coordination of multiple parties: SDK developers, hardware application developers (currently: Zondax), and client-side developers (e.g. CosmJS). Furthermore, a new submission of the hardware device application may be necessary, which, depending on the vendor, can take some time. As such, we recommend to avoid this type of updates as much as possible.
+Updates in the 1st category include changes of the `Screen` struct or its corresponding CBOR encoding. This type of updates require a modification of the hardware signer application, to be able to decode and parse the new types. Backwards-compatibility must also be guaranteed, so that the new hardware application works with existing versions of the SDK. These updates require the coordination of multiple parties: SDK developers, hardware application developers (currently: Zondax), and client-side developers (e.g. CosmJS). Furthermore, a new submission of the hardware device application may be necessary, which, dependending on the vendor, can take some time. As such, we recommend to avoid this type of updates as much as possible.
 
 Updates in the 2nd category include changes to any of the value renderers or to the transaction envelope. For example, the ordering of fields in the envelope can be swapped, or the timestamp formatting can be modified. Since SIGN_MODE_TEXTUAL sends `Screen`s to the hardware device, this type of change do not need a hardware wallet application update. They are however state-machine-breaking, and must be documented as such. They require the coordination of SDK developers with client-side developers (e.g. CosmJS), so that the updates are released on both sides close to each other in time.
 

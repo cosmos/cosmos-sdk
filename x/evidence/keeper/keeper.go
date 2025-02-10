@@ -8,49 +8,48 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Keeper defines the evidence module's keeper. The keeper is responsible for
 // managing persistence, state transitions and query handling for the evidence
 // module.
 type Keeper struct {
-	appmodule.Environment
+	cdc            codec.BinaryCodec
+	storeService   store.KVStoreService
+	router         types.Router
+	stakingKeeper  types.StakingKeeper
+	slashingKeeper types.SlashingKeeper
+	addressCodec   address.Codec
 
-	cdc                   codec.BinaryCodec
-	router                types.Router
-	stakingKeeper         types.StakingKeeper
-	slashingKeeper        types.SlashingKeeper
-	consensusKeeper       types.ConsensusKeeper
-	addressCodec          address.Codec
-	consensusAddressCodec address.Codec
+	cometInfo comet.BlockInfoService
 
-	Schema collections.Schema
-	// Evidences key: evidence hash bytes | value: Evidence
+	Schema    collections.Schema
 	Evidences collections.Map[[]byte, exported.Evidence]
 }
 
 // NewKeeper creates a new Keeper object.
 func NewKeeper(
-	cdc codec.BinaryCodec, env appmodule.Environment, stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper, ck types.ConsensusKeeper, ac, consensusAddressCodec address.Codec,
+	cdc codec.BinaryCodec, storeService store.KVStoreService, stakingKeeper types.StakingKeeper,
+	slashingKeeper types.SlashingKeeper, ac address.Codec, ci comet.BlockInfoService,
 ) *Keeper {
-	sb := collections.NewSchemaBuilder(env.KVStoreService)
+	sb := collections.NewSchemaBuilder(storeService)
 	k := &Keeper{
-		Environment:           env,
-		cdc:                   cdc,
-		stakingKeeper:         stakingKeeper,
-		slashingKeeper:        slashingKeeper,
-		consensusKeeper:       ck,
-		addressCodec:          ac,
-		consensusAddressCodec: consensusAddressCodec,
-		Evidences:             collections.NewMap(sb, types.KeyPrefixEvidence, "evidences", collections.BytesKey, codec.CollInterfaceValue[exported.Evidence](cdc)),
+		cdc:            cdc,
+		storeService:   storeService,
+		stakingKeeper:  stakingKeeper,
+		slashingKeeper: slashingKeeper,
+		addressCodec:   ac,
+		cometInfo:      ci,
+		Evidences:      collections.NewMap(sb, types.KeyPrefixEvidence, "evidences", collections.BytesKey, codec.CollInterfaceValue[exported.Evidence](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -58,6 +57,12 @@ func NewKeeper(
 	}
 	k.Schema = schema
 	return k
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // SetRouter sets the Evidence Handler router for the x/evidence module. Note,
@@ -105,12 +110,13 @@ func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) 
 		return errors.Wrap(types.ErrInvalidEvidence, err.Error())
 	}
 
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeSubmitEvidence,
-		event.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
-	); err != nil {
-		return err
-	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSubmitEvidence,
+			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
+		),
+	)
 
 	return k.Evidences.Set(ctx, evidence.Hash(), evidence)
 }

@@ -1,7 +1,6 @@
 package collections
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -130,51 +129,39 @@ func (r *Range[K]) RangeValues() (start, end *RangeKey[K], order Order, err erro
 	return r.start, r.end, r.order, nil
 }
 
-// parseRangeInstruction converts a Ranger into start bytes, end bytes and order of a store iteration.
-func parseRangeInstruction[K any](prefix []byte, keyCodec codec.KeyCodec[K], r Ranger[K]) ([]byte, []byte, Order, error) {
+// iteratorFromRanger generates an Iterator instance, with the proper prefixing and ranging.
+// a nil Ranger can be seen as an ascending iteration over all the possible keys.
+func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K]) (iter Iterator[K, V], err error) {
 	var (
 		start *RangeKey[K]
 		end   *RangeKey[K]
 		order = OrderAscending
-		err   error
 	)
 
 	if r != nil {
 		start, end, order, err = r.RangeValues()
 		if err != nil {
-			return nil, nil, 0, err
+			return iter, err
 		}
 	}
 
-	startBytes := prefix
+	startBytes := m.prefix
 	if start != nil {
-		startBytes, err = encodeRangeBound(prefix, keyCodec, start)
+		startBytes, err = encodeRangeBound(m.prefix, m.kc, start)
 		if err != nil {
-			return nil, nil, 0, err
+			return iter, err
 		}
 	}
 	var endBytes []byte
 	if end != nil {
-		endBytes, err = encodeRangeBound(prefix, keyCodec, end)
+		endBytes, err = encodeRangeBound(m.prefix, m.kc, end)
 		if err != nil {
-			return nil, nil, 0, err
+			return iter, err
 		}
 	} else {
-		endBytes = nextBytesPrefixKey(prefix)
+		endBytes = nextBytesPrefixKey(m.prefix)
 	}
-	if bytes.Compare(startBytes, endBytes) == 1 {
-		return nil, nil, 0, ErrInvalidIterator
-	}
-	return startBytes, endBytes, order, nil
-}
 
-// iteratorFromRanger generates an Iterator instance, with the proper prefixing and ranging.
-// a nil Ranger can be seen as an ascending iteration over all the possible keys.
-func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K]) (iter Iterator[K, V], err error) {
-	startBytes, endBytes, order, err := parseRangeInstruction(m.prefix, m.kc, r)
-	if err != nil {
-		return Iterator[K, V]{}, err
-	}
 	return newIterator(ctx, startBytes, endBytes, order, m)
 }
 
@@ -195,6 +182,9 @@ func newIterator[K, V any](ctx context.Context, start, end []byte, order Order, 
 	if err != nil {
 		return Iterator[K, V]{}, err
 	}
+	if !iter.Valid() {
+		return Iterator[K, V]{}, ErrInvalidIterator
+	}
 
 	return Iterator[K, V]{
 		kc:           m.kc,
@@ -204,7 +194,7 @@ func newIterator[K, V any](ctx context.Context, start, end []byte, order Order, 
 	}, nil
 }
 
-// Iterator defines a generic wrapper around a storetypes.Iterator.
+// Iterator defines a generic wrapper around an storetypes.Iterator.
 // This iterator provides automatic key and value encoding,
 // it assumes all the keys and values contained within the storetypes.Iterator
 // range are the same.

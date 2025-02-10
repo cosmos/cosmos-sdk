@@ -24,7 +24,7 @@ func TestInfoTestSuite(t *testing.T) {
 	suite.Run(t, new(InfoTestSuite))
 }
 
-// saveTestFile saves a TestFile in this test's Home/src directory.
+// saveSrcTestFile saves a TestFile in this test's Home/src directory.
 // The full path to the saved file is returned.
 func (s *InfoTestSuite) saveTestFile(f *TestFile) string {
 	fullName, err := f.SaveIn(s.Home)
@@ -47,13 +47,11 @@ func (s *InfoTestSuite) TestParseInfo() {
 	}
 	makeInfoStrFuncString := func(val string) func(t *testing.T) string {
 		return func(t *testing.T) string {
-			t.Helper()
 			return val
 		}
 	}
 	makeInfoStrFuncURL := func(file string) func(t *testing.T) string {
 		return func(t *testing.T) string {
-			t.Helper()
 			return makeFileURL(t, file)
 		}
 	}

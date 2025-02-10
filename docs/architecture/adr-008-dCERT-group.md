@@ -101,7 +101,7 @@ mechanism. If those tokens are unbonded then the dCERT member must be
 automatically kicked from the group.  
 
 Slashing of a particular dCERT member due to soft-contract breach should be
-performed by governance on a per-member basis based on the magnitude of the
+performed by governance on a per member basis based on the magnitude of the
 breach.  The process flow is anticipated to be that a dCERT member is suspended
 by the dCERT group prior to being slashed by governance.  
 
@@ -113,7 +113,7 @@ tokens, then the tokens are no longer staked and unable to be slashed.
 
 Additionally in the case of an emergency situation of a colluding and malicious
 dCERT group, the community needs the capability to disband the entire dCERT
-group and likely fully slash them. This could be achieved through a special new
+group and likely fully slash them. This could be achieved though a special new
 proposal type (implemented as a general governance proposal) which would halt
 the functionality of the dCERT group until the proposal was concluded. This
 special proposal type would likely need to also have a fairly large wager which

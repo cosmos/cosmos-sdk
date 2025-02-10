@@ -3,6 +3,8 @@ package depinject
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/cockroachdb/errors"
 )
 
 // ErrMultipleImplicitInterfaceBindings defines an error condition where an attempt was made to implicitly bind
@@ -61,6 +63,6 @@ func (err ErrNoTypeForExplicitBindingFound) Error() string {
 }
 
 func duplicateDefinitionError(typ reflect.Type, duplicateLoc Location, existingLoc string) error {
-	return fmt.Errorf("duplicate provision of type %v by %s\n\talready provided by %s",
+	return errors.Errorf("duplicate provision of type %v by %s\n\talready provided by %s",
 		typ, duplicateLoc, existingLoc)
 }

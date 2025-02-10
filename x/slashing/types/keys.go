@@ -1,10 +1,11 @@
 package types
 
 import (
-	"cosmossdk.io/collections"
+	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -35,11 +36,6 @@ const (
 	// As for the storage overhead, with the same factor f, it is as follows:
 	// (N - 256) + (N / ChunkSize) * (512 * f)
 	MissedBlockBitmapChunkSize = 1024 // 2^10 bits
-
-	// GovModuleName duplicates the gov module's name to avoid a cyclic dependency with x/gov.
-	// It should be synced with the gov module's name if it is ever changed.
-	// See: https://github.com/cosmos/cosmos-sdk/blob/b62a28aac041829da5ded4aeacfcd7a42873d1c8/x/gov/types/keys.go#L9
-	GovModuleName = "gov"
 )
 
 // Keys for slashing store
@@ -52,13 +48,42 @@ const (
 // - 0x03<accAddrLen (1 Byte)><accAddr_Bytes>: cryptotypes.PubKey
 
 var (
-	ParamsKey                           = collections.NewPrefix(0) // Prefix for params key
-	ValidatorSigningInfoKeyPrefix       = collections.NewPrefix(1) // Prefix for signing info
-	ValidatorMissedBlockBitmapKeyPrefix = collections.NewPrefix(2) // Prefix for missed block bitmap
-	AddrPubkeyRelationKeyPrefix         = collections.NewPrefix(3) // Prefix for address-pubkey relation
+	ParamsKey                           = []byte{0x00} // Prefix for params key
+	ValidatorSigningInfoKeyPrefix       = []byte{0x01} // Prefix for signing info
+	ValidatorMissedBlockBitmapKeyPrefix = []byte{0x02} // Prefix for missed block bitmap
+	AddrPubkeyRelationKeyPrefix         = []byte{0x03} // Prefix for address-pubkey relation
 )
 
 // ValidatorSigningInfoKey - stored by *Consensus* address (not operator address)
 func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorSigningInfoKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
+}
+
+// ValidatorSigningInfoAddress - extract the address from a validator signing info key
+func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
+	// Remove prefix and address length.
+	kv.AssertKeyAtLeastLength(key, 3)
+	addr := key[2:]
+
+	return sdk.ConsAddress(addr)
+}
+
+// ValidatorMissedBlockBitmapPrefixKey returns the key prefix for a validator's
+// missed block bitmap.
+func ValidatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
+	return append(ValidatorMissedBlockBitmapKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
+}
+
+// ValidatorMissedBlockBitmapKey returns the key for a validator's missed block
+// bitmap chunk.
+func ValidatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, uint64(chunkIndex))
+
+	return append(ValidatorMissedBlockBitmapPrefixKey(v), bz...)
+}
+
+// AddrPubkeyRelationKey gets pubkey relation key used to get the pubkey from the address
+func AddrPubkeyRelationKey(addr []byte) []byte {
+	return append(AddrPubkeyRelationKeyPrefix, address.MustLengthPrefix(addr)...)
 }

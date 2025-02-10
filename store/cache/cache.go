@@ -43,7 +43,7 @@ type (
 func NewCommitKVStoreCache(store types.CommitKVStore, size uint) *CommitKVStoreCache {
 	cache, err := lru.NewARC(int(size))
 	if err != nil {
-		panic(fmt.Errorf("failed to create KVStore cache: %w", err))
+		panic(fmt.Errorf("failed to create KVStore cache: %s", err))
 	}
 
 	return &CommitKVStoreCache{
@@ -84,7 +84,9 @@ func (cmgr *CommitKVStoreCacheManager) Reset() {
 	// Clear the map.
 	// Please note that we are purposefully using the map clearing idiom.
 	// See https://github.com/cosmos/cosmos-sdk/issues/6681.
-	clear(cmgr.caches)
+	for key := range cmgr.caches {
+		delete(cmgr.caches, key)
+	}
 }
 
 // CacheWrap implements the CacheWrapper interface

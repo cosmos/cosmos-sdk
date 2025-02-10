@@ -47,7 +47,7 @@ func doRejectUnknownFields(
 	if len(bz) == 0 {
 		return hasUnknownNonCriticals, nil
 	}
-	if recursionLimit <= 0 {
+	if recursionLimit == 0 {
 		return false, errors.New("recursion limit reached")
 	}
 
@@ -95,17 +95,6 @@ func doRejectUnknownFields(
 		// not message or group kind
 		if fieldMessage == nil {
 			continue
-		}
-		// if a message descriptor is a placeholder resolve it using the injected resolver.
-		// this can happen when a descriptor has been registered in the
-		// "google.golang.org/protobuf" registry but not in "github.com/cosmos/gogoproto".
-		// fixes: https://github.com/cosmos/cosmos-sdk/issues/22574
-		if fieldMessage.IsPlaceholder() {
-			gogoDesc, err := resolver.FindDescriptorByName(fieldMessage.FullName())
-			if err != nil {
-				return hasUnknownNonCriticals, fmt.Errorf("could not resolve placeholder descriptor: %v: %w", fieldMessage, err)
-			}
-			fieldMessage = gogoDesc.(protoreflect.MessageDescriptor)
 		}
 
 		// consume length prefix of nested message

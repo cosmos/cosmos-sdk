@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"os"
 
+	"github.com/cockroachdb/errors"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 

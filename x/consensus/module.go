@@ -2,92 +2,75 @@ package consensus
 
 import (
 	"context"
-	"encoding/json"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/collections"
+	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/codec"
-	"cosmossdk.io/core/registry"
-	"cosmossdk.io/schema"
-	"cosmossdk.io/x/consensus/keeper"
-	"cosmossdk.io/x/consensus/types"
+	"cosmossdk.io/core/event"
+	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	"github.com/cosmos/cosmos-sdk/x/consensus/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ConsensusVersion defines the current x/consensus module consensus version.
 const ConsensusVersion = 1
 
 var (
-	_ module.HasAminoCodec  = AppModule{}
-	_ module.HasGRPCGateway = AppModule{}
+	_ module.AppModuleBasic = AppModule{}
 
-	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasGenesis            = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.AppModule   = AppModule{}
+	_ appmodule.HasServices = AppModule{}
 )
 
-// AppModule implements an application module
-type AppModule struct {
-	cdc    codec.Codec
-	keeper keeper.Keeper
+// AppModuleBasic defines the basic application module used by the consensus module.
+type AppModuleBasic struct {
+	cdc codec.Codec
 }
-
-// NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
-	return AppModule{
-		cdc:    cdc,
-		keeper: keeper,
-	}
-}
-
-// InitGenesis performs genesis initialization for the bank module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	return am.keeper.InitGenesis(ctx)
-}
-
-// DefaultGenesis returns the default genesis state. (Noop)
-func (am AppModule) DefaultGenesis() json.RawMessage {
-	return nil
-}
-
-// ValidateGenesis validates the genesis state. (Noop)
-func (am AppModule) ValidateGenesis(data json.RawMessage) error {
-	return nil
-}
-
-// ExportGenesis returns the exported genesis state. (Noop)
-func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	return nil, nil
-}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (AppModule) IsAppModule() {}
 
 // Name returns the consensus module's name.
-// Deprecated: kept for legacy reasons.
-func (AppModule) Name() string { return types.ModuleName }
+func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
-	types.RegisterLegacyAminoCodec(registrar)
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
-func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
-func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	types.RegisterInterfaces(registrar)
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
+
+// AppModule implements an application module
+type AppModule struct {
+	AppModuleBasic
+
+	keeper keeper.Keeper
+}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
@@ -96,11 +79,57 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// ConsensusVersion implements HasConsensusVersion.
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+	}
+}
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// ModuleCodec implements schema.HasModuleCodec.
-// It allows the indexer to decode the module's KVPairUpdate.
-func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
-	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(ProvideModule),
+	)
+}
+
+type ModuleInputs struct {
+	depinject.In
+
+	Config       *modulev1.Module
+	Cdc          codec.Codec
+	StoreService storetypes.KVStoreService
+	EventManager event.Service
+}
+
+type ModuleOutputs struct {
+	depinject.Out
+
+	Keeper        keeper.Keeper
+	Module        appmodule.AppModule
+	BaseAppOption runtime.BaseAppOption
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager)
+	m := NewAppModule(in.Cdc, k)
+	baseappOpt := func(app *baseapp.BaseApp) {
+		app.SetParamStore(k.ParamsStore)
+	}
+
+	return ModuleOutputs{
+		Keeper:        k,
+		Module:        m,
+		BaseAppOption: baseappOpt,
+	}
 }

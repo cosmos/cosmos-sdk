@@ -4,14 +4,12 @@ import (
 	"context"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -34,7 +33,7 @@ func TestRegisterMsgService(t *testing.T) {
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
-	app := appBuilder.Build(coretesting.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB(), nil)
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -66,7 +65,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
-	db := coretesting.NewMemDB()
+	db := dbm.NewMemDB()
 	app := appBuilder.Build(db, nil)
 	testdata.RegisterInterfaces(registry)
 
@@ -99,7 +98,7 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
-	db := coretesting.NewMemDB()
+	db := dbm.NewMemDB()
 	app := appBuilder.Build(db, nil)
 	testdata.RegisterInterfaces(registry)
 
@@ -136,28 +135,28 @@ func TestMsgService(t *testing.T) {
 			depinject.Supply(log.NewNopLogger()),
 		), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)
-	app := appBuilder.Build(coretesting.NewMemDB(), nil)
-	signingCtx := interfaceRegistry.SigningContext()
+	app := appBuilder.Build(dbm.NewMemDB(), nil)
 
 	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
+
+	defaultSignMode, err := authsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
 
 	testdata.RegisterInterfaces(interfaceRegistry)
 	testdata.RegisterMsgServer(
 		app.MsgServiceRouter(),
 		testdata.MsgServerImpl{},
 	)
-	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 
 	_, _, addr := testdata.KeyTestPubAddr()
-	addrStr, err := signingCtx.AddressCodec().BytesToString(addr)
-	require.NoError(t, err)
 	msg := testdata.MsgCreateDog{
 		Dog:   &testdata.Dog{Name: "Spot"},
-		Owner: addrStr,
+		Owner: addr.String(),
 	}
 
 	txBuilder := txConfig.NewTxBuilder()
@@ -171,7 +170,7 @@ func TestMsgService(t *testing.T) {
 	sigV2 := signing.SignatureV2{
 		PubKey: priv.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  txConfig.SignModeHandler().DefaultMode(),
+			SignMode:  defaultSignMode,
 			Signature: nil,
 		},
 		Sequence: 0,
@@ -181,20 +180,14 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 
 	// Second round: all signer infos are set, so each signer can sign.
-	anyPk, err := codectypes.NewAnyWithValue(priv.PubKey())
-	require.NoError(t, err)
-
-	signerData := txsigning.SignerData{
+	signerData := authsigning.SignerData{
 		ChainID:       "test",
 		AccountNumber: 0,
 		Sequence:      0,
-		PubKey: &anypb.Any{
-			TypeUrl: anyPk.TypeUrl,
-			Value:   anyPk.Value,
-		},
+		PubKey:        priv.PubKey(),
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		context.TODO(), txConfig.SignModeHandler().DefaultMode(), signerData,
+		context.TODO(), defaultSignMode, signerData,
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)
@@ -203,7 +196,7 @@ func TestMsgService(t *testing.T) {
 	// Send the tx to the app
 	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.Equal(t, abci.CodeTypeOK, res.TxResults[0].Code, "res=%+v", res)
 }

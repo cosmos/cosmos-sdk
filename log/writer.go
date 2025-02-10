@@ -1,10 +1,9 @@
 package log
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
-
-	"github.com/bytedance/sonic"
 )
 
 // NewFilterWriter returns a writer that filters out all key/value pairs that do not match the filter.
@@ -29,7 +28,7 @@ func (fw *filterWriter) Write(p []byte) (n int, err error) {
 		Module string `json:"module"`
 	}
 
-	if err := sonic.Unmarshal(p, &event); err != nil {
+	if err := json.Unmarshal(p, &event); err != nil {
 		return 0, fmt.Errorf("failed to unmarshal event: %w", err)
 	}
 

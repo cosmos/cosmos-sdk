@@ -1,18 +1,13 @@
 package cmtservice
 
 import (
-	cmtprototypes "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"cosmossdk.io/core/address"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // convertHeader converts CometBFT header to sdk header
-func convertHeader(h cmtprototypes.Header, ac address.Codec) (Header, error) {
-	proposerAddr, err := ac.BytesToString(h.ProposerAddress)
-	if err != nil {
-		return Header{}, err
-	}
-
+func convertHeader(h cmtprototypes.Header) Header {
 	return Header{
 		Version:            h.Version,
 		ChainID:            h.ChainID,
@@ -27,21 +22,18 @@ func convertHeader(h cmtprototypes.Header, ac address.Codec) (Header, error) {
 		EvidenceHash:       h.EvidenceHash,
 		LastResultsHash:    h.LastResultsHash,
 		LastCommitHash:     h.LastCommitHash,
-		ProposerAddress:    proposerAddr,
-	}, nil
+		ProposerAddress:    sdk.ConsAddress(h.ProposerAddress).String(),
+	}
 }
 
 // convertBlock converts CometBFT block to sdk block
-func convertBlock(cmtblock *cmtprototypes.Block, ac address.Codec) (*Block, error) {
+func convertBlock(cmtblock *cmtprototypes.Block) *Block {
 	b := new(Block)
-	var err error
-	b.Header, err = convertHeader(cmtblock.Header, ac)
-	if err != nil {
-		return nil, err
-	}
+
+	b.Header = convertHeader(cmtblock.Header)
 	b.LastCommit = cmtblock.LastCommit
 	b.Data = cmtblock.Data
 	b.Evidence = cmtblock.Evidence
 
-	return b, nil
+	return b
 }

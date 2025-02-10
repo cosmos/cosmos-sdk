@@ -15,7 +15,6 @@ func BenchmarkCoinsAdditionIntersect(b *testing.B) {
 	b.ReportAllocs()
 	benchmarkingFunc := func(numCoinsA, numCoinsB int) func(b *testing.B) {
 		return func(b *testing.B) {
-			b.Helper()
 			b.ReportAllocs()
 			coinsA := Coins(make([]Coin, numCoinsA))
 			coinsB := Coins(make([]Coin, numCoinsB))
@@ -47,7 +46,6 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 	b.ReportAllocs()
 	benchmarkingFunc := func(numCoinsA, numCoinsB int) func(b *testing.B) {
 		return func(b *testing.B) {
-			b.Helper()
 			b.ReportAllocs()
 			coinsA := Coins(make([]Coin, numCoinsA))
 			coinsB := Coins(make([]Coin, numCoinsB))
@@ -82,7 +80,6 @@ func BenchmarkSumOfCoinAdds(b *testing.B) {
 	// already in the sum, and (coinsPerAdd - numIntersectingCoins) that are new denoms.
 	benchmarkingFunc := func(numAdds, coinsPerAdd, numIntersectingCoins int, sumFn func([]Coins) Coins) func(b *testing.B) {
 		return func(b *testing.B) {
-			b.Helper()
 			b.ReportAllocs()
 			addCoins := make([]Coins, numAdds)
 			nonIntersectingCoins := coinsPerAdd - numIntersectingCoins

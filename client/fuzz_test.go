@@ -8,14 +8,15 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type fuzzSuite struct {
 	IntegrationTestSuite
 }
 
-func (fz *fuzzSuite) FuzzQuery(f *testing.F) {
+func (fz *fuzzSuite) FuzzQueryBalance(f *testing.F) {
 	if testing.Short() {
 		f.Skip("In -short mode")
 	}
@@ -26,21 +27,24 @@ func (fz *fuzzSuite) FuzzQuery(f *testing.F) {
 	fz.Require().Equal("hello", testRes.Message)
 
 	// 1. Generate some seeds.
-	bz, err := fz.cdc.Marshal(&types.QueryGetCountRequest{})
+	bz, err := fz.cdc.Marshal(&types.QueryBalanceRequest{
+		Address: fz.genesisAccount.GetAddress().String(),
+		Denom:   sdk.DefaultBondDenom,
+	})
 	fz.Require().NoError(err)
 	f.Add(bz)
 
 	// 2. Now fuzz it and ensure that we don't get any panics.
 	ctx := context.Background()
 	f.Fuzz(func(t *testing.T, in []byte) {
-		qbReq := new(types.QueryGetCountRequest)
+		qbReq := new(types.QueryBalanceRequest)
 		if err := fz.cdc.Unmarshal(in, qbReq); err != nil {
 			return
 		}
 
 		// gRPC query to bank service should work
 		var header metadata.MD
-		_, _ = fz.counterClient.GetCount(
+		_, _ = fz.bankClient.Balance(
 			ctx,
 			qbReq,
 			grpc.Header(&header),
@@ -48,9 +52,9 @@ func (fz *fuzzSuite) FuzzQuery(f *testing.F) {
 	})
 }
 
-func FuzzQuery(f *testing.F) {
+func FuzzQueryBalance(f *testing.F) {
 	fzs := new(fuzzSuite)
 	fzs.SetT(new(testing.T))
 	fzs.SetupSuite()
-	fzs.FuzzQuery(f)
+	fzs.FuzzQueryBalance(f)
 }

@@ -21,6 +21,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
+// ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
+// binary and JSON encoding.
+// Deprecated: Use Codec instead.
+type ProtoCodecMarshaler interface {
+	Codec
+}
+
 // ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON
 // encoding.
 type ProtoCodec struct {
@@ -137,7 +144,7 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Messa
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
 func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) { //nolint:stdmethods // we don't want to implement Marshaler interface
 	if o == nil {
-		return nil, errors.New("cannot protobuf JSON encode nil")
+		return nil, fmt.Errorf("cannot protobuf JSON encode nil")
 	}
 	return ProtoMarshalJSON(o, pc.interfaceRegistry)
 }
@@ -292,7 +299,7 @@ func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
 }
 
-func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, protoreflect.Message, error) {
+func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, proto.Message, error) {
 	msgv2, err := anyutil.Unpack(&anypb.Any{
 		TypeUrl: msg.TypeUrl,
 		Value:   msg.Value,
@@ -302,17 +309,17 @@ func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, protoreflect.Me
 	}
 
 	signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgv2)
-	return signers, msgv2.ProtoReflect(), err
+	return signers, msgv2, err
 }
 
-func (pc *ProtoCodec) GetReflectMsgSigners(msg protoreflect.Message) ([][]byte, error) {
-	return pc.interfaceRegistry.SigningContext().GetSigners(msg.Interface())
+func (pc *ProtoCodec) GetMsgV2Signers(msg proto.Message) ([][]byte, error) {
+	return pc.interfaceRegistry.SigningContext().GetSigners(msg)
 }
 
-func (pc *ProtoCodec) GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error) {
+func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
 	if msgV2, ok := msg.(proto.Message); ok {
 		signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgV2)
-		return signers, msgV2.ProtoReflect(), err
+		return signers, msgV2, err
 	}
 	a, err := types.NewAnyWithValue(msg)
 	if err != nil {

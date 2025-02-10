@@ -4,7 +4,6 @@
 
 * 26 November 2019: Start of first version
 * 2 December 2019: Final draft of first version
-* 7 September 2023: Reduce HistoricalInfo type
 
 ## Context
 
@@ -17,11 +16,10 @@ The application MUST store the most recent `n` headers in a persistent store. At
 The application MUST store this information by storing new headers immediately when handling `abci.RequestBeginBlock`:
 
 ```go
-func BeginBlock(ctx sdk.Context, keeper HistoricalHeaderKeeper) error {
+func BeginBlock(ctx sdk.Context, keeper HistoricalHeaderKeeper, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
   info := HistoricalInfo{
-    apphash: ctx.HeaderInfo().AppHash,
-    Time: ctx.HeaderInfo().Time,
-    NextValidatorsHash: ctx.CometInfo().NextValidatorsHash,
+    Header: ctx.BlockHeader(),
+    ValSet: keeper.StakingKeeper.GetAllValidators(ctx), // note that this must be stored in a canonical order
   }
   keeper.SetHistoricalInfo(ctx, ctx.BlockHeight(), info)
   n := keeper.GetParamRecentHeadersToStore()

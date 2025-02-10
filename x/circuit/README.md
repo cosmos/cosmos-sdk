@@ -4,8 +4,6 @@
 
 Circuit Breaker is a module that is meant to avoid a chain needing to halt/shut down in the presence of a vulnerability, instead the module will allow specific messages or all messages to be disabled. When operating a chain, if it is app specific then a halt of the chain is less detrimental, but if there are applications built on top of the chain then halting is expensive due to the disturbance to applications. 
 
-## How it works
-
 Circuit Breaker works with the idea that an address or set of addresses have the right to block messages from being executed and/or included in the mempool. Any address with a permission is able to reset the circuit breaker for the message. 
 
 The transactions are checked and can be rejected at two points:
@@ -19,7 +17,7 @@ https://github.com/cosmos/cosmos-sdk/blob/x/circuit/v0.1.0/x/circuit/ante/circui
 * With a [message router check](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router):
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/baseapp/msg_service_router.go#L123-L133
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/baseapp/msg_service_router.go#L104-L115
 ``` 
 
 :::note
@@ -59,6 +57,7 @@ type Access struct {
 }
 ```
 
+
 ### Disable List
 
 List of type urls that are disabled.
@@ -79,7 +78,7 @@ Authorize, is called by the module authority (default governance module account)
 
 ### Trip
 
-Trip, is called by an authorized account to disable message execution for a specific msgURL. If empty, depending on the permission level of the sender, the corresponding messages will be disabled. For example: if the sender permission level is `LEVEL_SOME_MSGS` then all messages that sender has permission will be disabled. If the sender is `LEVEL_SUPER_ADMIN` or `LEVEL_ALL_MSGS` then all msgs will be disabled.
+Trip, is called by an authorized account to disable message execution for a specific msgURL. If empty, all the msgs will be disabled.
 
 ```protobuf
   // TripCircuitBreaker pauses processing of Msg's in the state machine.
@@ -88,11 +87,11 @@ Trip, is called by an authorized account to disable message execution for a spec
 
 ### Reset
 
-Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, depending on the permission level of the sender, the corresponding disabled messages will be re-enabled. For example: if the sender permission level is `LEVEL_SOME_MSGS` all messages that sender has permission will be re-enabled. If the sender is `LEVEL_SUPER_ADMIN` or `LEVEL_ALL_MSGS` then all messages will be re-enabled.
+Reset is called by an authorized account to enable execution for a specific msgURL of previously disabled message. If empty, all the disabled messages will be enabled.
 
 ```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that
-  // have been paused using TripCircuitBreaker.
+  // have been been paused using TripCircuitBreaker.
   rpc ResetCircuitBreaker(MsgResetCircuitBreaker) returns (MsgResetCircuitBreakerResponse);
 ```
 
@@ -101,7 +100,7 @@ Reset is called by an authorized account to enable execution for a specific msgU
 ### MsgAuthorizeCircuitBreaker
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/circuit/proto/cosmos/circuit/v1/tx.proto#L25-L40
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L25-L75
 ```
 
 This message is expected to fail if:
@@ -111,7 +110,7 @@ This message is expected to fail if:
 ### MsgTripCircuitBreaker
 
 ```protobuf reference 
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/circuit/proto/cosmos/circuit/v1/tx.proto#L47-L60
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L77-L93
 ```
 
 This message is expected to fail if:
@@ -121,14 +120,14 @@ This message is expected to fail if:
 ### MsgResetCircuitBreaker
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/circuit/proto/cosmos/circuit/v1/tx.proto#L67-L78
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L95-109
 ```
 
 This message is expected to fail if:
 
 * if the type url is not disabled
 
-## Events
+## Events - list and describe event tags 
 
 The circuit module emits the following events:
 
@@ -163,41 +162,9 @@ The circuit module emits the following events:
 | message  | action        | reset_circuit_breaker |
 
 
-## Keys
+## Keys - list of key prefixes used by the circuit module
 
 * `AccountPermissionPrefix` - `0x01`
 * `DisableListPrefix` -  `0x02`
 
-## Client
-
-### CLI
-
-`x/circuit` module client provides the following CLI commands:
-
-```shell
-$ <appd> tx circuit
-Transactions commands for the circuit module
-
-Usage:
-  simd tx circuit [flags]
-  simd tx circuit [command]
-
-Available Commands:
-  authorize   Authorize an account to trip the circuit breaker.
-  disable     Disable a message from being executed
-  reset       Enable a message to be executed
-```
-
-```shell
-$ <appd> query circuit
-Querying commands for the circuit module
-
-Usage:
-  simd query circuit [flags]
-  simd query circuit [command]
-
-Available Commands:
-  account       Query a specific account's permissions
-  accounts      Query all account permissions
-  disabled-list Query a list of all disabled message types
-```
+## Client - list and describe CLI commands and gRPC and REST endpoints

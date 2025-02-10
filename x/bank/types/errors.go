@@ -12,5 +12,4 @@ var (
 	ErrInvalidKey            = errors.Register(ModuleName, 7, "invalid key")
 	ErrDuplicateEntry        = errors.Register(ModuleName, 8, "duplicate entry")
 	ErrMultipleSenders       = errors.Register(ModuleName, 9, "multiple senders not allowed")
-	ErrInvalidSigner         = errors.Register(ModuleName, 10, "expected authority account as only signer for proposal message")
 )

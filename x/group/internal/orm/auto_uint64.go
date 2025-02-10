@@ -3,10 +3,10 @@ package orm
 import (
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/codec"
-	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (
@@ -21,8 +21,8 @@ type AutoUInt64Table struct {
 }
 
 // NewAutoUInt64Table creates a new AutoUInt64Table.
-func NewAutoUInt64Table(prefixData [2]byte, prefixSeq byte, model proto.Message, cdc codec.Codec, addressCodec address.Codec) (*AutoUInt64Table, error) {
-	table, err := newTable(prefixData, model, cdc, addressCodec)
+func NewAutoUInt64Table(prefixData [2]byte, prefixSeq byte, model proto.Message, cdc codec.Codec) (*AutoUInt64Table, error) {
+	table, err := newTable(prefixData, model, cdc)
 	if err != nil {
 		return nil, err
 	}

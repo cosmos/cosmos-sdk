@@ -1,14 +1,12 @@
 package baseapp
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"io"
 	"math"
 
-	"cosmossdk.io/core/server"
-	corestore "cosmossdk.io/core/store"
+	dbm "github.com/cosmos/cosmos-db"
+
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
@@ -86,11 +84,6 @@ func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
 }
 
-// SetIAVLSyncPruning set sync/async pruning in the IAVL store.
-func SetIAVLSyncPruning(syncPruning bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLSyncPruning(syncPruning) }
-}
-
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache storetypes.MultiStorePersistentCache) func(*BaseApp) {
@@ -124,17 +117,9 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
-// SetIncludeNestedMsgsGas sets the message types for which gas costs for its nested messages are calculated when simulating.
-func SetIncludeNestedMsgsGas(msgs []sdk.Msg) func(*BaseApp) {
-	return func(app *BaseApp) {
-		app.includeNestedMsgsGas = make(map[string]struct{})
-		for _, msg := range msgs {
-			if _, ok := msg.(HasNestedMsgs); !ok {
-				continue
-			}
-			app.includeNestedMsgsGas[sdk.MsgTypeURL(msg)] = struct{}{}
-		}
-	}
+// DisableBlockGasMeter disables the block gas meter.
+func DisableBlockGasMeter() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -162,17 +147,12 @@ func (app *BaseApp) SetVersion(v string) {
 	app.version = v
 }
 
-// SetAppVersion sets the application's version this is used as part of the
-// header in blocks and is returned to the consensus engine in EndBlock.
-func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
-	if app.versionModifier == nil {
-		return errors.New("version modifier must be set to set app version")
-	}
-
-	return app.versionModifier.SetAppVersion(ctx, v)
+// SetProtocolVersion sets the application's protocol version
+func (app *BaseApp) SetProtocolVersion(v uint64) {
+	app.appVersion = v
 }
 
-func (app *BaseApp) SetDB(db corestore.KVStoreWithBatch) {
+func (app *BaseApp) SetDB(db dbm.DB) {
 	if app.sealed {
 		panic("SetDB() on sealed BaseApp")
 	}
@@ -280,7 +260,7 @@ func (app *BaseApp) SetFauxMerkleMode() {
 	app.fauxMerkleMode = true
 }
 
-// SetNotSigverifyTx during simulation testing, transaction signature verification needs to be ignored.
+// SetNotSigverify during simulation testing, transaction signature verification needs to be ignored.
 func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
@@ -331,15 +311,6 @@ func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 	app.txEncoder = txEncoder
 }
 
-// SetVersionModifier sets the version modifier for the BaseApp that allows to set the app version.
-func (app *BaseApp) SetVersionModifier(versionModifier server.VersionModifier) {
-	if app.sealed {
-		panic("SetVersionModifier() on sealed BaseApp")
-	}
-
-	app.versionModifier = versionModifier
-}
-
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
@@ -372,15 +343,6 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 	app.prepareProposal = handler
 }
 
-// SetCheckTxHandler sets the checkTx function for the BaseApp.
-func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
-	if app.sealed {
-		panic("SetCheckTx() on sealed BaseApp")
-	}
-
-	app.checkTxHandler = handler
-}
-
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
 	if app.sealed {
 		panic("SetExtendVoteHandler() on sealed BaseApp")
@@ -409,6 +371,11 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 // SetStreamingManager sets the streaming manager for the BaseApp.
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 	app.streamingManager = manager
+}
+
+// SetDisableBlockGasMeter sets the disableBlockGasMeter flag for the BaseApp.
+func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
+	app.disableBlockGasMeter = disableBlockGasMeter
 }
 
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.

@@ -10,7 +10,7 @@ This idea was first conceived of in order to fulfill the use case of the
 creation of a decentralized Computer Emergency Response Team (dCERT), whose
 members would be elected by a governing community and would fulfill the role of
 coordinating the community under emergency situations. This thinking
-can be further abstracted into the concept of "blockchain specialization
+can be further abstracted into the conception of "blockchain specialization
 groups".
 
 The creation of these groups are the beginning of specialization capabilities
@@ -44,14 +44,14 @@ A specialization group can be broadly broken down into the following functions
     * Individual compensation for all constituents of a group from the
      greater community
 
-Membership admission to a specialization group could take place over a wide
+Membership admittance to a specialization group could take place over a wide
 variety of mechanisms. The most obvious example is through a general vote among
 the entire community, however in certain systems a community may want to allow
 the members already in a specialization group to internally elect new members,
 or maybe the community may assign a permission to a particular specialization
 group to appoint members to other 3rd party groups. The sky is really the limit
 as to how membership admittance can be structured. We attempt to capture
-some of these possibilities in a common interface dubbed the `Electionator`. For
+some of these possiblities in a common interface dubbed the `Electionator`. For
 its initial implementation as a part of this ADR we recommend that the general
 election abstraction (`Electionator`) is provided as well as a basic
 implementation of that abstraction which allows for a continuous election of

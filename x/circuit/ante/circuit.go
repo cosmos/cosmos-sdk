@@ -2,9 +2,8 @@ package ante
 
 import (
 	"context"
-	"errors"
 
-	"cosmossdk.io/core/transaction"
+	"github.com/cockroachdb/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -30,29 +29,17 @@ func NewCircuitBreakerDecorator(ck CircuitBreaker) CircuitBreakerDecorator {
 // - or error early if a nested authz grant is found.
 // The circuit AnteHandler handles this with baseapp's service router: https://github.com/cosmos/cosmos-sdk/issues/18632.
 func (cbd CircuitBreakerDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	if err := cbd.ValidateTx(ctx, tx); err != nil {
-		return ctx, err
-	}
-
-	return next(ctx, tx, simulate)
-}
-
-func (cbd CircuitBreakerDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
 	// loop through all the messages and check if the message type is allowed
-	msgs, err := tx.GetMessages()
-	if err != nil {
-		return err
-	}
-
-	for _, msg := range msgs {
+	for _, msg := range tx.GetMsgs() {
 		isAllowed, err := cbd.circuitKeeper.IsAllowed(ctx, sdk.MsgTypeURL(msg))
 		if err != nil {
-			return err
+			return ctx, err
 		}
 
 		if !isAllowed {
-			return errors.New("tx type not allowed")
+			return ctx, errors.New("tx type not allowed")
 		}
 	}
-	return nil
+
+	return next(ctx, tx, simulate)
 }

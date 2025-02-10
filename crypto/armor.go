@@ -3,7 +3,6 @@ package crypto
 import (
 	"bytes"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 
@@ -62,7 +61,7 @@ var BcryptSecurityParameter uint32 = 12
 //-----------------------------------------------------------------
 // add armor
 
-// ArmorInfoBytes armor the InfoBytes
+// Armor the InfoBytes
 func ArmorInfoBytes(bz []byte) string {
 	header := map[string]string{
 		headerType:    "Info",
@@ -72,7 +71,7 @@ func ArmorInfoBytes(bz []byte) string {
 	return EncodeArmor(blockTypeKeyInfo, header, bz)
 }
 
-// ArmorPubKeyBytes armor the PubKeyBytes
+// Armor the PubKeyBytes
 func ArmorPubKeyBytes(bz []byte, algo string) string {
 	header := map[string]string{
 		headerVersion: "0.0.1",
@@ -87,7 +86,7 @@ func ArmorPubKeyBytes(bz []byte, algo string) string {
 //-----------------------------------------------------------------
 // remove armor
 
-// UnarmorInfoBytes unarmor the InfoBytes
+// Unarmor the InfoBytes
 func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypeKeyInfo)
 	if err != nil {
@@ -105,7 +104,7 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	if err != nil {
-		return nil, "", fmt.Errorf("couldn't unarmor bytes: %w", err)
+		return nil, "", fmt.Errorf("couldn't unarmor bytes: %v", err)
 	}
 
 	switch header[headerVersion] {
@@ -118,7 +117,7 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 
 		return bz, header[headerType], err
 	case "":
-		return nil, "", errors.New("header's version field is empty")
+		return nil, "", fmt.Errorf("header's version field is empty")
 	default:
 		err = fmt.Errorf("unrecognized version: %v", header[headerVersion])
 		return nil, "", err
@@ -142,7 +141,7 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 //-----------------------------------------------------------------
 // encrypt/decrypt with armor
 
-// EncryptArmorPrivKey encrypt and armor the private key.
+// Encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
@@ -193,12 +192,12 @@ func UnarmorDecryptPrivKey(armorStr, passphrase string) (privKey cryptotypes.Pri
 	}
 
 	if header["salt"] == "" {
-		return privKey, "", errors.New("missing salt bytes")
+		return privKey, "", fmt.Errorf("missing salt bytes")
 	}
 
 	saltBytes, err := hex.DecodeString(header["salt"])
 	if err != nil {
-		return privKey, "", fmt.Errorf("error decoding salt: %w", err)
+		return privKey, "", fmt.Errorf("error decoding salt: %v", err.Error())
 	}
 
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase, header[kdfHeader])
@@ -241,7 +240,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 
-		if errors.Is(err, xsalsa20symmetric.ErrCiphertextDecrypt) {
+		if err == xsalsa20symmetric.ErrCiphertextDecrypt {
 			return privKey, sdkerrors.ErrWrongPassword
 		}
 	default:
@@ -262,15 +261,15 @@ func EncodeArmor(blockType string, headers map[string]string, data []byte) strin
 	buf := new(bytes.Buffer)
 	w, err := armor.Encode(buf, blockType, headers)
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %w", err))
+		panic(fmt.Errorf("could not encode ascii armor: %s", err))
 	}
 	_, err = w.Write(data)
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %w", err))
+		panic(fmt.Errorf("could not encode ascii armor: %s", err))
 	}
 	err = w.Close()
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %w", err))
+		panic(fmt.Errorf("could not encode ascii armor: %s", err))
 	}
 	return buf.String()
 }

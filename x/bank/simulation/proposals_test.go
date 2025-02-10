@@ -1,27 +1,25 @@
 package simulation_test
 
 import (
-	"context"
 	"math/rand"
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/x/bank/simulation"
-	"cosmossdk.io/x/bank/types"
-
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestProposalMsgs(t *testing.T) {
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-
 	// initialize parameters
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalMsgs function
@@ -34,14 +32,11 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgUpdateParams, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgUpdateParams, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(context.Background(), r, accounts, ac)
-	assert.NilError(t, err)
+	msg := w0.MsgSimulatorFn()(r, ctx, accounts)
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)
 
-	authority, err := ac.BytesToString(address.Module(types.GovModuleName))
-	assert.NilError(t, err)
-	assert.Equal(t, authority, msgUpdateParams.Authority)
-	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0) //nolint:staticcheck // we're testing the old way here
+	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
+	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0) //nolint:staticcheck // we're testing deprecated code here
 	assert.Equal(t, true, msgUpdateParams.Params.DefaultSendEnabled)
 }

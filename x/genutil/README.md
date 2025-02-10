@@ -12,7 +12,6 @@ The `genutil` package contains a variety of genesis utility functionalities for 
 * Genesis file migration
 * CometBFT related initialization
     * Translation of an app genesis to a CometBFT genesis
-* Application state export into a genesis file
 
 ## Genesis
 
@@ -88,18 +87,3 @@ simd genesis validate-genesis
 :::warning
 Validate genesis only validates if the genesis is valid at the **current application binary**. For validating a genesis from a previous version of the application, use the `migrate` command to migrate the genesis to the current version.
 :::
-
-#### export
-
-Export state to genesis file.
-
-```shell
-simd genesis export
-```
-
-Some flags are available to customize the export:
-
-* `--for-zero-height`: export the genesis file for a chain with zero height
-* `--height [height]`: export the genesis file for a chain with a given height
-
-Read the help for more information.

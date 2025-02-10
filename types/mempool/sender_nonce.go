@@ -4,7 +4,7 @@ import (
 	"context"
 	crand "crypto/rand" // #nosec // crypto/rand is used for seed generation
 	"encoding/binary"
-	"errors"
+	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
 	"sync"
 
@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_ Mempool  = (*SenderNonceMempool)(nil)
-	_ Iterator = (*senderNonceMempoolIterator)(nil)
+	_ ExtMempool = (*SenderNonceMempool)(nil)
+	_ Iterator   = (*senderNonceMempoolIterator)(nil)
 )
 
 var DefaultMaxTx = -1
@@ -132,21 +132,12 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 		return err
 	}
 	if len(sigs) == 0 {
-		return errors.New("tx must have at least one signer")
+		return fmt.Errorf("tx must have at least one signer")
 	}
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
-
-	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		timestamp := unordered.GetTimeoutTimeStamp().Unix()
-		if timestamp < 0 {
-			return errors.New("invalid timestamp value")
-		}
-		nonce = uint64(timestamp)
-	}
 
 	senderTxs, found := snm.senders[sender]
 	if !found {
@@ -167,13 +158,13 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 //
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
-func (snm *SenderNonceMempool) Select(ctx context.Context, txs []sdk.Tx) Iterator {
+func (snm *SenderNonceMempool) Select(ctx context.Context, txs [][]byte) Iterator {
 	snm.mtx.Lock()
 	defer snm.mtx.Unlock()
 	return snm.doSelect(ctx, txs)
 }
 
-func (snm *SenderNonceMempool) doSelect(_ context.Context, _ []sdk.Tx) Iterator {
+func (snm *SenderNonceMempool) doSelect(_ context.Context, _ [][]byte) Iterator {
 	var senders []string
 
 	senderCursors := make(map[string]*skiplist.Element)
@@ -202,7 +193,7 @@ func (snm *SenderNonceMempool) doSelect(_ context.Context, _ []sdk.Tx) Iterator 
 }
 
 // SelectBy will hold the mutex during the iteration, callback returns if continue.
-func (snm *SenderNonceMempool) SelectBy(ctx context.Context, txs []sdk.Tx, callback func(sdk.Tx) bool) {
+func (snm *SenderNonceMempool) SelectBy(ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
 	snm.mtx.Lock()
 	defer snm.mtx.Unlock()
 
@@ -229,21 +220,12 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 		return err
 	}
 	if len(sigs) == 0 {
-		return errors.New("tx must have at least one signer")
+		return fmt.Errorf("tx must have at least one signer")
 	}
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
-
-	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		timestamp := unordered.GetTimeoutTimeStamp().Unix()
-		if timestamp < 0 {
-			return errors.New("invalid timestamp value")
-		}
-		nonce = uint64(timestamp)
-	}
 
 	senderTxs, found := snm.senders[sender]
 	if !found {

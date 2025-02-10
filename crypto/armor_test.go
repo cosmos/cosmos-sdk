@@ -25,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
-	_ "github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -43,7 +43,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	// empty string
 	decrypted, algo, err = crypto.UnarmorDecryptPrivKey("", "passphrase")
 	require.Error(t, err)
-	require.True(t, errors.Is(err, io.EOF))
+	require.True(t, errors.Is(io.EOF, err))
 	require.Nil(t, decrypted)
 	require.Empty(t, algo)
 
@@ -84,8 +84,8 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 		configurator.NewAppConfig(),
 		depinject.Supply(log.NewNopLogger(),
 			func() address.Codec { return addresscodec.NewBech32Codec("cosmos") },
-			func() address.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
-			func() address.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
+			func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
+			func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
 		),
 	), &cdc)
 	require.NoError(t, err)
@@ -165,7 +165,7 @@ func TestArmorInfoBytes(t *testing.T) {
 func TestUnarmorInfoBytesErrors(t *testing.T) {
 	unarmoredBytes, err := crypto.UnarmorInfoBytes("")
 	require.Error(t, err)
-	require.True(t, errors.Is(err, io.EOF))
+	require.True(t, errors.Is(io.EOF, err))
 	require.Nil(t, unarmoredBytes)
 
 	header := map[string]string{

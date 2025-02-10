@@ -83,6 +83,7 @@ func BenchmarkLoggers(b *testing.B) {
 	// so that real write time is negligible.
 	b.Run("zerolog", func(b *testing.B) {
 		for _, bc := range benchCases {
+			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
 				zl := zerolog.New(io.Discard)
 				logger := log.NewCustomLogger(zl)
@@ -98,6 +99,7 @@ func BenchmarkLoggers(b *testing.B) {
 	// also useful as a reference for how expensive zerolog is.
 	b.Run("specialized nop logger", func(b *testing.B) {
 		for _, bc := range nopCases {
+			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
 				logger := log.NewNopLogger()
 
@@ -113,6 +115,7 @@ func BenchmarkLoggers(b *testing.B) {
 	// so we offer the specialized version in the exported API.
 	b.Run("zerolog nop logger", func(b *testing.B) {
 		for _, bc := range nopCases {
+			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
 				logger := log.NewCustomLogger(zerolog.Nop())
 

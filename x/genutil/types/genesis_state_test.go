@@ -8,17 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/staking"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -39,22 +38,17 @@ func TestNetGenesisState(t *testing.T) {
 }
 
 func TestValidateGenesisMultipleMessages(t *testing.T) {
-	desc := stakingtypes.NewDescription("testname", "", "", "", "", &stakingtypes.Metadata{})
+	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 	comm := stakingtypes.CommissionRates{}
-	valAc := codectestutil.CodecOptions{}.GetValidatorCodec()
 
-	pk1Addr, err := valAc.BytesToString(pk1.Address())
-	require.NoError(t, err)
-	msg1, err := stakingtypes.NewMsgCreateValidator(pk1Addr, pk1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
+	msg1, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()).String(), pk1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
 	require.NoError(t, err)
 
-	pk2Addr, err := valAc.BytesToString(pk2.Address())
-	require.NoError(t, err)
-	msg2, err := stakingtypes.NewMsgCreateValidator(pk2Addr, pk2,
+	msg2, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()).String(), pk2,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
 	require.NoError(t, err)
 
-	txConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, staking.AppModule{}, genutil.AppModule{}).TxConfig
+	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, genutil.AppModuleBasic{}).TxConfig
 	txBuilder := txConfig.NewTxBuilder()
 	require.NoError(t, txBuilder.SetMsgs(msg1, msg2))
 
@@ -66,14 +60,13 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 }
 
 func TestValidateGenesisBadMessage(t *testing.T) {
-	desc := stakingtypes.NewDescription("testname", "", "", "", "", &stakingtypes.Metadata{})
-	pk1Addr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(pk1.Address())
-	require.NoError(t, err)
-	msg1 := stakingtypes.NewMsgEditValidator(pk1Addr, desc, nil, nil)
+	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 
-	txConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, staking.AppModule{}, genutil.AppModule{}).TxConfig
+	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()).String(), desc, nil, nil)
+
+	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, genutil.AppModuleBasic{}).TxConfig
 	txBuilder := txConfig.NewTxBuilder()
-	err = txBuilder.SetMsgs(msg1)
+	err := txBuilder.SetMsgs(msg1)
 	require.NoError(t, err)
 
 	tx := txBuilder.GetTx()

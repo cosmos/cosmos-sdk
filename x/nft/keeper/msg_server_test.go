@@ -41,8 +41,7 @@ func (s *TestSuite) TestSend() {
 			Nfts:  []*nft.NFT{&ExpNFT},
 		}},
 	}
-	genesis, err := s.nftKeeper.ExportGenesis(s.ctx)
-	s.Require().NoError(err)
+	genesis := s.nftKeeper.ExportGenesis(s.ctx)
 	s.Require().Equal(expGenesis, genesis)
 
 	testCases := []struct {

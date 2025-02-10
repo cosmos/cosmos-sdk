@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -20,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	_ "github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -100,7 +99,7 @@ func TestVerifyMultisignature(t *testing.T) {
 		sig *signing.MultiSignatureData
 	)
 	msg := []byte{1, 2, 3, 4}
-	signBytesFn := func(mode apisigning.SignMode) ([]byte, error) { return msg, nil }
+	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
 	testCases := []struct {
 		msg        string
@@ -133,7 +132,7 @@ func TestVerifyMultisignature(t *testing.T) {
 				pubKeys, sigs := generatePubKeysAndSignatures(8, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(k, pubKeys)
 				sig = multisig.NewMultisig(len(pubKeys))
-				signBytesFn := func(mode apisigning.SignMode) ([]byte, error) { return msg, nil }
+				signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
 				for i := 0; i < k-1; i++ {
 					signingIndex := signingIndices[i]
@@ -261,11 +260,11 @@ func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
 
 func TestMultiSigMigration(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
-	pkSet, sigs := generatePubKeysAndSignatures(3, msg)
-	multisignature := multisig.NewMultisig(3)
+	pkSet, sigs := generatePubKeysAndSignatures(2, msg)
+	multisignature := multisig.NewMultisig(2)
 
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
-	signBytesFn := func(mode apisigning.SignMode) ([]byte, error) { return msg, nil }
+	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
 	cdc := codec.NewLegacyAmino()
 
@@ -319,22 +318,6 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubK
 	return
 }
 
-// generateNestedMultiSignature creates a nested multisig structure for testing purposes.
-// It generates a top-level multisig with 'n' sub-multisigs, where each sub-multisig contains
-// 5 individual signatures.
-//
-// Parameters:
-// - n: number of nested multisigs to generate (determines the size of the top-level multisig)
-// - msg: the message to be signed
-//
-// Returns:
-// - multisig.PubKey: the top-level multisig public key containing n sub-multisig public keys
-// - *signing.MultiSignatureData: the corresponding signature data structure containing n sub-multisig signatures
-//
-// Each sub-multisig is configured with:
-// - threshold of 5 (requires all 4 signatures)
-// - 5 individual secp256k1 public keys and their corresponding signatures
-// All signature bits are set to true to simulate a fully signed multisig.
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
 	pubKeys := make([]cryptotypes.PubKey, n)
 	signatures := make([]signing.SignatureData, n)
@@ -350,10 +333,10 @@ func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.
 			Signatures: nestedSigs,
 		}
 		signatures[i] = nestedSig
-		pubKeys[i] = kmultisig.NewLegacyAminoPubKey(4, nestedPks)
+		pubKeys[i] = kmultisig.NewLegacyAminoPubKey(5, nestedPks)
 		bitArray.SetIndex(i, true)
 	}
-	return kmultisig.NewLegacyAminoPubKey(n-1, pubKeys), &signing.MultiSignatureData{
+	return kmultisig.NewLegacyAminoPubKey(n, pubKeys), &signing.MultiSignatureData{
 		BitArray:   bitArray,
 		Signatures: signatures,
 	}
@@ -380,8 +363,8 @@ func TestDisplay(t *testing.T) {
 			configurator.NewAppConfig(),
 			depinject.Supply(log.NewNopLogger(),
 				func() address.Codec { return addresscodec.NewBech32Codec("cosmos") },
-				func() address.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
-				func() address.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
+				func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
+				func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
 			),
 		), &cdc)
 	require.NoError(err)
@@ -468,97 +451,5 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 		pk := secp256k1.PubKey{}
 		err := pk.Unmarshal(key.Value)
 		require.NoError(t, err)
-	}
-}
-
-func TestVerifyMultisignatureNMRule(t *testing.T) {
-	makeTestKeysAndSignatures := func(n int, msg []byte) ([]cryptotypes.PubKey, []signing.SignatureData) {
-		pubKeys := make([]cryptotypes.PubKey, n)
-		sigs := make([]signing.SignatureData, n)
-
-		for i := 0; i < n; i++ {
-			// Generate private key and get its public key
-			privKey := secp256k1.GenPrivKey()
-			pubKeys[i] = privKey.PubKey()
-
-			// Create real signature
-			sig, err := privKey.Sign(msg)
-			require.NoError(t, err)
-			sigs[i] = &signing.SingleSignatureData{
-				Signature: sig,
-			}
-		}
-		return pubKeys, sigs
-	}
-
-	tests := []struct {
-		name      string
-		n         int    // number of keys
-		m         uint32 // threshold
-		expectErr string
-	}{
-		{
-			name:      "valid case: N=3 M=2",
-			n:         3,
-			m:         2,
-			expectErr: "",
-		},
-		{
-			name:      "invalid: M=0",
-			n:         3,
-			m:         0,
-			expectErr: "invalid threshold: must be > 0, got 0",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			msg := []byte("test message")
-			pubKeys, sigs := makeTestKeysAndSignatures(tc.n, msg)
-
-			// Create the key directly instead of using NewLegacyAminoPubKey
-			pubKeysAny := make([]*types.Any, len(pubKeys))
-			for i, key := range pubKeys {
-				anyKey, err := types.NewAnyWithValue(key)
-				require.NoError(t, err)
-				pubKeysAny[i] = anyKey
-			}
-
-			multisigKey := &kmultisig.LegacyAminoPubKey{
-				Threshold: tc.m,
-				PubKeys:   pubKeysAny,
-			}
-
-			// Create a dummy signature with a proper bit array
-			bitArray := cryptotypes.NewCompactBitArray(tc.n)
-			// Set the first M bits to simulate M signatures
-			for i := 0; i < int(tc.m) && i < tc.n; i++ {
-				bitArray.SetIndex(i, true)
-			}
-
-			multiSig := &signing.MultiSignatureData{
-				BitArray:   bitArray,
-				Signatures: make([]signing.SignatureData, 0, tc.m),
-			}
-
-			// Fill in dummy signatures
-			for i := 0; i < int(tc.m) && i < tc.n; i++ {
-				multiSig.Signatures = append(multiSig.Signatures, sigs[i])
-			}
-
-			// Create getSignBytes function that returns our test message
-			getSignBytes := func(mode apisigning.SignMode) ([]byte, error) {
-				return msg, nil
-			}
-
-			err := multisigKey.VerifyMultisignature(getSignBytes, multiSig)
-
-			if tc.expectErr == "" {
-				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.expectErr)
-			}
-		})
 	}
 }

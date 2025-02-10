@@ -6,15 +6,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var coinPos = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
@@ -35,10 +34,9 @@ func TestMsgDecode(t *testing.T) {
 	require.True(t, pk1.Equals(pkUnmarshaled.(*ed25519.PubKey)))
 
 	// now let's try to serialize the whole message
-	vAddr1, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr1)
-	require.NoError(t, err)
+
 	commission1 := types.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
-	msg, err := types.NewMsgCreateValidator(vAddr1, pk1, coinPos, types.Description{}, commission1, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(valAddr1.String(), pk1, coinPos, types.Description{}, commission1, math.OneInt())
 	require.NoError(t, err)
 	msgSerialized, err := cdc.MarshalInterface(msg)
 	require.NoError(t, err)

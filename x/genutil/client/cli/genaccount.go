@@ -8,9 +8,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	address "cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
@@ -25,9 +28,9 @@ const (
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 // This command is provided as a default, applications are expected to provide their own command if custom genesis accounts are needed.
-func AddGenesisAccountCmd() *cobra.Command {
+func AddGenesisAccountCmd(defaultNodeHome string, addressCodec address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-account <address_or_key_name> <coin>[,<coin>...]",
+		Use:   "add-genesis-account [address_or_key_name] [coin][,[coin]]",
 		Short: "Add a genesis account to genesis.json",
 		Long: `Add a genesis account to genesis.json. The provided account must specify
 the account address or key name and a list of initial coins. If a key name is given,
@@ -37,9 +40,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			config := client.GetConfigFromCmd(cmd)
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
 
-			addressCodec := clientCtx.TxConfig.SigningContext().AddressCodec()
+			config.SetRoot(clientCtx.HomeDir)
+
 			var kr keyring.Keyring
 			addr, err := addressCodec.StringToBytes(args[0])
 			if err != nil {
@@ -73,36 +78,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
 			moduleNameStr, _ := cmd.Flags().GetString(flagModuleName)
 
-			addrStr, err := addressCodec.BytesToString(addr)
-			if err != nil {
-				return err
-			}
-
-			coins, err := sdk.ParseCoinsNormalized(args[1])
-			if err != nil {
-				return err
-			}
-
-			vestingAmt, err := sdk.ParseCoinsNormalized(vestingAmtStr)
-			if err != nil {
-				return err
-			}
-
-			accounts := []genutil.GenesisAccount{
-				{
-					Address:      addrStr,
-					Coins:        coins,
-					VestingAmt:   vestingAmt,
-					VestingStart: vestingStart,
-					VestingEnd:   vestingEnd,
-					ModuleName:   moduleNameStr,
-				},
-			}
-
-			return genutil.AddGenesisAccounts(clientCtx.Codec, clientCtx.AddressCodec, accounts, appendflag, config.GenesisFile())
+			return genutil.AddGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
 		},
 	}
 
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
@@ -116,14 +96,12 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 // AddBulkGenesisAccountCmd returns bulk-add-genesis-account cobra Command.
 // This command is provided as a default, applications are expected to provide their own command if custom genesis accounts are needed.
-func AddBulkGenesisAccountCmd() *cobra.Command {
+func AddBulkGenesisAccountCmd(defaultNodeHome string, addressCodec address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bulk-add-genesis-account [/file/path.json]",
 		Short: "Bulk add genesis accounts to genesis.json",
 		Example: `bulk-add-genesis-account accounts.json
-
 where accounts.json is:
-
 [
     {
         "address": "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
@@ -152,7 +130,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			config := client.GetConfigFromCmd(cmd)
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+
+			config.SetRoot(clientCtx.HomeDir)
 
 			f, err := os.Open(args[0])
 			if err != nil {
@@ -167,11 +148,12 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			appendflag, _ := cmd.Flags().GetBool(flagAppendMode)
 
-			return genutil.AddGenesisAccounts(clientCtx.Codec, clientCtx.AddressCodec, accounts, appendflag, config.GenesisFile())
+			return genutil.AddGenesisAccounts(clientCtx.Codec, addressCodec, accounts, appendflag, config.GenesisFile())
 		},
 	}
 
 	cmd.Flags().Bool(flagAppendMode, false, "append the coins to an account already in the genesis.json file")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

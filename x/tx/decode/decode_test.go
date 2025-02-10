@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -21,12 +20,6 @@ import (
 	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing"
 )
-
-type mockCodec struct{}
-
-func (m mockCodec) Unmarshal(bytes []byte, message gogoproto.Message) error {
-	return gogoproto.Unmarshal(bytes, message)
-}
 
 func TestDecode(t *testing.T) {
 	accSeq := uint64(2)
@@ -53,49 +46,22 @@ func TestDecode(t *testing.T) {
 	require.NoError(t, err)
 	decoder, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
-		ProtoCodec:     mockCodec{},
 	})
 	require.NoError(t, err)
 
-	gogoproto.RegisterType(&bankv1beta1.MsgSend{}, string((&bankv1beta1.MsgSend{}).ProtoReflect().Descriptor().FullName()))
-	gogoproto.RegisterType(&testpb.A{}, string((&testpb.A{}).ProtoReflect().Descriptor().FullName()))
-
 	testCases := []struct {
-		name            string
-		msg             proto.Message
-		feePayer        string
-		error           string
-		expectedSigners int
+		name  string
+		msg   proto.Message
+		error string
 	}{
 		{
-			name:            "happy path",
-			msg:             &bankv1beta1.MsgSend{},
-			expectedSigners: 1,
+			name: "happy path",
+			msg:  &bankv1beta1.MsgSend{},
 		},
 		{
 			name:  "empty signer option",
 			msg:   &testpb.A{},
 			error: "no cosmos.msg.v1.signer option found for message A; use DefineCustomGetSigners to specify a custom getter: tx parse error",
-		},
-		{
-			name:     "invalid feePayer",
-			msg:      &bankv1beta1.MsgSend{},
-			feePayer: "payer",
-			error:    `encoding/hex: invalid byte: U+0070 'p': tx parse error`,
-		},
-		{
-			name:            "valid feePayer",
-			msg:             &bankv1beta1.MsgSend{},
-			feePayer:        "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c", // hexadecimal to work with dummyAddressCodec
-			expectedSigners: 2,
-		},
-		{
-			name: "same msg signer and feePayer",
-			msg: &bankv1beta1.MsgSend{
-				FromAddress: "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c",
-			},
-			feePayer:        "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c",
-			expectedSigners: 1,
 		},
 	}
 
@@ -117,7 +83,7 @@ func TestDecode(t *testing.T) {
 					Fee: &txv1beta1.Fee{
 						Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
 						GasLimit: 100,
-						Payer:    tc.feePayer,
+						Payer:    "payer",
 						Granter:  "",
 					},
 				},
@@ -132,7 +98,6 @@ func TestDecode(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, len(decodeTx.Signers), tc.expectedSigners)
 
 			require.Equal(t,
 				fmt.Sprintf("/%s", tc.msg.ProtoReflect().Descriptor().FullName()),
@@ -166,7 +131,6 @@ func TestDecodeTxBodyPanic(t *testing.T) {
 	}
 	dec, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
-		ProtoCodec:     mockCodec{},
 	})
 	if err != nil {
 		t.Fatal(err)

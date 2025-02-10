@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
@@ -14,9 +13,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -35,23 +34,21 @@ func TestGenesisTestSuite(t *testing.T) {
 }
 
 func (s *GenesisTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(types.ModuleName)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, circuit.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
 
 	sdkCtx := testCtx.Ctx
 	s.ctx = sdkCtx
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
+	authority := authtypes.NewModuleAddress("gov")
 	ac := addresscodec.NewBech32Codec("cosmos")
 
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
-	s.Require().NoError(err)
-
-	bz, err := ac.StringToBytes(authority)
+	bz, err := ac.StringToBytes(authority.String())
 	s.Require().NoError(err)
 	s.addrBytes = bz
 
-	s.keeper = keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), s.cdc, authority, ac)
+	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(key), authority.String(), ac)
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {
@@ -63,10 +60,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().NoError(err)
 
 	var accounts []*types.GenesisAccountPermissions
-	addr, err := addresscodec.NewBech32Codec("cosmos").BytesToString(s.addrBytes)
-	s.Require().NoError(err)
 	genAccsPerms := types.GenesisAccountPermissions{
-		Address:     addr,
+		Address:     sdk.AccAddress(s.addrBytes).String(),
 		Permissions: &perms,
 	}
 	accounts = append(accounts, &genAccsPerms)
@@ -78,11 +73,9 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		DisabledTypeUrls:   []string{url},
 	}
 
-	err = s.keeper.InitGenesis(s.ctx, genesisState)
-	s.Require().NoError(err)
+	s.keeper.InitGenesis(s.ctx, genesisState)
 
-	exported, err := s.keeper.ExportGenesis(s.ctx)
-	s.Require().NoError(err)
+	exported := s.keeper.ExportGenesis(s.ctx)
 	bz, err := s.cdc.MarshalJSON(exported)
 	s.Require().NoError(err)
 

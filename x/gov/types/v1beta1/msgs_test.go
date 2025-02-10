@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -21,8 +20,7 @@ func init() {
 }
 
 func TestMsgDepositGetSignBytes(t *testing.T) {
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(sdk.AccAddress("addr1"))
-	require.NoError(t, err)
+	addr := sdk.AccAddress("addr1")
 	msg := NewMsgDeposit(addr, 0, coinsPos)
 	pc := codec.NewProtoCodec(types.NewInterfaceRegistry())
 	res, err := pc.MarshalAminoJSON(msg)
@@ -34,9 +32,7 @@ func TestMsgDepositGetSignBytes(t *testing.T) {
 
 // this tests that Amino JSON MsgSubmitProposal.GetSignBytes() still works with Content as Any using the ModuleCdc
 func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
-	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(sdk.AccAddress{})
-	require.NoError(t, err)
-	msg, err := NewMsgSubmitProposal(NewTextProposal("test", "abcd"), sdk.NewCoins(), addr)
+	msg, err := NewMsgSubmitProposal(NewTextProposal("test", "abcd"), sdk.NewCoins(), sdk.AccAddress{})
 	require.NoError(t, err)
 	pc := codec.NewProtoCodec(types.NewInterfaceRegistry())
 	bz, err := pc.MarshalAminoJSON(msg)

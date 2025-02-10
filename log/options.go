@@ -12,9 +12,7 @@ var defaultConfig = Config{
 	Filter:     nil,
 	OutputJSON: false,
 	Color:      true,
-	StackTrace: false,
 	TimeFormat: time.Kitchen,
-	Hooks:      nil,
 }
 
 // Config defines configuration for the logger.
@@ -23,9 +21,7 @@ type Config struct {
 	Filter     FilterFunc
 	OutputJSON bool
 	Color      bool
-	StackTrace bool
 	TimeFormat string
-	Hooks      []zerolog.Hook
 }
 
 type Option func(*Config)
@@ -80,19 +76,5 @@ func ColorOption(val bool) Option {
 func TimeFormatOption(format string) Option {
 	return func(cfg *Config) {
 		cfg.TimeFormat = format
-	}
-}
-
-// TraceOption add option to enable/disable print of stacktrace on error log
-func TraceOption(val bool) Option {
-	return func(cfg *Config) {
-		cfg.StackTrace = val
-	}
-}
-
-// HooksOption append hooks to the Logger hooks
-func HooksOption(hooks ...zerolog.Hook) Option {
-	return func(cfg *Config) {
-		cfg.Hooks = append(cfg.Hooks, hooks...)
 	}
 }

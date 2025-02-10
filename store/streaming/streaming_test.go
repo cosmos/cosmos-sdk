@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,9 +26,9 @@ type PluginTestSuite struct {
 
 	workDir string
 
-	finalizeBlockReq abci.FinalizeBlockRequest
-	finalizeBlockRes abci.FinalizeBlockResponse
-	commitRes        abci.CommitResponse
+	finalizeBlockReq abci.RequestFinalizeBlock
+	finalizeBlockRes abci.ResponseFinalizeBlock
+	commitRes        abci.ResponseCommit
 
 	changeSet []*storetypes.StoreKVPair
 }
@@ -57,7 +57,7 @@ func (s *PluginTestSuite) SetupTest() {
 	abciListener, ok := raw.(storetypes.ABCIListener)
 	require.True(s.T(), ok, "should pass type check")
 
-	header := cmtproto.Header{Height: 1, Time: time.Now()}
+	header := tmproto.Header{Height: 1, Time: time.Now()}
 	logger := log.NewNopLogger()
 	streamingService := storetypes.StreamingManager{
 		ABCIListeners: []storetypes.ABCIListener{abciListener},
@@ -67,16 +67,16 @@ func (s *PluginTestSuite) SetupTest() {
 
 	// test abci message types
 
-	s.finalizeBlockReq = abci.FinalizeBlockRequest{
+	s.finalizeBlockReq = abci.RequestFinalizeBlock{
 		Height:            s.loggerCtx.BlockHeight(),
 		Txs:               [][]byte{{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}},
 		Misbehavior:       []abci.Misbehavior{},
 		Hash:              []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		DecidedLastCommit: abci.CommitInfo{},
 	}
-	s.finalizeBlockRes = abci.FinalizeBlockResponse{
+	s.finalizeBlockRes = abci.ResponseFinalizeBlock{
 		Events:                []abci.Event{},
-		ConsensusParamUpdates: &cmtproto.ConsensusParams{},
+		ConsensusParamUpdates: &tmproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
 		TxResults: []*abci.ExecTxResult{{
 			Events:    []abci.Event{},
@@ -89,7 +89,7 @@ func (s *PluginTestSuite) SetupTest() {
 			Log:       "mockLog",
 		}},
 	}
-	s.commitRes = abci.CommitResponse{}
+	s.commitRes = abci.ResponseCommit{}
 
 	// test store kv pair types
 	for range [2000]int{} {
@@ -137,7 +137,7 @@ var (
 
 type MockContext struct {
 	baseCtx          context.Context
-	header           cmtproto.Header
+	header           tmproto.Header
 	logger           log.Logger
 	streamingManager storetypes.StreamingManager
 }
@@ -146,12 +146,12 @@ func (m MockContext) BlockHeight() int64                            { return m.h
 func (m MockContext) Logger() log.Logger                            { return m.logger }
 func (m MockContext) StreamingManager() storetypes.StreamingManager { return m.streamingManager }
 
-func (m MockContext) BlockHeader() cmtproto.Header {
-	msg := proto.Clone(&m.header).(*cmtproto.Header)
+func (m MockContext) BlockHeader() tmproto.Header {
+	msg := proto.Clone(&m.header).(*tmproto.Header)
 	return *msg
 }
 
-func NewMockContext(header cmtproto.Header, logger log.Logger, sm storetypes.StreamingManager) MockContext {
+func NewMockContext(header tmproto.Header, logger log.Logger, sm storetypes.StreamingManager) MockContext {
 	header.Time = header.Time.UTC()
 	return MockContext{
 		baseCtx:          context.Background(),

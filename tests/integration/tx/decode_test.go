@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/rapidproto"
@@ -11,25 +10,14 @@ import (
 	"pgregory.net/rapid"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/math"
-	authzmodule "cosmossdk.io/x/authz/module"
-	"cosmossdk.io/x/bank"
-	"cosmossdk.io/x/consensus"
-	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/gov"
-	groupmodule "cosmossdk.io/x/group/module"
-	"cosmossdk.io/x/mint"
-	"cosmossdk.io/x/slashing"
-	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -40,15 +28,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.
 func TestDecode(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		codectestutil.CodecOptions{}, auth.AppModule{}, authzmodule.AppModule{}, bank.AppModule{},
-		consensus.AppModule{}, distribution.AppModule{}, evidence.AppModule{}, feegrantmodule.AppModule{},
-		gov.AppModule{}, groupmodule.AppModule{}, mint.AppModule{},
-		slashing.AppModule{}, staking.AppModule{}, upgrade.AppModule{}, vesting.AppModule{})
+		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
+		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
+		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
+		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
 	fee := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
@@ -86,16 +84,6 @@ func TestDecode(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
 			rapid.Check(t, func(t *rapid.T) {
 				msg := gen.Draw(t, "msg")
-				signers, err := encCfg.TxConfig.SigningContext().GetSigners(msg)
-				if len(signers) == 0 {
-					return
-				}
-				if err != nil {
-					if strings.Contains(err.Error(), "empty address string is not allowed") {
-						return
-					}
-					require.NoError(t, err)
-				}
 				gogo := tt.Gogo
 				sanity := tt.Pulsar
 
@@ -113,7 +101,7 @@ func TestDecode(t *testing.T) {
 				sig := signing.SignatureV2{
 					PubKey: pubkey,
 					Data: &signing.SingleSignatureData{
-						SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
+						SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 						Signature: legacy.Cdc.MustMarshal(pubkey),
 					},
 					Sequence: accSeq,

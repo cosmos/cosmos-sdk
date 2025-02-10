@@ -1,4 +1,4 @@
-package module
+package authz
 
 import (
 	"context"
@@ -7,151 +7,181 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
+	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/codec"
-	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/x/authz"
-	"cosmossdk.io/x/authz/client/cli"
-	"cosmossdk.io/x/authz/keeper"
-	"cosmossdk.io/x/authz/simulation"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simsx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 )
-
-const ConsensusVersion = 2
 
 var (
-	_ module.HasAminoCodec       = AppModule{}
-	_ module.HasGRPCGateway      = AppModule{}
+	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-	_ appmodule.HasGenesis            = AppModule{}
-	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasMigrations         = AppModule{}
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
-// AppModule implements the sdk.AppModule interface
-type AppModule struct {
-	cdc      codec.Codec
-	keeper   keeper.Keeper
-	registry cdctypes.InterfaceRegistry
+// AppModuleBasic defines the basic application module used by the authz module.
+type AppModuleBasic struct {
+	cdc codec.Codec
+	ac  address.Codec
 }
-
-// NewAppModule creates a new AppModule object
-func NewAppModule(
-	cdc codec.Codec,
-	keeper keeper.Keeper,
-	registry cdctypes.InterfaceRegistry,
-) AppModule {
-	return AppModule{
-		cdc:      cdc,
-		keeper:   keeper,
-		registry: registry,
-	}
-}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (AppModule) IsAppModule() {}
 
 // Name returns the authz module's name.
-// Deprecated: kept for legacy reasons.
-func (AppModule) Name() string {
+func (AppModuleBasic) Name() string {
 	return authz.ModuleName
 }
 
-// RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	authz.RegisterQueryServer(registrar, am.keeper)
-	authz.RegisterMsgServer(registrar, am.keeper)
-
-	return nil
-}
-
-// RegisterMigrations registers the authz module migrations.
-func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
+// RegisterServices registers a gRPC query service to respond to the
+// module-specific gRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	authz.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	authz.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	m := keeper.NewMigrator(am.keeper)
-	if err := mr.Register(authz.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", authz.ModuleName, err)
+	err := cfg.RegisterMigration(authz.ModuleName, 1, m.Migrate1to2)
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", authz.ModuleName, err))
 	}
-
-	return nil
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
-	authz.RegisterLegacyAminoCodec(registrar)
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	authz.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers the authz module's interface types
-func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	authz.RegisterInterfaces(registrar)
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	authz.RegisterInterfaces(registry)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
-func (AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
-	if err := authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
-}
-
-// GetTxCmd returns the transaction commands for the authz module
-func (AppModule) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the authz module.
-func (am AppModule) DefaultGenesis() json.RawMessage {
-	data, err := am.cdc.MarshalJSON(authz.DefaultGenesisState())
-	if err != nil {
-		panic(err)
-	}
-	return data
+// DefaultGenesis returns default genesis state as raw bytes for the authz
+// module.
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(authz.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the authz module.
-func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data authz.GenesisState
-	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return errors.Wrapf(err, "failed to unmarshal %s genesis state", authz.ModuleName)
 	}
 
 	return authz.ValidateGenesis(data)
 }
 
-// InitGenesis performs genesis initialization for the authz module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
+	if err := authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
+}
+
+// GetTxCmd returns the transaction commands for the authz module
+func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ab.ac)
+}
+
+// AppModule implements the sdk.AppModule interface
+type AppModule struct {
+	AppModuleBasic
+
+	keeper        keeper.Keeper
+	accountKeeper authz.AccountKeeper
+	bankKeeper    authz.BankKeeper
+	registry      cdctypes.InterfaceRegistry
+}
+
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper, bk authz.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
+		keeper:         keeper.SetBankKeeper(bk), // Super ugly hack to not be api breaking in v0.50 and v0.47
+		accountKeeper:  ak,
+		bankKeeper:     bk,
+		registry:       registry,
+	}
+}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// InitGenesis performs genesis initialization for the authz module. It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState authz.GenesisState
-	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
-		return err
-	}
-	return am.keeper.InitGenesis(ctx, &genesisState)
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	am.keeper.InitGenesis(ctx, &genesisState)
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the authz module.
-func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	gs, err := am.keeper.ExportGenesis(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return am.cdc.MarshalJSON(gs)
+// ExportGenesis returns the exported genesis state as raw bytes for the authz
+// module.
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	gs := am.keeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(gs)
 }
 
-// ConsensusVersion implements HasConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // BeginBlock returns the begin blocker for the authz module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper)
+	c := sdk.UnwrapSDKContext(ctx)
+	return BeginBlocker(c, am.keeper)
 }
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(ProvideModule),
+	)
+}
+
+type ModuleInputs struct {
+	depinject.In
+
+	Cdc              codec.Codec
+	AccountKeeper    authz.AccountKeeper
+	BankKeeper       authz.BankKeeper
+	Registry         cdctypes.InterfaceRegistry
+	MsgServiceRouter baseapp.MessageRouter
+	StoreService     store.KVStoreService
+}
+
+type ModuleOutputs struct {
+	depinject.Out
+
+	AuthzKeeper keeper.Keeper
+	Module      appmodule.AppModule
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
+	return ModuleOutputs{AuthzKeeper: k.SetBankKeeper(in.BankKeeper) /* depinject ux improvement */, Module: m}
+}
+
+// ____________________________________________________________________________
 
 // AppModuleSimulation functions
 
@@ -165,8 +195,11 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
-	reg.Add(weights.Get("msg_grant", 100), simulation.MsgGrantFactory())
-	reg.Add(weights.Get("msg_revoke", 90), simulation.MsgRevokeFactory(am.keeper))
-	reg.Add(weights.Get("msg_exec", 90), simulation.MsgExecFactory(am.keeper))
+// WeightedOperations returns the all the gov module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		am.registry,
+		simState.AppParams, simState.Cdc, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }

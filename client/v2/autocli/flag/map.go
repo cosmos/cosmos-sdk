@@ -2,10 +2,10 @@ package flag
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 
-	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	dbm "github.com/cosmos/cosmos-db"
 
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -17,11 +17,10 @@ type Store interface {
 	CacheWrapper
 }
 
-// Committer is something that can persist to disk
+// something that can persist to disk
 type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
-	LatestVersion() int64
 
 	// WorkingHash returns the hash of the KVStore's state before commit.
 	WorkingHash() []byte
@@ -30,16 +29,6 @@ type Committer interface {
 	GetPruning() pruningtypes.PruningOptions
 }
 
-type PausablePruner interface {
-	// PausePruning let the pruning handler know that the store is being committed
-	// or not, so the handler can decide to prune or not the store.
-	//
-	// NOTE: PausePruning(true) should be called before Commit() and PausePruning(false)
-	PausePruning(bool)
-}
-
-// CommitStore represents a store that can be committed and provides basic store operations.
-// It combines the functionality of Committer and Store interfaces.
 // Stores of MultiStore must implement CommitStore.
 type CommitStore interface {
 	Committer
@@ -134,7 +123,7 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 type MultiStore interface {
 	Store
 
-	// CacheMultiStore branches MultiStore into a cached storage object.
+	// Branches MultiStore into a cached storage object.
 	// NOTE: Caller should probably not call .Write() on each, but
 	// call CacheMultiStore.Write().
 	CacheMultiStore() CacheMultiStore
@@ -143,7 +132,7 @@ type MultiStore interface {
 	// each stored is loaded at a specific version (height).
 	CacheMultiStoreWithVersion(version int64) (CacheMultiStore, error)
 
-	// GetStore is convenience for fetching substores.
+	// Convenience for fetching substores.
 	// If the store does not exist, panics.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
@@ -165,7 +154,7 @@ type MultiStore interface {
 	LatestVersion() int64
 }
 
-// CacheMultiStore is from MultiStore.CacheMultiStore()....
+// From MultiStore.CacheMultiStore()....
 type CacheMultiStore interface {
 	MultiStore
 	Write() // Writes operations to underlying KVStore
@@ -177,17 +166,17 @@ type CommitMultiStore interface {
 	MultiStore
 	snapshottypes.Snapshotter
 
-	// MountStoreWithDB mount a store of type using the given db.
+	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
-	MountStoreWithDB(key StoreKey, typ StoreType, db corestore.KVStoreWithBatch)
+	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
 
-	// GetCommitStore panics on a nil key.
+	// Panics on a nil key.
 	GetCommitStore(key StoreKey) CommitStore
 
-	// GetCommitKVStore panics on a nil key.
+	// Panics on a nil key.
 	GetCommitKVStore(key StoreKey) CommitKVStore
 
-	// LoadLatestVersion load the latest persisted version. Called once after all calls to
+	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
 	LoadLatestVersion() error
 
@@ -201,13 +190,13 @@ type CommitMultiStore interface {
 	// in order to handle breaking formats in migrations
 	LoadVersionAndUpgrade(ver int64, upgrades *StoreUpgrades) error
 
-	// LoadVersion load a specific persisted version. When you load an old version, or when
+	// Load a specific persisted version. When you load an old version, or when
 	// the last commit attempt didn't complete, the next commit after loading
 	// must be idempotent (return the same commit id). Otherwise the behavior is
 	// undefined.
 	LoadVersion(ver int64) error
 
-	// SetInterBlockCache set an inter-block (persistent) cache that maintains a mapping from
+	// Set an inter-block (persistent) cache that maintains a mapping from
 	// StoreKeys to CommitKVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
 
@@ -220,9 +209,6 @@ type CommitMultiStore interface {
 
 	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 	SetIAVLDisableFastNode(disable bool)
-
-	// SetIAVLSyncPruning set sync/async pruning on iavl.
-	SetIAVLSyncPruning(sync bool)
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
@@ -271,7 +257,7 @@ type KVStore interface {
 	// Exceptionally allowed for cachekv.Store, safe to write in the modules.
 	Iterator(start, end []byte) Iterator
 
-	// ReverseIterator iterates over a domain of keys in descending order. End is exclusive.
+	// Iterator over a domain of keys in descending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
 	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
@@ -280,7 +266,7 @@ type KVStore interface {
 }
 
 // Iterator is an alias db's Iterator for convenience.
-type Iterator = corestore.Iterator
+type Iterator = dbm.Iterator
 
 // CacheKVStore branches a KVStore and provides read cache functionality.
 // After calling .Write() on the CacheKVStore, all previously created
@@ -288,7 +274,7 @@ type Iterator = corestore.Iterator
 type CacheKVStore interface {
 	KVStore
 
-	// Write writes operations to underlying KVStore
+	// Writes operations to underlying KVStore
 	Write()
 }
 
@@ -335,7 +321,7 @@ func (cid CommitID) String() string {
 //----------------------------------------
 // Store types
 
-// StoreType is kind of store
+// kind of store
 type StoreType int
 
 const (
@@ -431,7 +417,7 @@ type TransientStoreKey struct {
 	name string
 }
 
-// NewTransientStoreKey constructs new TransientStoreKey
+// Constructs new TransientStoreKey
 // Must return a pointer according to the ocap principle
 func NewTransientStoreKey(name string) *TransientStoreKey {
 	return &TransientStoreKey{
@@ -439,12 +425,12 @@ func NewTransientStoreKey(name string) *TransientStoreKey {
 	}
 }
 
-// Name implements StoreKey
+// Implements StoreKey
 func (key *TransientStoreKey) Name() string {
 	return key.name
 }
 
-// String implements StoreKey
+// Implements StoreKey
 func (key *TransientStoreKey) String() string {
 	return fmt.Sprintf("TransientStoreKey{%p, %s}", key, key.name)
 }
@@ -500,11 +486,11 @@ func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
 // MultiStorePersistentCache defines an interface which provides inter-block
 // (persistent) caching capabilities for multiple CommitKVStores based on StoreKeys.
 type MultiStorePersistentCache interface {
-	// GetStoreCache wrap and return the provided CommitKVStore with an inter-block (persistent)
+	// Wrap and return the provided CommitKVStore with an inter-block (persistent)
 	// cache.
 	GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore
 
-	// Unwrap return the underlying CommitKVStore for a StoreKey.
+	// Return the underlying CommitKVStore for a StoreKey.
 	Unwrap(key StoreKey) CommitKVStore
 
 	// Reset the entire set of internal caches.

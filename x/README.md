@@ -1,35 +1,30 @@
 ---
 sidebar_position: 0
 ---
-<!-- markdown-link-check-disable -->
+
 # List of Modules
 
 Here are some production-grade modules that can be used in Cosmos SDK applications, along with their respective documentation:
 
-* [Accounts](./accounts/README.md) - Tools and infrastructure for creating advanced smart accounts.
 * [Auth](./auth/README.md) - Authentication of accounts and transactions for Cosmos SDK applications.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Bank](./bank/README.md) - Token transfer functionalities.
-* [Bank v2](./bank/v2/README.md) - Token transfer functionalities, enhanced.
-* [Circuit](./circuit/README.md) - Circuit breaker module for pausing messages.
-* [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
+* [Crisis](./crisis/README.md) - Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 * [Distribution](./distribution/README.md) - Fee distribution, and staking token provision distribution.
-* [Epochs](./epochs/README.md) - Allow other modules to set that they would like to be signaled once every period
 * [Evidence](./evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
-* [Genutil](./genutil/README.md) - Genesis utilities for the Cosmos SDK.
 * [Governance](./gov/README.md) - On-chain proposals and voting.
-* [Group](./group/README.md) - On-chain multisig accounts creation and management.
 * [Mint](./mint/README.md) - Creation of new units of staking token.
-* [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).
-* [Protocolpool](./protocolpool/README.md) - Functionalities handling community pool funds.
+* [Params](./params/README.md) - Globally available parameter store.
 * [Slashing](./slashing/README.md) - Validator punishment mechanisms.
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.
-* [Tx](./tx/README.md) - Tx utilities for the Cosmos SDK.
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.
-* [Validate](./validate/README.md) - Global ante/post handlers and tx validator setup.
+* [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/architecture/adr-043-nft-module.html).
+* [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
+* [Circuit](./circuit/README.md) - Circuit breaker module for pausing messages.
+* [Genutil](./genutil/README.md) - Genesis utilities for the Cosmos SDK.
 
-To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/build/building-modules/intro).
+To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 
 ## IBC
 
@@ -43,4 +38,4 @@ The CosmWasm module enables smart contracts, learn more by going to their [docum
 
 ## EVM
 
-Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://docs.evmos.org/).
+Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://docs.evmos.org/modules/evm/).

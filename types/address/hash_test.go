@@ -115,7 +115,6 @@ func (a addrMock) Address() []byte {
 }
 
 func (a addrMock) AddressWithLen(t *testing.T) []byte {
-	t.Helper()
 	addr, err := LengthPrefix(a.Addr)
 	assert.NoError(t, err)
 	return addr

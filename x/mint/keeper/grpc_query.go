@@ -3,17 +3,17 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var _ types.QueryServer = queryServer{}
 
-func NewQueryServerImpl(k *Keeper) types.QueryServer {
+func NewQueryServerImpl(k Keeper) types.QueryServer {
 	return queryServer{k}
 }
 
 type queryServer struct {
-	k *Keeper
+	k Keeper
 }
 
 // Params returns params of the mint module.

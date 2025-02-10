@@ -5,20 +5,20 @@ import (
 	"errors"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/assert"
 
 	"cosmossdk.io/log"
 )
 
-func testFinalizeBlock(_ context.Context, _ *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {
+func testFinalizeBlock(_ context.Context, _ *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	return nil, errors.New("test error")
 }
 
 func TestOptimisticExecution(t *testing.T) {
 	oe := NewOptimisticExecution(log.NewNopLogger(), testFinalizeBlock)
 	assert.True(t, oe.Enabled())
-	oe.Execute(&abci.ProcessProposalRequest{
+	oe.Execute(&abci.RequestProcessProposal{
 		Hash: []byte("test"),
 	})
 	assert.True(t, oe.Initialized())

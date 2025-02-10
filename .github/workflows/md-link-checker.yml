@@ -9,23 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cd docs && sh ./pre.sh
-      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.16
+      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
         with:
           folder-path: "docs"
       - run: cd docs && sh ./post.sh
-  sims-notify-failure:
-    permissions:
-      contents: none
-    runs-on: ubuntu-latest
-    if: ${{ failure() }}
-    steps:
-      - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.3.2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: sdk-sims
-          SLACK_USERNAME: Broken Links
-          SLACK_ICON_EMOJI: ":skull:"
-          SLACK_COLOR: danger
-          SLACK_MESSAGE: Links are broken in docs
-          SLACK_FOOTER: ""

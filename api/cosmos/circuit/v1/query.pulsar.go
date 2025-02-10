@@ -2881,7 +2881,7 @@ func (x *AccountsResponse) GetPagination() *v1beta1.PageResponse {
 	return nil
 }
 
-// QueryDisabledListRequest is the request type for the Query/DisabledList RPC method.
+// QueryDisableListRequest is the request type for the Query/DisabledList RPC method.
 type QueryDisabledListRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

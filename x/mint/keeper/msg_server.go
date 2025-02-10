@@ -4,18 +4,20 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/x/mint/types"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var _ types.MsgServer = msgServer{}
 
 // msgServer is a wrapper of Keeper.
 type msgServer struct {
-	*Keeper
+	Keeper
 }
 
 // NewMsgServerImpl returns an implementation of the x/mint MsgServer interface.
-func NewMsgServerImpl(k *Keeper) types.MsgServer {
+func NewMsgServerImpl(k Keeper) types.MsgServer {
 	return &msgServer{
 		Keeper: k,
 	}
@@ -24,7 +26,7 @@ func NewMsgServerImpl(k *Keeper) types.MsgServer {
 // UpdateParams updates the params.
 func (ms msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if ms.authority != msg.Authority {
-		return nil, errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.authority, msg.Authority)
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.authority, msg.Authority)
 	}
 
 	if err := msg.Params.Validate(); err != nil {

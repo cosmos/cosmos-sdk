@@ -9,29 +9,21 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestDelegationEqual(t *testing.T) {
-	codecOpts := codectestutil.CodecOptions{}
-	addr, err := codecOpts.GetAddressCodec().BytesToString(valAddr1)
-	require.NoError(t, err)
-	valAddr, err := codecOpts.GetValidatorCodec().BytesToString(valAddr2)
-	require.NoError(t, err)
-	d1 := types.NewDelegation(addr, valAddr, math.LegacyNewDec(100))
+	d1 := types.NewDelegation(sdk.AccAddress(valAddr1).String(), valAddr2.String(), math.LegacyNewDec(100))
 	d2 := d1
 
 	ok := d1.String() == d2.String()
 	require.True(t, ok)
 
-	vAddr3, err := codecOpts.GetValidatorCodec().BytesToString(valAddr2)
-	require.NoError(t, err)
-	d2.ValidatorAddress = vAddr3
+	d2.ValidatorAddress = valAddr3.String()
 	d2.Shares = math.LegacyNewDec(200)
 
 	ok = d1.String() == d2.String()
@@ -39,26 +31,19 @@ func TestDelegationEqual(t *testing.T) {
 }
 
 func TestDelegationString(t *testing.T) {
-	codecOpts := codectestutil.CodecOptions{}
-	addr, err := codecOpts.GetAddressCodec().BytesToString(valAddr1)
-	require.NoError(t, err)
-	valAddr, err := codecOpts.GetValidatorCodec().BytesToString(valAddr2)
-	require.NoError(t, err)
-	d := types.NewDelegation(addr, valAddr, math.LegacyNewDec(100))
+	d := types.NewDelegation(sdk.AccAddress(valAddr1).String(), valAddr2.String(), math.LegacyNewDec(100))
 	require.NotEmpty(t, d.String())
 }
 
 func TestUnbondingDelegationEqual(t *testing.T) {
 	ubd1 := types.NewUnbondingDelegation(sdk.AccAddress(valAddr1), valAddr2, 0,
-		time.Unix(0, 0), math.NewInt(0), addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+		time.Unix(0, 0), math.NewInt(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	ubd2 := ubd1
 
 	ok := ubd1.String() == ubd2.String()
 	require.True(t, ok)
 
-	vAddr3, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr3)
-	require.NoError(t, err)
-	ubd2.ValidatorAddress = vAddr3
+	ubd2.ValidatorAddress = valAddr3.String()
 
 	ubd2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
 	ok = (ubd1.String() == ubd2.String())
@@ -67,7 +52,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 
 func TestUnbondingDelegationString(t *testing.T) {
 	ubd := types.NewUnbondingDelegation(sdk.AccAddress(valAddr1), valAddr2, 0,
-		time.Unix(0, 0), math.NewInt(0), addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+		time.Unix(0, 0), math.NewInt(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 
 	require.NotEmpty(t, ubd.String())
 }
@@ -75,10 +60,10 @@ func TestUnbondingDelegationString(t *testing.T) {
 func TestRedelegationEqual(t *testing.T) {
 	r1 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), math.NewInt(0),
-		math.LegacyNewDec(0), addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	r2 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), math.NewInt(0),
-		math.LegacyNewDec(0), addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	require.True(t, proto.Equal(&r1, &r2))
 
 	r2.Entries[0].SharesDst = math.LegacyNewDec(10)
@@ -89,22 +74,16 @@ func TestRedelegationEqual(t *testing.T) {
 func TestRedelegationString(t *testing.T) {
 	r := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), math.NewInt(0),
-		math.LegacyNewDec(10), addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
+		math.LegacyNewDec(10), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 
 	require.NotEmpty(t, r.String())
 }
 
 func TestDelegationResponses(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
-	codecOpts := codectestutil.CodecOptions{}
-	addr, err := codecOpts.GetAddressCodec().BytesToString(valAddr1)
-	require.NoError(t, err)
-	valAddr, err := codecOpts.GetValidatorCodec().BytesToString(valAddr2)
-	require.NoError(t, err)
-
-	dr1 := types.NewDelegationResp(addr, valAddr, math.LegacyNewDec(5),
+	dr1 := types.NewDelegationResp(sdk.AccAddress(valAddr1).String(), valAddr2.String(), math.LegacyNewDec(5),
 		sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5)))
-	dr2 := types.NewDelegationResp(addr, valAddr, math.LegacyNewDec(5),
+	dr2 := types.NewDelegationResp(sdk.AccAddress(valAddr1).String(), valAddr3.String(), math.LegacyNewDec(5),
 		sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5)))
 	drs := types.DelegationResponses{dr1, dr2}
 
@@ -131,25 +110,12 @@ func TestDelegationResponses(t *testing.T) {
 
 func TestRedelegationResponses(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
-	addressCdc := codectestutil.CodecOptions{}.GetAddressCodec()
-	addr1, err := addressCdc.BytesToString(valAddr1)
-	require.NoError(t, err)
-	addr2, err := addressCdc.BytesToString(valAddr2)
-	require.NoError(t, err)
-	validatorCdc := codectestutil.CodecOptions{}.GetValidatorCodec()
-	vAddr1, err := validatorCdc.BytesToString(valAddr1)
-	require.NoError(t, err)
-	vAddr2, err := validatorCdc.BytesToString(valAddr2)
-	require.NoError(t, err)
-	vAddr3, err := validatorCdc.BytesToString(valAddr3)
-	require.NoError(t, err)
-
 	entries := []types.RedelegationEntryResponse{
-		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), math.LegacyNewDec(5), math.NewInt(5), math.NewInt(5)),
-		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), math.LegacyNewDec(5), math.NewInt(5), math.NewInt(5)),
+		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), math.LegacyNewDec(5), math.NewInt(5), math.NewInt(5), 0),
+		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), math.LegacyNewDec(5), math.NewInt(5), math.NewInt(5), 0),
 	}
-	rdr1 := types.NewRedelegationResponse(addr1, vAddr2, vAddr3, entries)
-	rdr2 := types.NewRedelegationResponse(addr2, vAddr1, vAddr3, entries)
+	rdr1 := types.NewRedelegationResponse(sdk.AccAddress(valAddr1).String(), valAddr2.String(), valAddr3.String(), entries)
+	rdr2 := types.NewRedelegationResponse(sdk.AccAddress(valAddr2).String(), valAddr1.String(), valAddr3.String(), entries)
 	rdrs := types.RedelegationResponses{rdr1, rdr2}
 
 	bz1, err := json.Marshal(rdr1)

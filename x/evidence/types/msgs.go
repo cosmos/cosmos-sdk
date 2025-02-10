@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/x/evidence/exported"
 
@@ -13,13 +12,13 @@ import (
 )
 
 var (
-	_ sdk.Msg                              = &MsgSubmitEvidence{}
-	_ gogoprotoany.UnpackInterfacesMessage = MsgSubmitEvidence{}
-	_ exported.MsgSubmitEvidenceI          = &MsgSubmitEvidence{}
+	_ sdk.Msg                       = &MsgSubmitEvidence{}
+	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}
+	_ exported.MsgSubmitEvidenceI   = &MsgSubmitEvidence{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
-func NewMsgSubmitEvidence(s string, evi exported.Evidence) (*MsgSubmitEvidence, error) {
+func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEvidence, error) {
 	msg, ok := evi.(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("cannot proto marshal %T", evi)
@@ -28,7 +27,7 @@ func NewMsgSubmitEvidence(s string, evi exported.Evidence) (*MsgSubmitEvidence, 
 	if err != nil {
 		return nil, err
 	}
-	return &MsgSubmitEvidence{Submitter: s, Evidence: any}, nil
+	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
 }
 
 func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {
@@ -52,7 +51,7 @@ func (m MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
 	return accAddr
 }
 
-func (m MsgSubmitEvidence) UnpackInterfaces(ctx gogoprotoany.AnyUnpacker) error {
+func (m MsgSubmitEvidence) UnpackInterfaces(ctx types.AnyUnpacker) error {
 	var evi exported.Evidence
 	return ctx.UnpackAny(m.Evidence, &evi)
 }

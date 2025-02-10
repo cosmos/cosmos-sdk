@@ -24,6 +24,7 @@ func TestRandomAccounts(t *testing.T) {
 		{"100-accounts", 100, 100},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := simulation.RandomAccounts(r, tt.n)
 			require.Equal(t, tt.want, len(got))
@@ -61,12 +62,13 @@ func TestRandomFees(t *testing.T) {
 		wantErr        bool
 	}{
 		{"0 coins", sdk.Coins{}, true, false},
-		{"2 coins", sdk.NewCoins(sdk.NewInt64Coin("aaa", 10), sdk.NewInt64Coin("bbb", 5)), false, false},
-		{"1 coin with 0 amount", sdk.Coins{sdk.NewInt64Coin("ccc", 0)}, true, true},
+		{"0 coins", sdk.NewCoins(sdk.NewInt64Coin("aaa", 10), sdk.NewInt64Coin("bbb", 5)), false, false},
 	}
 	for _, tt := range tests {
+		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := simulation.RandomFees(r, tt.spendableCoins)
+			got, err := simulation.RandomFees(r, sdk.Context{}, tt.spendableCoins)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RandomFees() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -3,15 +3,12 @@ package tx
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,11 +32,9 @@ type Factory struct {
 	sequence           uint64
 	gas                uint64
 	timeoutHeight      uint64
-	timeoutTimestamp   time.Time
 	gasAdjustment      float64
 	chainID            string
 	fromName           string
-	unordered          bool
 	offline            bool
 	generateOnly       bool
 	memo               string
@@ -48,52 +43,42 @@ type Factory struct {
 	feePayer           sdk.AccAddress
 	gasPrices          sdk.DecCoins
 	extOptions         []*codectypes.Any
-	signMode           apisigning.SignMode
+	signMode           signing.SignMode
 	simulateAndExecute bool
 	preprocessTxHook   client.PreprocessTxFn
 }
 
 // NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
-	if clientCtx.Viper == nil {
-		clientCtx = clientCtx.WithViper("")
-	}
-
-	if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
-		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
-	}
-
-	signMode := apisigning.SignMode_SIGN_MODE_UNSPECIFIED
+	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
 	switch clientCtx.SignModeStr {
 	case flags.SignModeDirect:
-		signMode = apisigning.SignMode_SIGN_MODE_DIRECT
+		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
-		signMode = apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	case flags.SignModeDirectAux:
-		signMode = apisigning.SignMode_SIGN_MODE_DIRECT_AUX
+		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
 	case flags.SignModeTextual:
-		signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
+		signMode = signing.SignMode_SIGN_MODE_TEXTUAL
 	case flags.SignModeEIP191:
-		signMode = apisigning.SignMode_SIGN_MODE_EIP_191 //nolint:staticcheck // We still need to check if it was called
+		signMode = signing.SignMode_SIGN_MODE_EIP_191
 	}
 
 	var accNum, accSeq uint64
 	if clientCtx.Offline {
 		if flagSet.Changed(flags.FlagAccountNumber) && flagSet.Changed(flags.FlagSequence) {
-			accNum = clientCtx.Viper.GetUint64(flags.FlagAccountNumber)
-			accSeq = clientCtx.Viper.GetUint64(flags.FlagSequence)
+			accNum, _ = flagSet.GetUint64(flags.FlagAccountNumber)
+			accSeq, _ = flagSet.GetUint64(flags.FlagSequence)
 		} else {
 			return Factory{}, errors.New("account-number and sequence must be set in offline mode")
 		}
 	}
 
-	gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)
-	memo := clientCtx.Viper.GetString(flags.FlagNote)
-	timestampUnix := clientCtx.Viper.GetInt64(flags.FlagTimeoutTimestamp)
-	timeoutTimestamp := time.Unix(timestampUnix, 0)
-	unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
+	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
+	memo, _ := flagSet.GetString(flags.FlagNote)
+	timeoutHeight, _ := flagSet.GetUint64(flags.FlagTimeoutHeight)
 
-	gasStr := clientCtx.Viper.GetString(flags.FlagGas)
+	gasStr, _ := flagSet.GetString(flags.FlagGas)
 	gasSetting, _ := flags.ParseGasSetting(gasStr)
 
 	f := Factory{
@@ -108,8 +93,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		simulateAndExecute: gasSetting.Simulate,
 		accountNumber:      accNum,
 		sequence:           accSeq,
-		timeoutTimestamp:   timeoutTimestamp,
-		unordered:          unordered,
+		timeoutHeight:      timeoutHeight,
 		gasAdjustment:      gasAdj,
 		memo:               memo,
 		signMode:           signMode,
@@ -117,10 +101,10 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		feePayer:           clientCtx.FeePayer,
 	}
 
-	feesStr := clientCtx.Viper.GetString(flags.FlagFees)
+	feesStr, _ := flagSet.GetString(flags.FlagFees)
 	f = f.WithFees(feesStr)
 
-	gasPricesStr := clientCtx.Viper.GetString(flags.FlagGasPrices)
+	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
 
 	f = f.WithPreprocessTxHook(clientCtx.PreprocessTxHook)
@@ -139,8 +123,6 @@ func (f Factory) Fees() sdk.Coins                           { return f.fees }
 func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
-func (f Factory) TimeoutTimestamp() time.Time               { return f.timeoutTimestamp }
-func (f Factory) Unordered() bool                           { return f.unordered }
 func (f Factory) FromName() string                          { return f.fromName }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
@@ -238,12 +220,12 @@ func (f Factory) WithSimulateAndExecute(sim bool) Factory {
 }
 
 // SignMode returns the sign mode configured in the Factory
-func (f Factory) SignMode() apisigning.SignMode {
+func (f Factory) SignMode() signing.SignMode {
 	return f.signMode
 }
 
 // WithSignMode returns a copy of the Factory with an updated sign mode value.
-func (f Factory) WithSignMode(mode apisigning.SignMode) Factory {
+func (f Factory) WithSignMode(mode signing.SignMode) Factory {
 	f.signMode = mode
 	return f
 }
@@ -251,18 +233,6 @@ func (f Factory) WithSignMode(mode apisigning.SignMode) Factory {
 // WithTimeoutHeight returns a copy of the Factory with an updated timeout height.
 func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	f.timeoutHeight = height
-	return f
-}
-
-// WithTimeoutTimestamp returns a copy of the Factory with an updated timeout timestamp.
-func (f Factory) WithTimeoutTimestamp(timestamp time.Time) Factory {
-	f.timeoutTimestamp = timestamp
-	return f
-}
-
-// WithUnordered returns a copy of the Factory with an updated unordered field.
-func (f Factory) WithUnordered(v bool) Factory {
-	f.unordered = v
 	return f
 }
 
@@ -341,9 +311,7 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			return nil, errors.New("cannot provide both fees and gas prices")
 		}
 
-		// f.gas is a uint64 and we should convert to LegacyDec
-		// without the risk of under/overflow via uint64->int64.
-		glDec := math.LegacyNewDecFromBigInt(new(big.Int).SetUint64(f.gas))
+		glDec := math.LegacyNewDec(int64(f.gas))
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
@@ -372,8 +340,6 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetFeeGranter(f.feeGranter)
 	tx.SetFeePayer(f.feePayer)
 	tx.SetTimeoutHeight(f.TimeoutHeight())
-	tx.SetTimeoutTimestamp(f.TimeoutTimestamp())
-	tx.SetUnordered(f.Unordered())
 
 	if etx, ok := tx.(client.ExtendedTxBuilder); ok {
 		etx.SetExtensionOptions(f.extOptions...)
@@ -453,7 +419,7 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 
 	encoder := f.txConfig.TxEncoder()
 	if encoder == nil {
-		return nil, errors.New("cannot simulate tx: tx encoder is nil")
+		return nil, fmt.Errorf("cannot simulate tx: tx encoder is nil")
 	}
 
 	return encoder(txb.GetTx())
@@ -462,7 +428,7 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 // getSimPK gets the public key to use for building a simulation tx.
 // Note, we should only check for keys in the keybase if we are in simulate and execute mode,
 // e.g. when using --gas=auto.
-// When using --dry-run, we are in simulation mode only and should not check the keybase.
+// When using --dry-run, we are is simulation mode only and should not check the keybase.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/11283
 func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 	var (
@@ -516,7 +482,11 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	}
 
 	fc := f
-	from := clientCtx.FromAddress
+	from := clientCtx.GetFromAddress()
+
+	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
+		return fc, err
+	}
 
 	initNum, initSeq := fc.accountNumber, fc.sequence
 	if initNum == 0 || initSeq == 0 {

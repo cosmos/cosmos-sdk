@@ -1,6 +1,6 @@
 package authz
 
-import "google.golang.org/grpc"
+import grpc "google.golang.org/grpc"
 
 // MsgServiceDesc return ServiceDesc for Msg server
 func MsgServiceDesc() *grpc.ServiceDesc {

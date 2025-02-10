@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/x/slashing/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // Unjail calls the staking Unjail function to unjail a validator if the
@@ -55,14 +55,16 @@ func (k Keeper) Unjail(ctx context.Context, validatorAddr sdk.ValAddress) error 
 	// that the validator was never bonded and must've been jailed due to falling
 	// below their minimum self-delegation. The validator can unjail at any point
 	// assuming they've now bonded above their minimum self-delegation.
-	info, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
+	info, err := k.GetValidatorSigningInfo(ctx, consAddr)
 	if err == nil {
 		// cannot be unjailed if tombstoned
 		if info.Tombstoned {
 			return types.ErrValidatorJailed
 		}
 
-		if k.HeaderService.HeaderInfo(ctx).Time.Before(info.JailedUntil) {
+		// cannot be unjailed until out of jail
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if sdkCtx.BlockHeader().Time.Before(info.JailedUntil) {
 			return types.ErrValidatorJailed
 		}
 	}

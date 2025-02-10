@@ -7,16 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
-	"google.golang.org/protobuf/types/known/anypb"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	txsigning "cosmossdk.io/x/tx/signing"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,14 +58,13 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 		"paying with no account": {
 			fee:   1,
-			valid: true,
+			valid: false,
+			err:   sdkerrors.ErrUnknownAddress,
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				// Do not register the account
 				priv, _, addr := testdata.KeyTestPubAddr()
-				acc := authtypes.NewBaseAccountWithAddress(addr)
-				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(nil).Times(2)
 				return TestAccount{
-					acc:  acc,
+					acc:  authtypes.NewBaseAccountWithAddress(addr),
 					priv: priv,
 				}, nil
 			},
@@ -82,7 +79,8 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 		"no fee with no account": {
 			fee:   0,
-			valid: true,
+			valid: false,
+			err:   sdkerrors.ErrUnknownAddress,
 			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
 				// Do not register the account
 				priv, _, addr := testdata.KeyTestPubAddr()
@@ -149,9 +147,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			suite := SetupTestSuite(t, false)
-			cdc := codec.NewProtoCodec(suite.encCfg.InterfaceRegistry)
-			signingCtx := suite.encCfg.InterfaceRegistry.SigningContext()
-			protoTxCfg := tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
+			protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry), tx.DefaultSignModes)
 			// this just tests our handler
 			dfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, suite.feeGrantKeeper, nil)
 			feeAnteHandler := sdk.ChainAnteDecorators(dfd)
@@ -194,6 +190,11 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	}
 }
 
+// don't consume any gas
+func SigGasNoConsumer(meter storetypes.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
+	return nil
+}
+
 func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
 	accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey,
 ) (sdk.Tx, error) {
@@ -204,7 +205,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	signMode := apisigning.SignMode_SIGN_MODE_DIRECT
+	signMode := signing.SignMode_SIGN_MODE_DIRECT
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -234,16 +235,11 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
-		anyPk, err := codectypes.NewAnyWithValue(p.PubKey())
-		if err != nil {
-			return nil, err
-		}
-
-		signerData := txsigning.SignerData{
+		signerData := authsign.SignerData{
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
+			PubKey:        p.PubKey(),
 		}
 		signBytes, err := authsign.GetSignBytesAdapter(
 			context.Background(), gen.SignModeHandler(), signMode, signerData, tx.GetTx())

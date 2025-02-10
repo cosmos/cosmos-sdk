@@ -3,16 +3,16 @@ package ante_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -35,22 +35,16 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	s.txBuilder.SetGasLimit(0)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
+	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	// Set current block height in headerInfo
-	headerInfo := s.ctx.HeaderInfo()
-	headerInfo.Height = s.ctx.BlockHeight()
-	s.ctx = s.ctx.WithHeaderInfo(headerInfo)
-
 	_, err = antehandler(s.ctx, tx, false)
 	require.Error(t, err)
 
 	// zero gas is accepted in simulation mode
-	s.ctx = s.ctx.WithExecMode(sdk.ExecModeSimulate)
 	_, err = antehandler(s.ctx, tx, true)
 	require.NoError(t, err)
 }
@@ -76,7 +70,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, feeAmount).Return(nil).Times(3)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
+	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// Set high gas price so standard test fee fails
@@ -84,20 +78,27 @@ func TestEnsureMempoolFees(t *testing.T) {
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
+	// Set IsCheckTx to true
+	s.ctx = s.ctx.WithIsCheckTx(true)
+
 	// antehandler errors with insufficient fees
 	_, err = antehandler(s.ctx, tx, false)
 	require.NotNil(t, err, "Decorator should have errored on too low fee for local gasPrice")
 
 	// antehandler should not error since we do not check minGasPrice in simulation mode
 	cacheCtx, _ := s.ctx.CacheContext()
-	cacheCtx = cacheCtx.WithExecMode(sdk.ExecModeSimulate)
 	_, err = antehandler(cacheCtx, tx, true)
 	require.Nil(t, err, "Decorator should not have errored in simulation mode")
 
+	// Set IsCheckTx to false
+	s.ctx = s.ctx.WithIsCheckTx(false)
+
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
-	s.ctx = s.ctx.WithExecMode(sdk.ExecModeFinalize)
 	_, err = antehandler(s.ctx, tx, false)
 	require.Nil(t, err, "MempoolFeeDecorator returned error in DeliverTx")
+
+	// Set IsCheckTx back to true for testing sufficient mempool fee
+	s.ctx = s.ctx.WithIsCheckTx(true)
 
 	atomPrice = sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(0).Quo(math.LegacyNewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}
@@ -126,7 +127,7 @@ func TestDeductFees(t *testing.T) {
 	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), apisigning.SignMode_SIGN_MODE_DIRECT)
+	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)

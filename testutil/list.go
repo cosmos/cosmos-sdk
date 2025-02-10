@@ -1,8 +1,6 @@
 package testutil
 
-import (
-	"math/rand"
-)
+import "math/rand"
 
 func RandSliceElem[E any](r *rand.Rand, elems []E) (E, bool) {
 	if len(elems) == 0 {

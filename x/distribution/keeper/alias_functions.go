@@ -2,18 +2,15 @@ package keeper
 
 import (
 	"context"
-	"errors"
-
-	"cosmossdk.io/collections"
-	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // get outstanding rewards
 func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk.ValAddress) (sdk.DecCoins, error) {
-	rewards, err := k.ValidatorOutstandingRewards.Get(ctx, val)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	rewards, err := k.GetValidatorOutstandingRewards(ctx, val)
+	if err != nil {
 		return nil, err
 	}
 

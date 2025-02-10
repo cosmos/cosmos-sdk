@@ -73,6 +73,8 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
+	// TODO: this may not always need to be proven
+	// https://github.com/cosmos/cosmos-sdk/issues/6807
 	resTx, err := node.Tx(context.Background(), hash, true)
 	if err != nil {
 		return nil, err
@@ -132,18 +134,16 @@ func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *c
 	if err != nil {
 		return nil, err
 	}
-	p, ok := txb.(*gogoTxWrapper)
+	p, ok := txb.(intoAny)
 	if !ok {
-		return nil, fmt.Errorf("unexpected type, wanted gogoTxWrapper, got: %T", txb)
+		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
 	}
+	any := p.AsAny()
+	return sdk.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
+}
 
-	tx, err := p.AsTx()
-	if err != nil {
-		return nil, err
-	}
-	anyTx, err := codectypes.NewAnyWithValue(tx)
-	if err != nil {
-		return nil, err
-	}
-	return sdk.NewResponseResultTx(resTx, anyTx, resBlock.Block.Time.Format(time.RFC3339)), nil
+// Deprecated: this interface is used only internally for scenario we are
+// deprecating (StdTxConfig support)
+type intoAny interface {
+	AsAny() *codectypes.Any
 }

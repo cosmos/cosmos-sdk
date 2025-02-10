@@ -37,8 +37,7 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 			for _, name := range args {
 				k, err := clientCtx.Keyring.Key(name)
 				if err != nil {
-					cmd.PrintErrf("key %s not found\n", name)
-					continue
+					return err
 				}
 
 				// confirm deletion, unless -y is passed

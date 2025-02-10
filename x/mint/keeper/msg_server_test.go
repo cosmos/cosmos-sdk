@@ -2,12 +2,12 @@ package keeper_test
 
 import (
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-func (s *KeeperTestSuite) TestUpdateParams() {
+func (s *IntegrationTestSuite) TestUpdateParams() {
 	testCases := []struct {
 		name      string
 		request   *types.MsgUpdateParams
@@ -53,7 +53,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					InflationMin:        sdkmath.LegacyNewDecWithPrec(2, 2),
 					GoalBonded:          sdkmath.LegacyNewDecWithPrec(37, 2),
 					BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
-					MaxSupply:           sdkmath.ZeroInt(), // infinite supply
 				},
 			},
 			expectErr: false,
@@ -61,6 +60,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.UpdateParams(s.ctx, tc.request)
 			if tc.expectErr {

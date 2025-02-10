@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
+	store "cosmossdk.io/core/store"
 	"cosmossdk.io/x/nft"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,15 +10,14 @@ import (
 
 // Keeper of the nft store
 type Keeper struct {
-	appmodule.Environment
-
-	cdc codec.BinaryCodec
-	bk  nft.BankKeeper
-	ac  address.Codec
+	cdc          codec.BinaryCodec
+	storeService store.KVStoreService
+	bk           nft.BankKeeper
+	ac           address.Codec
 }
 
 // NewKeeper creates a new nft Keeper instance
-func NewKeeper(env appmodule.Environment,
+func NewKeeper(storeService store.KVStoreService,
 	cdc codec.BinaryCodec, ak nft.AccountKeeper, bk nft.BankKeeper,
 ) Keeper {
 	// ensure nft module account is set
@@ -27,9 +26,9 @@ func NewKeeper(env appmodule.Environment,
 	}
 
 	return Keeper{
-		Environment: env,
-		cdc:         cdc,
-		bk:          bk,
-		ac:          ak.AddressCodec(),
+		cdc:          cdc,
+		storeService: storeService,
+		bk:           bk,
+		ac:           ak.AddressCodec(),
 	}
 }

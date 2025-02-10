@@ -8,14 +8,14 @@ import (
 	"sync"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/log"
 )
 
 // FinalizeBlockFunc is the function that is called by the OE to finalize the
 // block. It is the same as the one in the ABCI app.
-type FinalizeBlockFunc func(context.Context, *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error)
+type FinalizeBlockFunc func(context.Context, *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error)
 
 // OptimisticExecution is a struct that contains the OE context. It is used to
 // run the FinalizeBlock function in a goroutine, and to abort it if needed.
@@ -25,8 +25,8 @@ type OptimisticExecution struct {
 
 	mtx         sync.Mutex
 	stopCh      chan struct{}
-	request     *abci.FinalizeBlockRequest
-	response    *abci.FinalizeBlockResponse
+	request     *abci.RequestFinalizeBlock
+	response    *abci.ResponseFinalizeBlock
 	err         error
 	cancelFunc  func() // cancel function for the context
 	initialized bool   // A boolean value indicating whether the struct has been initialized
@@ -82,12 +82,12 @@ func (oe *OptimisticExecution) Initialized() bool {
 }
 
 // Execute initializes the OE and starts it in a goroutine.
-func (oe *OptimisticExecution) Execute(req *abci.ProcessProposalRequest) {
+func (oe *OptimisticExecution) Execute(req *abci.RequestProcessProposal) {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
 
 	oe.stopCh = make(chan struct{})
-	oe.request = &abci.FinalizeBlockRequest{
+	oe.request = &abci.RequestFinalizeBlock{
 		Txs:                req.Txs,
 		DecidedLastCommit:  req.ProposedLastCommit,
 		Misbehavior:        req.Misbehavior,
@@ -154,7 +154,7 @@ func (oe *OptimisticExecution) Abort() {
 }
 
 // WaitResult waits for the OE to finish and returns the result.
-func (oe *OptimisticExecution) WaitResult() (*abci.FinalizeBlockResponse, error) {
+func (oe *OptimisticExecution) WaitResult() (*abci.ResponseFinalizeBlock, error) {
 	<-oe.stopCh
 	return oe.response, oe.err
 }

@@ -4,22 +4,23 @@ import (
 	"context"
 	"encoding/json"
 
-	bankexported "cosmossdk.io/x/bank/exported"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
 // StakingKeeper defines the expected staking keeper (noalias)
 type StakingKeeper interface {
-	ApplyAndReturnValidatorSetUpdates(context.Context) (updates []module.ValidatorUpdate, err error)
+	ApplyAndReturnValidatorSetUpdates(context.Context) (updates []abci.ValidatorUpdate, err error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 	SetAccount(context.Context, sdk.AccountI)
+	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
 }
 
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
@@ -31,7 +32,7 @@ type GenesisAccountsIterator interface {
 	)
 }
 
-// GenesisBalancesIterator defines the expected iterating genesis balances object (noalias)
+// GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
 type GenesisBalancesIterator interface {
 	IterateGenesisBalances(
 		cdc codec.JSONCodec,

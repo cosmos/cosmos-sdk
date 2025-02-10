@@ -53,7 +53,7 @@ blocks. Validators who are _bonded_ are _at stake_, meaning that part or all of
 their stake and their delegators' stake is at risk if they commit a protocol fault.
 
 For each of these validators we keep a `ValidatorSigningInfo` record that contains
-information pertaining to validator's liveness and other infraction related
+information partaining to validator's liveness and other infraction related
 attributes.
 
 ### Tombstone Caps
@@ -143,18 +143,18 @@ bonded validator. The `SignedBlocksWindow` parameter defines the size
 The information stored for tracking validator liveness is as follows:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/slashing/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35
 ```
 
 ### Params
 
-The slashing module stores its params in state with the prefix of `0x00`,
+The slashing module stores it's params in state with the prefix of `0x00`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x00 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/slashing/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L62
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L59
 ```
 
 ## Messages
@@ -212,11 +212,10 @@ provisions and rewards.
 At the beginning of each block, we update the `ValidatorSigningInfo` for each
 validator and check if they've crossed below the liveness threshold over a
 sliding window. This sliding window is defined by `SignedBlocksWindow` and the
-index in this window is determined by (`height - SignInfo.StartHeight`).
-Notice that the position in the sliding window is incremented every block,
-independent of whether the validator signed or not.
-Once the index is determined, the `MissedBlocksBitArray` and
-`MissedBlocksCounter` are updated accordingly.
+index in this window is determined by `IndexOffset` found in the validator's
+`ValidatorSigningInfo`. For each block processed, the `IndexOffset` is incremented
+regardless if the validator signed or not. Once the index is determined, the
+`MissedBlocksBitArray` and `MissedBlocksCounter` are updated accordingly.
 
 Finally, in order to determine if a validator crosses below the liveness threshold,
 we fetch the maximum number of blocks missed, `maxMissed`, which is
@@ -236,8 +235,10 @@ for vote in block.LastCommitInfo.Votes {
   signInfo := GetValidatorSigningInfo(vote.Validator.Address)
 
   // This is a relative index, so we counts blocks the validator SHOULD have
-  // signed. We use the 0-value default signing info if not present.
-  index := (height - signInfo.StartHeight) % SignedBlocksWindow()
+  // signed. We use the 0-value default signing info if not present, except for
+  // start height.
+  index := signInfo.IndexOffset % SignedBlocksWindow()
+  signInfo.IndexOffset++
 
   // Update MissedBlocksBitArray and MissedBlocksCounter. The MissedBlocksCounter
   // just tracks the sum of MissedBlocksBitArray. That way we avoid needing to
@@ -312,7 +313,6 @@ The following hooks impact the slashing state:
 * `AfterValidatorBonded` creates a `ValidatorSigningInfo` instance as described in the following section.
 * `AfterValidatorCreated` stores a validator's consensus key.
 * `AfterValidatorRemoved` removes a validator's consensus key.
-* `AfterConsensusPubKeyUpdate` handles the rotation of signing info and updates the address-pubkey relation after a consensus key update.
 
 ### Validator Bonded
 
@@ -331,7 +331,7 @@ onValidatorBonded(address sdk.ValAddress)
       IndexOffset         : 0,
       JailedUntil         : time.Unix(0, 0),
       Tombstone           : false,
-      MissedBlocksCounter  : 0
+      MissedBloskCounter  : 0
     } else {
       signingInfo.StartHeight = CurrentHeight
     }
@@ -632,20 +632,6 @@ Example:
 
 ```bash
 simd tx slashing unjail --from mykey
-```
-
-#### update-params-proposal
-
-The `update-params-proposal` command allows users to submit a governance proposal to update the slashing module parameters:
-
-```bash
-simd tx slashing update-params-proposal <params> [flags]
-```
-
-Example:
-
-```bash
-simd tx slashing update-params-proposal '{ "signed_blocks_window": "100" }'
 ```
 
 ### gRPC

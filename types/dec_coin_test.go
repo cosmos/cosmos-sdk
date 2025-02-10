@@ -99,7 +99,7 @@ func (s *decCoinTestSuite) TestAddDecCoins() {
 	}{
 		{sdk.DecCoins{{testDenom1, one}, {testDenom2, one}}, sdk.DecCoins{{testDenom1, one}, {testDenom2, one}}, sdk.DecCoins{{testDenom1, two}, {testDenom2, two}}},
 		{sdk.DecCoins{{testDenom1, zero}, {testDenom2, one}}, sdk.DecCoins{{testDenom1, zero}, {testDenom2, zero}}, sdk.DecCoins{{testDenom2, one}}},
-		{sdk.DecCoins{{testDenom1, zero}, {testDenom2, zero}}, sdk.DecCoins{{testDenom1, zero}, {testDenom2, zero}}, sdk.DecCoins{}},
+		{sdk.DecCoins{{testDenom1, zero}, {testDenom2, zero}}, sdk.DecCoins{{testDenom1, zero}, {testDenom2, zero}}, sdk.DecCoins(nil)},
 	}
 
 	for tcIndex, tc := range cases {
@@ -211,6 +211,7 @@ func (s *decCoinTestSuite) TestIsValid() {
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		if tc.expectPass {
 			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
@@ -245,6 +246,7 @@ func (s *decCoinTestSuite) TestSubDecCoin() {
 	decCoin := sdk.NewDecCoin("mytoken", math.NewInt(10))
 
 	for _, tc := range tests {
+		tc := tc
 		if tc.expectPass {
 			equal := tc.coin.Sub(decCoin)
 			s.Require().Equal(equal, decCoin, tc.msg)
@@ -280,6 +282,7 @@ func (s *decCoinTestSuite) TestSubDecCoins() {
 	decCoins := sdk.NewDecCoinsFromCoins(sdk.NewCoin("btc", math.NewInt(10)), sdk.NewCoin("eth", math.NewInt(15)), sdk.NewCoin("mytoken", math.NewInt(5)))
 
 	for _, tc := range tests {
+		tc := tc
 		if tc.expectPass {
 			equal := tc.coins.Sub(decCoins)
 			s.Require().Equal(equal, decCoins, tc.msg)
@@ -374,9 +377,6 @@ func (s *decCoinTestSuite) TestParseDecCoins() {
 	}{
 		{"", nil, false},
 		{"4stake", sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDecFromInt(math.NewInt(4)))}, false},
-		{"5.5atom", sdk.DecCoins{
-			sdk.NewDecCoinFromDec("atom", math.LegacyNewDecWithPrec(5500000000000000000, math.LegacyPrecision)),
-		}, false},
 		{"5.5atom,4stake", sdk.DecCoins{
 			sdk.NewDecCoinFromDec("atom", math.LegacyNewDecWithPrec(5500000000000000000, math.LegacyPrecision)),
 			sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(4)),
@@ -524,6 +524,7 @@ func (s *decCoinTestSuite) TestDecCoinsQuoDecTruncate() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		if tc.panics {
 			s.Require().Panics(func() { tc.coins.QuoDecTruncate(tc.input) })
 		} else {
@@ -560,6 +561,7 @@ func (s *decCoinTestSuite) TestNewDecCoinsWithIsValid() {
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		if tc.expectPass {
 			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
@@ -586,6 +588,7 @@ func (s *decCoinTestSuite) TestNewDecCoinsWithZeroCoins() {
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		s.Require().Equal(sdk.NewDecCoinsFromCoins(tc.coins...).Len(), tc.expectLength)
 	}
 }
@@ -617,6 +620,7 @@ func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		if tc.expectPass {
 			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
@@ -672,6 +676,7 @@ func (s *decCoinTestSuite) TestDecCoins_GetDenomByIndex() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedErr {
 				s.Require().Panics(func() { tc.input.GetDenomByIndex(tc.index) }, "Test should have panicked")
@@ -713,6 +718,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsAllPositive() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedResult {
 				s.Require().True(tc.input.IsAllPositive(), "Test case #%d: %s", i, tc.name)
@@ -782,6 +788,7 @@ func (s *decCoinTestSuite) TestDecCoin_IsGTE() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedPanic {
 				s.Require().Panics(func() { tc.coin.IsGTE(tc.otherCoin) }, "Test case #%d: %s", i, tc.name)
@@ -825,6 +832,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsZero() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedResult {
 				s.Require().True(tc.coins.IsZero(), "Test case #%d: %s", i, tc.name)
@@ -879,6 +887,7 @@ func (s *decCoinTestSuite) TestDecCoins_MulDec() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			res := tc.coins.MulDec(tc.multiplier)
 			s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s", i, tc.name)
@@ -927,6 +936,7 @@ func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedPanic {
 				s.Require().Panics(func() { tc.coins.MulDecTruncate(tc.multiplier) }, "Test case #%d: %s", i, tc.name)
@@ -979,6 +989,7 @@ func (s *decCoinTestSuite) TestDecCoins_QuoDec() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.panics {
 				s.Require().Panics(func() { tc.coins.QuoDec(tc.input) }, "Test case #%d: %s", i, tc.name)
@@ -1148,53 +1159,6 @@ func (s *decCoinTestSuite) TestDecCoin_ParseDecCoin() {
 			} else {
 				s.Require().NoError(err, "unexpected error for test case #%d %s, input: %v", i, tc.name, tc.input)
 				s.Require().Equal(tc.expectedResult, res, "unexpected result for test case #%d %s, input: %v", i, tc.name, tc.input)
-			}
-		})
-	}
-}
-
-func (s *decCoinTestSuite) TestDecCoin_ParseDecAmount() {
-	testCases := map[string]struct {
-		input          string
-		expectedAmount string
-		expectedDenom  string
-		expectedErr    bool
-	}{
-		"Parse empty string": {"", "", "", false},
-		"Parse string which start with character different from digit, space, and letter": {"✨🌟⭐", "", "", true},
-		"Parse string started with letter":                                                {"h10", "", "h10", false},
-		"Parse string started with dot":                                                   {".atom", ".", "atom", false},
-
-		"Parse string that contain only numbers": {"10", "10", "", false},
-		"Use number for denom":                   {"10 11", "", "", true},
-		"Use invalid character '&' for denom ":   {"10f&", "", "", true},
-		"Use space between amount and denom":     {"10 atom", "10", "atom", false},
-		"Use two space between amount and denom": {"10  atom", "10", "atom", false},
-
-		"Denom start with digit": {"1 1atom", "", "", true},
-		"Denom start with '/'":   {"1 /atom", "", "", true},
-		"Denom start with ':'":   {"1 :atom", "", "", true},
-		"Denom start with '.'":   {"1 .atom", "", "", true},
-		"Denom start with '_'":   {"1 _atom", "", "", true},
-		"Denom start with '-'":   {"1 -atom", "", "", true},
-
-		"Denom contains '/'":   {"1 at/om", "1", "at/om", false},
-		"Denom contains ':'":   {"2atom:", "2", "atom:", false},
-		"Denom contains '.'":   {"3ato.m", "3", "ato.m", false},
-		"Denom contains '_'":   {"4 a_tom", "4", "a_tom", false},
-		"Denom contains '-'":   {"5 at-om", "5", "at-om", false},
-		"Denom contains space": {"5 at om", "", "", true},
-	}
-
-	for name, tc := range testCases {
-		s.T().Run(name, func(t *testing.T) {
-			actualAmount, actualDenom, err := sdk.ParseDecAmount(tc.input)
-			if tc.expectedErr {
-				s.Require().Error(err, "expected error for test case %s, input: %v", name, tc.input)
-			} else {
-				s.Require().NoError(err, "unexpected error for test case %s, input: %v", name, tc.input)
-				s.Require().Equal(tc.expectedAmount, actualAmount)
-				s.Require().Equal(tc.expectedDenom, actualDenom)
 			}
 		})
 	}

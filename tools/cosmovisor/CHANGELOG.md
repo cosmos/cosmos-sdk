@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v1.7.1 - 2025-01-10
+
+### Bug Fixes
+
+* []() Fix issue with wrong directory placement when using `prepare-upgrade` for non archive.
+
 ## v1.7.0 - 2024-11-18
 
 ### Features

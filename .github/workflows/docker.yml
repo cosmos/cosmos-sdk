@@ -60,8 +60,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to GitHub Packages
-        uses: docker/build-push-action@v4
+        uses: depot/build-push-action@v1
         with:
+          project: gnm1jqptpw
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}

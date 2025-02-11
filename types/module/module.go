@@ -450,7 +450,7 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 // RegisterInvariants registers all module invariants
 //
 // Deprecated: this function is a no-op and will be removed in the next release of the Cosmos SDK.
-func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {}
+func (m *Manager) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterServices registers all module services
 func (m *Manager) RegisterServices(cfg Configurator) error {

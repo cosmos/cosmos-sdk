@@ -28,12 +28,12 @@ require (
 	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250106144421-5f5ef82da422
 	google.golang.org/grpc v1.70.0
-	google.golang.org/protobuf v1.36.4
+	google.golang.org/protobuf v1.36.5
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.4-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.4-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.5-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.5-20240130113600-88ef6483f90f.1 // indirect
 	cloud.google.com/go v0.118.0 // indirect
 	cloud.google.com/go/auth v0.13.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect

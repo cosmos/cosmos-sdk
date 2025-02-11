@@ -7,8 +7,8 @@ import (
 	"time"
 
 	cmttime "github.com/cometbft/cometbft/types/time"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"

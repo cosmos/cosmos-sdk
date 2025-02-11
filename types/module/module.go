@@ -206,6 +206,8 @@ type AppModule interface {
 }
 
 // HasInvariants is the interface for registering invariants.
+//
+// Deprecated: this will be removed in the next Cosmos SDK release.
 type HasInvariants interface {
 	// RegisterInvariants registers module invariants.
 	RegisterInvariants(sdk.InvariantRegistry)
@@ -446,13 +448,9 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 }
 
 // RegisterInvariants registers all module invariants
-func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
-	for _, module := range m.Modules {
-		if module, ok := module.(HasInvariants); ok {
-			module.RegisterInvariants(ir)
-		}
-	}
-}
+//
+// Deprecated: this function is a no-op and will be removed in the next release of the Cosmos SDK.
+func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // RegisterServices registers all module services
 func (m *Manager) RegisterServices(cfg Configurator) error {

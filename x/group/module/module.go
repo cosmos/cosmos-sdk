@@ -113,6 +113,9 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	group.RegisterLegacyAminoCodec(cdc)
 }
 
+// RegisterInvariants is a no op and will be removed in the next Cosmos SDK release.
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {

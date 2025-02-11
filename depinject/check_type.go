@@ -2,11 +2,11 @@ package depinject
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 	"unicode"
 
 	"github.com/cockroachdb/errors"
-	"golang.org/x/exp/slices"
 )
 
 // isExportedType checks if the type is exported and not in an internal

@@ -1,10 +1,10 @@
 package proofs
 
 import (
-	"sort"
+	"maps"
+	"slices"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/math/unsafe"
 	sdkmaps "cosmossdk.io/store/internal/maps"
@@ -47,9 +47,7 @@ const (
 )
 
 func SortedKeys(data map[string][]byte) []string {
-	keys := maps.Keys(data)
-	sort.Strings(keys)
-	return keys
+	return slices.Sorted(maps.Keys(data))
 }
 
 func CalcRoot(data map[string][]byte) []byte {

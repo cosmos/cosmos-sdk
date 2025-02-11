@@ -3,9 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/tools/confix"
 

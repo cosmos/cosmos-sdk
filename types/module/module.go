@@ -32,12 +32,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
@@ -871,7 +872,7 @@ func (m *Manager) GetVersionMap() VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	return maps.Keys(m.Modules)
+	return slices.Collect(maps.Keys(m.Modules))
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

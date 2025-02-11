@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/address"
@@ -244,7 +244,7 @@ func InvokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooks
 
 	// Default ordering is lexical by module name.
 	// Explicit ordering can be added to the module config if required.
-	modNames := maps.Keys(govHooks)
+	modNames := slices.Sorted(maps.Keys(govHooks))
 	order := modNames
 	sort.Strings(order)
 

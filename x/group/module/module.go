@@ -113,11 +113,6 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	group.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInvariants does nothing, there are no invariants to enforce
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper)
-}
-
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {

@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -248,7 +249,7 @@ func InvokeSetStakingHooks(
 		return nil
 	}
 
-	modNames := maps.Keys(stakingHooks)
+	modNames := slices.Collect(maps.Keys(stakingHooks))
 	order := config.HooksOrder
 	if len(order) == 0 {
 		order = modNames

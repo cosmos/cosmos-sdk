@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -73,8 +72,7 @@ func prepareUpgradeHandler(cmd *cobra.Command, _ []string) error {
 
 	logger.Info("Downloading upgrade binary", "url", binaryURL)
 
-	upgradeBin := filepath.Join(cfg.UpgradeBin(upgradeInfo.Name), cfg.Name)
-	if err := plan.DownloadUpgrade(filepath.Dir(upgradeBin), binaryURL, cfg.Name); err != nil {
+	if err := plan.DownloadUpgrade(cfg.UpgradeDir(upgradeInfo.Name), binaryURL, cfg.Name); err != nil {
 		return fmt.Errorf("failed to download and verify binary: %w", err)
 	}
 

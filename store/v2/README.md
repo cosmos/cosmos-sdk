@@ -60,3 +60,34 @@ for more details.
 ## Test Coverage
 
 The test coverage of the following logical components should be over 60%:
+
+# Historical Queries After Migration
+
+When migrating from IAVL v1 to v2, historical data access can be preserved by enabling historical queries. This feature allows querying data from the old tree for heights before the migration point.
+
+## Configuration
+
+To enable historical queries, set `EnableHistoricalQueries` to `true` in the IAVL configuration:
+
+```go
+cfg := iavl.DefaultConfig()
+cfg.EnableHistoricalQueries = true
+```
+
+## How It Works
+
+1. During migration, the migration height is stored
+2. For queries:
+   - If version < migration height: uses old tree (if historical queries enabled)
+   - If version >= migration height: uses new tree
+   - If historical queries disabled: always uses new tree
+
+## Node Operator Instructions
+
+1. Before migration:
+   - Ensure old tree data is preserved
+   - Configure `EnableHistoricalQueries` if historical access is needed
+
+2. After migration:
+   - Historical queries will automatically use appropriate tree based on height
+   - Can disable historical queries later by setting `EnableHistoricalQueries = false`

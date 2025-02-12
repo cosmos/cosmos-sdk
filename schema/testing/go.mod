@@ -7,7 +7,7 @@ require (
 	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
-	gotest.tools/v3 v3.5.1
+	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.1.0
 )
 

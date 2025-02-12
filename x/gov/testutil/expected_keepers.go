@@ -3,7 +3,7 @@
 package testutil
 
 import (
-	context "context"
+	"context"
 
 	"cosmossdk.io/math"
 

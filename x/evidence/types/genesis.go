@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/x/evidence/exported"
 

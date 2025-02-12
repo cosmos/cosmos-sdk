@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 

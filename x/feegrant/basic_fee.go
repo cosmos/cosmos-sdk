@@ -2,7 +2,7 @@ package feegrant
 
 import (
 	"context"
-	time "time"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 

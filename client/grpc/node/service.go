@@ -1,7 +1,7 @@
 package node
 
 import (
-	context "context"
+	"context"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

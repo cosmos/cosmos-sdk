@@ -97,9 +97,9 @@ func TestInitGenesis(t *testing.T) {
 	delegations = append(delegations, genesisDelegations...)
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
-	vals := (f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState))
+	vals := f.stakingKeeper.InitGenesis(f.sdkCtx, genesisState)
 
-	actualGenesis := (f.stakingKeeper.ExportGenesis(f.sdkCtx))
+	actualGenesis := f.stakingKeeper.ExportGenesis(f.sdkCtx)
 	assert.DeepEqual(t, genesisState.Params, actualGenesis.Params)
 	assert.DeepEqual(t, genesisState.Delegations, actualGenesis.Delegations)
 
@@ -108,7 +108,7 @@ func TestInitGenesis(t *testing.T) {
 	assert.DeepEqual(t, allvals, actualGenesis.Validators)
 
 	// Ensure validators have addresses.
-	vals2, err := staking.WriteValidators(f.sdkCtx, (f.stakingKeeper))
+	vals2, err := staking.WriteValidators(f.sdkCtx, f.stakingKeeper)
 	assert.NilError(t, err)
 
 	for _, val := range vals2 {
@@ -116,18 +116,18 @@ func TestInitGenesis(t *testing.T) {
 	}
 
 	// now make sure the validators are bonded and intra-tx counters are correct
-	resVal, found := (f.stakingKeeper.GetValidator(f.sdkCtx, sdk.ValAddress(addrs[1])))
+	resVal, found := f.stakingKeeper.GetValidator(f.sdkCtx, sdk.ValAddress(addrs[1]))
 	assert.Assert(t, found)
 	assert.Equal(t, types.Bonded, resVal.Status)
 
-	resVal, found = (f.stakingKeeper.GetValidator(f.sdkCtx, sdk.ValAddress(addrs[2])))
+	resVal, found = f.stakingKeeper.GetValidator(f.sdkCtx, sdk.ValAddress(addrs[2]))
 	assert.Assert(t, found)
 	assert.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 
 	for i, val := range validators {
-		abcivals[i] = val.ABCIValidatorUpdate((f.stakingKeeper.PowerReduction(f.sdkCtx)))
+		abcivals[i] = val.ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	}
 
 	assert.DeepEqual(t, abcivals, vals)

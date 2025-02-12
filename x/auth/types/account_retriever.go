@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/client"

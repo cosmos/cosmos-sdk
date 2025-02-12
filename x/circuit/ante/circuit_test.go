@@ -34,7 +34,7 @@ type MockCircuitBreaker struct {
 	isAllowed bool
 }
 
-func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
+func (m MockCircuitBreaker) IsAllowed(_ context.Context, typeURL string) (bool, error) {
 	return typeURL == "/cosmos.circuit.v1.MsgAuthorizeCircuitBreaker", nil
 }
 
@@ -77,7 +77,7 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		// CircuitBreakerDecorator AnteHandler should always return success
 		decorator := ante.NewCircuitBreakerDecorator(circuitBreaker)
 
-		f.txBuilder.SetMsgs(tc.msg)
+		require.NoError(t, f.txBuilder.SetMsgs(tc.msg))
 		tx := f.txBuilder.GetTx()
 
 		sdkCtx := sdk.UnwrapSDKContext(f.ctx)
@@ -88,6 +88,7 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		if tc.allowed {
 			require.NoError(t, err)
 		} else {
+			require.Error(t, err)
 			require.Equal(t, "tx type not allowed", err.Error())
 		}
 	}

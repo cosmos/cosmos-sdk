@@ -48,30 +48,32 @@ func TestFeegrantPruning(t *testing.T) {
 
 	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper)
 
-	feegrantKeeper.GrantAllowance(
+	require.NoError(t, feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter1,
 		grantee,
 		&feegrant.BasicAllowance{
 			Expiration: &now,
 		},
-	)
-	feegrantKeeper.GrantAllowance(
+	))
+
+	require.NoError(t, feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter2,
 		grantee,
 		&feegrant.BasicAllowance{
 			SpendLimit: spendLimit,
 		},
-	)
-	feegrantKeeper.GrantAllowance(
+	))
+
+	require.NoError(t, feegrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter3,
 		grantee,
 		&feegrant.BasicAllowance{
 			Expiration: &oneDay,
 		},
-	)
+	))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, encCfg.InterfaceRegistry)
 	feegrant.RegisterQueryServer(queryHelper, feegrantKeeper)

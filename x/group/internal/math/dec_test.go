@@ -93,7 +93,7 @@ func TestDec(t *testing.T) {
 	require.True(t, minusOne.IsNegative())
 }
 
-var genDec *rapid.Generator[Dec] = rapid.Custom(func(t *rapid.T) Dec {
+var genDec = rapid.Custom(func(t *rapid.T) Dec {
 	f := rapid.Float64().Draw(t, "f")
 	dec, err := NewDecFromString(fmt.Sprintf("%g", f))
 	require.NoError(t, err)
@@ -107,7 +107,7 @@ type floatAndDec struct {
 }
 
 // Generate a Dec value along with the float used to create it
-var genFloatAndDec *rapid.Generator[floatAndDec] = rapid.Custom(func(t *rapid.T) floatAndDec {
+var genFloatAndDec = rapid.Custom(func(t *rapid.T) floatAndDec {
 	f := rapid.Float64().Draw(t, "f")
 	dec, err := NewDecFromString(fmt.Sprintf("%g", f))
 	require.NoError(t, err)

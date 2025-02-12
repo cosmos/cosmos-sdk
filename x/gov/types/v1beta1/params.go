@@ -10,7 +10,7 @@ import (
 
 // Default period for deposits & voting
 const (
-	DefaultPeriod time.Duration = time.Hour * 24 * 2 // 2 days
+	DefaultPeriod = time.Hour * 24 * 2 // 2 days
 )
 
 // Default governance params

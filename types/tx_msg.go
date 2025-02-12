@@ -2,8 +2,8 @@ package types
 
 import (
 	"encoding/json"
-	fmt "fmt"
-	strings "strings"
+	"fmt"
+	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"

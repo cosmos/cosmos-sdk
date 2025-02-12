@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	errorsmod "cosmossdk.io/errors"
 

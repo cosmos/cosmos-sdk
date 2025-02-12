@@ -46,7 +46,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 	ubd2.ValidatorAddress = valAddr3.String()
 
 	ubd2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
-	ok = (ubd1.String() == ubd2.String())
+	ok = ubd1.String() == ubd2.String()
 	require.False(t, ok)
 }
 

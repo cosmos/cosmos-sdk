@@ -1,7 +1,7 @@
 package cachekv_test
 
 import (
-	fmt "fmt"
+	"fmt"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"

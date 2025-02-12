@@ -18,7 +18,7 @@ const (
 	// DefaultUnbondingTime reflects three weeks in seconds as the default
 	// unbonding time.
 	// TODO: Justify our choice of default here.
-	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
+	DefaultUnbondingTime = time.Hour * 24 * 7 * 3
 
 	// Default maximum number of bonded validators
 	DefaultMaxValidators uint32 = 100

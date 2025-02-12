@@ -49,6 +49,8 @@ message MsgCreateVestingAccount {
   // end of vesting as unix time (in seconds).
   int64 end_time = 4;
   bool  delayed  = 5;
+  // start of vesting as unix time (in seconds).
+  int64 start_time = 6;
 }
 
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.

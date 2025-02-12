@@ -163,7 +163,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		return ledger.ShowAddress(*ledgerItem.Path, pk, sdk.GetConfig().GetBech32AccountAddrPrefix())
+		return ledger.ShowAddress(*ledgerItem.Path, pk, sdk.NewConfig().GetBech32AccountAddrPrefix())
 	}
 
 	return nil

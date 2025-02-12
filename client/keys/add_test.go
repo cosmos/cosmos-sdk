@@ -219,7 +219,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 				WithKeyring(kb)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-			path := sdk.GetConfig().GetFullBIP44Path()
+			path := sdk.NewConfig().GetFullBIP44Path()
 			_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 

@@ -73,7 +73,7 @@ func TestEquivocationValidateBasic(t *testing.T) {
 }
 
 func TestEvidenceAddressConversion(t *testing.T) {
-	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
+	sdk.NewConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
 	tmEvidence := NewCometMisbehavior(1, 100, time.Now(), comet.DuplicateVote,
 		validator{address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, power: 100})
 
@@ -81,7 +81,7 @@ func TestEvidenceAddressConversion(t *testing.T) {
 	consAddr := evidence.GetConsensusAddress(address.NewBech32Codec("testcnclcons"))
 	// Check the address is the same after conversion
 	require.Equal(t, tmEvidence.Validator().Address(), consAddr.Bytes())
-	sdk.GetConfig().SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
+	sdk.NewConfig().SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 }
 
 type Misbehavior struct {

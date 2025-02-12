@@ -102,7 +102,7 @@ func TestPublicKeySafe(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, priv)
-	require.Nil(t, ShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
+	require.Nil(t, ShowAddress(path, priv.PubKey(), sdk.NewConfig().GetBech32AccountAddrPrefix()))
 	checkDefaultPubKey(t, priv)
 
 	addr2 := sdk.AccAddress(priv.PubKey().Address()).String()

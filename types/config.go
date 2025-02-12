@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -30,8 +31,7 @@ type Config struct {
 
 // cosmos-sdk wide global singleton
 var (
-	sdkConfig  *Config
-	initConfig sync.Once
+	sdkConfig *Config
 )
 
 // New returns a new Config with default values.
@@ -56,15 +56,17 @@ func NewConfig() *Config {
 
 // GetConfig returns the config instance for the SDK.
 func GetConfig() *Config {
-	initConfig.Do(func() {
-		sdkConfig = NewConfig()
-	})
-	return sdkConfig
+	panic(errors.New("deprecated: global config is deprecated. Please migrate to version XXX"))
 }
 
 // GetSealedConfig returns the config instance for the SDK if/once it is sealed.
 func GetSealedConfig(ctx context.Context) (*Config, error) {
-	config := GetConfig()
+	config := NewConfig()
+	// probably still should be in sync.Once block but this is fine for testing
+	if sdkConfig == nil {
+		sdkConfig = NewConfig()
+		config = sdkConfig
+	}
 	select {
 	case <-config.sealedch:
 		return config, nil

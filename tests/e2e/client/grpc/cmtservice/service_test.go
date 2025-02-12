@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -156,7 +157,6 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPC() {
 		{"with pagination", &cmtservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{Offset: 0, Limit: uint64(len(vals))}}, false, ""},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			grpcRes, err := s.queryClient.GetLatestValidatorSet(context.Background(), tc.req)
 			if tc.expErr {
@@ -187,7 +187,6 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPCGateway() {
 		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=0&pagination.limit=2", vals[0].APIAddress), false, ""},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -220,7 +219,6 @@ func (s *E2ETestSuite) TestValidatorSetByHeight_GRPC() {
 		{"with pagination", &cmtservice.GetValidatorSetByHeightRequest{Height: 1, Pagination: &qtypes.PageRequest{Offset: 0, Limit: 1}}, false, ""},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			grpcRes, err := s.queryClient.GetValidatorSetByHeight(context.Background(), tc.req)
 			if tc.expErr {
@@ -249,7 +247,6 @@ func (s *E2ETestSuite) TestValidatorSetByHeight_GRPCGateway() {
 		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=0&pagination.limit=2", vals[0].APIAddress, 1), false, ""},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -328,8 +325,6 @@ func (s *E2ETestSuite) TestABCIQuery() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.ABCIQuery(context.Background(), tc.req)
 			if tc.expectErr {

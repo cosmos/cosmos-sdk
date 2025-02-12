@@ -176,7 +176,6 @@ func TestAppImportExport(t *testing.T) {
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	_, err = newApp.ModuleManager.InitGenesis(ctxB, app.AppCodec(), genesisState)
-
 	if err != nil {
 		if strings.Contains(err.Error(), "validator set is empty after InitGenesis") {
 			logger.Info("Skipping simulation as all validators have been unbonded")

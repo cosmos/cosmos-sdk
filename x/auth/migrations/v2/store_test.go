@@ -659,7 +659,6 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := accountKeeper.Params.Set(ctx, authtypes.DefaultParams())
 			require.NoError(t, err)

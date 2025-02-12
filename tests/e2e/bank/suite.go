@@ -234,7 +234,6 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.Require().NoError(s.network.WaitForNextBlock())
 		s.Run(tc.name, func() {
@@ -369,7 +368,6 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.Require().NoError(s.network.WaitForNextBlock())
 		s.Run(tc.name, func() {

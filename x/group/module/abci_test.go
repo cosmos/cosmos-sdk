@@ -335,7 +335,6 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			proposalID := spec.setupProposal(ctx)
 
@@ -559,7 +558,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 	}
 }
 
-func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) { //nolint:revive // context-as-argument: context.Context should be the first parameter of a function
+func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: groupPolicyAddr.String(),
 		Proposers:          proposers,
@@ -578,7 +577,7 @@ func submitProposal(s *IntegrationTestSuite, app *runtime.App, ctx context.Conte
 }
 
 func submitProposalAndVote(
-	s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg, //nolint:revive // context-as-argument: context.Context should be the first parameter of a function
+	s *IntegrationTestSuite, app *runtime.App, ctx context.Context, msgs []sdk.Msg,
 	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption,
 ) (uint64, error) {
 	myProposalID, err := submitProposal(s, app, ctx, msgs, proposers, groupPolicyAddr)

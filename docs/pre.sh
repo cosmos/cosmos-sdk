@@ -32,7 +32,6 @@ wget -O docs/user/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmo
 cp ../client/v2/README.md ./docs/learn/advanced/17-autocli.md
 cp ../depinject/README.md ./docs/build/packages/01-depinject.md
 cp ../collections/README.md ./docs/build/packages/02-collections.md
-cp ../orm/README.md ./docs/build/packages/03-orm.md
 
 ## Add architecture documentation
 cp -r ./architecture ./docs/build

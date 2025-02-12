@@ -68,7 +68,13 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	// Store the consensus params in the BaseApp's param store. Note, this must be
 	// done after the finalizeBlockState and context have been set as it's persisted
 	// to state.
-	if req.ConsensusParams != nil {
+	if cp := req.ConsensusParams; cp != nil {
+		if cp.Version == nil || (cp.Version != nil && cp.Version.App == 0) {
+			cp.Version = &cmtproto.VersionParams{
+				App: InitialAppVersion,
+			}
+		}
+
 		err := app.StoreConsensusParams(app.finalizeBlockState.Context(), *req.ConsensusParams)
 		if err != nil {
 			return nil, err
@@ -136,11 +142,22 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 
 func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 	lastCommitID := app.cms.LastCommitID()
+	appVersion := InitialAppVersion
+	if lastCommitID.Version > 0 {
+		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
+		if err != nil {
+			return nil, fmt.Errorf("failed creating query context: %w", err)
+		}
+		appVersion, err = app.AppVersion(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed getting app version: %w", err)
+		}
+	}
 
 	return &abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,
-		AppVersion:       app.appVersion,
+		AppVersion:       appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}, nil

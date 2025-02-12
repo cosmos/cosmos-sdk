@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.1.x-celestia]
+
+* [#1](https://github.com/01builders/cosmos-sdk/pull/1) No longer store the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
+
 ## [v0.1.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.4) - 2024-07-15
 
 ### Improvements

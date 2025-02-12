@@ -139,16 +139,6 @@ func TestSlashRedelegation(t *testing.T) {
 	err = slashKeeper.Slash(ctx, evilValConsAddr, math.LegacyMustNewDecFromStr("0.9"), evilPower, 3)
 	require.NoError(t, err)
 
-	// assert invariant to make sure we conduct slashing correctly
-	_, stop := stakingkeeper.AllInvariants(stakingKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
-	require.False(t, stop)
-
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
-	require.False(t, stop)
-
 	// one eternity later
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1000000000000000000))
 	require.NoError(t, err)

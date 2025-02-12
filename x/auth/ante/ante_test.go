@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"

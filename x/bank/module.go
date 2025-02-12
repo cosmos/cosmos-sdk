@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/address"
@@ -142,10 +143,8 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.Acc
 	}
 }
 
-// RegisterInvariants registers the bank module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper)
-}
+// RegisterInvariants is deprecated and will be removed in the next Cosmos SDK release.
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // QuerierRoute returns the bank module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
@@ -268,7 +267,7 @@ func InvokeSetSendRestrictions(
 		return nil
 	}
 
-	modules := maps.Keys(restrictions)
+	modules := slices.Collect(maps.Keys(restrictions))
 	order := config.RestrictionsOrder
 	if len(order) == 0 {
 		order = modules

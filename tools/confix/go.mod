@@ -1,6 +1,6 @@
 module cosmossdk.io/tools/confix
 
-go 1.21
+go 1.23
 
 require (
 	github.com/cosmos/cosmos-sdk v0.50.6
@@ -9,7 +9,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
 	gotest.tools/v3 v3.5.1
 )
 
@@ -141,11 +140,13 @@ require (
 	go.etcd.io/bbolt v1.3.10 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/tools v0.22.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240311132316-a219d84964c2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda // indirect

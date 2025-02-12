@@ -192,10 +192,6 @@ When extracting a package to its own go modules, some extra steps are required, 
 * Add the package in [`labeler.yml`](./.github/labeler.yml)
 * Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
 * Add tests to github workflow [test.yml](.github/workflows/test.yml) (under submodules)
-* Configure SonarCloud
-    * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
-    * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
-    * Ask the team to add the project to SonarCloud
 * (optional) Configure a `cosmossdk.io` vanity url by submitting a PR to [cosmos/vanity](https://github.com/cosmos/vanity).
 
 ## Protobuf

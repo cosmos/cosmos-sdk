@@ -32,12 +32,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
@@ -205,6 +206,8 @@ type AppModule interface {
 }
 
 // HasInvariants is the interface for registering invariants.
+//
+// Deprecated: this will be removed in the next Cosmos SDK release.
 type HasInvariants interface {
 	// RegisterInvariants registers module invariants.
 	RegisterInvariants(sdk.InvariantRegistry)
@@ -445,13 +448,9 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 }
 
 // RegisterInvariants registers all module invariants
-func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
-	for _, module := range m.Modules {
-		if module, ok := module.(HasInvariants); ok {
-			module.RegisterInvariants(ir)
-		}
-	}
-}
+//
+// Deprecated: this function is a no-op and will be removed in the next release of the Cosmos SDK.
+func (m *Manager) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterServices registers all module services
 func (m *Manager) RegisterServices(cfg Configurator) error {
@@ -871,7 +870,7 @@ func (m *Manager) GetVersionMap() VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	return maps.Keys(m.Modules)
+	return slices.Collect(maps.Keys(m.Modules))
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

@@ -9,9 +9,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
@@ -163,27 +163,6 @@ func TestManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderPrecommiters)
 	mm.SetOrderPrecommiters("module3", "module2", "module1")
 	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
-}
-
-func TestManager_RegisterInvariants(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
-	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
-	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
-	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	// TODO: This is not working for Core API modules yet
-	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("mockAppModule3", mockAppModule3))
-	require.NotNil(t, mm)
-	require.Equal(t, 3, len(mm.Modules))
-
-	// test RegisterInvariants
-	mockInvariantRegistry := mock.NewMockInvariantRegistry(mockCtrl)
-	mockAppModule1.EXPECT().RegisterInvariants(gomock.Eq(mockInvariantRegistry)).Times(1)
-	mockAppModule2.EXPECT().RegisterInvariants(gomock.Eq(mockInvariantRegistry)).Times(1)
-	mm.RegisterInvariants(mockInvariantRegistry)
 }
 
 func TestManager_RegisterQueryServices(t *testing.T) {

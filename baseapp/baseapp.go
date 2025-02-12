@@ -67,6 +67,7 @@ type BaseApp struct {
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
+	customQueryRouter sdk.QueryRouter             // router for redirecting custom abci query requests
 	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -200,17 +201,18 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger,
-		name:             name,
-		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
-		storeLoader:      DefaultStoreLoader,
-		grpcQueryRouter:  NewGRPCQueryRouter(),
-		msgServiceRouter: NewMsgServiceRouter(),
-		txDecoder:        txDecoder,
-		fauxMerkleMode:   false,
-		sigverifyTx:      true,
-		queryGasLimit:    math.MaxUint64,
+		logger:            logger,
+		name:              name,
+		db:                db,
+		cms:               store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		storeLoader:       DefaultStoreLoader,
+		customQueryRouter: NewQueryRouter(),
+		grpcQueryRouter:   NewGRPCQueryRouter(),
+		msgServiceRouter:  NewMsgServiceRouter(),
+		txDecoder:         txDecoder,
+		fauxMerkleMode:    false,
+		sigverifyTx:       true,
+		queryGasLimit:     math.MaxUint64,
 	}
 
 	for _, option := range options {
@@ -276,6 +278,9 @@ func (app *BaseApp) Logger() log.Logger {
 func (app *BaseApp) Trace() bool {
 	return app.trace
 }
+
+// CustomQueryRouter returns the custom QueryRouter of a BaseApp.
+func (app *BaseApp) CustomQueryRouter() sdk.QueryRouter { return app.customQueryRouter }
 
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }

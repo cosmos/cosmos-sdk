@@ -30,6 +30,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       # set VERSION to new version when making changes, when merged to main the image will automatically be pushed
       - uses: actions/checkout@v3

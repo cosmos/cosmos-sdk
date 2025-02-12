@@ -14,9 +14,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/testing/queryclient"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -36,7 +37,6 @@ type DeterministicTestSuite struct {
 
 	accountNumberLanes uint64
 
-	key            *storetypes.KVStoreKey
 	environment    appmodule.Environment
 	ctx            sdk.Context
 	queryClient    types.QueryClient
@@ -97,11 +97,10 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		types.NewModuleAddress("gov").String(),
 	)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
+	queryHelper := queryclient.NewQueryHelper(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry).GRPCCodec())
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(suite.accountKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
-	suite.key = key
 	suite.environment = env
 	suite.maccPerms = maccPerms
 	suite.accountNumberLanes = 1
@@ -261,13 +260,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 }
 
 func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.AccountKeeper) types.QueryClient {
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
+	queryHelper := queryclient.NewQueryHelper(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry).GRPCCodec())
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(ak))
 	return types.NewQueryClient(queryHelper)
 }
 
 func (suite *DeterministicTestSuite) setModuleAccounts(
-	ctx sdk.Context, ak keeper.AccountKeeper, maccs []string,
+	ctx context.Context, ak keeper.AccountKeeper, maccs []string,
 ) []sdk.AccountI {
 	sort.Strings(maccs)
 	moduleAccounts := make([]sdk.AccountI, 0, len(maccs))

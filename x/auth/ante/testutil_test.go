@@ -3,6 +3,7 @@ package ante_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -19,7 +20,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -98,14 +98,11 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 		"random":                 {"random"},
 	}
 
-	msgRouter := baseapp.NewMsgServiceRouter()
-	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
-	grpcQueryRouter.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
-
 	suite.consensusKeeper = antetestutil.NewMockConsensusKeeper(ctrl)
 	suite.consensusKeeper.EXPECT().BlockParams(gomock.Any()).Return(uint64(simtestutil.DefaultConsensusParams.Block.MaxGas), uint64(simtestutil.DefaultConsensusParams.Block.MaxBytes), nil).AnyTimes()
 
-	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
+	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
 		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
@@ -239,6 +236,67 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 			t.Fatal("expected one of txErr, anteErr to be an error")
 		}
 	}
+}
+
+func (suite *AnteTestSuite) CreateTestUnorderedTx(
+	ctx sdk.Context, privs []cryptotypes.PrivKey,
+	accNums, accSeqs []uint64,
+	chainID string, signMode apisigning.SignMode,
+	unordered bool, unorderedTimeout time.Time,
+) (xauthsigning.Tx, error) {
+	suite.txBuilder.SetUnordered(unordered)
+	suite.txBuilder.SetTimeoutTimestamp(unorderedTimeout)
+
+	// First round: we gather all the signer infos. We use the "set empty
+	// signature" hack to do that.
+	var sigsV2 []signing.SignatureV2
+	for i, priv := range privs {
+		sigV2 := signing.SignatureV2{
+			PubKey: priv.PubKey(),
+			Data: &signing.SingleSignatureData{
+				SignMode:  signMode,
+				Signature: nil,
+			},
+			Sequence: accSeqs[i],
+		}
+
+		sigsV2 = append(sigsV2, sigV2)
+	}
+	err := suite.txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Second round: all signer infos are set, so each signer can sign.
+	sigsV2 = []signing.SignatureV2{}
+	for i, priv := range privs {
+		anyPk, err := codectypes.NewAnyWithValue(priv.PubKey())
+		if err != nil {
+			return nil, err
+		}
+
+		signerData := txsigning.SignerData{
+			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
+			PubKey:        &anypb.Any{TypeUrl: anyPk.TypeUrl, Value: anyPk.Value},
+		}
+		sigV2, err := tx.SignWithPrivKey(
+			ctx, signMode, signerData,
+			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
+		if err != nil {
+			return nil, err
+		}
+
+		sigsV2 = append(sigsV2, sigV2)
+	}
+	err = suite.txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
+
+	return suite.txBuilder.GetTx(), nil
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.

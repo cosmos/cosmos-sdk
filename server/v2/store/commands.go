@@ -44,14 +44,8 @@ Supported app-db-backend types include 'goleveldb', 'pebbledb'.`,
 			if err := vp.BindPFlags(cmd.PersistentFlags()); err != nil {
 				return err
 			}
-			logger := serverv2.GetLoggerFromCmd(cmd)
 
-			rootStore, opts, err := createRootStore(vp, logger)
-			if err != nil {
-				return fmt.Errorf("can not create root store %w", err)
-			}
-
-			latestHeight, err := rootStore.GetLatestVersion()
+			latestHeight, err := s.store.GetLatestVersion()
 			if err != nil {
 				return err
 			}
@@ -61,10 +55,7 @@ Supported app-db-backend types include 'goleveldb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			diff := latestHeight - opts.SCPruningOption.KeepRecent
-			cmd.Printf("pruning heights up to %v\n", diff)
-
-			err = rootStore.Prune(latestHeight)
+			err = s.store.Prune(latestHeight)
 			if err != nil {
 				return err
 			}

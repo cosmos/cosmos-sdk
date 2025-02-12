@@ -105,6 +105,11 @@ func (m *Manager) Migrate(height uint64) error {
 		return err
 	}
 
+	// Store the migration height
+	if err := StoreMigrationHeight(m.db, height); err != nil {
+		return fmt.Errorf("failed to store migration height: %w", err)
+	}
+
 	m.migratedVersion.Store(height)
 
 	return nil

@@ -63,7 +63,7 @@ func ProvideCustomMsgTransactionGetSigners() signing.CustomGetSigner {
 
 	// Return the signer in the required format.
 	return signing.CustomGetSigner{
-		MsgType: gogoproto.MessageName(&types.CustomMsg{}),
+		MsgType: protoreflect.FullName(gogoproto.MessageName(&types.CustomMsg{})),
 		Fn: func(msg proto.Message) ([][]byte, error) {
 			return [][]byte{signer}, nil
 		}

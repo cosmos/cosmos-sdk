@@ -1,6 +1,6 @@
 module cosmossdk.io/collections
 
-go 1.21
+go 1.23
 
 require (
 	cosmossdk.io/core v0.11.0

@@ -135,8 +135,9 @@ hubl:
 .PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
 
 
+#? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install github.com/golang/mock/mockgen@v1.6.0
+	@go install go.uber.org/mock/mockgen@v0.5.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -371,7 +372,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.51.2
+golangci_version=v1.64.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

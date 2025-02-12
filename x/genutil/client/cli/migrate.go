@@ -58,7 +58,7 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 	target := args[0]
 	migrationFunc, ok := migrations[target]
 	if !ok || migrationFunc == nil {
-		versions := slices.Collect(maps.Keys(migrations))
+		versions := slices.Sorted(maps.Keys(migrations))
 		return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(versions, ", "))
 	}
 

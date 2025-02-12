@@ -14,12 +14,6 @@
   <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
-  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
-    <img alt="Code Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=coverage" />
-  </a>
-  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
-    <img alt="SonarCloud Analysis" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=alert_status">
-  </a>
 </div>
 <div align="center">
   <a href="https://discord.gg/AzefAFd">

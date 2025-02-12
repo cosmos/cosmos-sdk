@@ -6,7 +6,6 @@ rm -rf docs/build/tooling/02-confix.md
 rm -rf docs/build/tooling/03-hubl.md
 rm -rf docs/build/packages/01-depinject.md
 rm -rf docs/build/packages/02-collections.md
-rm -rf docs/build/packages/03-orm.md
 rm -rf docs/learn/advaced-concepts/17-autocli.md
 rm -rf docs/user/run-node/04-rosetta.md
 rm -rf docs/build/architecture

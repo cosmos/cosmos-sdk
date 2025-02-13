@@ -66,7 +66,7 @@ func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
 
 // BatchUpgradeWatcher starts a watcher loop that swaps upgrade manifests at the correct
 // height, given the batch upgrade file. It watches the current state of the chain
-// via the websocket API.
+// via the gRPC service.
 func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
 	// load batch file in memory
 	uInfos, err := loadBatchUpgradeFile(cfg)
@@ -341,7 +341,7 @@ func (l Launcher) doBackup() error {
 
 		// a destination directory, Format YYYY-MM-DD
 		st := time.Now()
-		ymd := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
+		ymd := fmt.Sprintf("%d-%02d-%02d", st.Year(), st.Month(), st.Day())
 		dst := filepath.Join(l.cfg.DataBackupPath, fmt.Sprintf("data"+"-backup-%s", ymd))
 
 		l.logger.Info("starting to take backup of data directory", "backup start time", st)
@@ -351,7 +351,7 @@ func (l Launcher) doBackup() error {
 			return fmt.Errorf("error while taking data backup: %w", err)
 		}
 
-		// backup is done, lets check endtime to calculate total time taken for backup process
+		// backup is done, let's check endtime to calculate total time taken for backup process
 		et := time.Now()
 		l.logger.Info("backup completed", "backup saved at", dst, "backup completion time", et, "time taken to complete backup", et.Sub(st))
 	}

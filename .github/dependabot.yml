@@ -133,15 +133,6 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/tools/hubl"
-    schedule:
-      interval: weekly
-      day: thursday
-      time: "02:15"
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
     directory: "/collections"
     schedule:
       interval: weekly

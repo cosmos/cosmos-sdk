@@ -184,26 +184,14 @@ get away with telling people they can just `go get` our software.
 Since some dependencies are not under our control, a third party may break our
 build, in which case we can fall back on `go mod tidy -v`.
 
-### `go.work`
-
-The Cosmos SDK is a multi-module repo, for this reason, the use of a `go.work` file is handy. 
-We provide a [`go.work.example`](./go.work.example) that contains all the modules used in the SDK.
-Do note that contributions modifying multiple Go modules should be submitted as separate PRs, this allows us to tag the changes and avoid `replace`s.
-For consistency between our CI and the local tests, `GOWORK=off` is set in the `Makefile`. This means that the `go.work` file is not used when using `make test` or any other `make` command.
-
 ### `go.mod`
 
 When extracting a package to its own go modules, some extra steps are required, for keeping our CI checks and Dev UX:
 
 * Add a CHANGELOG.md / README.md under the new package folder
 * Add the package in [`labeler.yml`](./.github/labeler.yml)
-* Add the package in [`go.work.example`](./go.work.example)
 * Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
 * Add tests to github workflow [test.yml](.github/workflows/test.yml) (under submodules)
-* Configure SonarCloud
-    * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
-    * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
-    * Ask the team to add the project to SonarCloud
 * (optional) Configure a `cosmossdk.io` vanity url by submitting a PR to [cosmos/vanity](https://github.com/cosmos/vanity).
 
 ## Protobuf

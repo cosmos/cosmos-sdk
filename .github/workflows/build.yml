@@ -19,12 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-arch: ["amd64", "arm", "arm64"]
+        # go-arch: ["amd64", "arm", "arm64"]
+        go-arch: ["amd64", "arm64"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+          go-version: "1.23"
           check-latest: true
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
@@ -55,6 +56,3 @@ jobs:
       - name: Build Confix
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} make confix
-      - name: Build Hubl
-        if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} make hubl

@@ -6,7 +6,13 @@ echo 'ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary'
 
 # create upgrade info
 # this info contains directly information about binaries (in chain2->chain3 update we test with info containing a link to the file with an address for the new chain binary)
-echo '{"name":"chain2","height":49,"info":"{\"binaries\":{\"linux/amd64\":\"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:13767eb0b57bf51a0f43d49f6277d5df97d4dec672dc39822d23a82fb8e70a7b\"}}"}' >$3
+cat > "$3" <<EOL
+{
+	"name": "chain2",
+	"height": 49,
+	"info": "{\"binaries\":{\"linux/amd64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:e84db844e123e3bb888c9ec52f6768ae29fbef7c17eaf8fc7431485a65dae6b9\",\"linux/arm64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:e84db844e123e3bb888c9ec52f6768ae29fbef7c17eaf8fc7431485a65dae6b9\",\"darwin/amd64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:e84db844e123e3bb888c9ec52f6768ae29fbef7c17eaf8fc7431485a65dae6b9\",\"darwin/arm64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:e84db844e123e3bb888c9ec52f6768ae29fbef7c17eaf8fc7431485a65dae6b9\"}}"
+}
+EOL
 
 sleep 0.1
 echo Never should be printed!!!

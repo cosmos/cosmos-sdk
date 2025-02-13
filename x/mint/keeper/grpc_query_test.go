@@ -4,8 +4,8 @@ import (
 	gocontext "context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	storetypes "cosmossdk.io/store/types"
 

@@ -90,7 +90,6 @@ type zeroLogWrapper struct {
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
-// The returned value can be safely cast to cosmossdk.io/core/log.Logger.
 func NewLogger(dst io.Writer, options ...Option) Logger {
 	logCfg := defaultConfig
 	for _, opt := range options {

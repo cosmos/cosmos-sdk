@@ -214,3 +214,8 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )
+
+replace (
+	github.com/cometbft/cometbft => github.com/unionlabs/cometbls v0.0.0-20250213202407-8d347817ce05
+	github.com/consensys/gnark-crypto => github.com/unionlabs/gnark-crypto v0.0.0-20231016072529-15c0507b6578
+)

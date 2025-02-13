@@ -22,6 +22,7 @@ on:
 permissions:
   contents: read
   packages: write
+  sid-token: write
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -59,6 +60,9 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Depot
+        uses: depot/setup-action@v1
 
       - name: Publish to GitHub Packages
         uses: depot/build-push-action@v1

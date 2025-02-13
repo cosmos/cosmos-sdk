@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -37,7 +36,7 @@ type Manager struct {
 	opts  types.SnapshotOptions
 	// multistore is the store from which snapshots are taken.
 	multistore types.Snapshotter
-	logger     log.Logger
+	logger     storetypes.Logger
 
 	mtx               sync.Mutex
 	operation         operation
@@ -68,10 +67,10 @@ const (
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
 
-var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
+var ErrOptsZeroSnapshotInterval = errors.New("snapshot-interval must not be 0")
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
+func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger storetypes.Logger) *Manager {
 	if extensions == nil {
 		extensions = map[string]types.ExtensionSnapshotter{}
 	}
@@ -389,8 +388,11 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 			return errorsmod.Wrapf(err, "extension %s restore", metadata.Name)
 		}
 
-		if nextItem.GetExtensionPayload() != nil {
-			return errorsmod.Wrapf(err, "extension %s don't exhausted payload stream", metadata.Name)
+		payload := nextItem.GetExtensionPayload()
+		if payload != nil && len(payload.Payload) != 0 {
+			return fmt.Errorf("extension %s don't exhausted payload stream", metadata.Name)
+		} else {
+			break
 		}
 	}
 	return nil

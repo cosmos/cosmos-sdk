@@ -5,20 +5,18 @@ import (
 	"fmt"
 	"io"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	dbm "github.com/cosmos/cosmos-db"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/wrapper"
 )
 
 const (
@@ -31,19 +29,20 @@ var (
 	_ types.CommitKVStore           = (*Store)(nil)
 	_ types.Queryable               = (*Store)(nil)
 	_ types.StoreWithInitialVersion = (*Store)(nil)
+	_ types.PausablePruner          = (*Store)(nil)
 )
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
 	tree    Tree
-	logger  log.Logger
+	logger  types.Logger
 	metrics metrics.StoreMetrics
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
-func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
+func LoadStore(db corestore.KVStoreWithBatch, logger types.Logger, key types.StoreKey, id types.CommitID, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
 	return LoadStoreWithInitialVersion(db, logger, key, id, 0, cacheSize, disableFastNode, metrics)
 }
 
@@ -51,8 +50,17 @@ func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.Commit
 // to the one given. Internally, it will load the store's version (id) from the
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
-func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
-	tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, disableFastNode, logger, iavl.InitialVersionOption(initialVersion))
+func LoadStoreWithInitialVersion(db corestore.KVStoreWithBatch, logger types.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
+	return LoadStoreWithOpts(db, logger, key, id, initialVersion, cacheSize, disableFastNode, metrics, iavl.AsyncPruningOption(true))
+}
+
+func LoadStoreWithOpts(db corestore.KVStoreWithBatch, logger types.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics, opts ...iavl.Option) (types.CommitKVStore, error) {
+	// store/v1 and app/v1 flows never require an initial version of 0
+	if initialVersion == 0 {
+		initialVersion = 1
+	}
+	opts = append(opts, iavl.InitialVersionOption(initialVersion))
+	tree := iavl.NewMutableTree(db, cacheSize, disableFastNode, logger, opts...)
 
 	isUpgradeable, err := tree.IsUpgradeable()
 	if err != nil {
@@ -147,13 +155,27 @@ func (st *Store) LastCommitID() types.CommitID {
 	}
 }
 
+// LatestVersion implements Committer.
+func (st *Store) LatestVersion() int64 {
+	return st.tree.Version()
+}
+
+// PausePruning implements CommitKVStore interface.
+func (st *Store) PausePruning(pause bool) {
+	if pause {
+		st.tree.SetCommitting()
+	} else {
+		st.tree.UnsetCommitting()
+	}
+}
+
 // SetPruning panics as pruning options should be provided at initialization
 // since IAVl accepts pruning options directly.
 func (st *Store) SetPruning(_ pruningtypes.PruningOptions) {
 	panic("cannot set pruning options on an initialized IAVL store")
 }
 
-// SetPruning panics as pruning options should be provided at initialization
+// GetPruning panics as pruning options should be provided at initialization
 // since IAVl accepts pruning options directly.
 func (st *Store) GetPruning() pruningtypes.PruningOptions {
 	panic("cannot get pruning options on an initialized IAVL store")
@@ -169,12 +191,12 @@ func (st *Store) GetAllVersions() []int {
 	return st.tree.AvailableVersions()
 }
 
-// Implements Store.
+// GetStoreType implements Store.
 func (st *Store) GetStoreType() types.StoreType {
 	return types.StoreTypeIAVL
 }
 
-// Implements Store.
+// CacheWrap implements Store.
 func (st *Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(st)
 }
@@ -184,7 +206,7 @@ func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
 }
 
-// Implements types.KVStore.
+// Set implements types.KVStore.
 func (st *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
@@ -194,7 +216,7 @@ func (st *Store) Set(key, value []byte) {
 	}
 }
 
-// Implements types.KVStore.
+// Get implements types.KVStore.
 func (st *Store) Get(key []byte) []byte {
 	defer st.metrics.MeasureSince("store", "iavl", "get")
 	value, err := st.tree.Get(key)
@@ -204,7 +226,7 @@ func (st *Store) Get(key []byte) []byte {
 	return value
 }
 
-// Implements types.KVStore.
+// Has implements types.KVStore.
 func (st *Store) Has(key []byte) (exists bool) {
 	defer st.metrics.MeasureSince("store", "iavl", "has")
 	has, err := st.tree.Has(key)
@@ -214,7 +236,7 @@ func (st *Store) Has(key []byte) (exists bool) {
 	return has
 }
 
-// Implements types.KVStore.
+// Delete implements types.KVStore.
 func (st *Store) Delete(key []byte) {
 	defer st.metrics.MeasureSince("store", "iavl", "delete")
 	_, _, err := st.tree.Remove(key)
@@ -223,7 +245,7 @@ func (st *Store) Delete(key []byte) {
 	}
 }
 
-// DeleteVersionsTo deletes versions upto the given version from the MutableTree. An error
+// DeleteVersionsTo deletes versions up to the given version from the MutableTree. An error
 // is returned if any single version is invalid or the delete fails. All writes
 // happen in a single batch with a single commit.
 func (st *Store) DeleteVersionsTo(version int64) error {
@@ -236,7 +258,7 @@ func (st *Store) LoadVersionForOverwriting(targetVersion int64) error {
 	return st.tree.LoadVersionForOverwriting(targetVersion)
 }
 
-// Implements types.KVStore.
+// Iterator implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, true)
 	if err != nil {
@@ -245,7 +267,7 @@ func (st *Store) Iterator(start, end []byte) types.Iterator {
 	return iterator
 }
 
-// Implements types.KVStore.
+// ReverseIterator implements types.KVStore.
 func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, false)
 	if err != nil {
@@ -260,7 +282,7 @@ func (st *Store) SetInitialVersion(version int64) {
 	st.tree.SetInitialVersion(uint64(version))
 }
 
-// Exports the IAVL store at the given version, returning an iavl.Exporter for the tree.
+// Export exports the IAVL store at the given version, returning an iavl.Exporter for the tree.
 func (st *Store) Export(version int64) (*iavl.Exporter, error) {
 	istore, err := st.GetImmutable(version)
 	if err != nil {
@@ -353,8 +375,8 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 		res.ProofOps = getProofFromTree(mtree, req.Data, res.Value != nil)
 
 	case "/subspace":
-		pairs := kv.Pairs{
-			Pairs: make([]kv.Pair, 0),
+		pairs := kv.Pairs{ //nolint:staticcheck // We are in store v1.
+			Pairs: make([]kv.Pair, 0), //nolint:staticcheck // We are in store v1.
 		}
 
 		subspace := req.Data
@@ -362,7 +384,7 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 
 		iterator := types.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
-			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
+			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()}) //nolint:staticcheck // We are in store v1.
 		}
 		if err := iterator.Close(); err != nil {
 			panic(fmt.Errorf("failed to close iterator: %w", err))

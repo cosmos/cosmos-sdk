@@ -228,10 +228,5 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 
 // hasPermissionForMsg returns true if the account can trip or reset the message.
 func hasPermissionForMsg(perms types.Permissions, msg string) bool {
-	for _, msgurl := range perms.LimitTypeUrls {
-		if msg == msgurl {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(perms.LimitTypeUrls, msg)
 }

@@ -54,22 +54,32 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/bank/proto/cosmos/ban
 If there is a need for custom signers then there is an alternative path which can be taken. A function which returns `signing.CustomGetSigner` for a specific message can be defined. 
 
 ```go
-func ProvideBankSendTransactionGetSigners() signing.CustomGetSigner {
+func ProvideCustomMsgTransactionGetSigners() signing.CustomGetSigner {
 	// Extract the signer from the signature.
 	signer, err := coretypes.LatestSigner(Tx).Sender(ethTx)
-    if err != nil {
+	if err != nil {
 		return nil, err
 	}
 
 	// Return the signer in the required format.
-	return [][]byte{signer.Bytes()}, nil
+	return signing.CustomGetSigner{
+		MsgType: protoreflect.FullName(gogoproto.MessageName(&types.CustomMsg{})),
+		Fn: func(msg proto.Message) ([][]byte, error) {
+			return [][]byte{signer}, nil
+		}
+	}
 }
 ```
 
-This can be provided to the application using depinject's `Provide` method in the application's `app.go`:
+This can be provided to the application using depinject's `Provide` method in the module that defines the type:
 
-```go
-depinject.Provide(banktypes.ProvideBankSendTransactionGetSigners)
+```diff
+func init() {
+	appconfig.RegisterModule(&modulev1.Module{},
+-		appconfig.Provide(ProvideModule),
++		appconfig.Provide(ProvideModule, ProvideCustomMsgTransactionGetSigners),
+	)
+}
 ```
 
 The Cosmos SDK uses Protobuf definitions to generate client and server code:

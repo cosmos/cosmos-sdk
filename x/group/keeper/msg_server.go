@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -1140,13 +1141,7 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 
 // isProposer checks that an address is a proposer of a given proposal.
 func isProposer(proposal group.Proposal, address string) bool {
-	for _, proposer := range proposal.Proposers {
-		if proposer == address {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(proposal.Proposers, address)
 }
 
 func validateMsgs(msgs []sdk.Msg) error {

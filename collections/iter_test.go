@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -10,11 +11,13 @@ import (
 func TestIteratorBasic(t *testing.T) {
 	sk, ctx := deps()
 	// safety check to ensure that iteration does not cross prefix boundaries
-	sk.OpenKVStore(ctx).Set([]byte{0, 0}, []byte("before prefix"))
-	sk.OpenKVStore(ctx).Set([]byte{2, 1}, []byte("after prefix"))
+	err := sk.OpenKVStore(ctx).Set([]byte{0, 0}, []byte("before prefix"))
+	require.NoError(t, err)
+	err = sk.OpenKVStore(ctx).Set([]byte{2, 1}, []byte("after prefix"))
+	require.NoError(t, err)
 	schemaBuilder := NewSchemaBuilder(sk)
 	m := NewMap(schemaBuilder, NewPrefix(1), "m", StringKey, Uint64Value)
-	_, err := schemaBuilder.Build()
+	_, err = schemaBuilder.Build()
 	require.NoError(t, err)
 
 	for i := uint64(1); i <= 2; i++ {
@@ -186,7 +189,7 @@ func TestWalk(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	sentinelErr := fmt.Errorf("sentinel error")
+	sentinelErr := errors.New("sentinel error")
 	err = m.Walk(ctx, nil, func(key, value uint64) (stop bool, err error) {
 		require.LessOrEqual(t, key, uint64(3)) // asserts that after the number three we stop
 		if key == 3 {

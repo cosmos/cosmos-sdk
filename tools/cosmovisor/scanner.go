@@ -74,7 +74,7 @@ func (fw *fileWatcher) Stop() {
 	fw.ticker.Stop()
 }
 
-// MonitorUpdate pools the filesystem to check for new upgrade currentInfo.
+// MonitorUpdate polls the filesystem to check for new upgrade currentInfo.
 // currentName is the name of currently running upgrade.  The check is rejected if it finds
 // an upgrade with the same name.
 func (fw *fileWatcher) MonitorUpdate(currentUpgrade upgradetypes.Plan) <-chan struct{} {

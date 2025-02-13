@@ -170,7 +170,7 @@ Example:
 	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix for the name of per-validator subdirectories (to be number-suffixed like node0, node1, ...)")
 	cmd.Flags().String(flagNodeDaemonHome, "simd", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
-	cmd.Flags().String(flagListenIPAddress, "127.0.0.1", "TCP or UNIX socket IP address for the RPC server to listen on")
+	cmd.Flags().String(flagListenIPAddress, "0.0.0.0", "TCP or UNIX socket IP address for the RPC server to listen on")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().Duration(flagCommitTimeout, 5*time.Second, "Time to wait after a block commit before starting on the new height")
 	cmd.Flags().Bool(flagSingleHost, false, "Cluster runs on a single host machine with different ports")
@@ -210,9 +210,9 @@ Example:
 
 	addTestnetFlagsToCmd(cmd)
 	cmd.Flags().Bool(flagEnableLogging, false, "Enable INFO logging of CometBFT validator nodes")
-	cmd.Flags().String(flagRPCAddress, "tcp://127.0.0.1:26657", "the RPC address to listen on")
-	cmd.Flags().String(flagAPIAddress, "tcp://127.0.0.1:1317", "the address to listen on for REST API")
-	cmd.Flags().String(flagGRPCAddress, "127.0.0.1:9090", "the gRPC server address to listen on")
+	cmd.Flags().String(flagRPCAddress, "tcp://0.0.0.0:26657", "the RPC address to listen on")
+	cmd.Flags().String(flagAPIAddress, "tcp://0.0.0.0:1317", "the address to listen on for REST API")
+	cmd.Flags().String(flagGRPCAddress, "0.0.0.0:9090", "the gRPC server address to listen on")
 	cmd.Flags().Bool(flagPrintMnemonic, true, "print mnemonic of first validator to stdout for manual testing")
 	return cmd
 }
@@ -264,8 +264,8 @@ func initTestnetFiles(
 			nodeConfig.P2P.AddrBookStrict = false
 			nodeConfig.P2P.PexReactor = false
 			nodeConfig.P2P.AllowDuplicateIP = true
-			appConfig.API.Address = fmt.Sprintf("tcp://127.0.0.1:%d", apiPort+portOffset)
-			appConfig.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset)
+			appConfig.API.Address = fmt.Sprintf("tcp://0.0.0.0:%d", apiPort+portOffset)
+			appConfig.GRPC.Address = fmt.Sprintf("0.0.0.0:%d", grpcPort+portOffset)
 		}
 
 		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)
@@ -285,7 +285,7 @@ func initTestnetFiles(
 			ip  string
 		)
 		if args.singleMachine {
-			ip = "127.0.0.1"
+			ip = "0.0.0.0"
 		} else {
 			ip, err = getIP(i, args.startingIPAddress)
 			if err != nil {
@@ -464,8 +464,8 @@ func collectGenFiles(
 	for i := 0; i < numValidators; i++ {
 		if singleMachine {
 			portOffset := i
-			nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%d", rpcPortStart+portOffset)
-			nodeConfig.P2P.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%d", p2pPortStart+portOffset)
+			nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%d", rpcPortStart+portOffset)
+			nodeConfig.P2P.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%d", p2pPortStart+portOffset)
 		}
 
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)

@@ -15,7 +15,7 @@ jobs:
   build:
     permissions:
       contents: read # for actions/checkout to fetch code
-    runs-on: large-sdk-runner
+    runs-on: depot-ubuntu-22.04-16
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
       - run: make build
 
   test-sim-import-export:
-    runs-on: large-sdk-runner
+    runs-on: depot-ubuntu-22.04-16
     needs: [build]
     timeout-minutes: 60
     steps:
@@ -40,7 +40,7 @@ jobs:
           make test-sim-import-export
 
   test-sim-after-import:
-    runs-on: large-sdk-runner
+    runs-on: depot-ubuntu-22.04-16
     needs: [build]
     timeout-minutes: 60
     steps:
@@ -54,7 +54,7 @@ jobs:
           make test-sim-after-import
 
   test-sim-deterministic:
-    runs-on: large-sdk-runner
+    runs-on: depot-ubuntu-22.04-16
     needs: [build]
     timeout-minutes: 60
     steps:
@@ -68,7 +68,7 @@ jobs:
           make test-sim-nondeterminism
 
   test-sim-multi-seed-short:
-    runs-on: large-sdk-runner
+    runs-on: depot-ubuntu-22.04-16
     needs: [build]
     timeout-minutes: 60
     steps:
@@ -89,7 +89,7 @@ jobs:
         test-sim-import-export,
         test-sim-deterministic,
       ]
-    runs-on: large-sdk-runner
+    runs-on: depot-ubuntu-22.04-16
     if: ${{ success() }}
     steps:
       - name: Check out repository
@@ -122,7 +122,7 @@ jobs:
         test-sim-import-export,
         test-sim-deterministic,
       ]
-    runs-on: large-sdk-runner
+    runs-on: depot-ubuntu-22.04-16
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure

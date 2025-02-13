@@ -227,7 +227,7 @@ func submitProposalWithVotesScheduled(
 					reporter.Skip("proposal not in voting period")
 					return nil, nil
 				}
-				voter := testData.AccountAt(reporter, whoVotes[i])
+				voter := testData.accountant(reporter, whoVotes[i])
 				msg := v1.NewMsgVote(voter.AddressBech32, proposalID, randomVotingOption(r.Rand), "")
 				return []simsx.SimAccount{voter}, msg
 			}

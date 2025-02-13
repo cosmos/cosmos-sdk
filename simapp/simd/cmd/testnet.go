@@ -189,7 +189,7 @@ and generate a directory for each validator populated with necessary
 configuration files (private validator, genesis, config, etc.).
 
 Example:
-	%s testnet --validator-count4 --output-dir ./.testnets
+	%s testnet --validator-count 4 --output-dir ./.testnets
 	`, version.AppName),
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			args := startArgs{}

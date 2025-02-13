@@ -106,7 +106,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		"init-files",
 		"--chain-id=" + s.chainID,
 		"--output-dir=" + s.outputDir,
-		"--v=" + strconv.Itoa(s.initialNodesCount),
+		"--validator-count=" + strconv.Itoa(s.initialNodesCount),
 		"--keyring-backend=test",
 		"--minimum-gas-prices=" + s.minGasPrice,
 	}

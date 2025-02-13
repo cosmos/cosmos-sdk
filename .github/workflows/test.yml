@@ -460,29 +460,6 @@ jobs:
           cd tools/confix
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
 
-  test-hubl:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: tools/hubl/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            tools/hubl/**/*.go
-            tools/hubl/go.mod
-            tools/hubl/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd tools/hubl
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
-
   test-store:
     runs-on: ubuntu-latest
     steps:

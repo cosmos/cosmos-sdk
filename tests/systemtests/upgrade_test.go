@@ -1,5 +1,3 @@
-//go:build system_test && linux
-
 package systemtests
 
 import (
@@ -14,6 +12,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+
+	"cosmossdk.io/systemtests"
 )
 
 func TestChainUpgrade(t *testing.T) {
@@ -21,17 +21,18 @@ func TestChainUpgrade(t *testing.T) {
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed
 	// then the chain upgrades successfully
+	sut := systemtests.Sut
 	sut.StopChain()
 
 	legacyBinary := FetchExecutable(t, "v0.50")
 	t.Logf("+++ legacy binary: %s\n", legacyBinary)
-	currentBranchBinary := sut.execBinary
-	currentInitializer := sut.testnetInitializer
+	currentBranchBinary := sut.ExecBinary()
+	currentInitializer := sut.TestnetInitializer()
 	sut.SetExecBinary(legacyBinary)
-	sut.SetTestnetInitializer(NewModifyConfigYamlInitializer(legacyBinary, sut))
+	sut.SetTestnetInitializer(systemtests.NewModifyConfigYamlInitializer(legacyBinary, sut))
 	sut.SetupChain()
 	votingPeriod := 5 * time.Second // enough time to vote
-	sut.ModifyGenesisJSON(t, SetGovVotingPeriod(t, votingPeriod))
+	sut.ModifyGenesisJSON(t, systemtests.SetGovVotingPeriod(t, votingPeriod))
 
 	const (
 		upgradeHeight int64 = 22
@@ -40,7 +41,7 @@ func TestChainUpgrade(t *testing.T) {
 
 	sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight))
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
 	// submit upgrade proposal
 	proposal := fmt.Sprintf(`
@@ -61,12 +62,12 @@ func TestChainUpgrade(t *testing.T) {
  "summary": "testing"
 }`, govAddr, upgradeName, upgradeHeight)
 	proposalID := cli.SubmitAndVoteGovProposal(proposal)
-	t.Logf("current_height: %d\n", sut.currentHeight)
+	t.Logf("current_height: %d\n", sut.CurrentHeight())
 	raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
 	t.Log(raw)
 
 	sut.AwaitBlockHeight(t, upgradeHeight-1, 60*time.Second)
-	t.Logf("current_height: %d\n", sut.currentHeight)
+	t.Logf("current_height: %d\n", sut.CurrentHeight())
 	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
 	require.Equal(t, "3", proposalStatus, raw) // PROPOSAL_STATUS_PASSED
@@ -79,14 +80,15 @@ func TestChainUpgrade(t *testing.T) {
 	sut.SetExecBinary(currentBranchBinary)
 	sut.SetTestnetInitializer(currentInitializer)
 	sut.StartChain(t)
-	cli = NewCLIWrapper(t, sut, verbose)
+	cli = systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
 
 	// smoke test that new version runs
+	defaultSrcAddr := "node0"
 	ownerAddr := cli.GetKeyAddr(defaultSrcAddr)
 	got := cli.Run("tx", "accounts", "init", "continuous-locking-account", `{"end_time":"2034-01-22T11:38:15.116127Z", "owner":"`+ownerAddr+`"}`, "--from="+defaultSrcAddr)
-	RequireTxSuccess(t, got)
+	systemtests.RequireTxSuccess(t, got)
 	got = cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from="+defaultSrcAddr)
-	RequireTxSuccess(t, got)
+	systemtests.RequireTxSuccess(t, got)
 }
 
 const cacheDir = "binaries"
@@ -94,20 +96,23 @@ const cacheDir = "binaries"
 // FetchExecutable to download and extract tar.gz for linux
 func FetchExecutable(t *testing.T, version string) string {
 	// use local cache
-	cacheFolder := filepath.Join(WorkDir, cacheDir)
+	cacheFolder := filepath.Join(systemtests.WorkDir, cacheDir)
 	err := os.MkdirAll(cacheFolder, 0o777)
 	if err != nil && !os.IsExist(err) {
 		panic(err)
 	}
 
-	cacheFile := filepath.Join(cacheFolder, fmt.Sprintf("%s_%s", execBinaryName, version))
+	cacheFile := filepath.Join(cacheFolder, fmt.Sprintf("%s_%s", systemtests.GetExecutableName(), version))
 	if _, err := os.Stat(cacheFile); err == nil {
 		return cacheFile
 	}
 	destFile := cacheFile
 	t.Log("+++ version not in cache, downloading from docker image")
-	runShellCmd(t, "docker", "pull", "ghcr.io/cosmos/simapp:"+version)
-	runShellCmd(t, "docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
-	runShellCmd(t, "docker", "cp", "ci_temp:/usr/bin/simd", destFile)
+	_, err = systemtests.RunShellCmd("docker", "pull", "ghcr.io/cosmos/simapp:"+version)
+	require.NoError(t, err)
+	_, err = systemtests.RunShellCmd("docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
+	require.NoError(t, err)
+	_, err = systemtests.RunShellCmd("docker", "cp", "ci_temp:/usr/bin/simd", destFile)
+	require.NoError(t, err)
 	return destFile
 }

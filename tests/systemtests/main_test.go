@@ -1,11 +1,11 @@
-//go:build system_test
-
 package systemtests
 
 import (
 	"testing"
+
+	"cosmossdk.io/systemtests"
 )
 
 func TestMain(m *testing.M) {
-	RunTests(m)
+	systemtests.RunTests(m)
 }

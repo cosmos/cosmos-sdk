@@ -1,8 +1,6 @@
 package math
 
-import (
-	"cmp"
-)
+import "cmp"
 
 func Max[T cmp.Ordered](a, b T, rest ...T) T {
 	max := a

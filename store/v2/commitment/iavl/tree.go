@@ -24,14 +24,39 @@ type IavlTree struct {
 	tree *iavl.MutableTree
 	// it is only used for new store key during the migration process.
 	initialVersion uint64
+	db            corestore.KVStoreWithBatch
+	oldReader     corestore.Reader
+	querier       *HistoricalQuerier
+	config        *Config
 }
 
 // NewIavlTree creates a new IavlTree instance.
-func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) *IavlTree {
-	tree := iavl.NewMutableTree(db, cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
-	return &IavlTree{
-		tree: tree,
+// Returns nil and error if initialization fails.
+func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) (*IavlTree, error) {
+	if cfg == nil {
+		cfg = DefaultConfig()
 	}
+	tree := iavl.NewMutableTree(db, cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
+	t := &IavlTree{
+		tree:   tree,
+		db:     db,
+		config: cfg,
+	}
+	
+	var err error
+	t.querier, err = NewHistoricalQuerier(t, t.oldReader, db, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create historical querier: %w", err)
+	}
+	
+	return t, nil
+}
+
+// SetOldReader sets the old reader for historical queries
+func (t *IavlTree) SetOldReader(reader corestore.Reader) {
+	t.oldReader = reader
+	// Reset querier to recreate it with new reader
+	t.querier = nil
 }
 
 // Remove removes the given key from the tree.
@@ -115,44 +140,28 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 	return immutableTree.GetProof(key)
 }
 
-// Get implements the Reader interface.
+// Get gets the value at the specified version
 func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
-	// the mutable tree is empty at genesis & when the storekey is removed, but the immutable tree is not but the immutable tree is not empty when the storekey is removed
-	// by checking the latest version we can determine if we are in genesis or have a key that has been removed
-	lv, err := t.tree.GetLatestVersion()
-	if err != nil {
-		return nil, err
+	if t.querier == nil {
+		var err error
+		t.querier, err = NewHistoricalQuerier(t, t.oldReader, t.db, t.config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create historical querier: %w", err)
+		}
 	}
-	if lv == 0 {
-		return t.tree.Get(key)
-	}
-
-	immutableTree, err := t.tree.GetImmutable(int64(version))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
-	}
-
-	return immutableTree.Get(key)
+	return t.querier.Get(version, key)
 }
 
-// Iterator implements the Reader interface.
+// Iterator returns an iterator over a domain of keys at the specified version
 func (t *IavlTree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
-	// the mutable tree is empty at genesis & when the storekey is removed, but the immutable tree is not empty when the storekey is removed
-	// by checking the latest version we can determine if we are in genesis or have a key that has been removed
-	lv, err := t.tree.GetLatestVersion()
-	if err != nil {
-		return nil, err
+	if t.querier == nil {
+		var err error
+		t.querier, err = NewHistoricalQuerier(t, t.oldReader, t.db, t.config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create historical querier: %w", err)
+		}
 	}
-	if lv == 0 {
-		return t.tree.Iterator(start, end, ascending)
-	}
-
-	immutableTree, err := t.tree.GetImmutable(int64(version))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
-	}
-
-	return immutableTree.Iterator(start, end, ascending)
+	return t.querier.Iterator(version, start, end, ascending)
 }
 
 // GetLatestVersion returns the latest version of the tree.

@@ -12,7 +12,7 @@ permissions:
 jobs:
   golangci:
     name: golangci-lint
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

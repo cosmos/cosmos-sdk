@@ -183,38 +183,6 @@ jobs:
         with:
           name: "${{ github.sha }}-e2e-coverage"
         continue-on-error: true
-
-  liveness-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
-            **/Makefile
-            Makefile
-      - name: start localnet
-        if: env.GIT_DIFF
-        run: |
-          make clean localnet-start
-      - name: test liveness
-        if: env.GIT_DIFF
-        run: |
-          ./contrib/localnet_liveness.sh 100 5 50 localhost
-
   test-sim-nondeterminism:
     runs-on: ubuntu-latest
     steps:

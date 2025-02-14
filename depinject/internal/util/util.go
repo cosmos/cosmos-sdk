@@ -20,6 +20,5 @@ func IterateMapOrdered[K cmp.Ordered, V any](m map[K]V, forEach func(k K, v V) e
 
 // OrderedMapKeys returns the map keys in ascending order.
 func OrderedMapKeys[K cmp.Ordered, V any](m map[K]V) []K {
-	keys := maps.Keys(m)
-	return slices.Sorted(keys)
+	return slices.Sorted(maps.Keys(m))
 }

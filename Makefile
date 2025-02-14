@@ -383,6 +383,11 @@ lint:
 	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
 
+lint-changes:
+	@echo "--> Running linter"
+	$(MAKE) lint-install
+	@./scripts/go-lint-changes.bash --timeout=15m
+
 lint-fix:
 	@echo "--> Running linter"
 	$(MAKE) lint-install

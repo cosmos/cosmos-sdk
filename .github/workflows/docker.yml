@@ -22,7 +22,7 @@ on:
 permissions:
   contents: read
   packages: write
-  id-token: write
+  sid-token: write
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -32,7 +32,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,8 +60,10 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup Depot
         uses: depot/setup-action@v1
+
       - name: Publish to GitHub Packages
         uses: depot/build-push-action@v1
         with:

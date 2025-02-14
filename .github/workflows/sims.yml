@@ -15,83 +15,85 @@ jobs:
   build:
     permissions:
       contents: read # for actions/checkout to fetch code
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-16
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
       - run: make build
-      - name: Install runsim
-        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
 
   test-sim-import-export:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-16
     needs: [build]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
       - name: test-sim-import-export
         run: |
           make test-sim-import-export
 
   test-sim-after-import:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-16
     needs: [build]
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
       - name: test-sim-after-import
         run: |
           make test-sim-after-import
 
-  test-sim-multi-seed-short:
-    runs-on: ubuntu-latest
+  test-sim-deterministic:
+    runs-on: depot-ubuntu-22.04-16
     needs: [build]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
-      - uses: actions/cache@v3
+      - name: test-sim-nondeterminism
+        run: |
+          make test-sim-nondeterminism
+
+  test-sim-multi-seed-short:
+    runs-on: depot-ubuntu-22.04-16
+    needs: [build]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
+          go-version: "1.24"
+          check-latest: true
       - name: test-sim-multi-seed-short
         run: |
           make test-sim-multi-seed-short
 
   sims-notify-success:
     needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    runs-on: ubuntu-latest
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
+    runs-on: depot-ubuntu-22.04-16
     if: ${{ success() }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status
@@ -100,7 +102,7 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.2.0
+        uses: rtCamp/action-slack-notify@v2.3.2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims
@@ -114,12 +116,17 @@ jobs:
     permissions:
       contents: none
     needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    runs-on: ubuntu-latest
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
+    runs-on: depot-ubuntu-22.04-16
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.2.0
+        uses: rtCamp/action-slack-notify@v2.3.2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims

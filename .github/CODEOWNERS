@@ -2,8 +2,14 @@
 
 # NOTE: Order is important; the last matching pattern takes the most precedence
 
-# Primary repo maintainers
+# Cosmos SDK Codeowners
 
-*       @cosmos/sdk-core-dev
+# Core team as default owners
 
-# CODEOWNERS for docs configuration
+* @cosmos/sdk-core-dev
+
+# Components
+
+# docs configuration
+
+/docs/ @cosmos/sdk-core-dev

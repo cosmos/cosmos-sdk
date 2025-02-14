@@ -15,7 +15,7 @@ require (
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.4
-	gotest.tools/v3 v3.5.1
+	gotest.tools/v3 v3.5.2
 	sigs.k8s.io/yaml v1.4.0
 )
 

@@ -12,7 +12,7 @@ var (
 	// ErrStopIterating is used to break out of an iteration
 	ErrStopIterating = Register(UndefinedCodespace, 2, "stop iterating")
 
-	// ErrPanic should only be set when we recovering from a panic
+	// ErrPanic should only be set when we recover from a panic
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
 )
 
@@ -99,9 +99,9 @@ func (e Error) Codespace() string {
 	return e.codespace
 }
 
-// Wrap extends given error with an additional information.
+// Wrap extends given error with additional information.
 //
-// If the wrapped error does not provide ABCICode method (ie. stdlib errors),
+// If the wrapped error does not provide ABCICode method (i.e. stdlib errors),
 // it will be labeled as internal error.
 //
 // If err is nil, this returns nil, avoiding the need for an if statement when
@@ -114,7 +114,7 @@ func Wrap(err error, description string) error {
 	return fmt.Errorf("%s: %w", description, err)
 }
 
-// Wrapf extends given error with an additional information.
+// Wrapf extends given error with additional information.
 //
 // This function works like Wrap function with additional functionality of
 // formatting the input as specified.

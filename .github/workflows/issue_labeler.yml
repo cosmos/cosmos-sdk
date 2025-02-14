@@ -5,7 +5,7 @@ on:
 
 jobs:
   triage:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: github/issue-labeler@v3.4
         if: join(github.event.issue.labels) == ''

@@ -48,6 +48,7 @@ type (
 		SetFeePayer(feePayer sdk.AccAddress)
 		SetGasLimit(limit uint64)
 		SetTimeoutHeight(height uint64)
+		SetUnordered(v bool)
 		SetFeeGranter(feeGranter sdk.AccAddress)
 		AddAuxSignerData(tx.AuxSignerData) error
 	}

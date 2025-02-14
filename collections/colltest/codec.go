@@ -40,6 +40,11 @@ func TestKeyCodec[T any](t *testing.T, keyCodec codec.KeyCodec[T], key T) {
 	decoded, err := keyCodec.DecodeJSON(keyJSON)
 	require.NoError(t, err)
 	require.Equal(t, key, decoded, "json encoding and decoding did not produce the same results")
+
+	// check type
+	require.NotEmpty(t, keyCodec.KeyType())
+	// check string
+	_ = keyCodec.Stringify(key)
 }
 
 // TestValueCodec asserts the correct behavior of a ValueCodec over the type T.
@@ -119,7 +124,7 @@ func (m mockValueCodec[T]) Decode(b []byte) (t T, err error) {
 
 	typ, exists := m.seenTypes[wrappedValue.TypeName]
 	if !exists {
-		return t, fmt.Errorf("uknown type %s, you're dealing with interfaces... in order to make the interface types known for the MockValueCodec, you need to first encode them", wrappedValue.TypeName)
+		return t, fmt.Errorf("unknown type %s, you're dealing with interfaces... in order to make the interface types known for the MockValueCodec, you need to first encode them", wrappedValue.TypeName)
 	}
 
 	newT := reflect.New(typ).Interface()

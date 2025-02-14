@@ -10,7 +10,7 @@ lint_module() {
   shift
   cd "$(dirname "$root")" &&
     echo "linting $(grep "^module" go.mod) [$(date -Iseconds -u)]" &&
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@"
+    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --new-from-rev=HEAD~
 }
 export -f lint_module
 
@@ -31,7 +31,7 @@ else
   for f in $(dirname $(echo "$GIT_DIFF" | tr -d "'") | uniq); do
     echo "linting $f [$(date -Iseconds -u)]" &&
     cd $f &&
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" &&
+    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --new-from-rev=HEAD~ &&
     cd $REPO_ROOT
   done
 fi

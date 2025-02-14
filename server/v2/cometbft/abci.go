@@ -10,6 +10,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -32,8 +33,11 @@ import (
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
-	consensustypes "cosmossdk.io/x/consensus/types"
 )
+
+// InitialAppVersion returned by Info at height 0.
+// Afterwards, the consensus params are queried from the app.
+var InitialAppVersion uint64 = 0
 
 const (
 	QueryPathApp   = "app"
@@ -139,7 +143,7 @@ func (c *consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	}
 
 	// if height is 0, we dont know the consensus params
-	var appVersion uint64 = 0
+	appVersion := InitialAppVersion
 	if version > 0 {
 		cp, err := GetConsensusParams(ctx, c.app)
 		// if the consensus params are not found, we set the app version to 0
@@ -281,21 +285,22 @@ func (c *consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
 
-	// TODO: check if we need to load the config from genesis.json or config.toml
+	// note the app version is not read from genesis
+	// user can update InitialAppVersion to that value if needed
+	// from height 1, we will query the app for the version
 	c.initialHeight = uint64(req.InitialHeight)
 	if c.initialHeight == 0 { // If initial height is 0, set it to 1
 		c.initialHeight = 1
 	}
 
-	if req.ConsensusParams != nil {
-		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, &consensustypes.MsgUpdateParams{
-			Block:     req.ConsensusParams.Block,
-			Evidence:  req.ConsensusParams.Evidence,
-			Validator: req.ConsensusParams.Validator,
-			Abci:      req.ConsensusParams.Abci,
-			Synchrony: req.ConsensusParams.Synchrony,
-			Feature:   req.ConsensusParams.Feature,
-		})
+	if cp := req.ConsensusParams; cp != nil {
+		if cp.Version == nil || (cp.Version != nil && cp.Version.App == 0) {
+			cp.Version = &v1.VersionParams{
+				App: InitialAppVersion,
+			}
+		}
+
+		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, cp)
 	}
 
 	ci, err := c.store.LastCommitID()

@@ -19,18 +19,30 @@ import (
 // BlockValidatorUpdates calculates the ValidatorUpdates for the current block
 // Called in each EndBlock
 func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	// Calculate validator set changes.
-	//
-	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
-	// UnbondAllMatureValidatorQueue.
-	// This fixes a bug when the unbonding period is instant (is the case in
-	// some of the tests). The test expected the validator to be completely
-	// unbonded after the Endblocker (go from Bonded -> Unbonding during
-	// ApplyAndReturnValidatorSetUpdates and then Unbonding -> Unbonded during
-	// UnbondAllMatureValidatorQueue).
-	validatorUpdates, err := k.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	var (
+		validatorUpdates []abci.ValidatorUpdate
+	)
+
+	isValidatorSetRotation, err := k.isValidatorSetRotation(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if isValidatorSetRotation {
+		// Calculate validator set changes.
+		//
+		// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
+		// UnbondAllMatureValidatorQueue.
+		// This fixes a bug when the unbonding period is instant (is the case in
+		// some of the tests). The test expected the validator to be completely
+		// unbonded after the Endblocker (go from Bonded -> Unbonding during
+		// ApplyAndReturnValidatorSetUpdates and then Unbonding -> Unbonded during
+		// UnbondAllMatureValidatorQueue).
+		validatorUpdates, err = k.ApplyAndReturnValidatorSetUpdates(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// unbond all mature validators from the unbonding queue
@@ -152,7 +164,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	}
 	defer iterator.Close()
 
-	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+	count := 0
+	for ; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 		// everything that is iterated in this loop is becoming or already a
 		// part of the bonded validator set
 		valAddr := sdk.ValAddress(iterator.Value())
@@ -211,6 +224,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 		totalPower = totalPower.Add(math.NewInt(newPower))
 	}
+
+	// Update the size of the new epochs validator set
+	k.SetNumberOfValidatorsInEpoch(ctx, uint32(count))
+	// Reset the number of jailed validators from the new epoch to 0
+	k.ResetNumberofValidatorsInJail(ctx)
 
 	noLongerBonded, err := sortNoLongerBonded(last, k.validatorAddressCodec)
 	if err != nil {
@@ -315,7 +333,11 @@ func (k Keeper) jailValidator(ctx context.Context, validator types.Validator) er
 		return err
 	}
 
-	return k.DeleteValidatorByPowerIndex(ctx, validator)
+	if err := k.DeleteValidatorByPowerIndex(ctx, validator); err != nil {
+		return err
+	}
+
+	return k.IncermentNumberofValidatorsInJail(ctx)
 }
 
 // remove a validator from jail
@@ -329,7 +351,11 @@ func (k Keeper) unjailValidator(ctx context.Context, validator types.Validator) 
 		return err
 	}
 
-	return k.SetValidatorByPowerIndex(ctx, validator)
+	if err := k.SetValidatorByPowerIndex(ctx, validator); err != nil {
+		return err
+	}
+
+	return k.DecrementNumberofValidatorsInJail(ctx)
 }
 
 // perform all the store operations for when a validator status becomes bonded
@@ -506,4 +532,64 @@ func sortNoLongerBonded(last validatorsByAddr, ac address.Codec) ([][]byte, erro
 	})
 
 	return noLongerBonded, nil
+}
+
+// Returns a boolean indicating if we should conduct a validator set rotation.
+//
+// True only if it's the end of an epoch or if the jailed validator threshold has been exceeded.
+func (k Keeper) isValidatorSetRotation(goCtx context.Context) (bool, error) {
+	ctx := goCtx.(sdk.Context)
+
+	epochLength, err := k.EpochLength(ctx)
+	if err != nil {
+		return false, err
+	}
+	isOverJailedThreshold, err := k.isOverJailedThreshold(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	if isEndOfEpoch(ctx, epochLength) {
+		ctx.Logger().Info("Rotating validator set due to end of epoch.")
+		return true, nil
+	} else if isOverJailedThreshold {
+		ctx.Logger().Info("Rotating validator set due to exceeding the threshold of jailed validators.")
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// Determines if the number of jailed validators is over the configured threshold.
+//
+// Treats `JailedValidatorThreshold` as a percentage (`JailedvalidatorThreshold/100`)
+func (k Keeper) isOverJailedThreshold(ctx context.Context) (bool, error) {
+	epochValidatorSetSize, err := k.GetNumberOfValidatorsInEpoch(ctx)
+	if err != nil {
+		return false, err
+	}
+	numberOfJailedValidators, err := k.GetNumberOfJailedValidators(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	raw, err := k.JailedValidatorThreshold(ctx)
+	mul := math.LegacyNewDecFromIntWithPrec(math.NewIntFromUint64(1), 2) // 0.01
+	jailedThresholdPercentage := math.LegacyNewDecFromInt(math.NewIntFromUint64(uint64(raw))).Mul(mul)
+	jailedThreshold := jailedThresholdPercentage.MulInt64(int64(epochValidatorSetSize)).RoundInt64()
+
+	if jailedThreshold == 0 {
+		jailedThreshold = 1
+	}
+
+	return jailedThreshold <= int64(numberOfJailedValidators), nil
+}
+
+// Returns true if the current block is the end of an epoch
+func isEndOfEpoch(goCtx context.Context, epochLength int64) bool {
+	ctx := goCtx.(sdk.Context)
+
+	currentHeight := ctx.BlockHeight()
+
+	return currentHeight%epochLength == 0
 }

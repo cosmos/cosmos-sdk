@@ -320,6 +320,10 @@ message Params {
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
+  // The percentage of validators that can be jailed before forcing a validator set rotation
+  uint32 jailed_validator_threshold = 7;
+  // The number of blocks between regular validator set rotations (between epochs)
+  int64 epoch_length = 8;
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

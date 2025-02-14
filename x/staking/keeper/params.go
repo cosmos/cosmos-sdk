@@ -56,6 +56,16 @@ func (k Keeper) MinCommissionRate(ctx context.Context) (math.LegacyDec, error) {
 	return params.MinCommissionRate, err
 }
 
+func (k Keeper) EpochLength(ctx context.Context) (int64, error) {
+	params, err := k.GetParams(ctx)
+	return params.EpochLength, err
+}
+
+func (k Keeper) JailedValidatorThreshold(ctx context.Context) (uint32, error) {
+	params, err := k.GetParams(ctx)
+	return params.JailedValidatorThreshold, err
+}
+
 // SetParams sets the x/staking module parameters.
 // CONTRACT: This method performs no validation of the parameters.
 func (k Keeper) SetParams(ctx context.Context, params types.Params) error {

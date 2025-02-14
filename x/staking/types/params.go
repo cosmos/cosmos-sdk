@@ -29,20 +29,45 @@ const (
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
+
+	// Default threshold of jailed validators before triggering a forced validator set rotation. Processed as a percentage (50 => 50%)
+	DefaultJailedValidorThreshold uint32 = 50
+
+	// Default number of blocks between normal validator set rotations
+	DefaultEpochLength int64 = 1
 )
 
 // DefaultMinCommissionRate is set to 0%
 var DefaultMinCommissionRate = math.LegacyZeroDec()
 
+// Staking params bounds
+const (
+	// Maximum value for JailedValidorThreshold
+	// JailedValidorThreshold should not be greater than 100 (100%)
+	JailedValidorThresholdMax uint32 = 100
+
+	// Minimum value for JailedValidorThreshold
+	JailedValidorThresholdMin uint32 = 10
+
+	// Maximum value for EpochLength
+	EpochLengthMax int64 = 512
+
+	// Minimum value for EpochLength
+	// EpochLength should not be 0
+	EpochLengthMin int64 = 1
+)
+
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minCommissionRate math.LegacyDec) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minCommissionRate math.LegacyDec, jailedValidatorThreshold uint32, epochLength int64) Params {
 	return Params{
-		UnbondingTime:     unbondingTime,
-		MaxValidators:     maxValidators,
-		MaxEntries:        maxEntries,
-		HistoricalEntries: historicalEntries,
-		BondDenom:         bondDenom,
-		MinCommissionRate: minCommissionRate,
+		UnbondingTime:            unbondingTime,
+		MaxValidators:            maxValidators,
+		MaxEntries:               maxEntries,
+		HistoricalEntries:        historicalEntries,
+		BondDenom:                bondDenom,
+		MinCommissionRate:        minCommissionRate,
+		JailedValidatorThreshold: jailedValidatorThreshold,
+		EpochLength:              epochLength,
 	}
 }
 
@@ -55,6 +80,8 @@ func DefaultParams() Params {
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
+		DefaultJailedValidorThreshold,
+		DefaultEpochLength,
 	)
 }
 
@@ -101,6 +128,14 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateHistoricalEntries(p.HistoricalEntries); err != nil {
+		return err
+	}
+
+	if err := validateJailedValidatorThreshold(p.JailedValidatorThreshold); err != nil {
+		return err
+	}
+
+	if err := validateEpochLength(p.EpochLength); err != nil {
 		return err
 	}
 
@@ -199,6 +234,38 @@ func validateMinCommissionRate(i interface{}) error {
 	}
 	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
+	}
+
+	return nil
+}
+
+func validateJailedValidatorThreshold(i interface{}) error {
+	v, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < JailedValidorThresholdMin {
+		return fmt.Errorf("jailed validor threshold cannot be less than %d: %d", JailedValidorThresholdMin, v)
+	}
+	if v > JailedValidorThresholdMax {
+		return fmt.Errorf("jailed validor threshold cannot be greater than %d: %d", JailedValidorThresholdMax, v)
+	}
+
+	return nil
+}
+
+func validateEpochLength(i interface{}) error {
+	v, ok := i.(int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < EpochLengthMin {
+		return fmt.Errorf("epoch length cannot be less than %d: %d", EpochLengthMin, v)
+	}
+	if v > EpochLengthMax {
+		return fmt.Errorf("epoch length cannot be greater than %d: %d", EpochLengthMax, v)
 	}
 
 	return nil

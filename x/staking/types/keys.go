@@ -56,6 +56,9 @@ var (
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 
 	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
+
+	NumberOfValidatorsInEpoch = []byte{0x91} // prefix for the number of validators in the active set at the start of the current epoch
+	NumberOfValidatorsInJail  = []byte{0x92} // prefix for the number of validators, from the current epoch validator set, in jail
 )
 
 // UnbondingType defines the type of unbonding operation

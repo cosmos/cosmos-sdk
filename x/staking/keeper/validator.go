@@ -644,3 +644,114 @@ func (k Keeper) GetPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (
 
 	return pubkey, nil
 }
+
+// Increments the number of jailed validators by one.
+//
+// Will assume a stored value of `nil` should be read as zero and will increment
+// by 1 (will not fail).
+func (k Keeper) IncermentNumberofValidatorsInJail(ctx context.Context) error {
+	var bz []byte
+	store := k.storeService.OpenKVStore(ctx)
+
+	has, err := store.Has(types.NumberOfValidatorsInJail)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		// value found, increment
+		intV := gogotypes.UInt32Value{}
+		val, err := store.Get(types.NumberOfValidatorsInJail)
+		if err != nil {
+			return err
+		}
+		k.cdc.MustUnmarshal(val, &intV)
+		bz = k.cdc.MustMarshal(&gogotypes.UInt32Value{Value: intV.Value + 1})
+	} else {
+		// no value stored yet, assume it should be zero and add one
+		bz = k.cdc.MustMarshal(&gogotypes.UInt32Value{Value: 1})
+	}
+
+	store.Set(types.NumberOfValidatorsInJail, bz)
+
+	return nil
+}
+
+// Decrement the number of jailed validators by one.
+func (k Keeper) DecrementNumberofValidatorsInJail(ctx context.Context) error {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.NumberOfValidatorsInJail)
+	if err != nil {
+		return err
+	}
+
+	if bz == nil {
+		bz = k.cdc.MustMarshal(&gogotypes.UInt32Value{Value: 0})
+		return nil
+	}
+
+	intV := gogotypes.UInt32Value{}
+	k.cdc.MustUnmarshal(bz, &intV)
+
+	if intV.Value < 0 {
+		bz = k.cdc.MustMarshal(&gogotypes.UInt32Value{Value: intV.Value - 1})
+	}
+
+	return nil
+}
+
+func (k Keeper) ResetNumberofValidatorsInJail(ctx context.Context) {
+	store := k.storeService.OpenKVStore(ctx)
+
+	bz := k.cdc.MustMarshal(&gogotypes.UInt32Value{Value: 0})
+
+	store.Set(types.NumberOfValidatorsInJail, bz)
+}
+
+func (k Keeper) SetNumberOfValidatorsInEpoch(ctx context.Context, n uint32) {
+	store := k.storeService.OpenKVStore(ctx)
+
+	bz := k.cdc.MustMarshal(&gogotypes.UInt32Value{Value: n})
+
+	store.Set(types.NumberOfValidatorsInEpoch, bz)
+}
+
+func (k Keeper) GetNumberOfValidatorsInEpoch(ctx context.Context) (uint32, error) {
+	store := k.storeService.OpenKVStore(ctx)
+
+	has, err := store.Has(types.NumberOfValidatorsInEpoch)
+	if err != nil {
+		return 0, err
+	}
+
+	if has {
+		bz, err := store.Get(types.NumberOfValidatorsInEpoch)
+		if err != nil {
+			return 0, err
+		}
+		intV := gogotypes.UInt32Value{}
+		k.cdc.MustUnmarshal(bz, &intV)
+		return intV.Value, nil
+	} else {
+		return 0, nil
+	}
+}
+
+func (k Keeper) GetNumberOfJailedValidators(ctx context.Context) (uint32, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	has, err := store.Has(types.NumberOfValidatorsInJail)
+	if err != nil {
+		return 0, err
+	}
+	if has {
+		bz, err := store.Get(types.NumberOfValidatorsInJail)
+		if err != nil {
+			return 0, err
+		}
+		intV := gogotypes.UInt32Value{}
+		k.cdc.MustUnmarshal(bz, &intV)
+		return intV.Value, nil
+	} else {
+		return 0, nil
+	}
+}

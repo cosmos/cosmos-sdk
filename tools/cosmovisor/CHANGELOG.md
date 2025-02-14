@@ -35,6 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+* [#23699](https://github.com/cosmos/cosmos-sdk/pull/23699) improve backup formatting.
 
 ## v1.7.0 - 2024-11-18
 

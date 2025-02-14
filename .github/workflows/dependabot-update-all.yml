@@ -10,7 +10,7 @@ env:
 
 jobs:
   update-all:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: Generate Token

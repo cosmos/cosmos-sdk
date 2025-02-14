@@ -6,7 +6,7 @@ on:
 
 jobs:
   assign-reviewers:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
 
     steps:
       - name: Check out the repository

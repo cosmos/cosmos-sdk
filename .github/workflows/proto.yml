@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +21,7 @@ jobs:
           input: "proto"
 
   break-check:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: bufbuild/buf-setup-action@v1.38.0

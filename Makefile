@@ -129,15 +129,12 @@ cosmovisor:
 confix:
 	$(MAKE) -C tools/confix confix
 
-hubl:
-	$(MAKE) -C tools/hubl hubl
-
 .PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
 
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install go.uber.org/mock/mockgen@v0.5.0
+	@go install go.uber.org/mock/mockgen@latest
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -372,7 +369,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.64.5
+golangci_version=latest
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

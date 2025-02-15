@@ -276,7 +276,7 @@ To achieve that, it might be tempting to use a store helper such as `HasAnyAtPre
 func HasAnyAtPrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) (bool, error) {
     _, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix), false, parseValue)
     if err != nil {
-        if err == ErrNoValuesInRange {
+        if errors.Is(err, ErrNoValuesInRange) {
             return false, nil
         }
         return false, err

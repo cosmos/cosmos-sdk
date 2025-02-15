@@ -148,6 +148,7 @@ require (
 )
 
 require (
+	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/x/bank v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	github.com/bytedance/sonic v1.12.8 // indirect

@@ -22,6 +22,7 @@ require (
 	cosmossdk.io/core/testing v0.0.2 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/log v1.5.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/store v1.10.0-rc.1 // indirect

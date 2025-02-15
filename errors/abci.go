@@ -59,6 +59,16 @@ func abciCode(err error) uint32 {
 	}
 
 	for {
+		if c, ok := err.(interface{ Unwrap() []error }); ok {
+			errs := c.Unwrap()
+			for _, e := range errs {
+				if e != nil {
+					err = e
+					break
+				}
+			}
+		}
+
 		if c, ok := err.(coder); ok {
 			return c.ABCICode()
 		}

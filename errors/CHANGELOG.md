@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (abci) [#23709](https://github.com/cosmos/cosmos-sdk/pull/23709) Add unwrapper to handle join error.
+
 ## [v2.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/errors/%2Fv2.0.0)
 
 ### API Breaking Changes

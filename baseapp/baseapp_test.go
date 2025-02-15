@@ -904,7 +904,7 @@ func TestErrorsJoinAndABCIInfo(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			_, act, _ := errorsmod.ABCIInfo(tc.err, false)
-			require.Equal(t, int(tc.exp), int(act))
+			require.Equal(t, tc.exp, act)
 		})
 	}
 }

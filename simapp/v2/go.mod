@@ -305,3 +305,6 @@ replace (
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store/v2
 )
+
+// TODO remove after all modules have their own go.mods
+replace cosmossdk.io/errors => github.com/mmsqe/cosmos-sdk/errors v0.0.0-20250215043036-b091ac7b6902

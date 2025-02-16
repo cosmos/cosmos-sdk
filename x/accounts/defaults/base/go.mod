@@ -161,6 +161,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../../../.
 
 replace (
+	cosmossdk.io/errors => github.com/mmsqe/cosmos-sdk/errors v0.0.0-20250215043036-b091ac7b6902
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/staking => ../../../staking

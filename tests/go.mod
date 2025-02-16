@@ -274,3 +274,6 @@ replace (
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 )
+
+// TODO remove after all modules have their own go.mods
+replace cosmossdk.io/errors => github.com/mmsqe/cosmos-sdk/errors v0.0.0-20250215043036-b091ac7b6902

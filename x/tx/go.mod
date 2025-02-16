@@ -39,3 +39,6 @@ require (
 // NOTE: we do not want to replace to the development version of cosmossdk.io/api yet
 // Until https://github.com/cosmos/cosmos-sdk/issues/19228 is resolved
 // We are tagging x/tx from main and must keep using released versions of x/tx dependencies
+
+// TODO remove after all modules have their own go.mods
+replace cosmossdk.io/errors => github.com/mmsqe/cosmos-sdk/errors v0.0.0-20250215043036-b091ac7b6902

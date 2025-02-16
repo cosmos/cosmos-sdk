@@ -62,3 +62,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250122153221-138b5a5a4fd4 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// TODO remove after all modules have their own go.mods
+replace cosmossdk.io/errors => github.com/mmsqe/cosmos-sdk/errors v0.0.0-20250215043036-b091ac7b6902

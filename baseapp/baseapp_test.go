@@ -18,7 +18,6 @@ import (
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
-	errorsmodv2 "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -1022,7 +1021,7 @@ func TestErrorsJoinAndABCIInfo(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, act, _ := errorsmodv2.ABCIInfo(tc.err, false)
+			_, act, _ := errorsmod.ABCIInfo(tc.err, false)
 			require.Equal(t, tc.exp, act)
 		})
 	}

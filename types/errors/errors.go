@@ -2,7 +2,6 @@ package errors
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	errorsmodv2 "cosmossdk.io/errors/v2"
 )
 
 // RootCodespace is the codespace for all errors defined in this package
@@ -21,7 +20,7 @@ var (
 	ErrUnauthorized = errorsmod.Register(RootCodespace, 4, "unauthorized")
 
 	// ErrInsufficientFunds is used when the account cannot pay requested amount.
-	ErrInsufficientFunds = errorsmodv2.Register(RootCodespace, 5, "insufficient funds")
+	ErrInsufficientFunds = errorsmod.Register(RootCodespace, 5, "insufficient funds")
 
 	// ErrUnknownRequest to doc
 	ErrUnknownRequest = errorsmod.Register(RootCodespace, 6, "unknown request")

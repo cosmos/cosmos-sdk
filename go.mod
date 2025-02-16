@@ -9,7 +9,6 @@ require (
 	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/errors/v2 v2.0.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/schema v1.0.0
@@ -176,7 +175,6 @@ require (
 
 // TODO remove after all modules have their own go.mods
 replace (
-	cosmossdk.io/errors/v2 => ./errors
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking
 )

@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"fmt"
 
 	"cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -40,7 +39,7 @@ func (a SendAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Accep
 
 	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount...)
 	if isNegative {
-		return authz.AcceptResponse{}, fmt.Errorf("%s: %w", "requested amount is more than spend limit", sdkerrors.ErrInsufficientFunds)
+		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
 	}
 
 	authzEnv, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodulev2.Environment)

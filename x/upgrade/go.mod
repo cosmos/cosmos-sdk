@@ -42,7 +42,6 @@ require (
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-beta.6 // indirect
 	cosmossdk.io/collections v1.1.0 // indirect
-	cosmossdk.io/errors/v2 v2.0.0 // indirect
 	cosmossdk.io/math v1.5.0 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect

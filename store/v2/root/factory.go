@@ -59,6 +59,7 @@ func DefaultStoreOptions() Options {
 			CacheSize:              500_000,
 			SkipFastStorageUpgrade: true,
 		},
+		IavlV2Config: iavlv2.DefaultConfig(),
 	}
 }
 

@@ -32,6 +32,7 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	runtimev2types "cosmossdk.io/runtime/v2"
+	benchmark "cosmossdk.io/tools/benchmark/module"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
@@ -194,6 +195,7 @@ var (
 						vestingtypes.ModuleName,
 						circuittypes.ModuleName,
 						epochstypes.ModuleName,
+						benchmark.ModuleName,
 					},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},

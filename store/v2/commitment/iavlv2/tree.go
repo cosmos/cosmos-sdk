@@ -29,6 +29,7 @@ func NewTree(
 	dbOptions iavl.SqliteDbOptions,
 	log log.Logger,
 ) (*Tree, error) {
+	log.Info("Creating IAVL v2 tree", "path", dbOptions.Path, "config", cfg)
 	pool := iavl.NewNodePool()
 	sql, err := iavl.NewSqliteDb(pool, dbOptions)
 	if err != nil {

@@ -21,7 +21,6 @@ type Config struct {
 func (c *Config) ToTreeOptions() iavl.TreeOptions {
 	return iavl.TreeOptions{
 		CheckpointInterval:  c.CheckpointInterval,
-		CheckpointMemory:    c.CheckpointMemory,
 		StateStorage:        c.StateStorage,
 		HeightFilter:        c.HeightFilter,
 		EvictionDepth:       c.EvictionDepth,
@@ -36,8 +35,7 @@ func DefaultConfig() Config {
 	defaultOptions := iavl.DefaultTreeOptions()
 
 	return Config{
-		CheckpointInterval:  200,
-		CheckpointMemory:    defaultOptions.CheckpointMemory,
+		CheckpointInterval:  60,
 		StateStorage:        defaultOptions.StateStorage,
 		HeightFilter:        1,
 		EvictionDepth:       22,

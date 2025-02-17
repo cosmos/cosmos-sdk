@@ -209,7 +209,7 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 	if err != nil {
 		return unbonding, err
 	}
-	return unbonding, err
+	return unbonding, nil
 }
 
 // GetDelegatorBonded returns the total amount a delegator has bonded.

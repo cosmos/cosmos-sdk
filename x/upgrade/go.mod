@@ -22,7 +22,7 @@ require (
 	github.com/hashicorp/go-getter v1.7.8
 	github.com/hashicorp/go-metrics v0.5.4
 	github.com/spf13/cast v1.7.1
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0

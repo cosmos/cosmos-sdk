@@ -1,18 +1,17 @@
 package configurator
 
 import (
-	accountsmodulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	countermodulev1 "cosmossdk.io/api/cosmos/counter/module/v1"
+	// countermodulev1 "cosmossdk.io/api/cosmos/counter/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
-	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
+	// TODO: add when backported
+	// epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
@@ -21,7 +20,8 @@ import (
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
-	poolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
+	// TODO: add when backported
+	// poolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
@@ -338,23 +338,25 @@ func CircuitModule() ModuleOption {
 	}
 }
 
-func ProtocolPoolModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs[testutil.ProtocolPoolModuleName] = &appv1alpha1.ModuleConfig{
-			Name:   testutil.ProtocolPoolModuleName,
-			Config: appconfig.WrapAny(&poolmodulev1.Module{}),
-		}
-	}
-}
+// TODO: re-add
+//func ProtocolPoolModule() ModuleOption {
+//	return func(config *Config) {
+//		config.ModuleConfigs[testutil.ProtocolPoolModuleName] = &appv1alpha1.ModuleConfig{
+//			Name:   testutil.ProtocolPoolModuleName,
+//			Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+//		}
+//	}
+//}
 
-func CounterModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["counter"] = &appv1alpha1.ModuleConfig{
-			Name:   "counter",
-			Config: appconfig.WrapAny(&countermodulev1.Module{}),
-		}
-	}
-}
+// TODO: re-add
+//func CounterModule() ModuleOption {
+//	return func(config *Config) {
+//		config.ModuleConfigs["counter"] = &appv1alpha1.ModuleConfig{
+//			Name:   "counter",
+//			Config: appconfig.WrapAny(&countermodulev1.Module{}),
+//		}
+//	}
+//}
 
 // TODO: re-add
 // func EpochsModule() ModuleOption {
@@ -413,8 +415,8 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 	}
 
 	runtimeConfig := &runtimev1alpha1.Module{
-		AppName:           "TestApp",
-		PreBlockers:       preBlockers,
+		AppName: "TestApp",
+		//PreBlockers:       preBlockers,
 		BeginBlockers:     beginBlockers,
 		EndBlockers:       endBlockers,
 		OverrideStoreKeys: overrides,
@@ -476,8 +478,8 @@ func NewAppV2Config(opts ...ModuleOption) depinject.Config {
 	}
 
 	runtimeConfig := &runtimev1alpha1.Module{
-		AppName:           "TestApp",
-		PreBlockers:       preBlockers,
+		AppName: "TestApp",
+		// PreBlockers:       preBlockers,
 		BeginBlockers:     beginBlockers,
 		EndBlockers:       endBlockers,
 		OverrideStoreKeys: overrides,

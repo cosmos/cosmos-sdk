@@ -66,7 +66,7 @@ func DefaultContextWithKeys(
 
 type TestContext struct {
 	Ctx sdk.Context
-	DB  corestore.KVStoreWithBatch
+	DB  dbm.DB
 	CMS store.CommitMultiStore
 }
 

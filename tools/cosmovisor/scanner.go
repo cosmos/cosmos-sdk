@@ -12,9 +12,10 @@ import (
 	"testing"
 	"time"
 
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/store"
+
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 var errUntestAble = errors.New("untestable")

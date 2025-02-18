@@ -85,6 +85,8 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 }
 
 // AppModule implements an application module for the crisis module.
+//
+// Deprecated: the crisis module is deprecated and will be removed in the next Cosmos SDK major release.
 type AppModule struct {
 	AppModuleBasic
 
@@ -103,6 +105,8 @@ type AppModule struct {
 // we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
 // - which doesn't impact the chain security unless 66+% of validators have a wrongly
 // modified genesis file.
+//
+// Deprecated: the crisis module is deprecated and will be removed in the next Cosmos SDK major release.
 func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported.Subspace) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},

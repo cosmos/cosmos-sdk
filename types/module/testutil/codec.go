@@ -43,8 +43,36 @@ func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig
 	return encCfg
 }
 
+func MakeTestEncodingConfigWithOpts(codecOpts testutil.CodecOptions, modules ...module.AppModuleBasic) TestEncodingConfig {
+	aminoCodec := codec.NewLegacyAmino()
+	interfaceRegistry := codecOpts.NewInterfaceRegistry()
+	codec := codec.NewProtoCodec(interfaceRegistry)
+
+	encCfg := TestEncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Codec:             codec,
+		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
+		Amino:             aminoCodec,
+	}
+
+	mb := module.NewBasicManager(modules...)
+
+	std.RegisterLegacyAminoCodec(encCfg.Amino)
+	std.RegisterInterfaces(encCfg.InterfaceRegistry)
+	mb.RegisterLegacyAminoCodec(encCfg.Amino)
+	mb.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	return encCfg
+}
+
 func MakeTestTxConfig() client.TxConfig {
 	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	return tx.NewTxConfig(cdc, tx.DefaultSignModes)
+}
+
+func MakeTestTxConfigWithOpts(codecOpts testutil.CodecOptions) client.TxConfig {
+	interfaceRegistry := codecOpts.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	return tx.NewTxConfig(cdc, tx.DefaultSignModes)
 }

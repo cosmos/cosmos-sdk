@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -281,6 +283,8 @@ func GenesisStateWithValSet(
 	return genesisState, nil
 }
 
+var _ servertypes.AppOptions = EmptyAppOptions{}
+
 // EmptyAppOptions is a stub implementing AppOptions
 type EmptyAppOptions struct{}
 
@@ -293,6 +297,8 @@ func (ao EmptyAppOptions) Get(o string) interface{} {
 func (ao EmptyAppOptions) GetString(_ string) string {
 	return ""
 }
+
+var _ servertypes.AppOptions = AppOptionsMap{}
 
 // AppOptionsMap is a stub implementing AppOptions which can get data from a map
 type AppOptionsMap map[string]interface{}
@@ -313,4 +319,10 @@ func (m AppOptionsMap) GetString(key string) string {
 	}
 
 	return v.(string)
+}
+
+func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
+	return AppOptionsMap{
+		flags.FlagHome: homePath,
+	}
 }

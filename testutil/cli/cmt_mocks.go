@@ -3,7 +3,7 @@ package cli
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
@@ -18,19 +18,19 @@ var _ client.CometRPC = (*MockCometRPC)(nil)
 type MockCometRPC struct {
 	rpcclientmock.Client
 
-	responseQuery abci.QueryResponse
+	responseQuery abci.ResponseQuery
 }
 
 // NewMockCometRPC returns a mock CometBFT RPC implementation.
 // It is used for CLI testing.
-func NewMockCometRPC(respQuery abci.QueryResponse) MockCometRPC {
+func NewMockCometRPC(respQuery abci.ResponseQuery) MockCometRPC {
 	return MockCometRPC{responseQuery: respQuery}
 }
 
 // NewMockCometRPCWithResponseQueryValue returns a mock CometBFT RPC implementation with value only.
 // It is used for CLI testing.
 func NewMockCometRPCWithResponseQueryValue(bz []byte) MockCometRPC {
-	return MockCometRPC{responseQuery: abci.QueryResponse{
+	return MockCometRPC{responseQuery: abci.ResponseQuery{
 		Value: bz,
 	}}
 }

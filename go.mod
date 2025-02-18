@@ -1,13 +1,11 @@
-go 1.23.1
-
-toolchain go1.24.0
+go 1.23
 
 module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
@@ -57,7 +55,7 @@ require (
 	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.33.0
 	golang.org/x/sync v0.11.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20250212204824-5a70512c5d8b
+	google.golang.org/genproto/googleapis/api v0.0.0-20241202173237-19429a94021a
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
 	gotest.tools/v3 v3.5.2
@@ -66,8 +64,6 @@ require (
 )
 
 require (
-	cosmossdk.io/core/testing v0.0.2 // indirect
-	cosmossdk.io/schema v1.0.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
@@ -165,12 +161,12 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/term v0.29.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
@@ -178,7 +174,9 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-replace cosmossdk.io/api => ./api
+// replace (
+// 	<temporary replace>
+// )
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

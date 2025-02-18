@@ -172,7 +172,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		validator := k.mustGetValidator(ctx, valAddr)
 
 		if validator.Jailed {
-			panic("should never retrieve a jailed validator from the power store")
+			// do not panic here to enable POA https://github.com/strangelove-ventures/poa/blob/34aee49474018a4035fecbe676b765c2717d78aa/INTEGRATION.md#example-integration-of-the-poa-module
+			continue
 		}
 
 		// if we get to a zero-power validator (which we don't bond),

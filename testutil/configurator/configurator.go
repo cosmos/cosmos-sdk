@@ -25,7 +25,6 @@ import (
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
-	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -34,7 +33,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/validate"       // import as blank for app wiring
 )
 
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
@@ -95,7 +93,6 @@ func defaultConfig() *Config {
 			testutil.ProtocolPoolModuleName,
 		},
 		InitGenesisOrder: []string{
-			testutil.AccountsModuleName,
 			testutil.AuthModuleName,
 			testutil.BankModuleName,
 			testutil.DistributionModuleName,
@@ -205,15 +202,6 @@ func TxModule() ModuleOption {
 		config.ModuleConfigs[testutil.AuthTxConfigDepinjectModuleName] = &appv1alpha1.ModuleConfig{
 			Name:   testutil.AuthTxConfigDepinjectModuleName,
 			Config: appconfig.WrapAny(&txconfigv1.Config{}),
-		}
-	}
-}
-
-func ValidateModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs[testutil.ValidateModuleName] = &appv1alpha1.ModuleConfig{
-			Name:   testutil.ValidateModuleName,
-			Config: appconfig.WrapAny(&validatemodulev1.Module{}),
 		}
 	}
 }
@@ -359,15 +347,6 @@ func ProtocolPoolModule() ModuleOption {
 	}
 }
 
-func AccountsModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs[testutil.AccountsModuleName] = &appv1alpha1.ModuleConfig{
-			Name:   testutil.AccountsModuleName,
-			Config: appconfig.WrapAny(&accountsmodulev1.Module{}),
-		}
-	}
-}
-
 func CounterModule() ModuleOption {
 	return func(config *Config) {
 		config.ModuleConfigs["counter"] = &appv1alpha1.ModuleConfig{
@@ -377,14 +356,15 @@ func CounterModule() ModuleOption {
 	}
 }
 
-func EpochsModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs[testutil.EpochsModuleName] = &appv1alpha1.ModuleConfig{
-			Name:   testutil.EpochsModuleName,
-			Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
-		}
-	}
-}
+// TODO: re-add
+// func EpochsModule() ModuleOption {
+//	return func(config *Config) {
+//		config.ModuleConfigs[testutil.EpochsModuleName] = &appv1alpha1.ModuleConfig{
+//			Name:   testutil.EpochsModuleName,
+//			Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+//		}
+//	}
+//}
 
 func OmitInitGenesis() ModuleOption {
 	return func(config *Config) {
@@ -465,7 +445,7 @@ func NewAppV2Config(opts ...ModuleOption) depinject.Config {
 	beginBlockers := make([]string, 0)
 	endBlockers := make([]string, 0)
 	initGenesis := make([]string, 0)
-	overrides := make([]*runtimev2.StoreKeyConfig, 0)
+	overrides := make([]*runtimev1alpha1.StoreKeyConfig, 0)
 
 	for _, s := range cfg.PreBlockersOrder {
 		if _, ok := cfg.ModuleConfigs[s]; ok {
@@ -492,20 +472,15 @@ func NewAppV2Config(opts ...ModuleOption) depinject.Config {
 	}
 
 	if _, ok := cfg.ModuleConfigs[testutil.AuthModuleName]; ok {
-		overrides = append(overrides, &runtimev2.StoreKeyConfig{ModuleName: testutil.AuthModuleName, KvStoreKey: "acc"})
+		overrides = append(overrides, &runtimev1alpha1.StoreKeyConfig{ModuleName: testutil.AuthModuleName, KvStoreKey: "acc"})
 	}
 
-	runtimeConfig := &runtimev2.Module{
+	runtimeConfig := &runtimev1alpha1.Module{
 		AppName:           "TestApp",
 		PreBlockers:       preBlockers,
 		BeginBlockers:     beginBlockers,
 		EndBlockers:       endBlockers,
 		OverrideStoreKeys: overrides,
-		GasConfig: &runtimev2.GasConfig{
-			ValidateTxGasLimit: 100_000,
-			QueryGasLimit:      100_000,
-			SimulationGasLimit: 100_000,
-		},
 	}
 	if cfg.setInitGenesis {
 		runtimeConfig.InitGenesis = initGenesis

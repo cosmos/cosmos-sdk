@@ -44,7 +44,7 @@ UNAME_M ?= $(shell uname -m)
 GOPATH ?= $(shell $(GO) env GOPATH)
 GITHUBDIR := $(GOPATH)$(FS)src$(FS)github.com
 
-BUF_VERSION ?= 0.11.0
+BUF_VERSION ?= 0.150.0
 
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 RUNSIM         = $(TOOLS_DESTDIR)/runsim

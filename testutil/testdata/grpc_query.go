@@ -2,12 +2,18 @@ package testdata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
-	grpc "google.golang.org/grpc"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	"github.com/cosmos/gogoproto/types/any/test"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/core/gas"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,9 +28,9 @@ type QueryImpl struct{}
 var _ QueryServer = QueryImpl{}
 
 func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
-	animal, ok := request.AnyAnimal.GetCachedValue().(Animal)
+	animal, ok := request.AnyAnimal.GetCachedValue().(test.Animal)
 	if !ok {
-		return nil, fmt.Errorf("expected Animal")
+		return nil, errors.New("expected Animal")
 	}
 
 	any, err := types.NewAnyWithValue(animal.(proto.Message))
@@ -47,16 +53,16 @@ func (e QueryImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHe
 	return &SayHelloResponse{Greeting: greeting}, nil
 }
 
-var _ types.UnpackInterfacesMessage = &TestAnyRequest{}
+var _ gogoprotoany.UnpackInterfacesMessage = &TestAnyRequest{}
 
-func (m *TestAnyRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var animal Animal
+func (m *TestAnyRequest) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+	var animal test.Animal
 	return unpacker.UnpackAny(m.AnyAnimal, &animal)
 }
 
-var _ types.UnpackInterfacesMessage = &TestAnyResponse{}
+var _ gogoprotoany.UnpackInterfacesMessage = &TestAnyResponse{}
 
-func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m *TestAnyResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)
 }
 
@@ -67,19 +73,21 @@ func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // `gasOverwrite` is set to true, we also check that this consumed
 // gas value is equal to the hardcoded `gasConsumed`.
 func DeterministicIterations[request, response proto.Message](
-	ctx sdk.Context,
 	t *testing.T,
+	ctx sdk.Context,
 	req request,
 	grpcFn func(context.Context, request, ...grpc.CallOption) (response, error),
 	gasConsumed uint64,
 	gasOverwrite bool,
 ) {
+	t.Helper()
 	before := ctx.GasMeter().GasConsumed()
 	prevRes, err := grpcFn(ctx, req)
 	assert.NilError(t, err)
 	if gasOverwrite { // to handle regressions, i.e. check that gas consumption didn't change
 		gasConsumed = ctx.GasMeter().GasConsumed() - before
 	}
+	t.Logf("gas consumed: %d", gasConsumed)
 
 	for i := 0; i < iterCount; i++ {
 		before := ctx.GasMeter().GasConsumed()
@@ -87,5 +95,32 @@ func DeterministicIterations[request, response proto.Message](
 		assert.Equal(t, ctx.GasMeter().GasConsumed()-before, gasConsumed)
 		assert.NilError(t, err)
 		assert.DeepEqual(t, res, prevRes)
+	}
+}
+
+func DeterministicIterationsV2[request, response proto.Message](
+	t *testing.T,
+	req request,
+	meterFn func() gas.Meter,
+	queryFn func(request) (response, error),
+	assertGas func(*testing.T, gas.Gas),
+	assertResponse func(*testing.T, response),
+) {
+	t.Helper()
+	prevRes, err := queryFn(req)
+	gasMeter := meterFn()
+	gasConsumed := gasMeter.Consumed()
+	require.NoError(t, err)
+	assertGas(t, gasConsumed)
+
+	for i := 0; i < iterCount; i++ {
+		res, err := queryFn(req)
+		require.NoError(t, err)
+		sameGas := gasMeter.Consumed()
+		require.Equal(t, gasConsumed, sameGas)
+		require.Equal(t, res, prevRes)
+		if assertResponse != nil {
+			assertResponse(t, res)
+		}
 	}
 }

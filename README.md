@@ -5,6 +5,8 @@ The fork include the following changes compared to upstream:
 
 * Store app version in consensus param store
 * Modify continuous vesting account to add start time 
-* Re-add query router for custom abci queries.
+* Re-add query router for custom abci queries
+* Add v0.52 helpers to facilitate testing
+* Disable heavy bank migrations
 
 Read the [CHANGELOG.md](CHANGELOG.md) for more details.

@@ -9,9 +9,8 @@ import (
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto" //nolint: gci // ignore this line for this linter
 
@@ -26,7 +25,7 @@ type (
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
-		GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cryptotypes.PubKey, error)
+		GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 	}
 
 	// GasTx defines the contract that a transaction with a gas limit must implement.
@@ -111,12 +110,7 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
 		}
 
-		cometPK, err := cryptocodec.ToCmtProtoPublicKey(pubKeyProto)
-		if err != nil {
-			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
-		}
-
-		cmtPubKey, err := cryptoenc.PubKeyFromProto(cometPK)
+		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
 		if err != nil {
 			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
 		}

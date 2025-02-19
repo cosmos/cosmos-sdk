@@ -28,6 +28,7 @@ const (
 //
 // Query is the app module query service.
 type QueryClient interface {
+	// Deprecated: Do not use.
 	// Config returns the current app config.
 	Config(ctx context.Context, in *QueryConfigRequest, opts ...grpc.CallOption) (*QueryConfigResponse, error)
 }
@@ -40,6 +41,7 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 	return &queryClient{cc}
 }
 
+// Deprecated: Do not use.
 func (c *queryClient) Config(ctx context.Context, in *QueryConfigRequest, opts ...grpc.CallOption) (*QueryConfigResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(QueryConfigResponse)
@@ -56,6 +58,7 @@ func (c *queryClient) Config(ctx context.Context, in *QueryConfigRequest, opts .
 //
 // Query is the app module query service.
 type QueryServer interface {
+	// Deprecated: Do not use.
 	// Config returns the current app config.
 	Config(context.Context, *QueryConfigRequest) (*QueryConfigResponse, error)
 	mustEmbedUnimplementedQueryServer()

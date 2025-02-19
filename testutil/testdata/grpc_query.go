@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/grpc"
+	grpc "google.golang.org/grpc"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

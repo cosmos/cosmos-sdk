@@ -1,6 +1,7 @@
 package counter
 
 import (
+	"cosmossdk.io/core/store"
 	"fmt"
 	"maps"
 	"slices"
@@ -29,8 +30,8 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *types.Module
-	Environment appmodule.Environment
+	Config       *types.Module
+	StoreService store.KVStoreService
 }
 
 type ModuleOutputs struct {
@@ -41,7 +42,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Environment)
+	k := keeper.NewKeeper(in.StoreService)
 	m := NewAppModule(k)
 
 	return ModuleOutputs{

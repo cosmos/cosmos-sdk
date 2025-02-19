@@ -2,27 +2,26 @@ package sims
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 
-	dbm "github.com/cosmos/cosmos-db"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -35,9 +34,6 @@ const DefaultGenTxGas = 10000000
 // DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
-	Version: &cmtproto.VersionParams{
-		App: 1,
-	},
 	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   100_000_000,
@@ -50,7 +46,6 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
 			cmttypes.ABCIPubKeyTypeEd25519,
-			cmttypes.ABCIPubKeyTypeSecp256k1,
 		},
 	},
 }
@@ -130,9 +125,16 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 	header.Time = newBlockTime
 	header.Height++
 
-	newCtx := app.BaseApp.NewUncachedContext(false, header)
+	newCtx := app.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
 
-	return newCtx, nil
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	return newCtx, err
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
@@ -162,7 +164,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// create validator set
 	valSet, err := startupConfig.ValidatorSet()
 	if err != nil {
-		return nil, errors.New("failed to create validator set")
+		return nil, fmt.Errorf("failed to create validator set")
 	}
 
 	var (
@@ -273,7 +275,7 @@ func GenesisStateWithValSet(
 	// add bonded amount to bonded pool module account
 	balances = append(balances, banktypes.Balance{
 		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt.MulRaw(int64(len(delegations))))},
+		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
 	})
 
 	// update total supply
@@ -283,8 +285,6 @@ func GenesisStateWithValSet(
 	return genesisState, nil
 }
 
-var _ servertypes.AppOptions = EmptyAppOptions{}
-
 // EmptyAppOptions is a stub implementing AppOptions
 type EmptyAppOptions struct{}
 
@@ -292,13 +292,6 @@ type EmptyAppOptions struct{}
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
 }
-
-// GetString implements AppOptions
-func (ao EmptyAppOptions) GetString(_ string) string {
-	return ""
-}
-
-var _ servertypes.AppOptions = AppOptionsMap{}
 
 // AppOptionsMap is a stub implementing AppOptions which can get data from a map
 type AppOptionsMap map[string]interface{}
@@ -310,15 +303,6 @@ func (m AppOptionsMap) Get(key string) interface{} {
 	}
 
 	return v
-}
-
-func (m AppOptionsMap) GetString(key string) string {
-	v, ok := m[key]
-	if !ok {
-		return ""
-	}
-
-	return v.(string)
 }
 
 func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {

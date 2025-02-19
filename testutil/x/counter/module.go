@@ -4,15 +4,13 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
-var (
-	_ appmodule.AppModule = AppModule{}
-)
+var _ appmodule.AppModule = AppModule{}
 
 // AppModule implements an application module
 type AppModule struct {

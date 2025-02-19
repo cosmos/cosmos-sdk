@@ -5,7 +5,6 @@ go 1.23
 require (
 	cosmossdk.io/math v1.5.0
 	github.com/cometbft/cometbft v0.38.17
-	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-sdk v0.50.11
 	github.com/creachadair/tomledit v0.0.27
 	github.com/stretchr/testify v1.10.0

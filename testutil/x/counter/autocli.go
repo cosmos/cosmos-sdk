@@ -1,11 +1,9 @@
 package counter
 
-/*
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 )
-
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
@@ -34,4 +32,3 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		},
 	}
 }
-*/

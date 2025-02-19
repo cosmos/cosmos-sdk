@@ -15,8 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var StoreKey = "Counter"
-
 type Keeper struct {
 	storeService store.KVStoreService
 
@@ -37,7 +35,7 @@ func NewKeeper(storeService store.KVStoreService) *Keeper {
 
 var _ types.QueryServer = Keeper{}
 
-// Params queries params of consensus module
+// GetCount queries the x/counter count
 func (k Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*types.QueryGetCountResponse, error) {
 	count, err := k.CountStore.Get(ctx)
 	if err != nil {

@@ -4,8 +4,8 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )

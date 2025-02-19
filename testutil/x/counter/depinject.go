@@ -1,12 +1,12 @@
 package counter
 
 import (
-	"cosmossdk.io/core/store"
 	"fmt"
 	"maps"
 	"slices"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 

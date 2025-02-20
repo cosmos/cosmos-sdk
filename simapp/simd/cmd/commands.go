@@ -104,7 +104,7 @@ func initRootCmd(
 	txConfig client.TxConfig,
 	basicManager module.BasicManager,
 ) {
-	cfg := sdk.GetConfig()
+	cfg := sdk.NewConfig()
 	cfg.Seal()
 
 	rootCmd.AddCommand(

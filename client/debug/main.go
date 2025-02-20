@@ -330,9 +330,9 @@ func PrefixesCmd() *cobra.Command {
 		Long:    "List prefixes used in Bech32 addresses.",
 		Example: fmt.Sprintf("$ %s debug prefixes", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())
-			cmd.Printf("Bech32 Val: %s\n", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
-			cmd.Printf("Bech32 Con: %s\n", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
+			cmd.Printf("Bech32 Acc: %s\n", sdk.NewConfig().GetBech32AccountAddrPrefix())
+			cmd.Printf("Bech32 Val: %s\n", sdk.NewConfig().GetBech32ValidatorAddrPrefix())
+			cmd.Printf("Bech32 Con: %s\n", sdk.NewConfig().GetBech32ConsensusAddrPrefix())
 			return nil
 		},
 	}

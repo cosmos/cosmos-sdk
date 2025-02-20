@@ -89,7 +89,7 @@ func NewTxConfig(protoCodec codec.Codec, enabledSignModes []signingtypes.SignMod
 // NewDefaultSigningOptions returns the sdk default signing options used by x/tx.  This includes account and
 // validator address prefix enabled codecs.
 func NewDefaultSigningOptions() (*txsigning.Options, error) {
-	sdkConfig := sdk.GetConfig()
+	sdkConfig := sdk.NewConfig()
 	return &txsigning.Options{
 		AddressCodec:          authcodec.NewBech32Codec(sdkConfig.GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdkConfig.GetBech32ValidatorAddrPrefix()),

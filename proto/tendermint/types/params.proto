@@ -1,7 +1,7 @@
 syntax = "proto3";
 package tendermint.types;
 
-option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
+option go_package = "github.com/cometbft/cometbft/proto/tendermint/types";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
@@ -11,10 +11,10 @@ option (gogoproto.equal_all) = true;
 // ConsensusParams contains consensus critical parameters that determine the
 // validity of blocks.
 message ConsensusParams {
-  BlockParams     block     = 1 [(gogoproto.nullable) = false];
-  EvidenceParams  evidence  = 2 [(gogoproto.nullable) = false];
-  ValidatorParams validator = 3 [(gogoproto.nullable) = false];
-  VersionParams   version   = 4 [(gogoproto.nullable) = false];
+  BlockParams     block     = 1;
+  EvidenceParams  evidence  = 2;
+  ValidatorParams validator = 3;
+  VersionParams   version   = 4;
 }
 
 // BlockParams contains limits on the block size.
@@ -25,11 +25,8 @@ message BlockParams {
   // Max gas per block.
   // Note: must be greater or equal to -1
   int64 max_gas = 2;
-  // Minimum time increment between consecutive blocks (in milliseconds) If the
-  // block header timestamp is ahead of the system clock, decrease this value.
-  //
-  // Not exposed to the application.
-  int64 time_iota_ms = 3;
+
+  reserved 3;  // was TimeIotaMs see https://github.com/cometbft/cometbft/pull/5792
 }
 
 // EvidenceParams determine how we handle evidence of malfeasance.
@@ -68,7 +65,7 @@ message VersionParams {
   option (gogoproto.populate) = true;
   option (gogoproto.equal)    = true;
 
-  uint64 app_version = 1;
+  uint64 app = 1;
 }
 
 // HashedParams is a subset of ConsensusParams.

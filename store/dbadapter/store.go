@@ -3,7 +3,7 @@ package dbadapter
 import (
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
@@ -38,6 +38,7 @@ func (dsa Store) Has(key []byte) bool {
 // Set wraps the underlying DB's Set method panicing on error.
 func (dsa Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
+	types.AssertValidValue(value)
 	if err := dsa.DB.Set(key, value); err != nil {
 		panic(err)
 	}

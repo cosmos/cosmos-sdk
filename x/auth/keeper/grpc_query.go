@@ -24,14 +24,16 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Id < 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid account number")
+	if req.Id != 0 { // ignoring `0` case since it is default value.
+		return nil, status.Error(codes.InvalidArgument, "requesting with id isn't supported, try to request using account-id")
 	}
 
+	accId := req.AccountId
+
 	ctx := sdk.UnwrapSDKContext(c)
-	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
+	address := ak.GetAccountAddressByID(ctx, accId)
 	if len(address) == 0 {
-		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
+		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", accId)
 	}
 
 	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
@@ -43,7 +45,7 @@ func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(ak.key)
+	store := ctx.KVStore(ak.storeKey)
 	accountsStore := prefix.NewStore(store, types.AddressStoreKeyPrefix)
 
 	var accounts []*codectypes.Any
@@ -206,4 +208,45 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 	}
 
 	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
+}
+
+// AccountInfo implements the AccountInfo query.
+func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Address == "" {
+		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	account := ak.GetAccount(ctx, addr)
+	if account == nil {
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+	}
+
+	// if there is no public key, avoid serializing the nil value
+	pubKey := account.GetPubKey()
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		pkAny, err = codectypes.NewAnyWithValue(account.GetPubKey())
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
+
+	return &types.QueryAccountInfoResponse{
+		Info: &types.BaseAccount{
+			Address:       addr.String(),
+			PubKey:        pkAny,
+			AccountNumber: account.GetAccountNumber(),
+			Sequence:      account.GetSequence(),
+		},
+	}, nil
 }

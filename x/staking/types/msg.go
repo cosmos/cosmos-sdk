@@ -16,6 +16,7 @@ const (
 	TypeMsgCreateValidator           = "create_validator"
 	TypeMsgDelegate                  = "delegate"
 	TypeMsgBeginRedelegate           = "begin_redelegate"
+	TypeMsgUpdateParams              = "update_params"
 )
 
 var (
@@ -27,6 +28,7 @@ var (
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
+	_ sdk.Msg                            = &MsgUpdateParams{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -186,7 +188,7 @@ func (msg MsgEditValidator) ValidateBasic() error {
 	}
 
 	if msg.CommissionRate != nil {
-		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.IsNegative() {
+		if msg.CommissionRate.GT(math.LegacyOneDec()) || msg.CommissionRate.IsNegative() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
 		}
 	}
@@ -397,4 +399,25 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
+// the expected signer needs to sign.
+func (m *MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(m)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic executes sanity validation on the provided data
+func (m *MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+	return m.Params.Validate()
+}
+
+// GetSigners returns the expected signers for a MsgUpdateParams message
+func (m *MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.AccAddressFromBech32(m.Authority)
+	return []sdk.AccAddress{addr}
 }

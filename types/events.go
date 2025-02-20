@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	"github.com/gogo/protobuf/jsonpb"
-	proto "github.com/gogo/protobuf/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/jsonpb"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -98,8 +97,8 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	for _, k := range keys {
 		v := attrMap[k]
 		attrs = append(attrs, abci.EventAttribute{
-			Key:   []byte(k),
-			Value: v,
+			Key:   k,
+			Value: string(v),
 		})
 	}
 
@@ -109,7 +108,7 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	}, nil
 }
 
-// ParseTypedEvent converts abci.Event back to typed event
+// ParseTypedEvent converts abci.Event back to a typed event.
 func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 	concreteGoType := proto.MessageType(event.Type)
 	if concreteGoType == nil {
@@ -130,7 +129,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 
 	attrMap := make(map[string]json.RawMessage)
 	for _, attr := range event.Attributes {
-		attrMap[string(attr.Key)] = json.RawMessage(attr.Value)
+		attrMap[attr.Key] = json.RawMessage(attr.Value)
 	}
 
 	attrBytes, err := json.Marshal(attrMap)
@@ -138,8 +137,8 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 		return nil, err
 	}
 
-	err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
-	if err != nil {
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err := unmarshaler.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg); err != nil {
 		return nil, err
 	}
 
@@ -186,18 +185,7 @@ func (a Attribute) String() string {
 
 // ToKVPair converts an Attribute object into a Tendermint key/value pair.
 func (a Attribute) ToKVPair() abci.EventAttribute {
-	return abci.EventAttribute{Key: toBytes(a.Key), Value: toBytes(a.Value)}
-}
-
-func toBytes(i interface{}) []byte {
-	switch x := i.(type) {
-	case []uint8:
-		return x
-	case string:
-		return []byte(x)
-	default:
-		panic(i)
-	}
+	return abci.EventAttribute{Key: a.Key, Value: a.Value}
 }
 
 // AppendAttributes adds one or more attributes to an Event.
@@ -206,6 +194,17 @@ func (e Event) AppendAttributes(attrs ...Attribute) Event {
 		e.Attributes = append(e.Attributes, attr.ToKVPair())
 	}
 	return e
+}
+
+// GetAttribute returns an attribute for a given key present in an event.
+// If the key is not found, the boolean value will be false.
+func (e Event) GetAttribute(key string) (Attribute, bool) {
+	for _, attr := range e.Attributes {
+		if attr.Key == key {
+			return Attribute{Key: attr.Key, Value: attr.Value}, true
+		}
+	}
+	return Attribute{}, false
 }
 
 // AppendEvent adds an Event to a slice of events.
@@ -227,6 +226,19 @@ func (e Events) ToABCIEvents() []abci.Event {
 	}
 
 	return res
+}
+
+// GetAttributes returns all attributes matching a given key present in events.
+// If the key is not found, the boolean value will be false.
+func (e Events) GetAttributes(key string) ([]Attribute, bool) {
+	attrs := make([]Attribute, 0)
+	for _, event := range e {
+		if attr, found := event.GetAttribute(key); found {
+			attrs = append(attrs, attr)
+		}
+	}
+
+	return attrs, len(attrs) > 0
 }
 
 // Common event types and attribute keys
@@ -255,37 +267,14 @@ func (se StringEvents) String() string {
 	var sb strings.Builder
 
 	for _, e := range se {
-		sb.WriteString(fmt.Sprintf("\t\t- %s\n", e.Type))
+		fmt.Fprintf(&sb, "\t\t- %s\n", e.Type)
 
 		for _, attr := range e.Attributes {
-			sb.WriteString(fmt.Sprintf("\t\t\t- %s\n", attr.String()))
+			fmt.Fprintf(&sb, "\t\t\t- %s\n", attr)
 		}
 	}
 
 	return strings.TrimRight(sb.String(), "\n")
-}
-
-// Flatten returns a flattened version of StringEvents by grouping all attributes
-// per unique event type.
-func (se StringEvents) Flatten() StringEvents {
-	flatEvents := make(map[string][]Attribute)
-
-	for _, e := range se {
-		flatEvents[e.Type] = append(flatEvents[e.Type], e.Attributes...)
-	}
-	keys := make([]string, 0, len(flatEvents))
-	res := make(StringEvents, 0, len(flatEvents)) // appeneded to keys, same length of what is allocated to keys
-
-	for ty := range flatEvents {
-		keys = append(keys, ty)
-	}
-
-	sort.Strings(keys)
-	for _, ty := range keys {
-		res = append(res, StringEvent{Type: ty, Attributes: flatEvents[ty]})
-	}
-
-	return res
 }
 
 // StringifyEvent converts an Event object to a StringEvent object.
@@ -295,7 +284,7 @@ func StringifyEvent(e abci.Event) StringEvent {
 	for _, attr := range e.Attributes {
 		res.Attributes = append(
 			res.Attributes,
-			Attribute{Key: string(attr.Key), Value: string(attr.Value)},
+			Attribute{Key: attr.Key, Value: attr.Value},
 		)
 	}
 
@@ -311,7 +300,7 @@ func StringifyEvents(events []abci.Event) StringEvents {
 		res = append(res, StringifyEvent(e))
 	}
 
-	return res.Flatten()
+	return res
 }
 
 // MarkEventsToIndex returns the set of ABCI events, where each event's attribute

@@ -39,8 +39,7 @@ A typical testing flow might look like the following:
 		s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
 		s.Require().NoError(err)
 
-		_, err = s.network.WaitForHeight(1)
-		s.Require().NoError(err)
+		s.Require().NoError(s.network.WaitForNextBlock())
 	}
 
 	func (s *IntegrationTestSuite) TearDownSuite() {

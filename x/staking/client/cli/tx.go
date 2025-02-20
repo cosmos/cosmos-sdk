@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -63,8 +64,11 @@ func NewCreateValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
-				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
@@ -398,10 +402,11 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	genOnly, _ := fs.GetBool(flags.FlagGenerateOnly)
 	if genOnly {
 		ip, _ := fs.GetString(FlagIP)
+		p2pPort, _ := fs.GetUint(FlagP2PPort)
 		nodeID, _ := fs.GetString(FlagNodeID)
 
-		if nodeID != "" && ip != "" {
-			txf = txf.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
+		if nodeID != "" && ip != "" && p2pPort > 0 {
+			txf = txf.WithMemo(fmt.Sprintf("%s@%s:%d", nodeID, ip, p2pPort))
 		}
 	}
 
@@ -412,7 +417,8 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 // this is anticipated to be used with the gen-tx
 func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
-	fsCreateValidator.String(FlagIP, ipDefault, "The node's public IP")
+	fsCreateValidator.String(FlagIP, ipDefault, "The node's public P2P IP")
+	fsCreateValidator.Uint(FlagP2PPort, 26656, "The node's public P2P port")
 	fsCreateValidator.String(FlagNodeID, "", "The node's NodeID")
 	fsCreateValidator.String(FlagMoniker, "", "The validator's (optional) moniker")
 	fsCreateValidator.String(FlagWebsite, "", "The validator's (optional) website")
@@ -452,6 +458,7 @@ type TxCreateValidatorConfig struct {
 	PubKey cryptotypes.PubKey
 
 	IP              string
+	P2PPort         uint
 	Website         string
 	SecurityContact string
 	Details         string
@@ -465,35 +472,35 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	if err != nil {
 		return c, err
 	}
+
 	if ip == "" {
-		_, _ = fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
-			"the tx's memo field will be unset")
+		_, _ = fmt.Fprintf(os.Stderr, "failed to retrieve an external IP; the tx's memo field will be unset")
 	}
-	c.IP = ip
+
+	p2pPort, err := flagSet.GetUint(FlagP2PPort)
+	if err != nil {
+		return c, err
+	}
 
 	website, err := flagSet.GetString(FlagWebsite)
 	if err != nil {
 		return c, err
 	}
-	c.Website = website
 
 	securityContact, err := flagSet.GetString(FlagSecurityContact)
 	if err != nil {
 		return c, err
 	}
-	c.SecurityContact = securityContact
 
 	details, err := flagSet.GetString(FlagDetails)
 	if err != nil {
 		return c, err
 	}
-	c.SecurityContact = details
 
 	identity, err := flagSet.GetString(FlagIdentity)
 	if err != nil {
 		return c, err
 	}
-	c.Identity = identity
 
 	c.Amount, err = flagSet.GetString(FlagAmount)
 	if err != nil {
@@ -520,6 +527,11 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		return c, err
 	}
 
+	c.IP = ip
+	c.P2PPort = p2pPort
+	c.Website = website
+	c.SecurityContact = securityContact
+	c.Identity = identity
 	c.NodeID = nodeID
 	c.PubKey = valPubKey
 	c.Website = website
@@ -587,17 +599,24 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr),
+		config.PubKey,
+		amount,
+		description,
+		commissionRates,
+		minSelfDelegation,
 	)
 	if err != nil {
 		return txBldr, msg, err
 	}
+
 	if generateOnly {
 		ip := config.IP
+		p2pPort := config.P2PPort
 		nodeID := config.NodeID
 
-		if nodeID != "" && ip != "" {
-			txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
+		if nodeID != "" && ip != "" && p2pPort > 0 {
+			txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:%d", nodeID, ip, p2pPort))
 		}
 	}
 

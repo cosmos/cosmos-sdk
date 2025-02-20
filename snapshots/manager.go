@@ -11,7 +11,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -86,6 +86,9 @@ func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snaps
 
 // RegisterExtensions register extension snapshotters to manager
 func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) error {
+	if m.extensions == nil {
+		m.extensions = make(map[string]types.ExtensionSnapshotter, len(extensions))
+	}
 	for _, extension := range extensions {
 		name := extension.SnapshotName()
 		if _, ok := m.extensions[name]; ok {
@@ -217,7 +220,10 @@ func (m *Manager) createSnapshot(height uint64, ch chan<- io.ReadCloser) {
 			streamWriter.CloseWithError(err)
 			return
 		}
-		if err := extension.Snapshot(height, streamWriter); err != nil {
+		payloadWriter := func(payload []byte) error {
+			return types.WriteExtensionPayload(streamWriter, payload)
+		}
+		if err := extension.SnapshotExtension(height, payloadWriter); err != nil {
 			streamWriter.CloseWithError(err)
 			return
 		}
@@ -337,24 +343,39 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		return sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
 
+	var nextItem types.SnapshotItem
 	streamReader, err := NewStreamReader(chChunks)
 	if err != nil {
 		return err
 	}
 	defer streamReader.Close()
 
-	next, err := m.multistore.Restore(snapshot.Height, snapshot.Format, streamReader)
+	// payloadReader reads an extension payload for extension snapshotter, it returns `io.EOF` at extension boundaries.
+	payloadReader := func() ([]byte, error) {
+		nextItem.Reset()
+		if err := streamReader.ReadMsg(&nextItem); err != nil {
+			return nil, err
+		}
+		payload := nextItem.GetExtensionPayload()
+		if payload == nil {
+			return nil, io.EOF
+		}
+		return payload.Payload, nil
+	}
+
+	nextItem, err = m.multistore.Restore(snapshot.Height, snapshot.Format, streamReader)
 	if err != nil {
 		return sdkerrors.Wrap(err, "multistore restore")
 	}
+
 	for {
-		if next.Item == nil {
+		if nextItem.Item == nil {
 			// end of stream
 			break
 		}
-		metadata := next.GetExtension()
+		metadata := nextItem.GetExtension()
 		if metadata == nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", next.Item)
+			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", nextItem.Item)
 		}
 		extension, ok := m.extensions[metadata.Name]
 		if !ok {
@@ -363,9 +384,13 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		if !IsFormatSupported(extension, metadata.Format) {
 			return sdkerrors.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
 		}
-		next, err = extension.Restore(snapshot.Height, metadata.Format, streamReader)
-		if err != nil {
+
+		if err := extension.RestoreExtension(snapshot.Height, metadata.Format, payloadReader); err != nil {
 			return sdkerrors.Wrapf(err, "extension %s restore", metadata.Name)
+		}
+
+		if nextItem.GetExtensionPayload() != nil {
+			return sdkerrors.Wrapf(err, "extension %s don't exhausted payload stream", metadata.Name)
 		}
 	}
 	return nil

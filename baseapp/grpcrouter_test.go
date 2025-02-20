@@ -6,14 +6,16 @@ import (
 	"sync"
 	"testing"
 
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,7 +23,7 @@ func TestGRPCQueryRouter(t *testing.T) {
 	qr := baseapp.NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
-	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
+	testdata_pulsar.RegisterQueryServer(qr, testdata_pulsar.QueryImpl{})
 	helper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: qr,
 		Ctx:             sdk.Context{}.WithContext(context.Background()),
@@ -53,11 +55,11 @@ func TestGRPCQueryRouter(t *testing.T) {
 
 func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Setup baseapp.
+	var appBuilder *runtime.AppBuilder
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
+	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
-	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {

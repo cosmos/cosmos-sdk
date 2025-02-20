@@ -256,8 +256,7 @@ func (i indexIterator) LoadNext(dest codec.ProtoMarshaler) (RowID, error) {
 
 // Close releases the iterator and should be called at the end of iteration
 func (i indexIterator) Close() error {
-	i.it.Close()
-	return nil
+	return i.it.Close()
 }
 
 // PrefixRange turns a prefix into a (start, end) range. The start is the given prefix value and

@@ -7,6 +7,8 @@ import (
 	"math"
 	"sort"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -30,10 +32,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 		{
 			"success",
 			func() {
-				suite.app.AccountKeeper.SetAccount(suite.ctx,
-					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, first))
-				suite.app.AccountKeeper.SetAccount(suite.ctx,
-					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, second))
+				suite.accountKeeper.SetAccount(suite.ctx,
+					suite.accountKeeper.NewAccountWithAddress(suite.ctx, first))
+				suite.accountKeeper.SetAccount(suite.ctx,
+					suite.accountKeeper.NewAccountWithAddress(suite.ctx, second))
 				req = &types.QueryAccountsRequest{}
 			},
 			true,
@@ -41,7 +43,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 				addresses := make([]sdk.AccAddress, len(res.Accounts))
 				for i, acc := range res.Accounts {
 					var account types.AccountI
-					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 					addresses[i] = account.GetAddress()
 				}
@@ -117,14 +119,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 		{
 			"success",
 			func() {
-				suite.app.AccountKeeper.SetAccount(suite.ctx,
-					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr))
+				suite.accountKeeper.SetAccount(suite.ctx,
+					suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr))
 				req = &types.QueryAccountRequest{Address: addr.String()}
 			},
 			true,
 			func(res *types.QueryAccountResponse) {
 				var newAccount types.AccountI
-				err := suite.app.InterfaceRegistry().UnpackAny(res.Account, &newAccount)
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &newAccount)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(newAccount)
 				suite.Require().True(addr.Equals(newAccount.GetAddress()))
@@ -181,16 +183,26 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			func(res *types.QueryAccountAddressByIDResponse) {},
 		},
 		{
-			"valid request",
+			"valid account-id",
 			func() {
-				account := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
-				suite.app.AccountKeeper.SetAccount(suite.ctx, account)
-				req = &types.QueryAccountAddressByIDRequest{Id: int64(account.GetAccountNumber())}
+				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				suite.accountKeeper.SetAccount(suite.ctx, account)
+				req = &types.QueryAccountAddressByIDRequest{AccountId: account.GetAccountNumber()}
 			},
 			true,
 			func(res *types.QueryAccountAddressByIDResponse) {
 				suite.Require().NotNil(res.AccountAddress)
 			},
+		},
+		{
+			"invalid request",
+			func() {
+				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				suite.accountKeeper.SetAccount(suite.ctx, account)
+				req = &types.QueryAccountAddressByIDRequest{Id: 1}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIDResponse) {},
 		},
 	}
 
@@ -231,7 +243,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 			"success",
 			func() {
 				req = &types.QueryParamsRequest{}
-				expParams = suite.app.AccountKeeper.GetParams(suite.ctx)
+				expParams = suite.accountKeeper.GetParams(suite.ctx)
 			},
 			true,
 		},
@@ -277,7 +289,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				mintModuleExists := false
 				for _, acc := range res.Accounts {
 					var account types.AccountI
-					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
 					moduleAccount, ok := account.(types.ModuleAccountI)
@@ -300,7 +312,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				mintModuleExists := false
 				for _, acc := range res.Accounts {
 					var account types.AccountI
-					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
 					moduleAccount, ok := account.(types.ModuleAccountI)
@@ -331,7 +343,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				var moduleNames []string
 				for _, any := range res.Accounts {
 					var account types.AccountI
-					err := suite.app.InterfaceRegistry().UnpackAny(any, &account)
+					err := suite.encCfg.InterfaceRegistry.UnpackAny(any, &account)
 					suite.Require().NoError(err)
 					moduleAccount, ok := account.(types.ModuleAccountI)
 					suite.Require().True(ok)
@@ -365,7 +377,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccountByName() {
 			true,
 			func(res *types.QueryModuleAccountByNameResponse) {
 				var account types.AccountI
-				err := suite.app.InterfaceRegistry().UnpackAny(res.Account, &account)
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &account)
 				suite.Require().NoError(err)
 
 				moduleAccount, ok := account.(types.ModuleAccountI)
@@ -497,4 +509,40 @@ func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestQueryAccountInfo() {
+	_, pk, addr := testdata.KeyTestPubAddr()
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	suite.Require().NoError(acc.SetPubKey(pk))
+	suite.Require().NoError(acc.SetSequence(10))
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+
+	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
+		Address: addr.String(),
+	})
+
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res.Info)
+	suite.Require().Equal(addr.String(), res.Info.Address)
+	suite.Require().Equal(acc.GetAccountNumber(), res.Info.AccountNumber)
+	suite.Require().Equal(acc.GetSequence(), res.Info.Sequence)
+	suite.Require().Equal("/"+proto.MessageName(pk), res.Info.PubKey.TypeUrl)
+	pkBz, err := proto.Marshal(pk)
+	suite.Require().NoError(err)
+	suite.Require().Equal(pkBz, res.Info.PubKey.Value)
+}
+
+func (suite *KeeperTestSuite) TestQueryAccountInfoWithoutPubKey() {
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+
+	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
+		Address: addr.String(),
+	})
+
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res.Info)
+	suite.Require().Equal(addr.String(), res.Info.Address)
+	suite.Require().Nil(res.Info.PubKey)
 }

@@ -195,5 +195,7 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 		panic(errors.Wrap(err, "failed to write trace operation"))
 	}
 
-	io.WriteString(w, "\n")
+	if _, err = io.WriteString(w, "\n"); err != nil {
+		panic(errors.Wrap(err, "failed to write newline"))
+	}
 }

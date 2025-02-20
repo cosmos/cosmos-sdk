@@ -5,20 +5,32 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/depinject"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func TestAuxTxBuilder(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+	var (
+		reg codectypes.InterfaceRegistry
+		cdc codec.Codec
+	)
+	err := depinject.Inject(clienttestutil.TestConfig, &reg, &cdc)
+	bankModule := bank.AppModuleBasic{}
+
+	require.NoError(t, err)
+	testdata.RegisterInterfaces(reg)
+	// required for test case: "GetAuxSignerData works for DIRECT_AUX"
+	bankModule.RegisterInterfaces(reg)
 
 	var b tx.AuxTxBuilder
 
@@ -159,7 +171,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				auxSignerData, err := b.GetAuxSignerData()
 
 				// Make sure auxSignerData is correctly populated
-				checkCorrectData(t, encCfg.Codec, auxSignerData, signing.SignMode_SIGN_MODE_DIRECT_AUX)
+				checkCorrectData(t, cdc, auxSignerData, signing.SignMode_SIGN_MODE_DIRECT_AUX)
 
 				return err
 			},
@@ -202,7 +214,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				auxSignerData, err := b.GetAuxSignerData()
 
 				// Make sure auxSignerData is correctly populated
-				checkCorrectData(t, encCfg.Codec, auxSignerData, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+				checkCorrectData(t, cdc, auxSignerData, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 
 				return err
 			},

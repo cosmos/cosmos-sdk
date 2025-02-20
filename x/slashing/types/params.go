@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Default parameter namespace
@@ -16,23 +17,9 @@ const (
 
 var (
 	DefaultMinSignedPerWindow      = sdk.NewDecWithPrec(5, 1)
-	DefaultSlashFractionDoubleSign = sdk.NewDec(1).Quo(sdk.NewDec(20))
-	DefaultSlashFractionDowntime   = sdk.NewDec(1).Quo(sdk.NewDec(100))
+	DefaultSlashFractionDoubleSign = math.LegacyNewDec(1).Quo(math.LegacyNewDec(20))
+	DefaultSlashFractionDowntime   = math.LegacyNewDec(1).Quo(math.LegacyNewDec(100))
 )
-
-// Parameter store keys
-var (
-	KeySignedBlocksWindow      = []byte("SignedBlocksWindow")
-	KeyMinSignedPerWindow      = []byte("MinSignedPerWindow")
-	KeyDowntimeJailDuration    = []byte("DowntimeJailDuration")
-	KeySlashFractionDoubleSign = []byte("SlashFractionDoubleSign")
-	KeySlashFractionDowntime   = []byte("SlashFractionDowntime")
-)
-
-// ParamKeyTable for slashing module
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
 
 // NewParams creates a new Params object
 func NewParams(
@@ -48,23 +35,35 @@ func NewParams(
 	}
 }
 
-// ParamSetPairs - Implements params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeySignedBlocksWindow, &p.SignedBlocksWindow, validateSignedBlocksWindow),
-		paramtypes.NewParamSetPair(KeyMinSignedPerWindow, &p.MinSignedPerWindow, validateMinSignedPerWindow),
-		paramtypes.NewParamSetPair(KeyDowntimeJailDuration, &p.DowntimeJailDuration, validateDowntimeJailDuration),
-		paramtypes.NewParamSetPair(KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign, validateSlashFractionDoubleSign),
-		paramtypes.NewParamSetPair(KeySlashFractionDowntime, &p.SlashFractionDowntime, validateSlashFractionDowntime),
-	}
-}
-
 // DefaultParams defines the parameters for this module
 func DefaultParams() Params {
 	return NewParams(
-		DefaultSignedBlocksWindow, DefaultMinSignedPerWindow, DefaultDowntimeJailDuration,
-		DefaultSlashFractionDoubleSign, DefaultSlashFractionDowntime,
+		DefaultSignedBlocksWindow,
+		DefaultMinSignedPerWindow,
+		DefaultDowntimeJailDuration,
+		DefaultSlashFractionDoubleSign,
+		DefaultSlashFractionDowntime,
 	)
+}
+
+// Validate validates the params
+func (p Params) Validate() error {
+	if err := validateSignedBlocksWindow(p.SignedBlocksWindow); err != nil {
+		return err
+	}
+	if err := validateMinSignedPerWindow(p.MinSignedPerWindow); err != nil {
+		return err
+	}
+	if err := validateDowntimeJailDuration(p.DowntimeJailDuration); err != nil {
+		return err
+	}
+	if err := validateSlashFractionDoubleSign(p.SlashFractionDoubleSign); err != nil {
+		return err
+	}
+	if err := validateSlashFractionDowntime(p.SlashFractionDowntime); err != nil {
+		return err
+	}
+	return nil
 }
 
 func validateSignedBlocksWindow(i interface{}) error {
@@ -86,10 +85,13 @@ func validateMinSignedPerWindow(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("min signed per window cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("min signed per window cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("min signed per window too large: %s", v)
 	}
 
@@ -115,10 +117,13 @@ func validateSlashFractionDoubleSign(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("double sign slash fraction cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("double sign slash fraction cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("double sign slash fraction too large: %s", v)
 	}
 
@@ -131,10 +136,13 @@ func validateSlashFractionDowntime(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("downtime slash fraction cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("downtime slash fraction cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("downtime slash fraction too large: %s", v)
 	}
 

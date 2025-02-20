@@ -56,7 +56,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	configFilePath := filepath.Join(configPath, "client.toml")
 	conf := defaultClientConfig()
 
-	// when client.toml does not exist create and init with default values
+	// if client.toml file does not exist we create it and write default ClientConfig values into it.
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		if err := ensureConfigPath(configPath); err != nil {
 			return ctx, fmt.Errorf("couldn't make client config: %v", err)

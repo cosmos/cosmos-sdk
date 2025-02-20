@@ -59,7 +59,7 @@ type FeeAllowanceI {
 
 Two basic fee allowance types, `BasicAllowance` and `PeriodicAllowance` are defined to support known use cases:
 
-```proto
+```protobuf
 // BasicAllowance implements FeeAllowanceI with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
 message BasicAllowance {
@@ -98,7 +98,7 @@ message PeriodicAllowance {
 
 Allowances can be granted and revoked using `MsgGrantAllowance` and `MsgRevokeAllowance`:
 
-```proto
+```protobuf
 // MsgGrantAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 message MsgGrantAllowance {
@@ -116,7 +116,7 @@ message MsgGrantAllowance {
 
 In order to use allowances in transactions, we add a new field `granter` to the transaction `Fee` type:
 
-```proto
+```protobuf
 package cosmos.tx.v1beta1;
 
 message Fee {

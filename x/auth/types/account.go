@@ -7,14 +7,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/gogoproto/proto"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 var (
@@ -137,14 +139,12 @@ func (acc BaseAccount) Validate() error {
 	return nil
 }
 
-func (acc BaseAccount) String() string {
-	out, _ := acc.MarshalYAML()
-	return out.(string)
-}
-
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &acc)
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+
+	bz, err := codec.MarshalYAML(codec.NewProtoCodec(registry), &acc)
 	if err != nil {
 		return nil, err
 	}
@@ -160,9 +160,20 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(acc.PubKey, &pubKey)
 }
 
+// NewModuleAddressOrAddress gets an input string and returns an AccAddress.
+// If the input is a valid address, it returns the address.
+// If the input is a module name, it returns the module address.
+func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
+	if addr, err := sdk.AccAddressFromBech32(input); err == nil {
+		return addr
+	}
+
+	return NewModuleAddress(input)
+}
+
 // NewModuleAddress creates an AccAddress from the hash of the module's name
 func NewModuleAddress(name string) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
+	return address.Module(name)
 }
 
 // NewEmptyModuleAccount creates a empty ModuleAccount from a string
@@ -243,11 +254,6 @@ type moduleAccountPretty struct {
 	Sequence      uint64         `json:"sequence"`
 	Name          string         `json:"name"`
 	Permissions   []string       `json:"permissions"`
-}
-
-func (ma ModuleAccount) String() string {
-	out, _ := ma.MarshalYAML()
-	return out.(string)
 }
 
 // MarshalYAML returns the YAML representation of a ModuleAccount.

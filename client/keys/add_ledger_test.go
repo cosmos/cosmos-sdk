@@ -10,14 +10,14 @@ import (
 	"io"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -44,7 +44,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	// Prepare a keybase
 	kbHome := t.TempDir()
 
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := clienttestutil.MakeTestCodec(t)
 	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithCodec(cdc)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
@@ -55,7 +55,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		fmt.Sprintf("--%s=0", flagIndex),
 		fmt.Sprintf("--%s=330", flagCoinType),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
@@ -96,16 +96,16 @@ func Test_runAddCmdLedger(t *testing.T) {
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := clienttestutil.MakeTestCodec(t)
 
-	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithCodec(encCfg.Codec)
+	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithCodec(cdc)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
@@ -114,7 +114,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now check that it has been stored properly
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
 	// Now check that it has been stored properly
@@ -137,7 +137,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 }
 
 func Test_runAddCmdLedgerDryRun(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := clienttestutil.MakeTestCodec(t)
 	testData := []struct {
 		name  string
 		args  []string

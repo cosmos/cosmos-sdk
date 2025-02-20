@@ -9,7 +9,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 message GenesisState {
   // class defines the class of the nft type.
   repeated cosmos.nft.v1beta1.Class classes = 1;
-  repeated Entry                    entries = 2;
+
+  // entry defines all nft owned by a person.
+  repeated Entry entries = 2;
 }
 
 // Entry Defines all nft owned by a person

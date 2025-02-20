@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -158,24 +158,32 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	params := q.GetParams(ctx)
 
+	response := &v1.QueryParamsResponse{}
+
+	//nolint:staticcheck
 	switch req.ParamsType {
 	case v1.ParamDeposit:
-		depositParmas := q.GetDepositParams(ctx)
-		return &v1.QueryParamsResponse{DepositParams: &depositParmas}, nil
+		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
+		response.DepositParams = &depositParams
 
 	case v1.ParamVoting:
-		votingParmas := q.GetVotingParams(ctx)
-		return &v1.QueryParamsResponse{VotingParams: &votingParmas}, nil
+		votingParams := v1.NewVotingParams(params.VotingPeriod)
+		response.VotingParams = &votingParams
 
 	case v1.ParamTallying:
-		tallyParams := q.GetTallyParams(ctx)
-		return &v1.QueryParamsResponse{TallyParams: &tallyParams}, nil
+		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+		response.TallyParams = &tallyParams
 
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,
 			"%s is not a valid parameter type", req.ParamsType)
+
 	}
+	response.Params = &params
+
+	return response, nil
 }
 
 // Deposit queries single deposit information based on proposalID, depositAddr.
@@ -262,7 +270,7 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 	case proposal.Status == v1.StatusDepositPeriod:
 		tallyResult = v1.EmptyTallyResult()
 
-	case proposal.Status == v1.StatusPassed || proposal.Status == v1.StatusRejected:
+	case proposal.Status == v1.StatusPassed || proposal.Status == v1.StatusRejected || proposal.Status == v1.StatusFailed:
 		tallyResult = *proposal.FinalTallyResult
 
 	default:
@@ -276,10 +284,11 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 var _ v1beta1.QueryServer = legacyQueryServer{}
 
 type legacyQueryServer struct {
-	keeper Keeper
+	keeper *Keeper
 }
 
-func NewLegacyQueryServer(k Keeper) v1beta1.QueryServer {
+// NewLegacyQueryServer returns an implementation of the v1beta1 legacy QueryServer interface.
+func NewLegacyQueryServer(k *Keeper) v1beta1.QueryServer {
 	return &legacyQueryServer{keeper: k}
 }
 
@@ -291,7 +300,7 @@ func (q legacyQueryServer) Proposal(c context.Context, req *v1beta1.QueryProposa
 		return nil, err
 	}
 
-	proposal, err := v046.ConvertToLegacyProposal(*resp.Proposal)
+	proposal, err := v3.ConvertToLegacyProposal(*resp.Proposal)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +321,7 @@ func (q legacyQueryServer) Proposals(c context.Context, req *v1beta1.QueryPropos
 
 	legacyProposals := make([]v1beta1.Proposal, len(resp.Proposals))
 	for idx, proposal := range resp.Proposals {
-		legacyProposals[idx], err = v046.ConvertToLegacyProposal(*proposal)
+		legacyProposals[idx], err = v3.ConvertToLegacyProposal(*proposal)
 		if err != nil {
 			return nil, err
 		}
@@ -333,7 +342,7 @@ func (q legacyQueryServer) Vote(c context.Context, req *v1beta1.QueryVoteRequest
 		return nil, err
 	}
 
-	vote, err := v046.ConvertToLegacyVote(*resp.Vote)
+	vote, err := v3.ConvertToLegacyVote(*resp.Vote)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +361,7 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 
 	votes := make([]v1beta1.Vote, len(resp.Votes))
 	for i, v := range resp.Votes {
-		votes[i], err = v046.ConvertToLegacyVote(*v)
+		votes[i], err = v3.ConvertToLegacyVote(*v)
 		if err != nil {
 			return nil, err
 		}
@@ -364,6 +373,7 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 	}, nil
 }
 
+//nolint:staticcheck
 func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
 	resp, err := q.keeper.Params(c, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,
@@ -412,7 +422,7 @@ func (q legacyQueryServer) Deposit(c context.Context, req *v1beta1.QueryDepositR
 		return nil, err
 	}
 
-	deposit := v046.ConvertToLegacyDeposit(resp.Deposit)
+	deposit := v3.ConvertToLegacyDeposit(resp.Deposit)
 	return &v1beta1.QueryDepositResponse{Deposit: deposit}, nil
 }
 
@@ -426,7 +436,7 @@ func (q legacyQueryServer) Deposits(c context.Context, req *v1beta1.QueryDeposit
 	}
 	deposits := make([]v1beta1.Deposit, len(resp.Deposits))
 	for idx, deposit := range resp.Deposits {
-		deposits[idx] = v046.ConvertToLegacyDeposit(deposit)
+		deposits[idx] = v3.ConvertToLegacyDeposit(deposit)
 	}
 
 	return &v1beta1.QueryDepositsResponse{Deposits: deposits, Pagination: resp.Pagination}, nil
@@ -440,7 +450,7 @@ func (q legacyQueryServer) TallyResult(c context.Context, req *v1beta1.QueryTall
 		return nil, err
 	}
 
-	tally, err := v046.ConvertToLegacyTallyResult(resp.Tally)
+	tally, err := v3.ConvertToLegacyTallyResult(resp.Tally)
 	if err != nil {
 		return nil, err
 	}

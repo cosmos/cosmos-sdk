@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	protogen.Options{}.Run(codegen.PluginRunner)
+	protogen.Options{}.Run(codegen.ORMPluginRunner)
 }

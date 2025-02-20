@@ -6,6 +6,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
@@ -15,8 +16,10 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
-	if _, err := k.GetPubkey(ctx, addr); err != nil {
-		panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
+
+	// don't update missed blocks when validator's jailed
+	if k.sk.IsValidatorJailed(ctx, consAddr) {
+		return
 	}
 
 	// fetch signing info
@@ -84,7 +87,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-			coinsBurned := k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
+			coinsBurned := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx), stakingtypes.Infraction_INFRACTION_DOWNTIME)
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,

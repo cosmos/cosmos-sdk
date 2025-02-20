@@ -8,7 +8,7 @@
 * [Specification](#specification)
 * [Future Adaptations](#future-adaptations)
 * [API](#api)
-* [References](#references)
+* [References](#references)  
 
 ## Status
 
@@ -54,16 +54,16 @@ of bytes and verification of a signature respectively.
 
 Note, our goal here is not to provide context and reasoning about why necessarily
 these algorithms were chosen apart from the fact they are the defacto algorithms
-used in Tendermint and the Cosmos SDK and that they satisfy our needs for such
+used in CometBFT and the Cosmos SDK and that they satisfy our needs for such
 cryptographic algorithms such as having resistance to collision and second
 pre-image attacks, as well as being [deterministic](https://en.wikipedia.org/wiki/Hash_function#Determinism) and [uniform](https://en.wikipedia.org/wiki/Hash_function#Uniformity).
 
 ## Specification
 
-Tendermint has a well established protocol for signing messages using a canonical
-JSON representation as defined [here](https://github.com/tendermint/tendermint/blob/master/types/canonical.go).
+CometBFT has a well established protocol for signing messages using a canonical
+JSON representation as defined [here](https://github.com/cometbft/cometbft/blob/master/types/canonical.go).
 
-An example of such a canonical JSON structure is Tendermint's vote structure:
+An example of such a canonical JSON structure is CometBFT's vote structure:
 
 ```go
 type CanonicalJSONVote struct {
@@ -87,7 +87,7 @@ to the Cosmos chain identifier. The user-agent should **refuse** signing if the
 `@chain_id` field does not match the currently active chain! The `@type` field
 must equal the constant `"message"`. The `@type` field corresponds to the type of
 structure the user will be signing in an application. For now, a user is only
-allowed to sign bytes of valid ASCII text ([see here](https://github.com/tendermint/tendermint/blob/master/libs/common/string.go#L61-L74)).
+allowed to sign bytes of valid ASCII text ([see here](https://github.com/cometbft/cometbft/blob/v0.37.0/libs/strings/string.go#L35-L64)).
 However, this will change and evolve to support additional application-specific
 structures that are human-readable and machine-verifiable ([see Future Adaptations](#futureadaptations)).
 

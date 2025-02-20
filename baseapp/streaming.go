@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )

@@ -2,6 +2,8 @@ run:
   tests: false
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
+  skip-files:
+    - server/grpc/gogoreflection/serverreflection.go
 
 linters:
   disable-all: true
@@ -38,9 +40,6 @@ issues:
     - text: "ST1016:"
       linters:
         - stylecheck
-    - text: "should be written without leading space as"
-      linters:
-        - nolintlint
     - path: "migrations"
       text: "SA1019:"
       linters:
@@ -57,5 +56,6 @@ linters-settings:
     suggest-new: true
   nolintlint:
     allow-unused: false
+    allow-leading-space: true
     require-explanation: false
     require-specific: false

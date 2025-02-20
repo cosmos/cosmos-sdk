@@ -23,7 +23,7 @@ const (
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
+func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time, metadata, title, summary string, proposer sdk.AccAddress) (Proposal, error) {
 	msgs, err := sdktx.SetMsgs(messages)
 	if err != nil {
 		return Proposal{}, err
@@ -39,6 +39,9 @@ func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, dep
 		FinalTallyResult: &tally,
 		SubmitTime:       &submitTime,
 		DepositEndTime:   &depositEndTime,
+		Title:            title,
+		Summary:          summary,
+		Proposer:         proposer.String(),
 	}
 
 	return p, nil
@@ -94,19 +97,7 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	return ProposalStatus(num), nil
 }
 
-// Marshal needed for protobuf compatibility
-func (status ProposalStatus) Marshal() ([]byte, error) {
-	return []byte{byte(status)}, nil
-}
-
-// Unmarshal needed for protobuf compatibility
-func (status *ProposalStatus) Unmarshal(data []byte) error {
-	*status = ProposalStatus(data[0])
-	return nil
-}
-
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

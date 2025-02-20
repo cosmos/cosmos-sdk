@@ -14,16 +14,21 @@ private
 # Build
 vendor
 build
-docs/_build
-docs/tutorial
 docs/node_modules
-docs/modules
-docs/run-node/cosmovisor.md
+docs/docs/modules
+docs/docs/spec
+docs/docs/architecture
+docs/docs/tooling/01-cosmovisor.md
+docs/docs/tooling/02-depinject.md
+docs/run-node/04-rosetta.md
 dist
 tools-stamp
 buf-stamp
 artifacts
-tools/
+
+# Go
+go.work
+go.work.sum
 
 # Data - ideally these don't exist
 baseapp/data/*
@@ -31,8 +36,9 @@ client/lcd/keys/*
 .testnets
 
 # Testing
+coverage.out
 coverage.txt
-profile.out
+*profile.out
 sim_log_file
 x/genutil/config
 x/genutil/data

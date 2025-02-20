@@ -18,7 +18,7 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 
 # The minimum gas prices a validator is willing to accept for processing a
 # transaction. A transaction's fees must meet the minimum of any denomination
-# specified in this config (e.g. 0.25token1;0.0001token2).
+# specified in this config (e.g. 0.25token1,0.0001token2).
 minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
 # default: the last 362880 states are kept, pruning at 10 block intervals
@@ -70,22 +70,20 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 # ["message.sender", "message.recipient"]
 index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 
-# IavlCacheSize set the size of the iavl tree cache. 
-# Default cache size is 50mb.
+# IavlCacheSize set the size of the iavl tree cache (in number of nodes).
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
-# IavlDisableFastNode enables or disables the fast node feature of IAVL. 
+# IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
 # Default is false.
 iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 
-# EXPERIMENTAL: IAVLLazyLoading enable/disable the lazy loading of iavl store.
+# IAVLLazyLoading enable/disable the lazy loading of iavl store.
 # Default is false.
 iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}
 
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
-# First fallback is the deprecated compile-time types.DBBackend value.
-# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in Tendermint's config.toml.
+# The fallback is the db_backend value set in Tendermint's config.toml.
 app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################
@@ -147,7 +145,7 @@ rpc-read-timeout = {{ .API.RPCReadTimeout }}
 # RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds).
 rpc-write-timeout = {{ .API.RPCWriteTimeout }}
 
-# RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes).
+# RPCMaxBodyBytes defines the Tendermint maximum request body (in bytes).
 rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
@@ -262,6 +260,19 @@ stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
 
 # fsync specifies if call fsync after writing the files.
 fsync = "{{ .Streamers.File.Fsync }}"
+
+###############################################################################
+###                         Mempool                                         ###
+###############################################################################
+
+[mempool]
+# Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
+# Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool.
+# Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
+#
+# Note, this configuration only applies to SDK built-in app-side mempool
+# implementations.
+max-txs = {{ .Mempool.MaxTxs }}
 `
 
 var configTemplate *template.Template

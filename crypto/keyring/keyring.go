@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
+	tmcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/pkg/errors"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -43,6 +43,8 @@ const (
 
 	// temporary pass phrase for exporting a key during a key rename
 	passPhrase = "temp"
+	// prefix for exported hex private keys
+	hexPrefix = "0x"
 )
 
 var (
@@ -113,7 +115,8 @@ type Signer interface {
 type Importer interface {
 	// ImportPrivKey imports ASCII armored passphrase-encrypted private keys.
 	ImportPrivKey(uid, armor, passphrase string) error
-
+	// ImportPrivKeyHex imports hex encoded keys.
+	ImportPrivKeyHex(uid, privKey, algoStr string) error
 	// ImportPubKey imports ASCII armored public keys.
 	ImportPubKey(uid string, armor string) error
 }
@@ -144,6 +147,15 @@ type Options struct {
 	SupportedAlgos SigningAlgoList
 	// supported signing algorithms for Ledger
 	SupportedAlgosLedger SigningAlgoList
+	// define Ledger Derivation function
+	LedgerDerivation func() (ledger.SECP256K1, error)
+	// define Ledger key generation function
+	LedgerCreateKey func([]byte) types.PubKey
+	// define Ledger app name
+	LedgerAppName string
+	// indicate whether Ledger should skip DER Conversion on signature,
+	// depending on which format (DER or BER) the Ledger app returns signatures
+	LedgerSigSkipDERConv bool
 }
 
 // NewInMemory creates a transient keyring useful for testing
@@ -211,6 +223,22 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Op
 
 	for _, optionFn := range opts {
 		optionFn(&options)
+	}
+
+	if options.LedgerDerivation != nil {
+		ledger.SetDiscoverLedger(options.LedgerDerivation)
+	}
+
+	if options.LedgerCreateKey != nil {
+		ledger.SetCreatePubkey(options.LedgerCreateKey)
+	}
+
+	if options.LedgerAppName != "" {
+		ledger.SetAppName(options.LedgerAppName)
+	}
+
+	if options.LedgerSigSkipDERConv {
+		ledger.SetSkipDERConversion()
 	}
 
 	return keystore{
@@ -308,7 +336,30 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
-func (ks keystore) ImportPubKey(uid string, armor string) error {
+func (ks keystore) ImportPrivKeyHex(uid, privKey, algoStr string) error {
+	if _, err := ks.Key(uid); err == nil {
+		return fmt.Errorf("cannot overwrite key: %s", uid)
+	}
+	if privKey[:2] == hexPrefix {
+		privKey = privKey[2:]
+	}
+	decodedPriv, err := hex.DecodeString(privKey)
+	if err != nil {
+		return err
+	}
+	algo, err := NewSigningAlgoFromString(algoStr, ks.options.SupportedAlgos)
+	if err != nil {
+		return err
+	}
+	priv := algo.Generate()(decodedPriv)
+	_, err = ks.writeLocalKey(uid, priv)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ks keystore) ImportPubKey(uid, armor string) error {
 	if _, err := ks.Key(uid); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
@@ -590,6 +641,18 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 	if err != nil {
 		return nil, nil, err
 	}
+	ledgerPubKey := priv.PubKey()
+	pubKey, err := k.GetPubKey()
+	if err != nil {
+		return nil, nil, err
+	}
+	if !pubKey.Equals(ledgerPubKey) {
+		return nil, nil, fmt.Errorf("the public key that the user attempted to sign with does not match the public key on the ledger device. %v does not match %v", pubKey.String(), ledgerPubKey.String())
+	}
+
+	if !priv.PubKey().VerifySignature(msg, sig) {
+		return nil, nil, errors.New("Ledger generated an invalid signature. Perhaps you have multiple ledgers and need to try another one")
+	}
 
 	return sig, priv.PubKey(), nil
 }
@@ -678,7 +741,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			}
 
 			buf := bufio.NewReader(buf)
-			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
+			pass, err := input.GetPassword(fmt.Sprintf("Enter keyring passphrase (attempt %d/%d):", failureCounter, maxPassphraseEntryAttempts), buf)
 			if err != nil {
 				// NOTE: LGTM.io reports a false positive alert that states we are printing the password,
 				// but we only log the error.
@@ -845,7 +908,6 @@ func (ks keystore) MigrateAll() ([]*Record, error) {
 	}
 
 	sort.Strings(keys)
-
 	var recs []*Record
 	for _, key := range keys {
 		// The keyring items only with `.info` consists the key info.

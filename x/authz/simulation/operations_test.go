@@ -5,16 +5,23 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -22,22 +29,37 @@ type SimTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-	app *simapp.SimApp
+
+	app               *runtime.App
+	legacyAmino       *codec.LegacyAmino
+	codec             codec.Codec
+	interfaceRegistry codectypes.InterfaceRegistry
+	accountKeeper     authkeeper.AccountKeeper
+	bankKeeper        bankkeeper.Keeper
+	authzKeeper       authzkeeper.Keeper
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&suite.legacyAmino,
+		&suite.codec,
+		&suite.interfaceRegistry,
+		&suite.accountKeeper,
+		&suite.bankKeeper,
+		&suite.authzKeeper,
+	)
+	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
-	cdc := suite.app.AppCodec()
+	cdc := suite.codec
 	appParams := make(simtypes.AppParams)
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
-		suite.app.BankKeeper, suite.app.AuthzKeeper, cdc)
+	weightedOps := simulation.WeightedOperations(suite.interfaceRegistry, appParams, cdc, suite.accountKeeper,
+		suite.bankKeeper, suite.authzKeeper)
 
 	s := rand.NewSource(3)
 	r := rand.New(s)
@@ -57,6 +79,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	for i, w := range weightedOps {
 		op, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		require.NoError(err)
+
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
@@ -72,14 +95,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
+	initAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins))
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
+		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins))
 	}
 
 	return accounts
@@ -104,12 +127,12 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 	grantee := accounts[1]
 
 	// execute operation
-	op := simulation.SimulateMsgGrant(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper)
+	op := simulation.SimulateMsgGrant(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.authzKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
 	var msg authz.MsgGrant
-	suite.app.LegacyAmino().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
@@ -130,24 +153,24 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 		},
 	})
 
-	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
+	initAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	a := banktypes.NewSendAuthorization(initCoins)
+	a := banktypes.NewSendAuthorization(initCoins, nil)
 	expire := time.Now().Add(30 * time.Hour)
 
-	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
+	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevoke(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper)
+	op := simulation.SimulateMsgRevoke(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.authzKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
 	var msg authz.MsgRevoke
-	suite.app.LegacyAmino().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
@@ -165,25 +188,25 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
-	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
+	initAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	a := banktypes.NewSendAuthorization(initCoins)
+	a := banktypes.NewSendAuthorization(initCoins, nil)
 	expire := suite.ctx.BlockTime().Add(1 * time.Hour)
 
-	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
+	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgExec(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec())
+	op := simulation.SimulateMsgExec(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.authzKeeper, suite.codec)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
 	var msg authz.MsgExec
 
-	suite.app.LegacyAmino().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)

@@ -72,19 +72,19 @@ tally() {
 
 The CLI command for creating a multi-option vote would be as such:
 
-```sh
+```shell
 simd tx gov vote 1 "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05" --from mykey
 ```
 
 To create a single-option vote a user can do either
 
-```sh
+```shell
 simd tx gov vote 1 "yes=1" --from mykey
 ```
 
 or
 
-```sh
+```shell
 simd tx gov vote 1 yes --from mykey
 ```
 

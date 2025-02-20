@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
 import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 
@@ -15,6 +16,12 @@ service Query {
   // Params queries params of the distribution module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/params";
+  }
+
+  // ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
+  rpc ValidatorDistributionInfo(QueryValidatorDistributionInfoRequest)
+      returns (QueryValidatorDistributionInfoResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/{validator_address}";
   }
 
   // ValidatorOutstandingRewards queries rewards of a validator address.
@@ -71,7 +78,28 @@ message QueryParamsRequest {}
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryValidatorDistributionInfoRequest is the request type for the Query/ValidatorDistributionInfo RPC method.
+message QueryValidatorDistributionInfoRequest {
+  // validator_address defines the validator address to query for.
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryValidatorDistributionInfoResponse is the response type for the Query/ValidatorDistributionInfo RPC method.
+message QueryValidatorDistributionInfoResponse {
+  // operator_address defines the validator operator address.
+  string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // self_bond_rewards defines the self delegations rewards.
+  repeated cosmos.base.v1beta1.DecCoin self_bond_rewards = 2 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
+  // commission defines the commission the validator received.
+  repeated cosmos.base.v1beta1.DecCoin commission = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 // QueryValidatorOutstandingRewardsRequest is the request type for the
@@ -84,7 +112,7 @@ message QueryValidatorOutstandingRewardsRequest {
 // QueryValidatorOutstandingRewardsResponse is the response type for the
 // Query/ValidatorOutstandingRewards RPC method.
 message QueryValidatorOutstandingRewardsResponse {
-  ValidatorOutstandingRewards rewards = 1 [(gogoproto.nullable) = false];
+  ValidatorOutstandingRewards rewards = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // QueryValidatorCommissionRequest is the request type for the
@@ -97,8 +125,8 @@ message QueryValidatorCommissionRequest {
 // QueryValidatorCommissionResponse is the response type for the
 // Query/ValidatorCommission RPC method
 message QueryValidatorCommissionResponse {
-  // commission defines the commision the validator received.
-  ValidatorAccumulatedCommission commission = 1 [(gogoproto.nullable) = false];
+  // commission defines the commission the validator received.
+  ValidatorAccumulatedCommission commission = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // QueryValidatorSlashesRequest is the request type for the
@@ -121,7 +149,7 @@ message QueryValidatorSlashesRequest {
 // Query/ValidatorSlashes RPC method.
 message QueryValidatorSlashesResponse {
   // slashes defines the slashes the validator received.
-  repeated ValidatorSlashEvent slashes = 1 [(gogoproto.nullable) = false];
+  repeated ValidatorSlashEvent slashes = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -143,8 +171,11 @@ message QueryDelegationRewardsRequest {
 // Query/DelegationRewards RPC method.
 message QueryDelegationRewardsResponse {
   // rewards defines the rewards accrued by a delegation.
-  repeated cosmos.base.v1beta1.DecCoin rewards = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
 }
 
 // QueryDelegationTotalRewardsRequest is the request type for the
@@ -160,10 +191,13 @@ message QueryDelegationTotalRewardsRequest {
 // Query/DelegationTotalRewards RPC method.
 message QueryDelegationTotalRewardsResponse {
   // rewards defines all the rewards accrued by a delegator.
-  repeated DelegationDelegatorReward rewards = 1 [(gogoproto.nullable) = false];
+  repeated DelegationDelegatorReward rewards = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // total defines the sum of all the rewards.
-  repeated cosmos.base.v1beta1.DecCoin total = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+  repeated cosmos.base.v1beta1.DecCoin total = 2 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
 }
 
 // QueryDelegatorValidatorsRequest is the request type for the
@@ -214,6 +248,9 @@ message QueryCommunityPoolRequest {}
 // RPC method.
 message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
-  repeated cosmos.base.v1beta1.DecCoin pool = 1
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin pool = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
+  ];
 }

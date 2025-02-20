@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // RestoreSnapshotCmd returns a command to restore a snapshot

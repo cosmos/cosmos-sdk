@@ -17,7 +17,7 @@ type TestSuite struct {
 
 func (s TestSuite) TestAssertNoForgottenModules() {
 	m := Manager{
-		Modules: map[string]AppModule{"a": nil, "b": nil},
+		Modules: map[string]interface{}{"a": nil, "b": nil},
 	}
 	tcs := []struct {
 		name     string
@@ -39,7 +39,7 @@ func (s TestSuite) TestAssertNoForgottenModules() {
 
 func (s TestSuite) TestModuleNames() {
 	m := Manager{
-		Modules: map[string]AppModule{"a": nil, "b": nil},
+		Modules: map[string]interface{}{"a": nil, "b": nil},
 	}
 	ms := m.ModuleNames()
 	sort.Strings(ms)

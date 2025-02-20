@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
 )
 
 // NewGenesisState creates a new GenesisState object
@@ -38,17 +38,17 @@ func DefaultGenesisState() *GenesisState {
 // ValidateGenesis validates the slashing genesis parameters
 func ValidateGenesis(data GenesisState) error {
 	downtime := data.Params.SlashFractionDowntime
-	if downtime.IsNegative() || downtime.GT(sdk.OneDec()) {
+	if downtime.IsNegative() || downtime.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("slashing fraction downtime should be less than or equal to one and greater than zero, is %s", downtime.String())
 	}
 
 	dblSign := data.Params.SlashFractionDoubleSign
-	if dblSign.IsNegative() || dblSign.GT(sdk.OneDec()) {
+	if dblSign.IsNegative() || dblSign.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("slashing fraction double sign should be less than or equal to one and greater than zero, is %s", dblSign.String())
 	}
 
 	minSign := data.Params.MinSignedPerWindow
-	if minSign.IsNegative() || minSign.GT(sdk.OneDec()) {
+	if minSign.IsNegative() || minSign.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("min signed per window should be less than or equal to one and greater than zero, is %s", minSign.String())
 	}
 

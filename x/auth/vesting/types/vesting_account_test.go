@@ -4,36 +4,59 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 var (
 	stakeDenom = "stake"
 	feeDenom   = "fee"
+	emptyCoins = sdk.Coins{}
 )
 
 type VestingAccountTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
-	ctx sdk.Context
+	ctx           sdk.Context
+	accountKeeper keeper.AccountKeeper
 }
 
 func (s *VestingAccountTestSuite) SetupTest() {
-	checkTx := false
-	s.app = simapp.Setup(s.T(), checkTx)
+	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModuleBasic{})
 
-	s.ctx = s.app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
+	key := sdk.NewKVStoreKey(authtypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{})
+
+	maccPerms := map[string][]string{
+		"fee_collector":          nil,
+		"mint":                   {"minter"},
+		"bonded_tokens_pool":     {"burner", "staking"},
+		"not_bonded_tokens_pool": {"burner", "staking"},
+		"multiPerm":              {"burner", "minter", "staking"},
+		"random":                 {"random"},
+	}
+
+	s.accountKeeper = keeper.NewAccountKeeper(
+		encCfg.Codec,
+		key,
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		"cosmos",
+		authtypes.NewModuleAddress("gov").String(),
+	)
 }
 
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
@@ -73,7 +96,7 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 
 	// require no coins vesting at the end of the vesting schedule
 	vestingCoins = cva.GetVestingCoins(endTime)
-	require.Nil(t, vestingCoins)
+	require.Equal(t, emptyCoins, vestingCoins)
 
 	// require 50% of coins vesting
 	vestingCoins = cva.GetVestingCoins(now.Add(12 * time.Hour))
@@ -149,14 +172,14 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 	cva.TrackDelegation(now, origCoins, origCoins)
 	cva.TrackUndelegation(origCoins)
 	require.Nil(t, cva.DelegatedFree)
-	require.Nil(t, cva.DelegatedVesting)
+	require.Equal(t, emptyCoins, cva.DelegatedVesting)
 
 	// require the ability to undelegate all vested coins
 	cva = types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 
 	cva.TrackDelegation(endTime, origCoins, origCoins)
 	cva.TrackUndelegation(origCoins)
-	require.Nil(t, cva.DelegatedFree)
+	require.Equal(t, emptyCoins, cva.DelegatedFree)
 	require.Nil(t, cva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
@@ -180,7 +203,7 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 
 	// undelegate from the other validator that did not get slashed
 	cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
-	require.Nil(t, cva.DelegatedFree)
+	require.Equal(t, emptyCoins, cva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, cva.DelegatedVesting)
 }
 
@@ -213,7 +236,7 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 
 	// require no coins vesting at schedule maturation
 	vestingCoins = dva.GetVestingCoins(endTime)
-	require.Nil(t, vestingCoins)
+	require.Equal(t, emptyCoins, vestingCoins)
 }
 
 func TestSpendableCoinsDelVestingAcc(t *testing.T) {
@@ -291,13 +314,13 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	dva.TrackDelegation(now, origCoins, origCoins)
 	dva.TrackUndelegation(origCoins)
 	require.Nil(t, dva.DelegatedFree)
-	require.Nil(t, dva.DelegatedVesting)
+	require.Equal(t, emptyCoins, dva.DelegatedVesting)
 
 	// require the ability to undelegate all vested coins
 	dva = types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	dva.TrackDelegation(endTime, origCoins, origCoins)
 	dva.TrackUndelegation(origCoins)
-	require.Nil(t, dva.DelegatedFree)
+	require.Equal(t, emptyCoins, dva.DelegatedFree)
 	require.Nil(t, dva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
@@ -388,7 +411,7 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 
 	// require no coins vesting at the end of the vesting schedule
 	vestingCoins = pva.GetVestingCoins(endTime)
-	require.Nil(t, vestingCoins)
+	require.Equal(t, emptyCoins, vestingCoins)
 
 	// require 50% of coins vesting
 	vestingCoins = pva.GetVestingCoins(now.Add(12 * time.Hour))
@@ -404,7 +427,7 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 
 	// require 0% of coins vesting after vesting complete
 	vestingCoins = pva.GetVestingCoins(now.Add(48 * time.Hour))
-	require.Nil(t, vestingCoins)
+	require.Equal(t, emptyCoins, vestingCoins)
 }
 
 func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
@@ -506,21 +529,21 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 	pva.TrackDelegation(now, origCoins, origCoins)
 	pva.TrackUndelegation(origCoins)
 	require.Nil(t, pva.DelegatedFree)
-	require.Nil(t, pva.DelegatedVesting)
+	require.Equal(t, emptyCoins, pva.DelegatedVesting)
 
 	// require the ability to undelegate all vested coins at the end of vesting
 	pva = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 
 	pva.TrackDelegation(endTime, origCoins, origCoins)
 	pva.TrackUndelegation(origCoins)
-	require.Nil(t, pva.DelegatedFree)
+	require.Equal(t, emptyCoins, pva.DelegatedFree)
 	require.Nil(t, pva.DelegatedVesting)
 
 	// require the ability to undelegate half of coins
 	pva = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	pva.TrackDelegation(endTime, origCoins, periods[0].Amount)
 	pva.TrackUndelegation(periods[0].Amount)
-	require.Nil(t, pva.DelegatedFree)
+	require.Equal(t, emptyCoins, pva.DelegatedFree)
 	require.Nil(t, pva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
@@ -544,7 +567,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 
 	// undelegate from the other validator that did not get slashed
 	pva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
-	require.Nil(t, pva.DelegatedFree)
+	require.Equal(t, emptyCoins, pva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, pva.DelegatedVesting)
 }
 
@@ -643,14 +666,14 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 	plva.TrackDelegation(now, origCoins, origCoins)
 	plva.TrackUndelegation(origCoins)
 	require.Nil(t, plva.DelegatedFree)
-	require.Nil(t, plva.DelegatedVesting)
+	require.Equal(t, emptyCoins, plva.DelegatedVesting)
 
 	// require the ability to undelegate all vesting coins at endTime
 	plva = types.NewPermanentLockedAccount(bacc, origCoins)
 	plva.TrackDelegation(endTime, origCoins, origCoins)
 	plva.TrackUndelegation(origCoins)
 	require.Nil(t, plva.DelegatedFree)
-	require.Nil(t, plva.DelegatedVesting)
+	require.Equal(t, emptyCoins, plva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
 	plva = types.NewPermanentLockedAccount(bacc, origCoins)
@@ -754,79 +777,75 @@ func TestGenesisAccountValidate(t *testing.T) {
 }
 
 func (s *VestingAccountTestSuite) TestContinuousVestingAccountMarshal() {
-	app := s.app
 	require := s.Require()
 	baseAcc, coins := initBaseAccount()
 	baseVesting := types.NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
 	acc := types.NewContinuousVestingAccountRaw(baseVesting, baseVesting.EndTime)
 
-	bz, err := app.AccountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.MarshalAccount(acc)
 	require.Nil(err)
 
-	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
 	require.Nil(err)
 	require.IsType(&types.ContinuousVestingAccount{}, acc2)
 	require.Equal(acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
 
 func (s *VestingAccountTestSuite) TestPeriodicVestingAccountMarshal() {
-	app := s.app
 	require := s.Require()
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewPeriodicVestingAccount(baseAcc, coins, time.Now().Unix(), types.Periods{types.Period{3600, coins}})
 
-	bz, err := app.AccountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.MarshalAccount(acc)
 	require.Nil(err)
 
-	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
 	require.Nil(err)
 	require.IsType(&types.PeriodicVestingAccount{}, acc2)
 	require.Equal(acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
 
 func (s *VestingAccountTestSuite) TestDelayedVestingAccountMarshal() {
-	app := s.app
 	require := s.Require()
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewDelayedVestingAccount(baseAcc, coins, time.Now().Unix())
 
-	bz, err := app.AccountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.MarshalAccount(acc)
 	require.Nil(err)
 
-	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
 	require.Nil(err)
 	require.IsType(&types.DelayedVestingAccount{}, acc2)
 	require.Equal(acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
 
 func (s *VestingAccountTestSuite) TestPermanentLockedAccountMarshal() {
-	app := s.app
 	require := s.Require()
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewPermanentLockedAccount(baseAcc, coins)
 
-	bz, err := app.AccountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.MarshalAccount(acc)
 	require.Nil(err)
 
-	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
 	require.Nil(err)
 	require.IsType(&types.PermanentLockedAccount{}, acc2)
 	require.Equal(acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
 

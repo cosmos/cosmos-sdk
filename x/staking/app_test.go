@@ -4,39 +4,33 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	stakingKeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.ValAddress, expFound bool) types.Validator {
-	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	validator, found := app.StakingKeeper.GetValidator(ctxCheck, addr)
+var (
+	priv1 = secp256k1.GenPrivKey()
+	addr1 = sdk.AccAddress(priv1.PubKey().Address())
+	priv2 = secp256k1.GenPrivKey()
+	addr2 = sdk.AccAddress(priv2.PubKey().Address())
 
-	require.Equal(t, expFound, found)
-	return validator
-}
-
-func checkDelegation(
-	t *testing.T, app *simapp.SimApp, delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.ValAddress, expFound bool, expShares sdk.Dec,
-) {
-	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	delegation, found := app.StakingKeeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
-	if expFound {
-		require.True(t, found)
-		require.True(sdk.DecEq(t, expShares, delegation.Shares))
-
-		return
-	}
-
-	require.False(t, found)
-}
+	valKey          = ed25519.GenPrivKey()
+	commissionRates = types.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
+)
 
 func TestStakingMsgs(t *testing.T) {
 	genTokens := sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
@@ -46,42 +40,47 @@ func TestStakingMsgs(t *testing.T) {
 
 	acc1 := &authtypes.BaseAccount{Address: addr1.String()}
 	acc2 := &authtypes.BaseAccount{Address: addr2.String()}
-	accs := authtypes.GenesisAccounts{acc1, acc2}
-	balances := []banktypes.Balance{
-		{
-			Address: addr1.String(),
-			Coins:   sdk.Coins{genCoin},
-		},
-		{
-			Address: addr2.String(),
-			Coins:   sdk.Coins{genCoin},
-		},
+	accs := []simtestutil.GenesisAccount{
+		{GenesisAccount: acc1, Coins: sdk.Coins{genCoin}},
+		{GenesisAccount: acc2, Coins: sdk.Coins{genCoin}},
 	}
 
-	app := simapp.SetupWithGenesisAccounts(t, accs, balances...)
-	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
-	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
+	var (
+		bankKeeper    bankKeeper.Keeper
+		stakingKeeper *stakingKeeper.Keeper
+	)
+
+	startupCfg := simtestutil.DefaultStartUpConfig()
+	startupCfg.GenesisAccounts = accs
+
+	app, err := simtestutil.SetupWithConfiguration(testutil.AppConfig, startupCfg, &bankKeeper, &stakingKeeper)
+	require.NoError(t, err)
+	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
+
+	require.True(t, sdk.Coins{genCoin}.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr1)))
+	require.True(t, sdk.Coins{genCoin}.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr2)))
 
 	// create validator
 	description := types.NewDescription("foo_moniker", "", "", "", "")
 	createValidatorMsg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(),
+		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, math.OneInt(),
 	)
 	require.NoError(t, err)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	txGen := simapp.MakeTestEncodingConfig().TxConfig
-	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
-	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
+	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	validator := checkValidator(t, app, sdk.ValAddress(addr1), true)
+	ctxCheck = app.BaseApp.NewContext(true, tmproto.Header{})
+	validator, found := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
+	require.True(t, found)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, types.Bonded, validator.Status)
-	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
+	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -91,32 +90,38 @@ func TestStakingMsgs(t *testing.T) {
 	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)
 	require.NoError(t, err)
 
-	validator = checkValidator(t, app, sdk.ValAddress(addr1), true)
+	ctxCheck = app.BaseApp.NewContext(true, tmproto.Header{})
+	validator, found = stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
+	require.True(t, found)
 	require.Equal(t, description, validator.Description)
 
 	// delegate
-	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
+	require.True(t, sdk.Coins{genCoin}.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr2)))
 	delegateMsg := types.NewMsgDelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{delegateMsg}, "", []uint64{1}, []uint64{0}, true, true, priv2)
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{delegateMsg}, "", []uint64{1}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
 
-	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
-	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), true, sdk.NewDecFromInt(bondTokens))
+	ctxCheck = app.BaseApp.NewContext(true, tmproto.Header{})
+	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr2)))
+	_, found = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
+	require.True(t, found)
 
 	// begin unbonding
 	beginUnbondingMsg := types.NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, "", []uint64{1}, []uint64{1}, true, true, priv2)
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, "", []uint64{1}, []uint64{1}, true, true, priv2)
 	require.NoError(t, err)
 
 	// delegation should exist anymore
-	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), false, sdk.Dec{})
+	ctxCheck = app.BaseApp.NewContext(true, tmproto.Header{})
+	_, found = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
+	require.False(t, found)
 
 	// balance should be the same because bonding not yet complete
-	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
+	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr2)))
 }

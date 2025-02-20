@@ -1,8 +1,9 @@
-package cli
+package cli_test
 
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +22,7 @@ func TestParseSigs(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		sigs, err := parseSigArgs(tc.args)
+		sigs, err := cli.ParseSigArgs(tc.args)
 		if tc.expErr {
 			require.Error(t, err)
 		} else {

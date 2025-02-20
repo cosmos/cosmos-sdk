@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -83,6 +84,16 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 // SetSnapshot sets the snapshot store.
 func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
+}
+
+// SetMempool sets the mempool on BaseApp.
+func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetMempool(mempool) }
+}
+
+// SetChainID sets the chain ID in BaseApp.
+func SetChainID(chainID string) func(*BaseApp) {
+	return func(app *BaseApp) { app.chainID = chainID }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -163,7 +174,7 @@ func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
 
-func (app *BaseApp) SetPostHandler(ph sdk.AnteHandler) {
+func (app *BaseApp) SetPostHandler(ph sdk.PostHandler) {
 	if app.sealed {
 		panic("SetPostHandler() on sealed BaseApp")
 	}
@@ -210,14 +221,6 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	app.storeLoader = loader
 }
 
-// SetRouter allows us to customize the router.
-func (app *BaseApp) SetRouter(router sdk.Router) {
-	if app.sealed {
-		panic("SetRouter() on sealed BaseApp")
-	}
-	app.router = router
-}
-
 // SetSnapshot sets the snapshot store and options.
 func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
 	if app.sealed {
@@ -249,12 +252,44 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	app.abciListeners = append(app.abciListeners, s)
 }
 
+// SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
+func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
+	app.txDecoder = txDecoder
+}
+
+// SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
+func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
+	app.txEncoder = txEncoder
+}
+
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
 func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
-	if app.sealed {
-		panic("SetQueryMultiStore() on sealed BaseApp")
-	}
 	app.qms = ms
+}
+
+// SetMempool sets the mempool for the BaseApp and is required for the app to start up.
+func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
+	if app.sealed {
+		panic("SetMempool() on sealed BaseApp")
+	}
+	app.mempool = mempool
+}
+
+// SetProcessProposal sets the process proposal function for the BaseApp.
+func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
+	if app.sealed {
+		panic("SetProcessProposal() on sealed BaseApp")
+	}
+	app.processProposal = handler
+}
+
+// SetPrepareProposal sets the prepare proposal function for the BaseApp.
+func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
+	if app.sealed {
+		panic("SetPrepareProposal() on sealed BaseApp")
+	}
+
+	app.prepareProposal = handler
 }

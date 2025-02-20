@@ -10,7 +10,8 @@ import (
 	"sort"
 	"sync"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,6 +29,7 @@ type StreamingService struct {
 	filePrefix     string                  // optional prefix for each of the generated files
 	writeDir       string                  // directory to write files into
 	codec          codec.BinaryCodec       // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	logger         log.Logger
 
 	currentBlockNumber int64
 	blockMetadata      types.BlockMetadata
@@ -49,6 +51,7 @@ func NewStreamingService(
 	writeDir, filePrefix string,
 	storeKeys []types.StoreKey,
 	cdc codec.BinaryCodec,
+	logger log.Logger,
 	outputMetadata, stopNodeOnErr, fsync bool,
 ) (*StreamingService, error) {
 	// sort storeKeys for deterministic output
@@ -74,6 +77,7 @@ func NewStreamingService(
 		filePrefix:     filePrefix,
 		writeDir:       writeDir,
 		codec:          cdc,
+		logger:         logger,
 		outputMetadata: outputMetadata,
 		stopNodeOnErr:  stopNodeOnErr,
 		fsync:          fsync,
@@ -131,6 +135,7 @@ func (fss *StreamingService) ListenEndBlock(ctx context.Context, req abci.Reques
 // It will only return a non-nil error when stopNodeOnErr is set.
 func (fss *StreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit) error {
 	if err := fss.doListenCommit(ctx, res); err != nil {
+		fss.logger.Error("Listen commit failed", "height", fss.currentBlockNumber, "err", err)
 		if fss.stopNodeOnErr {
 			return err
 		}

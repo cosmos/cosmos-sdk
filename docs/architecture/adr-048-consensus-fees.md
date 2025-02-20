@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- Dec 1, 2021: Initial Draft
+* Dec 1, 2021: Initial Draft
 
 ## Status
 
@@ -16,15 +16,15 @@ This ADR describes a flexible mechanism to maintain a consensus level gas prices
 
 Currently, each validator configures it's own `minimal-gas-prices` in `app.yaml`. But setting a proper minimal gas price is critical to protect network from dos attack, and it's hard for all the validators to pick a sensible value, so we propose to maintain a gas price in consensus level.
 
-Since tendermint 0.35 has supported mempool prioritization, we can take advantage of that to implement more sophisticated gas fee system.
+Since tendermint 0.34.20 has supported mempool prioritization, we can take advantage of that to implement more sophisticated gas fee system.
 
 ## Multi-Tier Price System
 
 We propose a multi-tier price system on consensus to provide maximum flexibility:
 
-- Tier 1: a constant gas price, which could only be modified occasionally through governance proposal.
-- Tier 2: a dynamic gas price which is adjusted according to previous block load.
-- Tier 3: a dynamic gas price which is adjusted according to previous block load at a higher speed.
+* Tier 1: a constant gas price, which could only be modified occasionally through governance proposal.
+* Tier 2: a dynamic gas price which is adjusted according to previous block load.
+* Tier 3: a dynamic gas price which is adjusted according to previous block load at a higher speed.
 
 The gas price of higher tier should bigger than the lower tier.
 
@@ -68,10 +68,11 @@ Transactions are prioritized based on the tier, the higher the tier, the higher 
 Within the same tier, follow the default Tendermint order (currently FIFO). Be aware of that the mempool tx ordering logic is not part of consensus and can be modified by malicious validator.
 
 This mechanism can be easily composed with prioritization mechanisms:
+
 * we can add extra tiers out of a user control:
-  * Example 1: user can set tier 0, 10 or 20, but the protocol will create tiers 0, 1, 2 ... 29. For example IBC transactions will go to tier `user_tier + 5`: if user selected tier 1, then the transaction will go to tier 15.
-  * Example 2: we can reserve tier 4, 5, ... only for special transaction types. For example, tier 5 is reserved for evidence tx. So if submits a bank.Send transaction and set tier 5, it will be delegated to tier 3 (the max tier level available for any transaction). 
-  * Example 3: we can enforce that all transactions of a sepecific type will go to specific tier. For example, tier 100 will be reserved for evidence transactions and all evidence transactions will always go to that tier.
+    * Example 1: user can set tier 0, 10 or 20, but the protocol will create tiers 0, 1, 2 ... 29. For example IBC transactions will go to tier `user_tier + 5`: if user selected tier 1, then the transaction will go to tier 15.
+    * Example 2: we can reserve tier 4, 5, ... only for special transaction types. For example, tier 5 is reserved for evidence tx. So if submits a bank.Send transaction and set tier 5, it will be delegated to tier 3 (the max tier level available for any transaction). 
+    * Example 3: we can enforce that all transactions of a sepecific type will go to specific tier. For example, tier 100 will be reserved for evidence transactions and all evidence transactions will always go to that tier.
 
 ### `min-gas-prices`
 
@@ -180,24 +181,24 @@ If attacker spam with lower tier transactions, user can mitigate by sending high
 
 ### Backwards Compatibility
 
-- New protocol parameters.
-- New consensus states.
-- New/changed fields in transaction body.
+* New protocol parameters.
+* New consensus states.
+* New/changed fields in transaction body.
 
 ### Positive
 
-- The default tier keeps the same predictable gas price experience for client.
-- The higher tier's gas price can adapt to block load.
-- No priority conflict with custom priority based on transaction types, since this proposal only occupy three priority levels.
-- Possibility to compose different priority rules with tiers
+* The default tier keeps the same predictable gas price experience for client.
+* The higher tier's gas price can adapt to block load.
+* No priority conflict with custom priority based on transaction types, since this proposal only occupy three priority levels.
+* Possibility to compose different priority rules with tiers
 
 ### Negative
 
-- Wallets & tools need to update to support the new `tier` parameter, and semantic of `fee` field is changed.
+* Wallets & tools need to update to support the new `tier` parameter, and semantic of `fee` field is changed.
 
 ### Neutral
 
 ## References
 
-- https://eips.ethereum.org/EIPS/eip-1559
-- https://iohk.io/en/blog/posts/2021/11/26/network-traffic-and-tiered-pricing/
+* https://eips.ethereum.org/EIPS/eip-1559
+* https://iohk.io/en/blog/posts/2021/11/26/network-traffic-and-tiered-pricing/

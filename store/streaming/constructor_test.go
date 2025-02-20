@@ -3,19 +3,20 @@ package streaming_test
 import (
 	"testing"
 
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
-	"github.com/stretchr/testify/require"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 type fakeOptions struct{}
@@ -44,7 +45,7 @@ func TestStreamingServiceConstructor(t *testing.T) {
 	var expectedType streaming.ServiceConstructor
 	require.IsType(t, expectedType, constructor)
 
-	serv, err := constructor(mockOptions, mockKeys, testMarshaller)
+	serv, err := constructor(mockOptions, mockKeys, testMarshaller, log.NewNopLogger())
 	require.Nil(t, err)
 	require.IsType(t, &file.StreamingService{}, serv)
 	listeners := serv.Listeners()
@@ -56,7 +57,7 @@ func TestStreamingServiceConstructor(t *testing.T) {
 
 func TestLoadStreamingServices(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCdc := simapp.MakeTestEncodingConfig()
+	encCdc := testutil.MakeTestEncodingConfig()
 	keys := sdk.NewKVStoreKeys("mockKey1", "mockKey2")
 	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db, nil)
 
@@ -65,7 +66,7 @@ func TestLoadStreamingServices(t *testing.T) {
 		activeStreamersLen int
 	}{
 		"empty app options": {
-			appOpts: simapp.EmptyAppOptions{},
+			appOpts: simtestutil.EmptyAppOptions{},
 		},
 		"all StoreKeys exposed": {
 			appOpts:            streamingAppOptions{keys: []string{"*"}},
@@ -82,7 +83,7 @@ func TestLoadStreamingServices(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, keys)
+			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, log.NewNopLogger(), keys)
 			require.NoError(t, err)
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})

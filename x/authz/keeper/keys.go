@@ -78,7 +78,7 @@ func parseGrantQueueKey(key []byte) (time.Time, sdk.AccAddress, sdk.AccAddress, 
 // expiration, then it should not be used in the pruning queue.
 // Key format is:
 //
-//	0x02<grant_expiration_Bytes>: GrantQueueItem
+//	0x02<expiration><granterAddressLen (1 Byte)><granterAddressBytes><granteeAddressLen (1 Byte)><granteeAddressBytes>: GrantQueueItem
 func GrantQueueKey(expiration time.Time, granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
 	exp := sdk.FormatTimeBytes(expiration)
 	granter = address.MustLengthPrefix(granter)

@@ -134,7 +134,7 @@ func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
-		return Coin{}, fmt.Errorf("negative coin amount")
+		return Coin{}, fmt.Errorf("negative coin amount: %s", res)
 	}
 
 	return res, nil
@@ -247,18 +247,16 @@ func (coins Coins) Validate() error {
 		}
 
 		lowDenom := coins[0].Denom
-		seenDenoms := make(map[string]bool)
-		seenDenoms[lowDenom] = true
 
 		for _, coin := range coins[1:] {
-			if seenDenoms[coin.Denom] {
-				return fmt.Errorf("duplicate denomination %s", coin.Denom)
-			}
 			if err := ValidateDenom(coin.Denom); err != nil {
 				return err
 			}
-			if coin.Denom <= lowDenom {
+			if coin.Denom < lowDenom {
 				return fmt.Errorf("denomination %s is not sorted", coin.Denom)
+			}
+			if coin.Denom == lowDenom {
+				return fmt.Errorf("duplicate denomination %s", coin.Denom)
 			}
 			if !coin.IsPositive() {
 				return fmt.Errorf("coin %s amount is not positive", coin.Denom)
@@ -266,7 +264,6 @@ func (coins Coins) Validate() error {
 
 			// we compare each coin against the last denom
 			lowDenom = coin.Denom
-			seenDenoms[coin.Denom] = true
 		}
 
 		return nil
@@ -286,6 +283,15 @@ func (coins Coins) isSorted() bool {
 // valid and unique denomination (i.e no duplicates).
 func (coins Coins) IsValid() bool {
 	return coins.Validate() == nil
+}
+
+// Denoms returns all denoms associated with a Coins object
+func (coins Coins) Denoms() []string {
+	res := make([]string, len(coins))
+	for i, coin := range coins {
+		res[i] = coin.Denom
+	}
+	return res
 }
 
 // Add adds two sets of coins.
@@ -328,7 +334,7 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 		}
 	}
 
-	for denom, cL := range uniqCoins {
+	for denom, cL := range uniqCoins { //#nosec
 		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
 		for _, c := range cL {
 			comboCoin = comboCoin.Add(c)
@@ -336,6 +342,9 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 		if !comboCoin.IsZero() {
 			coalesced = append(coalesced, comboCoin)
 		}
+	}
+	if coalesced == nil {
+		return Coins{}
 	}
 	return coalesced.Sort()
 }
@@ -415,7 +424,7 @@ func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
 }
 
 // QuoInt performs the scalar division of coins with a `divisor`
-// All coins are divided by x and trucated.
+// All coins are divided by x and truncated.
 // e.g.
 // {2A, 30B} / 2 = {1A, 15B}
 // {2A} / 2 = {1A}
@@ -818,7 +827,12 @@ var _ sort.Interface = Coins{}
 
 // Sort is a helper function to sort the set of coins in-place
 func (coins Coins) Sort() Coins {
-	sort.Sort(coins)
+	// sort.Sort(coins) does a costly runtime copy as part of `runtime.convTSlice`
+	// So we avoid this heap allocation if len(coins) <= 1. In the future, we should hopefully find
+	// a strategy to always avoid this.
+	if len(coins) > 1 {
+		sort.Sort(coins)
+	}
 	return coins
 }
 

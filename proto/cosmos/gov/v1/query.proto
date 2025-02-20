@@ -61,6 +61,7 @@ message QueryProposalRequest {
 
 // QueryProposalResponse is the response type for the Query/Proposal RPC method.
 message QueryProposalResponse {
+  // proposal is the requested governance proposal.
   Proposal proposal = 1;
 }
 
@@ -82,6 +83,7 @@ message QueryProposalsRequest {
 // QueryProposalsResponse is the response type for the Query/Proposals RPC
 // method.
 message QueryProposalsResponse {
+  // proposals defines all the requested governance proposals.
   repeated Proposal proposals = 1;
 
   // pagination defines the pagination in the response.
@@ -99,7 +101,7 @@ message QueryVoteRequest {
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
 message QueryVoteResponse {
-  // vote defined the queried vote.
+  // vote defines the queried vote.
   Vote vote = 1;
 }
 
@@ -114,7 +116,7 @@ message QueryVotesRequest {
 
 // QueryVotesResponse is the response type for the Query/Votes RPC method.
 message QueryVotesResponse {
-  // votes defined the queried votes.
+  // votes defines the queried votes.
   repeated Vote votes = 1;
 
   // pagination defines the pagination in the response.
@@ -130,12 +132,19 @@ message QueryParamsRequest {
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
+  // Deprecated: Prefer to use `params` instead.
   // voting_params defines the parameters related to voting.
-  VotingParams voting_params = 1;
+  VotingParams voting_params = 1 [deprecated = true];
+  // Deprecated: Prefer to use `params` instead.
   // deposit_params defines the parameters related to deposit.
-  DepositParams deposit_params = 2;
+  DepositParams deposit_params = 2 [deprecated = true];
+  // Deprecated: Prefer to use `params` instead.
   // tally_params defines the parameters related to tally.
-  TallyParams tally_params = 3;
+  TallyParams tally_params = 3 [deprecated = true];
+  // params defines all the paramaters of x/gov module.
+  //
+  // Since: cosmos-sdk 0.47
+  Params params = 4;
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.
@@ -164,6 +173,7 @@ message QueryDepositsRequest {
 
 // QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 message QueryDepositsResponse {
+  // deposits defines the requested deposits.
   repeated Deposit deposits = 1;
 
   // pagination defines the pagination in the response.

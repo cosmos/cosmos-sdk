@@ -5,24 +5,27 @@ RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 WORKDIR /work
 COPY go.mod go.sum /work/
-COPY db/go.mod db/go.sum /work/db/
 COPY errors/go.mod errors/go.sum /work/errors/
 COPY math/go.mod math/go.sum /work/math/
-
+COPY api/go.mod api/go.sum /work/api/
+COPY core/go.mod core/go.sum /work/core/
+COPY depinject/go.mod depinject/go.sum /work/depinject/
+COPY tools/rosetta/go.mod tools/rosetta/go.sum /work/tools/rosetta/
 RUN go mod download
+
 COPY ./ /work
 RUN LEDGER_ENABLED=false make COSMOS_BUILD_OPTIONS="debug,nostrip" clean build
 
+
 FROM alpine AS run
 RUN apk add bash curl jq
-COPY contrib/images/simd-dlv/wrapper.sh /usr/bin/wrapper.sh
-
-VOLUME /simd
-COPY --from=build /work/build/simd /simd/
-COPY --from=build /go/bin/dlv /usr/local/bin
-WORKDIR /simd
-
-EXPOSE 26656 26657 2345
+EXPOSE 26656 26657
 ENTRYPOINT ["/usr/bin/wrapper.sh"]
 CMD ["start", "--log_format", "plain"]
 STOPSIGNAL SIGTERM
+VOLUME /simd
+WORKDIR /simd
+
+COPY contrib/images/simd-dlv/wrapper.sh /usr/bin/wrapper.sh
+COPY --from=build /work/build/simd /simd/
+COPY --from=build /go/bin/dlv /usr/local/bin

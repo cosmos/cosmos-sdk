@@ -43,7 +43,7 @@ func (s *TestSuite) TestTally() {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				proposalId := submitProposal(ctx, s, msgs, proposers)
-				_, err := s.app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
+				_, err := s.groupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: proposalId,
 					Address:    proposers[0],
 				})
@@ -78,7 +78,7 @@ func (s *TestSuite) TestTally() {
 				ProposalId: pId,
 			}
 
-			res, err := s.keeper.TallyResult(ctx, req)
+			res, err := s.groupKeeper.TallyResult(ctx, req)
 			if spec.expErr {
 				s.Require().Error(err)
 			} else {

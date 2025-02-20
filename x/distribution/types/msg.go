@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -11,10 +13,18 @@ const (
 	TypeMsgWithdrawDelegatorReward     = "withdraw_delegator_reward"
 	TypeMsgWithdrawValidatorCommission = "withdraw_validator_commission"
 	TypeMsgFundCommunityPool           = "fund_community_pool"
+	TypeMsgUpdateParams                = "update_params"
+	TypeMsgCommunityPoolSpend          = "community_pool_spend"
 )
 
 // Verify interface at compile time
-var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorCommission{}
+var (
+	_ sdk.Msg = (*MsgSetWithdrawAddress)(nil)
+	_ sdk.Msg = (*MsgWithdrawDelegatorReward)(nil)
+	_ sdk.Msg = (*MsgWithdrawValidatorCommission)(nil)
+	_ sdk.Msg = (*MsgUpdateParams)(nil)
+	_ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
+)
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
 	return &MsgSetWithdrawAddress{
@@ -150,4 +160,67 @@ func (msg MsgFundCommunityPool) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
 	return nil
+}
+
+// Route returns the MsgUpdateParams message route.
+func (msg MsgUpdateParams) Route() string { return ModuleName }
+
+// Type returns the MsgUpdateParams message type.
+func (msg MsgUpdateParams) Type() string { return TypeMsgUpdateParams }
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes.
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
+// the expected signer needs to sign.
+func (msg MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic performs basic MsgUpdateParams message validation.
+func (msg MsgUpdateParams) ValidateBasic() error {
+	if (!msg.Params.BaseProposerReward.IsNil() && !msg.Params.BaseProposerReward.IsZero()) ||
+		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) {
+		return errors.New("base and bonus proposer reward are deprecated fields and should not be used")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+	}
+
+	return msg.Params.ValidateBasic()
+}
+
+// Route returns the MsgCommunityPoolSpend message route.
+func (msg MsgCommunityPoolSpend) Route() string { return ModuleName }
+
+// Type returns the MsgCommunityPoolSpend message type.
+func (msg MsgCommunityPoolSpend) Type() string { return TypeMsgCommunityPoolSpend }
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes, which is the authority.
+func (msg MsgCommunityPoolSpend) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+// GetSignBytes returns the raw bytes for a MsgCommunityPoolSpend message that
+// the expected signer needs to sign.
+func (msg MsgCommunityPoolSpend) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic performs basic MsgCommunityPoolSpend message validation.
+func (msg MsgCommunityPoolSpend) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+	}
+
+	return msg.Amount.Validate()
 }

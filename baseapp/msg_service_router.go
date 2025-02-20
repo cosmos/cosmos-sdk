@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/gogo/protobuf/proto"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -117,14 +117,9 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 				return handler(goCtx, req)
 			}
+
 			if err := req.ValidateBasic(); err != nil {
-				if mm, ok := req.(getter1); ok {
-					if !mm.GetAmount().Amount.IsZero() {
-						return nil, err
-					}
-				} else {
-					return nil, err
-				}
+				return nil, err
 			}
 
 			if msr.circuitBreaker != nil {
@@ -139,7 +134,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
 				}
 			}
-
 			// Call the method handler from the service description with the handler object.
 			// We don't do any decoding here because the decoding was already done.
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)
@@ -165,8 +159,4 @@ func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.I
 func noopDecoder(_ interface{}) error { return nil }
 func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
 	return nil, nil
-}
-
-type getter1 interface {
-	GetAmount() sdk.Coin
 }

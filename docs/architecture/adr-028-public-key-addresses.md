@@ -97,7 +97,7 @@ As in other parts of the Cosmos SDK, we will use `sha256`.
 
 ### Basic Address
 
-We start with defining a base hash algorithm for generating addresses. Notably, it's used for accounts represented by a single key pair. For each public key schema we have to have an associated `typ` string, which we discuss in a section below. `hash` is the cryptographic hash function defined in the previous section.
+We start with defining a base algorithm for generating addresses which we will call `Hash`. Notably, it's used for accounts represented by a single key pair. For each public key schema we have to have an associated `typ` string, explained in the next section. `hash` is the cryptographic hash function defined in the previous section.
 
 ```go
 const A_LEN = 32
@@ -114,16 +114,13 @@ Motivation: this algorithm keeps the address relatively small (length of the `ty
 and it's more secure than [post-hash-prefix-proposal] (which uses the first 20 bytes of a pubkey hash, significantly reducing the address space).
 Moreover the cryptographer motivated the choice of adding `typ` in the hash to protect against a switch table attack.
 
-We use the `address.Hash` function for generating addresses for all accounts represented by a single key:
+`address.Hash` is a low level function to generate _base_ addresses for new key types. Example:
 
-* simple public keys: `address.Hash(keyType, pubkey)`
-
-* aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
-* modules: `address.Hash("module", moduleName)`
+* BLS: `address.Hash("bls", pubkey)`
 
 ### Composed Addresses
 
-For simple composed accounts (like new naive multisig), we generalize the `address.Hash`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing them into a single address. It ensures that the ordering of keys doesn't impact the resulting address.
+For simple composed accounts (like a new naive multisig) we generalize the `address.Hash`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing them into a single address. It ensures that the ordering of keys doesn't impact the resulting address.
 
 ```go
 // We don't need a PubKey interface - we need anything which is addressable.
@@ -140,17 +137,17 @@ func Composed(typ string, subaccounts []Addressable) []byte {
 
 The `typ` parameter should be a schema descriptor, containing all significant attributes with deterministic serialization (eg: utf8 string).
 `LengthPrefix` is a function which prepends 1 byte to the address. The value of that byte is the length of the address bits before prepending. The address must be at most 255 bits long.
-We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, \a -> LengthPrefix(a))) = map(bs, \b -> LengthPrefix(b))` iff `as = bs`.
+We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, (a) => LengthPrefix(a))) = map(bs, (b) => LengthPrefix(b))` if `as = bs`.
 
 Implementation Tip: account implementations should cache addresses.
 
 #### Multisig Addresses
 
-For new multisig public keys, we define the `typ` parameter not based on any encoding scheme (amino or protobuf). This avoids issues with non-determinism in the encoding scheme.
+For a new multisig public keys, we define the `typ` parameter not based on any encoding scheme (amino or protobuf). This avoids issues with non-determinism in the encoding scheme.
 
 Example:
 
-```proto
+```protobuf
 package cosmos.crypto.multisig;
 
 message PubKey {
@@ -161,67 +158,83 @@ message PubKey {
 
 ```go
 func (multisig PubKey) Address() {
-  // first gather all nested pub keys
-  var keys []address.Addressable  // cryptotypes.PubKey implements Addressable
-  for _, _key := range multisig.Pubkeys {
-    keys = append(keys, key.GetCachedValue().(cryptotypes.PubKey))
-  }
+	// first gather all nested pub keys
+	var keys []address.Addressable  // cryptotypes.PubKey implements Addressable
+	for _, _key := range multisig.Pubkeys {
+		keys = append(keys, key.GetCachedValue().(cryptotypes.PubKey))
+	}
 
-  // form the type from the message name (cosmos.crypto.multisig.PubKey) and the threshold joined together
-  prefix := fmt.Sprintf("%s/%d", proto.MessageName(multisig), multisig.Threshold)
+	// form the type from the message name (cosmos.crypto.multisig.PubKey) and the threshold joined together
+	prefix := fmt.Sprintf("%s/%d", proto.MessageName(multisig), multisig.Threshold)
 
-  // use the Composed function defined above
-  return address.Composed(prefix, keys)
+	// use the Composed function defined above
+	return address.Composed(prefix, keys)
 }
 ```
 
-#### Module Account Addresses
 
-NOTE: this section is not finalize and it's in active discussion.
+### Derived Addresses
 
-In Basic Address section we defined a module account address as:
-
-```go
-address.Hash("module", moduleName)
-```
-
-We use `"module"` as a schema type for all module derived addresses. Module accounts can have sub accounts. The derivation process has a defined order: module name, submodule key, subsubmodule key.
-Module account addresses are heavily used in the Cosmos SDK so it makes sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
+We must be able to cryptographically derive one address from another one. The derivation process must guarantee hash properties, hence we use the already defined `Hash` function:
 
 ```go
-func Module(moduleName string, key []byte) []byte{
-	return Hash("module", []byte(moduleName) + 0 + key)
+func Derive(address, derivationKey []byte) []byte {
+	return Hash(addres, derivationKey)
 }
 ```
 
-**Example**  A lending BTC pool address would be:
+### Module Account Addresses
+
+A module account will have `"module"` type. Module accounts can have sub accounts. The submodule account will be created based on module name, and sequence of derivation keys. Typically, the first derivation key should be a class of the derived accounts. The derivation process has a defined order: module name, submodule key, subsubmodule key... An example module account is created using:
 
 ```go
-btcPool := address.Module("lending", btc.Addrress()})
+address.Module(moduleName, key)
+```
+
+An example sub-module account is created using:
+
+```go
+groupPolicyAddresses := []byte{1}
+address.Module(moduleName, groupPolicyAddresses, policyID)
+```
+
+The `address.Module` function is using `address.Hash` with `"module"` as the type argument, and byte representation of the module name concatenated with submodule key. The two last component must be uniquely separated to avoid potential clashes (example: modulename="ab" & submodulekey="bc" will have the same derivation key as modulename="a" & submodulekey="bbc").
+We use a null byte (`'\x00'`) to separate module name from the submodule key. This works, because null byte is not a part of a valid module name. Finally, the sub-submodule accounts are created by applying the `Derive` function recursively.
+We could use `Derive` function also in the first step (rather than concatenating module name with zero byte and the submodule key). We decided to do concatenation to avoid one level of derivation and speed up computation.
+
+For backward compatibility with the existing `authtypes.NewModuleAddress`, we add a special case in `Module` function: when no derivation key is provided, we fallback to the "legacy" implementation. 
+
+```go
+func Module(moduleName string, derivationKeys ...[]byte) []byte{
+	if len(derivationKeys) == 0 {
+		return authtypes.NewModuleAddress(modulenName)  // legacy case
+	}
+	submoduleAddress := Hash("module", []byte(moduleName) + 0 + key)
+	return fold((a, k) => Derive(a, k), subsubKeys, submoduleAddress)
+}
+```
+
+**Example 1**  A lending BTC pool address would be:
+
+```go
+btcPool := address.Module("lending", btc.Address()})
 ```
 
 If we want to create an address for a module account depending on more than one key, we can concatenate them:
 
 ```go
-btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
+btcAtomAMM := address.Module("amm", btc.Address() + atom.Address()})
 ```
 
-#### Derived Addresses
-
-We must be able to cryptographically derive one address from another one. The derivation process must guarantee hash properties, hence we use the already defined `Hash` function:
+**Example 2**  a smart-contract address could be constructed by:
 
 ```go
-func Derive(address []byte, derivationKey []byte) []byte {
-    return Hash(addres, derivationKey)
-}
-```
+smartContractAddr = Module("mySmartContractVM", smartContractsNamespace, smartContractKey})
 
-Note: `Module` is a special case of the more general _derived_ address, where we set the `"module"` string for the _from address_.
-
-**Example**  For a cosmwasm smart-contract address we could use the following construction:
-
-```go
-smartContractAddr := Derived(Module("cosmwasm", smartContractsNamespace), []{smartContractKey})
+// which equals to:
+smartContractAddr = Derived(
+    Module("mySmartContractVM", smartContractsNamespace), 
+    []{smartContractKey})
 ```
 
 ### Schema Types
@@ -231,11 +244,11 @@ Since all Cosmos SDK account types are serialized in the state, we propose to us
 
 Example: all public key types have a unique protobuf message type similar to:
 
-```proto
+```protobuf
 package cosmos.crypto.sr25519;
 
 message PubKey {
-  bytes key = 1;
+	bytes key = 1;
 }
 ```
 

@@ -18,9 +18,6 @@ const (
 
 	// RouterKey is the message route for gov
 	RouterKey = ModuleName
-
-	// QuerierRoute is the querier route for gov
-	QuerierRoute = ModuleName
 )
 
 // Keys for governance store
@@ -34,18 +31,26 @@ const (
 //
 // - 0x03: nextProposalID
 //
+// - 0x04<proposalID_Bytes>: []byte{0x01} if proposalID is in the voting period
+//
 // - 0x10<proposalID_Bytes><depositorAddrLen (1 Byte)><depositorAddr_Bytes>: Deposit
 //
 // - 0x20<proposalID_Bytes><voterAddrLen (1 Byte)><voterAddr_Bytes>: Voter
+//
+// - 0x30: Params
 var (
-	ProposalsKeyPrefix          = []byte{0x00}
-	ActiveProposalQueuePrefix   = []byte{0x01}
-	InactiveProposalQueuePrefix = []byte{0x02}
-	ProposalIDKey               = []byte{0x03}
+	ProposalsKeyPrefix            = []byte{0x00}
+	ActiveProposalQueuePrefix     = []byte{0x01}
+	InactiveProposalQueuePrefix   = []byte{0x02}
+	ProposalIDKey                 = []byte{0x03}
+	VotingPeriodProposalKeyPrefix = []byte{0x04}
 
 	DepositsKeyPrefix = []byte{0x10}
 
 	VotesKeyPrefix = []byte{0x20}
+
+	// ParamsKey is the key to query all gov params
+	ParamsKey = []byte{0x30}
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
@@ -65,6 +70,11 @@ func GetProposalIDFromBytes(bz []byte) (proposalID uint64) {
 // ProposalKey gets a specific proposal from the store
 func ProposalKey(proposalID uint64) []byte {
 	return append(ProposalsKeyPrefix, GetProposalIDBytes(proposalID)...)
+}
+
+// VotingPeriodProposalKey gets if a proposal is in voting period.
+func VotingPeriodProposalKey(proposalID uint64) []byte {
+	return append(VotingPeriodProposalKeyPrefix, GetProposalIDBytes(proposalID)...)
 }
 
 // ActiveProposalByTimeKey gets the active proposal queue key by endTime

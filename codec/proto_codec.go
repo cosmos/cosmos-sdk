@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/gogo/protobuf/jsonpb"
-	gogoproto "github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -196,6 +196,10 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 		return nil, err
 	}
 	any, err := types.NewAnyWithValue(i)
+	if err != nil {
+		return nil, err
+	}
+	err = pc.interfaceRegistry.EnsureRegistered(i)
 	if err != nil {
 		return nil, err
 	}

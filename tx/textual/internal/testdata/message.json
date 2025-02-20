@@ -1,0 +1,139 @@
+[
+    {
+        "proto": {},
+        "screens": [
+            {"text": "Foo object"}
+        ]
+    },
+    {
+        "proto": {
+            "full_name": "nonempty"
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Full name: nonempty", "indent": 1}
+        ]
+    },
+    {
+        "proto": {
+            "full_name": "thing one",
+            "nickname": ":thing two"
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Full name: thing one", "indent": 1},
+            {"text": "Nickname: :thing two", "indent": 1}
+        ]
+    },
+    {
+        "proto": {
+            "full_name": "special child message",
+            "mtime": {
+                "seconds": 1136214245
+            }
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Full name: special child message", "indent": 1},
+            {"text": "Mtime: 2006-01-02T15:04:05Z", "indent": 1}
+        ]
+    },
+    {
+        "proto": {
+            "nickname": "empty child",
+            "left": {}
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Nickname: empty child", "indent": 1},
+            {"text": "Left: Foo object", "indent": 1}
+        ]
+    },
+    {
+        "proto": {
+            "nickname": "empty children",
+            "left": {},
+            "right": {},
+            "bar": {}
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Nickname: empty children", "indent": 1},
+            {"text": "Left: Foo object", "indent": 1},
+            {"text": "Right: Foo object", "indent": 1},
+            {"text": "Bar: Bar object", "indent": 1}
+        ]
+    },
+    {
+        "proto": {
+            "full_name": "subfield",
+            "left": {},
+            "right": {
+                "nickname": "junior"
+            },
+            "bar": {}
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Full name: subfield", "indent": 1},
+            {"text": "Left: Foo object", "indent": 1},
+            {"text": "Right: Foo object", "indent": 1},
+            {"text": "Nickname: junior", "indent": 2},
+            {"text": "Bar: Bar object", "indent": 1}
+        ]
+    },
+    {
+        "proto": {
+            "full_name": "deep",
+            "left": {
+                "left": {"nickname": "LL"},
+                "right": {"nickname": "LR"}
+            },
+            "right": {
+                "left": {"nickname": "RL"},
+                "right": {"nickname": "RR"}
+            }
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Full name: deep", "indent": 1},
+            {"text": "Left: Foo object", "indent": 1},
+            {"text": "Left: Foo object", "indent": 2},
+            {"text": "Nickname: LL", "indent": 3},
+            {"text": "Right: Foo object", "indent": 2},
+            {"text": "Nickname: LR", "indent": 3},
+            {"text": "Right: Foo object", "indent": 1},
+            {"text": "Left: Foo object", "indent": 2},
+            {"text": "Nickname: RL", "indent": 3},
+            {"text": "Right: Foo object", "indent": 2},
+            {"text": "Nickname: RR", "indent": 3}
+        ]
+    },
+    {
+        "proto": {
+            "full_name": " the kitchen sink ",
+            "mtime": {},
+            "left": {},
+            "right": {
+                "nickname": "blub",
+                "right": {},
+                "bar": {
+                    "bar_id": "quux",
+                    "data": [255, 254]
+                }
+            }
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Full name:  the kitchen sink ", "indent": 1},
+            {"text": "Mtime: 1970-01-01T00:00:00Z", "indent": 1},
+            {"text": "Left: Foo object", "indent": 1},
+            {"text": "Right: Foo object", "indent": 1},
+            {"text": "Nickname: blub", "indent": 2},
+            {"text": "Right: Foo object", "indent": 2},
+            {"text": "Bar: Bar object", "indent": 2},
+            {"text": "Bar id: quux", "indent": 3},
+            {"text": "Data: FFFE", "indent": 3}
+        ]
+    }
+]

@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/evidence/types";
 service Query {
   // Evidence queries evidence based on evidence hash.
   rpc Evidence(QueryEvidenceRequest) returns (QueryEvidenceResponse) {
-    option (google.api.http).get = "/cosmos/evidence/v1beta1/evidence/{evidence_hash}";
+    option (google.api.http).get = "/cosmos/evidence/v1beta1/evidence/{hash}";
   }
 
   // AllEvidence queries all evidence.
@@ -24,7 +24,14 @@ service Query {
 // QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
 message QueryEvidenceRequest {
   // evidence_hash defines the hash of the requested evidence.
-  bytes evidence_hash = 1 [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];
+  // Deprecated: Use hash, a HEX encoded string, instead.
+  bytes evidence_hash = 1
+      [deprecated = true, (gogoproto.casttype) = "github.com/cometbft/cometbft/libs/bytes.HexBytes"];
+
+  // hash defines the evidence hash of the requested evidence.
+  //
+  // Since: cosmos-sdk 0.47
+  string hash = 2;
 }
 
 // QueryEvidenceResponse is the response type for the Query/Evidence RPC method.

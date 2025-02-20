@@ -62,3 +62,8 @@ type GovHooks interface {
 	AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64)                      // Must be called when proposal fails to reach min deposit
 	AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64)                     // Must be called when proposal's finishes it's voting period
 }
+
+type GovHooksWrapper struct{ GovHooks }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (GovHooksWrapper) IsOnePerModuleType() {}

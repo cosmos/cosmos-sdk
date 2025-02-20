@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -98,6 +98,11 @@ func (k *Keeper) Seal() {
 	}
 
 	k.sealed = true
+}
+
+// IsSealed returns if the keeper is sealed.
+func (k *Keeper) IsSealed() bool {
+	return k.sealed
 }
 
 // InitMemStore will assure that the module store is a memory store (it will panic if it's not)

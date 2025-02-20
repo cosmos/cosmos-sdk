@@ -24,7 +24,7 @@ type StoreKVPairWriteListener struct {
 
 // NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a
 // provided io.Writer and codec.BinaryCodec.
-func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairWriteListener {
+func NewStoreKVPairWriteListener(w io.Writer, m codec.Codec) *StoreKVPairWriteListener {
 	return &StoreKVPairWriteListener{
 		writer:     w,
 		marshaller: m,

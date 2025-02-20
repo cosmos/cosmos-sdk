@@ -25,7 +25,6 @@ func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 
 			if height == 0 {

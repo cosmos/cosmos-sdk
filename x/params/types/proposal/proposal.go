@@ -51,18 +51,18 @@ func (pcp *ParameterChangeProposal) ValidateBasic() error {
 func (pcp ParameterChangeProposal) String() string {
 	var b strings.Builder
 
-	b.WriteString(fmt.Sprintf(`Parameter Change Proposal:
+	fmt.Fprintf(&b, `Parameter Change Proposal:
   Title:       %s
   Description: %s
   Changes:
-`, pcp.Title, pcp.Description))
+`, pcp.Title, pcp.Description)
 
 	for _, pc := range pcp.Changes {
-		b.WriteString(fmt.Sprintf(`    Param Change:
+		fmt.Fprintf(&b, `    Param Change:
       Subspace: %s
       Key:      %s
       Value:    %X
-`, pc.Subspace, pc.Key, pc.Value))
+`, pc.Subspace, pc.Key, pc.Value)
 	}
 
 	return b.String()

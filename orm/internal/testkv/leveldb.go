@@ -3,7 +3,7 @@ package testkv
 import (
 	"testing"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"

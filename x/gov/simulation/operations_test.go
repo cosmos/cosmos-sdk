@@ -6,36 +6,59 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
-type MockWeightedProposalContent struct {
+var (
+	_ simtypes.WeightedProposalMsg     = MockWeightedProposals{}
+	_ simtypes.WeightedProposalContent = MockWeightedProposals{} //nolint:staticcheck
+)
+
+type MockWeightedProposals struct {
 	n int
 }
 
-func (m MockWeightedProposalContent) AppParamsKey() string {
+func (m MockWeightedProposals) AppParamsKey() string {
 	return fmt.Sprintf("AppParamsKey-%d", m.n)
 }
 
-func (m MockWeightedProposalContent) DefaultWeight() int {
+func (m MockWeightedProposals) DefaultWeight() int {
 	return m.n
 }
 
-func (m MockWeightedProposalContent) ContentSimulatorFn() simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
+func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
+	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
+		return nil
+	}
+}
+
+func (m MockWeightedProposals) ContentSimulatorFn() simtypes.ContentSimulatorFn { //nolint:staticcheck
+	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content { //nolint:staticcheck
 		return v1beta1.NewTextProposal(
 			fmt.Sprintf("title-%d: %s", m.n, simtypes.RandStringOfLength(r, 100)),
 			fmt.Sprintf("description-%d: %s", m.n, simtypes.RandStringOfLength(r, 4000)),
@@ -43,49 +66,57 @@ func (m MockWeightedProposalContent) ContentSimulatorFn() simtypes.ContentSimula
 	}
 }
 
-// make sure the MockWeightedProposalContent satisfied the WeightedProposalContent interface
-var _ simtypes.WeightedProposalContent = MockWeightedProposalContent{}
-
-func mockWeightedProposalContent(n int) []simtypes.WeightedProposalContent {
-	wpc := make([]simtypes.WeightedProposalContent, n)
+func mockWeightedProposalMsg(n int) []simtypes.WeightedProposalMsg {
+	wpc := make([]simtypes.WeightedProposalMsg, n)
 	for i := 0; i < n; i++ {
-		wpc[i] = MockWeightedProposalContent{i}
+		wpc[i] = MockWeightedProposals{i}
+	}
+	return wpc
+}
+
+func mockWeightedLegacyProposalContent(n int) []simtypes.WeightedProposalContent { //nolint:staticcheck
+	wpc := make([]simtypes.WeightedProposalContent, n) //nolint:staticcheck
+	for i := 0; i < n; i++ {
+		wpc[i] = MockWeightedProposals{i}
 	}
 	return wpc
 }
 
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
-	app, ctx := createTestApp(t, false)
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
 	ctx.WithChainID("test-chain")
-
-	cdc := app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper,
-		app.BankKeeper, app.GovKeeper, mockWeightedProposalContent(3),
+	weightesOps := simulation.WeightedOperations(appParams, govcodec.ModuleCdc, suite.AccountKeeper,
+		suite.BankKeeper, suite.GovKeeper, mockWeightedProposalMsg(3), mockWeightedLegacyProposalContent(1),
 	)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accs := getTestingAccounts(t, r, app, ctx, 3)
+	accs := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
 	}{
+		{simulation.DefaultWeightMsgDeposit, types.ModuleName, simulation.TypeMsgDeposit},
+		{simulation.DefaultWeightMsgVote, types.ModuleName, simulation.TypeMsgVote},
+		{simulation.DefaultWeightMsgVoteWeighted, types.ModuleName, simulation.TypeMsgVoteWeighted},
 		{0, types.ModuleName, simulation.TypeMsgSubmitProposal},
 		{1, types.ModuleName, simulation.TypeMsgSubmitProposal},
 		{2, types.ModuleName, simulation.TypeMsgSubmitProposal},
-		{simappparams.DefaultWeightMsgDeposit, types.ModuleName, simulation.TypeMsgDeposit},
-		{simappparams.DefaultWeightMsgVote, types.ModuleName, simulation.TypeMsgVote},
-		{simappparams.DefaultWeightMsgVoteWeighted, types.ModuleName, simulation.TypeMsgVoteWeighted},
+		{0, types.ModuleName, simulation.TypeMsgSubmitProposal},
 	}
 
+	require.Equal(t, len(weightesOps), len(expected), "number of operations should be the same")
 	for i, w := range weightesOps {
-		operationMsg, _, _ := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
+		require.NoError(t, err)
+
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
@@ -98,23 +129,54 @@ func TestWeightedOperations(t *testing.T) {
 // TestSimulateMsgSubmitProposal tests the normal scenario of a valid message of type TypeMsgSubmitProposal.
 // Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgSubmitProposal(t *testing.T) {
-	app, ctx := createTestApp(t, false)
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := getTestingAccounts(t, r, app, ctx, 3)
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSubmitProposal(app.AccountKeeper, app.BankKeeper, app.GovKeeper, MockWeightedProposalContent{3}.ContentSimulatorFn())
+	op := simulation.SimulateMsgSubmitProposal(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
 	var msg v1.MsgSubmitProposal
-	err = v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Proposer)
+	require.NotEqual(t, len(msg.InitialDeposit), 0)
+	require.Equal(t, "560969stake", msg.InitialDeposit[0].String())
+	require.Equal(t, simulation.TypeMsgSubmitProposal, sdk.MsgTypeURL(&msg))
+}
+
+// TestSimulateMsgSubmitProposal tests the normal scenario of a valid message of type TypeMsgSubmitProposal.
+// Abnormal scenarios, where errors occur, are not tested here.
+func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
+
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
+
+	// begin a new block
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgSubmitLegacyProposal(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.ContentSimulatorFn())
+	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg v1.MsgSubmitProposal
+	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -130,38 +192,39 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 // TestSimulateMsgDeposit tests the normal scenario of a valid message of type TypeMsgDeposit.
 // Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgDeposit(t *testing.T) {
-	app, ctx := createTestApp(t, false)
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := getTestingAccounts(t, r, app, ctx, 3)
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
 	// setup a proposal
 	content := v1beta1.NewTextProposal("Test", "description")
-	contentMsg, err := v1.NewLegacyContent(content, app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
+	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
 
 	submitTime := ctx.BlockHeader().Time
-	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
+	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	require.NoError(t, err)
 
-	app.GovKeeper.SetProposal(ctx, proposal)
+	suite.GovKeeper.SetProposal(ctx, proposal)
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgDeposit(app.AccountKeeper, app.BankKeeper, app.GovKeeper)
+	op := simulation.SimulateMsgDeposit(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
 	var msg v1.MsgDeposit
-	err = v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -176,38 +239,39 @@ func TestSimulateMsgDeposit(t *testing.T) {
 // TestSimulateMsgVote tests the normal scenario of a valid message of type TypeMsgVote.
 // Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgVote(t *testing.T) {
-	app, ctx := createTestApp(t, false)
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := getTestingAccounts(t, r, app, ctx, 3)
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
 	// setup a proposal
-	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
+	govAcc := suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
 
 	submitTime := ctx.BlockHeader().Time
-	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
+	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	require.NoError(t, err)
 
-	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
+	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgVote(app.AccountKeeper, app.BankKeeper, app.GovKeeper)
+	op := simulation.SimulateMsgVote(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
 	var msg v1.MsgVote
-	v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
@@ -220,37 +284,38 @@ func TestSimulateMsgVote(t *testing.T) {
 // TestSimulateMsgVoteWeighted tests the normal scenario of a valid message of type TypeMsgVoteWeighted.
 // Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgVoteWeighted(t *testing.T) {
-	app, ctx := createTestApp(t, false)
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := getTestingAccounts(t, r, app, ctx, 3)
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
 	// setup a proposal
-	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
+	govAcc := suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
 	submitTime := ctx.BlockHeader().Time
-	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
+	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "test", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	require.NoError(t, err)
 
-	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
+	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgVoteWeighted(app.AccountKeeper, app.BankKeeper, app.GovKeeper)
+	op := simulation.SimulateMsgVoteWeighted(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
 	var msg v1.MsgVoteWeighted
-	v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
@@ -260,28 +325,51 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	require.Equal(t, simulation.TypeMsgVoteWeighted, msg.Type())
 }
 
-// returns context and an app with updated mint keeper
-func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(t, isCheckTx)
-
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
-
-	return app, ctx
+type suite struct {
+	cdc           codec.Codec
+	AccountKeeper authkeeper.AccountKeeper
+	BankKeeper    bankkeeper.Keeper
+	GovKeeper     *keeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
+	App           *runtime.App
 }
 
-func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.Context, n int) []simtypes.Account {
+// returns context and an app with updated mint keeper
+func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
+	res := suite{}
+
+	app, err := simtestutil.Setup(configurator.NewAppConfig(
+		configurator.AuthModule(),
+		configurator.TxModule(),
+		configurator.ParamsModule(),
+		configurator.BankModule(),
+		configurator.StakingModule(),
+		configurator.ConsensusModule(),
+		configurator.GovModule(),
+	), &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.cdc)
+	require.NoError(t, err)
+
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+
+	res.App = app
+	return res, ctx
+}
+
+func getTestingAccounts(
+	t *testing.T, r *rand.Rand,
+	accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper,
+	ctx sdk.Context, n int,
+) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
+	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
-		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
+		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
+		accountKeeper.SetAccount(ctx, acc)
+		require.NoError(t, testutil.FundAccount(bankKeeper, ctx, account.Address, initCoins))
 	}
 
 	return accounts

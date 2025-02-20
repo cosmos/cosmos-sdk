@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -334,23 +333,27 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	// collision with an existing address.
 	for {
 		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, nextAccVal)
+		derivationKey := make([]byte, 8)
+		binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-		parentAcc := address.Module(group.ModuleName, []byte{GroupPolicyTablePrefix})
-		accountAddr = address.Derive(parentAcc, buf)
-
+		ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
+		if err != nil {
+			return nil, err
+		}
+		accountAddr = sdk.AccAddress(ac.Address())
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision, in which case we just go on to the
 			// next sequence value and derive a new address.
 			continue
 		}
-		acc := k.accKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
-			BaseAccount: &authtypes.BaseAccount{
-				Address: accountAddr.String(),
-			},
-			Name: accountAddr.String(),
-		})
+
+		// group policy accounts are unclaimable base accounts
+		account, err := authtypes.NewBaseAccountWithPubKey(ac)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "could not create group policy account")
+		}
+
+		acc := k.accKeeper.NewAccount(ctx, account)
 		k.accKeeper.SetAccount(ctx, acc)
 
 		break
@@ -471,6 +474,14 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
+	if err := k.assertMetadataLength(req.Summary, "proposal summary"); err != nil {
+		return nil, err
+	}
+
+	if err := k.assertMetadataLength(req.Title, "proposal Title"); err != nil {
+		return nil, err
+	}
+
 	policyAcc, err := k.getGroupPolicyInfo(ctx, req.GroupPolicyAddress)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
@@ -516,6 +527,8 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
 		FinalTallyResult:   group.DefaultTallyResult(),
+		Title:              req.Title,
+		Summary:            req.Summary,
 	}
 
 	if err := m.SetMsgs(msgs); err != nil {

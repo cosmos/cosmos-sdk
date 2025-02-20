@@ -17,10 +17,17 @@ message GenesisState {
   repeated Vote votes = 3;
   // proposals defines all the proposals present at genesis.
   repeated Proposal proposals = 4;
-  // params defines all the paramaters of related to deposit.
-  DepositParams deposit_params = 5;
-  // params defines all the paramaters of related to voting.
-  VotingParams voting_params = 6;
-  // params defines all the paramaters of related to tally.
-  TallyParams tally_params = 7;
+  // Deprecated: Prefer to use `params` instead.
+  // deposit_params defines all the paramaters of related to deposit.
+  DepositParams deposit_params = 5 [deprecated = true];
+  // Deprecated: Prefer to use `params` instead.
+  // voting_params defines all the paramaters of related to voting.
+  VotingParams voting_params = 6 [deprecated = true];
+  // Deprecated: Prefer to use `params` instead.
+  // tally_params defines all the paramaters of related to tally.
+  TallyParams tally_params = 7 [deprecated = true];
+  // params defines all the paramaters of x/gov module.
+  //
+  // Since: cosmos-sdk 0.47
+  Params params = 8;
 }

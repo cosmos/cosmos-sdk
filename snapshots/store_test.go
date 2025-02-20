@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	db "github.com/cometbft/cometbft-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -42,7 +42,7 @@ func setupStore(t *testing.T) *snapshots.Store {
 }
 
 func TestNewStore(t *testing.T) {
-	tempdir := t.TempDir()
+	tempdir := testutil.GetTempDir(t)
 	_, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 
 	require.NoError(t, err)

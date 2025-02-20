@@ -31,6 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* [#23639](https://github.com/cosmos/cosmos-sdk/pull/23639) Fix allowed pruning height logic when changing `snapshot-interval`
 
 ## v1.10.0 (December 13, 2024)
 

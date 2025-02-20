@@ -182,6 +182,10 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 				return err
 			}
 		}
+		// ensure that group has one or more members
+		if totalWeight.IsZero() {
+			return errors.ErrInvalid.Wrap("group must not be empty")
+		}
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
 		g.Version++

@@ -1,18 +1,16 @@
-# Cosmos SDK v0.47.15 Release Notes
+# Cosmos SDK v0.47.16 Release Notes
 
 💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/6)
 
 ## 🚀 Highlights
 
-This release fixes [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm). Check the advisory for more information.
+This patch release fixes [GHSA-x5vx-95h7-rv4p](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-x5vx-95h7-rv4p).
+It resolves a `x/group` module issue that can halt chain when handling a malicious proposal.
+Only users of the `x/group` module are affected by this issue.
 
-Additionally, this release is mainly here to disclose the incoming end-of-life of the `v0.47.x` line.
+We recommended to upgrade to this patch release as soon as possible.
+When upgrading from <= v0.47.15, please use a chain upgrade to ensure that 2/3 of the validator power upgrade to v0.47.16.
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.15/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.14...v0.47.15) from last release.
+## 📝 Changelog
 
-## End-of-Life Notice
-
-`v0.47.15` is the last release of the `v0.47.x` line. Per this version, the v0.47.x line reached its end-of-life.
-The SDK team maintains the [latest two major versions of the SDK](https://github.com/cosmos/cosmos-sdk/blob/main/RELEASE_PROCESS.md#major-release-maintenance). This means no features, improvements or bug fixes will be backported to the `v0.47.x` line. Per our policy, the `v0.47.x` line will receive security patches only.
-
-We encourage all chains to upgrade to Cosmos SDK Olympus (`rc`) (`v0.52.0`), or the `v0.50.x` line.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.16/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.15...v0.47.16) from last release.

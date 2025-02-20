@@ -52,14 +52,10 @@ func (em *EventManager) GetABCIEventHistory() []abci.Event {
 		attrs := make([]abci.EventAttribute, len(event.Attributes))
 		history[i].Attributes = attrs
 		for j, attr := range event.Attributes {
-			attrKey := make([]byte, len(attr.Key))
-			copy(attrKey, attr.Key)
-			attrValue := make([]byte, len(attr.Value))
-			copy(attrValue, attr.Value)
 			attrs[j] = abci.EventAttribute{
 				Index: attr.Index,
-				Key:   attrKey,
-				Value: attrValue,
+				Key:   attr.Key,
+				Value: attr.Value,
 			}
 		}
 	}

@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"testing"
 
+	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
-	tmcfg "github.com/tendermint/tendermint/config"
 )
 
 func TestAbciClientType(t *testing.T) {
@@ -22,11 +22,11 @@ func TestAbciClientType(t *testing.T) {
 	}{
 		{
 			clientType:  "committing",
-			creatorName: "github.com/tendermint/tendermint/proxy.NewCommittingClientCreator",
+			creatorName: "github.com/cometbft/cometbft/proxy.NewCommittingClientCreator",
 		},
 		{
 			clientType:  "local",
-			creatorName: "github.com/tendermint/tendermint/proxy.NewLocalClientCreator",
+			creatorName: "github.com/cometbft/cometbft/proxy.NewLocalClientCreator",
 		},
 		{
 			clientType: "cool ranch",

@@ -9,7 +9,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 
-	tmtime "github.com/tendermint/tendermint/types/time"
+	tmtime "github.com/cometbft/cometbft/types/time"
 )
 
 var (

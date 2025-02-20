@@ -20,17 +20,6 @@ var (
 	MaxUnpackAnyRecursionDepth = 10
 )
 
-var (
-
-	// MaxUnpackAnySubCalls extension point that defines the maximum number of sub-calls allowed during the unpacking
-	// process of protobuf Any messages.
-	MaxUnpackAnySubCalls = 100
-
-	// MaxUnpackAnyRecursionDepth extension point that defines the maximum allowed recursion depth during protobuf Any
-	// message unpacking.
-	MaxUnpackAnyRecursionDepth = 10
-)
-
 // AnyUnpacker is an interface which allows safely unpacking types packed
 // in Any's against a whitelist of registered types
 type AnyUnpacker interface {

@@ -572,7 +572,14 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 // child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	// [AGORIC] Reset the EventManager, preserving any existing event history.
+	eventHistory := []abci.Event{}
+	if oldEm := ctx.EventManager(); oldEm != nil {
+		eventHistory = oldEm.GetABCIEventHistory()
+	}
+	em := sdk.NewEventManagerWithHistory(eventHistory)
+
+	ctx = ctx.WithEventManager(em)
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {

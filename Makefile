@@ -9,7 +9,8 @@ LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 MOCKS_DIR = $(CURDIR)/tests/mocks
-HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
+PR_TARGET_REPO = https://github.com/agoric-labs/cosmos-sdk.git
+PR_TARGET_BRANCH = Agoric
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 DOCS_DOMAIN=docs.cosmos.network
@@ -335,7 +336,7 @@ test-sim-profile:
 
 test-rosetta:
 	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
-	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+	docker compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
 .PHONY: test-rosetta
 
 benchmark:
@@ -420,9 +421,9 @@ proto-lint:
 	@$(protoImage) buf lint --error-format=json
 
 proto-check-breaking:
-	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
+	@$(protoImage) buf breaking --against $(PR_TARGET_REPO)#branch=$(PR_TARGET_BRANCH)
 
-CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.37.0/proto/tendermint
+CMT_URL              = https://raw.githubusercontent.com/agoric-labs/cometbft/v0.37.5/proto/tendermint
 
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci
@@ -435,27 +436,27 @@ proto-update-deps:
 	@echo "Updating Protobuf dependencies"
 
 	@mkdir -p $(TM_ABCI_TYPES)
-	@curl -sSL $(TM_URL)/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
+	@curl -sSL $(CMT_URL)/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
 
 	@mkdir -p $(TM_VERSION)
-	@curl -sSL $(TM_URL)/version/types.proto > $(TM_VERSION)/types.proto
+	@curl -sSL $(CMT_URL)/version/types.proto > $(TM_VERSION)/types.proto
 
 	@mkdir -p $(TM_TYPES)
-	@curl -sSL $(TM_URL)/types/types.proto > $(TM_TYPES)/types.proto
-	@curl -sSL $(TM_URL)/types/evidence.proto > $(TM_TYPES)/evidence.proto
-	@curl -sSL $(TM_URL)/types/params.proto > $(TM_TYPES)/params.proto
-	@curl -sSL $(TM_URL)/types/validator.proto > $(TM_TYPES)/validator.proto
-	@curl -sSL $(TM_URL)/types/block.proto > $(TM_TYPES)/block.proto
+	@curl -sSL $(CMT_URL)/types/types.proto > $(TM_TYPES)/types.proto
+	@curl -sSL $(CMT_URL)/types/evidence.proto > $(TM_TYPES)/evidence.proto
+	@curl -sSL $(CMT_URL)/types/params.proto > $(TM_TYPES)/params.proto
+	@curl -sSL $(CMT_URL)/types/validator.proto > $(TM_TYPES)/validator.proto
+	@curl -sSL $(CMT_URL)/types/block.proto > $(TM_TYPES)/block.proto
 
 	@mkdir -p $(TM_CRYPTO_TYPES)
-	@curl -sSL $(TM_URL)/crypto/proof.proto > $(TM_CRYPTO_TYPES)/proof.proto
-	@curl -sSL $(TM_URL)/crypto/keys.proto > $(TM_CRYPTO_TYPES)/keys.proto
+	@curl -sSL $(CMT_URL)/crypto/proof.proto > $(TM_CRYPTO_TYPES)/proof.proto
+	@curl -sSL $(CMT_URL)/crypto/keys.proto > $(TM_CRYPTO_TYPES)/keys.proto
 
 	@mkdir -p $(TM_LIBS)
-	@curl -sSL $(TM_URL)/libs/bits/types.proto > $(TM_LIBS)/types.proto
+	@curl -sSL $(CMT_URL)/libs/bits/types.proto > $(TM_LIBS)/types.proto
 
 	@mkdir -p $(TM_P2P)
-	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
+	@curl -sSL $(CMT_URL)/p2p/types.proto > $(TM_P2P)/types.proto
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 
@@ -473,10 +474,10 @@ localnet-build-dlv:
 localnet-build-nodes:
 	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
 			  testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
-	docker-compose up -d
+	docker compose up -d
 
 localnet-stop:
-	docker-compose down
+	docker compose down
 
 # localnet-start will run a 4-node testnet locally. The nodes are
 # based off the docker images in: ./contrib/images/simd-env

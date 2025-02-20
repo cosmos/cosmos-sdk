@@ -13,8 +13,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// [AGORIC] Valid values for FlagAbciClientType
+const (
+	AbciClientTypeCommitting = "committing"
+	AbciClientTypeLocal      = "local"
+)
+
 const (
 	defaultMinGasPrices = ""
+
+	// DefaultABCIClientType defines the default ABCI client type to use with cometbft.
+	DefaultABCIClientType = AbciClientTypeCommitting // [AGORIC]
 
 	// DefaultAPIAddress defines the default address to bind the API server to.
 	DefaultAPIAddress = "tcp://localhost:1317"
@@ -92,6 +101,12 @@ type BaseConfig struct {
 
 	// IAVLLazyLoading enable/disable the lazy loading of iavl store.
 	IAVLLazyLoading bool `mapstructure:"iavl-lazy-loading"`
+
+	// ABCIClientType selects the type of ABCI client.
+	// Valid settings are "committing" (default) or "local".
+	// The committing client allows greater query parallelism,
+	// but the local client is more defensive.
+	ABCIClientType string `mapstructure:"abci-client-type"`
 
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
 	// An empty string indicates that the Tendermint config's DBBackend value should be used.
@@ -291,6 +306,7 @@ func DefaultConfig() *Config {
 			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
 			IAVLLazyLoading:     false,
+			ABCIClientType:      DefaultABCIClientType, // [AGORIC]
 			AppDBBackend:        "",
 		},
 		Telemetry: telemetry.Config{

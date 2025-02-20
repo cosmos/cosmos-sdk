@@ -65,7 +65,10 @@ const (
 	chunkBufferSize   = 4
 	chunkIDBufferSize = 1024
 
-	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
+	// snapshotMaxItemSize limits the size of both KVStore entries and snapshot
+	// extension payloads during a state-sync restore.
+	// Unexported so copied in manager_test.go for testing
+	snapshotMaxItemSize = int(512e6)
 )
 
 var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
@@ -510,19 +513,24 @@ func (m *Manager) SnapshotIfApplicable(height int64) {
 	if m == nil {
 		return
 	}
-	if !m.shouldTakeSnapshot(height) {
+	if !m.ShouldTakeSnapshot(height) {
 		m.logger.Debug("snapshot is skipped", "height", height)
 		return
 	}
-	m.snapshot(height)
+	m.Snapshot(height)
 }
 
-// shouldTakeSnapshot returns true is snapshot should be taken at height.
-func (m *Manager) shouldTakeSnapshot(height int64) bool {
+// ShouldTakeSnapshot returns true if a snapshot should be taken at height.
+func (m *Manager) ShouldTakeSnapshot(height int64) bool {
+	if m == nil {
+		return false
+	}
 	return m.opts.Interval > 0 && uint64(height)%m.opts.Interval == 0
 }
 
-func (m *Manager) snapshot(height int64) {
+// Snapshot taks a snapshot of the current state and prunes any old snapshottypes.
+// It should be started as a goroutine
+func (m *Manager) Snapshot(height int64) {
 	m.logger.Info("creating state snapshot", "height", height)
 
 	if height <= 0 {

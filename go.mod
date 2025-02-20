@@ -1,6 +1,8 @@
-go 1.19
-
 module github.com/cosmos/cosmos-sdk
+
+go 1.22.0
+
+toolchain go1.22.12
 
 require (
 	cosmossdk.io/api v0.3.1
@@ -191,6 +193,8 @@ require (
 replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// replace broken iavl
+	github.com/cosmos/iavl => github.com/cosmos/iavl v0.19.7
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
@@ -201,6 +205,8 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	// stick with compatible version of rapid in v0.47.x line
 	pgregory.net/rapid => pgregory.net/rapid v0.5.5
+	// use cometbft
+	github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.5
 )
 
 retract (

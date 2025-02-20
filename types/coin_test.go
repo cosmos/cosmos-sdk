@@ -520,7 +520,7 @@ func (s *coinTestSuite) TestEqualCoins() {
 		{sdk.Coins{}, sdk.Coins{}, true, false},
 		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, true, false},
 		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom2, 0)}, false, true},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom2, 0)}, false, false},
 		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 1)}, false, false},
 		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, false, false},
 		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true, false},

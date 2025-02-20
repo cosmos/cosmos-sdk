@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/abci/server"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -62,6 +63,7 @@ const (
 	FlagIAVLCacheSize       = "iavl-cache-size"
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
 	FlagIAVLLazyLoading     = "iavl-lazy-loading"
+	FlagAbciClientType      = "abci-client-type"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -200,6 +202,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
+	cmd.Flags().String(FlagAbciClientType, serverconfig.DefaultABCIClientType, fmt.Sprintf(`Type of ABCI client ("%s" or "%s")`, serverconfig.AbciClientTypeCommitting, serverconfig.AbciClientTypeLocal))
 
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
 
@@ -315,6 +318,8 @@ func startStandAlone(ctx *Context, clientCtx client.Context, appCreator types.Ap
 	return WaitForQuitSignals()
 }
 
+type abciClientCreator func(abcitypes.Application) proxy.ClientCreator
+
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
@@ -369,11 +374,19 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
+		// [AGORIC] allow the ABCI client type to be configurable.
+		abciClientType := config.ABCIClientType
+		ctx.Logger.Info(fmt.Sprintf("ABCI client type: %s", abciClientType))
+		clientCreator, err := getAbciClientCreator(abciClientType)
+		if err != nil {
+			return err
+		}
+
 		tmNode, err = node.NewNode(
 			cfg,
 			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 			nodeKey,
-			proxy.NewLocalClientCreator(app),
+			clientCreator(app),
 			genDocProvider,
 			node.DefaultDBProvider,
 			node.DefaultMetricsProvider(cfg.Instrumentation),
@@ -581,6 +594,18 @@ func startAPIserver(config serverconfig.Config, genDocProvider node.GenesisDocPr
 		}
 	}
 	return apiSrv, nil
+}
+
+// getAbciClientCreator dispatches the client type to the right cometbft constructor.
+// [AGORIC] Allows us to disable committingClient.
+func getAbciClientCreator(abciClientType string) (abciClientCreator, error) {
+	switch abciClientType {
+	case serverconfig.AbciClientTypeCommitting:
+		return proxy.NewCommittingClientCreator, nil
+	case serverconfig.AbciClientTypeLocal:
+		return proxy.NewLocalClientCreator, nil
+	}
+	return nil, fmt.Errorf(`unknown ABCI client type "%s"`, abciClientType)
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {

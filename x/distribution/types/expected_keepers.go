@@ -30,6 +30,19 @@ type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 }
 
+// DistributionHooks allows other keepers to register to be called for certain events.
+type DistributionHooks interface {
+	// AllowWithdrawAddr tells whether to honor the delegation withdraw
+	// address associated with the address (if any). The distribution
+	// keeper will call this before each reward withdrawal.
+	// If multiple distribution hooks are set, then any of them may
+	// disallow the withdraw address.
+	AllowWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress) bool
+
+	// AfterDelegationReward is called after the reward has been transferred the address.
+	AfterDelegationReward(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress, reward sdk.Coins)
+}
+
 // StakingKeeper expected staking keeper (noalias)
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator

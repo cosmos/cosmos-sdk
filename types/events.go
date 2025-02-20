@@ -24,10 +24,47 @@ import (
 // can be emitted from.
 type EventManager struct {
 	events Events
+	// history holds the events from all transactions delivered in a block
+	// [AGORIC] Used to communicate the history through the context.
+	history []abci.Event
+}
+
+// NewEventManagerWithHistory returns a new event manager with empty events,
+// but seeded with the provided history of earlier events in the block.
+// [AGORIC] This should be used to create the EventManager for use in EndBlockers.
+func NewEventManagerWithHistory(history []abci.Event) *EventManager {
+	return &EventManager{
+		events:  EmptyEvents(),
+		history: history,
+	}
 }
 
 func NewEventManager() *EventManager {
-	return &EventManager{EmptyEvents()}
+	return NewEventManagerWithHistory([]abci.Event{})
+}
+
+// GetABCIEventHistory returns a deep copy of the ABCI events history.
+// [AGORIC] This should only be called in EndBlock processing.
+func (em *EventManager) GetABCIEventHistory() []abci.Event {
+	history := make([]abci.Event, len(em.history))
+	for i, event := range em.history {
+		history[i].Type = event.Type
+		attrs := make([]abci.EventAttribute, len(event.Attributes))
+		history[i].Attributes = attrs
+		for j, attr := range event.Attributes {
+			attrKey := make([]byte, len(attr.Key))
+			copy(attrKey, attr.Key)
+			attrValue := make([]byte, len(attr.Value))
+			copy(attrValue, attr.Value)
+			attrs[j] = abci.EventAttribute{
+				Index: attr.Index,
+				Key:   attrKey,
+				Value: attrValue,
+			}
+		}
+	}
+	copy(history, em.history)
+	return history
 }
 
 func (em *EventManager) Events() Events { return em.events }

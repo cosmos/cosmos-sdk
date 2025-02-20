@@ -23,6 +23,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
+// [AGORIC] Context keys for including TX hash and msg index.
+const (
+	TxHashContextKey   = sdk.ContextKey("tx-hash")
+	TxMsgIdxContextKey = sdk.ContextKey("tx-msg-idx")
+)
+
 type (
 	// Enum mode for app.runTx
 	runTxMode uint8
@@ -422,8 +428,9 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+		ms:           ms,
+		ctx:          sdk.NewContext(ms, header, false, app.logger),
+		eventHistory: []abci.Event{}, // [AGORIC]: start with an empty history.
 	}
 
 	switch mode {
@@ -603,6 +610,13 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+	// [AGORIC] Add Tx hash to the context if absent.
+	txHash, ok := ctx.Context().Value(TxHashContextKey).(string)
+	if !ok {
+		txHash = fmt.Sprintf("%X", tmhash.Sum(txBytes))
+		ctx = ctx.WithValue(TxHashContextKey, txHash)
+	}
+
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
@@ -610,7 +624,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 		msCache = msCache.SetTracingContext(
 			sdk.TraceContext(
 				map[string]interface{}{
-					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
+					"txHash": txHash,
 				},
 			),
 		).(sdk.CacheMultiStore)
@@ -808,8 +822,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
 
+		// [AGORIC] Propagate the message index in the context.
+		msgCtx := ctx.WithValue(TxMsgIdxContextKey, i)
+
 		// ADR 031 request type routing
-		msgResult, err := handler(ctx, msg)
+		msgResult, err := handler(msgCtx, msg)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
 		}

@@ -162,6 +162,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		))
 	}
 
+	app.checkHalt(req.Header.Height, req.Header.Time)
+
 	if err := app.validateHeight(req); err != nil {
 		panic(err)
 	}
@@ -220,13 +222,19 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		// [AGORIC] Propagate the event history.
+		enhancedEm := sdk.NewEventManagerWithHistory(app.deliverState.eventHistory)
+		enhancedCtx := app.deliverState.ctx.WithEventManager(enhancedEm)
+
+		res = app.endBlocker(enhancedCtx, req)
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
 	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
 		res.ConsensusParamUpdates = cp
 	}
+
+	app.deliverState.eventHistory = []abci.Event{}
 
 	// call the streaming service hooks with the EndBlock messages
 	for _, streamingListener := range app.abciListeners {
@@ -392,6 +400,17 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+	// [AGORIC] Remember event history for successful deliveries.
+	// deliverTxWithoutEventHistory is the upstream cosmos-sdk DeliverTx.
+	res = app.deliverTxWithoutEventHistory(req)
+	// When successful, remember event history.
+	if res.Code == sdkerrors.SuccessABCICode {
+		app.deliverState.eventHistory = append(app.deliverState.eventHistory, res.Events...)
+	}
+	return res
+}
+
+func (app *BaseApp) deliverTxWithoutEventHistory(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -425,6 +444,47 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 	}
 }
 
+// checkHalt forces a state machine halt and attempts to kill the current
+// process if block height or timestamp exceeds halt-height or halt-time
+// respectively.
+func (app *BaseApp) checkHalt(blockHeight int64, blockTime time.Time) {
+	var halt bool
+	if app.haltHeight > 0 && uint64(blockHeight) > app.haltHeight {
+		// height to halt has passed
+		halt = true
+	} else if app.haltTime > 0 && blockTime.Unix() > int64(app.haltTime) {
+		// time to halt has passed
+		halt = true
+	}
+
+	if !halt {
+		return
+	}
+
+	app.logger.Info(
+		"halt per configuration",
+		"haltHeight", app.haltHeight,
+		"haltTime", app.haltTime,
+		"blockHeight", blockHeight,
+		"blockTime", blockTime,
+	)
+
+	// [AGORIC] Make a best-effort attempt to kill our process.
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		_ = p.Signal(syscall.SIGINT)
+		_ = p.Signal(syscall.SIGTERM)
+		// Errors in these signal calls are not meaningful to us.  We tried our
+		// best, but we don't care (and can't tell) if or how the signal handler
+		// responds.
+	}
+
+	// Prevent the state machine from advancing to the next block, no matter how
+	// the signals were handled.
+	panic(errors.New("halt application"))
+}
+
 // Commit implements the ABCI interface. It will commit all state that exists in
 // the deliver state's multi-store and includes the resulting commit ID in the
 // returned abci.ResponseCommit. Commit will set the check state based on the
@@ -433,6 +493,22 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() abci.ResponseCommit {
+	// Upstream cosmos-sdk unconditionally calls SnapshotIfApplicable, like:
+	//    go app.snapshotManager.SnapshotIfApplicable(header.Height)
+	// We separate that into determination in CommitWithoutSnapshot
+	// and initiation (if applicable) here.
+	res, snapshotHeight := app.CommitWithoutSnapshot()
+	if snapshotHeight > 0 {
+		go app.snapshotManager.Snapshot(snapshotHeight)
+	}
+
+	return res
+}
+
+// CommitWithoutSnapshot is like Commit but instead of starting the snapshot goroutine
+// it returns a positive height to indicate that a snapshot is warranted.
+// It can be used by apps to synchronously manage snapshot logic, especially initiation.
+func (app *BaseApp) CommitWithoutSnapshot() (_res abci.ResponseCommit, snapshotHeight int64) {
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
@@ -470,49 +546,21 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// empty/reset the deliver state
 	app.deliverState = nil
 
-	var halt bool
-
-	switch {
-	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
-		halt = true
-
-	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
-		halt = true
+	if app.snapshotManager.ShouldTakeSnapshot(header.Height) {
+		snapshotHeight = header.Height
 	}
 
-	if halt {
-		// Halt the binary and allow Tendermint to receive the ResponseCommit
-		// response with the commit ID hash. This will allow the node to successfully
-		// restart and process blocks assuming the halt configuration has been
-		// reset or moved to a more distant value.
-		app.halt()
-	}
-
-	go app.snapshotManager.SnapshotIfApplicable(header.Height)
-
-	return res
+	return res, snapshotHeight
 }
 
-// halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
-// back on os.Exit if both fail.
-func (app *BaseApp) halt() {
-	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
-
-	p, err := os.FindProcess(os.Getpid())
-	if err == nil {
-		// attempt cascading signals in case SIGINT fails (os dependent)
-		sigIntErr := p.Signal(syscall.SIGINT)
-		sigTermErr := p.Signal(syscall.SIGTERM)
-
-		if sigIntErr == nil || sigTermErr == nil {
-			return
-		}
+// Snapshot takes a snapshot of the current state and prunes any old snapshottypes.
+// It should be started as a goroutine
+func (app *BaseApp) Snapshot(height int64) {
+	if app.snapshotManager == nil {
+		app.logger.Info("snapshot manager not configured")
+		return
 	}
-
-	// Resort to exiting immediately if the process could not be found or killed
-	// via SIGINT/SIGTERM signals.
-	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
-	os.Exit(0)
+	app.snapshotManager.Snapshot(height)
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
@@ -527,8 +575,19 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	}()
 
 	// when a client did not provide a query height, manually inject the latest
+	lastHeight := app.LastBlockHeight()
 	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
+		req.Height = lastHeight
+	}
+	if req.Height > lastHeight {
+		return sdkerrors.QueryResult(
+			sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidHeight,
+				"given height %d is greater than latest height %d",
+				req.Height, lastHeight,
+			),
+			app.trace,
+		)
 	}
 
 	telemetry.IncrCounter(1, "query", "count")

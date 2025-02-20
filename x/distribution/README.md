@@ -409,6 +409,24 @@ The message handling can fail if:
 
 Available hooks that can be called by and from this module.
 
+### Setting Hooks
+
+Other modules may call the `AddHooks()` method of the distribution keeper
+to register an object implementing the `DistributionHooks` interface.
+All registered hooks will be called for the following events.
+
+### Before Reward Withdrawal
+
+Before a reward is transferred, the distribution keeper will call the
+`AllowWithdrawAddr()` method of each hooks object. If any hooks object
+returns `false`, the alternative withdrawal address is not honored and
+the reward will be sent to the withdrawing account.
+
+### After Reward Withdrawal
+
+After a delegation reward has been transferred, the distribution keeper will call the
+`AfterDelegationReward()` method of each hooks object.
+
 ### Create or modify delegation distribution
 
 * triggered-by: `staking.MsgDelegate`, `staking.MsgBeginRedelegate`, `staking.MsgUndelegate`

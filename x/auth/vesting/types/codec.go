@@ -19,13 +19,18 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.VestingAccount)(nil), nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
+	cdc.RegisterConcrete(&ClawbackVestingAccount{}, "cosmos-sdk/ClawbackVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
 	cdc.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount", nil)
 	cdc.RegisterConcrete(&PermanentLockedAccount{}, "cosmos-sdk/PermanentLockedAccount", nil)
-	legacy.RegisterAminoMsg(cdc, &MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount")
-	legacy.RegisterAminoMsg(cdc, &MsgCreatePermanentLockedAccount{}, "cosmos-sdk/MsgCreatePermLockedAccount")
+	legacy.RegisterAminoMsg(cdc, &MsgClawback{}, "cosmos-sdk/MsgClawback")
+	// msgName needs to be 39 chars or less, but only needs to be unique - abbreviate next two
+	legacy.RegisterAminoMsg(cdc, &MsgCreateClawbackVestingAccount{}, "cosmos-sdk/MsgCreateClawbkVestAccount")
 	legacy.RegisterAminoMsg(cdc, &MsgCreatePeriodicVestingAccount{}, "cosmos-sdk/MsgCreatePeriodVestAccount")
+	legacy.RegisterAminoMsg(cdc, &MsgCreatePermanentLockedAccount{}, "cosmos-sdk/MsgCreatePermLockedAccount")
+	legacy.RegisterAminoMsg(cdc, &MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount")
+	legacy.RegisterAminoMsg(cdc, &MsgReturnGrants{}, "cosmos-sdk/MsgReturnGrants")
 }
 
 // RegisterInterface associates protoName with AccountI and VestingAccount
@@ -38,6 +43,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&DelayedVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
+		&ClawbackVestingAccount{},
 	)
 
 	registry.RegisterImplementations(
@@ -47,6 +53,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&ContinuousVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
+		&ClawbackVestingAccount{},
 	)
 
 	registry.RegisterImplementations(
@@ -56,12 +63,17 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&ContinuousVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
+		&ClawbackVestingAccount{},
 	)
 
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
-		&MsgCreateVestingAccount{},
+		&MsgClawback{},
+		&MsgCreateClawbackVestingAccount{},
+		&MsgCreatePeriodicVestingAccount{},
 		&MsgCreatePermanentLockedAccount{},
+		&MsgCreateVestingAccount{},
+		&MsgReturnGrants{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

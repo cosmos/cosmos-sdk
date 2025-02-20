@@ -52,6 +52,9 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 			if err := h.k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins); err != nil {
 				return err
 			}
+			for _, distHook := range h.k.hooks {
+				distHook.AfterDelegationReward(ctx, accAddr, withdrawAddr, coins)
+			}
 		}
 	}
 

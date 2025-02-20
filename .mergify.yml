@@ -1,50 +1,31 @@
 queue_rules:
   - name: default
-    conditions:
-      - "#approved-reviews-by>1"
+    queue_conditions:
+      - "#approved-reviews-by>0"
+      - base~=^Agoric
+      - label=automerge
+    merge_conditions:
+      - base~=^Agoric
+    merge_method: merge
 
 pull_request_rules:
-  - name: automerge to main with label automerge and branch protection passing
+  - name: backport patches to Agoric branch
     conditions:
-      - "#approved-reviews-by>1"
-      - base=main
-      - label=A:automerge
+      - base=Agoric-ag0
+      - label=backport/Agoric
+    actions:
+      backport:
+        branches:
+          - Agoric
+  - name: backport patches to Agoric-ag0 branch
+    conditions:
+      - base=Agoric
+      - label=backport/Agoric-ag0
+    actions:
+      backport:
+        branches:
+          - Agoric-ag0
+  - name: automerge to Agoric* with label automerge and branch protection passing
+    conditions: []
     actions:
       queue:
-        name: default
-        method: squash
-        commit_message_template: |
-          {{ title }} (#{{ number }})
-          {{ body }}
-  - name: backport patches to v0.46.x branch
-    conditions:
-      - base=main
-      - label=backport/0.46.x
-    actions:
-      backport:
-        branches:
-          - release/v0.46.x
-  - name: backport patches to v0.45.x branch
-    conditions:
-      - base=main
-      - label=backport/0.45.x
-    actions:
-      backport:
-        branches:
-          - release/v0.45.x
-  - name: backport patches to v0.44.x branch
-    conditions:
-      - base=main
-      - label=backport/0.44.x
-    actions:
-      backport:
-        branches:
-          - release/v0.44.x
-  - name: backport patches to v0.42.x branch
-    conditions:
-      - base=main
-      - label=backport/0.42.x (Stargate)
-    actions:
-      backport:
-        branches:
-          - release/v0.42.x

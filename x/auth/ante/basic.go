@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"time"
+
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
@@ -187,6 +189,7 @@ type (
 		sdk.Tx
 
 		GetTimeoutHeight() uint64
+		GetTimeoutTimeStamp() time.Time
 	}
 )
 
@@ -210,6 +213,14 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
 		return ctx, errorsmod.Wrapf(
 			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", ctx.BlockHeight(), timeoutHeight,
+		)
+	}
+
+	headerInfo := ctx.HeaderInfo()
+	timeoutTimestamp := timeoutTx.GetTimeoutTimeStamp()
+	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 && timeoutTimestamp.Before(headerInfo.Time) {
+		return ctx, errorsmod.Wrapf(
+			sdkerrors.ErrTxTimeout, "block time: %s, timeout timestamp: %s", headerInfo.Time.String(), timeoutTimestamp.String(),
 		)
 	}
 

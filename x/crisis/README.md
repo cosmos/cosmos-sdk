@@ -4,6 +4,8 @@ sidebar_position: 1
 
 # `x/crisis`
 
+NOTE: `x/crisis` is deprecated as of Cosmos SDK v0.53 and will be removed in the next release.
+
 ## Overview
 
 The crisis module halts the blockchain under the circumstance that a blockchain

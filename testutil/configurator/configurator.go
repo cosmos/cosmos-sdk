@@ -50,7 +50,6 @@ func defaultConfig() *Config {
 			"auth",
 			"bank",
 			"gov",
-			"crisis",
 			"genutil",
 			"authz",
 			"feegrant",
@@ -62,7 +61,6 @@ func defaultConfig() *Config {
 			"circuit",
 		},
 		EndBlockersOrder: []string{
-			"crisis",
 			"gov",
 			"staking",
 			"auth",
@@ -90,7 +88,6 @@ func defaultConfig() *Config {
 			"slashing",
 			"gov",
 			"mint",
-			"crisis",
 			"genutil",
 			"evidence",
 			"authz",

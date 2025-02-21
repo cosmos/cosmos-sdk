@@ -43,6 +43,8 @@ var (
 
 // Module init related flags
 const (
+	// Deprecated: this flag is no longer used and will be removed along with x/crisis in the next major
+	// Cosmos SDK release.
 	FlagSkipGenesisInvariants = "x-crisis-skip-assert-invariants"
 )
 
@@ -85,6 +87,8 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 }
 
 // AppModule implements an application module for the crisis module.
+//
+// Deprecated: the crisis module is deprecated and will be removed in the next Cosmos SDK major release.
 type AppModule struct {
 	AppModuleBasic
 
@@ -103,6 +107,8 @@ type AppModule struct {
 // we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
 // - which doesn't impact the chain security unless 66+% of validators have a wrongly
 // modified genesis file.
+//
+// Deprecated: the crisis module is deprecated and will be removed in the next Cosmos SDK major release.
 func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported.Subspace) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
@@ -120,6 +126,8 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 // AddModuleInitFlags implements servertypes.ModuleInitFlags interface.
+//
+// Deprecated: this flag is deprecated and will be removed in the next major Cosmos SDK release.
 func AddModuleInitFlags(startCmd *cobra.Command) {
 	startCmd.Flags().Bool(FlagSkipGenesisInvariants, false, "Skip x/crisis invariants check on startup")
 }

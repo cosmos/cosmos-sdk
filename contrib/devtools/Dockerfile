@@ -2,8 +2,8 @@
 # docker build --pull --rm -f "contrib/devtools/Dockerfile" -t cosmossdk-proto:latest "contrib/devtools"
 # docker run --rm -v $(pwd):/workspace --workdir /workspace cosmossdk-proto sh ./scripts/protocgen.sh
 
-FROM bufbuild/buf:1.36.0 as BUILDER
-FROM golang:1.23-alpine
+FROM bufbuild/buf:1.50.0 AS builder
+FROM golang:1.24-alpine
 
 RUN apk add --no-cache \
   nodejs \
@@ -37,4 +37,4 @@ RUN git clone https://github.com/cosmos/gogoproto.git; \
   go mod download; \
   make install
 
-COPY --from=BUILDER /usr/local/bin /usr/local/bin
+COPY --from=builder /usr/local/bin /usr/local/bin

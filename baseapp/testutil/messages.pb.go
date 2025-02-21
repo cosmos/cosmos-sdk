@@ -388,6 +388,7 @@ func _Counter_IncrementCounter_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+var Counter_serviceDesc = _Counter_serviceDesc
 var _Counter_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Counter",
 	HandlerType: (*CounterServer)(nil),
@@ -460,6 +461,7 @@ func _Counter2_IncrementCounter_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+var Counter2_serviceDesc = _Counter2_serviceDesc
 var _Counter2_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Counter2",
 	HandlerType: (*Counter2Server)(nil),
@@ -532,6 +534,7 @@ func _KeyValue_Set_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+var KeyValue_serviceDesc = _KeyValue_serviceDesc
 var _KeyValue_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "KeyValue",
 	HandlerType: (*KeyValueServer)(nil),

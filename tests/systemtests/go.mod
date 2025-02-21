@@ -4,6 +4,8 @@ go 1.23
 
 toolchain go1.24.0
 
+replace cosmossdk.io/systemtests => ../../systemtests
+
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/cosmos-sdk v0.50.11 // indirect
@@ -173,5 +175,3 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-replace cosmossdk.io/systemtests => ../../systemtests

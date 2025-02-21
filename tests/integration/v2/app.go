@@ -33,7 +33,6 @@ import (
 	"cosmossdk.io/store/v2/root"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -276,8 +275,7 @@ func NewApp(
 	ctx := context.WithValue(
 		context.Background(),
 		corecontext.CometParamsInitInfoKey,
-		&consensustypes.MsgUpdateParams{
-			Authority: "consensus",
+		&cmtproto.ConsensusParams{
 			Block:     DefaultConsensusParams.Block,
 			Evidence:  DefaultConsensusParams.Evidence,
 			Validator: DefaultConsensusParams.Validator,

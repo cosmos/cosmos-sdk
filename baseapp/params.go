@@ -6,7 +6,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 )
 
-const InitialAppVersion uint64 = 0
+var InitialAppVersion uint64 = 0
 
 // ParamStore defines the interface the parameter store used by the BaseApp must
 // fulfill.

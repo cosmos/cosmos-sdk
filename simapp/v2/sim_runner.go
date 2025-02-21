@@ -32,7 +32,6 @@ import (
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/streaming"
 	storev2 "cosmossdk.io/store/v2"
-	consensustypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -372,7 +371,7 @@ func doChainInitWithGenesis[T Tx](
 		IsGenesis: true,
 	}
 
-	initialConsensusParams := &consensustypes.MsgUpdateParams{
+	initialConsensusParams := &cmtproto.ConsensusParams{
 		Block: &cmtproto.BlockParams{
 			MaxBytes: 200000,
 			MaxGas:   100_000_000,

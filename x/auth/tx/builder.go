@@ -91,7 +91,11 @@ func (w *wrapper) SetTimeoutTimestamp(timestamp time.Time) {
 }
 
 func (w *wrapper) GetTimeoutTimeStamp() time.Time {
-	return *w.tx.Body.TimeoutTimestamp // TODO(technicallyty): this is probably bad.
+	t := w.tx.Body.TimeoutTimestamp
+	if t == nil {
+		return time.Time{}
+	}
+	return *t
 }
 
 func (w *wrapper) ValidateBasic() error {

@@ -43,7 +43,7 @@ In general, if randomness is used, it should be accessed in a deterministic way 
 
 ### Go map internals
 
-Under the hood, Go maps are implemented as a hash map of buckets where each bucket contains up to 8 key-value pairs. Since some key-value pairs within the bucket can be empty, Go uses randomness to select the starting element within the bucket. See [this article](https://medium.com/i0exception/map-iteration-in-go-275abb76f721) for the breakdown.
+Under the hood, Go maps are implemented as a hash map of buckets where each bucket contains up to 8 key-value pairs. Since some key-value pairs within the bucket can be empty, Go uses randomness to select the starting element within the bucket. 
 
 **When building on the Cosmos SDK, you should never iterate over a Go map**. Doing so results in non-determinism. Instead, if `map` usage is inevitable, it is necessary to convert it to a `slice` and sort it. See an example [here](https://github.com/osmosis-labs/osmosis/blob/b0aee0006ce55d0851773084bd7880db7e32ad70/osmoutils/partialord/internal/dag/dag.go#L290-L302).
 

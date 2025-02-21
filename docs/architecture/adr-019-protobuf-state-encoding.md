@@ -328,8 +328,6 @@ In order for this functionality to work:
 
 ### Why Wasn't X Chosen Instead
 
-For a more complete comparison to alternative protocols, see [here](https://codeburst.io/json-vs-protocol-buffers-vs-flatbuffers-a4247f8bda6f).
-
 ### Cap'n Proto
 
 While [Cap’n Proto](https://capnproto.org/) does seem like an advantageous alternative to Protobuf

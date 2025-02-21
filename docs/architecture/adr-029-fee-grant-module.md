@@ -148,6 +148,5 @@ created to use it
 
 ## References
 
-* Blog article describing initial work: https://medium.com/regen-network/hacking-the-cosmos-cosmwasm-and-key-management-a08b9f561d1b
 * Initial public specification: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56
 * Original subkeys proposal from B-harvest which influenced this design: https://github.com/cosmos/cosmos-sdk/issues/4480

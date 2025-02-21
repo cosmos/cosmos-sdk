@@ -351,6 +351,7 @@ func _ReflectionService_ListImplementations_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+var ReflectionService_serviceDesc = _ReflectionService_serviceDesc
 var _ReflectionService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.base.reflection.v1beta1.ReflectionService",
 	HandlerType: (*ReflectionServiceServer)(nil),

@@ -10,7 +10,6 @@ import (
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -342,7 +341,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 			)
 		}
 	}
-	
+
 	// retrieve pubkey
 	pubKey := acc.GetPubKey()
 	if !simulate && pubKey == nil {

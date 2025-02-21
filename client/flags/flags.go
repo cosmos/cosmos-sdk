@@ -73,7 +73,7 @@ const (
 	FlagPageKey          = "page-key"
 	FlagOffset           = "offset"
 	FlagCountTotal       = "count-total"
-	FlagTimeoutHeight    = "timeout-height"
+	FlagTimeoutTimestamp = "timeout-timestamp"
 	FlagUnordered        = "unordered"
 	FlagKeyAlgorithm     = "algo"
 	FlagKeyType          = "key-type"
@@ -136,8 +136,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f.Bool(FlagOffline, false, "Offline mode (does not allow any online functionality)")
 	f.BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	f.String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
-	f.Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
-	f.Bool(FlagUnordered, false, "Enable unordered transaction delivery; must be used in conjunction with --timeout-height")
+	f.Int64(FlagTimeoutTimestamp, 0, "Set a block timeout timestamp to prevent the tx from being committed past a certain time")
+	f.Bool(FlagUnordered, false, "Enable unordered transaction delivery; must be used in conjunction with --timeout-timestamp")
 	f.String(FlagFeePayer, "", "Fee payer pays fees for the transaction instead of deducting from the signer")
 	f.String(FlagFeeGranter, "", "Fee granter grants fees for the transaction")
 	f.String(FlagTip, "", "Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator")

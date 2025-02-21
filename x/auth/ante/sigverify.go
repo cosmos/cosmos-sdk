@@ -352,13 +352,6 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 		return err
 	}
 
-	if sig.Sequence != acc.GetSequence() {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrWrongSequence,
-			"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-		)
-	}
-
 	// we're in simulation mode, or in ReCheckTx, or context is not
 	// on sig verify tx, then we do not need to verify the signatures
 	// in the tx.

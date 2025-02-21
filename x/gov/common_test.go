@@ -129,7 +129,11 @@ func createTestSuite(t *testing.T) suite {
 			depinject.Supply(sdklog.NewNopLogger()),
 		),
 		simtestutil.DefaultStartUpConfig(),
-		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.DistributionKeeper, &res.StakingKeeper,
+		&res.AccountKeeper,
+		&res.BankKeeper,
+		&res.GovKeeper,
+		&res.DistributionKeeper,
+		&res.StakingKeeper,
 	)
 	require.NoError(t, err)
 

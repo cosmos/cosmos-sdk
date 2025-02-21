@@ -323,6 +323,25 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 // - the pub key is on the curve.
 // - verify sig
 func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
+	unorderedTx, ok := tx.(sdk.TxWithUnordered)
+	isUnordered := ok && unorderedTx.GetUnordered()
+	// only check sequence if the tx is not unordered
+	if !isUnordered {
+		if ctx.ExecMode() == sdk.ExecModeCheck {
+			if sig.Sequence < acc.GetSequence() {
+				return errorsmod.Wrapf(
+					sdkerrors.ErrWrongSequence,
+					"account sequence mismatch: expected higher than or equal to %d, got %d", acc.GetSequence(), sig.Sequence,
+				)
+			}
+		} else if sig.Sequence != acc.GetSequence() {
+			return errorsmod.Wrapf(
+				sdkerrors.ErrWrongSequence,
+				"account sequence mismatch: expected %d, got %d", acc.GetSequence(), sig.Sequence,
+			)
+		}
+	}
+
 	// retrieve pubkey
 	pubKey := acc.GetPubKey()
 	if !simulate && pubKey == nil {

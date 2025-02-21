@@ -3,6 +3,7 @@ package tx
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -83,6 +84,18 @@ func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
 	}
 
 	return w.msgsV2, nil
+}
+
+func (w *wrapper) SetTimeoutTimestamp(timestamp time.Time) {
+	w.tx.Body.TimeoutTimestamp = &timestamp
+}
+
+func (w *wrapper) GetTimeoutTimeStamp() time.Time {
+	t := w.tx.Body.TimeoutTimestamp
+	if t == nil {
+		return time.Time{}
+	}
+	return *t
 }
 
 func (w *wrapper) ValidateBasic() error {

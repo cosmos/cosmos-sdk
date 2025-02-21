@@ -2,6 +2,7 @@ package ante_test
 
 import (
 	"testing"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
@@ -211,6 +212,62 @@ func (suite *AnteTestSuite) CreateTestTx(
 	accNums, accSeqs []uint64,
 	chainID string, signMode signing.SignMode,
 ) (xauthsigning.Tx, error) {
+	// First round: we gather all the signer infos. We use the "set empty
+	// signature" hack to do that.
+	var sigsV2 []signing.SignatureV2
+	for i, priv := range privs {
+		sigV2 := signing.SignatureV2{
+			PubKey: priv.PubKey(),
+			Data: &signing.SingleSignatureData{
+				SignMode:  signMode,
+				Signature: nil,
+			},
+			Sequence: accSeqs[i],
+		}
+
+		sigsV2 = append(sigsV2, sigV2)
+	}
+	err := suite.txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Second round: all signer infos are set, so each signer can sign.
+	sigsV2 = []signing.SignatureV2{}
+	for i, priv := range privs {
+		signerData := xauthsigning.SignerData{
+			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
+			PubKey:        priv.PubKey(),
+		}
+		sigV2, err := tx.SignWithPrivKey(
+			ctx, signMode, signerData,
+			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
+		if err != nil {
+			return nil, err
+		}
+
+		sigsV2 = append(sigsV2, sigV2)
+	}
+	err = suite.txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
+
+	return suite.txBuilder.GetTx(), nil
+}
+
+func (suite *AnteTestSuite) CreateTestUnorderedTx(
+	ctx sdk.Context, privs []cryptotypes.PrivKey,
+	accNums, accSeqs []uint64,
+	chainID string, signMode signing.SignMode,
+	unordered bool, unorderedTimeout time.Time,
+) (xauthsigning.Tx, error) {
+	suite.txBuilder.SetUnordered(unordered)
+	suite.txBuilder.SetTimeoutTimestamp(unorderedTimeout)
+
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2

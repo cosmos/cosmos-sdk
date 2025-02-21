@@ -79,6 +79,14 @@ type (
 		GetTimeoutHeight() uint64
 	}
 
+	// TxWithUnordered extends the Tx interface by allowing a transaction to set
+	// the unordered field, which implicitly relies on TxWithTimeoutHeight.
+	TxWithUnordered interface {
+		TxWithTimeoutHeight
+
+		GetUnordered() bool
+	}
+
 	// HasValidateBasic defines a type that has a ValidateBasic method.
 	// ValidateBasic is deprecated and now facultative.
 	// Prefer validating messages directly in the msg server.

@@ -70,6 +70,8 @@ func TestUnknownFields(t *testing.T) {
 			shouldAminoErr: fmt.Sprintf("%s: %s", aminoNonCriticalFieldsError, sdkerrors.ErrInvalidRequest.Error()),
 		},
 		{
+			// If new fields are added to TxBody the number for some_new_field in the proto definition must be set to
+			// one that it's not used in TxBody.
 			name: "critical fields in TxBody should error on decode",
 			body: &testdata.TestUpdatedTxBody{
 				Memo:         "foo",

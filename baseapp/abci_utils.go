@@ -285,7 +285,17 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			selectedTxsNums int
 			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
-		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx sdk.Tx) bool {
+		// decode transactions
+		decodedTxs := make([]sdk.Tx, len(req.Txs))
+		for i, txBz := range req.Txs {
+			tx, err := h.txVerifier.TxDecode(txBz)
+			if err != nil {
+				return nil, err
+			}
+
+			decodedTxs[i] = tx
+		}
+		h.mempool.SelectBy(ctx, decodedTxs, func(memTx sdk.Tx) bool {
 			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
 			isUnordered := ok && unorderedTx.GetUnordered()
 			txSignersSeqs := make(map[string]uint64)

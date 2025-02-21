@@ -216,11 +216,11 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		)
 	}
 
-	headerInfo := ctx.HeaderInfo()
 	timeoutTimestamp := timeoutTx.GetTimeoutTimeStamp()
-	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 && timeoutTimestamp.Before(headerInfo.Time) {
+	blockTime := ctx.BlockHeader().Time
+	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 && timeoutTimestamp.Before(blockTime) {
 		return ctx, errorsmod.Wrapf(
-			sdkerrors.ErrTxTimeout, "block time: %s, timeout timestamp: %s", headerInfo.Time.String(), timeoutTimestamp.String(),
+			sdkerrors.ErrTxTimeout, "block time: %s, timeout timestamp: %s", blockTime, timeoutTimestamp.String(),
 		)
 	}
 

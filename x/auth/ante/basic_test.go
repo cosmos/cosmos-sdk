@@ -231,7 +231,7 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
-			ctx := suite.ctx.WithBlockHeight(tc.height).WithBlockTime(tc.timeoutTimestamp)
+			ctx := suite.ctx.WithBlockHeight(tc.height).WithBlockTime(tc.timestamp)
 			_, err = antehandler(ctx, tx, true)
 			require.ErrorIs(t, err, tc.expectedErr)
 		})

@@ -5,8 +5,8 @@ package v1alpha1
 
 import (
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	proto "github.com/cosmos/gogoproto/proto"
-	any "github.com/cosmos/gogoproto/types/any"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -101,7 +101,7 @@ type ModuleConfig struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// config is the config object for the module. Module config messages should
 	// define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module extension.
-	Config *any.Any `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
+	Config *types.Any `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 	// golang_bindings specifies explicit interface to implementation type bindings which
 	// depinject uses to resolve interface inputs to provider functions.  The scope of this
 	// field's configuration is module specific.
@@ -148,7 +148,7 @@ func (m *ModuleConfig) GetName() string {
 	return ""
 }
 
-func (m *ModuleConfig) GetConfig() *any.Any {
+func (m *ModuleConfig) GetConfig() *types.Any {
 	if m != nil {
 		return m.Config
 	}
@@ -681,7 +681,7 @@ func (m *ModuleConfig) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Config == nil {
-				m.Config = &any.Any{}
+				m.Config = &types.Any{}
 			}
 			if err := m.Config.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

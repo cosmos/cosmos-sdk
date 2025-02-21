@@ -145,6 +145,15 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 		snm.senders[sender] = senderTxs
 	}
 
+	// if it's an unordered tx, we use the gas instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		gasLimit, err := unordered.GetGasLimit()
+		nonce = gasLimit
+		if err != nil {
+			return err
+		}
+	}
+
 	senderTxs.Set(nonce, tx)
 
 	key := txKey{nonce: nonce, address: sender}
@@ -226,6 +235,15 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
+
+	// if it's an unordered tx, we use the gas instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		gasLimit, err := unordered.GetGasLimit()
+		nonce = gasLimit
+		if err != nil {
+			return err
+		}
+	}
 
 	senderTxs, found := snm.senders[sender]
 	if !found {

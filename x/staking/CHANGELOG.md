@@ -54,7 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18506](https://github.com/cosmos/cosmos-sdk/pull/18506) Detect the length of the ed25519 pubkey in CreateValidator to prevent panic.
 
 ### Bug Fixes
-
+* [#22527](https://github.com/cosmos/cosmos-sdk/pull/22527) Allow delegating `StakeAuthorization` to all validators by leaving `AllowList` and `DenyList` empty.
 * [#20688](https://github.com/cosmos/cosmos-sdk/pull/20688) Avoid overslashing unbonding delegations after a redelegation.
 * [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
 * [#23461](https://github.com/cosmos/cosmos-sdk/pull/23461) Fix `UpdateDescription` to correctly update the `Metadata` field.

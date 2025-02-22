@@ -3,6 +3,8 @@ package tx
 import (
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -53,7 +55,7 @@ func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
 	return signing.SignatureV2{
 		PubKey: pk,
 		Data: &signing.SingleSignatureData{
-			SignMode:  a.Mode,
+			SignMode:  apisigning.SignMode(a.Mode),
 			Signature: a.Sig,
 		},
 		Sequence: a.SignDoc.Sequence,

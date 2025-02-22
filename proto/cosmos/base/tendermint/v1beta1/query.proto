@@ -106,7 +106,7 @@ message GetBlockByHeightResponse {
   .cometbft.types.v1.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .cometbft.types.v1.Block block = 2;
+  .cometbft.types.v1.Block block = 2 [deprecated = true];
 
   Block sdk_block = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 }

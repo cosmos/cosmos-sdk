@@ -25,6 +25,7 @@ type AppModuleWithAllExtensionsABCI interface {
 	module.HasServices
 	appmodulev2.HasABCIGenesis
 	appmodulev2.HasConsensusVersion
+	appmodulev2.HasBeginBlocker
 	module.HasABCIEndBlock
 }
 

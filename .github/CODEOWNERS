@@ -11,61 +11,60 @@
 # Components
 
 /baseapp/ @cosmos/sdk-core-dev
-/client/ @julienrbrt @JulianToledano @cosmos/sdk-core-dev
-/client/v2/ @julienrbrt @JulianToledano @cosmos/sdk-core-dev
+/client/ @cosmos/sdk-core-dev
+/client/v2/ @cosmos/sdk-core-dev
 /collections/ @cosmos/sdk-core-dev
 /core/ @cosmos/sdk-core-dev
-/crypto/ @JulianToledano @raynaudoe @cosmos/sdk-core-dev
-/depinject/ @julienrbrt @cosmos/sdk-core-dev
+/crypto/ @cosmos/sdk-core-dev
+/depinject/ @cosmos/sdk-core-dev
 /indexer/ @cosmos/sdk-core-dev
-/log/ @julienrbrt @cosmos/sdk-core-dev
-/math/ @alpe @cosmos/sdk-core-dev
-/orm/ @lucaslopezf @cosmos/sdk-core-dev
-/runtime/ @julienrbrt @cosmos/sdk-core-dev
-/runtime/v2/ @julienrbrt @cosmos/sdk-core-dev
+/log/ @cosmos/sdk-core-dev
+/math/ @cosmos/sdk-core-dev
+/orm/ @cosmos/sdk-core-dev
+/runtime/ @cosmos/sdk-core-dev
+/runtime/v2/ @cosmos/sdk-core-dev
 /schema/ @cosmos/sdk-core-dev
 /server/ @cosmos/sdk-core-dev
-/server/v2/ @julienrbrt @cosmos/sdk-core-dev
+/server/v2/ @cosmos/sdk-core-dev
 /server/v2/stf/ @cosmos/sdk-core-dev
 /server/v2/appmanager/ @cosmos/sdk-core-dev
 /server/v2/cometbft/ @cosmos/sdk-core-dev
-/simsx @alpe @cosmos/sdk-core-dev
-/simapp/ @julienrbrt @cosmos/sdk-core-dev
-/simapp/v2/ @julienrbrt @cosmos/sdk-core-dev
+/simsx @cosmos/sdk-core-dev
+/simapp/ @cosmos/sdk-core-dev
+/simapp/v2/ @cosmos/sdk-core-dev
 /store/ @cosmos/sdk-core-dev
 /store/v2/ @cosmos/sdk-core-dev
 /types/mempool/ @cosmos/sdk-core-dev
-/tools/hubl @julienrbrt @JulianToledano @cosmos/sdk-core-dev
-/tools/cosmovisor @julienrbrt @cosmos/sdk-core-dev
-/tools/confix @julienrbrt @cosmos/sdk-core-dev
+/tools/cosmovisor @cosmos/sdk-core-dev
+/tools/confix @cosmos/sdk-core-dev
 /tests/integration/aminojson @cosmos/sdk-core-dev
 
 # x modules
 
 /x/accounts/ @cosmos/sdk-core-dev
 /x/auth/ @cosmos/sdk-core-dev
-/x/auth/tx/config @julienrbrt @cosmos/sdk-core-dev
-/x/authz/ @raynaudoe @cosmos/sdk-core-dev
-/x/bank/ @julienrbrt @cosmos/sdk-core-dev
-/x/bank/v2 @julienrbrt @cosmos/sdk-core-dev
-/x/circuit/ @raynaudoe @cosmos/sdk-core-dev
-/x/consensus/ @raynaudoe @cosmos/sdk-core-dev
-/x/distribution/ @alpe @JulianToledano @cosmos/sdk-core-dev
-/x/epochs/ @alpe @cosmos/sdk-core-dev
-/x/evidence/ @alpe @cosmos/sdk-core-dev
-/x/feegrant/ @alpe @cosmos/sdk-core-dev
-/x/genutil/ @julienrbrt @cosmos/sdk-core-dev
-/x/gov/ @julienrbrt @cosmos/sdk-core-dev
+/x/auth/tx/config @cosmos/sdk-core-dev
+/x/authz/ @cosmos/sdk-core-dev
+/x/bank/ @cosmos/sdk-core-dev
+/x/bank/v2 @cosmos/sdk-core-dev
+/x/circuit/ @cosmos/sdk-core-dev
+/x/consensus/ @cosmos/sdk-core-dev
+/x/distribution/ @cosmos/sdk-core-dev
+/x/epochs/ @cosmos/sdk-core-dev
+/x/evidence/ @cosmos/sdk-core-dev
+/x/feegrant/ @cosmos/sdk-core-dev
+/x/genutil/ @cosmos/sdk-core-dev
+/x/gov/ @cosmos/sdk-core-dev
 /x/group/ @cosmos/sdk-core-dev
-/x/mint/ @lucaslopezf @cosmos/sdk-core-dev
-/x/nft/ @alpe @lucaslopezf @cosmos/sdk-core-dev
-/x/protocolpool/ @alpe @cosmos/sdk-core-dev
+/x/mint/ @cosmos/sdk-core-dev
+/x/nft/ @cosmos/sdk-core-dev
+/x/protocolpool/ @cosmos/sdk-core-dev
 /x/simulation/ @cosmos/sdk-core-dev # deprecated so whole team
-/x/slashing/ @raynaudoe @lucaslopezf @cosmos/sdk-core-dev
-/x/staking/ @JulianToledano @ziscky @cosmos/sdk-core-dev
+/x/slashing/ @cosmos/sdk-core-dev
+/x/staking/ @cosmos/sdk-core-dev
 /x/tx/ @cosmos/sdk-core-dev
-/x/upgrade/ @lucaslopezf @cosmos/sdk-core-dev
-/x/validate @julienrbrt @cosmos/sdk-core-dev
+/x/upgrade/ @cosmos/sdk-core-dev
+/x/validate @cosmos/sdk-core-dev
 
 # go mods
 
@@ -74,16 +73,16 @@
 
 # ci & build
 
-.github/ @julienrbrt @tac0turtle
-scripts/ @julienrbrt @tac0turtle
-contrib/ @julienrbrt @tac0turtle
-*.mk @julienrbrt @tac0turtle
-Makefile @julienrbrt @tac0turtle
+.github/ @cosmos/sdk-core-dev
+scripts/ @cosmos/sdk-core-dev
+contrib/ @cosmos/sdk-core-dev
+*.mk @cosmos/sdk-core-dev
+Makefile @cosmos/sdk-core-dev
 
 # docs configuration
 
 /docs/ @cosmos/sdk-core-dev
-/docs/docusaurus.config.js @julienrbrt @tac0turtle
-/docs/sidebars.js @julienrbrt @tac0turtle
-/docs/pre.sh @julienrbrt @tac0turtle
-/docs/post.sh @julienrbrt @tac0turtle
+/docs/docusaurus.config.js @cosmos/sdk-core-dev
+/docs/sidebars.js @cosmos/sdk-core-dev
+/docs/pre.sh @cosmos/sdk-core-dev
+/docs/post.sh @cosmos/sdk-core-dev

@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -82,12 +84,10 @@ func TestCalculateGas(t *testing.T) {
 
 	for _, tc := range testCases {
 		txCfg, _ := newTestTxConfig()
-		defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
-		require.NoError(t, err)
 
 		txf := Factory{}.
 			WithChainID("test-chain").
-			WithTxConfig(txCfg).WithSignMode(defaultSignMode)
+			WithTxConfig(txCfg).WithSignMode(txCfg.SignModeHandler().DefaultMode())
 
 		t.Run(tc.name, func(t *testing.T) {
 			mockClientCtx := mockContext{
@@ -120,9 +120,6 @@ func mockTxFactory(txCfg client.TxConfig) Factory {
 
 func TestBuildSimTx(t *testing.T) {
 	txCfg, cdc := newTestTxConfig()
-	defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
-	require.NoError(t, err)
-
 	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
 
@@ -133,7 +130,7 @@ func TestBuildSimTx(t *testing.T) {
 	fromAddr, err := ac.BytesToString(sdk.AccAddress("from"))
 	require.NoError(t, err)
 
-	txf := mockTxFactory(txCfg).WithSignMode(defaultSignMode).WithKeybase(kb)
+	txf := mockTxFactory(txCfg).WithSignMode(txCfg.SignModeHandler().DefaultMode()).WithKeybase(kb)
 	msg := &countertypes.MsgIncreaseCounter{Signer: fromAddr, Count: 1}
 	bz, err := txf.BuildSimTx(msg)
 	require.NoError(t, err)
@@ -263,9 +260,9 @@ func TestSign(t *testing.T) {
 	txfNoKeybase := mockTxFactory(txConfig)
 	txfDirect := txfNoKeybase.
 		WithKeybase(kb).
-		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
+		WithSignMode(apisigning.SignMode_SIGN_MODE_DIRECT)
 	txfAmino := txfDirect.
-		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		WithSignMode(apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	addr1, err := k1.GetAddress()
 	requireT.NoError(err)
 	addr2, err := k2.GetAddress()
@@ -423,7 +420,7 @@ func TestPreprocessHook(t *testing.T) {
 
 	txfDirect := mockTxFactory(txConfig).
 		WithKeybase(kb).
-		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT).
+		WithSignMode(apisigning.SignMode_SIGN_MODE_DIRECT).
 		WithPreprocessTxHook(preprocessHook)
 
 	addr1, err := kr.GetAddress()

@@ -14,7 +14,7 @@ jobs:
   release:
     permissions:
       contents: write # for goreleaser/goreleaser-action to create a GitHub release
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - name: Install Go
@@ -34,7 +34,7 @@ jobs:
   release-success:
     needs: release
     if: ${{ success() }}
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - name: Notify Slack on success
         uses: rtCamp/action-slack-notify@v2.3.2

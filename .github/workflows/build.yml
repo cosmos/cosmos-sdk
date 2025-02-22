@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     strategy:
       matrix:
         go-arch: ["amd64", "arm64"] # drop 32 bit support for now (and maybe forever)
@@ -46,5 +46,3 @@ jobs:
         run: GOARCH=${{ matrix.go-arch }} make cosmovisor
       - name: Build Confix
         run: GOARCH=${{ matrix.go-arch }} make confix
-      - name: Build Hubl
-        run: GOARCH=${{ matrix.go-arch }} make hubl

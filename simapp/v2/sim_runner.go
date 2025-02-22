@@ -7,6 +7,7 @@ import (
 	"iter"
 	"maps"
 	"math/rand"
+	"os"
 	"slices"
 	"testing"
 	"time"
@@ -26,7 +27,10 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/streaming"
 	storev2 "cosmossdk.io/store/v2"
 	consensustypes "cosmossdk.io/x/consensus/types"
 
@@ -46,6 +50,7 @@ type (
 	HasWeightedOperationsX              = simsx.HasWeightedOperationsX
 	HasWeightedOperationsXWithProposals = simsx.HasWeightedOperationsXWithProposals
 	HasProposalMsgsX                    = simsx.HasProposalMsgsX
+	HasLegacyProposalMsgs               = simsx.HasLegacyProposalMsgs
 )
 
 const SimAppChainID = "simulation-app"
@@ -84,6 +89,7 @@ type (
 
 	ModuleManager interface {
 		Modules() map[string]appmodulev2.AppModule
+		StoreKeys() map[string]string
 	}
 
 	// SimulationApp abstract blockchain app
@@ -106,7 +112,7 @@ type (
 
 	// TestInstance system under test
 	TestInstance[T Tx] struct {
-		Seed          int64
+		RandSource    simsxv2.RandSource
 		App           SimulationApp[T]
 		TxDecoder     transaction.Codec[T]
 		BankKeeper    BankKeeper
@@ -115,6 +121,8 @@ type (
 		TXBuilder     simsxv2.TXBuilder[T]
 		AppManager    appmanager.AppManager[T]
 		ModuleManager ModuleManager
+		StreamManager streaming.Manager
+		StreamHook    *appdata.Listener
 	}
 
 	AppFactory[T Tx, V SimulationApp[T]] func(config depinject.Config, outputs ...any) (V, error)
@@ -126,11 +134,12 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](
 	tb testing.TB,
 	appFactory AppFactory[T, V],
 	appConfigFactory AppConfigFactory,
-	seed int64,
+	randSource simsxv2.RandSource,
+	dbBackend string,
 ) TestInstance[T] {
 	tb.Helper()
 	vp := viper.New()
-	vp.Set("store.app-db-backend", "memdb")
+	vp.Set("store.app-db-backend", dbBackend)
 	vp.Set("home", tb.TempDir())
 
 	depInjCfg := depinject.Configs(
@@ -153,7 +162,7 @@ func SetupTestInstance[T Tx, V SimulationApp[T]](
 	xapp, err := appFactory(depinject.Configs(depinject.Supply(log.NewNopLogger(), runtime.GlobalConfig(vp.AllSettings()))))
 	require.NoError(tb, err)
 	return TestInstance[T]{
-		Seed:          seed,
+		RandSource:    randSource,
 		App:           xapp,
 		BankKeeper:    bankKeeper,
 		AuthKeeper:    authKeeper,
@@ -197,7 +206,7 @@ func (ti TestInstance[T]) InitializeChain(
 	}
 }
 
-// RunWithSeeds runs a series of subtests using the default set of random seeds for deterministic simulation testing.
+// RunWithSeeds runs a series of subtests for each of the given set of seeds for deterministic simulation testing.
 func RunWithSeeds[T Tx, V SimulationApp[T]](
 	t *testing.T,
 	appFactory AppFactory[T, V],
@@ -226,11 +235,24 @@ func RunWithSeed[T Tx, V SimulationApp[T]](
 	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
 ) {
 	tb.Helper()
+	RunWithRandSource(tb, appFactory, appConfigFactory, tCfg, simsxv2.NewSeededRandSource(seed), postRunActions...)
+}
+
+// RunWithRandSource initializes and executes a simulation run with the given rand source, generating blocks and transactions.
+func RunWithRandSource[T Tx, V SimulationApp[T]](
+	tb testing.TB,
+	appFactory AppFactory[T, V],
+	appConfigFactory AppConfigFactory,
+	tCfg simtypes.Config,
+	randSource simsxv2.RandSource,
+	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
+) {
+	tb.Helper()
 	initialBlockHeight := tCfg.InitialBlockHeight
 	require.NotEmpty(tb, initialBlockHeight, "initial block height must not be 0")
 
 	setupFn := func(ctx context.Context, r *rand.Rand) (TestInstance[T], ChainState[T], []simtypes.Account) {
-		testInstance := SetupTestInstance[T, V](tb, appFactory, appConfigFactory, seed)
+		testInstance := SetupTestInstance[T, V](tb, appFactory, appConfigFactory, randSource, tCfg.DBBackend)
 		accounts, genesisAppState, chainID, genesisTimestamp := prepareInitialGenesisState(
 			testInstance.App,
 			r,
@@ -249,29 +271,38 @@ func RunWithSeed[T Tx, V SimulationApp[T]](
 
 		return testInstance, cs, accounts
 	}
-	RunWithSeedX(tb, tCfg, setupFn, seed, postRunActions...)
+	RunWithRandSourceX(tb, tCfg, setupFn, randSource, postRunActions...)
 }
 
-// RunWithSeedX entrypoint for custom chain setups.
-// The function runs the full simulation test circle for the specified seed and setup function, followed by optional post-run actions.
-func RunWithSeedX[T Tx](
+// RunWithRandSourceX entrypoint for custom chain setups.
+// The function runs the full simulation test circle for the specified random source and setup function, followed by optional post-run actions.
+// when tb implements ResetTimer, the method is called after setup, before jumping into the main loop
+func RunWithRandSourceX[T Tx](
 	tb testing.TB,
 	tCfg simtypes.Config,
 	setupChainStateFn func(ctx context.Context, r *rand.Rand) (TestInstance[T], ChainState[T], []simtypes.Account),
-	seed int64,
+	randSource rand.Source,
 	postRunActions ...func(t testing.TB, cs ChainState[T], app TestInstance[T], accs []simtypes.Account),
 ) {
 	tb.Helper()
-	r := rand.New(rand.NewSource(seed))
+	r := rand.New(randSource)
 	rootCtx, done := context.WithCancel(context.Background())
 	defer done()
 
 	testInstance, chainState, accounts := setupChainStateFn(rootCtx, r)
-
-	emptySimParams := make(map[string]json.RawMessage) // todo read sims params from disk as before
+	customFactoryParams := make(map[string]json.RawMessage)
+	if tCfg.ParamsFile != "" {
+		bz, err := os.ReadFile(tCfg.ParamsFile)
+		require.NoError(tb, err)
+		require.NoError(tb, json.Unmarshal(bz, &customFactoryParams))
+	}
 
 	modules := testInstance.ModuleManager.Modules()
-	msgFactoriesFn := prepareSimsMsgFactories(r, modules, simsx.ParamWeightSource(emptySimParams))
+	msgFactoriesFn := prepareSimsMsgFactories(tb, r, modules, simsx.ParamWeightSource(customFactoryParams))
+
+	if b, ok := tb.(interface{ ResetTimer() }); ok {
+		b.ResetTimer()
+	}
 
 	doMainLoop(
 		tb,
@@ -301,7 +332,6 @@ func prepareInitialGenesisState[T Tx](
 	moduleManager ModuleManager,
 ) ([]simtypes.Account, json.RawMessage, string, time.Time) {
 	txConfig := app.TxConfig()
-	// todo: replace legacy testdata functions ?
 	appStateFn := simtestutil.AppStateFn(
 		app.AppCodec(),
 		txConfig.SigningContext().AddressCodec(),
@@ -424,9 +454,10 @@ func doMainLoop[T Tx](
 		}
 
 		cometInfo := comet.Info{
-			ValidatorsHash:  nil,
-			Evidence:        cs.ValsetHistory.MissBehaviour(r),
-			ProposerAddress: cs.ActiveValidatorSet[0].Address, // todo: pick random one
+			ValidatorsHash: nil,
+			Evidence:       cs.ValsetHistory.MissBehaviour(r),
+			// pick one of top 10
+			ProposerAddress: cs.ActiveValidatorSet[r.Intn(min(len(cs.ActiveValidatorSet), 10))].Address,
 			LastCommit:      cs.ActiveValidatorSet.NewCommitInfo(r),
 		}
 		fOps, pos := futureOpsReg.PopScheduledFor(cs.BlockTime), 0
@@ -469,6 +500,7 @@ func doMainLoop[T Tx](
 
 					tx, err := testInstance.TXBuilder.Build(ctx, testInstance.AuthKeeper, signers, msg, r, cs.ChainID)
 					require.NoError(tb, err)
+					blockReqN.Txs = append(blockReqN.Txs, tx)
 					if !yield(tx) {
 						return
 					}
@@ -490,6 +522,26 @@ func doMainLoop[T Tx](
 		}
 		txTotalCounter += txPerBlockCounter
 		cs.ActiveValidatorSet = cs.ActiveValidatorSet.Update(blockRsp.ValidatorUpdates)
+
+		if len(testInstance.StreamManager.Listeners) == 0 && testInstance.StreamHook == nil {
+			continue
+		}
+		// stream data
+		strmCtx, cancel := context.WithTimeout(rootCtx, time.Second)
+		rawTxs := simsx.Collect(blockReqN.Txs, func(a T) []byte { return a.Bytes() })
+		require.NoError(tb, cometbft.StreamOut[T](
+			strmCtx,
+			int64(blockReqN.Height),
+			rawTxs,
+			blockReqN.Txs,
+			*blockRsp,
+			changeSet,
+			testInstance.StreamManager,
+			testInstance.StreamHook,
+			true,
+			tb.Logf,
+		))
+		cancel()
 	}
 	fmt.Println("+++ reporter:\n" + rootReporter.Summary().String())
 	fmt.Printf("Tx total: %d skipped: %d\n", txTotalCounter, txSkippedCounter)
@@ -497,21 +549,19 @@ func doMainLoop[T Tx](
 
 // prepareSimsMsgFactories constructs and returns a function to retrieve simulation message factories for all modules.
 // It initializes proposal and factory registries, registers proposals and weighted operations, and sorts deterministically.
-func prepareSimsMsgFactories(
-	r *rand.Rand,
-	modules map[string]appmodulev2.AppModule,
-	weights simsx.WeightSource,
-) func() simsx.SimMsgFactoryX {
+func prepareSimsMsgFactories(tb testing.TB, r *rand.Rand, modules map[string]appmodulev2.AppModule, weights simsx.WeightSource) func() simsx.SimMsgFactoryX {
+	tb.Helper()
 	moduleNames := slices.Collect(maps.Keys(modules))
 	slices.Sort(moduleNames) // make deterministic
 
 	// get all proposal types
 	proposalRegistry := simsx.NewUniqueTypeRegistry()
 	for _, n := range moduleNames {
-		switch xm := modules[n].(type) { // nolint: gocritic // extended in the future
+		switch xm := modules[n].(type) {
 		case HasProposalMsgsX:
 			xm.ProposalMsgsX(weights, proposalRegistry)
-			// todo: register legacy and v1 msg proposals
+		case HasLegacyProposalMsgs:
+			tb.Logf("Ignoring legacy proposal messages for module: %s", n)
 		}
 	}
 	// register all msg factories

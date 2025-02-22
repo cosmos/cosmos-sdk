@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -23,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -88,8 +88,8 @@ func NewSigningFixture(
 	txConfig, err := tx.NewTxConfigWithOptions(
 		protoCodec,
 		tx.ConfigOptions{
-			EnabledSignModes: []signingtypes.SignMode{
-				signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			EnabledSignModes: []apisigning.SignMode{
+				apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			},
 			SigningOptions: signingOptions,
 		})
@@ -141,8 +141,8 @@ func (s *SigningFixture) RequireLegacyAminoEquivalent(t *testing.T, msg transact
 	}()
 	legacyAminoSignHandler := tx.NewSignModeLegacyAminoJSONHandler()
 	legacyBz, err := legacyAminoSignHandler.GetSignBytes(
-		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-		authsigning.SignerData{
+		apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		signing.SignerData{
 			ChainID:       signerData.ChainID,
 			Address:       signerData.Address,
 			AccountNumber: signerData.AccountNumber,

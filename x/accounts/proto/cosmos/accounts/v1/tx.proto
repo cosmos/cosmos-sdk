@@ -7,7 +7,6 @@ option go_package = "cosmossdk.io/x/accounts/v1";
 import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/tx/v1beta1/tx.proto";
 import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service for the x/accounts module.

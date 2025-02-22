@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   split-test-files:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -45,7 +45,7 @@ jobs:
           path: ./pkgs.txt.part.03
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     needs: split-test-files
     strategy:
       fail-fast: false
@@ -84,7 +84,7 @@ jobs:
           path: ./${{ matrix.part }}profile.out
 
   test-integration:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -115,7 +115,7 @@ jobs:
           path: ./tests/integration-profile.out
 
   repo-analysis:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     needs: [tests, test-integration]
     steps:
       - uses: actions/checkout@v4
@@ -161,7 +161,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   test-sim-nondeterminism:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -194,7 +194,7 @@ jobs:
   # They run when there is a diff in their respective directories.
 
   test-clientv2:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -225,7 +225,7 @@ jobs:
           projectBaseDir: client/v2/
 
   test-core:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -255,7 +255,7 @@ jobs:
         with:
           projectBaseDir: core/
   test-coretesting:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -278,7 +278,7 @@ jobs:
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
 
   test-depinject:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -307,7 +307,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   test-errors:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -338,7 +338,7 @@ jobs:
           projectBaseDir: errors/
 
   test-math:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -369,7 +369,7 @@ jobs:
           projectBaseDir: math/
 
   test-schema:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -399,7 +399,7 @@ jobs:
           projectBaseDir: schema/
 
   test-schema-testing:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -429,7 +429,7 @@ jobs:
           projectBaseDir: schema/testing/
 
   test-indexer-postgres:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -465,7 +465,7 @@ jobs:
           projectBaseDir: indexer/postgres/
 
   test-simapp-v2:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -507,7 +507,7 @@ jobs:
           kill -9 "$SIMD_PID"
 
   test-collections:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -537,31 +537,8 @@ jobs:
         with:
           projectBaseDir: collections/
 
-  test-collections-protocodec:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: collections/protocodec/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            collections/protocodec/**/*.go
-            collections/protocodec/go.mod
-            collections/protocodec/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd collections/protocodec
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
   test-orm:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -592,7 +569,7 @@ jobs:
           projectBaseDir: orm/
 
   test-cosmovisor:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -623,7 +600,7 @@ jobs:
           projectBaseDir: tools/cosmovisor/
 
   test-confix:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -653,39 +630,8 @@ jobs:
         with:
           projectBaseDir: tools/confix/
 
-  test-hubl:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: tools/hubl/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            tools/hubl/**/*.go
-            tools/hubl/go.mod
-            tools/hubl/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd tools/hubl
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - name: sonarcloud
-        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: tools/hubl/
-
   test-store:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -716,7 +662,7 @@ jobs:
           projectBaseDir: store/
 
   test-store-v2:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     strategy:
       fail-fast: false
     steps:
@@ -749,7 +695,7 @@ jobs:
           projectBaseDir: store/v2/
 
   test-log:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -787,7 +733,7 @@ jobs:
   # They run when there is a diff in their respective directories.
 
   test-x-accounts:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -818,7 +764,7 @@ jobs:
           projectBaseDir: x/accounts/
 
   test-x-accounts-base:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -841,7 +787,7 @@ jobs:
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
 
   test-x-accounts-lockup:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -864,7 +810,7 @@ jobs:
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
 
   test-x-accounts-multisig:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -887,7 +833,7 @@ jobs:
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
 
   test-x-tx:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -918,7 +864,7 @@ jobs:
           projectBaseDir: x/tx/
 
   test-x-nft:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -949,7 +895,7 @@ jobs:
           projectBaseDir: x/nft/
 
   test-x-circuit:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -980,7 +926,7 @@ jobs:
           projectBaseDir: x/circuit/
 
   test-x-distribution:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1011,7 +957,7 @@ jobs:
           projectBaseDir: x/distribution/
 
   test-x-protocolpool:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1042,7 +988,7 @@ jobs:
           projectBaseDir: x/protocolpool/
 
   test-x-feegrant:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1073,7 +1019,7 @@ jobs:
           projectBaseDir: x/feegrant/
 
   test-x-evidence:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1103,7 +1049,7 @@ jobs:
         with:
           projectBaseDir: x/evidence/
   test-x-upgrade:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1133,7 +1079,7 @@ jobs:
         with:
           projectBaseDir: x/upgrade/
   test-x-group:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1163,7 +1109,7 @@ jobs:
         with:
           projectBaseDir: x/group/
   test-x-gov:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1194,7 +1140,7 @@ jobs:
           projectBaseDir: x/gov/
 
   test-x-slashing:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1225,7 +1171,7 @@ jobs:
           projectBaseDir: x/slashing/
 
   test-x-staking:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1256,7 +1202,7 @@ jobs:
           projectBaseDir: x/staking/
 
   test-x-authz:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1287,7 +1233,7 @@ jobs:
           projectBaseDir: x/authz/
 
   test-x-bank:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1318,7 +1264,7 @@ jobs:
           projectBaseDir: x/bank/
 
   test-x-mint:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1349,7 +1295,7 @@ jobs:
           projectBaseDir: x/mint/
 
   test-x-epochs:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1380,7 +1326,7 @@ jobs:
           projectBaseDir: x/epochs/
 
   test-x-consensus:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -1411,7 +1357,7 @@ jobs:
           projectBaseDir: x/consensus/
 
   test-tools-benchmark:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

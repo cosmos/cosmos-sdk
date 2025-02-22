@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -199,6 +200,10 @@ func (k Keeper) UpdateGroupMembers(ctx context.Context, msg *group.MsgUpdateGrou
 			if err != nil {
 				return err
 			}
+		}
+		// ensure that group has one or more members
+		if totalWeight.IsZero() {
+			return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
 		}
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
@@ -1131,22 +1136,14 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 		if _, err := math.NewNonNegativeDecFromString(member.Weight); err != nil {
 			return errorsmod.Wrap(err, "weight must be non negative")
 		}
-
 		index[member.Address] = struct{}{}
 	}
-
 	return nil
 }
 
 // isProposer checks that an address is a proposer of a given proposal.
 func isProposer(proposal group.Proposal, address string) bool {
-	for _, proposer := range proposal.Proposers {
-		if proposer == address {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(proposal.Proposers, address)
 }
 
 func validateMsgs(msgs []sdk.Msg) error {

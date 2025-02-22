@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
@@ -127,15 +128,15 @@ func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
 
 // SetSignMode sets the aux signer's sign mode. Allowed sign modes are
 // DIRECT_AUX and LEGACY_AMINO_JSON.
-func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
+func (b *AuxTxBuilder) SetSignMode(mode apisigning.SignMode) error {
 	switch mode {
-	case signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+	case apisigning.SignMode_SIGN_MODE_DIRECT_AUX, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 	default:
 		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s",
-			signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+			apisigning.SignMode_SIGN_MODE_DIRECT_AUX, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	b.auxSignerData.Mode = mode
+	b.auxSignerData.Mode = signing.SignMode(mode)
 	return nil
 }
 

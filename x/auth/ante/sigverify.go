@@ -327,15 +327,6 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 	isUnordered := ok && unorderedTx.GetUnordered()
 	// only check sequence if the tx is not unordered
 	if !isUnordered {
-		// TODO(technicallyty):
-		//if ctx.ExecMode() == sdk.ExecModeCheck {
-		//	if sig.Sequence < acc.GetSequence() {
-		//		return errorsmod.Wrapf(
-		//			sdkerrors.ErrWrongSequence,
-		//			"account sequence mismatch: expected higher than or equal to %d, got %d", acc.GetSequence(), sig.Sequence,
-		//		)
-		//	}
-		//} else if
 		if sig.Sequence != acc.GetSequence() {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrWrongSequence,
@@ -353,13 +344,6 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx
 	if err := verifyIsOnCurve(pubKey); err != nil {
 		return err
 	}
-
-	//if sig.Sequence != acc.GetSequence() {
-	//	return errorsmod.Wrapf(
-	//		sdkerrors.ErrWrongSequence,
-	//		"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-	//	)
-	//}
 
 	// we're in simulation mode, or in ReCheckTx, or context is not
 	// on sig verify tx, then we do not need to verify the signatures

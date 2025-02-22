@@ -232,6 +232,8 @@
 				],
 				"memo": "> ⚛️\\u269B⚛️     ",
 				"timeout_height": 20,
+				"unordered": true,
+				"timeout_timestamp": "2042-01-01T00:00:20Z",
 				"extension_options": [
 					{
 						"@type": "/cosmos.base.v1beta1.Coin",

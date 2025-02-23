@@ -3,7 +3,9 @@ package accounts
 import (
 	"testing"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/gogoproto/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -89,4 +91,32 @@ func TestKeeper_Query(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, implementation.Equal(&types.Int64Value{Value: 1000}, resp))
 	})
+}
+
+func TestKeeper_NextAccountNumber(t *testing.T) {
+	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
+	num := uint64(0)
+	err := m.AccountNumber.Set(ctx, num)
+	require.NoError(t, err)
+
+	n, err := m.NextAccountNumber(ctx)
+	require.NoError(t, err)
+	require.Equal(t, num, n)
+
+	err = m.AccountNumber.Set(ctx, 0)
+	require.NoError(t, err)
+
+	store := m.KVStoreService.OpenKVStore(ctx)
+	num = uint64(10)
+	val := &gogotypes.UInt64Value{
+		Value: num,
+	}
+	data, err := val.Marshal()
+	require.NoError(t, err)
+	err = store.Set(authtypes.LegacyGlobalAccountNumberKey, data)
+	require.NoError(t, err)
+
+	n, err = m.NextAccountNumber(ctx)
+	require.NoError(t, err)
+	require.Equal(t, num, n)
 }

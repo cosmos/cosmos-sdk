@@ -22,6 +22,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 var (
@@ -129,7 +131,21 @@ func (k Keeper) NextAccountNumber(
 	if err != nil {
 		return 0, err
 	}
-
+	if accNum == 0 {
+		store := k.KVStoreService.OpenKVStore(ctx)
+		b, err := store.Get(authtypes.LegacyGlobalAccountNumberKey)
+		if err != nil {
+			panic(err)
+		}
+		v := new(gogotypes.UInt64Value)
+		if err := v.Unmarshal(b); err != nil {
+			panic(err)
+		}
+		accNum = v.Value
+		if err := k.AccountNumber.Set(ctx, v.Value+1); err != nil {
+			panic(err)
+		}
+	}
 	return accNum, nil
 }
 

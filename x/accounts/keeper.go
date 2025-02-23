@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	_ "cosmossdk.io/api/cosmos/accounts/defaults/base/v1" // import for side-effects
 	"cosmossdk.io/collections"
@@ -23,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 var (
@@ -135,15 +135,15 @@ func (k Keeper) NextAccountNumber(
 		store := k.KVStoreService.OpenKVStore(ctx)
 		b, err := store.Get(authtypes.LegacyGlobalAccountNumberKey)
 		if err != nil {
-			panic(err)
+			return 0, fmt.Errorf("failed to get legacy account number: %w", err)
 		}
 		v := new(gogotypes.UInt64Value)
 		if err := v.Unmarshal(b); err != nil {
-			panic(err)
+			return 0, fmt.Errorf("failed to unmarshal legacy account number: %w", err)
 		}
 		accNum = v.Value
 		if err := k.AccountNumber.Set(ctx, v.Value+1); err != nil {
-			panic(err)
+			return 0, fmt.Errorf("failed to set account number: %w", err)
 		}
 	}
 	return accNum, nil

@@ -7,7 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/testing"
+	coretesting "cosmossdk.io/core/testing"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestMigrate(t *testing.T) {
@@ -22,7 +24,7 @@ func TestMigrate(t *testing.T) {
 	legacySeqBytes, err := (&types.UInt64Value{Value: wantValue}).Marshal()
 	require.NoError(t, err)
 
-	err = kv.OpenKVStore(ctx).Set(LegacyGlobalAccountNumberKey, legacySeqBytes)
+	err = kv.OpenKVStore(ctx).Set(authtypes.LegacyGlobalAccountNumberKey, legacySeqBytes)
 	require.NoError(t, err)
 
 	err = Migrate(ctx, kv, seq)

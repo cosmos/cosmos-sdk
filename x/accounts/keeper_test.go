@@ -3,14 +3,14 @@ package accounts
 import (
 	"testing"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/gogoproto/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestKeeper_Init(t *testing.T) {
@@ -108,7 +108,7 @@ func TestKeeper_NextAccountNumber(t *testing.T) {
 
 	store := m.KVStoreService.OpenKVStore(ctx)
 	num = uint64(10)
-	val := &gogotypes.UInt64Value{
+	val := &types.UInt64Value{
 		Value: num,
 	}
 	data, err := val.Marshal()

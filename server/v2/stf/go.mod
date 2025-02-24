@@ -11,6 +11,6 @@ require (
 )
 
 require (
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
 )

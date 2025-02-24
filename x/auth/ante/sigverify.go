@@ -318,10 +318,15 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 	return nil
 }
 
-// verifySig will verify the signature of the provided signer account.
-// it will assess:
-// - the pub key is on the curve.
-// - verify sig
+// verifySig will verify the signature of the provided account.
+// The following checks are performed:
+// - For regular transactions (not unordered) , validates that the signature sequence matches the account sequence
+// - Verifies the public key exists and is on the elliptic curve
+// - In non-simulation mode and when signature verification is enabled, performs full signature validation:
+//   - Retrieves signer data (address, chain ID, account number, sequence)
+//   - Verifies the signature against the transaction data using the appropriate sign mode handler
+//
+// Signature verification is skipped during simulation, ReCheckTx, or when not in a signature verification context
 func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, simulate bool, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2) error {
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	isUnordered := ok && unorderedTx.GetUnordered()

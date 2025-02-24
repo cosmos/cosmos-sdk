@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	client "github.com/cometbft/cometbft/rpc/client/http"
 	cmtypes "github.com/cometbft/cometbft/types"
@@ -70,7 +70,7 @@ func (r RPCClient) Invoke(ctx context.Context, method string, req, reply interfa
 		}
 	}
 
-	abciReq := abci.QueryRequest{
+	abciReq := abci.RequestQuery{
 		Path:   method,
 		Data:   reqBz,
 		Height: height,

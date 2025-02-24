@@ -1,14 +1,15 @@
 package ante
 
 import (
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-	txsigning "cosmossdk.io/x/tx/signing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -20,6 +21,7 @@ type HandlerOptions struct {
 	SignModeHandler        *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker           TxFeeChecker
+	UnorderedTxManager     *unorderedtx.Manager
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -49,6 +51,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(options.AccountKeeper),
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigGasConsumer),
+	}
+
+	if options.UnorderedTxManager != nil {
+		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.UnorderedTxManager, DefaultSha256Cost))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

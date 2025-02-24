@@ -121,7 +121,7 @@ message TxBody {
   // transaction execution.
   //
   // Note, when set to true, the existing 'timeout_height' value must
-  // be set and will be used to correspond to a time_stamp in which the transaction is deemed
+  // be set and will be used to correspond to a timestamp in which the transaction is deemed
   // valid.
   bool unordered = 4;
 

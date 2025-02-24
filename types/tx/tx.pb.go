@@ -373,7 +373,7 @@ type TxBody struct {
 	// transaction execution.
 	//
 	// Note, when set to true, the existing 'timeout_height' value must
-	// be set and will be used to correspond to a time_stamp in which the transaction is deemed
+	// be set and will be used to correspond to a timestamp in which the transaction is deemed
 	// valid.
 	Unordered bool `protobuf:"varint,4,opt,name=unordered,proto3" json:"unordered,omitempty"`
 	// timeout_timestamp is the block time after which this transaction will not

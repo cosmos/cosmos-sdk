@@ -79,6 +79,8 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		FeeGranter:                  txAuthInfo.Fee.Granter,
 		GasLimit:                    txAuthInfo.Fee.GasLimit,
 		TimeoutHeight:               txBody.TimeoutHeight,
+		TimeoutTimestamp:            txBody.TimeoutTimestamp,
+		Unordered:                   txBody.Unordered,
 		ExtensionOptions:            txBody.ExtensionOptions,
 		NonCriticalExtensionOptions: txBody.NonCriticalExtensionOptions,
 		HashOfRawBytes:              getHash(textualData.BodyBytes, textualData.AuthInfoBytes),

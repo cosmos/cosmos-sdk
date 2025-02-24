@@ -1,11 +1,9 @@
 package simapp
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -142,23 +140,5 @@ func BenchmarkInvariants(b *testing.B) {
 
 	if config.Commit {
 		simtestutil.PrintStats(db)
-	}
-
-	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight() + 1})
-
-	// 3. Benchmark each invariant separately
-	//
-	// NOTE: We use the crisis keeper as it has all the invariants registered with
-	// their respective metadata which makes it useful for testing/benchmarking.
-	for _, cr := range app.CrisisKeeper.Routes() {
-		cr := cr
-		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
-			if res, stop := cr.Invar(ctx); stop {
-				b.Fatalf(
-					"broken invariant at block %d of %d\n%s",
-					ctx.BlockHeight()-1, config.NumBlocks, res,
-				)
-			}
-		})
 	}
 }

@@ -127,6 +127,8 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		"Fee granter":                    {},
 		"Gas limit":                      {},
 		"Timeout height":                 {},
+		"Timeout timestamp":              {},
+		"Unordered":                      {},
 		"Other signer":                   {},
 		"Extension options":              {},
 		"Non critical extension options": {},
@@ -231,6 +233,8 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		Messages:                    envelope.Message,
 		Memo:                        envelope.Memo,
 		TimeoutHeight:               envelope.TimeoutHeight,
+		TimeoutTimestamp:            envelope.TimeoutTimestamp,
+		Unordered:                   envelope.Unordered,
 		ExtensionOptions:            envelope.ExtensionOptions,
 		NonCriticalExtensionOptions: envelope.NonCriticalExtensionOptions,
 	}

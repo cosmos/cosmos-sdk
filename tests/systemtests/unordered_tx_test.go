@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	systest "cosmossdk.io/systemtests"
 )
@@ -32,15 +33,19 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 
 	timeoutTimestamp := time.Now().Add(time.Minute)
 	// send tokens
-	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1", "--note=1")
+	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1", "--note=1"}
+	rsp1 := cli.Run(cmd...)
 	systest.RequireTxSuccess(t, rsp1)
 
 	assertDuplicateErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
 		require.Len(t, gotOutputs, 1)
-		assert.Contains(t, gotOutputs[0], "is duplicated: invalid request")
-		return false // always abort
+		output := gotOutputs[0].(string)
+		code := gjson.Get(output, "code")
+		require.True(t, code.Exists())
+		require.Equal(t, int64(19), code.Int()) // 19 == already in mempool.
+		return false                            // always abort
 	}
-	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1")
+	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run(cmd...)
 	systest.RequireTxFailure(t, rsp2)
 
 	require.Eventually(t, func() bool {

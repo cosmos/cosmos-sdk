@@ -95,25 +95,22 @@ func TestKeeper_Query(t *testing.T) {
 
 func TestKeeper_NextAccountNumber(t *testing.T) {
 	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	num := uint64(0)
-	err := m.AccountNumber.Set(ctx, num)
-	require.NoError(t, err)
-
-	n, err := m.NextAccountNumber(ctx)
-	require.NoError(t, err)
-	require.Equal(t, num, n)
-
-	err = m.AccountNumber.Set(ctx, 0)
-	require.NoError(t, err)
-
 	store := m.KVStoreService.OpenKVStore(ctx)
-	num = uint64(10)
+	num := uint64(10)
 	val := &types.UInt64Value{
 		Value: num,
 	}
 	data, err := val.Marshal()
 	require.NoError(t, err)
 	err = store.Set(authtypes.LegacyGlobalAccountNumberKey, data)
+	require.NoError(t, err)
+
+	n, err := m.NextAccountNumber(ctx)
+	require.NoError(t, err)
+	require.Equal(t, num, n)
+
+	num = uint64(0)
+	err = m.AccountNumber.Set(ctx, num)
 	require.NoError(t, err)
 
 	n, err = m.NextAccountNumber(ctx)

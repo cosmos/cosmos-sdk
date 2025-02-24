@@ -124,7 +124,7 @@ func (k Keeper) IsAccountsModuleAccount(
 	return hasAcc
 }
 
-func (k Keeper) NextAccountNumberLegacy(ctx context.Context) (uint64, error) {
+func (k Keeper) GetAccountNumberLegacy(ctx context.Context) (uint64, error) {
 	store := k.KVStoreService.OpenKVStore(ctx)
 	b, err := store.Get(authtypes.LegacyGlobalAccountNumberKey)
 	if err != nil {
@@ -134,10 +134,6 @@ func (k Keeper) NextAccountNumberLegacy(ctx context.Context) (uint64, error) {
 	if err := v.Unmarshal(b); err != nil {
 		return 0, fmt.Errorf("failed to unmarshal legacy account number: %w", err)
 	}
-	if err := k.AccountNumber.Set(ctx, v.Value+1); err != nil {
-		return 0, fmt.Errorf("failed to set account number: %w", err)
-	}
-
 	return v.Value, nil
 }
 
@@ -145,20 +141,18 @@ func (k Keeper) NextAccountNumber(
 	ctx context.Context,
 ) (accNum uint64, err error) {
 	accNum, err = collections.Item[uint64](k.AccountNumber).Get(ctx)
-	if err == nil {
-		if err := k.AccountNumber.Set(ctx, accNum+1); err != nil {
-			return 0, fmt.Errorf("failed to set account number: %w", err)
-		}
-		return accNum, nil
-	}
-	if errors.Is(err, collections.ErrNotFound) {
+	if err != nil && errors.Is(err, collections.ErrNotFound) {
 		// this won't happen in the tip of production network,
 		// but can happen when query historical states,
 		// fallback to old key for backward-compatibility.
-		accNum, err = k.NextAccountNumberLegacy(ctx)
+		accNum, err = k.GetAccountNumberLegacy(ctx)
 	}
 
 	if err != nil {
+		return 0, err
+	}
+
+	if err := k.AccountNumber.Set(ctx, accNum+1); err != nil {
 		return 0, err
 	}
 

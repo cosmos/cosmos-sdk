@@ -142,9 +142,10 @@ func (k Keeper) NextAccountNumber(
 ) (accNum uint64, err error) {
 	accNum, err = collections.Item[uint64](k.AccountNumber).Get(ctx)
 	if err != nil && errors.Is(err, collections.ErrNotFound) {
-		// this won't happen in the tip of production network,
-		// but can happen when query historical states,
-		// fallback to old key for backward-compatibility.
+		// This change makes the method works in historical states.
+		// Although the behavior is not identical, but semantically compatible.
+		//
+		// For the state machine, it also does the migration lazily.
 		accNum, err = k.GetAccountNumberLegacy(ctx)
 	}
 

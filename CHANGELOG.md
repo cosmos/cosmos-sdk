@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* [#23815](https://github.com/cosmos/cosmos-sdk/pull/23815) Upstream `x/epochs` from Osmosis
+
 ### Bug Fixes
 
 * (query) [87d3a43](https://github.com/cosmos/cosmos-sdk/commit/87d3a432af95f4cf96aa02351ed5fcc51cca6e7b) Fix collection filtered pagination.

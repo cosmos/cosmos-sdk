@@ -10,7 +10,7 @@ import (
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
-	ctx, epochsKeeper, _ := Setup(t)
+	ctx, epochsKeeper := Setup(t)
 
 	chainStartTime := ctx.BlockTime()
 	chainStartHeight := ctx.BlockHeight()
@@ -28,7 +28,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 }
 
 func TestEpochsInitGenesis(t *testing.T) {
-	ctx, epochsKeeper, _ := Setup(t)
+	ctx, epochsKeeper := Setup(t)
 
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status

@@ -123,7 +123,7 @@ func initializeBlankEpochInfoFields(epoch types.EpochInfo, identifier string, du
 }
 
 func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
-	ctx, epochsKeeper, _ := Setup(t)
+	ctx, epochsKeeper := Setup(t)
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status
 	epochInfos, err := epochsKeeper.AllEpochInfos(ctx)

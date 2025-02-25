@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -23,17 +22,15 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 	Ctx          sdk.Context
-	storeService store.KVStoreService
 	EpochsKeeper epochskeeper.Keeper
 	queryClient  types.QueryClient
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	ctx, epochsKeeper, ss := Setup(s.T())
+	ctx, epochsKeeper := Setup(s.T())
 
 	s.Ctx = ctx
 	s.EpochsKeeper = epochsKeeper
-	s.storeService = ss
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
 	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(s.EpochsKeeper))
@@ -46,7 +43,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.queryClient = types.NewQueryClient(grpcQueryService)
 }
 
-func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper, store.KVStoreService) {
+func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper) {
 	t.Helper()
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
@@ -66,7 +63,7 @@ func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper, store.KVStoreService
 	require.NoError(t, err)
 	SetEpochStartTime(ctx, epochsKeeper)
 
-	return ctx, epochsKeeper, storeService
+	return ctx, epochsKeeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {

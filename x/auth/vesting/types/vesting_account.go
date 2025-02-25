@@ -2,7 +2,8 @@ package types
 
 import (
 	"errors"
-	"math"
+
+	stdmath "math"
 	"time"
 
 	"cosmossdk.io/math"
@@ -942,7 +943,7 @@ func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, requestor, dest sdk.
 
 	// If we need more, transfer UnbondingDelegations.
 	want := toClawBack.AmountOf(bondDenom)
-	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
+	unbondings := sk.GetUnbondingDelegations(ctx, addr, stdmath.MaxUint16)
 	for _, unbonding := range unbondings {
 		valAddr, err := sdk.ValAddressFromBech32(unbonding.ValidatorAddress)
 		if err != nil {
@@ -957,7 +958,7 @@ func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, requestor, dest sdk.
 
 	// If we need more, transfer Delegations.
 	if want.IsPositive() {
-		delegations := sk.GetDelegatorDelegations(ctx, addr, math.MaxUint16)
+		delegations := sk.GetDelegatorDelegations(ctx, addr, stdmath.MaxUint16)
 		for _, delegation := range delegations {
 			validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 			if err != nil {
@@ -1026,7 +1027,7 @@ func (va *BaseVestingAccount) forceTransfer(ctx sdk.Context, amt sdk.Coins, dest
 		return
 	}
 	got := sdk.NewInt(0)
-	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
+	unbondings := sk.GetUnbondingDelegations(ctx, addr, stdmath.MaxUint16)
 	for _, unbonding := range unbondings {
 		valAddr, err := sdk.ValAddressFromBech32(unbonding.ValidatorAddress)
 		if err != nil {
@@ -1042,7 +1043,7 @@ func (va *BaseVestingAccount) forceTransfer(ctx sdk.Context, amt sdk.Coins, dest
 
 	// If we need more, transfer Delegations.
 	if want.IsPositive() {
-		delegations := sk.GetDelegatorDelegations(ctx, addr, math.MaxUint16)
+		delegations := sk.GetDelegatorDelegations(ctx, addr, stdmath.MaxUint16)
 		for _, delegation := range delegations {
 			validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 			if err != nil {

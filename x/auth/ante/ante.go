@@ -54,7 +54,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	if options.UnorderedTxManager != nil {
-		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.UnorderedTxManager, DefaultSha256Cost))
+		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.UnorderedTxManager, DefaultSha256GasCost))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

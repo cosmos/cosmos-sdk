@@ -28,7 +28,7 @@ func TestUnorderedTxDecorator_OrderedTx(t *testing.T) {
 
 	SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256GasCost))
 
 	tx, txBz := genUnorderedTx(t, false, time.Time{})
 	ctx := sdk.Context{}.WithTxBytes(txBz)
@@ -47,7 +47,7 @@ func TestUnorderedTxDecorator_UnorderedTx_NoTTL(t *testing.T) {
 
 	SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256GasCost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Time{})
 	ctx := sdk.Context{}.WithTxBytes(txBz)
@@ -66,7 +66,7 @@ func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
 
 	SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256GasCost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(unorderedtx.DefaultMaxTimeoutDuration+time.Second))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockTime(time.Now())
@@ -84,7 +84,7 @@ func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
 
 	SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256GasCost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockTime(time.Now()).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
@@ -107,7 +107,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 
 	SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256GasCost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockTime(time.Now()).WithExecMode(sdk.ExecModeCheck).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
@@ -126,7 +126,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 
 	SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256GasCost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockTime(time.Now()).WithExecMode(sdk.ExecModeFinalize).WithGasMeter(storetypes.NewGasMeter(gasConsumed))

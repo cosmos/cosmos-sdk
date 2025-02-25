@@ -27,7 +27,7 @@ var bufPool = sync.Pool{
 	},
 }
 
-const DefaultSha256Cost = 25
+const DefaultSha256GasCost = 25
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 
@@ -47,18 +47,18 @@ type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
 	maxTimeoutDuration time.Duration
 	txManager          *unorderedtx.Manager
-	sha256Cost         uint64
+	sha256GasCost      uint64
 }
 
 func NewUnorderedTxDecorator(
 	maxDuration time.Duration,
 	m *unorderedtx.Manager,
-	gasCost uint64,
+	sha256GasCost uint64,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxTimeoutDuration: maxDuration,
 		txManager:          m,
-		sha256Cost:         gasCost,
+		sha256GasCost:      sha256GasCost,
 	}
 }
 
@@ -111,7 +111,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error 
 	}
 
 	// consume gas in all exec modes to avoid gas estimation discrepancies
-	sdkCtx.GasMeter().ConsumeGas(d.sha256Cost, "consume gas for calculating tx hash")
+	sdkCtx.GasMeter().ConsumeGas(d.sha256GasCost, "consume gas for calculating tx hash")
 
 	// Avoid checking for duplicates and creating the identifier in simulation mode
 	// This is done to avoid sha256 computation in simulation mode

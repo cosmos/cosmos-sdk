@@ -137,6 +137,7 @@ type VestingInputs struct {
 
 	AccountKeeper keeper.AccountKeeper
 	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
 }
 
 type VestingOutputs struct {
@@ -146,7 +147,7 @@ type VestingOutputs struct {
 }
 
 func ProvideModule(in VestingInputs) VestingOutputs {
-	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
+	m := NewAppModule(in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
 
 	return VestingOutputs{Module: m}
 }

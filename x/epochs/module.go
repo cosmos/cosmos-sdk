@@ -37,11 +37,6 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	// TODO implement me
-	panic("implement me")
-}
-
 // NewAppModule creates a new AppModule object.
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	return AppModule{
@@ -134,6 +129,11 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 }
 
 // AppModuleSimulation functions
+
+// WeightedOperations is a no-op.
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return nil
+}
 
 // GenerateGenesisState creates a randomized GenState of the epochs module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {

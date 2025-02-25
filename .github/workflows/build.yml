@@ -40,6 +40,12 @@ jobs:
       - name: Build with Secp_cgo
         if: matrix.go-arch == 'amd64'
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="secp" make build
+      - name: Build with legacy app.go
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="legacy" make build
+      - name: Build with legacy app.go and Secp_cgo
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="legacy,secp" make build
         ###################
         ## Build Tooling ##
         ###################

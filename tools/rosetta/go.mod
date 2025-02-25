@@ -129,4 +129,4 @@ require (
 )
 
 // use cometbft
-replace github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.6-0.20250220043405-d91eb54f41d9
+replace github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.15-alpha.agoric.1

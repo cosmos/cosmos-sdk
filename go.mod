@@ -194,7 +194,7 @@ replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// use cometbft
-	github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.6-0.20250220043405-d91eb54f41d9
+	github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.15-alpha.agoric.1
 	// replace broken iavl
 	github.com/cosmos/iavl => github.com/cosmos/iavl v0.19.7
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

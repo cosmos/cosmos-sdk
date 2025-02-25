@@ -49,10 +49,9 @@ func TestSnapshotter(t *testing.T) {
 
 	// start the manager and wait a bit for the background purge loop to run
 	txm2.Start()
-	time.Sleep(time.Millisecond * 5)
-	txm2.OnNewBlock(currentTime.Add(time.Second * 200))
-	time.Sleep(time.Second * 5) // the loop runs every 5 seconds, so we need to wait for that
-	require.Equal(t, 0, txm2.Size())
+	txm2.OnNewBlock(currentTime.Add(time.Second * 200)) // blocks until channel is read in purge loop
+	// the loop runs every 5 seconds, so we need to wait for that
+	require.Eventually(t, func() bool { return txm2.Size() == 0 }, 6*time.Second, 500*time.Millisecond)
 
 	// restore with timestamp < timeout time which should result in all unordered txs synced
 	txm3 := unorderedtx.NewManager(dataDir)

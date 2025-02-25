@@ -4,6 +4,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 
 // TextualData represents all the information needed to generate
 // the textual SignDoc (which is []Screen encoded to CBOR). It is meant to be
@@ -83,4 +84,6 @@ message Envelope {
   repeated google.protobuf.Any extension_options              = 16;
   repeated google.protobuf.Any non_critical_extension_options = 17;
   string                       hash_of_raw_bytes              = 18;
+  bool                         unordered                      = 19;
+  google.protobuf.Timestamp    timeout_timestamp              = 20;
 }

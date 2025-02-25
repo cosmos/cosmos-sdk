@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
@@ -33,6 +34,7 @@ type Factory struct {
 	sequence           uint64
 	gas                uint64
 	timeoutHeight      uint64
+	timeoutTimestamp   time.Time
 	gasAdjustment      float64
 	chainID            string
 	fromName           string
@@ -86,6 +88,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 
 	gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)
 	memo := clientCtx.Viper.GetString(flags.FlagNote)
+	timestampUnix := clientCtx.Viper.GetInt64(flags.FlagTimeoutTimestamp)
+	timeoutTimestamp := time.Unix(timestampUnix, 0)
 	timeoutHeight := clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
 	unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
 
@@ -105,6 +109,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		accountNumber:      accNum,
 		sequence:           accSeq,
 		timeoutHeight:      timeoutHeight,
+		timeoutTimestamp:   timeoutTimestamp,
 		unordered:          unordered,
 		gasAdjustment:      gasAdj,
 		memo:               memo,
@@ -135,6 +140,7 @@ func (f Factory) Fees() sdk.Coins                           { return f.fees }
 func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
+func (f Factory) TimeoutTimestamp() time.Time               { return f.timeoutTimestamp }
 func (f Factory) Unordered() bool                           { return f.unordered }
 func (f Factory) FromName() string                          { return f.fromName }
 
@@ -246,6 +252,12 @@ func (f Factory) WithSignMode(mode signing.SignMode) Factory {
 // WithTimeoutHeight returns a copy of the Factory with an updated timeout height.
 func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	f.timeoutHeight = height
+	return f
+}
+
+// WithTimeoutTimestamp returns a copy of the Factory with an updated timeout timestamp.
+func (f Factory) WithTimeoutTimestamp(timestamp time.Time) Factory {
+	f.timeoutTimestamp = timestamp
 	return f
 }
 
@@ -361,6 +373,8 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetFeeGranter(f.feeGranter)
 	tx.SetFeePayer(f.feePayer)
 	tx.SetTimeoutHeight(f.TimeoutHeight())
+	tx.SetTimeoutTimestamp(f.TimeoutTimestamp())
+	tx.SetUnordered(f.Unordered())
 
 	if etx, ok := tx.(client.ExtendedTxBuilder); ok {
 		etx.SetExtensionOptions(f.extOptions...)

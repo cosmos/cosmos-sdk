@@ -2,7 +2,6 @@ package ante
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
@@ -74,13 +73,7 @@ func (d *UnorderedTxDecorator) AnteHandle(
 	return next(ctx, tx, false)
 }
 
-func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkTx, ok := tx.(sdk.Tx)
-	if !ok {
-		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
-	}
-
+func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the
@@ -88,7 +81,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error 
 		return nil
 	}
 
-	blockTime := sdkCtx.BlockTime()
+	blockTime := ctx.BlockTime()
 	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
 	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
 		return errorsmod.Wrap(
@@ -111,16 +104,16 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error 
 	}
 
 	// consume gas in all exec modes to avoid gas estimation discrepancies
-	sdkCtx.GasMeter().ConsumeGas(d.sha256GasCost, "consume gas for calculating tx hash")
+	ctx.GasMeter().ConsumeGas(d.sha256GasCost, "consume gas for calculating tx hash")
 
 	// Avoid checking for duplicates and creating the identifier in simulation mode
 	// This is done to avoid sha256 computation in simulation mode
-	if sdkCtx.ExecMode() == sdk.ExecModeSimulate {
+	if ctx.ExecMode() == sdk.ExecModeSimulate {
 		return nil
 	}
 
 	// calculate the tx hash
-	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), sdkTx)
+	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), tx)
 	if err != nil {
 		return err
 	}
@@ -132,7 +125,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error 
 			"tx %X is duplicated",
 		)
 	}
-	if sdkCtx.ExecMode() == sdk.ExecModeFinalize {
+	if ctx.ExecMode() == sdk.ExecModeFinalize {
 		// a new tx included in the block, add the hash to the unordered tx manager
 		d.txManager.Add(txHash, timeoutTimestamp)
 	}

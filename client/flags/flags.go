@@ -73,6 +73,7 @@ const (
 	FlagPageKey          = "page-key"
 	FlagOffset           = "offset"
 	FlagCountTotal       = "count-total"
+	FlagTimeoutHeight    = "timeout-height"
 	FlagTimeoutTimestamp = "timeout-timestamp"
 	FlagUnordered        = "unordered"
 	FlagKeyAlgorithm     = "algo"
@@ -136,6 +137,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f.Bool(FlagOffline, false, "Offline mode (does not allow any online functionality)")
 	f.BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	f.String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
+	f.Uint64(FlagTimeoutHeight, 0, "DEPRECATED: Please use --timeout-timestamp instead. Set a block timeout height to prevent the tx from being committed past a certain height")
 	f.Int64(FlagTimeoutTimestamp, 0, "Set a block timeout timestamp to prevent the tx from being committed past a certain time")
 	f.Bool(FlagUnordered, false, "Enable unordered transaction delivery; must be used in conjunction with --timeout-timestamp")
 	f.String(FlagFeePayer, "", "Fee payer pays fees for the transaction instead of deducting from the signer")
@@ -146,6 +148,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	// --gas can accept integers and "auto"
 	f.String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically. Note: %q option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of %q. (default %d)",
 		GasFlagAuto, GasFlagAuto, FlagFees, DefaultGasLimit))
+
+	cmd.MarkFlagsMutuallyExclusive(FlagTimeoutHeight, FlagTimeoutTimestamp)
 
 	AddKeyringFlags(f)
 }

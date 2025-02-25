@@ -113,7 +113,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	}
 
 	// calculate the tx hash
-	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), tx)
+	txHash, err := TxHashFromTimeout(uint64(timeoutTimestamp.Unix()), tx)
 	if err != nil {
 		return err
 	}
@@ -133,15 +133,15 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	return nil
 }
 
-// TxIdentifier returns a unique identifier for a transaction that is intended to be unordered.
-func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
+// TxHashFromTimeout returns a TxHash for an unordered transaction.
+func TxHashFromTimeout(timeout uint64, tx sdk.Tx) (unorderedtx.TxHash, error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
-		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return unorderedtx.TxHash{}, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	if sigTx.GetFee().IsZero() {
-		return [32]byte{}, errorsmod.Wrap(
+		return unorderedtx.TxHash{}, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"unordered transaction must have a fee",
 		)
@@ -155,12 +155,12 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 	// Add signatures to the transaction identifier
 	signatures, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return [32]byte{}, err
+		return unorderedtx.TxHash{}, err
 	}
 
 	for _, sig := range signatures {
 		if err := addSignatures(sig.Data, buf); err != nil {
-			return [32]byte{}, err
+			return unorderedtx.TxHash{}, err
 		}
 	}
 
@@ -171,14 +171,14 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
 		bz, err := proto.Marshal(msg)
 		if err != nil {
-			return [32]byte{}, errorsmod.Wrap(
+			return unorderedtx.TxHash{}, errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"failed to marshal message",
 			)
 		}
 
 		if _, err := buf.Write(bz); err != nil {
-			return [32]byte{}, errorsmod.Wrap(
+			return unorderedtx.TxHash{}, errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"failed to write message to buffer",
 			)
@@ -187,7 +187,7 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 
 	// write the timeout height to the buffer
 	if err := binary.Write(buf, binary.LittleEndian, timeout); err != nil {
-		return [32]byte{}, errorsmod.Wrap(
+		return unorderedtx.TxHash{}, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"failed to write timeout_height to buffer",
 		)
@@ -195,7 +195,7 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 
 	// write gas to the buffer
 	if err := binary.Write(buf, binary.LittleEndian, sigTx.GetGas()); err != nil {
-		return [32]byte{}, errorsmod.Wrap(
+		return unorderedtx.TxHash{}, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"failed to write unordered to buffer",
 		)

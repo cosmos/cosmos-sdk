@@ -164,7 +164,7 @@ func genUnorderedTx(t *testing.T, unordered bool, timestamp time.Time) (sdk.Tx, 
 	tx, err := s.CreateTestTx(s.ctx, privKeys, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	txBz, err := ante.TxIdentifier(uint64(timestamp.Unix()), tx)
+	txBz, err := ante.TxHashFromTimeout(uint64(timestamp.Unix()), tx)
 
 	require.NoError(t, err)
 

@@ -20,8 +20,8 @@ func (f FeePool) ValidateGenesis() error {
 		return fmt.Errorf("negative DecimalPool in distribution fee pool, is %v", f.DecimalPool)
 	}
 
-	if f.CommunityPool.IsAnyNegative() { // TODO(@julienrbrt) in v0.53, panic if the community pool is set
-		return fmt.Errorf("negative CommunityPool in distribution fee pool, is %v", f.CommunityPool)
+	if f.CommunityPool.IsAnyNegative() {
+		panic(fmt.Sprintf("negative CommunityPool in distribution fee pool, is %v", f.CommunityPool))
 	}
 
 	return nil

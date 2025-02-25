@@ -24,7 +24,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 	Ctx          sdk.Context
 	storeService store.KVStoreService
-	EpochsKeeper *epochskeeper.Keeper
+	EpochsKeeper epochskeeper.Keeper
 	queryClient  types.QueryClient
 }
 
@@ -36,7 +36,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.storeService = ss
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
-	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*s.EpochsKeeper))
+	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(s.EpochsKeeper))
 	grpcQueryService := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: queryRouter,
 		Ctx:             s.Ctx,
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.queryClient = types.NewQueryClient(grpcQueryService)
 }
 
-func Setup(t *testing.T) (sdk.Context, *epochskeeper.Keeper, store.KVStoreService) {
+func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper, store.KVStoreService) {
 	t.Helper()
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
@@ -59,12 +59,12 @@ func Setup(t *testing.T) (sdk.Context, *epochskeeper.Keeper, store.KVStoreServic
 		storeService,
 		encCfg.Codec,
 	)
-	epochsKeeper = epochsKeeper.SetHooks(types.NewMultiEpochHooks())
+	epochsKeeper.SetHooks(types.NewMultiEpochHooks())
 	ctx = ctx.WithBlockTime(time.Now().UTC()).WithBlockHeight(1).WithChainID("epochs")
 
 	err := epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
 	require.NoError(t, err)
-	SetEpochStartTime(ctx, *epochsKeeper)
+	SetEpochStartTime(ctx, epochsKeeper)
 
 	return ctx, epochsKeeper, storeService
 }

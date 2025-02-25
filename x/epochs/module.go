@@ -34,7 +34,7 @@ const ConsensusVersion = 1
 // AppModule implements the AppModule interface for the epochs module.
 type AppModule struct {
 	cdc    codec.Codec
-	keeper *keeper.Keeper
+	keeper keeper.Keeper
 }
 
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
@@ -43,7 +43,7 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		cdc:    cdc,
 		keeper: keeper,
@@ -60,7 +60,9 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the epochs module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(_ codectypes.InterfaceRegistry) {}
+func (AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+
+func (AppModule) RegisterInterfaces(_ codectypes.InterfaceRegistry) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the epochs module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
@@ -71,7 +73,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterQueryServer(registrar, keeper.NewQuerier(*am.keeper))
+	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
 	return nil
 }
 

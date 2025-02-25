@@ -39,7 +39,7 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	EpochKeeper *keeper.Keeper
+	EpochKeeper keeper.Keeper
 	Module      appmodule.AppModule
 }
 

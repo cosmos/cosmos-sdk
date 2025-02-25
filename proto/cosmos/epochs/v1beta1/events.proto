@@ -3,10 +3,7 @@ syntax = "proto3";
 
 package cosmos.epochs.v1beta1;
 
-import "cosmos_proto/cosmos.proto";
-import "cosmos/epochs/v1beta1/genesis.proto";
-
-option go_package = "cosmossdk.io/x/epochs/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/epochs/types";
 
 // EventEpochEnd is an event emitted when an epoch end.
 message EventEpochEnd {

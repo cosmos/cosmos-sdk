@@ -7,7 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/x/epochs/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -24,9 +25,11 @@ func NewQuerier(k Keeper) Querier {
 }
 
 // EpochInfos provide running epochInfos.
-func (q Querier) EpochInfos(ctx context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
-	epochs, err := q.Keeper.AllEpochInfos(ctx)
-	return &types.QueryEpochsInfoResponse{
+func (q Querier) EpochInfos(ctx context.Context, _ *types.QueryEpochInfosRequest) (*types.QueryEpochInfosResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	epochs, err := q.Keeper.AllEpochInfos(sdkCtx)
+	return &types.QueryEpochInfosResponse{
 		Epochs: epochs,
 	}, err
 }

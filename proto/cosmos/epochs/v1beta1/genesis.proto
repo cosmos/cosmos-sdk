@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "cosmossdk.io/x/epochs/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/epochs/types";
 
 // EpochInfo is a struct that describes the data going into
 // a timer defined by the x/epochs module.

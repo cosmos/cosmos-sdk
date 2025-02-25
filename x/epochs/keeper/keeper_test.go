@@ -7,36 +7,33 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
-	epochskeeper "cosmossdk.io/x/epochs/keeper"
-	"cosmossdk.io/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 	Ctx          sdk.Context
-	environment  appmodule.Environment
+	storeService store.KVStoreService
 	EpochsKeeper *epochskeeper.Keeper
 	queryClient  types.QueryClient
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	ctx, epochsKeeper, environment := Setup(s.T())
+	ctx, epochsKeeper, ss := Setup(s.T())
 
 	s.Ctx = ctx
 	s.EpochsKeeper = epochsKeeper
-	s.environment = environment
+	s.storeService = ss
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
 	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*s.EpochsKeeper))
@@ -44,32 +41,32 @@ func (s *KeeperTestSuite) SetupTest() {
 		GRPCQueryRouter: queryRouter,
 		Ctx:             s.Ctx,
 	}
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	grpcQueryService.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	s.queryClient = types.NewQueryClient(grpcQueryService)
 }
 
-func Setup(t *testing.T) (sdk.Context, *epochskeeper.Keeper, appmodule.Environment) {
+func Setup(t *testing.T) (sdk.Context, *epochskeeper.Keeper, store.KVStoreService) {
 	t.Helper()
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	ctx := testCtx.Ctx.WithBlockTime(time.Now().UTC())
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	epochsKeeper := epochskeeper.NewKeeper(
-		environment,
+		storeService,
 		encCfg.Codec,
 	)
 	epochsKeeper = epochsKeeper.SetHooks(types.NewMultiEpochHooks())
-	ctx.WithHeaderInfo(header.Info{Height: 1, Time: time.Now().UTC(), ChainID: "epochs"})
+	ctx = ctx.WithBlockTime(time.Now().UTC()).WithBlockHeight(1).WithChainID("epochs")
+
 	err := epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
 	require.NoError(t, err)
 	SetEpochStartTime(ctx, *epochsKeeper)
 
-	return ctx, epochsKeeper, environment
+	return ctx, epochsKeeper, storeService
 }
 
 func TestKeeperTestSuite(t *testing.T) {

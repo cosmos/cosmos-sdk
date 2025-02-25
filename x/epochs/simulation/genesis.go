@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"cosmossdk.io/x/epochs/types"
-
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 // GenCommunityTax randomized CommunityTax

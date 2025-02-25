@@ -8,23 +8,20 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/codec"
-	"cosmossdk.io/core/registry"
-	"cosmossdk.io/schema"
-	"cosmossdk.io/x/epochs/keeper"
-	"cosmossdk.io/x/epochs/simulation"
-	"cosmossdk.io/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/epochs/keeper"
+	"github.com/cosmos/cosmos-sdk/x/epochs/simulation"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 var (
-	_ module.HasAminoCodec       = AppModule{}
-	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 
@@ -38,6 +35,11 @@ const ConsensusVersion = 1
 type AppModule struct {
 	cdc    codec.Codec
 	keeper *keeper.Keeper
+}
+
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	// TODO implement me
+	panic("implement me")
 }
 
 // NewAppModule creates a new AppModule object.
@@ -58,7 +60,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the epochs module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {}
+func (AppModule) RegisterLegacyAminoCodec(_ codectypes.InterfaceRegistry) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the epochs module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
@@ -74,7 +76,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // DefaultGenesis returns the epochs module's default genesis state.
-func (am AppModule) DefaultGenesis() json.RawMessage {
+func (am AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 	data, err := am.cdc.MarshalJSON(types.DefaultGenesis())
 	if err != nil {
 		panic(err)
@@ -83,7 +85,7 @@ func (am AppModule) DefaultGenesis() json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the epochs module.
-func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := am.cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -93,23 +95,31 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs the epochs module's genesis initialization
-func (am AppModule) InitGenesis(ctx context.Context, bz json.RawMessage) error {
+func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, bz json.RawMessage) {
 	var gs types.GenesisState
 	err := am.cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
-		return (fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err))
+		panic(fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err))
 	}
 
-	return am.keeper.InitGenesis(ctx, gs)
+	if err := am.keeper.InitGenesis(ctx, gs); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the epochs module's exported genesis state as raw JSON bytes.
-func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
 	gs, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return am.cdc.MarshalJSON(gs)
+
+	bz, err := am.cdc.MarshalJSON(gs)
+	if err != nil {
+		panic(err)
+	}
+
+	return bz
 }
 
 // ConsensusVersion implements HasConsensusVersion
@@ -117,7 +127,8 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the epochs module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return am.keeper.BeginBlocker(sdkCtx)
 }
 
 // AppModuleSimulation functions
@@ -132,8 +143,11 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
+// TODO add when we have collections full support with schema
+/*
 // ModuleCodec implements schema.HasModuleCodec.
 // It allows the indexer to decode the module's KVPairUpdate.
 func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
 }
+*/

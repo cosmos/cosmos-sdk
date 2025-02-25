@@ -7,12 +7,13 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/epochs/keeper"
-	"cosmossdk.io/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/epochs/keeper"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -30,9 +31,9 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *modulev1.Module
-	Cdc         codec.Codec
-	Environment appmodule.Environment
+	Config       *modulev1.Module
+	Cdc          codec.Codec
+	StoreService store.KVStoreService
 }
 
 type ModuleOutputs struct {
@@ -43,7 +44,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Environment, in.Cdc)
+	k := keeper.NewKeeper(in.StoreService, in.Cdc)
 	m := NewAppModule(in.Cdc, k)
 	return ModuleOutputs{EpochKeeper: k, Module: m}
 }

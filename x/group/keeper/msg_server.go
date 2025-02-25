@@ -200,6 +200,10 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 				return err
 			}
 		}
+		// ensure that group has one or more members
+		if totalWeight.IsZero() {
+			return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
+		}
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
 		g.Version++
@@ -1145,10 +1149,8 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 		if _, err := math.NewNonNegativeDecFromString(member.Weight); err != nil {
 			return errorsmod.Wrap(err, "weight must be non negative")
 		}
-
 		index[member.Address] = struct{}{}
 	}
-
 	return nil
 }
 

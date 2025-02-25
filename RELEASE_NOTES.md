@@ -1,26 +1,16 @@
-# Cosmos SDK v0.50.11 Release Notes
+# Cosmos SDK v0.50.12 Release Notes
 
 💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/58)
 
 ## 🚀 Highlights
 
-We are back on schedule for our monthly v0.50.x patch releases.
-The last two months, next to ramping up on v0.52 and v2, we added a few bug fixes and (UX) improvements.
+This patch release fixes [GHSA-x5vx-95h7-rv4p](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-x5vx-95h7-rv4p).
+It resolves a `x/group` module issue that can halt chain when handling a malicious proposal.
+Only users of the `x/group` module are affected by this issue.
 
-Notable changes:
-
-* Fix [ABS-0043/ABS-0044](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-8wcc-m6j2-qxvm).
-* New Linux-only backend that adds Linux kernel's `keyctl` support
-* Skip sims test when running dry on validators
+We recommended to upgrade to this patch release as soon as possible.
+When upgrading from <= v0.50.11, please use a chain upgrade to ensure that 2/3 of the validator power upgrade to v0.50.12.
 
 ## 📝 Changelog
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.11/CHANGELOG.md) for an exhaustive list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.50.10...v0.50.11) from the last release.
-
-## Maintenance Policy
-
-Cosmos SDK Olympus (v0.52) final release is approaching really soon. That means the Eden line (v0.50.x) will soon only be supported for bug fixes only, as per our release policy. Earlier versions are not maintained.  
-
-Note, that the next SDK release, v0.52, does not include `x/params` migration, when migrating from < v0.47, v0.50.x **or** v0.47.x, is a mandatory migration.
-
-Start integrating with [Cosmos SDK Eden (v0.52)](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#v052x) and enjoy and the new features and performance improvements.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.12/CHANGELOG.md) for an exhaustive list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.50.11...v0.50.12) from the last release.

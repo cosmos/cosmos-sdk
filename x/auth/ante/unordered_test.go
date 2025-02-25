@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -70,7 +69,7 @@ func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(unorderedtx.DefaultMaxTimeoutDuration+time.Second))
-	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()})
+	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockTime(time.Now())
 	_, err := chain(ctx, tx, false)
 	require.Error(t, err)
 }
@@ -88,7 +87,7 @@ func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
-	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
+	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockTime(time.Now()).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
 
 	bz := [32]byte{}
 	copy(bz[:], txBz[:32])
@@ -111,7 +110,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
-	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeCheck).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
+	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockTime(time.Now()).WithExecMode(sdk.ExecModeCheck).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
 
 	_, err := chain(ctx, tx, false)
 	require.NoError(t, err)
@@ -130,7 +129,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
-	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeFinalize).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
+	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockTime(time.Now()).WithExecMode(sdk.ExecModeFinalize).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
 
 	_, err := chain(ctx, tx, false)
 	require.NoError(t, err)

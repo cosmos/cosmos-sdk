@@ -33,7 +33,7 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 
 // UnorderedTxDecorator defines an AnteHandler decorator that is responsible for
 // checking if a transaction is intended to be unordered and if so, evaluates
-// the transaction accordingly. An unordered transaction will bypass having it's
+// the transaction accordingly. An unordered transaction will bypass having its
 // nonce incremented, which allows fire-and-forget along with possible parallel
 // transaction processing, without having to deal with nonces.
 //
@@ -88,7 +88,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error 
 		return nil
 	}
 
-	headerInfo := sdkCtx.HeaderInfo()
+	blockTime := sdkCtx.BlockTime()
 	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
 	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
 		return errorsmod.Wrap(
@@ -96,13 +96,13 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error 
 			"unordered transaction must have timeout_timestamp set",
 		)
 	}
-	if timeoutTimestamp.Before(headerInfo.Time) {
+	if timeoutTimestamp.Before(blockTime) {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"unordered transaction has a timeout_timestamp that has already passed",
 		)
 	}
-	if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
+	if timeoutTimestamp.After(blockTime.Add(d.maxTimeoutDuration)) {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"unordered tx ttl exceeds %s",

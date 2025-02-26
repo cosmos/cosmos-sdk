@@ -158,111 +158,6 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
 
-#### Unordered Transactions
-
-The Cosmos SDK now supports unordered transactions. This means that transactions
-can be executed in any order and doesn't require the client to deal with or manage
-nonces. This also means the order of execution is not guaranteed.
-
-Unordered transactions are automatically enabled when using `depinject` / app di, simply supply the `servertypes.AppOptions` in `app.go`:
-
-```diff
-	depinject.Supply(
-+		// supply the application options
-+		appOpts,
-		// supply the logger
-		logger,
-	)
-```
-
-<details>
-<summary>Step-by-step Wiring </summary>
-If you are still using the legacy wiring, you must enable unordered transactions manually:
-
-* Update the `App` constructor to create, load, and save the unordered transaction
-  manager.
-
-  ```go
-  func NewApp(...) *App {
-      // ...
-
-      // create, start, and load the unordered tx manager
-      utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-      app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-      app.UnorderedTxManager.Start()
-
-      if err := app.UnorderedTxManager.OnInit(); err != nil {
-          panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-      }
-  }
-  ```
-
-* Add the decorator to the existing AnteHandler chain, which should be as early
-  as possible.
-
-  ```go
-  anteDecorators := []sdk.AnteDecorator{
-      ante.NewSetUpContextDecorator(),
-      // ...
-      ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.TxManager, options.Environment),
-      // ...
-  }
-
-  return sdk.ChainAnteDecorators(anteDecorators...), nil
-  ```
-
-* If the App has a SnapshotManager defined, you must also register the extension
-  for the TxManager.
-
-  ```go
-  if manager := app.SnapshotManager(); manager != nil {
-      err := manager.RegisterExtensions(unorderedtx.NewSnapshotter(app.UnorderedTxManager))
-      if err != nil {
-          panic(fmt.Errorf("failed to register snapshot extension: %s", err))
-      }
-  }
-  ```
-
-* Create or update the App's `Preblocker()` method to call the unordered tx
-  manager's `OnNewBlock()` method.
-
-  ```go
-  ...
-  app.SetPreblocker(app.PreBlocker)
-  ...
-
-  func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-      app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
-      return app.ModuleManager.PreBlock(ctx, req)
-  }
-  ```
-
-* Create or update the App's `Close()` method to close the unordered tx manager.
-  Note, this is critical as it ensures the manager's state is written to file
-  such that when the node restarts, it can recover the state to provide replay
-  protection.
-
-  ```go
-  func (app *App) Close() error {
-      // ...
-
-      // close the unordered tx manager
-      if e := app.UnorderedTxManager.Close(); e != nil {
-          err = errors.Join(err, e)
-      }
-
-      return err
-  }
-  ```
-
-</details>
-
-To submit an unordered transaction, the client must set the `unordered` flag to
-`true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
-used as a TTL for the transaction and is used to provide replay protection. See
-[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md)
-for more details.
-
 #### Module Assertions
 
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`. This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `appmodule.HasBeginBlocker`, `appmodule.HasEndBlocker` and `appmodule.HasGenesis` / `module.HasGenesis` interfaces.
@@ -508,14 +403,14 @@ It is possible to ensure that a module implements the correct interfaces by usin
 
 ```go
 var (
-	_ module.AppModuleBasic      = (*AppModule)(nil)
-	_ module.AppModuleSimulation = (*AppModule)(nil)
-	_ module.HasGenesis          = (*AppModule)(nil)
+_ module.AppModuleBasic      = (*AppModule)(nil)
+_ module.AppModuleSimulation = (*AppModule)(nil)
+_ module.HasGenesis          = (*AppModule)(nil)
 
-	_ appmodule.AppModule        = (*AppModule)(nil)
-	_ appmodule.HasBeginBlocker  = (*AppModule)(nil)
-	_ appmodule.HasEndBlocker    = (*AppModule)(nil)
-	...
+_ appmodule.AppModule        = (*AppModule)(nil)
+_ appmodule.HasBeginBlocker  = (*AppModule)(nil)
+_ appmodule.HasEndBlocker    = (*AppModule)(nil)
+...
 )
 ```
 

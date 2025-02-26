@@ -150,6 +150,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 		GasFlagAuto, GasFlagAuto, FlagFees, DefaultGasLimit))
 
 	cmd.MarkFlagsMutuallyExclusive(FlagTimeoutHeight, FlagTimeoutTimestamp)
+	cmd.MarkFlagsRequiredTogether(FlagUnordered, FlagTimeoutTimestamp)
 
 	AddKeyringFlags(f)
 }

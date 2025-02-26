@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -26,6 +25,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -44,7 +44,7 @@ type App struct {
 	ModuleManager      *module.Manager
 	UnorderedTxManager *unorderedtx.Manager
 
-	configurator      module.Configurator // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry

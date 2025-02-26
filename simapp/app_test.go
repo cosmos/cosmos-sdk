@@ -51,8 +51,6 @@ import (
 	group "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -219,7 +217,6 @@ func TestRunMigrations(t *testing.T) {
 					slashingtypes.ModuleName: slashing.AppModule{}.ConsensusVersion(),
 					govtypes.ModuleName:      gov.AppModule{}.ConsensusVersion(),
 					grouptypes.ModuleName:    group.AppModule{}.ConsensusVersion(),
-					paramstypes.ModuleName:   params.AppModule{}.ConsensusVersion(),
 					upgradetypes.ModuleName:  upgrade.AppModule{}.ConsensusVersion(),
 					vestingtypes.ModuleName:  vesting.AppModule{}.ConsensusVersion(),
 					feegrant.ModuleName:      feegrantmodule.AppModule{}.ConsensusVersion(),
@@ -268,7 +265,6 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"distribution": distribution.AppModule{}.ConsensusVersion(),
 			"slashing":     slashing.AppModule{}.ConsensusVersion(),
 			"gov":          gov.AppModule{}.ConsensusVersion(),
-			"params":       params.AppModule{}.ConsensusVersion(),
 			"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 			"vesting":      vesting.AppModule{}.ConsensusVersion(),
 			"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),

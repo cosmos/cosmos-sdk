@@ -39,8 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
-* (all) [23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support. 
-  * Adds a `--timeout-timestamp` flag that allows users to specify a block time at which the unordered transactions should expire from the mempool.
+
+* (all) [23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support.
+    * Adds a `--timeout-timestamp` flag that allows users to specify a block time at which the unordered transactions should expire from the mempool.
+* (client) [#23811](https://github.com/cosmos/cosmos-sdk/pull/23811) Add auto cli for node service
 
 ### Bug Fixes
 

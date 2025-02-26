@@ -50,7 +50,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
 		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(options.AccountKeeper),
-		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigGasConsumer),
+		NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+		NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 
 	if options.UnorderedTxManager != nil {

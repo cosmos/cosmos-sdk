@@ -4,7 +4,6 @@
 
 * Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
 * Jan 30, 2024: Include section on deterministic transaction encoding
-* Feb 26, 2025: Revise section about facilitating nonce incrementing to align with the context of cosmos-sdk v0.53.x.
 
 ## Status
 
@@ -215,23 +214,17 @@ func channelBatchRecv[T any](ch <-chan *T) []*T {
 
 ### AnteHandler Decorator
 
-In order to facilitate bypassing nonce verification, we have to modify the `authenticate` method of the
-SigVerificationDecorator type.
+In order to facilitate bypassing nonce verification, we have to modify the existing
+`IncrementSequenceDecorator` AnteHandler decorator to skip the nonce verification
+when the transaction is marked as un-ordered.
 
 ```golang
-// authenticate the authentication of the TX for a specific tx signer.
-func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx sdk.Tx, simulate bool, signer []byte, sig signing.SignatureV2) error {
-	// ....
+func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+  if tx.UnOrdered() {
+    return next(ctx, tx, simulate)
+  }
 
-	// Bypass incrementing sequence for transactions with unordered set to true.
-	// The actual parameters of the un-ordered tx will be checked in a separate
-	// decorator.
-	unorderedTx, ok := tx.(sdk.TxWithUnordered)
-	if ok && unorderedTx.GetUnordered() {
-		return nil
-	}
-
-	return svd.increaseSequence(ctx, acc)
+  // ...
 }
 ```
 

@@ -31,8 +31,6 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // QueryEpochInfosRequest defines the gRPC request structure for
 // querying all epoch info.
-//
-// Since: cosmos-sdk 0.53
 type QueryEpochInfosRequest struct {
 }
 
@@ -71,8 +69,6 @@ var xxx_messageInfo_QueryEpochInfosRequest proto.InternalMessageInfo
 
 // QueryEpochInfosRequest defines the gRPC response structure for
 // querying all epoch info.
-//
-// Since: cosmos-sdk 0.53
 type QueryEpochInfosResponse struct {
 	Epochs []EpochInfo `protobuf:"bytes,1,rep,name=epochs,proto3" json:"epochs"`
 }
@@ -119,8 +115,6 @@ func (m *QueryEpochInfosResponse) GetEpochs() []EpochInfo {
 
 // QueryCurrentEpochRequest defines the gRPC request structure for
 // querying an epoch by its identifier.
-//
-// Since: cosmos-sdk 0.53
 type QueryCurrentEpochRequest struct {
 	Identifier string `protobuf:"bytes,1,opt,name=identifier,proto3" json:"identifier,omitempty"`
 }
@@ -167,8 +161,6 @@ func (m *QueryCurrentEpochRequest) GetIdentifier() string {
 
 // QueryCurrentEpochResponse defines the gRPC response structure for
 // querying an epoch by its identifier.
-//
-// Since: cosmos-sdk 0.53
 type QueryCurrentEpochResponse struct {
 	CurrentEpoch int64 `protobuf:"varint,1,opt,name=current_epoch,json=currentEpoch,proto3" json:"current_epoch,omitempty"`
 }

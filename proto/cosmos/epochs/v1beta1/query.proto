@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.53
 syntax = "proto3";
 package cosmos.epochs.v1beta1;
 
@@ -21,30 +22,22 @@ service Query {
 
 // QueryEpochInfosRequest defines the gRPC request structure for
 // querying all epoch info.
-//
-// Since: cosmos-sdk 0.53
 message QueryEpochInfosRequest {}
 
 // QueryEpochInfosRequest defines the gRPC response structure for
 // querying all epoch info.
-//
-// Since: cosmos-sdk 0.53
 message QueryEpochInfosResponse {
   repeated EpochInfo epochs = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryCurrentEpochRequest defines the gRPC request structure for
 // querying an epoch by its identifier.
-//
-// Since: cosmos-sdk 0.53
 message QueryCurrentEpochRequest {
   string identifier = 1;
 }
 
 // QueryCurrentEpochResponse defines the gRPC response structure for
 // querying an epoch by its identifier.
-//
-// Since: cosmos-sdk 0.53
 message QueryCurrentEpochResponse {
   int64 current_epoch = 1;
 }

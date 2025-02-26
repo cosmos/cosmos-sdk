@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	// DefaultmaxTimeoutDuration defines the default maximum duration an un-ordered transaction
+	// DefaultMaxTimeoutDuration defines the default maximum duration an un-ordered transaction
 	// can set.
 	DefaultMaxTimeoutDuration = time.Minute * 40
 
@@ -31,8 +31,8 @@ type TxHash [32]byte
 // Manager contains the tx hash dictionary for duplicates checking, and expire
 // them when block production progresses.
 type Manager struct {
-	// blockCh defines a channel to receive newly committed block time
-	blockCh chan time.Time
+	// blockTimeCh defines a channel to receive newly committed block time
+	blockTimeCh chan time.Time
 	// doneCh allows us to ensure the purgeLoop has gracefully terminated prior to closing
 	doneCh chan struct{}
 
@@ -63,10 +63,10 @@ func NewManager(dataDir string) *Manager {
 	}
 
 	m := &Manager{
-		dataDir:  dataDir,
-		blockCh:  make(chan time.Time, 16),
-		doneCh:   make(chan struct{}),
-		txHashes: make(map[TxHash]time.Time),
+		dataDir:     dataDir,
+		blockTimeCh: make(chan time.Time, 16),
+		doneCh:      make(chan struct{}),
+		txHashes:    make(map[TxHash]time.Time),
 	}
 
 	return m
@@ -83,9 +83,9 @@ func (m *Manager) Start() {
 // It will free all necessary resources as well as writing all unexpired unordered
 // transactions along with their TTL values to file.
 func (m *Manager) Close() error {
-	close(m.blockCh)
+	close(m.blockTimeCh)
 	<-m.doneCh
-	m.blockCh = nil
+	m.blockTimeCh = nil
 
 	return m.flushToFile()
 }
@@ -156,7 +156,7 @@ func (m *Manager) OnInit() error {
 // OnNewBlock sends the latest block time to the background purge loop, which
 // should be called in ABCI Commit event.
 func (m *Manager) OnNewBlock(blockTime time.Time) {
-	m.blockCh <- blockTime
+	m.blockTimeCh <- blockTime
 }
 
 func (m *Manager) exportSnapshot(_ uint64, snapshotWriter func([]byte) error) error {
@@ -261,7 +261,7 @@ func (m *Manager) batchReceive() (time.Time, bool) {
 		case <-ctx.Done():
 			return latestTime, true
 
-		case blockTime, ok := <-m.blockCh:
+		case blockTime, ok := <-m.blockTimeCh:
 			if !ok {
 				// channel is closed
 				return time.Time{}, false

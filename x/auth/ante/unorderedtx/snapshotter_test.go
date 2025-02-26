@@ -17,7 +17,7 @@ func TestSnapshotter(t *testing.T) {
 
 	// add a handful of unordered txs
 	for i := 0; i < 100; i++ {
-		txm.Add([32]byte{byte(i)}, currentTime.Add(time.Second*100))
+		txm.Add(unorderedtx.TxHash{byte(i)}, currentTime.Add(time.Second*100))
 	}
 
 	var unorderedTxBz []byte
@@ -61,6 +61,6 @@ func TestSnapshotter(t *testing.T) {
 	require.Equal(t, 100, txm3.Size())
 
 	for i := 0; i < 100; i++ {
-		require.True(t, txm3.Contains([32]byte{byte(i)}))
+		require.True(t, txm3.Contains(unorderedtx.TxHash{byte(i)}))
 	}
 }

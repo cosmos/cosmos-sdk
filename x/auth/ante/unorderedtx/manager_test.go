@@ -25,9 +25,9 @@ func TestUnorderedTxManager_SimpleSize(t *testing.T) {
 
 	txm.Start()
 
-	txm.Add([32]byte{0xFF}, time.Now())
-	txm.Add([32]byte{0xAA}, time.Now())
-	txm.Add([32]byte{0xCC}, time.Now())
+	txm.Add(unorderedtx.TxHash{0xFF}, time.Now())
+	txm.Add(unorderedtx.TxHash{0xAA}, time.Now())
+	txm.Add(unorderedtx.TxHash{0xCC}, time.Now())
 
 	require.Equal(t, 3, txm.Size())
 }
@@ -41,13 +41,13 @@ func TestUnorderedTxManager_SimpleContains(t *testing.T) {
 	txm.Start()
 
 	for i := 0; i < 10; i++ {
-		txHash := [32]byte{byte(i)}
+		txHash := unorderedtx.TxHash{byte(i)}
 		txm.Add(txHash, time.Now())
 		require.True(t, txm.Contains(txHash))
 	}
 
 	for i := 10; i < 20; i++ {
-		txHash := [32]byte{byte(i)}
+		txHash := unorderedtx.TxHash{byte(i)}
 		require.False(t, txm.Contains(txHash))
 	}
 }
@@ -70,7 +70,7 @@ func TestUnorderedTxManager_CloseInit(t *testing.T) {
 
 	// add a handful of unordered txs
 	for i := 0; i < 100; i++ {
-		txm.Add([32]byte{byte(i)}, time.Now())
+		txm.Add(unorderedtx.TxHash{byte(i)}, time.Now())
 	}
 
 	// close the manager, which should flush all unexpired txs to file
@@ -88,7 +88,7 @@ func TestUnorderedTxManager_CloseInit(t *testing.T) {
 	require.Equal(t, 100, txm2.Size())
 
 	for i := 0; i < 100; i++ {
-		require.True(t, txm2.Contains([32]byte{byte(i)}))
+		require.True(t, txm2.Contains(unorderedtx.TxHash{byte(i)}))
 	}
 }
 
@@ -105,7 +105,7 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 	// Seed the manager with a txs, some of which should eventually be purged and
 	// the others will remain. Txs with TTL less than or equal to 50 should be purged.
 	for i := 1; i <= 100; i++ {
-		txHash := [32]byte{byte(i)}
+		txHash := unorderedtx.TxHash{byte(i)}
 
 		if i <= 50 {
 			txm.Add(txHash, currentTime.Add(time.Millisecond*500*time.Duration(i)))

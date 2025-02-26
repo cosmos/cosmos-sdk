@@ -1,6 +1,6 @@
 module cosmossdk.io/tools/rosetta
 
-go 1.22
+go 1.23
 
 
 require (

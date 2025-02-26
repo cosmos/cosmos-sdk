@@ -239,6 +239,28 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"empty total power",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"0",
+			time.Second * 50,
+			group.DecisionPolicyResult{
+				Allow: false,
+				Final: true,
+			},
+			false,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

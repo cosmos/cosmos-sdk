@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	_ "cosmossdk.io/api/cosmos/accounts/defaults/base/v1" // import for side-effects
 	"cosmossdk.io/collections"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -122,11 +124,36 @@ func (k Keeper) IsAccountsModuleAccount(
 	return hasAcc
 }
 
+func (k Keeper) GetAccountNumberLegacy(ctx context.Context) (uint64, error) {
+	store := k.KVStoreService.OpenKVStore(ctx)
+	b, err := store.Get(authtypes.LegacyGlobalAccountNumberKey)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get legacy account number: %w", err)
+	}
+	v := new(gogotypes.UInt64Value)
+	if err := v.Unmarshal(b); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal legacy account number: %w", err)
+	}
+	return v.Value, nil
+}
+
 func (k Keeper) NextAccountNumber(
 	ctx context.Context,
 ) (accNum uint64, err error) {
-	accNum, err = k.AccountNumber.Next(ctx)
+	accNum, err = collections.Item[uint64](k.AccountNumber).Get(ctx)
+	if err != nil && errors.Is(err, collections.ErrNotFound) {
+		// This change makes the method works in historical states.
+		// Although the behavior is not identical, but semantically compatible.
+		//
+		// For the state machine, it also does the migration lazily.
+		accNum, err = k.GetAccountNumberLegacy(ctx)
+	}
+
 	if err != nil {
+		return 0, err
+	}
+
+	if err := k.AccountNumber.Set(ctx, accNum+1); err != nil {
 		return 0, err
 	}
 

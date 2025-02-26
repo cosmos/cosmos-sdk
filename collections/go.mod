@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core/testing v0.0.1
 	cosmossdk.io/schema v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
 	google.golang.org/protobuf v1.36.4

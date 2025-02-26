@@ -26,6 +26,7 @@ var bufPool = sync.Pool{
 	},
 }
 
+// DefaultSha256GasCost is the suggested default gas cost for Sha256 operations in unordered transaction handling.
 const DefaultSha256GasCost = 25
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)

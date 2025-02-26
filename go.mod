@@ -2,8 +2,6 @@ module github.com/cosmos/cosmos-sdk
 
 go 1.22.7
 
-toolchain go1.23.6
-
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/core v0.5.1

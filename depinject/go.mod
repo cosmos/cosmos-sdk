@@ -2,8 +2,6 @@ module cosmossdk.io/depinject
 
 go 1.22
 
-toolchain go1.22.12
-
 require (
 	github.com/pkg/errors v0.9.1
 	github.com/regen-network/gocuke v0.6.2

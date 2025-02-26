@@ -2,8 +2,6 @@ module cosmossdk.io/math
 
 go 1.22
 
-toolchain go1.22.12
-
 require (
 	github.com/stretchr/testify v1.8.1
 	sigs.k8s.io/yaml v1.3.0

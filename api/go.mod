@@ -2,7 +2,6 @@ module cosmossdk.io/api
 
 go 1.22
 
-toolchain go1.22.12
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

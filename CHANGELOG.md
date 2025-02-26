@@ -40,7 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* [#23815](https://github.com/cosmos/cosmos-sdk/pull/23815) Upstream `x/epochs` from Osmosis
+* (x/epochs) [#23815](https://github.com/cosmos/cosmos-sdk/pull/23815) Upstream `x/epochs` from Osmosis
+* (client) [#21074](https://github.com/cosmos/cosmos-sdk/pull/21074) Add auto cli for node service
 
 ### Bug Fixes
 

@@ -2,6 +2,7 @@
 version: v1
 name: buf.build/cosmos/cosmos-sdk
 deps:
+  - buf.build/cometbft/cometbft:68e42a58b3014033aee53aa3202bf37c
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis

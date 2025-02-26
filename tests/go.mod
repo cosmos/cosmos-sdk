@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/tests
 
-go 1.22.7
+go 1.22
 
 require (
 	cosmossdk.io/api v0.3.1

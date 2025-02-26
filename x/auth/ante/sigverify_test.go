@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -24,8 +25,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	storetypes "cosmossdk.io/store/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestSetPubKey(t *testing.T) {

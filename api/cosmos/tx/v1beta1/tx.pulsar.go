@@ -2,11 +2,15 @@
 package txv1beta1
 
 import (
+	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	_ "cosmossdk.io/api/amino"
 	v1beta12 "cosmossdk.io/api/cosmos/base/v1beta1"
 	v1beta11 "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -15,9 +19,6 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_Tx_3_list)(nil)
@@ -8560,7 +8561,7 @@ type TxBody struct {
 	// incremented, which allows for fire-and-forget as well as concurrent
 	// transaction execution.
 	//
-	// Note, when set to true, the existing 'timeout_height' value must
+	// Note, when set to true, the existing 'timeout_timestamp' value must
 	// be set and will be used to correspond to a timestamp in which the transaction is deemed
 	// valid.
 	Unordered bool `protobuf:"varint,4,opt,name=unordered,proto3" json:"unordered,omitempty"`

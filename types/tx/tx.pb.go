@@ -372,7 +372,7 @@ type TxBody struct {
 	// incremented, which allows for fire-and-forget as well as concurrent
 	// transaction execution.
 	//
-	// Note, when set to true, the existing 'timeout_height' value must
+	// Note, when set to true, the existing 'timeout_timestamp' value must
 	// be set and will be used to correspond to a timestamp in which the transaction is deemed
 	// valid.
 	Unordered bool `protobuf:"varint,4,opt,name=unordered,proto3" json:"unordered,omitempty"`

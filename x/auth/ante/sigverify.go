@@ -256,6 +256,9 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
+	utx, ok := tx.(sdk.TxWithUnordered)
+	isUnordered := ok && utx.GetUnordered()
+
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	sigs, err := sigTx.GetSignaturesV2()
@@ -286,11 +289,13 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
-			return ctx, errorsmod.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
+		if !isUnordered {
+			if sig.Sequence != acc.GetSequence() {
+				return ctx, errorsmod.Wrapf(
+					sdkerrors.ErrWrongSequence,
+					"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+				)
+			}
 		}
 
 		// retrieve signer data
@@ -309,7 +314,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 				Address:       acc.GetAddress().String(),
 				ChainID:       chainID,
 				AccountNumber: accNum,
-				Sequence:      acc.GetSequence(),
+				Sequence:      sig.Sequence,
 				PubKey: &anypb.Any{
 					TypeUrl: anyPk.TypeUrl,
 					Value:   anyPk.Value,
@@ -359,6 +364,9 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 }
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	if utx, ok := tx.(sdk.TxWithUnordered); ok && utx.GetUnordered() {
+		return next(ctx, tx, simulate)
+	}
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")

@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (abci) [#23709](https://github.com/cosmos/cosmos-sdk/pull/23709) Add unwrapper to handle join error.
+
 ### Features
 
 * [#15989](https://github.com/cosmos/cosmos-sdk/pull/15989) Add `ErrStopIterating` for modules to use for breaking out of iteration.

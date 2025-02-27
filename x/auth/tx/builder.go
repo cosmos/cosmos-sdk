@@ -7,7 +7,9 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -429,7 +431,31 @@ func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
 }
 
 func (w *wrapper) GetTx() authsigning.Tx {
-	return w
+
+	var body proto.Message
+	if w.tx.Body.GetUnordered() && w.GetTimeoutTimeStamp().IsZero() && w.GetTimeoutTimeStamp().Unix() == 0 {
+		body = &txv1beta1.TxBodyCompat{
+			Messages:                    convertAnys(w.tx.Body.Messages),
+			Memo:                        w.GetMemo(),
+			TimeoutHeight:               w.GetTimeoutHeight(),
+			ExtensionOptions:            convertAnys(w.GetExtensionOptions()),
+			NonCriticalExtensionOptions: convertAnys(w.GetNonCriticalExtensionOptions()),
+		}
+	} else {
+
+	}
+	return w.tx.Body
+}
+
+func convertAnys(anys []*codectypes.Any) []*anypb.Any {
+	newAnys := make([]*anypb.Any, len(anys))
+	for i, a := range anys {
+		newAnys[i] = &anypb.Any{
+			TypeUrl: a.GetTypeUrl(),
+			Value:   a.GetValue(),
+		}
+	}
+	return newAnys
 }
 
 func (w *wrapper) GetProtoTx() *tx.Tx {

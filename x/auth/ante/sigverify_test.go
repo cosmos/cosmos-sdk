@@ -3,6 +3,7 @@ package ante_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -335,27 +336,76 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
-	require.NoError(t, err)
-
 	isd := ante.NewIncrementSequenceDecorator(suite.accountKeeper)
 	antehandler := sdk.ChainAnteDecorators(isd)
 
 	testCases := []struct {
-		ctx         sdk.Context
-		simulate    bool
-		expectedSeq uint64
+		name         string
+		ctx          sdk.Context
+		simulate     bool
+		createTx     func() sdk.Tx
+		expectSeqInc bool
 	}{
-		{suite.ctx.WithIsReCheckTx(true), false, 1},
-		{suite.ctx.WithIsCheckTx(true).WithIsReCheckTx(false), false, 2},
-		{suite.ctx.WithIsReCheckTx(true), false, 3},
-		{suite.ctx.WithIsReCheckTx(true), false, 4},
-		{suite.ctx.WithIsReCheckTx(true), true, 5},
+		{
+			"inc on recheck no sim",
+			suite.ctx.WithIsReCheckTx(true),
+			false,
+			func() sdk.Tx {
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+				require.NoError(t, err)
+				return tx
+			},
+			true,
+		},
+		{
+			"inc on no recheck, no sim",
+			suite.ctx.WithIsReCheckTx(false),
+			false,
+			func() sdk.Tx {
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+				require.NoError(t, err)
+				return tx
+			},
+			true,
+		},
+		{
+			"inc on recheck and sim",
+			suite.ctx.WithIsReCheckTx(true),
+			true,
+			func() sdk.Tx {
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+				require.NoError(t, err)
+				return tx
+			},
+			true,
+		},
+		{
+			"no inc on unordered",
+			suite.ctx.WithIsReCheckTx(true),
+			true,
+			func() sdk.Tx {
+				tx, err := suite.CreateTestUnorderedTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT, true, time.Now().Add(time.Hour))
+				require.NoError(t, err)
+				return tx
+			},
+			false,
+		},
 	}
 
 	for i, tc := range testCases {
-		_, err := antehandler(tc.ctx, tx, tc.simulate)
-		require.NoError(t, err, "unexpected error; tc #%d, %v", i, tc)
-		require.Equal(t, tc.expectedSeq, suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence())
+		t.Run(tc.name, func(t *testing.T) {
+			beforeSeq := suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence()
+
+			_, err := antehandler(tc.ctx, tc.createTx(), tc.simulate)
+			require.NoError(t, err, "unexpected error; tc #%d, %v", i, tc)
+
+			afterSeq := suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence()
+
+			if tc.expectSeqInc {
+				require.Equal(t, beforeSeq+1, afterSeq)
+			} else {
+				require.Equal(t, beforeSeq, afterSeq)
+			}
+		})
 	}
 }

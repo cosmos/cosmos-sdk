@@ -174,4 +174,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace cosmossdk.io/systemtests => ../../systemtests
+replace cosmossdk.io/systemtests => ./../../testutil/systemtests

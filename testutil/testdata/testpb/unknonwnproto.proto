@@ -290,7 +290,7 @@ message TestUpdatedTxBody {
   repeated google.protobuf.Any messages                          = 1;
   string                       memo                              = 2;
   int64                        timeout_height                    = 3;
-  uint64                       some_new_field                    = 4;
+  uint64                       some_new_field                    = 5;
   string                       some_new_field_non_critical_field = 1050;
   repeated google.protobuf.Any extension_options                 = 1023;
   repeated google.protobuf.Any non_critical_extension_options    = 2047;

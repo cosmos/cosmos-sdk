@@ -22,7 +22,6 @@ import (
 	client "github.com/cometbft/cometbft/rpc/client/http"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/creachadair/tomledit"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
 
@@ -733,14 +732,6 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		configFile := filepath.Join(configPath, tomlFile)
 		_ = os.Remove(configFile)
 		_ = MustCopyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
-		if tomlFile == "app.toml" && IsV2() {
-			file := filepath.Join(WorkDir, s.nodePath(nodeNumber), "config", tomlFile)
-			EditToml(file, func(doc *tomledit.Document) {
-				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultApiPort+nodeNumber), "grpc-gateway", "address")
-				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultRestPort+nodeNumber), "rest", "address")
-				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultTelemetryPort+nodeNumber), "telemetry", "address")
-			})
-		}
 	}
 	peers := make([]string, len(allNodes)-1)
 	for i, n := range allNodes[0 : len(allNodes)-1] {

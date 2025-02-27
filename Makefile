@@ -228,7 +228,7 @@ $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
 ARGS += -tags "$(test_tags)"
-SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort)
+SUB_MODULES = $(shell find . -type f -name 'go.mod' ! -path './tests/systemtests/*' -print0 | xargs -0 -n1 dirname | sort)
 CURRENT_DIR = $(shell pwd)
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
@@ -237,7 +237,7 @@ ifneq (,$(shell which tparse 2>/dev/null))
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
 		echo "Running unit tests for $$(grep '^module' go.mod)"; \
-		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
+		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) | tparse; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
 	done; \
@@ -248,7 +248,7 @@ else
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
 		echo "Running unit tests for $$(grep '^module' go.mod)"; \
-		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
+		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
 	done; \
@@ -256,6 +256,13 @@ else
 endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)
+
+test-system: build
+	mkdir -p ./tests/systemtests/binaries/
+	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+	$(MAKE) -C tests/systemtests test
+.PHONY: test-system
+
 
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
@@ -488,9 +495,4 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-test-system: build
-	mkdir -p ./tests/systemtests/binaries/
-	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
-	$(MAKE) -C tests/systemtests test
-.PHONY: test-system
 

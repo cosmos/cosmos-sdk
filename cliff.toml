@@ -85,7 +85,7 @@ commit_preprocessors = [
     { pattern = '^Co-authored-by:.*', replace='' },
     # don't include references to issues as changelog entries.
     { pattern = '^ref:.*', replace='' },
-    # exclude CVSS format, CVE can still be included in regular conventinal commits.
+    # exclude CVSS format, CVE can still be included in regular conventional commits.
     { pattern = 'CVSS:.*', replace='' },
     # don't include dependabot auto merge entries.
     { pattern = '.*dependabot-automerge-.*', replace='' },

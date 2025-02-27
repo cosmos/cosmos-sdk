@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   runtime-v2:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     strategy:
       fail-fast: false
     steps:
@@ -39,7 +39,7 @@ jobs:
           cd runtime/v2 && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
 
   server-v2:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     strategy:
       fail-fast: false
     steps:
@@ -63,7 +63,7 @@ jobs:
         run: |
           cd server/v2 && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
   stf:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     strategy:
       fail-fast: false
     steps:
@@ -87,7 +87,7 @@ jobs:
           cd server/v2/stf && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
 
   appmanager:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     strategy:
       fail-fast: false
     steps:
@@ -111,7 +111,7 @@ jobs:
           cd server/v2/appmanager && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
 
   cometbft:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     strategy:
       fail-fast: false
     steps:
@@ -135,7 +135,7 @@ jobs:
           cd server/v2/cometbft && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
 
   test-system-v2:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
         with:
@@ -166,7 +166,7 @@ jobs:
       - name: system tests v2
         if: env.GIT_DIFF
         run: |
-          COSMOS_BUILD_OPTIONS=v2 make test-system
+          make test-system
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

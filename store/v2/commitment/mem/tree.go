@@ -69,3 +69,7 @@ func (t *Tree) Import(version uint64) (commitment.Importer, error) {
 func New() *Tree {
 	return &Tree{MemDB: db.NewMemDB()}
 }
+
+func (t *Tree) IsConcurrentSafe() bool {
+	return false
+}

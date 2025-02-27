@@ -7,17 +7,18 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,44 +33,46 @@ func newWrapperFromDecodedTx(
 	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
 ) (*gogoTxWrapper, error) {
 	var (
-		fees = sdk.Coins{} // decodedTx.Tx.AuthInfo.Fee.Amount might be nil
-		err  error
+		fees                 = sdk.Coins{} // decodedTx.Tx.AuthInfo.Fee.Amount might be nil
+		err                  error
+		feePayer, feeGranter []byte
 	)
-	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
-		amtInt, ok := math.NewIntFromString(fee.Amount)
-		if !ok {
-			return nil, fmt.Errorf("invalid fee coin amount at index %d: %s", i, fee.Amount)
+	if decodedTx.Tx.AuthInfo.Fee != nil {
+		for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
+			amtInt, ok := math.NewIntFromString(fee.Amount)
+			if !ok {
+				return nil, fmt.Errorf("invalid fee coin amount at index %d: %s", i, fee.Amount)
+			}
+			if err = sdk.ValidateDenom(fee.Denom); err != nil {
+				return nil, fmt.Errorf("invalid fee coin denom at index %d: %w", i, err)
+			}
+
+			fees = fees.Add(sdk.Coin{
+				Denom:  fee.Denom,
+				Amount: amtInt,
+			})
 		}
-		if err = sdk.ValidateDenom(fee.Denom); err != nil {
-			return nil, fmt.Errorf("invalid fee coin denom at index %d: %w", i, err)
+		if !fees.IsSorted() {
+			return nil, fmt.Errorf("invalid not sorted tx fees: %s", fees.String())
 		}
 
-		fees = fees.Add(sdk.Coin{
-			Denom:  fee.Denom,
-			Amount: amtInt,
-		})
-	}
-	if !fees.IsSorted() {
-		return nil, fmt.Errorf("invalid not sorted tx fees: %s", fees.String())
-	}
-	// set fee payer
-	var feePayer []byte
-	if len(decodedTx.Signers) != 0 {
-		feePayer = decodedTx.Signers[0]
-		if decodedTx.Tx.AuthInfo.Fee.Payer != "" {
-			feePayer, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Payer)
+		// set fee payer
+		if len(decodedTx.Signers) != 0 {
+			feePayer = decodedTx.Signers[0]
+			if decodedTx.Tx.AuthInfo.Fee.Payer != "" {
+				feePayer, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Payer)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		// fee granter
+		if decodedTx.Tx.AuthInfo.Fee.Granter != "" {
+			feeGranter, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Granter)
 			if err != nil {
 				return nil, err
 			}
-		}
-	}
-
-	// fee granter
-	var feeGranter []byte
-	if decodedTx.Tx.AuthInfo.Fee.Granter != "" {
-		feeGranter, err = addrCodec.StringToBytes(decodedTx.Tx.AuthInfo.Fee.Granter)
-		if err != nil {
-			return nil, err
 		}
 	}
 
@@ -236,11 +239,11 @@ func (w *gogoTxWrapper) GetSigningTxData() txsigning.TxData {
 }
 
 func (w *gogoTxWrapper) GetExtensionOptions() []*codectypes.Any {
-	return intoAnyV1(w.Tx.Body.ExtensionOptions)
+	return intoAnyV1(w.cdc, w.Tx.Body.ExtensionOptions)
 }
 
 func (w *gogoTxWrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
-	return intoAnyV1(w.Tx.Body.NonCriticalExtensionOptions)
+	return intoAnyV1(w.cdc, w.Tx.Body.NonCriticalExtensionOptions)
 }
 
 func (w *gogoTxWrapper) AsTx() (*txtypes.Tx, error) {
@@ -270,13 +273,20 @@ func (w *gogoTxWrapper) AsTxRaw() (*txtypes.TxRaw, error) {
 	}, nil
 }
 
-func intoAnyV1(v2s []*anypb.Any) []*codectypes.Any {
+func intoAnyV1(cdc codec.BinaryCodec, v2s []*anypb.Any) []*codectypes.Any {
 	v1s := make([]*codectypes.Any, len(v2s))
 	for i, v2 := range v2s {
-		v1s[i] = &codectypes.Any{
-			TypeUrl: v2.TypeUrl,
-			Value:   v2.Value,
+		var value *gogoproto.Any
+		if msg, err := decodeFromAny(cdc, v2); err == nil {
+			value, _ = gogoproto.NewAnyWithCacheWithValue(msg)
 		}
+		if value == nil {
+			value = &codectypes.Any{
+				TypeUrl: v2.TypeUrl,
+				Value:   v2.Value,
+			}
+		}
+		v1s[i] = value
 	}
 	return v1s
 }

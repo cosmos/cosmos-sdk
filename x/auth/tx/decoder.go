@@ -5,14 +5,25 @@ import (
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/codec"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/decode"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
+
+// DefaultTxDecoder returns a default protobuf TxDecoder.
+func DefaultTxDecoder(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *decode.Decoder) func([]byte) (sdk.Tx, error) {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		decodedTx, err := decoder.Decode(txBytes)
+		if err != nil {
+			return nil, err
+		}
+		return newWrapperFromDecodedTx(addrCodec, cdc, decodedTx)
+	}
+}
 
 // DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler.
 func DefaultJSONTxDecoder(addrCodec address.Codec, cdc codec.Codec, decoder *decode.Decoder) sdk.TxDecoder {

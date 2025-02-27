@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
+	"cosmossdk.io/schema"
 )
 
 var (
@@ -120,6 +121,28 @@ func (a genericAddressKey[T]) SizeNonTerminal(key T) int {
 	return collections.BytesKey.SizeNonTerminal(key)
 }
 
+func (a genericAddressKey[T]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
+	return collcodec.SchemaCodec[T]{
+		Fields: []schema.Field{{Kind: schema.AddressKind}},
+		ToSchemaType: func(t T) (any, error) {
+			if len(t) == 0 {
+				return nil, fmt.Errorf("invalid empty address")
+			}
+			return t, nil
+		},
+		FromSchemaType: func(s any) (T, error) {
+			addr, ok := s.([]byte)
+			if !ok {
+				return nil, fmt.Errorf("expected []byte, got %T", s)
+			}
+			if len(addr) == 0 {
+				return nil, fmt.Errorf("invalid empty address")
+			}
+			return T(addr), nil
+		},
+	}, nil
+}
+
 // Deprecated: lengthPrefixedAddressKey is a special key codec used to retain state backwards compatibility
 // when a generic address key (be: AccAddress, ValAddress, ConsAddress), is used as an index key.
 // More docs can be found in the LengthPrefixedAddressKey function.
@@ -220,6 +243,26 @@ func (i intValueCodec) Stringify(value math.Int) string {
 
 func (i intValueCodec) ValueType() string {
 	return Int
+}
+
+func (i intValueCodec) SchemaCodec() (collcodec.SchemaCodec[math.Int], error) {
+	return collcodec.SchemaCodec[math.Int]{
+		Fields: []schema.Field{{Kind: schema.IntegerKind}},
+		ToSchemaType: func(t math.Int) (any, error) {
+			return t.String(), nil
+		},
+		FromSchemaType: func(s any) (math.Int, error) {
+			sz, ok := s.(string)
+			if !ok {
+				return math.Int{}, fmt.Errorf("expected string, got %T", s)
+			}
+			t, ok := math.NewIntFromString(sz)
+			if !ok {
+				return math.Int{}, fmt.Errorf("failed to parse Int from string: %s", sz)
+			}
+			return t, nil
+		},
+	}, nil
 }
 
 type uintValueCodec struct{}

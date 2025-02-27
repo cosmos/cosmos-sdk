@@ -117,8 +117,9 @@ func createStartCommand[T transaction.Tx](
 // wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
 // callbackFn, then waits for it to return.
 func wrapCPUProfile(logger log.Logger, cfg server.ConfigMap, callbackFn func() error) error {
-	cpuProfileFile, ok := cfg[FlagCPUProfiling]
-	if !ok {
+	serverCfg := cfg[serverName].(map[string]any)
+	cpuProfileFile, ok := serverCfg["cpu-profile"]
+	if !ok || cpuProfileFile == "" {
 		// if cpu profiling is not enabled, just run the callback
 		return callbackFn()
 	}
@@ -183,6 +184,9 @@ func topLevelCmd(ctx context.Context, use, short string) *cobra.Command {
 var appBuildingCommands = [][]string{
 	{"start"},
 	{"genesis", "export"},
+	{"store", "restore"},
+	{"store", "prune"},
+	{"store", "export"},
 }
 
 // IsAppRequired determines if a command requires a full application to be built by
@@ -204,7 +208,7 @@ func IsAppRequired(cmd *cobra.Command, required ...[]string) bool {
 	}
 	cmdPath := make([]string, 0, 5) // Pre-allocate with reasonable capacity
 	for {
-		cmdPath = append(cmdPath, cmd.Use)
+		cmdPath = append(cmdPath, cmd.Name())
 		if _, ok := m[strings.Join(cmdPath, "")]; ok {
 			return true
 		}

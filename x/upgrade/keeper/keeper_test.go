@@ -5,26 +5,22 @@ import (
 	"path/filepath"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/server"
 	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -34,11 +30,13 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
+	ctx coretesting.TestContext
+	env coretesting.TestEnvironment
+
 	key              *storetypes.KVStoreKey
-	baseApp          *baseapp.BaseApp
+	versionModifier  server.VersionModifier
 	upgradeKeeper    *keeper.Keeper
 	homeDir          string
-	ctx              sdk.Context
 	msgSrvr          types.MsgServer
 	addrs            []sdk.AccAddress
 	encodedAddrs     []string
@@ -48,25 +46,14 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	s.key = key
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 10})
 
-	s.baseApp = baseapp.NewBaseApp(
-		"upgrade",
-		log.NewNopLogger(),
-		testCtx.DB,
-		s.encCfg.TxConfig.TxDecoder(),
-	)
-	s.baseApp.SetParamStore(&paramStore{params: cmttypes.DefaultConsensusParams().ToProto()})
-	s.baseApp.SetVersionModifier(newMockedVersionModifier(0))
+	ctx, env := coretesting.NewTestEnvironment(coretesting.TestEnvironmentConfig{
+		ModuleName: types.ModuleName,
+		Logger:     coretesting.NewNopLogger(),
+	})
 
-	appVersion, err := s.baseApp.AppVersion(context.Background())
-	s.Require().NoError(err)
-	s.Require().Equal(uint64(0), appVersion)
+	s.ctx = ctx.WithHeaderInfo(header.Info{Height: 10})
+	s.env = env
 
 	skipUpgradeHeights := make(map[int64]bool)
 
@@ -75,9 +62,18 @@ func (s *KeeperTestSuite) SetupTest() {
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	s.Require().NoError(err)
 	s.encodedAuthority = authority
+	s.versionModifier = newMockedVersionModifier(0)
 
 	ctrl := gomock.NewController(s.T())
-	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority, upgradetestutil.NewMockConsensusKeeper(ctrl))
+	s.upgradeKeeper = keeper.NewKeeper(
+		env.Environment,
+		skipUpgradeHeights,
+		s.encCfg.Codec,
+		homeDir,
+		s.versionModifier,
+		authority,
+		upgradetestutil.NewMockConsensusKeeper(ctrl),
+	)
 
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -260,7 +256,15 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	storeService := runtime.NewKVStoreService(s.key)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	ctrl := gomock.NewController(s.T())
-	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority, upgradetestutil.NewMockConsensusKeeper(ctrl))
+	upgradeKeeper := keeper.NewKeeper(
+		env,
+		skip,
+		s.encCfg.Codec,
+		s.T().TempDir(),
+		s.versionModifier,
+		s.encodedAuthority,
+		upgradetestutil.NewMockConsensusKeeper(ctrl),
+	)
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
 }
@@ -280,9 +284,9 @@ func (s *KeeperTestSuite) TestDowngradeVerified() {
 }
 
 // Test that the protocol version successfully increments after an
-// upgrade and is successfully set on BaseApp's appVersion.
+// upgrade and is successfully set on application's appVersion.
 func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
-	oldProtocolVersion, err := s.baseApp.AppVersion(context.Background())
+	oldProtocolVersion, err := s.versionModifier.AppVersion(context.Background())
 	s.Require().NoError(err)
 	res := s.upgradeKeeper.HasHandler("dummy")
 	s.Require().False(res)
@@ -300,7 +304,7 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	})
 	err = s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
 	s.Require().NoError(err)
-	upgradedProtocolVersion, err := s.baseApp.AppVersion(s.ctx)
+	upgradedProtocolVersion, err := s.versionModifier.AppVersion(s.ctx)
 	s.Require().NoError(err)
 
 	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
@@ -419,23 +423,4 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-type paramStore struct {
-	params cmtproto.ConsensusParams
-}
-
-var _ baseapp.ParamStore = (*paramStore)(nil)
-
-func (ps *paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
-	ps.params = value
-	return nil
-}
-
-func (ps paramStore) Has(_ context.Context) (bool, error) {
-	return true, nil
-}
-
-func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
-	return ps.params, nil
 }

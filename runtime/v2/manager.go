@@ -12,7 +12,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	proto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
@@ -82,6 +82,21 @@ func NewModuleManager[T transaction.Tx](
 // Modules returns the modules registered in the module manager
 func (m *MM[T]) Modules() map[string]appmodulev2.AppModule {
 	return m.modules
+}
+
+// StoreKeys returns a map containing modules to their store keys
+func (m *MM[T]) StoreKeys() map[string]string {
+	storeKeys := make(map[string]string, len(m.modules))
+	for v := range maps.Keys(m.modules) {
+		storeKeys[v] = v // set default naming convention
+	}
+	for _, v := range m.config.OverrideStoreKeys {
+		storeKeys[v.ModuleName] = v.KvStoreKey
+	}
+	for _, v := range m.config.SkipStoreKeys {
+		delete(storeKeys, v)
+	}
+	return storeKeys
 }
 
 // RegisterLegacyAminoCodec registers all module codecs

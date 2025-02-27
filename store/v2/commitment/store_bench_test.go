@@ -1,6 +1,3 @@
-//go:build rocksdb
-// +build rocksdb
-
 package commitment_test
 
 import (
@@ -20,9 +17,6 @@ import (
 var (
 	storeKeys  = []string{"store1", "store2", "store3"}
 	dbBackends = map[string]func(dataDir string) (corestore.KVStoreWithBatch, error){
-		"rocksdb_opts": func(dataDir string) (corestore.KVStoreWithBatch, error) {
-			return dbm.NewRocksDB("test", dataDir)
-		},
 		"pebbledb_opts": func(dataDir string) (corestore.KVStoreWithBatch, error) {
 			return dbm.NewPebbleDB("test", dataDir)
 		},

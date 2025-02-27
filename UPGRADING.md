@@ -336,7 +336,7 @@ For the same instructions than for legacy app wiring to enable sign mode textual
 ### Depinject `app_config.go` / `app.yml`
 
 With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
-Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default. It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
+The 'Environment struct provides essential services](https://docs.cosmos.network/main/learn/advanced/core#environment) to modules including logging, event handling, gas metering, header access, routing, and both KV and memory store services. Given the fields of environment, this means runtime creates a kv store service for all modules by default. It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
 
 ```diff
 InitGenesis: []string{
@@ -469,9 +469,23 @@ Accounts's AccountNumber will be used as a global account number tracking replac
 ```go
 import authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper" 
 ...
-err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
-if err != nil {
-	return nil, err
+app.UpgradeKeeper.SetUpgradeHandler(planName,
+	func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
+		if err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper); err != nil {
+			return nil, err
+		}
+		return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
+	},
+)
+```
+
+Add `x/accounts` store while upgrading to v0.52.x:
+
+```go
+storetypes.StoreUpgrades{
+	Added: []string{
+		accounts.StoreKey,
+	},
 }
 ```
 
@@ -1221,8 +1235,6 @@ The SDK made a [patch fix](https://github.com/cosmos/gogoproto/pull/32) on its g
 For example, assuming you put all your proto files in subfolders inside your root `proto/` folder, then a proto file with package name `myapp.mymodule.v1` should be found in the `proto/myapp/mymodule/v1/` folder. If it is in another folder, the proto generation command will throw an error.
 
 If you are using a custom folder structure for your proto files, please reorganize them so that their OS path matches their proto package name.
-
-This is to allow the proto FileDescriptSets to be correctly registered, and this standardized OS import paths allows [Hubl](https://github.com/cosmos/cosmos-sdk/tree/main/tools/hubl) to reflectively talk to any chain.
 
 #### `{accepts,implements}_interface` proto annotations
 

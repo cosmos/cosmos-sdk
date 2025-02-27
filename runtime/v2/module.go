@@ -45,18 +45,24 @@ func (m appModule[T]) IsOnePerModuleType() {}
 func (m appModule[T]) IsAppModule()        {}
 
 func (m appModule[T]) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
+	moduleOptions, err := services.ExtractAutoCLIOptions(m.app.moduleManager.modules)
 	if err != nil {
 		return err
 	}
 
-	autocliv1.RegisterQueryServer(registrar, autoCliQueryService)
-
-	reflectionSvc, err := services.NewReflectionService()
+	fds, err := proto.MergedGlobalFileDescriptors()
 	if err != nil {
 		return err
 	}
-	reflectionv1.RegisterReflectionServiceServer(registrar, reflectionSvc)
+
+	// manually register types in for gogoproto
+	proto.RegisterType(&reflectionv1.FileDescriptorsRequest{}, "cosmos.reflection.v1.FileDescriptorsRequest")
+	proto.RegisterType(&reflectionv1.FileDescriptorsResponse{}, "cosmos.reflection.v1.FileDescriptorsResponse")
+	proto.RegisterType(&autocliv1.AppOptionsRequest{}, "cosmos.autocli.v1.AppOptionsRequest")
+	proto.RegisterType(&autocliv1.AppOptionsResponse{}, "cosmos.autocli.v1.AppOptionsResponse")
+
+	registrar.RegisterService(&autocliv1.Query_ServiceDesc, &services.AutoCLIQueryService{ModuleOptions: moduleOptions})
+	registrar.RegisterService(&reflectionv1.ReflectionService_ServiceDesc, &services.ReflectionService{Files: fds})
 
 	return nil
 }
@@ -68,7 +74,7 @@ func (m appModule[T]) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Config",
-					Short:     "Query the current app config",
+					Skip:      true, // The config command has been deprecated
 				},
 			},
 			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
@@ -148,7 +154,6 @@ func ProvideAppBuilder[T transaction.Tx](
 type AppInputs struct {
 	depinject.In
 
-	StoreConfig        *root.Config
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]

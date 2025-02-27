@@ -11,7 +11,7 @@ jobs:
   goreleaser:
     permissions:
       contents: write # for goreleaser/goreleaser-action to create a GitHub release
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

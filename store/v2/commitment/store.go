@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	protoio "github.com/cosmos/gogoproto/io"
+	"golang.org/x/sync/errgroup"
 
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -61,6 +62,8 @@ func NewCommitStore(trees, oldTrees map[string]Tree, db corestore.KVStoreWithBat
 }
 
 func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
+	eg := new(errgroup.Group)
+	eg.SetLimit(store.MaxWriteParallelism)
 	for _, pairs := range cs.Changes {
 		key := conv.UnsafeBytesToStr(pairs.Actor)
 
@@ -68,17 +71,30 @@ func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 		if !ok {
 			return fmt.Errorf("store key %s not found in multiTrees", key)
 		}
-		for _, kv := range pairs.StateChanges {
-			if kv.Remove {
-				if err := tree.Remove(kv.Key); err != nil {
-					return err
-				}
-			} else if err := tree.Set(kv.Key, kv.Value); err != nil {
+		if tree.IsConcurrentSafe() {
+			eg.Go(func() error {
+				return writeChangeset(tree, pairs)
+			})
+		} else {
+			if err := writeChangeset(tree, pairs); err != nil {
 				return err
 			}
 		}
 	}
 
+	return eg.Wait()
+}
+
+func writeChangeset(tree Tree, changes corestore.StateChanges) error {
+	for _, kv := range changes.StateChanges {
+		if kv.Remove {
+			if err := tree.Remove(kv.Key); err != nil {
+				return err
+			}
+		} else if err := tree.Set(kv.Key, kv.Value); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -162,16 +178,33 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 		}
 	}
 
+	eg := errgroup.Group{}
+	eg.SetLimit(store.MaxWriteParallelism)
 	for _, storeKey := range storeKeys {
+		tree := c.multiTrees[storeKey]
 		if overrideAfter {
-			if err := c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion); err != nil {
-				return err
+			if tree.IsConcurrentSafe() {
+				eg.Go(func() error {
+					return c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion)
+				})
+			} else {
+				if err := c.multiTrees[storeKey].LoadVersionForOverwriting(targetVersion); err != nil {
+					return err
+				}
 			}
 		} else {
-			if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
-				return err
+			if tree.IsConcurrentSafe() {
+				eg.Go(func() error { return c.multiTrees[storeKey].LoadVersion(targetVersion) })
+			} else {
+				if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
+					return err
+				}
 			}
 		}
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
 	// If the target version is greater than the latest version, it is the snapshot
@@ -188,32 +221,44 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string, over
 }
 
 func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
-	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
+	storeInfos := make([]*proof.StoreInfo, 0, len(c.multiTrees))
+	eg := new(errgroup.Group)
+	eg.SetLimit(store.MaxWriteParallelism)
 
 	for storeKey, tree := range c.multiTrees {
 		if internal.IsMemoryStoreKey(storeKey) {
 			continue
 		}
-		hash, cversion, err := tree.Commit()
-		if err != nil {
-			return nil, err
+		si := &proof.StoreInfo{Name: storeKey}
+		storeInfos = append(storeInfos, si)
+
+		if tree.IsConcurrentSafe() {
+			eg.Go(func() error {
+				err := c.commit(tree, si, version)
+				if err != nil {
+					return fmt.Errorf("commit fail: %s: %w", si.Name, err)
+				}
+				return nil
+			})
+		} else {
+			err := c.commit(tree, si, version)
+			if err != nil {
+				return nil, err
+			}
 		}
-		if cversion != version {
-			return nil, fmt.Errorf("commit version %d does not match the target version %d", cversion, version)
-		}
-		commitID := proof.CommitID{
-			Version: version,
-			Hash:    hash,
-		}
-		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name:     []byte(storeKey),
-			CommitID: commitID,
-		})
 	}
 
+	// convert storeInfos to []proof.StoreInfo
+	sideref := make([]*proof.StoreInfo, 0, len(c.multiTrees))
+	sideref = append(sideref, storeInfos...)
+
 	cInfo := &proof.CommitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
+		Version:    int64(version),
+		StoreInfos: sideref,
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
 	}
 
 	if err := c.metadata.flushCommitInfo(version, cInfo); err != nil {
@@ -221,6 +266,21 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 	}
 
 	return cInfo, nil
+}
+
+func (c *CommitStore) commit(tree Tree, si *proof.StoreInfo, expected uint64) error {
+	h, v, err := tree.Commit()
+	if err != nil {
+		return err
+	}
+	if v != expected {
+		return fmt.Errorf("commit version %d does not match the target version %d", v, expected)
+	}
+	si.CommitId = &proof.CommitID{
+		Version: int64(v),
+		Hash:    h,
+	}
+	return nil
 }
 
 func (c *CommitStore) SetInitialVersion(version uint64) error {
@@ -503,6 +563,9 @@ loop:
 					node.Value = []byte{}
 				}
 			}
+			if node.Version == 0 {
+				node.Version = int64(version)
+			}
 			err := importer.Add(node)
 			if err != nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to add node to importer: %w", err)
@@ -531,7 +594,7 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 		return ci, nil
 	}
 	// otherwise built the commit info from the trees
-	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
+	storeInfos := make([]*proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
 		if internal.IsMemoryStoreKey(storeKey) {
 			continue
@@ -540,18 +603,17 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 		if v != version {
 			return nil, fmt.Errorf("tree version %d does not match the target version %d", v, version)
 		}
-		bz := []byte(storeKey)
-		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name: bz,
-			CommitID: proof.CommitID{
-				Version: v,
+		storeInfos = append(storeInfos, &proof.StoreInfo{
+			Name: storeKey,
+			CommitId: &proof.CommitID{
+				Version: int64(v),
 				Hash:    tree.Hash(),
 			},
 		})
 	}
 
 	ci = &proof.CommitInfo{
-		Version:    version,
+		Version:    int64(version),
 		StoreInfos: storeInfos,
 	}
 	return ci, nil

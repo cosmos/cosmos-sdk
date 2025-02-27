@@ -72,11 +72,7 @@ func (db *PebbleDB) Get(key []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to perform PebbleDB read: %w", err)
 	}
 
-	if len(bz) == 0 {
-		return nil, closer.Close()
-	}
-
-	return bz, closer.Close()
+	return slices.Clone(bz), closer.Close()
 }
 
 func (db *PebbleDB) Has(key []byte) (bool, error) {
@@ -232,6 +228,9 @@ func (itr *pebbleDBIterator) Error() error {
 }
 
 func (itr *pebbleDBIterator) Close() error {
+	if itr.source == nil {
+		return nil
+	}
 	err := itr.source.Close()
 	itr.source = nil
 	itr.valid = false

@@ -28,7 +28,6 @@ v                     without deliberation
     * [ ] Audit x/bank/v2
     * [ ] Audit x/circuit
     * [ ] Audit x/consensus 
-    * [ ] Audit x/crisis 
     * [ ] Audit x/distribution 
     * [ ] Audit x/evidence 
     * [ ] Audit x/epochs

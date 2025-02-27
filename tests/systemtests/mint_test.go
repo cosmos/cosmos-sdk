@@ -74,10 +74,6 @@ func TestMintQueries(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// TODO: remove below check once grpc gateway is implemented in v2
-			if systest.IsV2() {
-				return
-			}
 			resp := systest.GetRequestWithHeaders(t, tc.url, tc.headers, http.StatusOK)
 			require.JSONEq(t, tc.expOut, string(resp))
 		})

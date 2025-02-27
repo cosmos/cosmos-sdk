@@ -31,14 +31,13 @@ import (
 	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
+	runtimev2types "cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/bank/v2" // import for side-effects
-	bankv2types "cosmossdk.io/x/bank/v2/types"
-	bankmodulev2 "cosmossdk.io/x/bank/v2/types/module"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects
@@ -68,7 +67,6 @@ import (
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	_ "github.com/cosmos/cosmos-sdk/x/auth" // import for side-effects
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -110,7 +108,7 @@ var (
 	ModuleConfig = &appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
-				Name: runtime.ModuleName,
+				Name: runtimev2types.ModuleName,
 				Config: appconfig.WrapAny(&runtimev2.Module{
 					AppName: "SimAppV2",
 					// NOTE: upgrade module is required to be prioritized
@@ -156,7 +154,6 @@ var (
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
-						bankv2types.ModuleName,
 						distrtypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
@@ -176,10 +173,32 @@ var (
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
-					// ExportGenesis: []string{},
+					ExportGenesis: []string{
+						consensustypes.ModuleName,
+						accounts.ModuleName,
+						authtypes.ModuleName,
+						pooltypes.ModuleName, // Must be exported before bank
+						banktypes.ModuleName,
+						distrtypes.ModuleName,
+						stakingtypes.ModuleName,
+						slashingtypes.ModuleName,
+						govtypes.ModuleName,
+						minttypes.ModuleName,
+						genutiltypes.ModuleName,
+						evidencetypes.ModuleName,
+						authz.ModuleName,
+						feegrant.ModuleName,
+						nft.ModuleName,
+						group.ModuleName,
+						upgradetypes.ModuleName,
+						vestingtypes.ModuleName,
+						circuittypes.ModuleName,
+						epochstypes.ModuleName,
+					},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
-					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
+					// GasConfig is used to set the gas configuration for the queries and transactions.
+					// This config is aimed to app-wide and shouldn't be overridden by individual validators.
 					GasConfig: &runtimev2.GasConfig{
 						ValidateTxGasLimit: 10_000_000,
 						QueryGasLimit:      100_000,
@@ -190,6 +209,9 @@ var (
 					SkipStoreKeys: []string{
 						authtxconfig.DepinjectModuleName,
 						validate.ModuleName,
+						genutiltypes.ModuleName,
+						runtimev2types.ModuleName,
+						vestingtypes.ModuleName,
 					},
 				}),
 			},
@@ -296,10 +318,6 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
-			},
-			{
-				Name:   bankv2types.ModuleName,
-				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
 		},
 	}

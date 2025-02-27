@@ -32,6 +32,10 @@ func TestUpdateDescription(t *testing.T) {
 	d1 := types.Description{
 		Website: "https://validator.cosmos",
 		Details: "Test validator",
+		Metadata: &types.Metadata{
+			ProfilePicUri:    "https://validator.cosmos/profile.png",
+			SocialHandleUris: []string{"https://validator.cosmos/twitter", "https://validator.cosmos/telegram"},
+		},
 	}
 
 	d2 := types.Description{
@@ -39,6 +43,10 @@ func TestUpdateDescription(t *testing.T) {
 		Identity: types.DoNotModifyDesc,
 		Website:  types.DoNotModifyDesc,
 		Details:  types.DoNotModifyDesc,
+		Metadata: &types.Metadata{
+			ProfilePicUri:    types.DoNotModifyDesc,
+			SocialHandleUris: []string{"https://validator.cosmos/twitter", "https://validator.cosmos/telegram"},
+		},
 	}
 
 	d3 := types.Description{
@@ -46,6 +54,7 @@ func TestUpdateDescription(t *testing.T) {
 		Identity: "",
 		Website:  "",
 		Details:  "",
+		Metadata: &types.Metadata{},
 	}
 
 	d, err := d1.UpdateDescription(d2)

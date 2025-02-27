@@ -151,9 +151,11 @@ func New[T transaction.Tx](
 	var listener *appdata.Listener
 	if indexerCfg := srv.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
 		indexingTarget, err := indexer.StartIndexing(indexer.IndexingOptions{
-			Config:   indexerCfg,
-			Resolver: decoderResolver,
-			Logger:   logger.With(log.ModuleKey, "indexer"),
+			Config:       indexerCfg,
+			Resolver:     decoderResolver,
+			Logger:       logger.With(log.ModuleKey, "indexer"),
+			SyncSource:   nil, // TODO: Support catch-up syncs
+			AddressCodec: appCodecs.AppCodec.InterfaceRegistry().SigningContext().AddressCodec(),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to start indexing: %w", err)

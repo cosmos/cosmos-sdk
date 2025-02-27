@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#23462](https://github.com/cosmos/cosmos-sdk/pull/23462) fixes missing data for genesis ex-/import on key rotation 
 * [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315), [#22556](https://github.com/cosmos/cosmos-sdk/pull/22556) Create metadata type and add metadata field in validator details proto
     * Add parsing of `metadata-profile-pic-uri` in `create-validator` JSON.
     * Add cli flag: `metadata-profile-pic-uri` to `edit-validator` cmd.
@@ -56,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#20688](https://github.com/cosmos/cosmos-sdk/pull/20688) Avoid overslashing unbonding delegations after a redelegation.
 * [#19226](https://github.com/cosmos/cosmos-sdk/pull/19226) Ensure `GetLastValidators` in `x/staking` does not return an error when `MaxValidators` exceeds total number of bonded validators.
+* [#23461](https://github.com/cosmos/cosmos-sdk/pull/23461) Fix `UpdateDescription` to correctly update the `Metadata` field.
 
 ### API Breaking Changes
 

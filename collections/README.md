@@ -90,7 +90,7 @@ Since a module can have multiple collections, the following is expected:
 We don't want a collection to write over the state of the other collection so we pass it a prefix, which defines a storage
 partition owned by the collection.
 
-If you already built modules, the prefix translates to the items you were creating in your ``types/keys.go`` file, example: https://github.com/cosmos/cosmos-sdk/blob/main/x/feegrant/key.go#L27
+If you already built modules, the prefix translates to the items you were creating in your ``types/keys.go`` file, example: https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-rc.1/x/feegrant/key.go#L16~L22
 
 your old:
 

@@ -3,13 +3,18 @@ package keeper_test
 import (
 	"time"
 
+	"go.uber.org/mock/gomock"
+
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestInitGenesis() {
+func (suite *KeeperTestSuite) TestInitExportGenesis() {
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ProtocolPoolDistrAccount, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.StreamAccount, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
 	hour := time.Hour
 	gs := types.NewGenesisState(
 		[]*types.ContinuousFund{
@@ -49,5 +54,5 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(gs.ContinuousFund, exportedGenState.ContinuousFund)
 	suite.Require().Equal(gs.Budget, exportedGenState.Budget)
-	suite.Require().Equal(math.NewInt(101), exportedGenState.LastBalance.Amount.AmountOf("stake"))
+	suite.Require().Equal(math.ZeroInt(), exportedGenState.LastBalance.Amount.AmountOf("stake"))
 }

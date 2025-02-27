@@ -15,6 +15,7 @@ import (
 	grpcserver "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/grpcgateway"
 	"cosmossdk.io/server/v2/api/rest"
+	"cosmossdk.io/server/v2/api/swagger"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
@@ -24,13 +25,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
+	"github.com/cosmos/cosmos-sdk/client/docs"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -47,10 +48,7 @@ type CommandDependencies[T transaction.Tx] struct {
 	TxConfig      client.TxConfig
 	ModuleManager *runtimev2.MM[T]
 	SimApp        *simapp.SimApp[T]
-	// could generally be more generic with serverv2.ServerComponent[T]
-	// however, we want to register extra grpc handlers
-	ConsensusServer *cometbft.CometBFTServer[T]
-	ClientContext   client.Context
+	ClientContext client.Context
 }
 
 func InitRootCmd[T transaction.Tx](
@@ -77,21 +75,19 @@ func InitRootCmd[T transaction.Tx](
 
 	// build CLI skeleton for initial config parsing or a client application invocation
 	if deps.SimApp == nil {
-		if deps.ConsensusServer == nil {
-			deps.ConsensusServer = cometbft.NewWithConfigOptions[T](initCometConfig())
-		}
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
 			io.NopCloser(nil),
 			deps.GlobalConfig,
 			initServerConfig(),
-			deps.ConsensusServer,
+			cometbft.NewWithConfigOptions[T](initCometConfig()),
 			&grpcserver.Server[T]{},
 			&serverstore.Server[T]{},
 			&telemetry.Server[T]{},
 			&rest.Server[T]{},
 			&grpcgateway.Server[T]{},
+			&swagger.Server[T]{},
 		)
 	}
 
@@ -109,29 +105,32 @@ func InitRootCmd[T transaction.Tx](
 	}
 
 	// consensus component
-	if deps.ConsensusServer == nil {
-		deps.ConsensusServer, err = cometbft.New(
-			logger,
-			simApp.Name(),
-			simApp.Store(),
-			simApp.App.AppManager,
-			cometbft.AppCodecs[T]{
-				AppCodec:              simApp.AppCodec(),
-				TxCodec:               &client.DefaultTxDecoder[T]{TxConfig: deps.TxConfig},
-				LegacyAmino:           deps.ClientContext.LegacyAmino,
-				ConsensusAddressCodec: deps.ClientContext.ConsensusAddressCodec,
-			},
-			simApp.App.QueryHandlers(),
-			simApp.App.SchemaDecoderResolver(),
-			initCometOptions[T](),
-			deps.GlobalConfig,
-		)
-		if err != nil {
-			return nil, err
-		}
+	consensusServer, err := cometbft.New(
+		logger,
+		simApp.Name(),
+		simApp.Store(),
+		simApp.App.AppManager,
+		cometbft.AppCodecs[T]{
+			AppCodec:              simApp.AppCodec(),
+			TxCodec:               &client.DefaultTxDecoder[T]{TxConfig: deps.TxConfig},
+			LegacyAmino:           deps.ClientContext.LegacyAmino,
+			ConsensusAddressCodec: deps.ClientContext.ConsensusAddressCodec,
+		},
+		simApp.App.QueryHandlers(),
+		simApp.App.SchemaDecoderResolver(),
+		initCometOptions[T](),
+		deps.GlobalConfig,
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger, sdktelemetry.EnableTelemetry)
+	telemetryServer, err := telemetry.New[T](logger, sdktelemetry.EnableTelemetry, deps.GlobalConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	swaggerServer, err := swagger.New[T](logger, docs.GetSwaggerFS(), deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +142,7 @@ func InitRootCmd[T transaction.Tx](
 		simApp.Query,
 		deps.GlobalConfig,
 		grpcserver.WithExtraGRPCHandlers[T](
-			deps.ConsensusServer.GRPCServiceRegistrar(
+			consensusServer.GRPCServiceRegistrar(
 				deps.ClientContext,
 				deps.GlobalConfig,
 			),
@@ -157,11 +156,12 @@ func InitRootCmd[T transaction.Tx](
 		logger,
 		deps.GlobalConfig,
 		simApp.InterfaceRegistry(),
+		simApp.App.AppManager,
 	)
 	if err != nil {
 		return nil, err
 	}
-	registerGRPCGatewayRoutes[T](deps, grpcgatewayServer)
+	registerGRPCGatewayRoutes(deps.ClientContext, grpcgatewayServer)
 
 	// wire server commands
 	return serverv2.AddCommands[T](
@@ -170,12 +170,13 @@ func InitRootCmd[T transaction.Tx](
 		simApp,
 		deps.GlobalConfig,
 		initServerConfig(),
-		deps.ConsensusServer,
+		consensusServer,
 		grpcServer,
 		storeComponent,
 		telemetryServer,
 		restServer,
 		grpcgatewayServer,
+		swaggerServer,
 	)
 }
 
@@ -268,20 +269,12 @@ func RootCommandPersistentPreRun(clientCtx client.Context) func(*cobra.Command, 
 }
 
 // registerGRPCGatewayRoutes registers the gRPC gateway routes for all modules and other components
-// TODO(@julienrbrt): Eventually, this should removed and directly done within the grpcgateway.Server
-// ref: https://github.com/cosmos/cosmos-sdk/pull/22701#pullrequestreview-2470651390
 func registerGRPCGatewayRoutes[T transaction.Tx](
-	deps CommandDependencies[T],
+	clientContext client.Context,
 	server *grpcgateway.Server[T],
 ) {
 	// those are the extra services that the CometBFT server implements (server/v2/cometbft/grpc.go)
-	cmtservice.RegisterGRPCGatewayRoutes(deps.ClientContext, server.GRPCGatewayRouter)
-	_ = nodeservice.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, nodeservice.NewServiceClient(deps.ClientContext))
-	_ = txtypes.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, txtypes.NewServiceClient(deps.ClientContext))
-
-	for _, mod := range deps.ModuleManager.Modules() {
-		if gmod, ok := mod.(module.HasGRPCGateway); ok {
-			gmod.RegisterGRPCGatewayRoutes(deps.ClientContext, server.GRPCGatewayRouter)
-		}
-	}
+	cmtservice.RegisterGRPCGatewayRoutes(clientContext, server.GRPCGatewayRouter)
+	_ = nodeservice.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, nodeservice.NewServiceClient(clientContext))
+	_ = txtypes.RegisterServiceHandlerClient(context.Background(), server.GRPCGatewayRouter, txtypes.NewServiceClient(clientContext))
 }

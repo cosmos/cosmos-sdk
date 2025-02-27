@@ -44,12 +44,41 @@ func AddGenesisAccounts(
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 	}
 
+	modifiedAppState, err := AddGenesisAccountsWithGenesis(
+		cdc,
+		addressCodec,
+		accounts,
+		appendAcct,
+		appState,
+	)
+	if err != nil {
+		return err
+	}
+
+	appStateJSON, err := json.Marshal(modifiedAppState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal application genesis state: %w", err)
+	}
+
+	appGenesis.AppState = appStateJSON
+	return ExportGenesisFile(appGenesis, genesisFileURL)
+}
+
+// AddGenesisAccountsWithGenesis modifies the provided appState by adding the provided genesis accounts.
+// It returns the modified appState.
+func AddGenesisAccountsWithGenesis(
+	cdc codec.Codec,
+	addressCodec address.Codec,
+	accounts []GenesisAccount,
+	appendAcct bool,
+	appState map[string]json.RawMessage,
+) (map[string]json.RawMessage, error) {
 	authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
 	bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 
 	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
 	if err != nil {
-		return fmt.Errorf("failed to get accounts from any: %w", err)
+		return nil, fmt.Errorf("failed to get accounts from any: %w", err)
 	}
 
 	newSupplyCoinsCache := sdk.NewCoins()
@@ -62,13 +91,20 @@ func AddGenesisAccounts(
 		}
 	}
 
+	// check if provided accounts aren't duplicated
+	mapAddr := make(map[string]struct{}, len(accounts))
 	for _, acc := range accounts {
+		if _, ok := mapAddr[acc.Address]; ok {
+			return nil, fmt.Errorf("duplicate account address provided in arguments: %s", acc.Address)
+		}
+		mapAddr[acc.Address] = struct{}{}
+
 		addr := acc.Address
 		coins := acc.Coins
 
 		accAddr, err := addressCodec.StringToBytes(addr)
 		if err != nil {
-			return fmt.Errorf("failed to parse account address %s: %w", addr, err)
+			return nil, fmt.Errorf("failed to parse account address %s: %w", addr, err)
 		}
 
 		// create concrete account type based on input parameters
@@ -84,12 +120,12 @@ func AddGenesisAccounts(
 
 			baseVestingAccount, err := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
 			if err != nil {
-				return fmt.Errorf("failed to create base vesting account: %w", err)
+				return nil, fmt.Errorf("failed to create base vesting account: %w", err)
 			}
 
 			if (balances.Coins.IsZero() && !baseVestingAccount.OriginalVesting.IsZero()) ||
 				baseVestingAccount.OriginalVesting.IsAnyGT(balances.Coins) {
-				return errors.New("vesting amount cannot be greater than total amount")
+				return nil, errors.New("vesting amount cannot be greater than total amount")
 			}
 
 			switch {
@@ -100,7 +136,7 @@ func AddGenesisAccounts(
 				genAccount = authvesting.NewDelayedVestingAccountRaw(baseVestingAccount)
 
 			default:
-				return errors.New("invalid vesting parameters; must supply start and end time or end time")
+				return nil, errors.New("invalid vesting parameters; must supply start and end time or end time")
 			}
 		} else if acc.ModuleName != "" {
 			genAccount = authtypes.NewEmptyModuleAccount(acc.ModuleName, authtypes.Burner, authtypes.Minter)
@@ -109,12 +145,12 @@ func AddGenesisAccounts(
 		}
 
 		if err := genAccount.Validate(); err != nil {
-			return fmt.Errorf("failed to validate new genesis account: %w", err)
+			return nil, fmt.Errorf("failed to validate new genesis account: %w", err)
 		}
 
 		if _, ok := balanceCache[addr]; ok {
 			if !appendAcct {
-				return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", accAddr)
+				return nil, fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", accAddr)
 			}
 
 			for idx, acc := range bankGenState.Balances {
@@ -138,31 +174,24 @@ func AddGenesisAccounts(
 
 	authGenState.Accounts, err = authtypes.PackAccounts(accs)
 	if err != nil {
-		return fmt.Errorf("failed to convert accounts into any's: %w", err)
+		return nil, fmt.Errorf("failed to convert accounts into any's: %w", err)
 	}
 
 	appState[authtypes.ModuleName], err = cdc.MarshalJSON(&authGenState)
 	if err != nil {
-		return fmt.Errorf("failed to marshal auth genesis state: %w", err)
+		return nil, fmt.Errorf("failed to marshal auth genesis state: %w", err)
 	}
 
 	bankGenState.Balances, err = banktypes.SanitizeGenesisBalances(bankGenState.Balances, addressCodec)
 	if err != nil {
-		return fmt.Errorf("failed to sanitize genesis bank Balances: %w", err)
+		return nil, fmt.Errorf("failed to sanitize genesis bank Balances: %w", err)
 	}
 
 	bankGenState.Supply = bankGenState.Supply.Add(newSupplyCoinsCache...)
-
 	appState[banktypes.ModuleName], err = cdc.MarshalJSON(bankGenState)
 	if err != nil {
-		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
+		return nil, fmt.Errorf("failed to marshal bank genesis state: %w", err)
 	}
 
-	appStateJSON, err := json.Marshal(appState)
-	if err != nil {
-		return fmt.Errorf("failed to marshal application genesis state: %w", err)
-	}
-
-	appGenesis.AppState = appStateJSON
-	return ExportGenesisFile(appGenesis, genesisFileURL)
+	return appState, nil
 }

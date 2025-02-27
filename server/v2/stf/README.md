@@ -1,34 +1,152 @@
-# State Transition Function (STF)
+# STF (State Transition Function) Documentation
 
-STF is a function that takes a state and an action as input and returns the next state. It does not assume the execution model of the application nor consensus.
+This document outlines the main external calls in the STF package, their execution flows, and dependencies.
 
-The state transition function receives a read only instance of state. It does not directly write to disk, instead it will return the state changes which has undergone within the application. The state transition function is deterministic, meaning that given the same input, it will always produce the same output.
+## Table of Contents
+- [DeliverBlock](#deliverblock)
+- [Simulate](#simulate)
+- [ValidateTx](#validatetx)
+- [Query](#query)
 
-## BranchDB
+## DeliverBlock
 
-BranchDB is a cache of all the reads done within a block, simulation or transaction validation. It takes a read-only instance of state and creates its own write instance using a btree. After all state transitions are done, the new change sets are returned to the caller.
+DeliverBlock is the main state transition function that processes an entire block of transactions.
 
-The BranchDB can be replaced and optimized for specific use cases. The implementation is as follows
-
-```go
-   type branchdb func(state store.ReaderMap) store.WriterMap
+```mermaid
+sequenceDiagram
+participant Caller
+participant STF
+participant State
+participant PreBlock
+participant BeginBlock
+participant TxProcessor
+participant EndBlock
+Caller->>STF: DeliverBlock(ctx, block, state)
+STF->>State: Branch(state)
+STF->>State: SetHeaderInfo
+STF->>PreBlock: doPreBlock(ctx, txs)
+STF->>BeginBlock: doBeginBlock(ctx)
+loop For each transaction
+STF->>TxProcessor: deliverTx(ctx, state, tx)
+TxProcessor->>TxProcessor: validateTx()
+TxProcessor->>TxProcessor: execTx()
+TxProcessor-->>STF: TxResult
+end
+STF->>EndBlock: doEndBlock(ctx)
+STF->>EndBlock: validatorUpdates(ctx)
+STF-->>Caller: BlockResponse, newState, error
 ```
 
-## GasMeter
+### Dependencies
+- Required Input:
+  - Context
+  - BlockRequest containing transactions
+  - ReadOnly state
+- Required Components:
+  - PreBlock handler
+  - BeginBlock handler
+  - EndBlock handler
+  - Transaction validator
+  - Message router
+  - Gas meter
 
-GasMeter is a utility that keeps track of the gas consumed by the state transition function. It is used to limit the amount of computation that can be done within a block.
+## Simulate
 
-The GasMeter can be replaced and optimized for specific use cases. The implementation is as follows:
+Simulate executes a transaction without committing changes to the actual state.
 
-```go
-type (
- // gasMeter is a function type that takes a gas limit as input and returns a gas.Meter.
- // It is used to measure and limit the amount of gas consumed during the execution of a function.
- gasMeter func(gasLimit uint64) gas.Meter
-
- // wrapGasMeter is a function type that wraps a gas meter and a store writer map.
- wrapGasMeter func(meter gas.Meter, store store.WriterMap) store.WriterMap
-)
+```mermaid
+sequenceDiagram
+participant Caller
+participant STF
+participant State
+participant TxProcessor
+Caller->>STF: Simulate(ctx, state, gasLimit, tx)
+STF->>State: Branch(state)
+STF->>State: GetHeaderInfo()
+STF->>TxProcessor: deliverTx(ctx, state, tx, SimulateMode)
+TxProcessor-->>Caller: TxResult, simulationState
 ```
 
-THe wrapGasMeter is used in order to consume gas. Application developers can seamlsessly replace the gas meter with their own implementation in order to customize consumption of gas.
+### Dependencies
+- Required Input:
+  - Context
+  - ReadOnly state
+  - Gas limit
+  - Transaction
+- Required Components:
+  - Transaction processor
+  - Gas meter
+  - Message router
+
+## ValidateTx
+
+ValidateTx performs transaction validation without execution.
+
+```mermaid
+sequenceDiagram
+participant Caller
+participant STF
+participant State
+participant Validator
+Caller->>STF: ValidateTx(ctx, state, gasLimit, tx)
+STF->>State: Branch(state)
+STF->>Validator: validateTx(ctx, state, gasLimit, tx)
+Validator-->>Caller: TxResult
+```
+
+### Dependencies
+- Required Input:
+  - Context
+  - ReadOnly state
+  - Gas limit
+  - Transaction
+- Required Components:
+  - Transaction validator
+  - Gas meter
+
+## Query
+
+Query executes a read-only query against the application state.
+
+```mermaid
+sequenceDiagram
+participant Caller
+participant STF
+participant State
+participant QueryRouter
+Caller->>STF: Query(ctx, state, gasLimit, req)
+STF->>State: Branch(state)
+STF->>State: GetHeaderInfo()
+STF->>QueryRouter: Invoke(ctx, req)
+QueryRouter-->>Caller: Response, error
+```
+
+### Dependencies
+- Required Input:
+  - Context
+  - ReadOnly state
+  - Gas limit
+  - Query request message
+- Required Components:
+  - Query router
+  - Gas meter
+  - Message handlers
+
+## Error Handling
+
+All operations include error handling for:
+- Context cancellation
+- Gas limit exceeded
+- Invalid transactions
+- State operation failures
+- Panic recovery (in transaction execution)
+
+## Gas Management
+
+Gas is tracked and limited for:
+- Transaction validation
+- Message execution
+- State operations
+- Query execution
+
+Each operation that consumes gas uses a gas meter to track usage and ensure limits are not exceeded.

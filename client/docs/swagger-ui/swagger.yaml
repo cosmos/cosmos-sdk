@@ -1241,7 +1241,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/auth/v1beta1/address_by_id/{id}:
+  /cosmos/auth/v1beta1/address_by_id/{account_id}:
     get:
       summary: AccountAddressByID returns account address based on account number.
       operationId: AccountAddressByID
@@ -1445,6 +1445,12 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
+        - name: account_id
+          description: account_id is the account number of the address to be queried.
+          in: path
+          required: true
+          type: string
+          format: uint64
         - name: id
           description: |-
             Deprecated, use account_id instead
@@ -1452,16 +1458,10 @@ paths:
             id is the account number of the address to be queried. This field
             should have been an uint64 (like all account numbers), and will be
             updated to uint64 in a future version of the auth query.
-          in: path
-          required: true
-          type: string
-          format: int64
-        - name: account_id
-          description: account_id is the account number of the address to be queried.
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
       tags:
         - Query
   /cosmos/auth/v1beta1/bech32:
@@ -1667,6 +1667,428 @@ paths:
                           "@type": "type.googleapis.com/google.protobuf.Duration",
                           "value": "1.212s"
                         }
+      tags:
+        - Query
+  /cosmos/auth/v1beta1/bech32/decode/{address_bytes}:
+    get:
+      summary: AddressBytesToString converts Account Address bytes to string
+      operationId: AddressBytesToString2
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              address_string:
+                type: string
+            description: >-
+              AddressBytesToStringResponse is the response type for
+              AddressString rpc method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: address_bytes
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
+  /cosmos/auth/v1beta1/bech32/encode/{address_string}:
+    get:
+      summary: AddressStringToBytes converts Address string to bytes
+      operationId: AddressStringToBytes
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              address_bytes:
+                type: string
+                format: byte
+            description: >-
+              AddressStringToBytesResponse is the response type for AddressBytes
+              rpc method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: address_string
+          in: path
+          required: true
+          type: string
       tags:
         - Query
   /cosmos/auth/v1beta1/bech32/{address_bytes}:
@@ -1878,217 +2300,6 @@ paths:
           required: true
           type: string
           format: byte
-      tags:
-        - Query
-  /cosmos/auth/v1beta1/bech32/{address_string}:
-    get:
-      summary: AddressStringToBytes converts Address string to bytes
-      operationId: AddressStringToBytes
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              address_bytes:
-                type: string
-                format: byte
-            description: >-
-              AddressStringToBytesResponse is the response type for AddressBytes
-              rpc method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
-                  additionalProperties: {}
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := anypb.New(foo)
-                         if err != nil {
-                           ...
-                         }
-                         ...
-                         foo := &pb.Foo{}
-                         if err := any.UnmarshalTo(foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
-      parameters:
-        - name: address_string
-          in: path
-          required: true
-          type: string
       tags:
         - Query
   /cosmos/auth/v1beta1/module_accounts:
@@ -3364,6 +3575,7 @@ paths:
           in: path
           required: true
           type: string
+          pattern: .+
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -3876,6 +4088,7 @@ paths:
           in: path
           required: true
           type: string
+          pattern: .+
       tags:
         - Query
   /cosmos/bank/v1beta1/denoms_metadata_by_query_string:
@@ -8095,6 +8308,12 @@ paths:
                       title: Module is the type for VersionInfo
                   cosmos_sdk_version:
                     type: string
+                  comet_server_version:
+                    type: string
+                  runtime_version:
+                    type: string
+                  stf_version:
+                    type: string
                 description: VersionInfo is the type for the GetNodeInfoResponse message.
             description: >-
               GetNodeInfoResponse is the response type for the Query/GetNodeInfo
@@ -8700,7 +8919,11 @@ paths:
                       format: int64
                   description: Validator is the type for the validator-set.
               pagination:
-                description: pagination defines an pagination for the response.
+                description: >-
+                  pagination defines an pagination for the response. offset and
+                  limit are used for pagination, next_key is not
+
+                  supported for this query.
                 type: object
                 properties:
                   next_key:
@@ -9171,7 +9394,11 @@ paths:
                       format: int64
                   description: Validator is the type for the validator-set.
               pagination:
-                description: pagination defines an pagination for the response.
+                description: >-
+                  pagination defines an pagination for the response. offset and
+                  limit are used for pagination, next_key is not
+
+                  supported for this query.
                 type: object
                 properties:
                   next_key:
@@ -9514,7 +9741,7 @@ paths:
                 format: byte
                 title: validator hash provided by the consensus header
             description: >-
-              StateResponse defines the response structure for the status of a
+              StatusResponse defines the response structure for the status of a
               node.
         default:
           description: An unexpected error response.
@@ -17348,177 +17575,7 @@ paths:
                   properties:
                     '@type':
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                   additionalProperties: {}
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := anypb.New(foo)
-                         if err != nil {
-                           ...
-                         }
-                         ...
-                         foo := &pb.Foo{}
-                         if err := any.UnmarshalTo(foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       tags:
         - Query
   /cosmos/mint/v1beta1/inflation:
@@ -17557,177 +17614,7 @@ paths:
                   properties:
                     '@type':
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                   additionalProperties: {}
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := anypb.New(foo)
-                         if err != nil {
-                           ...
-                         }
-                         ...
-                         foo := &pb.Foo{}
-                         if err := any.UnmarshalTo(foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       tags:
         - Query
   /cosmos/mint/v1beta1/params:
@@ -17769,285 +17656,6 @@ paths:
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
-                  additionalProperties: {}
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := anypb.New(foo)
-                         if err != nil {
-                           ...
-                         }
-                         ...
-                         foo := &pb.Foo{}
-                         if err := any.UnmarshalTo(foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
-      tags:
-        - Query
-  /cosmos/params/v1beta1/params:
-    get:
-      summary: |-
-        Params queries a specific parameter of a module, given its subspace and
-        key.
-      operationId: Params
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              param:
-                description: param defines the queried parameter.
-                type: object
-                properties:
-                  subspace:
-                    type: string
-                  key:
-                    type: string
-                  value:
-                    type: string
-            description: >-
-              QueryParamsResponse is response type for the Query/Params RPC
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: subspace
-          description: subspace defines the module to query the parameter for.
-          in: query
-          required: false
-          type: string
-        - name: key
-          description: key defines the key of the parameter in the subspace.
-          in: query
-          required: false
-          type: string
-      tags:
-        - Query
-  /cosmos/params/v1beta1/subspaces:
-    get:
-      summary: >-
-        Subspaces queries for all registered subspaces and all keys for a
-        subspace.
-      operationId: Subspaces
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              subspaces:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    subspace:
-                      type: string
-                    keys:
-                      type: array
-                      items:
-                        type: string
-                  description: >-
-                    Subspace defines a parameter subspace name and all the keys
-                    that exist for
-
-                    the subspace.
-            description: >-
-              QuerySubspacesResponse defines the response types for querying for
-              all
-
-              registered subspaces and all keys for a subspace.
         default:
           description: An unexpected error response.
           schema:
@@ -18592,7 +18200,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -18602,7 +18210,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -18632,6 +18240,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -19019,7 +18628,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -19029,7 +18638,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -19059,6 +18668,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -19386,7 +18996,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -19396,7 +19006,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -19426,6 +19036,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -19668,6 +19279,24 @@ paths:
                         details:
                           type: string
                           description: details define other optional details.
+                        metadata:
+                          description: >-
+                            metadata defines extra information about the
+                            validator.
+                          type: object
+                          properties:
+                            profile_pic_uri:
+                              type: string
+                              description: >-
+                                profile_pic_uri defines a link to the validator
+                                profile picture.
+                            social_handle_uris:
+                              type: array
+                              items:
+                                type: string
+                              description: >-
+                                social_handle_uris defines a string array of
+                                uris to the validator's social handles.
                     unbonding_height:
                       type: string
                       format: int64
@@ -19888,7 +19517,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -19898,7 +19527,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -19928,6 +19557,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -20164,6 +19794,24 @@ paths:
                       details:
                         type: string
                         description: details define other optional details.
+                      metadata:
+                        description: >-
+                          metadata defines extra information about the
+                          validator.
+                        type: object
+                        properties:
+                          profile_pic_uri:
+                            type: string
+                            description: >-
+                              profile_pic_uri defines a link to the validator
+                              profile picture.
+                          social_handle_uris:
+                            type: array
+                            items:
+                              type: string
+                            description: >-
+                              social_handle_uris defines a string array of uris
+                              to the validator's social handles.
                   unbonding_height:
                     type: string
                     format: int64
@@ -20340,7 +19988,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -20350,7 +19998,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -20380,6 +20028,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -20662,6 +20311,24 @@ paths:
                             details:
                               type: string
                               description: details define other optional details.
+                            metadata:
+                              description: >-
+                                metadata defines extra information about the
+                                validator.
+                              type: object
+                              properties:
+                                profile_pic_uri:
+                                  type: string
+                                  description: >-
+                                    profile_pic_uri defines a link to the
+                                    validator profile picture.
+                                social_handle_uris:
+                                  type: array
+                                  items:
+                                    type: string
+                                  description: >-
+                                    social_handle_uris defines a string array of
+                                    uris to the validator's social handles.
                         unbonding_height:
                           type: string
                           format: int64
@@ -20865,7 +20532,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -20875,7 +20542,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -20905,6 +20572,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -21125,7 +20793,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -21135,7 +20803,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -21165,6 +20833,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -21333,7 +21002,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -21343,7 +21012,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -21373,6 +21042,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -21554,6 +21224,24 @@ paths:
                         details:
                           type: string
                           description: details define other optional details.
+                        metadata:
+                          description: >-
+                            metadata defines extra information about the
+                            validator.
+                          type: object
+                          properties:
+                            profile_pic_uri:
+                              type: string
+                              description: >-
+                                profile_pic_uri defines a link to the validator
+                                profile picture.
+                            social_handle_uris:
+                              type: array
+                              items:
+                                type: string
+                              description: >-
+                                social_handle_uris defines a string array of
+                                uris to the validator's social handles.
                     unbonding_height:
                       type: string
                       format: int64
@@ -21807,7 +21495,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -21817,7 +21505,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -21847,6 +21535,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -22081,6 +21770,24 @@ paths:
                       details:
                         type: string
                         description: details define other optional details.
+                      metadata:
+                        description: >-
+                          metadata defines extra information about the
+                          validator.
+                        type: object
+                        properties:
+                          profile_pic_uri:
+                            type: string
+                            description: >-
+                              profile_pic_uri defines a link to the validator
+                              profile picture.
+                          social_handle_uris:
+                            type: array
+                            items:
+                              type: string
+                            description: >-
+                              social_handle_uris defines a string array of uris
+                              to the validator's social handles.
                   unbonding_height:
                     type: string
                     format: int64
@@ -22257,7 +21964,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -22267,7 +21974,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -22297,6 +22004,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -22548,7 +22256,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -22558,7 +22266,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -22588,6 +22296,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -22854,7 +22563,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -22864,7 +22573,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -22894,6 +22603,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -23123,7 +22833,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -23133,7 +22843,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -23163,6 +22873,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -23439,7 +23150,7 @@ paths:
                           foo = any.unpack(Foo.getDefaultInstance());
                         }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -23449,7 +23160,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -23479,6 +23190,7 @@ paths:
 
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -25456,9 +25168,6 @@ paths:
 
                       additional metadata, emitted only by processing the
                       messages.
-
-
-                      Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
             description: |-
               BroadcastTxResponse is the response type for the
               Service.BroadcastTx method.
@@ -38688,7 +38397,7 @@ paths:
         - Query
   /cosmos/circuit/v1/accounts:
     get:
-      summary: Account returns account permissions.
+      summary: Accounts returns multiple accounts permissions.
       operationId: CircuitAccounts
       responses:
         '200':
@@ -39180,6 +38889,159 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  /cosmos/protocolpool/v1/community_pool:
+    get:
+      summary: CommunityPool queries the community pool coins.
+      operationId: ProtocolPoolCommunityPool
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              pool:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    DecCoin defines a token with a denomination and a decimal
+                    amount.
+
+
+                    NOTE: The amount field is an Dec which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+                description: pool defines community pool's coins.
+            description: >-
+              QueryCommunityPoolResponse is the response type for the
+              Query/CommunityPool
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /cosmos/protocolpool/v1/unclaimed_budget/{address}:
+    get:
+      summary: >-
+        UnclaimedBudget queries the remaining budget left to be claimed and it
+        gives overall budget allocation view.
+      operationId: UnclaimedBudget
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              claimed_amount:
+                title: >-
+                  claimed_amount is the budget amount already claimed by the
+                  recipient
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              unclaimed_amount:
+                title: >-
+                  unclaimed_amount is the remaining budget amount that is
+                  unclaimed by the recipient
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              next_claim_from:
+                type: string
+                format: date-time
+                description: >-
+                  next_claim_from is the next starting claim time for fund
+                  distribution.
+
+                  It represents the time when we can claim funds after the
+                  period time interval has passed.
+              period:
+                type: string
+                title: period is the time interval for fund distribution
+              tranches_left:
+                type: string
+                format: uint64
+                title: >-
+                  tranches_left is the number of tranches left for the amount to
+                  be distributed
+            description: >-
+              QueryUnclaimedBudgetResponse is the response type for the
+              Query/UnclaimedBudget
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: address
+          description: >-
+            address is the recipient address to query unclaimed budget amount
+            for.
+          in: path
+          required: true
+          type: string
       tags:
         - Query
 definitions:
@@ -47962,7 +47824,11 @@ definitions:
               format: int64
           description: Validator is the type for the validator-set.
       pagination:
-        description: pagination defines an pagination for the response.
+        description: >-
+          pagination defines an pagination for the response. offset and limit
+          are used for pagination, next_key is not
+
+          supported for this query.
         type: object
         properties:
           next_key:
@@ -48059,6 +47925,12 @@ definitions:
                   title: checksum
               title: Module is the type for VersionInfo
           cosmos_sdk_version:
+            type: string
+          comet_server_version:
+            type: string
+          runtime_version:
+            type: string
+          stf_version:
             type: string
         description: VersionInfo is the type for the GetNodeInfoResponse message.
     description: >-
@@ -48263,7 +48135,11 @@ definitions:
               format: int64
           description: Validator is the type for the validator-set.
       pagination:
-        description: pagination defines an pagination for the response.
+        description: >-
+          pagination defines an pagination for the response. offset and limit
+          are used for pagination, next_key is not
+
+          supported for this query.
         type: object
         properties:
           next_key:
@@ -48599,6 +48475,12 @@ definitions:
           title: Module is the type for VersionInfo
       cosmos_sdk_version:
         type: string
+      comet_server_version:
+        type: string
+      runtime_version:
+        type: string
+      stf_version:
+        type: string
     description: VersionInfo is the type for the GetNodeInfoResponse message.
   cosmos.base.node.v1beta1.ConfigResponse:
     type: object
@@ -48636,7 +48518,7 @@ definitions:
         type: string
         format: byte
         title: validator hash provided by the consensus header
-    description: StateResponse defines the response structure for the status of a node.
+    description: StatusResponse defines the response structure for the status of a node.
   cosmos.base.v1beta1.DecCoin:
     type: object
     properties:
@@ -52438,66 +52320,6 @@ definitions:
             type: string
             title: maximum supply for the token
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  cosmos.params.v1beta1.ParamChange:
-    type: object
-    properties:
-      subspace:
-        type: string
-      key:
-        type: string
-      value:
-        type: string
-    description: |-
-      ParamChange defines an individual parameter change, for use in
-      ParameterChangeProposal.
-  cosmos.params.v1beta1.QueryParamsResponse:
-    type: object
-    properties:
-      param:
-        description: param defines the queried parameter.
-        type: object
-        properties:
-          subspace:
-            type: string
-          key:
-            type: string
-          value:
-            type: string
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  cosmos.params.v1beta1.QuerySubspacesResponse:
-    type: object
-    properties:
-      subspaces:
-        type: array
-        items:
-          type: object
-          properties:
-            subspace:
-              type: string
-            keys:
-              type: array
-              items:
-                type: string
-          description: >-
-            Subspace defines a parameter subspace name and all the keys that
-            exist for
-
-            the subspace.
-    description: |-
-      QuerySubspacesResponse defines the response types for querying for all
-      registered subspaces and all keys for a subspace.
-  cosmos.params.v1beta1.Subspace:
-    type: object
-    properties:
-      subspace:
-        type: string
-      keys:
-        type: array
-        items:
-          type: string
-    description: |-
-      Subspace defines a parameter subspace name and all the keys that exist for
-      the subspace.
   cosmos.slashing.v1beta1.Params:
     type: object
     properties:
@@ -52864,6 +52686,20 @@ definitions:
       details:
         type: string
         description: details define other optional details.
+      metadata:
+        description: metadata defines extra information about the validator.
+        type: object
+        properties:
+          profile_pic_uri:
+            type: string
+            description: profile_pic_uri defines a link to the validator profile picture.
+          social_handle_uris:
+            type: array
+            items:
+              type: string
+            description: >-
+              social_handle_uris defines a string array of uris to the
+              validator's social handles.
     description: Description defines a validator description.
   cosmos.staking.v1beta1.HistoricalInfo:
     type: object
@@ -53076,6 +52912,22 @@ definitions:
                 details:
                   type: string
                   description: details define other optional details.
+                metadata:
+                  description: metadata defines extra information about the validator.
+                  type: object
+                  properties:
+                    profile_pic_uri:
+                      type: string
+                      description: >-
+                        profile_pic_uri defines a link to the validator profile
+                        picture.
+                    social_handle_uris:
+                      type: array
+                      items:
+                        type: string
+                      description: >-
+                        social_handle_uris defines a string array of uris to the
+                        validator's social handles.
             unbonding_height:
               type: string
               format: int64
@@ -53169,6 +53021,20 @@ definitions:
       recent HistoricalInfo
 
       (`n` is set by the staking module's `historical_entries` parameter).
+  cosmos.staking.v1beta1.Metadata:
+    type: object
+    properties:
+      profile_pic_uri:
+        type: string
+        description: profile_pic_uri defines a link to the validator profile picture.
+      social_handle_uris:
+        type: array
+        items:
+          type: string
+        description: >-
+          social_handle_uris defines a string array of uris to the validator's
+          social handles.
+    description: Metadata defines extra information about the validator.
   cosmos.staking.v1beta1.Params:
     type: object
     properties:
@@ -53540,6 +53406,22 @@ definitions:
               details:
                 type: string
                 description: details define other optional details.
+              metadata:
+                description: metadata defines extra information about the validator.
+                type: object
+                properties:
+                  profile_pic_uri:
+                    type: string
+                    description: >-
+                      profile_pic_uri defines a link to the validator profile
+                      picture.
+                  social_handle_uris:
+                    type: array
+                    items:
+                      type: string
+                    description: >-
+                      social_handle_uris defines a string array of uris to the
+                      validator's social handles.
           unbonding_height:
             type: string
             format: int64
@@ -53725,6 +53607,22 @@ definitions:
                 details:
                   type: string
                   description: details define other optional details.
+                metadata:
+                  description: metadata defines extra information about the validator.
+                  type: object
+                  properties:
+                    profile_pic_uri:
+                      type: string
+                      description: >-
+                        profile_pic_uri defines a link to the validator profile
+                        picture.
+                    social_handle_uris:
+                      type: array
+                      items:
+                        type: string
+                      description: >-
+                        social_handle_uris defines a string array of uris to the
+                        validator's social handles.
             unbonding_height:
               type: string
               format: int64
@@ -54047,6 +53945,22 @@ definitions:
                     details:
                       type: string
                       description: details define other optional details.
+                    metadata:
+                      description: metadata defines extra information about the validator.
+                      type: object
+                      properties:
+                        profile_pic_uri:
+                          type: string
+                          description: >-
+                            profile_pic_uri defines a link to the validator
+                            profile picture.
+                        social_handle_uris:
+                          type: array
+                          items:
+                            type: string
+                          description: >-
+                            social_handle_uris defines a string array of uris to
+                            the validator's social handles.
                 unbonding_height:
                   type: string
                   format: int64
@@ -54614,6 +54528,22 @@ definitions:
               details:
                 type: string
                 description: details define other optional details.
+              metadata:
+                description: metadata defines extra information about the validator.
+                type: object
+                properties:
+                  profile_pic_uri:
+                    type: string
+                    description: >-
+                      profile_pic_uri defines a link to the validator profile
+                      picture.
+                  social_handle_uris:
+                    type: array
+                    items:
+                      type: string
+                    description: >-
+                      social_handle_uris defines a string array of uris to the
+                      validator's social handles.
           unbonding_height:
             type: string
             format: int64
@@ -54885,6 +54815,22 @@ definitions:
                 details:
                   type: string
                   description: details define other optional details.
+                metadata:
+                  description: metadata defines extra information about the validator.
+                  type: object
+                  properties:
+                    profile_pic_uri:
+                      type: string
+                      description: >-
+                        profile_pic_uri defines a link to the validator profile
+                        picture.
+                    social_handle_uris:
+                      type: array
+                      items:
+                        type: string
+                      description: >-
+                        social_handle_uris defines a string array of uris to the
+                        validator's social handles.
             unbonding_height:
               type: string
               format: int64
@@ -55480,6 +55426,22 @@ definitions:
           details:
             type: string
             description: details define other optional details.
+          metadata:
+            description: metadata defines extra information about the validator.
+            type: object
+            properties:
+              profile_pic_uri:
+                type: string
+                description: >-
+                  profile_pic_uri defines a link to the validator profile
+                  picture.
+              social_handle_uris:
+                type: array
+                items:
+                  type: string
+                description: >-
+                  social_handle_uris defines a string array of uris to the
+                  validator's social handles.
       unbonding_height:
         type: string
         format: int64
@@ -56107,9 +56069,6 @@ definitions:
           emitted from the ante. Whereas Logs contains the events, with
 
           additional metadata, emitted only by processing the messages.
-
-
-          Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
     description: >-
       TxResponse defines a structure containing relevant tx data and metadata.
       The
@@ -56576,9 +56535,6 @@ definitions:
               emitted from the ante. Whereas Logs contains the events, with
 
               additional metadata, emitted only by processing the messages.
-
-
-              Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
     description: |-
       BroadcastTxResponse is the response type for the
       Service.BroadcastTx method.
@@ -57544,9 +57500,6 @@ definitions:
               emitted from the ante. Whereas Logs contains the events, with
 
               additional metadata, emitted only by processing the messages.
-
-
-              Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
     description: GetTxResponse is the response type for the Service.GetTx method.
   cosmos.tx.v1beta1.GetTxsEventResponse:
     type: object
@@ -57759,9 +57712,6 @@ definitions:
                 emitted from the ante. Whereas Logs contains the events, with
 
                 additional metadata, emitted only by processing the messages.
-
-
-                Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
           description: >-
             TxResponse defines a structure containing relevant tx data and
             metadata. The
@@ -58618,14 +58568,6 @@ definitions:
               will not
 
               be processed by the chain.
-
-
-              Note, if unordered=true this value MUST be set
-
-              and will act as a short-lived TTL in which the transaction is
-              deemed valid
-
-              and kept in memory to prevent duplicates.
           unordered:
             type: boolean
             description: >-
@@ -58644,12 +58586,27 @@ definitions:
 
 
               Note, when set to true, the existing 'timeout_height' value must
-              be set and
 
-              will be used to correspond to a height in which the transaction is
-              deemed
+              be set and will be used to correspond to a time_stamp in which the
+              transaction is deemed
 
               valid.
+          timeout_timestamp:
+            type: string
+            format: date-time
+            description: >-
+              timeout_timestamp is the block time after which this transaction
+              will not
+
+              be processed by the chain.
+
+
+              Note, if unordered=true this value MUST be set
+
+              and will act as a short-lived TTL in which the transaction is
+              deemed valid
+
+              and kept in memory to prevent duplicates.
           extension_options:
             type: array
             items:
@@ -59233,14 +59190,6 @@ definitions:
           not
 
           be processed by the chain.
-
-
-          Note, if unordered=true this value MUST be set
-
-          and will act as a short-lived TTL in which the transaction is deemed
-          valid
-
-          and kept in memory to prevent duplicates.
       unordered:
         type: boolean
         description: >-
@@ -59256,13 +59205,28 @@ definitions:
           transaction execution.
 
 
-          Note, when set to true, the existing 'timeout_height' value must be
-          set and
+          Note, when set to true, the existing 'timeout_height' value must
 
-          will be used to correspond to a height in which the transaction is
-          deemed
+          be set and will be used to correspond to a time_stamp in which the
+          transaction is deemed
 
           valid.
+      timeout_timestamp:
+        type: string
+        format: date-time
+        description: >-
+          timeout_timestamp is the block time after which this transaction will
+          not
+
+          be processed by the chain.
+
+
+          Note, if unordered=true this value MUST be set
+
+          and will act as a short-lived TTL in which the transaction is deemed
+          valid
+
+          and kept in memory to prevent duplicates.
       extension_options:
         type: array
         items:
@@ -65192,152 +65156,6 @@ definitions:
       breaker for Msg's of all type URLs.
        - LEVEL_SUPER_ADMIN: LEVEL_SUPER_ADMIN indicates that the account can take all circuit breaker
       actions and can grant permissions to other accounts.
-  cometbft.abci.v1.CommitInfo:
-    type: object
-    properties:
-      round:
-        type: integer
-        format: int32
-      votes:
-        type: array
-        items:
-          type: object
-          properties:
-            validator:
-              type: object
-              properties:
-                address:
-                  type: string
-                  format: byte
-                  title: The first 20 bytes of SHA256(public key)
-                power:
-                  type: string
-                  format: int64
-                  description: The voting power
-                  title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
-              description: Validator in the validator set.
-            block_id_flag:
-              type: string
-              enum:
-                - BLOCK_ID_FLAG_UNKNOWN
-                - BLOCK_ID_FLAG_ABSENT
-                - BLOCK_ID_FLAG_COMMIT
-                - BLOCK_ID_FLAG_NIL
-              default: BLOCK_ID_FLAG_UNKNOWN
-              description: |-
-                - BLOCK_ID_FLAG_UNKNOWN: Indicates an error condition
-                 - BLOCK_ID_FLAG_ABSENT: The vote was not received
-                 - BLOCK_ID_FLAG_COMMIT: Voted for the block that received the majority
-                 - BLOCK_ID_FLAG_NIL: Voted for nil
-              title: BlockIdFlag indicates which BlockID the signature is for
-          description: VoteInfo contains the information about the vote.
-    description: CommitInfo contains votes for the particular round.
-  cometbft.abci.v1.Misbehavior:
-    type: object
-    properties:
-      type:
-        type: string
-        enum:
-          - MISBEHAVIOR_TYPE_UNKNOWN
-          - MISBEHAVIOR_TYPE_DUPLICATE_VOTE
-          - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK
-        default: MISBEHAVIOR_TYPE_UNKNOWN
-        description: |-
-          The type of misbehavior committed by a validator.
-
-           - MISBEHAVIOR_TYPE_UNKNOWN: Unknown
-           - MISBEHAVIOR_TYPE_DUPLICATE_VOTE: Duplicate vote
-           - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK: Light client attack
-      validator:
-        type: object
-        properties:
-          address:
-            type: string
-            format: byte
-            title: The first 20 bytes of SHA256(public key)
-          power:
-            type: string
-            format: int64
-            description: The voting power
-            title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
-        description: Validator in the validator set.
-        title: The offending validator
-      height:
-        type: string
-        format: int64
-        title: The height when the offense occurred
-      time:
-        type: string
-        format: date-time
-        title: The corresponding time where the offense occurred
-      total_voting_power:
-        type: string
-        format: int64
-        title: >-
-          Total voting power of the validator set in case the ABCI application
-          does
-
-          not store historical validators.
-
-          https://github.com/tendermint/tendermint/issues/4581
-    description: Misbehavior is a type of misbehavior committed by a validator.
-  cometbft.abci.v1.MisbehaviorType:
-    type: string
-    enum:
-      - MISBEHAVIOR_TYPE_UNKNOWN
-      - MISBEHAVIOR_TYPE_DUPLICATE_VOTE
-      - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK
-    default: MISBEHAVIOR_TYPE_UNKNOWN
-    description: |-
-      The type of misbehavior committed by a validator.
-
-       - MISBEHAVIOR_TYPE_UNKNOWN: Unknown
-       - MISBEHAVIOR_TYPE_DUPLICATE_VOTE: Duplicate vote
-       - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK: Light client attack
-  cometbft.abci.v1.Validator:
-    type: object
-    properties:
-      address:
-        type: string
-        format: byte
-        title: The first 20 bytes of SHA256(public key)
-      power:
-        type: string
-        format: int64
-        description: The voting power
-        title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
-    description: Validator in the validator set.
-  cometbft.abci.v1.VoteInfo:
-    type: object
-    properties:
-      validator:
-        type: object
-        properties:
-          address:
-            type: string
-            format: byte
-            title: The first 20 bytes of SHA256(public key)
-          power:
-            type: string
-            format: int64
-            description: The voting power
-            title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
-        description: Validator in the validator set.
-      block_id_flag:
-        type: string
-        enum:
-          - BLOCK_ID_FLAG_UNKNOWN
-          - BLOCK_ID_FLAG_ABSENT
-          - BLOCK_ID_FLAG_COMMIT
-          - BLOCK_ID_FLAG_NIL
-        default: BLOCK_ID_FLAG_UNKNOWN
-        description: |-
-          - BLOCK_ID_FLAG_UNKNOWN: Indicates an error condition
-           - BLOCK_ID_FLAG_ABSENT: The vote was not received
-           - BLOCK_ID_FLAG_COMMIT: Voted for the block that received the majority
-           - BLOCK_ID_FLAG_NIL: Voted for nil
-        title: BlockIdFlag indicates which BlockID the signature is for
-    description: VoteInfo contains the information about the vote.
   cometbft.types.v1.ABCIParams:
     type: object
     properties:
@@ -65704,214 +65522,6 @@ definitions:
 
           It was named app_version in CometBFT 0.34.
     description: VersionParams contain the version of specific components of CometBFT.
-  cosmos.consensus.v1.CometInfo:
-    type: object
-    properties:
-      evidence:
-        type: array
-        items:
-          type: object
-          properties:
-            type:
-              type: string
-              enum:
-                - MISBEHAVIOR_TYPE_UNKNOWN
-                - MISBEHAVIOR_TYPE_DUPLICATE_VOTE
-                - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK
-              default: MISBEHAVIOR_TYPE_UNKNOWN
-              description: |-
-                The type of misbehavior committed by a validator.
-
-                 - MISBEHAVIOR_TYPE_UNKNOWN: Unknown
-                 - MISBEHAVIOR_TYPE_DUPLICATE_VOTE: Duplicate vote
-                 - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK: Light client attack
-            validator:
-              type: object
-              properties:
-                address:
-                  type: string
-                  format: byte
-                  title: The first 20 bytes of SHA256(public key)
-                power:
-                  type: string
-                  format: int64
-                  description: The voting power
-                  title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
-              description: Validator in the validator set.
-              title: The offending validator
-            height:
-              type: string
-              format: int64
-              title: The height when the offense occurred
-            time:
-              type: string
-              format: date-time
-              title: The corresponding time where the offense occurred
-            total_voting_power:
-              type: string
-              format: int64
-              title: >-
-                Total voting power of the validator set in case the ABCI
-                application does
-
-                not store historical validators.
-
-                https://github.com/tendermint/tendermint/issues/4581
-          description: Misbehavior is a type of misbehavior committed by a validator.
-      validators_hash:
-        type: string
-        format: byte
-      proposer_address:
-        type: string
-        format: byte
-      last_commit:
-        type: object
-        properties:
-          round:
-            type: integer
-            format: int32
-          votes:
-            type: array
-            items:
-              type: object
-              properties:
-                validator:
-                  type: object
-                  properties:
-                    address:
-                      type: string
-                      format: byte
-                      title: The first 20 bytes of SHA256(public key)
-                    power:
-                      type: string
-                      format: int64
-                      description: The voting power
-                      title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
-                  description: Validator in the validator set.
-                block_id_flag:
-                  type: string
-                  enum:
-                    - BLOCK_ID_FLAG_UNKNOWN
-                    - BLOCK_ID_FLAG_ABSENT
-                    - BLOCK_ID_FLAG_COMMIT
-                    - BLOCK_ID_FLAG_NIL
-                  default: BLOCK_ID_FLAG_UNKNOWN
-                  description: |-
-                    - BLOCK_ID_FLAG_UNKNOWN: Indicates an error condition
-                     - BLOCK_ID_FLAG_ABSENT: The vote was not received
-                     - BLOCK_ID_FLAG_COMMIT: Voted for the block that received the majority
-                     - BLOCK_ID_FLAG_NIL: Voted for nil
-                  title: BlockIdFlag indicates which BlockID the signature is for
-              description: VoteInfo contains the information about the vote.
-        description: CommitInfo contains votes for the particular round.
-    description: CometInfo defines the structure of the x/consensus module's comet info.
-  cosmos.consensus.v1.QueryGetCometInfoResponse:
-    type: object
-    properties:
-      comet_info:
-        description: comet_info is the comet info of the x/consensus module.
-        type: object
-        properties:
-          evidence:
-            type: array
-            items:
-              type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - MISBEHAVIOR_TYPE_UNKNOWN
-                    - MISBEHAVIOR_TYPE_DUPLICATE_VOTE
-                    - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK
-                  default: MISBEHAVIOR_TYPE_UNKNOWN
-                  description: |-
-                    The type of misbehavior committed by a validator.
-
-                     - MISBEHAVIOR_TYPE_UNKNOWN: Unknown
-                     - MISBEHAVIOR_TYPE_DUPLICATE_VOTE: Duplicate vote
-                     - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK: Light client attack
-                validator:
-                  type: object
-                  properties:
-                    address:
-                      type: string
-                      format: byte
-                      title: The first 20 bytes of SHA256(public key)
-                    power:
-                      type: string
-                      format: int64
-                      description: The voting power
-                      title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
-                  description: Validator in the validator set.
-                  title: The offending validator
-                height:
-                  type: string
-                  format: int64
-                  title: The height when the offense occurred
-                time:
-                  type: string
-                  format: date-time
-                  title: The corresponding time where the offense occurred
-                total_voting_power:
-                  type: string
-                  format: int64
-                  title: >-
-                    Total voting power of the validator set in case the ABCI
-                    application does
-
-                    not store historical validators.
-
-                    https://github.com/tendermint/tendermint/issues/4581
-              description: Misbehavior is a type of misbehavior committed by a validator.
-          validators_hash:
-            type: string
-            format: byte
-          proposer_address:
-            type: string
-            format: byte
-          last_commit:
-            type: object
-            properties:
-              round:
-                type: integer
-                format: int32
-              votes:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    validator:
-                      type: object
-                      properties:
-                        address:
-                          type: string
-                          format: byte
-                          title: The first 20 bytes of SHA256(public key)
-                        power:
-                          type: string
-                          format: int64
-                          description: The voting power
-                          title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
-                      description: Validator in the validator set.
-                    block_id_flag:
-                      type: string
-                      enum:
-                        - BLOCK_ID_FLAG_UNKNOWN
-                        - BLOCK_ID_FLAG_ABSENT
-                        - BLOCK_ID_FLAG_COMMIT
-                        - BLOCK_ID_FLAG_NIL
-                      default: BLOCK_ID_FLAG_UNKNOWN
-                      description: |-
-                        - BLOCK_ID_FLAG_UNKNOWN: Indicates an error condition
-                         - BLOCK_ID_FLAG_ABSENT: The vote was not received
-                         - BLOCK_ID_FLAG_COMMIT: Voted for the block that received the majority
-                         - BLOCK_ID_FLAG_NIL: Voted for nil
-                      title: BlockIdFlag indicates which BlockID the signature is for
-                  description: VoteInfo contains the information about the vote.
-            description: CommitInfo contains votes for the particular round.
-    description: >-
-      QueryCometInfoResponse defines the response type for querying x/consensus
-      comet info.
   cosmos.consensus.v1.QueryParamsResponse:
     type: object
     properties:
@@ -66592,3 +66202,79 @@ definitions:
 
               field's configuration is global (not module specific).
     description: QueryConfigResponse is the Query/Config response type.
+  cosmos.protocolpool.v1.QueryCommunityPoolResponse:
+    type: object
+    properties:
+      pool:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+        description: pool defines community pool's coins.
+    description: >-
+      QueryCommunityPoolResponse is the response type for the
+      Query/CommunityPool
+
+      RPC method.
+  cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse:
+    type: object
+    properties:
+      claimed_amount:
+        title: claimed_amount is the budget amount already claimed by the recipient
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      unclaimed_amount:
+        title: >-
+          unclaimed_amount is the remaining budget amount that is unclaimed by
+          the recipient
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      next_claim_from:
+        type: string
+        format: date-time
+        description: >-
+          next_claim_from is the next starting claim time for fund distribution.
+
+          It represents the time when we can claim funds after the period time
+          interval has passed.
+      period:
+        type: string
+        title: period is the time interval for fund distribution
+      tranches_left:
+        type: string
+        format: uint64
+        title: >-
+          tranches_left is the number of tranches left for the amount to be
+          distributed
+    description: >-
+      QueryUnclaimedBudgetResponse is the response type for the
+      Query/UnclaimedBudget
+
+      RPC method.

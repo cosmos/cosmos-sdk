@@ -42,11 +42,8 @@ func TestStakeUnstake(t *testing.T) {
 	assert.Equal(t, int64(8999999), cli.QueryBalance(account1Addr, "stake"))
 
 	// check validator has been updated
-	if systest.IsV2() {
-		rsp = cli.CustomQuery("q", "comet", "block-results", gjson.Get(rsp, "height").String())
-	} else {
-		rsp = cli.CustomQuery("q", "block-results", gjson.Get(rsp, "height").String())
-	}
+	rsp = cli.CustomQuery("q", "comet", "block-results", gjson.Get(rsp, "height").String())
+
 	validatorUpdates := gjson.Get(rsp, "validator_updates").Array()
 	assert.NotEmpty(t, validatorUpdates)
 	vpk := gjson.Get(validatorUpdates[0].String(), "pub_key_bytes").String()

@@ -25,6 +25,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [GHSA-x5vx-95h7-rv4p](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-x5vx-95h7-rv4p) Fix Group module can halt chain when handling a malicious proposal
+
+
 ## [v0.2.0-rc.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/group/v0.2.0-rc.1) - 2024-12-18
 
 ### Improvements

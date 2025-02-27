@@ -5,8 +5,6 @@
   - tools/confix/**/*
 "C:Cosmovisor":
   - tools/cosmovisor/**/*
-"C:Hubl":
-  - tools/hubl/**/*
 "C:Keys":
   - client/keys/**/*
 "C:Simulations":
@@ -19,8 +17,6 @@
   - store/**/*
 "C:collections":
   - collections/**/*
-"C:collections/protocodec":
-  - collections/protocodec/*
 "C:core/testing":
   - core/testing/**/*
 "C:log":
@@ -51,8 +47,6 @@
   - x/circuit/**/*
 "C:x/consensus":
   - x/consensus/**/*
-"C:x/crisis":
-  - x/crisis/**/*
 "C:x/distribution":
   - x/distribution/**/*
 "C:x/evidence":

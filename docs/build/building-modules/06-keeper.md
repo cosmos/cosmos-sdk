@@ -46,7 +46,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/staking/keeper/keeper
 
 Let us go through the different parameters:
 
-* Environment is a struct that holds the necessary references to services available to the modules. This includes the [store services](../../advanced/04-store.md#store-services), the [event manager](../../learn/advanced/06-events.md) and more.
+* Environment is a struct that holds the necessary references to services available to the modules. This includes the [kvstore services](../../learn/advanced/02-core.md#kvstore-service), the [event manager](../../learn/advanced/02-core.md#event-service) and more.
 * An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in an `expected_keepers.go` file in the root of the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself.
 * `cdc` is the [codec](../../learn/advanced/05-encoding.md) used to marshal and unmarshal structs to/from `[]byte`. The `cdc` can be any of `codec.BinaryCodec`, `codec.JSONCodec` or `codec.Codec` based on your requirements. It can be either a proto or amino codec as long as they implement these interfaces.
 * The authority listed is a module account or user account that has the right to change module level parameters. Previously this was handled by the param module, which has been deprecated.

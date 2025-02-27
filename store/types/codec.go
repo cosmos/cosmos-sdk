@@ -2,9 +2,9 @@ package types
 
 import (
 	"encoding/binary"
-	fmt "fmt"
+	"fmt"
 
-	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // Codec defines a interface needed for the store package to marshal data

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/address"
 	txdecode "cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -15,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 type config struct {
@@ -37,7 +37,7 @@ type ConfigOptions struct {
 	// txsigning.HandlerMap.
 	SigningHandler *txsigning.HandlerMap
 	// EnabledSignModes is the list of sign modes that will be enabled in the txsigning.HandlerMap.
-	EnabledSignModes []signingtypes.SignMode
+	EnabledSignModes []apisigning.SignMode
 	// If SigningContext is specified it will be used when constructing sign mode handlers. If nil, one will be created
 	// with the options specified in SigningOptions.
 	SigningContext *txsigning.Context
@@ -60,11 +60,11 @@ type ConfigOptions struct {
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
-var DefaultSignModes = []signingtypes.SignMode{
-	signingtypes.SignMode_SIGN_MODE_DIRECT,
-	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
-	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	// signingtypes.SignMode_SIGN_MODE_TEXTUAL is not enabled by default, as it requires a x/bank keeper or gRPC connection.
+var DefaultSignModes = []apisigning.SignMode{
+	apisigning.SignMode_SIGN_MODE_DIRECT,
+	apisigning.SignMode_SIGN_MODE_DIRECT_AUX,
+	apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+	// apisigning.SignMode_SIGN_MODE_TEXTUAL is not enabled by default, as it requires a x/bank keeper or gRPC connection.
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
@@ -76,7 +76,7 @@ var DefaultSignModes = []signingtypes.SignMode{
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
-func NewTxConfig(protoCodec codec.Codec, addressCodec, validatorAddressCodec address.Codec, enabledSignModes []signingtypes.SignMode, customSignModes ...txsigning.SignModeHandler,
+func NewTxConfig(protoCodec codec.Codec, addressCodec, validatorAddressCodec address.Codec, enabledSignModes []apisigning.SignMode, customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
 		EnabledSignModes: enabledSignModes,
@@ -127,9 +127,9 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 	for i, m := range configOpts.EnabledSignModes {
 		var err error
 		switch m {
-		case signingtypes.SignMode_SIGN_MODE_DIRECT:
+		case apisigning.SignMode_SIGN_MODE_DIRECT:
 			handlers[i] = &direct.SignModeHandler{}
-		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
+		case apisigning.SignMode_SIGN_MODE_DIRECT_AUX:
 			handlers[i], err = directaux.NewSignModeHandler(directaux.SignModeHandlerOptions{
 				TypeResolver:   signingOpts.TypeResolver,
 				SignersContext: configOpts.SigningContext,
@@ -137,12 +137,12 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 			if err != nil {
 				return nil, err
 			}
-		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+		case apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				FileResolver: signingOpts.FileResolver,
 				TypeResolver: signingOpts.TypeResolver,
 			})
-		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
+		case apisigning.SignMode_SIGN_MODE_TEXTUAL:
 			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
 				CoinMetadataQuerier: configOpts.TextualCoinMetadataQueryFn,
 				FileResolver:        signingOpts.FileResolver,
@@ -189,16 +189,15 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		}
 	}
 
+	txConfig.txDecoder, err = txdecode.NewDecoder(txdecode.Options{
+		SigningContext: configOptions.SigningContext,
+		ProtoCodec:     protoCodec,
+	})
+	if err != nil {
+		return nil, err
+	}
 	if configOptions.ProtoDecoder == nil {
-		dec, err := txdecode.NewDecoder(txdecode.Options{
-			SigningContext: configOptions.SigningContext,
-			ProtoCodec:     protoCodec,
-		})
-		if err != nil {
-			return nil, err
-		}
-		txConfig.decoder = txV2toInterface(configOptions.SigningOptions.AddressCodec, protoCodec, dec)
-		txConfig.txDecoder = dec
+		txConfig.decoder = DefaultTxDecoder(configOptions.SigningOptions.AddressCodec, protoCodec, txConfig.txDecoder)
 	}
 	if configOptions.ProtoEncoder == nil {
 		txConfig.encoder = DefaultTxEncoder()
@@ -261,14 +260,4 @@ func (g config) TxJSONDecoder() sdk.TxDecoder {
 
 func (g config) SigningContext() *txsigning.Context {
 	return g.signingContext
-}
-
-func txV2toInterface(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *txdecode.Decoder) func([]byte) (sdk.Tx, error) {
-	return func(txBytes []byte) (sdk.Tx, error) {
-		decodedTx, err := decoder.Decode(txBytes)
-		if err != nil {
-			return nil, err
-		}
-		return newWrapperFromDecodedTx(addrCodec, cdc, decodedTx)
-	}
 }

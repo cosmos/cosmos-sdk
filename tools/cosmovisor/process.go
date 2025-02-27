@@ -26,7 +26,7 @@ import (
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	cmtservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 )
 
 type Launcher struct {

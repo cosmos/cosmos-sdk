@@ -13,7 +13,7 @@
 
 # jobs:
 #   root:
-#     runs-on: ubuntu-latest
+#     runs-on: depot-ubuntu-22.04-4
 #     name: "Push to buf.build/cosmos/cosmos-sdk"
 #     steps:
 #       - uses: actions/checkout@v4

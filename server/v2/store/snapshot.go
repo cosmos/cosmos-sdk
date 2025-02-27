@@ -39,21 +39,10 @@ func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 			}
 
 			logger := serverv2.GetLoggerFromCmd(cmd)
-			rootStore, _, err := createRootStore(v, logger)
-			if err != nil {
-				return err
-			}
-			if height == 0 {
-				lastCommitId, err := rootStore.LastCommitID()
-				if err != nil {
-					return err
-				}
-				height = int64(lastCommitId.Version)
-			}
 
 			cmd.Printf("Exporting snapshot for height %d\n", height)
 
-			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
+			sm, err := createSnapshotsManager(cmd, v, logger, s.store)
 			if err != nil {
 				return err
 			}
@@ -94,11 +83,7 @@ func (s *Server[T]) RestoreSnapshotCmd() *cobra.Command {
 				return err
 			}
 
-			rootStore, _, err := createRootStore(v, logger)
-			if err != nil {
-				return fmt.Errorf("failed to create root store: %w", err)
-			}
-			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
+			sm, err := createSnapshotsManager(cmd, v, logger, s.store)
 			if err != nil {
 				return err
 			}
@@ -177,7 +162,7 @@ func (s *Server[T]) DumpArchiveCmd() *cobra.Command {
 		Use:   "dump <height> <format>",
 		Short: "Dump the snapshot as portable archive format",
 		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			v := serverv2.GetViperFromCmd(cmd)
 			snapshotStore, err := snapshots.NewStore(filepath.Join(v.GetString(serverv2.FlagHome), "data", "snapshots"))
 			if err != nil {
@@ -220,7 +205,9 @@ func (s *Server[T]) DumpArchiveCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer fp.Close()
+			defer func() {
+				err = errors.Join(err, fp.Close())
+			}()
 
 			// since the chunk files are already compressed, we just use fastest compression here
 			gzipWriter, err := gzip.NewWriterLevel(fp, gzip.BestSpeed)
@@ -255,7 +242,7 @@ func (s *Server[T]) DumpArchiveCmd() *cobra.Command {
 				return fmt.Errorf("failed to close gzip writer: %w", err)
 			}
 
-			return fp.Close()
+			return nil
 		},
 	}
 

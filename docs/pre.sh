@@ -28,7 +28,6 @@ cat ../x/README.md | sed 's/\.\.\/\/build\/building-modules\/README\.md/\/buildi
 ## Add tooling documentation
 cp ../tools/cosmovisor/README.md ./build/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./build/tooling/02-confix.md
-cp ../tools/hubl/README.md ./build/tooling/03-hubl.md
 
 ## Add package documentation
 cp ../client/v2/README.md ./learn/advanced/17-autocli.md

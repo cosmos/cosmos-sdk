@@ -17,7 +17,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // bufPool is a pool of bytes.Buffer objects to reduce memory allocations.
@@ -44,7 +46,7 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
 // chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
 type UnorderedTxDecorator struct {
-	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
+	// maxTimeoutDuration defines the maximum TTL a transaction can define.
 	maxTimeoutDuration time.Duration
 	txManager          *unorderedtx.Manager
 	env                appmodulev2.Environment
@@ -146,8 +148,12 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx
 
 // TxIdentifier returns a unique identifier for a transaction that is intended to be unordered.
 func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
-	feetx := tx.(sdk.FeeTx)
-	if feetx.GetFee().IsZero() {
+	sigTx, ok := tx.(authsigning.Tx)
+	if !ok {
+		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+	}
+
+	if sigTx.GetFee().IsZero() {
 		return [32]byte{}, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"unordered transaction must have a fee",
@@ -158,6 +164,18 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 	// Make sure to reset the buffer
 	buf.Reset()
 	defer bufPool.Put(buf)
+
+	// Add signatures to the transaction identifier
+	signatures, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return [32]byte{}, err
+	}
+
+	for _, sig := range signatures {
+		if err := addSignatures(sig.Data, buf); err != nil {
+			return [32]byte{}, err
+		}
+	}
 
 	// Use the buffer
 	for _, msg := range tx.GetMsgs() {
@@ -189,7 +207,7 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 	}
 
 	// write gas to the buffer
-	if err := binary.Write(buf, binary.LittleEndian, feetx.GetGas()); err != nil {
+	if err := binary.Write(buf, binary.LittleEndian, sigTx.GetGas()); err != nil {
 		return [32]byte{}, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"failed to write unordered to buffer",
@@ -200,4 +218,28 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 
 	// Return the Buffer to the pool
 	return txHash, nil
+}
+
+func addSignatures(sig signing.SignatureData, buf *bytes.Buffer) error {
+	switch data := sig.(type) {
+	case *signing.SingleSignatureData:
+		if _, err := buf.Write(data.Signature); err != nil {
+			return errorsmod.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				"failed to write single signature to buffer",
+			)
+		}
+		return nil
+
+	case *signing.MultiSignatureData:
+		for _, sigdata := range data.Signatures {
+			if err := addSignatures(sigdata, buf); err != nil {
+				return err
+			}
+		}
+	default:
+		return fmt.Errorf("unexpected SignatureData %T", data)
+	}
+
+	return nil
 }

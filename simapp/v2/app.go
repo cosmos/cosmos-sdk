@@ -16,7 +16,9 @@ import (
 	"cosmossdk.io/runtime/v2"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment/iavlv2"
 	"cosmossdk.io/store/v2/root"
+	_ "cosmossdk.io/tools/benchmark"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
@@ -220,5 +222,12 @@ func (app *SimApp[T]) Close() error {
 }
 
 func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {
-	return serverstore.UnmarshalConfig(config)
+	cfg, err := serverstore.UnmarshalConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	cfg.Options.IavlV2Config = iavlv2.DefaultConfig()
+	cfg.Options.IavlV2Config.MinimumKeepVersions = int64(cfg.Options.SCPruningOption.KeepRecent)
+	iavlv2.SetGlobalPruneLimit(1)
+	return cfg, err
 }

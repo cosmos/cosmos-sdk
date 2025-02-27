@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	serverv2 "cosmossdk.io/server/v2"
-	grpc "cosmossdk.io/server/v2/api/grpc"
-	store "cosmossdk.io/server/v2/store"
+	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/root"
 )
 

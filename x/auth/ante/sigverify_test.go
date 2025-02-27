@@ -358,7 +358,6 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 			true,
 		},
 		{
-
 			"inc on no recheck, no sim",
 			suite.ctx.WithIsReCheckTx(false),
 			false,

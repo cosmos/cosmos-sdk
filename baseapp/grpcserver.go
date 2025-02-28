@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -63,6 +64,8 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {
 			app.logger.Error("failed to set gRPC header", "err", err)
 		}
+
+		app.logger.Debug("gRPC query received", "type", fmt.Sprintf("%#v", req))
 
 		return handler(grpcCtx, req)
 	}

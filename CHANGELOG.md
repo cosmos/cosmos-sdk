@@ -45,6 +45,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/epochs) [#23815](https://github.com/cosmos/cosmos-sdk/pull/23815) Upstream `x/epochs` from Osmosis
 * (client) [#23811](https://github.com/cosmos/cosmos-sdk/pull/23811) Add auto cli for node service.
 
+### Improvements
+
+* (gRPC) [#23844](https://github.com/cosmos/cosmos-sdk/pull/23844) Add debug log prints for each gRPC request.
+
 ### Bug Fixes
 
 * (x/bank) [#23836](https://github.com/cosmos/cosmos-sdk/pull/23836) Fix `DenomMetadata` rpc allow value with slashes.

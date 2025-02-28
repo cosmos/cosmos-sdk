@@ -143,6 +143,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Skip:      true, // skipped because authority gated
 				},
 			},
+			EnhanceCustomCommand: false,
 		},
 	}
 }

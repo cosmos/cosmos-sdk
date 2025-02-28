@@ -52,6 +52,10 @@ var (
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 )
 
+var marshalOption = protov2.MarshalOptions{
+	Deterministic: true,
+}
+
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
 type ExtensionOptionsTxBuilder interface {
 	client.TxBuilder
@@ -431,31 +435,50 @@ func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
 }
 
 func (w *wrapper) GetTx() authsigning.Tx {
-
-	var body proto.Message
-	if w.tx.Body.GetUnordered() && w.GetTimeoutTimeStamp().IsZero() && w.GetTimeoutTimeStamp().Unix() == 0 {
-		body = &txv1beta1.TxBodyCompat{
-			Messages:                    convertAnys(w.tx.Body.Messages),
+	if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
+		anyMsgs, err := msgsV1toAnyV2(w.GetMsgs())
+		if err != nil {
+			panic(fmt.Errorf("unable to convert messages: %w", err))
+		}
+		body := &txv1beta1.TxBodyCompat{
+			Messages:                    anyMsgs,
 			Memo:                        w.GetMemo(),
 			TimeoutHeight:               w.GetTimeoutHeight(),
-			ExtensionOptions:            convertAnys(w.GetExtensionOptions()),
-			NonCriticalExtensionOptions: convertAnys(w.GetNonCriticalExtensionOptions()),
+			ExtensionOptions:            intoAnyV2(w.GetExtensionOptions()),
+			NonCriticalExtensionOptions: intoAnyV2(w.GetNonCriticalExtensionOptions()),
 		}
-	} else {
+		bodyBytes, err := marshalOption.Marshal(body)
+		if err != nil {
+			panic(fmt.Errorf("unable to marshal body: %w", err))
+		}
 
+		w.bodyBz = bodyBytes
 	}
-	return w.tx.Body
+	return w
 }
 
-func convertAnys(anys []*codectypes.Any) []*anypb.Any {
-	newAnys := make([]*anypb.Any, len(anys))
-	for i, a := range anys {
-		newAnys[i] = &anypb.Any{
-			TypeUrl: a.GetTypeUrl(),
-			Value:   a.GetValue(),
+func msgsV1toAnyV2(msgs []sdk.Msg) ([]*anypb.Any, error) {
+	anys := make([]*codectypes.Any, len(msgs))
+	for i, msg := range msgs {
+		anyMsg, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+		anys[i] = anyMsg
+	}
+
+	return intoAnyV2(anys), nil
+}
+
+func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {
+	v2s := make([]*anypb.Any, len(v1s))
+	for i, v1 := range v1s {
+		v2s[i] = &anypb.Any{
+			TypeUrl: v1.TypeUrl,
+			Value:   v1.Value,
 		}
 	}
-	return newAnys
+	return v2s
 }
 
 func (w *wrapper) GetProtoTx() *tx.Tx {

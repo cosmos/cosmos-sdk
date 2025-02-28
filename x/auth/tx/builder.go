@@ -131,34 +131,46 @@ func (w *wrapper) ValidateBasic() error {
 
 func (w *wrapper) getBodyBytes() []byte {
 	if len(w.bodyBz) == 0 {
-		if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
-			anyMsgs, err := msgsV1toAnyV2(w.GetMsgs())
-			if err != nil {
-				panic(fmt.Errorf("unable to convert messages: %w", err))
+		if w.tx.Body != nil {
+			if w.tx.Body.TimeoutTimestamp == nil {
+				w.tx.Body.TimeoutTimestamp = &time.Time{}
 			}
-			body := &txv1beta1.TxBodyCompat{
-				Messages:                    anyMsgs,
-				Memo:                        w.GetMemo(),
-				TimeoutHeight:               w.GetTimeoutHeight(),
-				ExtensionOptions:            intoAnyV2(w.GetExtensionOptions()),
-				NonCriticalExtensionOptions: intoAnyV2(w.GetNonCriticalExtensionOptions()),
+			if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
+				var anyMsgs []*anypb.Any
+				if len(w.tx.Body.Messages) > 0 {
+					for _, msg := range w.tx.Body.Messages {
+						anyMsgs = append(anyMsgs, &anypb.Any{
+							TypeUrl: msg.TypeUrl,
+							Value:   msg.Value,
+						})
+					}
+				}
+
+				body := &txv1beta1.TxBodyCompat{
+					Messages:                    anyMsgs,
+					Memo:                        w.GetMemo(),
+					TimeoutHeight:               w.GetTimeoutHeight(),
+					ExtensionOptions:            intoAnyV2(w.GetExtensionOptions()),
+					NonCriticalExtensionOptions: intoAnyV2(w.GetNonCriticalExtensionOptions()),
+				}
+				bodyBytes, err := marshalOption.Marshal(body)
+				if err != nil {
+					panic(fmt.Errorf("unable to marshal body: %w", err))
+				}
+				w.bodyBz = bodyBytes
+				return w.bodyBz
 			}
-			bodyBytes, err := marshalOption.Marshal(body)
-			if err != nil {
-				panic(fmt.Errorf("unable to marshal body: %w", err))
-			}
-			w.bodyBz = bodyBytes
-		} else {
-			// if bodyBz is empty, then marshal the body. bodyBz will generally
-			// be set to nil whenever SetBody is called so the result of calling
-			// this method should always return the correct bytes. Note that after
-			// decoding bodyBz is derived from TxRaw so that it matches what was
-			// transmitted over the wire
-			var err error
-			w.bodyBz, err = proto.Marshal(w.tx.Body)
-			if err != nil {
-				panic(err)
-			}
+		}
+
+		// if bodyBz is empty, then marshal the body. bodyBz will generally
+		// be set to nil whenever SetBody is called so the result of calling
+		// this method should always return the correct bytes. Note that after
+		// decoding bodyBz is derived from TxRaw so that it matches what was
+		// transmitted over the wire
+		var err error
+		w.bodyBz, err = proto.Marshal(w.tx.Body)
+		if err != nil {
+			panic(err)
 		}
 	}
 	return w.bodyBz
@@ -454,25 +466,6 @@ func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
 }
 
 func (w *wrapper) GetTx() authsigning.Tx {
-	if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
-		anyMsgs, err := msgsV1toAnyV2(w.GetMsgs())
-		if err != nil {
-			panic(fmt.Errorf("unable to convert messages: %w", err))
-		}
-		body := &txv1beta1.TxBodyCompat{
-			Messages:                    anyMsgs,
-			Memo:                        w.GetMemo(),
-			TimeoutHeight:               w.GetTimeoutHeight(),
-			ExtensionOptions:            intoAnyV2(w.GetExtensionOptions()),
-			NonCriticalExtensionOptions: intoAnyV2(w.GetNonCriticalExtensionOptions()),
-		}
-		bodyBytes, err := marshalOption.Marshal(body)
-		if err != nil {
-			panic(fmt.Errorf("unable to marshal body: %w", err))
-		}
-
-		w.bodyBz = bodyBytes
-	}
 	return w
 }
 

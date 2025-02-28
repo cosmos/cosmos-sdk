@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestKeeper_Init(t *testing.T) {
@@ -89,4 +91,29 @@ func TestKeeper_Query(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, implementation.Equal(&types.Int64Value{Value: 1000}, resp))
 	})
+}
+
+func TestKeeper_NextAccountNumber(t *testing.T) {
+	m, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
+	store := m.KVStoreService.OpenKVStore(ctx)
+	num := uint64(10)
+	val := &types.UInt64Value{
+		Value: num,
+	}
+	data, err := val.Marshal()
+	require.NoError(t, err)
+	err = store.Set(authtypes.LegacyGlobalAccountNumberKey, data)
+	require.NoError(t, err)
+
+	n, err := m.NextAccountNumber(ctx)
+	require.NoError(t, err)
+	require.Equal(t, num, n)
+
+	num = uint64(0)
+	err = m.AccountNumber.Set(ctx, num)
+	require.NoError(t, err)
+
+	n, err = m.NextAccountNumber(ctx)
+	require.NoError(t, err)
+	require.Equal(t, num, n)
 }

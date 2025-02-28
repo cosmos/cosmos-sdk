@@ -329,7 +329,7 @@ func MsgUpdateGroupMembersFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgF
 		}
 		oldMemberAddrs := simsx.Collect(res.Members, func(a *group.GroupMember) string { return a.Member.Address })
 		members := genGroupMembersX(testData, reporter, simsx.ExcludeAddresses(oldMemberAddrs...))
-		if len(res.Members) != 0 {
+		if len(res.Members) != 1 {
 			// set existing random group member weight to zero to remove from the group
 			obsoleteMember := simsx.OneOf(testData.Rand(), res.Members)
 			obsoleteMember.Member.Weight = "0"

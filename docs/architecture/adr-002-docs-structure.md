@@ -2,85 +2,125 @@
 
 ## Context
 
-There is a need for a scalable structure of the Cosmos SDK documentation. Current documentation includes a lot of non-related Cosmos SDK material, is difficult to maintain and hard to follow as a user.
+The current Cosmos SDK documentation structure presents several challenges:
 
-Ideally, we would have:
+- It includes a significant amount of non-SDK-related material, making it difficult to navigate.
+- The documentation is hard to maintain due to its scattered nature.
+- Users struggle to find the relevant information efficiently.
 
-* All docs related to dev frameworks or tools live in their respective github repos (sdk repo would contain sdk docs, hub repo would contain hub docs, lotion repo would contain lotion docs, etc.)
-* All other docs (faqs, whitepaper, high-level material about Cosmos) would live on the website.
+To address these issues, we propose a structured and scalable documentation framework that segregates content logically and makes it easier to maintain and update.
+
+### Goals
+
+- Ensure that all documentation related to development frameworks and tools reside in their respective GitHub repositories:
+  - The SDK repository should contain SDK-related documentation.
+  - The Hub repository should contain Hub-specific documentation.
+  - The Lotion repository should contain Lotion-related documentation.
+- Store all general and high-level materials, such as FAQs, whitepapers, and introductory overviews, on the Cosmos website.
 
 ## Decision
 
-Re-structure the `/docs` folder of the Cosmos SDK github repo as follows:
+We will restructure the `/docs` directory of the Cosmos SDK GitHub repository as follows:
 
-```text
+```plaintext
 docs/
-├── README
+├── README.md
 ├── intro/
+│   ├── overview.md
+│   ├── getting-started.md
+│   ├── installation.md
+│   ├── tutorials.md
+│   ├── faq.md
 ├── concepts/
-│   ├── baseapp
-│   ├── types
-│   ├── store
-│   ├── server
+│   ├── baseapp.md
+│   ├── types.md
+│   ├── store.md
+│   ├── server.md
 │   ├── modules/
-│   │   ├── keeper
-│   │   ├── handler
-│   │   ├── cli
-│   ├── gas
-│   └── commands
+│   │   ├── keeper.md
+│   │   ├── handler.md
+│   │   ├── cli.md
+│   ├── gas.md
+│   └── commands.md
 ├── clients/
 │   ├── lite/
-│   ├── service-providers
+│   │   ├── introduction.md
+│   │   ├── setup.md
+│   ├── service-providers.md
 ├── modules/
+│   ├── governance.md
+│   ├── staking.md
+│   ├── slashing.md
+│   ├── auth.md
+│   ├── bank.md
+│   ├── distribution.md
+│   ├── evidence.md
 ├── spec/
+│   ├── modules/
+│   ├── architecture.md
+│   ├── security.md
 ├── translations/
-└── architecture/
+│   ├── README.md
+│   ├── en/
+│   ├── es/
+│   ├── zh/
+│   ├── ru/
+├── architecture/
+│   ├── adr-001.md
+│   ├── adr-002.md
+│   ├── system-design.md
+└── _attic/
+    ├── deprecated_docs/
+    ├── legacy_guides.md
 ```
 
-The files in each sub-folders do not matter and will likely change. What matters is the sectioning:
+### Explanation of Sections
 
-* `README`: Landing page of the docs.
-* `intro`: Introductory material. Goal is to have a short explainer of the Cosmos SDK and then channel people to the resources they need. The [Cosmos SDK tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.
-* `concepts`: Contains high-level explanations of the abstractions of the Cosmos SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`.
-* `clients`: Contains specs and info about the various Cosmos SDK clients.
-* `spec`: Contains specs of modules, and others.
-* `modules`: Contains links to `godocs` and the spec of the modules.
-* `architecture`: Contains architecture-related docs like the present one.
-* `translations`: Contains different translations of the documentation.
+- **`README.md`**: Serves as the landing page for the documentation, providing an introduction and directing users to key resources.
+- **`intro/`**: Contains introductory material, including an overview, setup guides, FAQs, and tutorials to help new users get started.
+- **`concepts/`**: Provides high-level explanations of Cosmos SDK abstractions. These are not API specifications but conceptual overviews that do not require frequent updates.
+- **`clients/`**: Contains specifications and guides for different Cosmos SDK clients, including Lite clients and service providers.
+- **`modules/`**: Lists and details the Cosmos SDK modules, including governance, staking, slashing, authentication, and banking.
+- **`spec/`**: Stores technical specifications, including module details and security guidelines.
+- **`translations/`**: Houses translated versions of the documentation to support a global audience.
+- **`architecture/`**: Includes architecture-related documents such as ADRs (Architecture Decision Records) and system design documents.
+- **`_attic/`**: Contains deprecated or legacy documentation that is no longer actively maintained but may still be relevant for reference.
 
-Website docs sidebar will only include the following sections:
+### Website Documentation Structure
 
-* `README`
-* `intro`
-* `concepts`
-* `clients`
+The documentation displayed on the Cosmos website will include only the following sections to maintain clarity and focus:
 
-`architecture` need not be displayed on the website.
+- `README`
+- `intro`
+- `concepts`
+- `clients`
+
+The `architecture` section will be excluded from the website to avoid overwhelming general users with internal architectural decisions.
 
 ## Status
 
-Accepted
+**Accepted**
 
 ## Consequences
 
-### Positive
+### Positive Outcomes
 
-* Much clearer organisation of the Cosmos SDK docs.
-* The `/docs` folder now only contains Cosmos SDK and gaia related material. Later, it will only contain Cosmos SDK related material.
-* Developers only have to update `/docs` folder when they open a PR (and not `/examples` for example).
-* Easier for developers to find what they need to update in the docs thanks to reworked architecture.
-* Cleaner `vuepress` build for website docs.
-* Will help build an executable doc (cf https://github.com/cosmos/cosmos-sdk/issues/2611)
+- **Improved Organization**: The documentation is now logically structured, making it easier to navigate and maintain.
+- **Focused SDK Content**: The `/docs` directory now exclusively contains SDK-related material, eliminating unnecessary content.
+- **Easier Contribution**: Developers can now update only the `/docs` folder when making changes, without affecting unrelated sections.
+- **Cleaner Build Process**: The `vuepress` build for website documentation is simplified, improving efficiency.
+- **Foundation for Executable Documentation**: The new structure aligns with ongoing efforts to create executable documentation.
 
-### Neutral
+### Neutral Changes
 
-* We need to move a bunch of deprecated stuff to `/_attic` folder.
-* We need to integrate content in `docs/sdk/docs/core` in `concepts`.
-* We need to move all the content that currently lives in `docs` and does not fit in new structure (like `lotion`, intro material, whitepaper) to the website repository.
-* Update `DOCS_README.md`
+- **Migration of Deprecated Content**: Outdated materials will be moved to the `/_attic` folder for archival purposes.
+- **Integration of Existing Content**: Documentation from `docs/sdk/docs/core` will be merged into the `concepts` section.
+- **Relocation of Non-SDK Material**: Introductory content, whitepapers, and Lotion-related materials will be transferred to the Cosmos website repository.
+- **Update of Documentation Guidelines**: The `DOCS_README.md` file will be revised to reflect the new structure and guidelines.
 
 ## References
 
-* https://github.com/cosmos/cosmos-sdk/issues/1460
-* https://github.com/cosmos/cosmos-sdk/pull/2695
-* https://github.com/cosmos/cosmos-sdk/issues/2611
+- [GitHub Issue #1460](https://github.com/cosmos/cosmos-sdk/issues/1460)
+- [GitHub Pull Request #2695](https://github.com/cosmos/cosmos-sdk/pull/2695)
+- [GitHub Issue #2611](https://github.com/cosmos/cosmos-sdk/issues/2611)
+

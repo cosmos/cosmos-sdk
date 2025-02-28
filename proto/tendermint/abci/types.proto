@@ -1,7 +1,7 @@
 syntax = "proto3";
 package tendermint.abci;
 
-option go_package = "github.com/cometbft/cometbft/abci/types";
+option go_package = "github.com/cometbft/cometbft/api/cometbft/abci/v1";
 
 // For more information on gogo.proto, see:
 // https://github.com/cosmos/gogoproto/blob/master/extensions.md

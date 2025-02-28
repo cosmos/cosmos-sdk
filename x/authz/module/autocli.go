@@ -25,7 +25,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "granter"},
 						{ProtoField: "grantee"},
-						{ProtoField: "msg_type_url", Optional: true},
+						{ProtoField: "msg_type_url"},
 					},
 				},
 				{
@@ -47,8 +47,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service:              authzv1beta1.Msg_ServiceDesc.ServiceName,
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
+			Service: authzv1beta1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Exec",

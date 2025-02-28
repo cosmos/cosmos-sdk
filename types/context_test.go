@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -161,14 +161,6 @@ func (s *contextTestSuite) TestContextHeader() {
 	s.Require().Equal(height, ctx.BlockHeader().Height)
 	s.Require().Equal(time.UTC(), ctx.BlockHeader().Time)
 	s.Require().Equal(proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
-}
-
-func (s *contextTestSuite) TestWithBlockTime() {
-	now := time.Now()
-	ctx := types.NewContext(nil, cmtproto.Header{}, false, nil)
-	ctx = ctx.WithBlockTime(now)
-	cmttime2 := cmttime.Canonical(now)
-	s.Require().Equal(ctx.BlockTime(), cmttime2)
 }
 
 func (s *contextTestSuite) TestContextHeaderClone() {

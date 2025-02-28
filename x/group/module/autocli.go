@@ -124,8 +124,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service:              groupv1.Msg_ServiceDesc.ServiceName,
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
+			Service: groupv1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "UpdateGroupAdmin",

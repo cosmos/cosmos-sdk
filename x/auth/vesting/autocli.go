@@ -41,7 +41,6 @@ These tokens may be used for staking but are non-transferable. Staking rewards w
 					},
 				},
 			},
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
 		},
 	}
 }

@@ -87,8 +87,7 @@ To look up all denoms, do not provide any arguments.`,
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service:              bankv1beta1.Msg_ServiceDesc.ServiceName,
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
+			Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Send",

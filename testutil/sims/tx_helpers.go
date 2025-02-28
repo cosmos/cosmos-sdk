@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	types2 "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
+	types2 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	types "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/errors"

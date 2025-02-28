@@ -11,6 +11,7 @@ import (
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	v1 "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -96,7 +97,7 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gom
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types2.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, process)
 }
@@ -143,7 +144,7 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // BurnCoins mocks base method.
-func (m *MockBankKeeper) BurnCoins(arg0 context.Context, arg1 []byte, arg2 types2.Coins) error {
+func (m *MockBankKeeper) BurnCoins(ctx context.Context, name string, amt types2.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BurnCoins", ctx, name, amt)
 	ret0, _ := ret[0].(error)
@@ -306,10 +307,10 @@ func (m *MockValidatorSet) EXPECT() *MockValidatorSetMockRecorder {
 }
 
 // Delegation mocks base method.
-func (m *MockValidatorSet) Delegation(arg0 context.Context, arg1 types2.AccAddress, arg2 types2.ValAddress) (types2.DelegationI, error) {
+func (m *MockValidatorSet) Delegation(arg0 context.Context, arg1 types2.AccAddress, arg2 types2.ValAddress) (types.DelegationI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delegation", arg0, arg1, arg2)
-	ret0, _ := ret[0].(types2.DelegationI)
+	ret0, _ := ret[0].(types.DelegationI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -336,7 +337,7 @@ func (mr *MockValidatorSetMockRecorder) GetPubKeyByConsAddr(arg0, arg1 interface
 }
 
 // IterateBondedValidatorsByPower mocks base method.
-func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types2.ValidatorI) bool) error {
+func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateBondedValidatorsByPower", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -350,7 +351,7 @@ func (mr *MockValidatorSetMockRecorder) IterateBondedValidatorsByPower(arg0, arg
 }
 
 // IterateLastValidators mocks base method.
-func (m *MockValidatorSet) IterateLastValidators(arg0 context.Context, arg1 func(int64, types0.ValidatorI) bool) error {
+func (m *MockValidatorSet) IterateLastValidators(arg0 context.Context, arg1 func(int64, types.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateLastValidators", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -364,7 +365,7 @@ func (mr *MockValidatorSetMockRecorder) IterateLastValidators(arg0, arg1 interfa
 }
 
 // IterateValidators mocks base method.
-func (m *MockValidatorSet) IterateValidators(arg0 context.Context, arg1 func(int64, types2.ValidatorI) bool) error {
+func (m *MockValidatorSet) IterateValidators(arg0 context.Context, arg1 func(int64, types.ValidatorI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateValidators", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -422,7 +423,7 @@ func (mr *MockValidatorSetMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 inter
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockValidatorSet) SlashWithInfractionReason(arg0 context.Context, arg1 types2.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 stakingv1beta1.Infraction) (math.Int, error) {
+func (m *MockValidatorSet) SlashWithInfractionReason(arg0 context.Context, arg1 types2.ConsAddress, arg2, arg3 int64, arg4 math.LegacyDec, arg5 types.Infraction) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(math.Int)
@@ -481,10 +482,10 @@ func (mr *MockValidatorSetMockRecorder) Unjail(arg0, arg1 interface{}) *gomock.C
 }
 
 // Validator mocks base method.
-func (m *MockValidatorSet) Validator(arg0 context.Context, arg1 types2.ValAddress) (types2.ValidatorI, error) {
+func (m *MockValidatorSet) Validator(arg0 context.Context, arg1 types2.ValAddress) (types.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validator", arg0, arg1)
-	ret0, _ := ret[0].(types2.ValidatorI)
+	ret0, _ := ret[0].(types.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -496,10 +497,10 @@ func (mr *MockValidatorSetMockRecorder) Validator(arg0, arg1 interface{}) *gomoc
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockValidatorSet) ValidatorByConsAddr(arg0 context.Context, arg1 types2.ConsAddress) (types2.ValidatorI, error) {
+func (m *MockValidatorSet) ValidatorByConsAddr(arg0 context.Context, arg1 types2.ConsAddress) (types.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types2.ValidatorI)
+	ret0, _ := ret[0].(types.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -534,10 +535,10 @@ func (m *MockDelegationSet) EXPECT() *MockDelegationSetMockRecorder {
 }
 
 // GetValidatorSet mocks base method.
-func (m *MockDelegationSet) GetValidatorSet() types0.ValidatorSet {
+func (m *MockDelegationSet) GetValidatorSet() types.ValidatorSet {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetValidatorSet")
-	ret0, _ := ret[0].(types0.ValidatorSet)
+	ret0, _ := ret[0].(types.ValidatorSet)
 	return ret0
 }
 
@@ -548,7 +549,7 @@ func (mr *MockDelegationSetMockRecorder) GetValidatorSet() *gomock.Call {
 }
 
 // IterateDelegations mocks base method.
-func (m *MockDelegationSet) IterateDelegations(ctx context.Context, delegator types2.AccAddress, fn func(int64, types2.DelegationI) bool) error {
+func (m *MockDelegationSet) IterateDelegations(ctx context.Context, delegator types2.AccAddress, fn func(int64, types.DelegationI) bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
 	ret0, _ := ret[0].(error)

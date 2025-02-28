@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"

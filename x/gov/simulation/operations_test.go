@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
@@ -143,7 +143,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -174,7 +174,7 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -232,7 +232,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 
 	suite.GovKeeper.SetProposal(ctx, proposal)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -279,7 +279,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 
 	suite.GovKeeper.SetProposal(ctx, proposal)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -327,7 +327,7 @@ func TestSimulateMsgVote(t *testing.T) {
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -373,7 +373,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})

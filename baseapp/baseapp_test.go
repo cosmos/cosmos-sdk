@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
@@ -719,7 +719,7 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.headerHeight != tc.height {
-				_, err := app.InitChain(&abci.RequestInitChain{
+				_, err := app.InitChain(&abci.InitChainRequest{
 					InitialHeight: tc.headerHeight,
 				})
 				require.NoError(t, err)

@@ -34,7 +34,7 @@ import (
 	"fmt"
 	"sort"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -478,8 +478,8 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage) (*abci.InitChainResponse, error) {
-	var validatorUpdates []ValidatorUpdate
+func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.InitChainResponse, error) {
+	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
@@ -502,15 +502,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMe
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return &abci.InitChainResponse{}, err
-			}
+			module.InitGenesis(ctx, cdc, genesisData[moduleName])
 		} else if module, ok := mod.(HasABCIGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
-			if err != nil {
-				return &abci.InitChainResponse{}, err
-			}
+			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
@@ -531,7 +526,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMe
 	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
 	for i, v := range validatorUpdates {
 		cometValidatorUpdates[i] = abci.ValidatorUpdate{
-			PubKeyBytes: v.PubKey,
+			PubKeyBytes: v.PubKeyBytes,
 			Power:       v.Power,
 			PubKeyType:  v.PubKeyType,
 		}
@@ -826,7 +821,11 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 				}
 
 				for _, updates := range moduleValUpdates {
-					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
+					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{
+						Power:       updates.Power,
+						PubKeyBytes: updates.PubKeyBytes,
+						PubKeyType:  updates.PubKeyType,
+					})
 				}
 			}
 		}
@@ -835,7 +834,7 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
 	for i, v := range validatorUpdates {
 		cometValidatorUpdates[i] = abci.ValidatorUpdate{
-			PubKeyBytes: v.PubKey,
+			PubKeyBytes: v.PubKeyBytes,
 			PubKeyType:  v.PubKeyType,
 			Power:       v.Power,
 		}

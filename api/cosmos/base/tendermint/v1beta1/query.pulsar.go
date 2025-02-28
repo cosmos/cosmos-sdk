@@ -6,8 +6,6 @@ import (
 	v1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
 	_ "cosmossdk.io/api/amino"
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
-	p2p "cosmossdk.io/api/tendermint/p2p"
-	types "cosmossdk.io/api/tendermint/types"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"

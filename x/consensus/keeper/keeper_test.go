@@ -55,6 +55,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 	// Create ConsensusParams with modified fields
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
 	modifiedConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
 	modifiedConsensusParams.Block.MaxBytes++
 	modifiedConsensusParams.Block.MaxGas = 100

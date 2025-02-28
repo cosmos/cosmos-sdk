@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -130,7 +130,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
 
-	_, err = baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(b, err)
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))

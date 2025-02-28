@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
@@ -701,23 +701,30 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
+func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, error) {
+	var events []abci.Event
 	if app.preBlocker != nil {
 		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
-		rsp, err := app.preBlocker(ctx, req)
-		if err != nil {
+		if err := app.preBlocker(ctx, req); err != nil {
 			return nil, err
 		}
-		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed
+		// ConsensusParams can change in preblocker, so we need to
 		// write the consensus parameters in store to context
-		if rsp.ConsensusParamsChanged {
-			ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
-			// GasMeter must be set after we get a context with updated consensus params.
-			gasMeter := app.getBlockGasMeter(ctx)
-			ctx = ctx.WithBlockGasMeter(gasMeter)
-			app.finalizeBlockState.SetContext(ctx)
-		}
+		ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+		// GasMeter must be set after we get a context with updated consensus params.
+		gasMeter := app.getBlockGasMeter(ctx)
+		ctx = ctx.WithBlockGasMeter(gasMeter)
+		app.finalizeBlockState.SetContext(ctx)
 		events = ctx.EventManager().ABCIEvents()
+
+		// append PreBlock attributes to all events
+		for i, event := range events {
+			events[i].Attributes = append(
+				event.Attributes,
+				abci.EventAttribute{Key: "mode", Value: "PreBlock"},
+				abci.EventAttribute{Key: "event_index", Value: strconv.Itoa(i)},
+			)
+		}
 	}
 	return events, nil
 }

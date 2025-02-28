@@ -64,7 +64,7 @@ func TestABCIValidatorUpdate(t *testing.T) {
 	abciVal := validator.ABCIValidatorUpdate(sdk.DefaultPowerReduction)
 	pk, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
-	require.Equal(t, pk, abciVal.PubKey)
+	require.Equal(t, pk, abciVal.PubKeyBytes)
 	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
 }
 
@@ -73,7 +73,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 	abciVal := validator.ABCIValidatorUpdateZero()
 	pk, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
-	require.Equal(t, pk, abciVal.PubKey)
+	require.Equal(t, pk, abciVal.PubKeyBytes)
 	require.Equal(t, int64(0), abciVal.Power)
 }
 

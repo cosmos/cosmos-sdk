@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"

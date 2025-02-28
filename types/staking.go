@@ -1,11 +1,7 @@
 package types
 
 import (
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-
 	"cosmossdk.io/math"
-
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Delay, in blocks, between when validator updates are returned to the
@@ -25,15 +21,15 @@ var (
 	DefaultBondDenom = "stake"
 
 	// DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power
-	DefaultPowerReduction = sdkmath.NewIntFromUint64(1000000)
+	DefaultPowerReduction = math.NewIntFromUint64(1000000)
 )
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
-func TokensToConsensusPower(tokens, powerReduction sdkmath.Int) int64 {
+func TokensToConsensusPower(tokens, powerReduction math.Int) int64 {
 	return (tokens.Quo(powerReduction)).Int64()
 }
 
 // TokensFromConsensusPower - convert input power to tokens
-func TokensFromConsensusPower(power int64, powerReduction sdkmath.Int) sdkmath.Int {
-	return sdkmath.NewInt(power).Mul(powerReduction)
+func TokensFromConsensusPower(power int64, powerReduction math.Int) math.Int {
+	return math.NewInt(power).Mul(powerReduction)
 }

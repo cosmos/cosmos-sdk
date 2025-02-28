@@ -14,11 +14,10 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -45,8 +44,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+const (
+	failStr    = "&failOnAnte=false"
+	fooStr     = "foo"
+	counterStr = "counter="
+)
+
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
+	ctx := suite.baseApp.NewContext(true)
 
 	reqInfo := abci.InfoRequest{}
 	res, err := suite.baseApp.Info(&reqInfo)
@@ -58,8 +64,7 @@ func TestABCI_Info(t *testing.T) {
 	require.Equal(t, t.Name(), res.GetData())
 	require.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, appHash, res.LastBlockAppHash)
-	appVersion, err := suite.baseApp.AppVersion(ctx)
-	require.NoError(t, err)
+	appVersion := suite.baseApp.AppVersion()
 	require.Equal(t, appVersion, res.AppVersion)
 
 	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
@@ -2049,11 +2054,11 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 		wasHookCalled = true
 
 		ctx.EventManager().EmitEvent(sdk.NewEvent("preblockertest", sdk.NewAttribute("height", fmt.Sprintf("%d", req.Height))))
-		return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
+		return nil
 	})
 	app.Seal()
 
-	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 	require.Equal(t, true, wasHookCalled)
 	require.Len(t, res.Events, 1)
@@ -2173,9 +2178,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				ctx.KVStore(capKey1).Set([]byte("avgPrice"), buf)
 			}
 
-			return &sdk.ResponsePreBlock{
-				ConsensusParamsChanged: true,
-			}, nil
+			return nil
 		})
 	}
 

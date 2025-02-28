@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // isExportedType checks if the type is exported and not in an internal
@@ -19,7 +20,7 @@ func isExportedType(typ reflect.Type) error {
 	name := typ.Name()
 	pkgPath := typ.PkgPath()
 	if name != "" && pkgPath != "" {
-		if unicode.IsLower([]rune(name)[0]) {
+		if r, _ := utf8.DecodeRuneInString(name); unicode.IsLower(r) {
 			return fmt.Errorf("type must be exported: %s", typ)
 		}
 

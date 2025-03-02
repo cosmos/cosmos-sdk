@@ -198,13 +198,24 @@ We consider a compression of prefix keys by creating a mapping from module key t
 
 We need to assure that the codes won't change. We can fix the mapping in a static variable (provided by an app) or SS state under a special key.
 
-TODO: need to make decision about the key compression.
+The decision for key compression is to implement a two-level approach:
+1. Use a static mapping from module names to small integer IDs (1-byte where possible)
+2. Store this mapping in a reserved namespace in the state store to ensure consistency across restarts
+3. For modules with many key types, allow a second level of compression for key prefixes within the module
+
+This approach provides a good balance between compression efficiency and simplicity of implementation. The mapping will be initialized during app startup and can be upgraded during chain upgrades if needed.
 
 ## Optimization: SS key compression
 
 Some objects may be saved with key, which contains a Protobuf message type. Such keys are long. We could save a lot of space if we can map Protobuf message types in varints.
 
-TODO: finalize this or move to another ADR.
+For Protobuf message type compression, we will implement the following approach:
+1. Create a registry of Protobuf message types used as keys in the application
+2. Assign each type a unique varint identifier
+3. Replace the full Protobuf type URL in keys with this compact identifier
+4. Store the mapping in a reserved namespace in the state store
+
+This compression will be transparent to modules using the store, as the compression and decompression will happen at the storage layer. This approach is expected to reduce key sizes by 70-90% for keys containing Protobuf type URLs.
 
 ## Migration
 

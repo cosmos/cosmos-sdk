@@ -211,7 +211,7 @@ func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration
 		txResult = c.WithRunErrorsIgnored().CustomQuery("q", "tx", txHash.String())
 		if code := gjson.Get(txResult, "code"); code.Exists() {
 			if code.Int() != 0 { // 0 = success code
-				c.t.Logf("+++ got error response code: %s\n", txResult)
+				c.t.Logf("+++ got error response code: %s", txResult)
 			}
 			return txResult, true
 		}
@@ -512,7 +512,7 @@ func expErrWithMsg(t assert.TestingT, err error, args []interface{}, expMsg stri
 	}
 	var found bool
 	for _, v := range args {
-		if strings.Contains(fmt.Sprintf("%s", v), expMsg) {
+		if strings.Contains(fmt.Sprint(v), expMsg) {
 			found = true
 			break
 		}

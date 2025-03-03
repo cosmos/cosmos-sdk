@@ -3,6 +3,7 @@ package keyring
 import (
 	"bufio"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
-	"github.com/cockroachdb/errors"
 	"github.com/cosmos/go-bip39"
 	"golang.org/x/crypto/bcrypt"
 
@@ -418,7 +418,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 
 	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
 	if err != nil {
-		return nil, errors.CombineErrors(ErrLedgerGenerateKey, err)
+		return nil, errorsmod.Wrap(err, ErrLedgerGenerateKey.Error())
 	}
 
 	return ks.writeLedgerKey(uid, priv.PubKey(), hdPath)
@@ -813,7 +813,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return errors.CombineErrors(ErrUnableToSerialize, err)
+		return errorsmod.Wrap(err, ErrUnableToSerialize.Error())
 	}
 
 	item := keyring.Item{
@@ -964,7 +964,7 @@ func (ks keystore) migrate(key string) (*Record, error) {
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return nil, errors.CombineErrors(ErrUnableToSerialize, err)
+		return nil, errorsmod.Wrap(err, ErrUnableToSerialize.Error())
 	}
 
 	item = keyring.Item{

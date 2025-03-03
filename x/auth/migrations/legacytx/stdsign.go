@@ -126,7 +126,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	return string(bz), err
+	return string(bz), nil
 }
 
 func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

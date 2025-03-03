@@ -145,6 +145,6 @@ func normalizeBroadcastMode(mode tx.BroadcastMode) string {
 	case tx.BroadcastMode_BROADCAST_MODE_SYNC:
 		return "sync"
 	default:
-		return "unspecified"
+		return ""
 	}
 }

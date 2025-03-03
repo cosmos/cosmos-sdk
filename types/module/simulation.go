@@ -1,6 +1,7 @@
 package module
 
 import (
+	"cosmossdk.io/core/address"
 	"encoding/json"
 	"math/rand"
 	"sort"
@@ -26,17 +27,24 @@ type AppModuleSimulation interface {
 	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
 }
 
-// HasProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
-type HasProposalMsgs interface {
-	// msg functions used to simulate governance proposals
-	ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
-}
+type (
+	// HasProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
+	HasProposalMsgs interface {
+		// msg functions used to simulate governance proposals
+		ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
+	}
 
-// HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
-type HasProposalContents interface {
-	// content functions used to simulate governance proposals
-	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
-}
+	// HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
+	HasProposalContents interface {
+		// content functions used to simulate governance proposals
+		ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
+	}
+
+	HasWeightedOperations interface {
+		// WeightedOperations simulation operations (i.e msgs) with their respective weight
+		WeightedOperations(simState SimulationState) []simulation.WeightedOperation
+	}
+)
 
 // SimulationManager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
@@ -62,14 +70,13 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 // Then it attempts to cast every provided AppModule into an AppModuleSimulation.
 // If the cast succeeds, its included, otherwise it is excluded.
 func NewSimulationManagerFromAppModules(modules map[string]interface{}, overrideModules map[string]AppModuleSimulation) *SimulationManager {
-	simModules := []AppModuleSimulation{}
 	appModuleNamesSorted := make([]string, 0, len(modules))
 	for moduleName := range modules {
 		appModuleNamesSorted = append(appModuleNamesSorted, moduleName)
 	}
-
 	sort.Strings(appModuleNamesSorted)
 
+	var simModules []AppModuleSimulation
 	for _, moduleName := range appModuleNamesSorted {
 		// for every module, see if we override it. If so, use override.
 		// Else, if we can cast the app module into a simulation module add it.
@@ -114,6 +121,16 @@ func (sm *SimulationManager) GetProposalMsgs(simState SimulationState) []simulat
 	return wContents
 }
 
+// WeightedOperations returns all the modules' weighted operations of an application
+func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simulation.WeightedOperation {
+	wOps := make([]simulation.WeightedOperation, 0, len(sm.Modules))
+	for _, module := range sm.Modules {
+		wOps = append(wOps, module.WeightedOperations(simState)...)
+	}
+
+	return wOps
+}
+
 // RegisterStoreDecoders registers each of the modules' store decoders into a map
 func (sm *SimulationManager) RegisterStoreDecoders() {
 	for _, module := range sm.Modules {
@@ -129,21 +146,13 @@ func (sm *SimulationManager) GenerateGenesisStates(simState *SimulationState) {
 	}
 }
 
-// WeightedOperations returns all the modules' weighted operations of an application
-func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simulation.WeightedOperation {
-	wOps := make([]simulation.WeightedOperation, 0, len(sm.Modules))
-	for _, module := range sm.Modules {
-		wOps = append(wOps, module.WeightedOperations(simState)...)
-	}
-
-	return wOps
-}
-
 // SimulationState is the input parameters used on each of the module's randomized
 // GenesisState generator function
 type SimulationState struct {
 	AppParams         simulation.AppParams
 	Cdc               codec.JSONCodec                // application codec
+	AddressCodec      address.Codec                  // address codec
+	ValidatorCodec    address.Codec                  // validator address codec
 	TxConfig          client.TxConfig                // Shared TxConfig; this is expensive to create and stateless, so create it once up front.
 	Rand              *rand.Rand                     // random number
 	GenState          map[string]json.RawMessage     // genesis state

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -112,7 +112,7 @@ type HasFutureOpsRegistry interface {
 // msg factory to legacy Operation type
 func legacyOperationAdapter(l regCommon, fx SimMsgFactoryX) simtypes.Operation {
 	return func(
-		r *rand.Rand, app AppEntrypoint, ctx sdk.Context,
+		r *rand.Rand, app simtypes.SimulationEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		xCtx, done := context.WithCancel(ctx)

@@ -7,7 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
+
+var _ simtypes.AppEntrypoint = &BaseApp{}
 
 // SimCheck defines a CheckTx helper function that used in tests and simulations.
 func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -38,6 +41,12 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 
 	gasInfo, result, _, err := app.runTx(execModeFinalize, bz)
 	return gasInfo, result, err
+}
+
+// SimWriteState is an entrypoint for simulations only. They are not executed during the normal ABCI finalize
+// block step but later. Therefore, an extra call to the root multi-store (app.cms) is required to write the changes.
+func (app *BaseApp) SimWriteState() {
+	app.finalizeBlockState.ms.Write()
 }
 
 func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {

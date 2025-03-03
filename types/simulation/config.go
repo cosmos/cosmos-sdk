@@ -1,5 +1,7 @@
 package simulation
 
+import "testing"
+
 // Config contains the necessary configuration flags for the simulator
 type Config struct {
 	GenesisFile string // custom simulation genesis file; cannot be used with params file
@@ -24,4 +26,22 @@ type Config struct {
 
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
+
+	FuzzSeed   []byte
+	TB         testing.TB
+	FauxMerkle bool
+}
+
+func (c Config) shallowCopy() Config {
+	return c
+}
+
+// With sets the values of t, seed, and fuzzSeed in a copy of the Config and returns the copy.
+func (c Config) With(tb testing.TB, seed int64, fuzzSeed []byte) Config {
+	tb.Helper()
+	r := c.shallowCopy()
+	r.TB = tb
+	r.Seed = seed
+	r.FuzzSeed = fuzzSeed
+	return r
 }

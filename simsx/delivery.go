@@ -15,7 +15,7 @@ import (
 
 type (
 	// AppEntrypoint is an alias to the simtype interface
-	AppEntrypoint = simtypes.AppEntrypoint
+	AppEntrypoint = simtypes.SimulationEntrypoint
 
 	AccountSource interface {
 		GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI

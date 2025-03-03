@@ -139,9 +139,9 @@ func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {
 		err := x.error
 		x.cMX.RUnlock()
 		if err == nil {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), true)
+			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), true, nil)
 		} else {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), false)
+			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), false, nil)
 		}
 	default:
 		x.Fail(errors.New("operation aborted before msg was executed"))

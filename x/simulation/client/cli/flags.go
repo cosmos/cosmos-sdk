@@ -31,6 +31,7 @@ var (
 	FlagPeriodValue      uint
 	FlagGenesisTimeValue int64
 	FlagSigverifyTxValue bool
+	FlagFauxMerkle       bool
 )
 
 // GetSimulatorFlags gets the values of all the available simulation flags
@@ -58,6 +59,7 @@ func GetSimulatorFlags() {
 	flag.UintVar(&FlagPeriodValue, "Period", 0, "run slow invariants only once every period assertions")
 	flag.Int64Var(&FlagGenesisTimeValue, "GenesisTime", 0, "override genesis UNIX time instead of using a random UNIX time")
 	flag.BoolVar(&FlagSigverifyTxValue, "SigverifyTx", true, "whether to sigverify check for transaction ")
+	flag.BoolVar(&FlagFauxMerkle, "FauxMerkle", false, "use faux merkle instead of iavl")
 }
 
 // NewConfigFromFlags creates a simulation from the retrieved values of the flags.

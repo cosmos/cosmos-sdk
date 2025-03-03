@@ -160,7 +160,7 @@ func (b *SimsAccountBalance) randomAmount(retryCount int, reporter SimulationRep
 }
 
 func (b *SimsAccountBalance) RandFees() sdk.Coins {
-	amount, err := simtypes.RandomFees(b.r, b.Coins)
+	amount, err := simtypes.RandomFees(b.r, sdk.Context{}, b.Coins)
 	if err != nil {
 		return sdk.Coins{}
 	}

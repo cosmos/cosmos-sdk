@@ -3,6 +3,7 @@ package simsx
 import (
 	"encoding/json"
 	"fmt"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,8 +12,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/server"
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -58,7 +57,7 @@ type SimStateFactory struct {
 
 // SimulationApp abstract app that is used by sims
 type SimulationApp interface {
-	runtime.AppSimI
+	runtime.AppI
 	SetNotSigverifyTx()
 	GetBaseApp() *baseapp.BaseApp
 	TxConfig() client.TxConfig
@@ -73,10 +72,10 @@ func Run[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db corestore.KVStoreWithBatch,
+		db dbm.DB,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts server.DynamicConfig,
+		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -99,10 +98,10 @@ func RunWithSeeds[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db corestore.KVStoreWithBatch,
+		db dbm.DB,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts server.DynamicConfig,
+		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -119,10 +118,10 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db corestore.KVStoreWithBatch,
+		db dbm.DB,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts server.DynamicConfig,
+		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -152,7 +151,13 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 func RunWithSeed[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(
+		logger log.Logger,
+		db dbm.DB,
+		traceStore io.Writer,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -166,7 +171,13 @@ func RunWithSeed[T SimulationApp](
 func RunWithSeedAndRandAcc[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(
+		logger log.Logger,
+		db dbm.DB,
+		traceStore io.Writer,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -193,7 +204,7 @@ func RunWithSeedAndRandAcc[T SimulationApp](
 	err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 	require.NoError(tb, err)
 	if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
-		simtestutil.PrintStats(testInstance.DB.(*dbm.GoLevelDB), tb.Log)
+		simtestutil.PrintStats(testInstance.DB)
 	}
 	// not using tb.Log to always print the summary
 	fmt.Printf("+++ DONE (seed: %d): \n%s\n", seed, reporter.Summary().String())
@@ -246,7 +257,7 @@ type (
 //   - ExecLogWriter: Captures block and operation data coming from the simulation
 type TestInstance[T SimulationApp] struct {
 	App           T
-	DB            corestore.KVStoreWithBatch
+	DB            dbm.DB
 	WorkDir       string
 	Cfg           simtypes.Config
 	AppLogger     log.Logger
@@ -329,7 +340,13 @@ func prepareWeightedOps(
 func NewSimulationAppInstance[T SimulationApp](
 	tb testing.TB,
 	tCfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(
+		logger log.Logger,
+		db dbm.DB,
+		traceStore io.Writer,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
 	tb.Helper()
 	workDir := tb.TempDir()

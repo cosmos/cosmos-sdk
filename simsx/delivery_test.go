@@ -23,7 +23,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 	)
 	noopResultHandler := func(err error) error { return err }
 	specs := map[string]struct {
-		app                      AppEntrypoint
+		app                      github.com/cosmos/cosmos-sdk/x/staking
 		reporter                 func() SimulationReporter
 		deliveryResultHandler    SimDeliveryResultHandler
 		errDeliveryResultHandler error
@@ -46,7 +46,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 			}),
 			reporter:              func() SimulationReporter { return NewBasicSimulationReporter() },
 			deliveryResultHandler: noopResultHandler,
-			expOps:                simtypes.NewOperationMsgBasic("", "", "", true),
+			expOps:                simtypes.NewOperationMsgBasic("", "", "", true, nil),
 		},
 		"error delivery": {
 			app: SimDeliverFn(func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -54,7 +54,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 			}),
 			reporter:              func() SimulationReporter { return NewBasicSimulationReporter() },
 			deliveryResultHandler: noopResultHandler,
-			expOps:                simtypes.NewOperationMsgBasic("", "", "delivering tx with msgs: &testdata.TestMsg{Signers:[]string{\"cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3\"}, DecField:0.000000000000000000}", false),
+			expOps:                simtypes.NewOperationMsgBasic("", "", "delivering tx with msgs: &testdata.TestMsg{Signers:[]string{\"cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3\"}, DecField:0.000000000000000000}", false, nil),
 		},
 		"error delivery handled": {
 			app: SimDeliverFn(func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -62,7 +62,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 			}),
 			reporter:              func() SimulationReporter { return NewBasicSimulationReporter() },
 			deliveryResultHandler: func(err error) error { return nil },
-			expOps:                simtypes.NewOperationMsgBasic("", "", "", true),
+			expOps:                simtypes.NewOperationMsgBasic("", "", "", true, nil),
 		},
 	}
 	for name, spec := range specs {

@@ -55,7 +55,7 @@ func txConfig() client.TxConfig {
 		},
 	}))
 	std.RegisterInterfaces(ir)
-	ir.RegisterImplementations((sdk.Msg)(nil), &testdata.TestMsg{})
+	ir.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	protoCodec := codec.NewProtoCodec(ir)
 	return tx.NewTxConfig(protoCodec, tx.DefaultSignModes)
 }

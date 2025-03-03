@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -1454,17 +1453,6 @@ func TestBaseAppCreateQueryContextRejectsFutureHeights(t *testing.T) {
 			require.Error(t, err)
 			require.Equal(t, sctx, sdk.Context{})
 		})
-	}
-}
-
-type paramStore struct {
-	db *dbm.MemDB
-}
-
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
-	bz, err := json.Marshal(value)
-	if err != nil {
-		panic(err)
 	}
 }
 

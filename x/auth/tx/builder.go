@@ -138,12 +138,7 @@ func (w *wrapper) getBodyBytes() []byte {
 			if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
 				var anyMsgs []*anypb.Any
 				if len(w.tx.Body.Messages) > 0 {
-					for _, msg := range w.tx.Body.Messages {
-						anyMsgs = append(anyMsgs, &anypb.Any{
-							TypeUrl: msg.TypeUrl,
-							Value:   msg.Value,
-						})
-					}
+					anyMsgs = intoAnyV2(w.tx.Body.Messages)
 				}
 
 				body := &txv1beta1.TxBodyCompat{
@@ -467,19 +462,6 @@ func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
 
 func (w *wrapper) GetTx() authsigning.Tx {
 	return w
-}
-
-func msgsV1toAnyV2(msgs []sdk.Msg) ([]*anypb.Any, error) {
-	anys := make([]*codectypes.Any, len(msgs))
-	for i, msg := range msgs {
-		anyMsg, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return nil, err
-		}
-		anys[i] = anyMsg
-	}
-
-	return intoAnyV2(anys), nil
 }
 
 func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {

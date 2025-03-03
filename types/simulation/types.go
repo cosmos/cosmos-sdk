@@ -17,7 +17,7 @@ var _ AppEntrypoint = &baseapp.BaseApp{}
 
 // AppEntrypoint defines the method for delivering simulation TX to the app. This is implemented by *Baseapp
 type AppEntrypoint interface {
-	SimDeliver(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+	baseapp.SimDeliverFn
 }
 
 // Deprecated: Use WeightedProposalMsg instead.

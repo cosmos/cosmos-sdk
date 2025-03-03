@@ -1,16 +1,14 @@
 package baseapp
 
 import (
+	"errors"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
-
-var _ simtypes.AppEntrypoint = &BaseApp{}
 
 // SimCheck defines a CheckTx helper function that used in tests and simulations.
 func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -32,7 +30,7 @@ func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 	return gasInfo, result, err
 }
 
-func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+func (app *BaseApp) defaultSimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	// See comment for Check().
 	bz, err := txEncoder(tx)
 	if err != nil {
@@ -41,6 +39,37 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 
 	gasInfo, result, _, err := app.runTx(execModeFinalize, bz)
 	return gasInfo, result, err
+
+}
+
+// SimDeliver runs a configured simDeliverFn if it has been set, otherwise runs the default logic
+// for handling simulation tx.
+func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+	if app.simDeliverFn != nil {
+		return app.simDeliverFn(txEncoder, tx)
+	}
+
+	return app.defaultSimDeliver(txEncoder, tx)
+}
+
+// SimDeliverFn is the function interface for simulating delivering a Tx to a baseapp.
+type SimDeliverFn = func(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+
+// WithSimDeliverFn will set the baseapp simDeliverFn to the given function.
+func WithSimDeliverFn(fn SimDeliverFn) func(*BaseApp) {
+	return func(app *BaseApp) {
+		app.simDeliverFn = fn
+	}
+}
+
+// SetSimDeliver sets the simDeliverFn override of the baseapp if it is not set.
+func (app *BaseApp) SetSimDeliver(fn SimDeliverFn) error {
+	if app.simDeliverFn != nil {
+		return errors.New("sim deliver function is already set")
+	}
+
+	app.simDeliverFn = fn
+	return nil
 }
 
 // SimWriteState is an entrypoint for simulations only. They are not executed during the normal ABCI finalize

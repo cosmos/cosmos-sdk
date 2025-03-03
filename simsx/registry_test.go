@@ -3,6 +3,7 @@ package simsx
 import (
 	"context"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"math/rand"
 	"testing"
 	"time"
@@ -87,10 +88,12 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 
 			// and when ops executed
 			var capturedTXs []sdk.Tx
-			captureTXApp := AppEntrypointFn(func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+			simDeliver := func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 				capturedTXs = append(capturedTXs, tx)
 				return sdk.GasInfo{}, &sdk.Result{}, spec.expDeliveryErr
-			})
+			}
+			bA := baseapp.BaseApp{}
+
 			fn := gotOps[0].Op()
 			gotOpsResult, gotFOps, gotErr := fn(rand.New(rand.NewSource(1)), captureTXApp, ctx, accs, "testchain")
 			// then

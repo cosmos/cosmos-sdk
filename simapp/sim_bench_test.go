@@ -62,8 +62,9 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	simParams, _, simErr := simulation.SimulateFromSeed(
 		b,
+		logger,
 		os.Stdout,
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
@@ -117,8 +118,9 @@ func BenchmarkInvariants(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	simParams, _, simErr := simulation.SimulateFromSeed(
 		b,
+		logger,
 		os.Stdout,
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),

@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 
@@ -71,7 +70,6 @@ func SimulateFromSeed(
 	blockedAddrs map[string]bool,
 	config simulation.Config,
 	cdc codec.JSONCodec,
-	addressCodec address.Codec,
 ) (exportedParams Params, accs []simulation.Account, err error) {
 	tb.Helper()
 	mode, _, _ := getTestingMode(tb)

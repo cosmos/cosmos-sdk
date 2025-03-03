@@ -194,6 +194,10 @@ type BaseApp struct {
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
+
+	// simDeliverFn is a function that can be overridden for delivering a Tx in simulation testing.
+	// The default behavior is defaultSimDeliver.  This can be overridden using the WithSimDeliverFn option.
+	simDeliverFn SimDeliverFn
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

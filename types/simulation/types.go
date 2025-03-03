@@ -8,9 +8,12 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
+
+var _ AppEntrypoint = &baseapp.BaseApp{}
 
 // AppEntrypoint defines the method for delivering simulation TX to the app. This is implemented by *Baseapp
 type AppEntrypoint interface {
@@ -68,7 +71,7 @@ type WeightedOperation interface {
 //
 // Operations can optionally provide a list of "FutureOperations" to run later
 // These will be ran at the beginning of the corresponding block.
-type Operation func(r *rand.Rand, app AppEntrypoint,
+type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []Account, chainID string) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 

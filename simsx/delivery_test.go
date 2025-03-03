@@ -23,7 +23,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 	)
 	noopResultHandler := func(err error) error { return err }
 	specs := map[string]struct {
-		app                      github.com/cosmos/cosmos-sdk/x/staking
+		app                      simtypes.AppEntrypoint
 		reporter                 func() SimulationReporter
 		deliveryResultHandler    SimDeliveryResultHandler
 		errDeliveryResultHandler error

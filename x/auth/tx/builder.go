@@ -135,6 +135,9 @@ func (w *wrapper) getBodyBytes() []byte {
 			if w.tx.Body.TimeoutTimestamp == nil {
 				w.tx.Body.TimeoutTimestamp = &time.Time{}
 			}
+			// if the unordered/timeout_timetsamp fields are not set, we set bodyBytes to the `TxBodyCompat` type so that
+			// this transaction may be compatible with any pre-v0.53 chain. This is needed for backwards compat as sdk chains
+			// automatically reject transactions that have unknown fields.
 			if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
 				var anyMsgs []*anypb.Any
 				if len(w.tx.Body.Messages) > 0 {
@@ -464,6 +467,7 @@ func (w *wrapper) GetTx() authsigning.Tx {
 	return w
 }
 
+// intoAnyV2 converts the SDK's codec Any into protobuf's canonical any type.
 func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {
 	v2s := make([]*anypb.Any, len(v1s))
 	for i, v1 := range v1s {

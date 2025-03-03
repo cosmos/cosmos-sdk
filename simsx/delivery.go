@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -14,9 +15,6 @@ import (
 )
 
 type (
-	// AppEntrypoint is an alias to the simtype interface
-	AppEntrypoint = simtypes.SimulationEntrypoint
-
 	AccountSource interface {
 		GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	}
@@ -45,7 +43,7 @@ type (
 func DeliverSimsMsg(
 	ctx context.Context,
 	reporter SimulationReporter,
-	app AppEntrypoint,
+	app *baseapp.BaseApp,
 	r *rand.Rand,
 	txGen client.TxConfig,
 	ak AccountSource,

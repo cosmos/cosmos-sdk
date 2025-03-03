@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"errors"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -39,7 +40,6 @@ func (app *BaseApp) defaultSimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.G
 
 	gasInfo, result, _, err := app.runTx(execModeFinalize, bz)
 	return gasInfo, result, err
-
 }
 
 // SimDeliver runs a configured simDeliverFn if it has been set, otherwise runs the default logic

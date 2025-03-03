@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -112,7 +113,7 @@ type HasFutureOpsRegistry interface {
 // msg factory to legacy Operation type
 func legacyOperationAdapter(l regCommon, fx SimMsgFactoryX) simtypes.Operation {
 	return func(
-		r *rand.Rand, app simtypes.SimulationEntrypoint, ctx sdk.Context,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		xCtx, done := context.WithCancel(ctx)
@@ -280,7 +281,7 @@ func (s WeightedFactoryMethods) Iterator() WeightedProposalMsgIter {
 
 // legacy operation to Msg factory type
 func legacyToMsgFactoryAdapter(fn simtypes.MsgSimulatorFnX) FactoryMethod {
-	return func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+	return func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
 		msg, err := fn(ctx, testData.r, testData.AllAccounts(), testData.AddressCodec())
 		if err != nil {
 			reporter.Skip(err.Error())

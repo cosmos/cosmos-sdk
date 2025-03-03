@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -23,7 +24,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 	)
 	noopResultHandler := func(err error) error { return err }
 	specs := map[string]struct {
-		app                      simtypes.AppEntrypoint
+		app                      baseapp.SimDeliverFn
 		reporter                 func() SimulationReporter
 		deliveryResultHandler    SimDeliveryResultHandler
 		errDeliveryResultHandler error
@@ -67,7 +68,11 @@ func TestDeliverSimsMsg(t *testing.T) {
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got := DeliverSimsMsg(ctx, spec.reporter(), spec.app, r, txConfig, ak, "testing", myMsg, spec.deliveryResultHandler, sender)
+			ba := &baseapp.BaseApp{}
+			opt := baseapp.WithSimDeliverFn(spec.app)
+			opt(ba)
+
+			got := DeliverSimsMsg(ctx, spec.reporter(), ba, r, txConfig, ak, "testing", myMsg, spec.deliveryResultHandler, sender)
 			assert.Equal(t, spec.expOps, got)
 		})
 	}

@@ -8,17 +8,12 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
-
-var _ AppEntrypoint = &baseapp.BaseApp{}
-
-// AppEntrypoint defines the method for delivering simulation TX to the app. This is implemented by *Baseapp
-type AppEntrypoint interface {
-	baseapp.SimDeliverFn
-}
 
 // Deprecated: Use WeightedProposalMsg instead.
 type WeightedProposalContent interface {
@@ -46,9 +41,19 @@ type WeightedProposalMsg interface {
 	MsgSimulatorFn() MsgSimulatorFn // msg simulator function
 }
 
-type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
+type (
+	// Deprecated: use MsgSimulatorFnX
+	MsgSimulatorFn  func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
+	MsgSimulatorFnX func(ctx sdk.Context, r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+	SimValFn        func(r *rand.Rand) string
+)
 
-type SimValFn func(r *rand.Rand) string
+func MsgSimulatorFnToMsgSimulatorFnX(fn MsgSimulatorFn) MsgSimulatorFnX {
+	return func(ctx sdk.Context, r *rand.Rand, accs []Account, _ address.Codec) (sdk.Msg, error) {
+		msg := fn(r, ctx, accs)
+		return msg, nil
+	}
+}
 
 type LegacyParamChange interface {
 	Subspace() string

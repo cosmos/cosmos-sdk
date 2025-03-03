@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/x/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -59,11 +60,8 @@ func txConfig() client.TxConfig {
 	return tx.NewTxConfig(protoCodec, tx.DefaultSignModes)
 }
 
-var _ simtypes.SimulationEntrypoint = SimDeliverFn(nil)
-
 type (
-	AppEntrypointFn = SimDeliverFn
-	SimDeliverFn    func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+	SimDeliverFn baseapp.SimDeliverFn
 )
 
 func (m SimDeliverFn) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {

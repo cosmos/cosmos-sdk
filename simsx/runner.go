@@ -309,7 +309,7 @@ func prepareWeightedOps(
 		case HasLegacyProposalMsgs:
 			for _, p := range xm.ProposalMsgs(simState) {
 				weight := weights.Get(p.AppParamsKey(), uint32(p.DefaultWeight()))
-				legacyPReg.Add(weight, legacyToMsgFactoryAdapter(p.MsgSimulatorFn()))
+				legacyPReg.Add(weight, legacyToMsgFactoryAdapter(simtypes.MsgSimulatorFnToMsgSimulatorFnX(p.MsgSimulatorFn())))
 			}
 		case HasLegacyProposalContents:
 			wContent = append(wContent, xm.ProposalContents(simState)...)

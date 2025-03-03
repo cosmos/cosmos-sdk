@@ -1,8 +1,6 @@
 package simsx
 
 import (
-	"context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,14 +39,14 @@ type (
 	// Returns:
 	// - signer: A slice of `SimAccount` representing the proposed signers.
 	// - msg: An instance of `sdk.Msg` representing the message to be delivered.
-	FactoryMethod func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg)
+	FactoryMethod func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg)
 
 	// FactoryMethodWithFutureOps extended message factory method for the gov module or others that have to schedule operations for a future block.
-	FactoryMethodWithFutureOps[T sdk.Msg] func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter, fOpsReg FutureOpsRegistry) ([]SimAccount, T)
+	FactoryMethodWithFutureOps[T sdk.Msg] func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter, fOpsReg FutureOpsRegistry) ([]SimAccount, T)
 
 	// FactoryMethodWithDeliveryResultHandler extended factory method that can return a result handler, that is executed on the delivery tx error result.
 	// This is used in staking for example to validate negative execution results.
-	FactoryMethodWithDeliveryResultHandler[T sdk.Msg] func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T, handler SimDeliveryResultHandler)
+	FactoryMethodWithDeliveryResultHandler[T sdk.Msg] func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T, handler SimDeliveryResultHandler)
 )
 
 var _ SimMsgFactoryX = &ResultHandlingSimMsgFactory[sdk.Msg]{}
@@ -64,7 +62,7 @@ func NewSimMsgFactoryWithDeliveryResultHandler[T sdk.Msg](f FactoryMethodWithDel
 	r := &ResultHandlingSimMsgFactory[T]{
 		resultHandler: expectNoError,
 	}
-	r.SimMsgFactoryFn = func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T) {
+	r.SimMsgFactoryFn = func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T) {
 		signer, msg, r.resultHandler = f(ctx, testData, reporter)
 		if r.resultHandler == nil {
 			r.resultHandler = expectNoError
@@ -93,7 +91,7 @@ type LazyStateSimMsgFactory[T sdk.Msg] struct {
 
 func NewSimMsgFactoryWithFutureOps[T sdk.Msg](f FactoryMethodWithFutureOps[T]) *LazyStateSimMsgFactory[T] {
 	r := &LazyStateSimMsgFactory[T]{}
-	r.SimMsgFactoryFn = func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T) {
+	r.SimMsgFactoryFn = func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T) {
 		signer, msg = f(ctx, testData, reporter, r.fsOpsReg)
 		return
 	}
@@ -112,7 +110,7 @@ func expectNoError(err error) error {
 var _ SimMsgFactoryX = SimMsgFactoryFn[sdk.Msg](nil)
 
 // SimMsgFactoryFn is the default factory for most cases. It does not create future operations but ensures successful message delivery.
-type SimMsgFactoryFn[T sdk.Msg] func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T)
+type SimMsgFactoryFn[T sdk.Msg] func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T)
 
 // MsgType returns an empty instance of type T, which implements `sdk.Msg`.
 func (f SimMsgFactoryFn[T]) MsgType() sdk.Msg {
@@ -122,7 +120,7 @@ func (f SimMsgFactoryFn[T]) MsgType() sdk.Msg {
 
 func (f SimMsgFactoryFn[T]) Create() FactoryMethod {
 	// adapter to return sdk.Msg instead of typed result to match FactoryMethod signature
-	return func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
+	return func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
 		return f(ctx, testData, reporter)
 	}
 }
@@ -142,7 +140,7 @@ type tuple struct {
 
 // SafeRunFactoryMethod runs the factory method on a separate goroutine to abort early when the context is canceled via reporter skip
 func SafeRunFactoryMethod(
-	ctx context.Context,
+	ctx sdk.Context,
 	data *ChainDataSource,
 	reporter SimulationReporter,
 	f FactoryMethod,

@@ -20,18 +20,18 @@ func TestMsgFactories(t *testing.T) {
 		expErrHandled bool
 	}{
 		"default": {
-			src: SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+			src: SimMsgFactoryFn[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 				return mySigners, myMsg
 			}),
 		},
 		"with delivery result handler": {
-			src: NewSimMsgFactoryWithDeliveryResultHandler[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg, handler SimDeliveryResultHandler) {
+			src: NewSimMsgFactoryWithDeliveryResultHandler[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg, handler SimDeliveryResultHandler) {
 				return mySigners, myMsg, func(err error) error { return nil }
 			}),
 			expErrHandled: true,
 		},
 		"with future ops": {
-			src: NewSimMsgFactoryWithFutureOps[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter, fOpsReg FutureOpsRegistry) ([]SimAccount, *testdata.TestMsg) {
+			src: NewSimMsgFactoryWithFutureOps[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter, fOpsReg FutureOpsRegistry) ([]SimAccount, *testdata.TestMsg) {
 				return mySigners, myMsg
 			}),
 		},
@@ -42,7 +42,7 @@ func TestMsgFactories(t *testing.T) {
 
 			factoryMethod := spec.src.Create()
 			require.NotNil(t, factoryMethod)
-			gotSigners, gotMsg := factoryMethod(context.Background(), nil, nil)
+			gotSigners, gotMsg := factoryMethod(sdk.Context{}.WithContext(context.Background()), nil, nil)
 			assert.Equal(t, mySigners, gotSigners)
 			assert.Equal(t, gotMsg, myMsg)
 
@@ -63,21 +63,21 @@ func TestRunWithFailFast(t *testing.T) {
 		expSkipped bool
 	}{
 		"factory completes": {
-			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
+			factory: func(ctx sdk.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
 				return mySigners, myTestMsg
 			},
 			expSigners: mySigners,
 			expMsg:     myTestMsg,
 		},
 		"factory skips": {
-			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
+			factory: func(ctx sdk.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
 				reporter.Skip("testing")
 				return nil, nil
 			},
 			expSkipped: true,
 		},
 		"factory skips and panics": {
-			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
+			factory: func(ctx sdk.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
 				reporter.Skip("testing")
 				panic("should be handled")
 			},
@@ -87,8 +87,9 @@ func TestRunWithFailFast(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			ctx, done := context.WithCancel(context.Background())
+			sdkCtx := sdk.Context{}.WithContext(ctx)
 			reporter := NewBasicSimulationReporter().WithScope(&testdata.TestMsg{}, SkipHookFn(func(...any) { done() }))
-			gotSigners, gotMsg := SafeRunFactoryMethod(ctx, nil, reporter, spec.factory)
+			gotSigners, gotMsg := SafeRunFactoryMethod(sdkCtx, nil, reporter, spec.factory)
 			assert.Equal(t, spec.expSigners, gotSigners)
 			assert.Equal(t, spec.expMsg, gotMsg)
 			assert.Equal(t, spec.expSkipped, reporter.IsSkipped())

@@ -34,20 +34,20 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 		expFutureOpsCount int
 	}{
 		"successful execution": {
-			factory: SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+			factory: SimMsgFactoryFn[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 				return []SimAccount{senderAcc}, myMsg
 			}),
 			expFactoryMsg: myMsg,
 		},
 		"skip execution": {
-			factory: SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+			factory: SimMsgFactoryFn[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 				reporter.Skip("testing")
 				return nil, nil
 			}),
 		},
 		"future ops registration": {
-			factory: NewSimMsgFactoryWithFutureOps[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter, fOpsReg FutureOpsRegistry) (signer []SimAccount, msg *testdata.TestMsg) {
-				fOpsReg.Add(futureTime, SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+			factory: NewSimMsgFactoryWithFutureOps[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter, fOpsReg FutureOpsRegistry) (signer []SimAccount, msg *testdata.TestMsg) {
+				fOpsReg.Add(futureTime, SimMsgFactoryFn[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 					return []SimAccount{senderAcc}, myMsg
 				}))
 				return []SimAccount{senderAcc}, myMsg
@@ -56,20 +56,20 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 			expFutureOpsCount: 1,
 		},
 		"error in factory execution": {
-			factory: NewSimMsgFactoryWithFutureOps[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter, fOpsReg FutureOpsRegistry) (signer []SimAccount, msg *testdata.TestMsg) {
+			factory: NewSimMsgFactoryWithFutureOps[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter, fOpsReg FutureOpsRegistry) (signer []SimAccount, msg *testdata.TestMsg) {
 				reporter.Fail(errors.New("testing"))
 				return nil, nil
 			}),
 			expFactoryErr: errors.New("testing"),
 		},
 		"missing senders": {
-			factory: SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+			factory: SimMsgFactoryFn[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 				return nil, myMsg
 			}),
 			expDeliveryErr: errors.New("no senders"),
 		},
 		"error in delivery execution": {
-			factory: SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+			factory: SimMsgFactoryFn[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 				return []SimAccount{senderAcc}, myMsg
 			}),
 			expDeliveryErr: errors.New("testing"),
@@ -92,10 +92,12 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 				capturedTXs = append(capturedTXs, tx)
 				return sdk.GasInfo{}, &sdk.Result{}, spec.expDeliveryErr
 			}
-			bA := baseapp.BaseApp{}
+			bA := &baseapp.BaseApp{}
+			opt := baseapp.WithSimDeliverFn(simDeliver)
+			opt(bA)
 
 			fn := gotOps[0].Op()
-			gotOpsResult, gotFOps, gotErr := fn(rand.New(rand.NewSource(1)), captureTXApp, ctx, accs, "testchain")
+			gotOpsResult, gotFOps, gotErr := fn(rand.New(rand.NewSource(1)), bA, ctx, accs, "testchain")
 			// then
 			if spec.expFactoryErr != nil {
 				require.Equal(t, spec.expFactoryErr, gotErr)
@@ -119,10 +121,10 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 }
 
 func TestUniqueTypeRegistry(t *testing.T) {
-	exampleFactory := SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+	exampleFactory := SimMsgFactoryFn[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 		return []SimAccount{}, nil
 	})
-	exampleFactory2 := SimMsgFactoryFn[*testdata.MsgCreateDog](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.MsgCreateDog) {
+	exampleFactory2 := SimMsgFactoryFn[*testdata.MsgCreateDog](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.MsgCreateDog) {
 		return []SimAccount{}, nil
 	})
 
@@ -167,10 +169,10 @@ func TestUniqueTypeRegistry(t *testing.T) {
 
 func TestWeightedFactories(t *testing.T) {
 	r := NewWeightedFactoryMethods()
-	f1 := func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+	f1 := func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
 		panic("not implemented")
 	}
-	f2 := func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+	f2 := func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
 		panic("not implemented")
 	}
 	r.Add(1, f1)
@@ -184,17 +186,17 @@ func TestWeightedFactories(t *testing.T) {
 
 func TestAppendIterators(t *testing.T) {
 	r1 := NewWeightedFactoryMethods()
-	r1.Add(2, func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+	r1.Add(2, func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
 		panic("not implemented")
 	})
-	r1.Add(2, func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+	r1.Add(2, func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
 		panic("not implemented")
 	})
-	r1.Add(3, func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+	r1.Add(3, func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
 		panic("not implemented")
 	})
 	r2 := NewUniqueTypeRegistry()
-	r2.Add(1, SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+	r2.Add(1, SimMsgFactoryFn[*testdata.TestMsg](func(ctx sdk.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 		panic("not implemented")
 	}))
 	// when

@@ -61,7 +61,6 @@ func initChain(
 // operations, testing the provided invariants, but using the provided config.Seed.
 func SimulateFromSeed(
 	tb testing.TB,
-	logger log.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
 	appStateFn simulation.AppStateFn,
@@ -70,10 +69,11 @@ func SimulateFromSeed(
 	blockedAddrs map[string]bool,
 	config simulation.Config,
 	cdc codec.JSONCodec,
-) (exportedParams Params, accs []simulation.Account, err error) {
+) (stopEarly bool, exportedParams Params, err error) {
 	tb.Helper()
 	mode, _, _ := getTestingMode(tb)
-	return SimulateFromSeedX(tb, logger, w, app, appStateFn, randAccFn, ops, blockedAddrs, config, cdc, NewLogWriter(mode))
+
+	return SimulateFromSeedX(tb, log.NewTestLogger(tb), w, app, appStateFn, randAccFn, ops, blockedAddrs, config, cdc, NewLogWriter(mode))
 }
 
 // SimulateFromSeedX tests an application by running the provided
@@ -90,7 +90,7 @@ func SimulateFromSeedX(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 	logWriter LogWriter,
-) (exportedParams Params, accs []simulation.Account, err error) {
+) (stopEarly bool, exportedParams Params, err error) {
 	tb.Helper()
 	defer func() {
 		if err != nil {
@@ -108,7 +108,7 @@ func SimulateFromSeedX(
 	logger.Debug("Randomized simulation setup", "params", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
-	accs = randAccFn(r, params.NumKeys())
+	accs := randAccFn(r, params.NumKeys())
 	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
@@ -117,7 +117,7 @@ func SimulateFromSeedX(
 	// At least 2 accounts must be added here, otherwise when executing SimulateMsgSend
 	// two accounts will be selected to meet the conditions from != to and it will fall into an infinite loop.
 	if len(accs) <= 1 {
-		return params, accs, errors.New("at least two genesis accounts are required")
+		return stopEarly, params, errors.New("at least two genesis accounts are required")
 	}
 
 	config.ChainID = chainID
@@ -129,7 +129,7 @@ func SimulateFromSeedX(
 	nextValidators := validators
 	if len(nextValidators) == 0 {
 		tb.Skip("skipping: empty validator set in genesis")
-		return params, accs, nil
+		return true, params, nil
 	}
 
 	var (
@@ -189,7 +189,7 @@ func SimulateFromSeedX(
 	}
 
 	if _, err := app.FinalizeBlock(finalizeBlockReq); err != nil {
-		return params, accs, fmt.Errorf("block finalization failed at height %d: %+w", blockHeight, err)
+		return true, params, fmt.Errorf("block finalization failed at height %d: %+w", blockHeight, err)
 	}
 
 	for blockHeight < int64(config.NumBlocks+config.InitialBlockHeight) {
@@ -201,7 +201,7 @@ func SimulateFromSeedX(
 
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
-			return params, accs, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
+			return true, params, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
 		}
 
 		ctx := app.NewContextLegacy(false, cmtproto.Header{
@@ -248,7 +248,7 @@ func SimulateFromSeedX(
 		if config.Commit {
 			app.SimWriteState()
 			if _, err := app.Commit(); err != nil {
-				return params, accs, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
+				return true, params, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
 			}
 		}
 
@@ -267,7 +267,7 @@ func SimulateFromSeedX(
 		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, eventStats.Tally)
 		if len(nextValidators) == 0 {
 			tb.Skip("skipping: empty validator set")
-			return exportedParams, accs, err
+			return stopEarly, params, err
 		}
 
 		// update the exported params
@@ -284,7 +284,7 @@ func SimulateFromSeedX(
 	} else {
 		eventStats.Print(w)
 	}
-	return exportedParams, accs, err
+	return false, params, nil
 }
 
 type blockSimFn func(

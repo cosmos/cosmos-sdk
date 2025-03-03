@@ -82,9 +82,8 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// run randomized simulation
-	simParams, _, simErr := simulation.SimulateFromSeed(
+	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
-		logger,
 		os.Stdout,
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
@@ -131,9 +130,8 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	simParams, _, simErr := simulation.SimulateFromSeed(
+	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
-		logger,
 		os.Stdout,
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
@@ -254,9 +252,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	simParams, _, simErr := simulation.SimulateFromSeed(
+	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
-		logger,
 		os.Stdout,
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
@@ -275,7 +272,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	if config.Commit {
 		simtestutil.PrintStats(db)
 	}
-	
+
 	fmt.Printf("exporting genesis...\n")
 
 	exported, err := app.ExportAppStateAndValidators(true, []string{}, []string{})
@@ -301,7 +298,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	_, _, err = simulation.SimulateFromSeed(
 		t,
-		logger,
 		os.Stdout,
 		newApp.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
@@ -381,7 +377,6 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			_, _, err := simulation.SimulateFromSeed(
 				t,
-				logger,
 				os.Stdout,
 				app.BaseApp,
 				simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),

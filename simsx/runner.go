@@ -3,7 +3,6 @@ package simsx
 import (
 	"encoding/json"
 	"fmt"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"io"
 	"os"
 	"path/filepath"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -79,7 +79,7 @@ func Run[T SimulationApp](
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
-	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+	postRunActions ...func(t testing.TB, app TestInstance[T]),
 ) {
 	t.Helper()
 	RunWithSeeds(t, appFactory, setupStateFactory, defaultSeeds, nil, postRunActions...)
@@ -107,7 +107,7 @@ func RunWithSeeds[T SimulationApp](
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,
-	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+	postRunActions ...func(t testing.TB, app TestInstance[T]),
 ) {
 	t.Helper()
 	RunWithSeedsAndRandAcc(t, appFactory, setupStateFactory, seeds, fuzzSeed, simtypes.RandomAccounts, postRunActions...)
@@ -128,7 +128,7 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 	seeds []int64,
 	fuzzSeed []byte,
 	randAccFn simtypes.RandomAccountFn,
-	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+	postRunActions ...func(t testing.TB, app TestInstance[T]),
 ) {
 	t.Helper()
 	cfg := cli.NewConfigFromFlags()
@@ -137,7 +137,7 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 		seed := seeds[i]
 		t.Run(fmt.Sprintf("seed: %d", seed), func(t *testing.T) {
 			t.Parallel()
-			RunWithSeed(t, cfg, appFactory, setupStateFactory, seed, fuzzSeed, postRunActions...)
+			RunWithSeedAndRandAcc(t, cfg, appFactory, setupStateFactory, seed, fuzzSeed, randAccFn, postRunActions...)
 		})
 	}
 }
@@ -161,7 +161,7 @@ func RunWithSeed[T SimulationApp](
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
-	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+	postRunActions ...func(t testing.TB, app TestInstance[T]),
 ) {
 	tb.Helper()
 	RunWithSeedAndRandAcc(tb, cfg, appFactory, setupStateFactory, seed, fuzzSeed, simtypes.RandomAccounts, postRunActions...)
@@ -182,7 +182,7 @@ func RunWithSeedAndRandAcc[T SimulationApp](
 	seed int64,
 	fuzzSeed []byte,
 	randAccFn simtypes.RandomAccountFn,
-	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
+	postRunActions ...func(t testing.TB, app TestInstance[T]),
 ) {
 	tb.Helper()
 	// setup environment
@@ -199,7 +199,7 @@ func RunWithSeedAndRandAcc[T SimulationApp](
 	app := testInstance.App
 	stateFactory := setupStateFactory(app)
 	ops, reporter := prepareWeightedOps(app.SimulationManager(), stateFactory, tCfg, testInstance.App.TxConfig(), runLogger)
-	simParams, accs, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, randAccFn, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
+	_, simParams, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, randAccFn, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
 	require.NoError(tb, err)
 	err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 	require.NoError(tb, err)
@@ -209,7 +209,7 @@ func RunWithSeedAndRandAcc[T SimulationApp](
 	// not using tb.Log to always print the summary
 	fmt.Printf("+++ DONE (seed: %d): \n%s\n", seed, reporter.Summary().String())
 	for _, step := range postRunActions {
-		step(tb, testInstance, accs)
+		step(tb, testInstance)
 	}
 	require.NoError(tb, app.Close())
 }

@@ -9,6 +9,7 @@ pull_request_rules:
       - "#approved-reviews-by>1"
       - base=main
       - label=A:automerge
+<<<<<<< HEAD
     actions:
       queue:
         name: default
@@ -16,6 +17,24 @@ pull_request_rules:
         commit_message_template: |
           {{ title }} (#{{ number }})
           {{ body }}
+=======
+    merge_conditions:
+      - "#approved-reviews-by>1"
+    commit_message_template: |
+      {{ title }} (#{{ number }})
+      {{ body }}
+    merge_method: squash
+
+pull_request_rules:
+  - name: backport patches to v0.53.x branch
+    conditions:
+      - base=main
+      - label=backport/v0.53.x
+    actions:
+      backport:
+        branches:
+          - release/v0.53.x
+>>>>>>> 11a35fea2 (chore: set up backport rule for 53 (#23871))
   - name: backport patches to v0.50.x branch
     conditions:
       - base=main

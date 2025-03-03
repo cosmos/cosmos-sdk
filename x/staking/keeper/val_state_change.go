@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -142,13 +143,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	// (see LastValidatorPowerKey).
 	last, err := k.getLastValidatorsByAddr(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get last validator set: %w", err)
 	}
 
 	// Iterate over validators, highest power to lowest.
 	iterator, err := k.ValidatorsPowerStoreIterator(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get validators power store iterator: %w", err)
 	}
 	defer iterator.Close()
 
@@ -156,10 +157,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		// everything that is iterated in this loop is becoming or already a
 		// part of the bonded validator set
 		valAddr := sdk.ValAddress(iterator.Value())
-		validator := k.mustGetValidator(ctx, valAddr)
+		validator, err := k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return nil, fmt.Errorf("validator record not found for address: %X", valAddr)
+		}
 
 		if validator.Jailed {
-			panic("should never retrieve a jailed validator from the power store")
+			return nil, errors.New("should never retrieve a jailed validator from the power store")
 		}
 
 		// if we get to a zero-power validator (which we don't bond),
@@ -185,14 +189,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		case validator.IsBonded():
 			// no state change
 		default:
-			panic("unexpected validator status")
+			return nil, errors.New("unexpected validator status")
 		}
 
+		valAddrStr := string(valAddr)
 		// fetch the old power bytes
-		valAddrStr, err := k.validatorAddressCodec.BytesToString(valAddr)
-		if err != nil {
-			return nil, err
-		}
 		oldPowerBytes, found := last[valAddrStr]
 		newPower := validator.ConsensusPower(powerReduction)
 		newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
@@ -209,7 +210,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		delete(last, valAddrStr)
 		count++
 
-		totalPower = totalPower.Add(math.NewInt(newPower))
+		totalPower = totalPower.AddRaw(newPower)
 	}
 
 	noLongerBonded, err := sortNoLongerBonded(last, k.validatorAddressCodec)
@@ -218,14 +219,17 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	}
 
 	for _, valAddrBytes := range noLongerBonded {
-		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+		validator, err := k.GetValidator(ctx, sdk.ValAddress(valAddrBytes))
+		if err != nil {
+			return nil, fmt.Errorf("validator record not found for address: %X", sdk.ValAddress(valAddrBytes))
+		}
 		validator, err = k.bondedToUnbonding(ctx, validator)
 		if err != nil {
 			return nil, err
 		}
 		str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get validator operator address: %w", err)
 		}
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
 		if err = k.DeleteLastValidatorPower(ctx, str); err != nil {
@@ -273,7 +277,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 func (k Keeper) bondedToUnbonding(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsBonded() {
-		panic(fmt.Sprintf("bad state transition bondedToUnbonding, validator: %v\n", validator))
+		return types.Validator{}, fmt.Errorf("bad state transition bondedToUnbonding, validator: %v", validator)
 	}
 
 	return k.BeginUnbondingValidator(ctx, validator)
@@ -281,7 +285,7 @@ func (k Keeper) bondedToUnbonding(ctx context.Context, validator types.Validator
 
 func (k Keeper) unbondingToBonded(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonding() {
-		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
+		return types.Validator{}, fmt.Errorf("bad state transition unbondingToBonded, validator: %v", validator)
 	}
 
 	return k.bondValidator(ctx, validator)
@@ -289,7 +293,7 @@ func (k Keeper) unbondingToBonded(ctx context.Context, validator types.Validator
 
 func (k Keeper) unbondedToBonded(ctx context.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonded() {
-		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))
+		return types.Validator{}, fmt.Errorf("bad state transition unbondedToBonded, validator: %v", validator)
 	}
 
 	return k.bondValidator(ctx, validator)
@@ -363,7 +367,7 @@ func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (t
 
 	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
 	if err != nil {
-		return validator, err
+		return validator, fmt.Errorf("failed to get validator operator address: %w", err)
 	}
 
 	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, str); err != nil {
@@ -387,7 +391,7 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 
 	// sanity check
 	if validator.Status != types.Bonded {
-		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
+		return validator, fmt.Errorf("should not already be unbonded or unbonding, validator: %v", validator)
 	}
 
 	id, err := k.IncrementUnbondingID(ctx)
@@ -426,7 +430,7 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 
 	str, err := k.validatorAddressCodec.StringToBytes(validator.GetOperator())
 	if err != nil {
-		return validator, err
+		return validator, fmt.Errorf("failed to get validator operator address: %w", err)
 	}
 
 	if err := k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, str); err != nil {
@@ -470,12 +474,7 @@ func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, 
 
 	for ; iterator.Valid(); iterator.Next() {
 		// extract the validator address from the key (prefix is 1-byte, addrLen is 1-byte)
-		valAddr := types.AddressFromLastValidatorPowerKey(iterator.Key())
-		valAddrStr, err := k.validatorAddressCodec.BytesToString(valAddr)
-		if err != nil {
-			return nil, err
-		}
-
+		valAddrStr := string(types.AddressFromLastValidatorPowerKey(iterator.Key()))
 		powerBytes := iterator.Value()
 		last[valAddrStr] = make([]byte, len(powerBytes))
 		copy(last[valAddrStr], powerBytes)
@@ -492,10 +491,7 @@ func sortNoLongerBonded(last validatorsByAddr, ac address.Codec) ([][]byte, erro
 	index := 0
 
 	for valAddrStr := range last {
-		valAddrBytes, err := ac.StringToBytes(valAddrStr)
-		if err != nil {
-			return nil, err
-		}
+		valAddrBytes := []byte(valAddrStr)
 		noLongerBonded[index] = valAddrBytes
 		index++
 	}

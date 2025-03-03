@@ -267,6 +267,7 @@ func (k Keeper) IterateUnbondingDelegations(ctx context.Context, fn func(index i
 // GetDelegatorUnbonding returns the total amount a delegator has unbonding.
 func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	unbonding := math.ZeroInt()
+<<<<<<< HEAD
 	err := k.IterateDelegatorUnbondingDelegations(ctx, delegator, func(ubd types.UnbondingDelegation) bool {
 		for _, entry := range ubd.Entries {
 			unbonding = unbonding.Add(entry.Balance)
@@ -274,6 +275,23 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 		return false
 	})
 	return unbonding, err
+=======
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](delegator)
+	err := k.UnbondingDelegations.Walk(
+		ctx,
+		rng,
+		func(key collections.Pair[[]byte, []byte], ubd types.UnbondingDelegation) (stop bool, err error) {
+			for _, entry := range ubd.Entries {
+				unbonding = unbonding.Add(entry.Balance)
+			}
+			return false, nil
+		},
+	)
+	if err != nil {
+		return unbonding, err
+	}
+	return unbonding, nil
+>>>>>>> 4d474617d (refactor: use a more straightforward return value (#23718))
 }
 
 // IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.

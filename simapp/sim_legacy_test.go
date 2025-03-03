@@ -1,3 +1,5 @@
+//go:build sims_legacy
+
 package simapp
 
 import (

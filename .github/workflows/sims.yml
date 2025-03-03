@@ -37,7 +37,7 @@ jobs:
           check-latest: true
       - name: test-sim-import-export
         run: |
-          make test-sim-import-export
+          COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-import-export
 
   test-sim-after-import:
     runs-on: depot-ubuntu-22.04-16
@@ -51,7 +51,7 @@ jobs:
           check-latest: true
       - name: test-sim-after-import
         run: |
-          make test-sim-after-import
+          COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-after-import
 
   test-sim-deterministic:
     runs-on: depot-ubuntu-22.04-16
@@ -65,7 +65,7 @@ jobs:
           check-latest: true
       - name: test-sim-nondeterminism
         run: |
-          make test-sim-nondeterminism
+          COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-nondeterminism
 
   test-sim-multi-seed-short:
     runs-on: depot-ubuntu-22.04-16
@@ -79,7 +79,7 @@ jobs:
           check-latest: true
       - name: test-sim-multi-seed-short
         run: |
-          make test-sim-multi-seed-short
+          COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-multi-seed-short
 
   sims-notify-success:
     needs:

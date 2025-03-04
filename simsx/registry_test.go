@@ -3,7 +3,6 @@ package simsx
 import (
 	"context"
 	"errors"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"math/rand"
 	"testing"
 	"time"
@@ -13,6 +12,7 @@ import (
 
 	"cosmossdk.io/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

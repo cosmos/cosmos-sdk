@@ -1,12 +1,12 @@
 package module
 
 import (
-	"cosmossdk.io/core/address"
 	"encoding/json"
 	"math/rand"
 	"sort"
 	"time"
 
+	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,26 +17,26 @@ import (
 // AppModuleSimulation defines the standard functions that every module should expose
 // for the SDK blockchain simulator
 type AppModuleSimulation interface {
-	// randomized genesis states
+	// GenerateGenesisState generates randomized genesis states
 	GenerateGenesisState(input *SimulationState)
 
-	// register a func to decode the each module's defined types from their corresponding store key
+	// RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
 	RegisterStoreDecoder(simulation.StoreDecoderRegistry)
 
-	// simulation operations (i.e msgs) with their respective weight
+	// WeightedOperations are simulation operations (i.e msgs) with their respective weight
 	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
 }
 
 type (
 	// HasProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
 	HasProposalMsgs interface {
-		// msg functions used to simulate governance proposals
+		// ProposalMsgs are msg functions used to simulate governance proposals
 		ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
 	}
 
 	// HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
 	HasProposalContents interface {
-		// content functions used to simulate governance proposals
+		// ProposalContents is a content functions used to simulate governance proposals
 		ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
 	}
 

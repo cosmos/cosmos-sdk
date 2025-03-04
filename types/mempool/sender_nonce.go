@@ -4,6 +4,7 @@ import (
 	"context"
 	crand "crypto/rand" // #nosec // crypto/rand is used for seed generation
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
 	"sync"
@@ -139,6 +140,15 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
 
+	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		timestamp := unordered.GetTimeoutTimeStamp().Unix()
+		if timestamp < 0 {
+			return errors.New("invalid timestamp value")
+		}
+		nonce = uint64(timestamp)
+	}
+
 	senderTxs, found := snm.senders[sender]
 	if !found {
 		senderTxs = skiplist.New(skiplist.Uint64)
@@ -226,6 +236,15 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
+
+	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		timestamp := unordered.GetTimeoutTimeStamp().Unix()
+		if timestamp < 0 {
+			return errors.New("invalid timestamp value")
+		}
+		nonce = uint64(timestamp)
+	}
 
 	senderTxs, found := snm.senders[sender]
 	if !found {

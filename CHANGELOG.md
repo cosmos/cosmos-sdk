@@ -37,19 +37,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (types/query) [#23880](https://github.com/cosmos/cosmos-sdk/pull/23880) Fix NPE in query pagination.
+
 ## [v0.47.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.16) - 2025-02-20
 
 ### Bug Fixes
 
-<<<<<<< HEAD
 * [GHSA-x5vx-95h7-rv4p](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-x5vx-95h7-rv4p) Fix Group module can halt chain when handling a malicious proposal
-=======
-* (x/auth) [#23741](https://github.com/cosmos/cosmos-sdk/pull/23741) Support legacy global AccountNumber.
-* (types/query) [#23880](https://github.com/cosmos/cosmos-sdk/pull/23880) Fix NPE in query pagination.
 
 ### Removed
 
-* (tools/hub) [#23562](https://github.com/cosmos/cosmos-sdk/pull/23562) Remove `tools/hubl`. A similar tool will be maintained in [ignite](https://www.github.com/ignite/cli).
+* (tools/hubl) [#23562](https://github.com/cosmos/cosmos-sdk/pull/23562) Remove `tools/hubl`. A similar tool will be maintained in [ignite](https://www.github.com/ignite/cli).
 
 ### API Breaking Changes
 

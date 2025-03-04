@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (client) [#23860](https://github.com/cosmos/cosmos-sdk/pull/23860) Add missing `unordered` field for legacy amino signing of tx body.
 * (x/bank) [#23836](https://github.com/cosmos/cosmos-sdk/pull/23836) Fix `DenomMetadata` rpc allow value with slashes.
 * (query) [87d3a43](https://github.com/cosmos/cosmos-sdk/commit/87d3a432af95f4cf96aa02351ed5fcc51cca6e7b) Fix collection filtered pagination.
 

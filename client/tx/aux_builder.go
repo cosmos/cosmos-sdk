@@ -223,6 +223,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 				Memo:             body.Memo,
 				TimeoutHeight:    body.TimeoutHeight,
 				TimeoutTimestamp: body.TimeoutTimestamp,
+				Unordered:        body.Unordered,
 				// AuxTxBuilder has no concern with extension options, so we set them to nil.
 				// This preserves pre-PR#16025 behavior where extension options were ignored, this code path:
 				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/client/tx/aux_builder.go#L193

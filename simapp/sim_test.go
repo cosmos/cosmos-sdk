@@ -276,3 +276,14 @@ func FuzzFullAppSimulation(f *testing.F) {
 		)
 	})
 }
+
+// Profile with:
+// /usr/local/go/bin/go test -benchmem -run=^$ cosmossdk.io/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
+func BenchmarkFullAppSimulation(b *testing.B) {
+	b.ReportAllocs()
+
+	config := simcli.NewConfigFromFlags()
+	config.ChainID = simsx.SimAppChainID
+
+	simsx.RunWithSeed(b, config, NewSimApp, setupStateFactory, 1, nil)
+}

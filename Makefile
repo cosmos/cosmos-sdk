@@ -309,12 +309,6 @@ test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
 	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 10 TestFullAppSimulation
 
-test-sim-benchmark-invariants:
-	@echo "Running simulation invariant benchmarks..."
-	cd ${CURRENT_DIR}/simapp && @go test -mod=readonly $(SIM_ARGS) -benchmem -bench=BenchmarkInvariants -run=^$ \
-	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
-	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
-
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-nondeterminism-streaming \
@@ -323,8 +317,7 @@ test-sim-import-export \
 test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
-test-sim-multi-seed-long \
-test-sim-benchmark-invariants
+test-sim-multi-seed-long
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

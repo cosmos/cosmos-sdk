@@ -579,7 +579,7 @@ func RunShellCmd(cmd string, args ...string) (string, error) {
 		args...,
 	)
 	c.Dir = WorkDir
-	out, err := c.Output()
+	out, err := c.CombinedOutput()
 	if err != nil {
 		return string(out), fmt.Errorf("run `%s %s`: out: %s: %w", cmd, strings.Join(args, " "), string(out), err)
 	}

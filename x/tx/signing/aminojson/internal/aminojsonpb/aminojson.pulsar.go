@@ -1747,14 +1747,16 @@ type AminoSignDoc struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	AccountNumber    uint64                 `protobuf:"varint,1,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
-	Sequence         uint64                 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	TimeoutHeight    uint64                 `protobuf:"varint,3,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
-	ChainId          string                 `protobuf:"bytes,4,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
-	Memo             string                 `protobuf:"bytes,5,opt,name=memo,proto3" json:"memo,omitempty"`
-	Fee              *AminoSignFee          `protobuf:"bytes,6,opt,name=fee,proto3" json:"fee,omitempty"`
-	Msgs             []*anypb.Any           `protobuf:"bytes,7,rep,name=msgs,proto3" json:"msgs,omitempty"`
-	Unordered        bool                   `protobuf:"varint,8,opt,name=unordered,proto3" json:"unordered,omitempty"`
+	AccountNumber uint64        `protobuf:"varint,1,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
+	Sequence      uint64        `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	TimeoutHeight uint64        `protobuf:"varint,3,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
+	ChainId       string        `protobuf:"bytes,4,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	Memo          string        `protobuf:"bytes,5,opt,name=memo,proto3" json:"memo,omitempty"`
+	Fee           *AminoSignFee `protobuf:"bytes,6,opt,name=fee,proto3" json:"fee,omitempty"`
+	Msgs          []*anypb.Any  `protobuf:"bytes,7,rep,name=msgs,proto3" json:"msgs,omitempty"`
+	// Since: cosmos-sdk 0.53
+	Unordered bool `protobuf:"varint,8,opt,name=unordered,proto3" json:"unordered,omitempty"`
+	// Since: cosmos-sdk 0.53
 	TimeoutTimestamp *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty"`
 }
 

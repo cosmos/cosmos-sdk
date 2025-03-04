@@ -123,6 +123,8 @@ message TxBody {
   // Note, when set to true, the existing 'timeout_timestamp' value must
   // be set and will be used to correspond to a timestamp in which the transaction is deemed
   // valid.
+  //
+  // Since: cosmos-sdk 0.53
   bool unordered = 4;
 
   // timeout_timestamp is the block time after which this transaction will not
@@ -131,6 +133,8 @@ message TxBody {
   // Note, if unordered=true this value MUST be set
   // and will act as a short-lived TTL in which the transaction is deemed valid
   // and kept in memory to prevent duplicates.
+  //
+  // Since: cosmos-sdk 0.53
   google.protobuf.Timestamp timeout_timestamp = 5 [(gogoproto.nullable) = true, (gogoproto.stdtime) = true];
 
   // extension_options are arbitrary options that can be added by chains
@@ -148,6 +152,8 @@ message TxBody {
 // This message is used to represent the transaction body before the unordered
 // features was added. It is used to support backwards compatibility when user a newer
 // client with an older chain.
+//
+// Since: cosmos-sdk 0.53
 message TxBodyCompat {
   // messages is a list of messages to be executed. The required signers of
   // those messages define the number and order of elements in AuthInfo's

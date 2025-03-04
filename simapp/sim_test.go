@@ -3,14 +3,9 @@
 package simapp
 
 import (
-	"cosmossdk.io/x/feegrant"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
-	dbm "github.com/cosmos/cosmos-db"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"io"
 	"math/rand"
 	"strings"
@@ -20,12 +15,14 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -33,11 +30,12 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
-
-// SimAppChainID hardcoded chainID for simulation
 
 var FlagEnableStreamingValue bool
 
@@ -73,7 +71,7 @@ var (
 )
 
 func TestAppImportExport(t *testing.T) {
-	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
+	simsx.Run(t, NewSimApp, setupStateFactory, func(tb testing.TB, ti simsx.TestInstance[*SimApp]) { //nolint:thelper // this is a core test that we want logs from
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
@@ -114,7 +112,7 @@ func TestAppImportExport(t *testing.T) {
 //	set up a new node instance, Init chain from exported genesis
 //	run new instance for n blocks
 func TestAppSimulationAfterImport(t *testing.T) {
-	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
+	simsx.Run(t, NewSimApp, setupStateFactory, func(tb testing.TB, ti simsx.TestInstance[*SimApp]) { //nolint:thelper // this is a core test that we want logs from
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
@@ -193,7 +191,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)
 	appSimLogger := make(map[int64][]simulation.LogWriter)
-	captureAndCheckHash := func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
+	captureAndCheckHash := func(tb testing.TB, ti simsx.TestInstance[*SimApp]) { //nolint:thelper // this is a core test that we want logs from
 		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
 		mx.Lock()
 		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
@@ -229,12 +227,14 @@ type ComparableStoreApp interface {
 	GetStoreKeys() []storetypes.StoreKey
 }
 
-func AssertEqualStores(t testing.TB, app, newApp ComparableStoreApp, storeDecoders simtypes.StoreDecoderRegistry, skipPrefixes map[string][][]byte) {
+func AssertEqualStores(tb testing.TB, app, newApp ComparableStoreApp, storeDecoders simtypes.StoreDecoderRegistry, skipPrefixes map[string][][]byte) {
+	tb.Helper()
+
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
 	storeKeys := app.GetStoreKeys()
-	require.NotEmpty(t, storeKeys)
+	require.NotEmpty(tb, storeKeys)
 
 	for _, appKeyA := range storeKeys {
 		// only compare kvstores
@@ -249,14 +249,14 @@ func AssertEqualStores(t testing.TB, app, newApp ComparableStoreApp, storeDecode
 		storeB := ctxB.KVStore(appKeyB)
 
 		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
-		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare %s, key stores %s and %s", keyName, appKeyA, appKeyB)
+		require.Equal(tb, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare %s, key stores %s and %s", keyName, appKeyA, appKeyB)
 
-		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
-		if !assert.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, storeDecoders, failedKVAs, failedKVBs)) {
+		tb.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
+		if !assert.Equal(tb, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, storeDecoders, failedKVAs, failedKVBs)) {
 			for _, v := range failedKVAs {
-				t.Logf("store mismatch: %q\n", v)
+				tb.Logf("store mismatch: %q\n", v)
 			}
-			t.FailNow()
+			tb.FailNow()
 		}
 	}
 }

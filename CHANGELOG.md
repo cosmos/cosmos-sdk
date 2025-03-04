@@ -53,6 +53,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Bug Fixes
 
 * (x/auth) [#23741](https://github.com/cosmos/cosmos-sdk/pull/23741) Support legacy global AccountNumber.
+* (baseapp) [#]() Fix nil pointer panic in FinalizeBlock.
 
 ### Removed
 

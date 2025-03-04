@@ -126,26 +126,25 @@ func (w *wrapper) ValidateBasic() error {
 func (w *wrapper) getBodyBytes() []byte {
 	if len(w.bodyBz) == 0 {
 		if w.tx.Body != nil {
-			if w.tx.Body.TimeoutTimestamp == nil {
-				w.tx.Body.TimeoutTimestamp = &time.Time{}
-			}
-			// if the unordered/timeout_timetsamp fields are not set, we set bodyBytes to the `TxBodyCompat` type so that
-			// this transaction may be compatible with any pre-v0.53 chain. This is needed for backwards compat as sdk chains
-			// automatically reject transactions that have unknown fields.
-			if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
-				body := &tx.TxBodyCompat{
-					Messages:                    w.tx.Body.Messages,
-					Memo:                        w.GetMemo(),
-					TimeoutHeight:               w.GetTimeoutHeight(),
-					ExtensionOptions:            w.GetExtensionOptions(),
-					NonCriticalExtensionOptions: w.GetNonCriticalExtensionOptions(),
+			if w.tx.Body.TimeoutTimestamp != nil {
+				// if the unordered/timeout_timetsamp fields are not set, we set bodyBytes to the `TxBodyCompat` type so that
+				// this transaction may be compatible with any pre-v0.53 chain. This is needed for backwards compat as sdk chains
+				// automatically reject transactions that have unknown fields.
+				if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
+					body := &tx.TxBodyCompat{
+						Messages:                    w.tx.Body.Messages,
+						Memo:                        w.GetMemo(),
+						TimeoutHeight:               w.GetTimeoutHeight(),
+						ExtensionOptions:            w.GetExtensionOptions(),
+						NonCriticalExtensionOptions: w.GetNonCriticalExtensionOptions(),
+					}
+					bodyBytes, err := proto.Marshal(body)
+					if err != nil {
+						panic(fmt.Errorf("unable to marshal body: %w", err))
+					}
+					w.bodyBz = bodyBytes
+					return w.bodyBz
 				}
-				bodyBytes, err := proto.Marshal(body)
-				if err != nil {
-					panic(fmt.Errorf("unable to marshal body: %w", err))
-				}
-				w.bodyBz = bodyBytes
-				return w.bodyBz
 			}
 		}
 

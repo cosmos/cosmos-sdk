@@ -7,9 +7,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -51,10 +49,6 @@ var (
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 )
-
-var marshalOption = protov2.MarshalOptions{
-	Deterministic: true,
-}
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
 type ExtensionOptionsTxBuilder interface {
@@ -139,19 +133,14 @@ func (w *wrapper) getBodyBytes() []byte {
 			// this transaction may be compatible with any pre-v0.53 chain. This is needed for backwards compat as sdk chains
 			// automatically reject transactions that have unknown fields.
 			if !w.tx.Body.Unordered && (w.tx.Body.TimeoutTimestamp.IsZero() || w.tx.Body.TimeoutTimestamp.Unix() == 0) {
-				var anyMsgs []*anypb.Any
-				if len(w.tx.Body.Messages) > 0 {
-					anyMsgs = intoAnyV2(w.tx.Body.Messages)
-				}
-
-				body := &txv1beta1.TxBodyCompat{
-					Messages:                    anyMsgs,
+				body := &tx.TxBodyCompat{
+					Messages:                    w.tx.Body.Messages,
 					Memo:                        w.GetMemo(),
 					TimeoutHeight:               w.GetTimeoutHeight(),
-					ExtensionOptions:            intoAnyV2(w.GetExtensionOptions()),
-					NonCriticalExtensionOptions: intoAnyV2(w.GetNonCriticalExtensionOptions()),
+					ExtensionOptions:            w.GetExtensionOptions(),
+					NonCriticalExtensionOptions: w.GetNonCriticalExtensionOptions(),
 				}
-				bodyBytes, err := marshalOption.Marshal(body)
+				bodyBytes, err := proto.Marshal(body)
 				if err != nil {
 					panic(fmt.Errorf("unable to marshal body: %w", err))
 				}
@@ -465,18 +454,6 @@ func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
 
 func (w *wrapper) GetTx() authsigning.Tx {
 	return w
-}
-
-// intoAnyV2 converts the SDK's codec Any into protobuf's canonical any type.
-func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {
-	v2s := make([]*anypb.Any, len(v1s))
-	for i, v1 := range v1s {
-		v2s[i] = &anypb.Any{
-			TypeUrl: v1.TypeUrl,
-			Value:   v1.Value,
-		}
-	}
-	return v2s
 }
 
 func (w *wrapper) GetProtoTx() *tx.Tx {

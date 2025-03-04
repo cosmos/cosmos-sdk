@@ -569,7 +569,7 @@ func (s *SystemUnderTest) ForEachNodeExecAndWait(t *testing.T, cmds ...[]string)
 func MustRunShellCmd(t *testing.T, cmd string, args ...string) string {
 	t.Helper()
 	out, err := RunShellCmd(cmd, args...)
-	require.NoError(t, err)
+	require.NoError(t, err, out)
 	return out
 }
 

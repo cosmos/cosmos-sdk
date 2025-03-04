@@ -903,6 +903,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.FinalizeBlockRequest) (res *abci.FinalizeBlockResponse, err error) {
 	defer func() {
+		// res could be nil if internal finalize block return error.
 		if res == nil {
 			return
 		}

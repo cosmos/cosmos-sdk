@@ -14,6 +14,7 @@ type Config struct {
 
 	Seed               int64  // simulation random seed
 	InitialBlockHeight int    // initial block to start the simulation
+	GenesisTime        int64  // genesis time to start the simulation
 	NumBlocks          int    // number of new blocks to simulate from the initial block height
 	BlockSize          int    // operations per block
 	ChainID            string // chain-id used on the simulation
@@ -21,15 +22,16 @@ type Config struct {
 	Lean   bool // lean simulation log output
 	Commit bool // have the simulation commit
 
-	OnOperation   bool // run slow invariants every operation
+	// Deprecated: invariants are no longer checked
+	OnOperation bool // run slow invariants every operation
+	// Deprecated: invariants are no longer checked
 	AllInvariants bool // print all failed invariants if a broken invariant is found
 
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
-
-	FuzzSeed   []byte
-	TB         testing.TB
-	FauxMerkle bool
+	FuzzSeed    []byte
+	TB          testing.TB
+	FauxMerkle  bool
 }
 
 func (c Config) shallowCopy() Config {

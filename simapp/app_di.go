@@ -4,6 +4,7 @@ package simapp
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	"io"
 	"path/filepath"
 
@@ -56,6 +57,7 @@ var DefaultNodeHome string
 var (
 	_ runtime.AppI            = (*SimApp)(nil)
 	_ servertypes.Application = (*SimApp)(nil)
+	_ simsx.SimulationApp     = (*SimApp)(nil)
 )
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
@@ -405,4 +407,8 @@ func BlockedAddresses() map[string]bool {
 	}
 
 	return result
+}
+
+func (app *SimApp) GetBaseApp() *baseapp.BaseApp {
+	return app.BaseApp
 }

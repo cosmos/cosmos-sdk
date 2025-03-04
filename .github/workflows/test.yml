@@ -178,7 +178,7 @@ jobs:
       - name: test-sim-nondeterminism
         if: env.GIT_DIFF
         run: |
-          make test-sim-nondeterminism
+          COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-nondeterminism
 
   ###############################
   #### Cosmos SDK Submodules ####

@@ -181,7 +181,6 @@ func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		_, _, log := ABCIInfo(spec.src, spec.debug)
 		s.Require().Equal(spec.exp, log, msg)
 	}

@@ -38,22 +38,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Bug Fixes 
+### Bug Fixes
 
-* (types/query) [#23884](https://github.com/cosmos/cosmos-sdk/pull/23884) Fix NPE in query pagination.
+* (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.
+* (query) [#23884](https://github.com/cosmos/cosmos-sdk/pull/23884) Fix NPE in query pagination.
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20
 
 ### Bug Fixes
 
-<<<<<<< HEAD
 * [GHSA-x5vx-95h7-rv4p](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-x5vx-95h7-rv4p) Fix Group module can halt chain when handling a malicious proposal
-=======
-* (x/auth) [#23741](https://github.com/cosmos/cosmos-sdk/pull/23741) Support legacy global AccountNumber.
-* (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.
-* (types/query) [#23880](https://github.com/cosmos/cosmos-sdk/pull/23880) Fix NPE in query pagination.
->>>>>>> 05df209fa (fix(baseapp): ensure finalize block response is not empty (#23879))
-
 
 ## [v0.50.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.11) - 2024-12-16
 

@@ -2,7 +2,16 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-export VERSION := $(shell echo $(shell git describe --tags --always --match "v*") | sed 's/^v//')
+
+# Ensure all tags are fetched
+VERSION_RAW := $(shell git fetch --tags --force >/dev/null 2>&1; git describe --tags --always --match "v*")
+VERSION := $(shell echo $(VERSION_RAW) | sed -E 's/^v?([0-9]+\.[0-9]+\.[0-9]+.*)/\1/')
+
+# Fallback if the version is just a commit hash (not semver-like)
+ifeq ($(findstring -,$(VERSION)),)  # No "-" means it's just a hash
+    VERSION := 0.0.0-$(VERSION_RAW)
+endif
+export VERSION
 export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -228,7 +237,7 @@ $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
 ARGS += -tags "$(test_tags)"
-SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort)
+SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort | grep -v './tests/systemtests')
 CURRENT_DIR = $(shell pwd)
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))

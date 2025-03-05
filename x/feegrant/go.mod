@@ -2,8 +2,6 @@ module cosmossdk.io/x/feegrant
 
 go 1.23.0
 
-toolchain go1.24.0
-
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/core v0.11.0

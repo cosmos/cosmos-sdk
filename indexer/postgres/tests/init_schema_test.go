@@ -2,7 +2,6 @@ package tests
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 
@@ -69,11 +68,7 @@ func testInitSchema(t *testing.T, disableRetainDeletions bool, goldenFileName st
 
 func createTestDB(t *testing.T) (connectionUrl string) {
 	t.Helper()
-	tempDir, err := os.MkdirTemp("", "postgres-indexer-test")
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, os.RemoveAll(tempDir))
-	})
+	tempDir := t.TempDir()
 
 	dbPort := freeport.GetOne(t)
 	pgConfig := embeddedpostgres.DefaultConfig().

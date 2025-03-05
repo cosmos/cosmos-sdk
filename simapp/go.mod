@@ -2,8 +2,6 @@ module cosmossdk.io/simapp
 
 go 1.23.0
 
-toolchain go1.24.0
-
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e

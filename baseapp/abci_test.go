@@ -1442,14 +1442,14 @@ func TestBaseAppCreateQueryContextRejectsFutureHeights(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	proves := []bool{
 		false, true,
 	}
 	for _, prove := range proves {
 		t.Run(fmt.Sprintf("prove=%t", prove), func(t *testing.T) {
-			sctx, err := app.createQueryContext(30, true)
+			sctx, err := app.CreateQueryContext(30, true)
 			require.Error(t, err)
 			require.Equal(t, sctx, sdk.Context{})
 		})
@@ -1861,10 +1861,10 @@ func TestABCI_HaltChain(t *testing.T) {
 				}
 			}()
 
-			app := NewBaseApp(
+			app := baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetHaltHeight(tc.haltHeight),
-				SetHaltTime(tc.haltTime),
+				baseapp.SetHaltHeight(tc.haltHeight),
+				baseapp.SetHaltTime(tc.haltTime),
 			)
 
 			app.InitChain(abci.RequestInitChain{

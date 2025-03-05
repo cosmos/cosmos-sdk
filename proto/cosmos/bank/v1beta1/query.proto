@@ -214,7 +214,6 @@ message QuerySpendableBalanceByDenomResponse {
   cosmos.base.v1beta1.Coin balance = 1;
 }
 
-
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 // method.
 message QueryTotalSupplyRequest {

@@ -38,8 +38,8 @@ message WeightedVoteOption {
   // option defines the valid vote options, it must not contain duplicate vote options.
   VoteOption option = 1;
 
-  // weight is the vote weight associated with the vote option. 
-  string     weight = 2 [
+  // weight is the vote weight associated with the vote option.
+  string weight = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -55,7 +55,7 @@ message TextProposal {
   option (gogoproto.equal) = true;
 
   // title of the proposal.
-  string title       = 1;
+  string title = 1;
 
   // description associated with the proposal.
   string description = 2;
@@ -68,11 +68,11 @@ message Deposit {
   option (gogoproto.equal)           = false;
 
   // proposal_id defines the unique id of the proposal.
-  uint64   proposal_id                     = 1;
-  
+  uint64 proposal_id = 1;
+
   // depositor defines the deposit addresses from the proposals.
-  string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  
+  string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // amount to be deposited by depositor.
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
@@ -86,26 +86,26 @@ message Proposal {
   option (gogoproto.equal) = true;
 
   // proposal_id defines the unique id of the proposal.
-  uint64              proposal_id = 1;
+  uint64 proposal_id = 1;
 
   // content is the proposal's content.
   google.protobuf.Any content = 2 [(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"];
   // status defines the proposal status.
-  ProposalStatus      status      = 3;
-  
+  ProposalStatus status = 3;
+
   // final_tally_result is the final tally result of the proposal. When
   // querying a proposal via gRPC, this field is not populated until the
   // proposal's voting period has ended.
-  TallyResult               final_tally_result = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  
+  TallyResult final_tally_result = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
   // submit_time is the time of proposal submission.
-  google.protobuf.Timestamp submit_time        = 5
+  google.protobuf.Timestamp submit_time = 5
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  
+
   // deposit_end_time is the end time for deposition.
   google.protobuf.Timestamp deposit_end_time = 6
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  
+
   // total_deposit is the total deposit on the proposal.
   repeated cosmos.base.v1beta1.Coin total_deposit = 7 [
     (gogoproto.nullable)     = false,
@@ -116,7 +116,7 @@ message Proposal {
   // voting_start_time is the starting time to vote on a proposal.
   google.protobuf.Timestamp voting_start_time = 8
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  
+
   // voting_end_time is the end time of voting on a proposal.
   google.protobuf.Timestamp voting_end_time = 9
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
@@ -186,14 +186,14 @@ message Vote {
 
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1 [(gogoproto.jsontag) = "id", (amino.field_name) = "id", (amino.dont_omitempty) = true];
-  
+
   // voter is the voter address of the proposal.
-  string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Deprecated: Prefer to use `options` instead. This field is set in queries
   // if and only if `len(options) == 1` and that option has weight 1. In all
   // other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
   VoteOption option = 3 [deprecated = true];
-  
+
   // options is the weighted vote options.
   //
   // Since: cosmos-sdk 0.43

@@ -63,9 +63,10 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 // SetTimeoutTimestamp sets a timeout timestamp in the tx.
 func (b *AuxTxBuilder) SetTimeoutTimestamp(timestamp time.Time) {
 	b.checkEmptyFields()
-
-	b.body.TimeoutTimestamp = timestamppb.New(timestamp)
-	b.auxSignerData.SignDoc.BodyBytes = nil
+	if !timestamp.IsZero() && timestamp.Unix() != 0 {
+		b.body.TimeoutTimestamp = timestamppb.New(timestamp)
+		b.auxSignerData.SignDoc.BodyBytes = nil
+	}
 }
 
 // SetMsgs sets an array of Msgs in the tx.

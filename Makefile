@@ -261,7 +261,7 @@ ifeq (sims_legacy,$(findstring sims_legacy,$(COSMOS_SIMS_OPTIONS)))
   sim_tags += sims_legacy
 endif
 
-SIM_ARGS += -tags "$(sim_tags)"
+SIM_ARGS += -tags "$(sim_tags)" sims
 
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."

@@ -1,4 +1,4 @@
-//go:build !sims_legacy
+//go:build !sims_legacy && sims
 
 package simapp
 

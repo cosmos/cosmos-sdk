@@ -88,6 +88,10 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 	nextParams := params.Update(&consensusParams)
 
+	// NOTE: do not override the version params
+	// consensusParams.Version always has DefaultConsensusParams version: 0
+	// AppVersion is updated by x/upgrade during migrations
+	nextParams.Version = params.Version
 	if err := nextParams.ValidateBasic(); err != nil {
 		return nil, err
 	}

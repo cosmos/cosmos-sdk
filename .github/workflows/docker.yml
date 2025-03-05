@@ -62,12 +62,7 @@ jobs:
       - name: Publish to GitHub Packages
         uses: docker/build-push-action@v4
         with:
-<<<<<<< HEAD
-          platforms: linux/amd64,linux/arm64
-=======
-          project: gnm1jqptpw
           platforms: linux/amd64,linux/arm64,darwin/arm64,darwin/amd64
->>>>>>> 4258cabde (ci: add darwin to platforms (#23905))
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha

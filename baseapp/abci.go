@@ -855,6 +855,9 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
 	defer func() {
+		if res == nil {
+			return
+		}
 		// call the streaming service hooks with the FinalizeBlock messages
 		for _, streamingListener := range app.streamingManager.ABCIListeners {
 			if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {

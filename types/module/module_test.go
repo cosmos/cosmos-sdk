@@ -204,8 +204,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx)).AnyTimes().Return(json.RawMessage(`{"key2": "value2"}`), nil)
 
 	want := map[string]json.RawMessage{
-		"module1":          json.RawMessage(`{"key1": "value1"}`),
-		"module2":          json.RawMessage(`{"key2": "value2"}`),
+		"module1": json.RawMessage(`{"key1": "value1"}`),
+		"module2": json.RawMessage(`{"key2": "value2"}`),
 		"mockCoreAppModule": json.RawMessage(`{
   "someField": "someKey"
 }`),

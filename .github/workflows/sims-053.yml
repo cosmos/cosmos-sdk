@@ -1,6 +1,6 @@
 name: Sims release/0.53.x
 # Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
-# This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
+# This workflow will run on a  cron basis and on releases
 on:
   schedule:
     - cron: "0 0,12 * * *"
@@ -39,9 +39,12 @@ jobs:
         with:
           go-version: "1.24"
           check-latest: true
-      - name: test-sim-import-export
+      - name: test-sim-import-export (legacy)
         run: |
           COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-import-export
+      - name: test-sim-import-export (non-legacy)
+        run: |
+          make test-sim-import-export
 
   test-sim-after-import:
     runs-on: depot-ubuntu-22.04-16
@@ -55,9 +58,12 @@ jobs:
         with:
           go-version: "1.24"
           check-latest: true
-      - name: test-sim-after-import
+      - name: test-sim-after-import (legacy)
         run: |
           COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-after-import
+      - name: test-sim-after-import (non-legacy)
+        run: |
+          make test-sim-after-import
 
   test-sim-deterministic:
     runs-on: depot-ubuntu-22.04-16
@@ -71,9 +77,12 @@ jobs:
         with:
           go-version: "1.24"
           check-latest: true
-      - name: test-sim-nondeterminism
+      - name: test-sim-nondeterminism (legacy)
         run: |
           COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-nondeterminism
+      - name: test-sim-nondeterminism (non-legacy)
+        run: |
+          make test-sim-nondeterminism
 
   test-sim-multi-seed-short:
     runs-on: depot-ubuntu-22.04-16
@@ -87,7 +96,10 @@ jobs:
         with:
           go-version: "1.24"
           check-latest: true
-      - name: test-sim-multi-seed-short
+      - name: test-sim-multi-seed-short (legacy)
+        run: |
+          COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-multi-seed-short
+      - name: test-sim-multi-seed-short (non-legacy)
         run: |
           make test-sim-multi-seed-short
 

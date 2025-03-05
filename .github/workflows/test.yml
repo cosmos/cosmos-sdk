@@ -175,10 +175,14 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
-      - name: test-sim-nondeterminism
+      - name: test-sim-nondeterminism (legacy)
         if: env.GIT_DIFF
         run: |
           COSMOS_SIMS_OPTIONS=sims_legacy make test-sim-nondeterminism
+      - name: test-sim-nondeterminism (non-legacy)
+        if: env.GIT_DIFF
+        run: |
+          make test-sim-nondeterminism
 
   ###############################
   #### Cosmos SDK Submodules ####

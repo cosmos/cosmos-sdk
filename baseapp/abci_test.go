@@ -43,6 +43,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+type mockABCIListener struct {
+	ListenCommitFn func(context.Context, abci.ResponseCommit, []*storetypes.StoreKVPair) error
+}
+
+func (m mockABCIListener) ListenFinalizeBlock(_ context.Context, _ abci.RequestFinalizeBlock, _ abci.ResponseFinalizeBlock) error {
+	return nil
+}
+
+func (m *mockABCIListener) ListenCommit(ctx context.Context, commit abci.ResponseCommit, pairs []*storetypes.StoreKVPair) error {
+	return m.ListenCommitFn(ctx, commit, pairs)
+}
+
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 
@@ -2492,4 +2504,19 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+}
+
+func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(1))
+	suite.baseApp.SetStreamingManager(storetypes.StreamingManager{
+		ABCIListeners: []storetypes.ABCIListener{
+			&mockABCIListener{},
+		},
+	})
+
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 2,
+	})
+	require.Empty(t, res)
+	require.NotEmpty(t, err)
 }

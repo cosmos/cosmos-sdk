@@ -91,13 +91,15 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	}
 
 	signDoc := &aminojsonpb.AminoSignDoc{
-		AccountNumber: signerData.AccountNumber,
-		TimeoutHeight: body.TimeoutHeight,
-		ChainId:       signerData.ChainID,
-		Sequence:      signerData.Sequence,
-		Memo:          body.Memo,
-		Msgs:          txData.Body.Messages,
-		Fee:           fee,
+		AccountNumber:    signerData.AccountNumber,
+		TimeoutHeight:    body.TimeoutHeight,
+		ChainId:          signerData.ChainID,
+		Sequence:         signerData.Sequence,
+		Memo:             body.Memo,
+		Msgs:             txData.Body.Messages,
+		Unordered:        txData.Body.Unordered,
+		TimeoutTimestamp: txData.Body.TimeoutTimestamp,
+		Fee:              fee,
 	}
 
 	return h.encoder.Marshal(signDoc)

@@ -100,12 +100,7 @@ func (v versionModifier) SetAppVersion(ctx context.Context, version uint64) erro
 }
 
 func (v versionModifier) AppVersion(ctx context.Context) (uint64, error) {
-	params, err := v.Keeper.Params(ctx, nil)
-	if err != nil {
-		return 0, err
-	}
-
-	return params.Params.Version.GetApp(), nil
+	return v.Keeper.AppVersion(ctx)
 }
 
 func ProvideAppVersionModifier(k keeper.Keeper) server.VersionModifier {

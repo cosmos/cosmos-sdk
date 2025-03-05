@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#23720](https://github.com/cosmos/cosmos-sdk/pull/23720) Get block height from db after node execution fails
+
 ## v1.7.1 - 2025-01-12
 
 ### Bug Fixes

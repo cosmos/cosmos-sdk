@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -33,6 +34,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -1000,4 +1002,27 @@ func TestABCI_FinalizeWithInvalidTX(t *testing.T) {
 	require.NoError(t, gotErr)
 	require.Len(t, gotRsp.TxResults, 1)
 	require.Equal(t, uint32(2), gotRsp.TxResults[0].Code)
+}
+
+func TestErrorsJoinAndABCIInfo(t *testing.T) {
+	tErr := sdkerrors.ErrInsufficientFunds
+	tErrCode := tErr.ABCICode()
+	tests := []struct {
+		name string
+		err  error
+		exp  uint32
+	}{
+		{name: "nil", err: nil, exp: 0},
+		{name: "ErrInsufficientFunds", err: tErr, exp: tErrCode},
+		{name: "joined ErrInsufficientFunds", err: errors.Join(tErr), exp: tErrCode},
+		{name: "joined nil ErrInsufficientFunds", err: errors.Join(nil, tErr), exp: tErrCode},
+		{name: "joined ErrInsufficientFunds nil", err: errors.Join(tErr, nil), exp: tErrCode},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, act, _ := errorsmod.ABCIInfo(tc.err, false)
+			require.Equal(t, tc.exp, act)
+		})
+	}
 }

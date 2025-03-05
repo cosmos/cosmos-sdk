@@ -56,6 +56,16 @@ func abciInfo(err error) (code uint32, codespace string) {
 		return SuccessABCICode, ""
 	}
 
+	if c, ok := err.(interface{ Unwrap() []error }); ok {
+		errs := c.Unwrap()
+		for _, e := range errs {
+			if e != nil {
+				err = e
+				break
+			}
+		}
+	}
+
 	var customErr *Error
 
 	if errors.As(err, &customErr) {

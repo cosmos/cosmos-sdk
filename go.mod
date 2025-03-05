@@ -40,7 +40,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/muesli/termenv v0.15.2
-	github.com/prometheus/client_golang v1.20.5
+	github.com/prometheus/client_golang v1.21.1
 	github.com/prometheus/common v0.62.0
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1

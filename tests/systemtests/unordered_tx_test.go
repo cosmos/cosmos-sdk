@@ -3,7 +3,9 @@
 package systemtests
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -51,4 +53,95 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	require.Eventually(t, func() bool {
 		return cli.QueryBalance(account2Addr, "stake") == 5000
 	}, 10*systest.Sut.BlockTime(), 200*time.Millisecond, "TX was not executed before timeout")
+}
+
+func TestTxBackwardsCompatability(t *testing.T) {
+	// Scenario:
+	// A transaction generated from a v0.53 chain without unordered and timeout_timestamp flags set should succeed.
+	// Conversely, a transaction generated from a v0.53 chain with unordered and timeout_timestamp flags set should fail.
+	var (
+		denom                = "stake"
+		transferAmount int64 = 1000
+	)
+	systest.Sut.ResetChain(t)
+
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+
+	systest.Sut.StartChain(t)
+
+	// create unsigned tx
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
+	txFile := systest.StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
+	signedTxFile := systest.StoreTempFile(t, []byte(res))
+	// encodedTx := cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
+
+	systest.Sut.StopChain()
+
+	// Now we're going to switch to a v.50 chain.
+	legacyBinary := systest.WorkDir + "/binaries/simd_v50"
+	systest.Sut.SetExecBinary(legacyBinary)
+	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
+	systest.Sut.SetupChain()
+	systest.Sut.StartChain(t)
+
+	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	res = cli.Run("tx", "broadcast", signedTxFile.Name())
+	systest.RequireTxSuccess(t, res)
+
+	//res = cli.CustomQuery("tx", "decode", fmt.Sprintf(`%s`, encodedTx))
+	//res, err := fixJSONIntegerResponse(res)
+	//require.NoError(t, err)
+	//tx := &txtypes.Tx{}
+	//err = json.Unmarshal([]byte(res), tx)
+	//require.NoError(t, err)
+}
+
+func fixJSONIntegerResponse(input string) (string, error) {
+	var data interface{}
+	if err := json.Unmarshal([]byte(input), &data); err != nil {
+		return "", fmt.Errorf("invalid JSON: %w", err)
+	}
+
+	processed := doReplace(data, []string{})
+
+	result, err := json.Marshal(processed)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	return string(result), nil
+}
+
+// replaces integers in data only if we're not in "fee.amount"
+func doReplace(data interface{}, path []string) interface{} {
+	switch v := data.(type) {
+	case map[string]interface{}:
+		for key, val := range v {
+			newPath := append(path, key)
+			v[key] = doReplace(val, newPath)
+		}
+	case []interface{}:
+		for i, val := range v {
+			v[i] = doReplace(val, path)
+		}
+	case string:
+		// we don't want to change it if its fee.amount
+		if len(path) >= 3 &&
+			path[len(path)-3] == "fee" &&
+			path[len(path)-2] == "amount" {
+			return v
+		}
+		if num, err := strconv.Atoi(v); err == nil {
+			return num
+		}
+	}
+	return data
 }

@@ -204,8 +204,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx)).AnyTimes().Return(json.RawMessage(`{"key2": "value2"}`), nil)
 
 	want := map[string]json.RawMessage{
-		"module1": json.RawMessage(`{"key1": "value1"}`),
-		"module2": json.RawMessage(`{"key2": "value2"}`),
+		"module1":          json.RawMessage(`{"key1": "value1"}`),
+		"module2":          json.RawMessage(`{"key2": "value2"}`),
 		"mockCoreAppModule": json.RawMessage(`{
   "someField": "someKey"
 }`),
@@ -291,8 +291,12 @@ func TestCoreAPIManager_InitGenesis(t *testing.T) {
 	_, err := mm.InitGenesis(ctx, genesisData)
 	require.ErrorContains(t, err, "validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction")
 
-	// TODO: add happy path test. We are not returning any validator updates, this will come with the services.
 	// REF: https://github.com/cosmos/cosmos-sdk/issues/14688
+}
+
+// Happy path test for CoreAPIManager_InitGenesis
+func TestCoreAPIManager_InitGenesisHappyPath(t *testing.T) {
+	t.Skip("Happy path test is not fully implemented. We currently do not return any validator updates.")
 }
 
 func TestCoreAPIManager_ExportGenesis(t *testing.T) {

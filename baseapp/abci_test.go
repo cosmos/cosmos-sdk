@@ -2779,3 +2779,18 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 }
+
+func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(1))
+	suite.baseApp.SetStreamingManager(storetypes.StreamingManager{
+		ABCIListeners: []storetypes.ABCIListener{
+			&mockABCIListener{},
+		},
+	})
+
+	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
+		Height: 2,
+	})
+	require.Empty(t, res)
+	require.NotEmpty(t, err)
+}

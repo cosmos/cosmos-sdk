@@ -14,7 +14,6 @@ import (
 // Ensures that CollectTx correctly traverses directories and won't error out on encountering
 // a directory during traversal of the first level. See issue https://github.com/cosmos/cosmos-sdk/issues/6788.
 func TestCollectTxsHandlesDirectories(t *testing.T) {
-
 	testDir := t.TempDir()
 
 	// 1. We'll insert a directory as the first element before JSON file.

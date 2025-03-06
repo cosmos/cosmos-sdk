@@ -5,7 +5,6 @@ package systemtests
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
@@ -62,24 +61,27 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	var (
 		denom                = "stake"
 		transferAmount int64 = 1000
-		testSeed = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure""
+		testSeed             = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
 	)
 	systest.Sut.ResetChain(t)
-	
+
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
-	receiverAddr := cli.AddKeyFromSeed("account1", testSeed)
+	senderAddr := cli.AddKeyFromSeed("account1", testSeed)
+	systest.Sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", senderAddr, "10000000000stake"},
+	)
 
 	systest.Sut.StartChain(t)
 
 	// create unsigned tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", receiverAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := systest.StoreTempFile(t, []byte(res))
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+receiverAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0)) // might have to remove keyring test.
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+senderAddr, "--chain-id="+cli.ChainID(), "--home="+systest.Sut.NodeDir(0))
 
-	// fix the transaction. we need to remove the fields. for now. this should be fixed later.
+	// fix the transaction body. we need to remove the fields. for now. this should be fixed later.
 	var transaction map[string]any
 	err := json.Unmarshal([]byte(res), &transaction)
 	require.NoError(t, err)
@@ -99,51 +101,19 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	legacySut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, legacySut))
 	legacySut.SetupChain()
 	legacySut.SetExecBinary(legacyBinary)
-	legacySut.StartChain(t)
-
 	cli = systest.NewCLIWrapper(t, legacySut, systest.Verbose)
+	legacySut.ModifyGenesisCLI(t,
+		// add some bogus accounts because the v53 chain had 4 nodes which takes account numbers 1-4.
+		[]string{"genesis", "add-genesis-account", cli.AddKey("foo"), "10000000000stake"},
+		[]string{"genesis", "add-genesis-account", cli.AddKey("bar"), "10000000000stake"},
+		[]string{"genesis", "add-genesis-account", cli.AddKey("baz"), "10000000000stake"},
+		// we need our sender to be account 5 because thats how it was signed in the v53 scenario.
+		[]string{"genesis", "add-genesis-account", senderAddr, "10000000000stake"},
+	)
+	senderAddr = cli.AddKeyFromSeed("account1", testSeed)
+	legacySut.StartChain(t)
+	t.Logf("legacy sender address: %s", senderAddr)
+
 	res = cli.Run("tx", "broadcast", signedTxFile.Name())
 	systest.RequireTxSuccess(t, res)
-}
-
-func fixJSONIntegerResponse(input string) (string, error) {
-	var data interface{}
-	if err := json.Unmarshal([]byte(input), &data); err != nil {
-		return "", fmt.Errorf("invalid JSON: %w", err)
-	}
-
-	processed := doReplace(data, []string{})
-
-	result, err := json.Marshal(processed)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal JSON: %w", err)
-	}
-
-	return string(result), nil
-}
-
-// replaces integers in data only if we're not in "fee.amount"
-func doReplace(data interface{}, path []string) interface{} {
-	switch v := data.(type) {
-	case map[string]interface{}:
-		for key, val := range v {
-			newPath := append(path, key)
-			v[key] = doReplace(val, newPath)
-		}
-	case []interface{}:
-		for i, val := range v {
-			v[i] = doReplace(val, path)
-		}
-	case string:
-		// we don't want to change it if its fee.amount
-		if len(path) >= 3 &&
-			path[len(path)-3] == "fee" &&
-			path[len(path)-2] == "amount" {
-			return v
-		}
-		if num, err := strconv.Atoi(v); err == nil {
-			return num
-		}
-	}
-	return data
 }

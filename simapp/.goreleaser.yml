@@ -1,0 +1,34 @@
+project_name: simd
+
+release:
+  disable: false
+  name_template: "{{.Tag}}"
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./simd
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - name_template: '{{ replace .Version "simd/" "simd-" }}-{{ .Os }}-{{ .Arch }}'
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: 'SHA256SUMS-{{ replace .Version "simd/" "simd-" }}.txt'
+  algorithm: sha256
+
+changelog:
+  skip: true

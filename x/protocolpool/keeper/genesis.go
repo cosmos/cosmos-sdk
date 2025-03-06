@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
-	currentTime := k.HeaderService.HeaderInfo(ctx).Time
+func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
+	currentTime := ctx.BlockTime()
 
 	err := k.Params.Set(ctx, *data.Params)
 	if err != nil {

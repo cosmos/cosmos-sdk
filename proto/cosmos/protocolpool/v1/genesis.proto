@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.protocolpool.v1;
 
-option go_package = "cosmossdk.io/x/protocolpool/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/protocolpool/types";
 
 import "cosmos/protocolpool/v1/types.proto";
 import "gogoproto/gogo.proto";

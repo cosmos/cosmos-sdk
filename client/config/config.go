@@ -2,10 +2,7 @@ package config
 
 import (
 	"crypto/tls"
-<<<<<<< HEAD
 	"errors"
-=======
->>>>>>> 319e6e4f5e (feat: Integrate grpc configuration into client.toml (#19905))
 	"fmt"
 	"os"
 	"path/filepath"
@@ -159,11 +156,7 @@ func getGRPCClient(grpcConfig GRPCConfig) (*grpc.ClientConn, error) {
 	}
 
 	dialOptions := []grpc.DialOption{transport}
-<<<<<<< HEAD
-	grpcClient, err := grpc.NewClient(grpcConfig.Address, dialOptions...)
-=======
 	grpcClient, err := grpc.Dial(grpcConfig.Address, dialOptions...)
->>>>>>> 319e6e4f5e (feat: Integrate grpc configuration into client.toml (#19905))
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial gRPC server at %s: %w", grpcConfig.Address, err)
 	}

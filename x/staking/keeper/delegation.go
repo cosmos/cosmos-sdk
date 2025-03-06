@@ -273,7 +273,11 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 		}
 		return false
 	})
-	return unbonding, err
+	if err != nil {
+		return unbonding, err
+	}
+
+	return unbonding, nil
 }
 
 // IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.

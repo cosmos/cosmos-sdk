@@ -26,7 +26,9 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (*types.MsgClaimBudgetResponse, error) {
-	amount, err := k.claimFunds(ctx, msg.RecipientAddress)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	amount, err := k.claimFunds(sdkCtx, msg.RecipientAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +37,8 @@ func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (
 }
 
 func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmitBudgetProposal) (*types.MsgSubmitBudgetProposalResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
 		return nil, err
 	}
@@ -44,14 +48,14 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 		return nil, err
 	}
 
-	budgetProposal, err := k.validateAndUpdateBudgetProposal(ctx, *msg)
+	budgetProposal, err := k.validateAndUpdateBudgetProposal(sdkCtx, *msg)
 	if err != nil {
 		return nil, err
 	}
 
 	// set budget proposal in state
 	// Note: If two budgets to the same address are created, the budget would be updated with the new budget.
-	err = k.BudgetProposal.Set(ctx, recipient, *budgetProposal)
+	err = k.BudgetProposal.Set(sdkCtx, recipient, *budgetProposal)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +63,8 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 }
 
 func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
@@ -69,7 +75,7 @@ func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 	}
 
 	// send funds to community pool module account
-	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
+	if err := k.Keeper.FundCommunityPool(sdkCtx, msg.Amount, depositor); err != nil {
 		return nil, err
 	}
 
@@ -77,6 +83,8 @@ func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 }
 
 func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
@@ -91,16 +99,18 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	}
 
 	// distribute funds from community pool module account
-	if err := k.Keeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.Keeper.DistributeFromCommunityPool(sdkCtx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 
-	k.Logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
+	sdkCtx.Logger().Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
 
 func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
@@ -110,7 +120,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
-	has, err := k.ContinuousFund.Has(ctx, recipient)
+	has, err := k.ContinuousFund.Has(sdkCtx, recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +129,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Validate the message fields
-	err = k.validateContinuousFund(ctx, *msg)
+	err = k.validateContinuousFund(sdkCtx, *msg)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +137,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	// Check if total funds percentage exceeds 100%
 	// If exceeds, we should not setup continuous fund proposal.
 	totalStreamFundsPercentage := math.LegacyZeroDec()
-	err = k.Keeper.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+	err = k.Keeper.ContinuousFund.Walk(sdkCtx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value.Percentage)
 		return false, nil
 	})
@@ -140,7 +150,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Distribute funds to avoid giving this new fund more than it should get
-	if err := k.IterateAndUpdateFundsDistribution(ctx); err != nil {
+	if err := k.IterateAndUpdateFundsDistribution(sdkCtx); err != nil {
 		return nil, err
 	}
 
@@ -152,12 +162,12 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Set continuous fund to the state
-	err = k.ContinuousFund.Set(ctx, recipient, cf)
+	err = k.ContinuousFund.Set(sdkCtx, recipient, cf)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.RecipientFundDistribution.Set(ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
+	err = k.RecipientFundDistribution.Set(sdkCtx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 	if err != nil {
 		return nil, err
 	}
@@ -166,18 +176,20 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 }
 
 func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWithdrawContinuousFund) (*types.MsgWithdrawContinuousFundResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
 
-	err = k.IterateAndUpdateFundsDistribution(ctx)
+	err = k.IterateAndUpdateFundsDistribution(sdkCtx)
 	if err != nil {
 		return nil, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 	}
 
 	// withdraw continuous fund
-	withdrawnAmount, err := k.withdrawRecipientFunds(ctx, recipient)
+	withdrawnAmount, err := k.withdrawRecipientFunds(sdkCtx, recipient)
 	if err != nil {
 		return nil, fmt.Errorf("error while withdrawing recipient funds for recipient: %w", err)
 	}
@@ -186,6 +198,8 @@ func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWit
 }
 
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
@@ -195,25 +209,25 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, err
 	}
 
-	canceledHeight := k.HeaderService.HeaderInfo(ctx).Height
-	canceledTime := k.HeaderService.HeaderInfo(ctx).Time
+	canceledHeight := sdkCtx.BlockHeight()
+	canceledTime := sdkCtx.BlockTime()
 
 	// distribute funds before withdrawing
-	if err = k.IterateAndUpdateFundsDistribution(ctx); err != nil {
+	if err = k.IterateAndUpdateFundsDistribution(sdkCtx); err != nil {
 		return nil, err
 	}
 
 	// withdraw funds if any are allocated
-	withdrawnFunds, err := k.withdrawRecipientFunds(ctx, recipient)
+	withdrawnFunds, err := k.withdrawRecipientFunds(sdkCtx, recipient)
 	if err != nil && !errorspkg.Is(err, types.ErrNoRecipientFound) {
 		return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
-	if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
+	if err := k.ContinuousFund.Remove(sdkCtx, recipient); err != nil {
 		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
-	if err := k.RecipientFundDistribution.Remove(ctx, recipient); err != nil {
+	if err := k.RecipientFundDistribution.Remove(sdkCtx, recipient); err != nil {
 		return nil, fmt.Errorf("failed to remove recipient fund distribution for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
@@ -226,11 +240,13 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 }
 
 func (k MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
 		return nil, err
 	}
 
-	if err := k.Params.Set(ctx, msg.Params); err != nil {
+	if err := k.Params.Set(sdkCtx, msg.Params); err != nil {
 		return nil, err
 	}
 

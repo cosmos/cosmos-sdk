@@ -7,39 +7,40 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	poolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
-	pooltestutil "github.com/cosmos/cosmos-sdk/x/protocolpool/testutil"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	poolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
+	pooltestutil "github.com/cosmos/cosmos-sdk/x/protocolpool/testutil"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 var (
 	poolAcc      = authtypes.NewEmptyModuleAccount(types.ModuleName)
 	streamAcc    = authtypes.NewEmptyModuleAccount(types.StreamAccount)
 	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolDistrAccount)
+	
+	recipientAddr = sdk.AccAddress("to1__________________")
+
+	fooCoin  = sdk.NewInt64Coin("foo", 100)
+	fooCoin2 = sdk.NewInt64Coin("foo", 50)
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx         sdk.Context
-	environment appmodule.Environment
-	poolKeeper  poolkeeper.Keeper
-	authKeeper  *pooltestutil.MockAccountKeeper
-	bankKeeper  *pooltestutil.MockBankKeeper
+	ctx        sdk.Context
+	poolKeeper poolkeeper.Keeper
+	authKeeper *pooltestutil.MockAccountKeeper
+	bankKeeper *pooltestutil.MockBankKeeper
 
 	msgServer   types.MsgServer
 	queryServer types.QueryServer
@@ -48,10 +49,9 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -70,14 +70,13 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
-		environment,
+		storeService,
 		accountKeeper,
 		bankKeeper,
 		authority,
 	)
 	s.ctx = ctx
 	s.poolKeeper = poolKeeper
-	s.environment = environment
 
 	err = s.poolKeeper.Params.Set(ctx, types.Params{
 		EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},

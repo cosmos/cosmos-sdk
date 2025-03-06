@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -76,7 +75,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 	return nil
 }
 
-func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
+func (k Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 	// refresh all funds
 	if err := k.IterateAndUpdateFundsDistribution(ctx); err != nil {
 		return nil, err

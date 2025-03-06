@@ -1,26 +1,25 @@
 package keeper
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sort"
 	"time"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 type Keeper struct {
-	appmodule.Environment
+	storeService store.KVStoreService
 
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
@@ -44,7 +43,7 @@ const (
 	errModuleAccountNotSet = "%s module account has not been set"
 )
 
-func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, authority string,
+func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, bk types.BankKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -59,10 +58,10 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		panic(fmt.Sprintf(errModuleAccountNotSet, types.ProtocolPoolDistrAccount))
 	}
 
-	sb := collections.NewSchemaBuilder(env.KVStoreService)
+	sb := collections.NewSchemaBuilder(storeService)
 
 	keeper := Keeper{
-		Environment:               env,
+		storeService:              storeService,
 		authKeeper:                ak,
 		bankKeeper:                bk,
 		cdc:                       cdc,
@@ -90,24 +89,24 @@ func (k Keeper) GetAuthority() string {
 }
 
 // FundCommunityPool allows an account to directly fund the community fund pool.
-func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender []byte) error {
+func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender []byte) error {
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
 
 // DistributeFromCommunityPool distributes funds from the protocolpool module account to
 // a receiver address.
-func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr []byte) error {
+func (k Keeper) DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr []byte) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 
 // DistributeFromStreamFunds distributes funds from the protocolpool's stream module account to
 // a receiver address.
-func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins, receiveAddr []byte) error {
+func (k Keeper) DistributeFromStreamFunds(ctx sdk.Context, amount sdk.Coins, receiveAddr []byte) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.StreamAccount, receiveAddr, amount)
 }
 
 // GetCommunityPool gets the community pool balance.
-func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
+func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error) {
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	if moduleAccount == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ModuleName)
@@ -115,7 +114,7 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
 
-func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (sdk.Coins, error) {
+func (k Keeper) withdrawRecipientFunds(ctx sdk.Context, recipient []byte) (sdk.Coins, error) {
 	// get allocated continuous fund
 	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
@@ -139,7 +138,7 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (s
 }
 
 // SetToDistribute sets the amount to be distributed among recipients.
-func (k Keeper) SetToDistribute(ctx context.Context) error {
+func (k Keeper) SetToDistribute(ctx sdk.Context) error {
 	// Get current balance of the intermediary module account
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount)
 	if moduleAccount == nil {
@@ -201,7 +200,7 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 		return nil
 	}
 
-	if err = k.Distributions.Set(ctx, k.HeaderService.HeaderInfo(ctx).Time, types.DistributionAmount{Amount: amountToDistribute}); err != nil {
+	if err = k.Distributions.Set(ctx, ctx.BlockTime(), types.DistributionAmount{Amount: amountToDistribute}); err != nil {
 		return fmt.Errorf("error while setting Distributions: %w", err)
 	}
 
@@ -209,7 +208,7 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 	return k.LastBalance.Set(ctx, types.DistributionAmount{Amount: currentBalance})
 }
 
-func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
+func (k Keeper) IterateAndUpdateFundsDistribution(ctx sdk.Context) error {
 	// first we get all the continuous funds, and keep a list of the ones that expired so we can delete later
 	funds := []types.ContinuousFund{}
 	toDelete := [][]byte{}
@@ -217,7 +216,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		funds = append(funds, cf)
 
 		// check if the continuous fund has expired, and add it to the list of funds to delete
-		if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
+		if cf.Expiry != nil && cf.Expiry.Before(ctx.BlockTime()) {
 			toDelete = append(toDelete, key)
 		}
 
@@ -327,7 +326,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	return nil
 }
 
-func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
+func (k Keeper) claimFunds(ctx sdk.Context, recipientAddr string) (amount sdk.Coin, err error) {
 	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
 	if err != nil {
 		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
@@ -348,7 +347,7 @@ func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sd
 	return amount, nil
 }
 
-func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
+func (k Keeper) getClaimableFunds(ctx sdk.Context, recipientAddr string) (amount sdk.Coin, err error) {
 	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
 	if err != nil {
 		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
@@ -379,7 +378,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 		}
 	}
 
-	currentTime := k.HeaderService.HeaderInfo(ctx).Time
+	currentTime := ctx.BlockTime()
 
 	// Check if the distribution time has not reached
 	if budget.LastClaimedAt != nil {
@@ -396,7 +395,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 	return k.calculateClaimableFunds(ctx, recipient, budget, currentTime)
 }
 
-func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAddress, budget types.Budget, currentTime time.Time) (amount sdk.Coin, err error) {
+func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddress, budget types.Budget, currentTime time.Time) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
 	timeElapsed := currentTime.Sub(*budget.LastClaimedAt)
 
@@ -431,7 +430,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period * time.Duration(periodsPassed))
 	budget.LastClaimedAt = &nextClaimFrom
 
-	k.Logger.Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
+	ctx.Logger().Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
 	// Save the updated budget in the state
 	if err := k.BudgetProposal.Set(ctx, recipient, budget); err != nil {
@@ -441,7 +440,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	return amount, nil
 }
 
-func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
+func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
 	if bp.BudgetPerTranche.IsZero() {
 		return nil, errors.New("invalid budget proposal: budget per tranche cannot be zero")
 	}
@@ -450,7 +449,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 		return nil, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
-	currentTime := k.HeaderService.HeaderInfo(ctx).Time
+	currentTime := ctx.BlockTime()
 	if bp.StartTime.IsZero() || bp.StartTime == nil {
 		bp.StartTime = &currentTime
 	}
@@ -480,7 +479,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 }
 
 // validateContinuousFund validates the fields of the CreateContinuousFund message.
-func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateContinuousFund) error {
+func (k Keeper) validateContinuousFund(ctx sdk.Context, msg types.MsgCreateContinuousFund) error {
 	// Validate percentage
 	if msg.Percentage.IsZero() || msg.Percentage.IsNil() {
 		return errors.New("percentage cannot be zero or empty")
@@ -493,7 +492,7 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	}
 
 	// Validate expiry
-	currentTime := k.HeaderService.HeaderInfo(ctx).Time
+	currentTime := ctx.BlockTime()
 	if msg.Expiry != nil && msg.Expiry.Compare(currentTime) == -1 {
 		return errors.New("expiry time cannot be less than the current block time")
 	}
@@ -501,7 +500,7 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	return nil
 }
 
-func (k Keeper) BeginBlocker(ctx context.Context) error {
+func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 	start := telemetry.Now()
 	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 

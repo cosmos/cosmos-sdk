@@ -88,7 +88,7 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	// Now we're going to switch to a v.50 chain.
 	legacyBinary := systest.WorkDir + "/binaries/simd_v50"
 	systest.Sut.SetExecBinary(legacyBinary)
-	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
+	systest.Sut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
 	systest.Sut.StartChain(t)
 

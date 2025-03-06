@@ -11,8 +11,8 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/x/protocolpool/keeper"
-	"cosmossdk.io/x/protocolpool/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/module"

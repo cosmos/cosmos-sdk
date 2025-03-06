@@ -6,7 +6,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/protocolpool/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

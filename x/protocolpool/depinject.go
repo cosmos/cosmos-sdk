@@ -5,9 +5,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/protocolpool/keeper"
-	"cosmossdk.io/x/protocolpool/simulation"
-	"cosmossdk.io/x/protocolpool/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/simulation"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simsx"

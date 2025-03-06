@@ -49,7 +49,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements 
 
-* (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/xxxx) Add grpc client config to `client.toml`.
+* (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/23920) Add grpc client config to `client.toml`.
 
 ### Bug Fixes
 

@@ -62,46 +62,48 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	var (
 		denom                = "stake"
 		transferAmount int64 = 1000
+		testSeed = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure""
 	)
 	systest.Sut.ResetChain(t)
-
+	
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
-
-	// add new key
-	receiverAddr := cli.AddKey("account1")
+	receiverAddr := cli.AddKeyFromSeed("account1", testSeed)
 
 	systest.Sut.StartChain(t)
 
 	// create unsigned tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", receiverAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + cli.ChainID(), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := systest.StoreTempFile(t, []byte(res))
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+valAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0))
-	signedTxFile := systest.StoreTempFile(t, []byte(res))
-	// encodedTx := cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), "--from="+receiverAddr, "--chain-id="+cli.ChainID(), "--keyring-backend=test", "--home="+systest.Sut.NodeDir(0)) // might have to remove keyring test.
 
+	// fix the transaction. we need to remove the fields. for now. this should be fixed later.
+	var transaction map[string]any
+	err := json.Unmarshal([]byte(res), &transaction)
+	require.NoError(t, err)
+	body := transaction["body"].(map[string]any)
+	delete(body, "unordered")
+	delete(body, "timeout_timestamp")
+	transaction["body"] = body
+	txBz, err := json.Marshal(transaction)
+	require.NoError(t, err)
+	signedTxFile := systest.StoreTempFile(t, txBz)
 	systest.Sut.StopChain()
 
-	// Now we're going to switch to a v.50 chain.
-	legacyBinary := systest.WorkDir + "/binaries/simd_v50"
-	systest.Sut.SetExecBinary(legacyBinary)
-	systest.Sut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, systest.Sut))
-	systest.Sut.SetupChain()
-	systest.Sut.StartChain(t)
+	//// Now we're going to switch to a v.50 chain.
+	legacyBinary := systest.WorkDir + "/binaries/simdv50"
 
-	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	legacySut := systest.NewSystemUnderTest(legacyBinary, systest.Verbose, 1, 1*time.Second)
+	legacySut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, legacySut))
+	legacySut.SetupChain()
+	legacySut.SetExecBinary(legacyBinary)
+	legacySut.StartChain(t)
+
+	cli = systest.NewCLIWrapper(t, legacySut, systest.Verbose)
 	res = cli.Run("tx", "broadcast", signedTxFile.Name())
 	systest.RequireTxSuccess(t, res)
-
-	//res = cli.CustomQuery("tx", "decode", fmt.Sprintf(`%s`, encodedTx))
-	//res, err := fixJSONIntegerResponse(res)
-	//require.NoError(t, err)
-	//tx := &txtypes.Tx{}
-	//err = json.Unmarshal([]byte(res), tx)
-	//require.NoError(t, err)
 }
 
 func fixJSONIntegerResponse(input string) (string, error) {

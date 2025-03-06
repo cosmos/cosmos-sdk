@@ -153,7 +153,7 @@ func NewModifyConfigYamlInitializer(exec string, s *SystemUnderTest) *ModifyConf
 		minGasPrice:       s.minGasPrice,
 		commitTimeout:     s.CommitTimeout(),
 		log:               s.Log,
-		projectName:       s.projectName,
+		projectName:       s.ProjectName,
 	}
 }
 

@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	db "github.com/cosmos/cosmos-db"
@@ -15,6 +16,7 @@ func TestCollectionPagination(t *testing.T) {
 	sk, ctx := deps()
 	sb := collections.NewSchemaBuilder(sk)
 	m := collections.NewMap(sb, collections.NewPrefix(0), "_", collections.Uint64Key, collections.Uint64Value)
+	dummyErr := errors.New("dummy error")
 
 	for i := uint64(0); i < 300; i++ {
 		require.NoError(t, m.Set(ctx, i, i))
@@ -151,6 +153,18 @@ func TestCollectionPagination(t *testing.T) {
 			expResults: []collections.KeyValue[uint64, uint64]{
 				{Key: 295, Value: 295},
 			},
+		},
+		"filtered no key with error": {
+			req: &PageRequest{
+				Limit: 3,
+			},
+			expResp: &PageResponse{
+				NextKey: encodeKey(5),
+			},
+			filter: func(key, value uint64) (bool, error) {
+				return false, dummyErr
+			},
+			wantErr: dummyErr,
 		},
 	}
 

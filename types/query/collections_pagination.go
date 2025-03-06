@@ -104,7 +104,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V], T any](
 		return results, new(PageResponse), nil
 	}
 	// strip the prefix from next key
-	if len(pageRes.NextKey) != 0 && prefix != nil {
+	if pageRes != nil && len(pageRes.NextKey) != 0 && prefix != nil {
 		pageRes.NextKey = pageRes.NextKey[len(prefix):]
 	}
 	return results, pageRes, err

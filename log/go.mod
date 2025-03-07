@@ -3,17 +3,13 @@ module cosmossdk.io/log
 go 1.23
 
 require (
-<<<<<<< HEAD
-	github.com/bytedance/sonic v1.12.9
-=======
-	github.com/bytedance/sonic v1.13.0
->>>>>>> f479c2eff (build(deps): bump sonic in log (#23927))
+	github.com/bytedance/sonic v1.13.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 )
 
 require (
-	github.com/bytedance/sonic/loader v0.2.3 // indirect
+	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect

@@ -17,7 +17,6 @@ builds:
       - amd64
       - arm64
     env:
-      - CGO_ENABLED=0
       - LEDGER_ENABLED=false
 
 archives:

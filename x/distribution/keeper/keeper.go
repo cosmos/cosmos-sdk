@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -31,13 +32,21 @@ type Keeper struct {
 	FeePool collections.Item[types.FeePool]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
+
+	protocolPoolEnabled bool
 }
+
+type InitOptions func(*Keeper)
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, storeService store.KVStoreService,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
+	cdc codec.BinaryCodec,
+	storeService store.KVStoreService,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
 	feeCollectorName, authority string,
+	opts ...InitOptions,
 ) Keeper {
 	// ensure distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -46,15 +55,16 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		storeService:     storeService,
-		cdc:              cdc,
-		authKeeper:       ak,
-		bankKeeper:       bk,
-		stakingKeeper:    sk,
-		feeCollectorName: feeCollectorName,
-		authority:        authority,
-		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		storeService:        storeService,
+		cdc:                 cdc,
+		authKeeper:          ak,
+		bankKeeper:          bk,
+		stakingKeeper:       sk,
+		feeCollectorName:    feeCollectorName,
+		authority:           authority,
+		Params:              collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		FeePool:             collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		protocolPoolEnabled: false,
 	}
 
 	schema, err := sb.Build()
@@ -62,6 +72,18 @@ func NewKeeper(
 		panic(err)
 	}
 	k.Schema = schema
+
+	for _, opt := range opts {
+		opt(&k)
+	}
+
+	if k.protocolPoolEnabled {
+		// ensure protocolpool module account is set
+		if addr := ak.GetModuleAddress(protocolpooltypes.ModuleName); addr == nil {
+			panic(fmt.Sprintf("%s module account has not been set", protocolpooltypes.ModuleName))
+		}
+	}
+
 	return k
 }
 

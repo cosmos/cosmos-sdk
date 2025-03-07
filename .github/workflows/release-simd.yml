@@ -29,11 +29,11 @@ jobs:
           git tag -d ${{ env.RELEASE_VERSION }} || echo "No such a tag exists before"
           git tag ${{ env.RELEASE_VERSION }} HEAD
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: v2.7.0
           args: release --clean
-          workdir: .
+          workdir: simapp
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ env.RELEASE_VERSION }}

@@ -42,7 +42,7 @@ import (
 var (
 	sum                   = sha256.Sum256([]byte("test-hash"))
 	emptyHash             = sha256.Sum256([]byte(""))
-	DefaulConsensusParams = &v1.ConsensusParams{
+	DefaultConsensusParams = &v1.ConsensusParams{
 		Block: &v1.BlockParams{
 			MaxGas: 5000000,
 		},
@@ -148,7 +148,7 @@ func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:            time.Now(),
 		ChainId:         "test",
-		ConsensusParams: DefaulConsensusParams,
+		ConsensusParams: DefaultConsensusParams,
 		InitialHeight:   1,
 	})
 	require.NoError(t, err)

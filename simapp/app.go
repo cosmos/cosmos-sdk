@@ -387,7 +387,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -407,7 +407,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 
@@ -468,6 +468,7 @@ func NewSimApp(
 	app.ModuleManager.SetOrderBeginBlockers(
 		minttypes.ModuleName,
 		distrtypes.ModuleName,
+		protocolpooltypes.ModuleName,
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
@@ -509,8 +510,30 @@ func NewSimApp(
 		protocolpooltypes.ModuleName,
 	}
 
+	exportModuleOrder := []string{
+		consensusparamtypes.ModuleName,
+		authtypes.ModuleName,
+		protocolpooltypes.ModuleName, // Must be exported before bank
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
+		slashingtypes.ModuleName,
+		govtypes.ModuleName,
+		minttypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		nft.ModuleName,
+		group.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		circuittypes.ModuleName,
+		epochstypes.ModuleName,
+	}
+
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
-	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)
+	app.ModuleManager.SetOrderExportGenesis(exportModuleOrder...)
 
 	// Uncomment if you want to set a custom migration order here.
 	// app.ModuleManager.SetOrderMigrations(custom order)

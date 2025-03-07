@@ -1,6 +1,9 @@
 package simapp
 
 import (
+	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
+
 	"time"
 
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -64,7 +67,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
 	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/protocolpool" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/slashing"     // import for side-effects
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -80,6 +84,9 @@ var (
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: nft.ModuleName},
+		{Account: protocolpooltypes.ModuleName},
+		{Account: protocolpooltypes.StreamAccount},
+		{Account: protocolpooltypes.ProtocolPoolDistrAccount},
 	}
 
 	// blocked account addresses
@@ -112,6 +119,7 @@ var (
 					BeginBlockers: []string{
 						minttypes.ModuleName,
 						distrtypes.ModuleName,
+						protocolpooltypes.ModuleName,
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
@@ -123,6 +131,7 @@ var (
 						stakingtypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
+						protocolpooltypes.ModuleName,
 					},
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -151,10 +160,31 @@ var (
 						vestingtypes.ModuleName,
 						circuittypes.ModuleName,
 						epochstypes.ModuleName,
+						protocolpooltypes.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
-					// ExportGenesis: []string{},
+					ExportGenesis: []string{
+						consensustypes.ModuleName,
+						authtypes.ModuleName,
+						protocolpooltypes.ModuleName, // Must be exported before bank
+						banktypes.ModuleName,
+						distrtypes.ModuleName,
+						stakingtypes.ModuleName,
+						slashingtypes.ModuleName,
+						govtypes.ModuleName,
+						minttypes.ModuleName,
+						genutiltypes.ModuleName,
+						evidencetypes.ModuleName,
+						authz.ModuleName,
+						feegrant.ModuleName,
+						nft.ModuleName,
+						group.ModuleName,
+						upgradetypes.ModuleName,
+						vestingtypes.ModuleName,
+						circuittypes.ModuleName,
+						epochstypes.ModuleName,
+					},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
 				}),
@@ -252,6 +282,10 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			{
+				Name:   protocolpooltypes.ModuleName,
+				Config: appconfig.WrapAny(&protocolpoolmodulev1.Module{}),
 			},
 		},
 	}),

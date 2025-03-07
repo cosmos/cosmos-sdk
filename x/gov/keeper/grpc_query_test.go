@@ -2004,7 +2004,7 @@ func (suite *KeeperTestSuite) TestProposalVoteOptions() {
 				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 				err = suite.govKeeper.ProposalVoteOptions.Set(suite.ctx, proposal.Id, v1.ProposalVoteOptions{
-					OptionOne:   "Vote for @tac0turle",
+					OptionOne:   "Vote for @tac0turtle",
 					OptionTwo:   "Vote for @facudomedica",
 					OptionThree: "Vote for @alexanderbez",
 				})
@@ -2012,7 +2012,7 @@ func (suite *KeeperTestSuite) TestProposalVoteOptions() {
 			},
 			expResp: &v1.QueryProposalVoteOptionsResponse{
 				VoteOptions: &v1.ProposalVoteOptions{
-					OptionOne:   "Vote for @tac0turle",
+					OptionOne:   "Vote for @tac0turtle",
 					OptionTwo:   "Vote for @facudomedica",
 					OptionThree: "Vote for @alexanderbez",
 					OptionSpam:  "spam",

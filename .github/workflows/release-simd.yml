@@ -1,0 +1,40 @@
+name: Release Simd
+
+on:
+  push:
+    tags:
+      - "simd/v*.*.*"
+permissions:
+  contents: read
+
+jobs:
+  goreleaser:
+    permissions:
+      contents: write # for goreleaser/goreleaser-action to create a GitHub release
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+      - name: Set env
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/simd/}" >> $GITHUB_ENV
+          echo "FULL_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Tag without prefix locally to avoid error in goreleaser
+        run: |-
+          git tag -d ${{ env.RELEASE_VERSION }} || echo "No such a tag exists before"
+          git tag ${{ env.RELEASE_VERSION }} HEAD
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          version: v2.19.0
+          args: release --clean
+          workdir: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ env.RELEASE_VERSION }}
+          SIMD_FULL_TAG: ${{ env.FULL_TAG }}

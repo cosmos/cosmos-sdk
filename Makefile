@@ -497,15 +497,17 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-test-system: build
+test-system: build-v50 build
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+	cp $(BUILDDIR)/simdv50 ./tests/systemtests/binaries/
 	$(MAKE) -C tests/systemtests test
 .PHONY: test-system
 
 
-build-50:
+build-v50:
 	git checkout release/v0.50.x
 	make build
+	mv build/simd build/simdv50
 	git checkout release/v0.53.x
-
+.PHONY: build-v50

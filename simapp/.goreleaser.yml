@@ -9,7 +9,7 @@ before:
     - go mod tidy
 
 builds:
-  - main: .simd
+  - main: ./simd
     goos:
       - linux
       - darwin

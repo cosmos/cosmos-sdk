@@ -3,7 +3,11 @@ module cosmossdk.io/log
 go 1.23
 
 require (
+<<<<<<< HEAD
 	github.com/bytedance/sonic v1.12.9
+=======
+	github.com/bytedance/sonic v1.13.0
+>>>>>>> f479c2eff (build(deps): bump sonic in log (#23927))
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 )

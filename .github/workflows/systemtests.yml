@@ -43,3 +43,7 @@ jobs:
         if: env.GIT_DIFF
         run: |
           make test-system
+      - name: system tests (legacy)
+        if: env.GIT_DIFF
+        run: |
+          COSMOS_BUILD_OPTIONS=legacy make test-system

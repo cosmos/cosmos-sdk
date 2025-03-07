@@ -28,7 +28,7 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // Params queries params of distribution module
-func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	params, err := k.Keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -256,7 +256,7 @@ func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegati
 	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
 }
 
-// DelegationTotalRewards the total rewards accrued by a each validator
+// DelegationTotalRewards the total rewards accrued by each validator
 func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

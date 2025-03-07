@@ -296,11 +296,24 @@ func NewSimApp(
 	}
 
 	// set the BaseApp's parameter store
-	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress(govtypes.ModuleName).String(), runtime.EventService{})
+	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		runtime.EventService{},
+	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.AccountKeeper = authkeeper.NewAccountKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		sdk.Bech32MainPrefix,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
@@ -327,17 +340,48 @@ func NewSimApp(
 	app.txConfig = txConfig
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr), authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
+		appCodec,
+		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
+		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
-	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), app.StakingKeeper, app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.MintKeeper = mintkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
+		app.StakingKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
-	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, app.StakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.DistrKeeper = distrkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		distrkeeper.WithProtocolPoolEnabled(),
+	)
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec, legacyAmino, runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), app.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec,
+		legacyAmino,
+		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
+		app.StakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[feegrant.StoreKey]), app.AccountKeeper)
+	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[feegrant.StoreKey]),
+		app.AccountKeeper,
+	)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -345,17 +389,33 @@ func NewSimApp(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.CircuitKeeper = circuitkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[circuittypes.StoreKey]), authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AccountKeeper.AddressCodec())
+	app.CircuitKeeper = circuitkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[circuittypes.StoreKey]),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.AccountKeeper.AddressCodec(),
+	)
 	app.BaseApp.SetCircuitBreaker(&app.CircuitKeeper)
 
-	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper)
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[authzkeeper.StoreKey]),
+		appCodec,
+		app.MsgServiceRouter(),
+		app.AccountKeeper,
+	)
 
 	groupConfig := group.DefaultConfig()
 	/*
 		Example of setting group params:
 		groupConfig.MaxMetadataLen = 1000
 	*/
-	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
+	app.GroupKeeper = groupkeeper.NewKeeper(
+		keys[group.StoreKey],
+		appCodec,
+		app.MsgServiceRouter(),
+		app.AccountKeeper,
+		groupConfig,
+	)
 
 	// get skipUpgradeHeights from the app options
 	skipUpgradeHeights := map[int64]bool{}
@@ -364,7 +424,14 @@ func NewSimApp(
 	}
 	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
 	// set the governance module account as the authority for conducting upgrades
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(keys[upgradetypes.StoreKey]), appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.UpgradeKeeper = upgradekeeper.NewKeeper(
+		skipUpgradeHeights,
+		runtime.NewKVStoreService(keys[upgradetypes.StoreKey]),
+		appCodec,
+		homePath,
+		app.BaseApp,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	// Register the proposal types
 	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
@@ -378,8 +445,15 @@ func NewSimApp(
 		govConfig.MaxMetadataLen = 10000
 	*/
 	govKeeper := govkeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, app.DistrKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec,
+		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.MsgServiceRouter(),
+		govConfig,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// Set legacy router for backwards compatibility with gov v1beta1
@@ -387,7 +461,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -407,7 +481,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
+			// insert epoch hooks receivers here
 		),
 	)
 

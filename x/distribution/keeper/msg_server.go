@@ -103,6 +103,10 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 }
 
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
+	if k.protocolPoolEnabled {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "protocol pool is enabled - to call FundCommunityPool use the method exposed by x/protocolpool")
+	}
+
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
@@ -141,6 +145,10 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
+	if k.protocolPoolEnabled {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "protocol pool is enabled - to call CommunityPoolSpend use the method exposed by x/protocolpool")
+	}
+
 	if err := k.validateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}

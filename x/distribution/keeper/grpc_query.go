@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -362,7 +363,11 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 }
 
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+	if k.protocolPoolEnabled {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "protocol pool is enabled - to query CommunityPool use the query exposed by x/protocolpool")
+	}
+
 	pool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return nil, err

@@ -26,6 +26,7 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
+	_ module.AppModule           = AppModule{}
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
@@ -68,6 +69,10 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 // RegisterInterfaces registers interfaces and implementations of the protocolpool module.
 func (AppModule) RegisterInterfaces(ir codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(ir)
+}
+
+func (am AppModule) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(amino)
 }
 
 // RegisterServices registers module services.

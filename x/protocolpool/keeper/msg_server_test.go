@@ -6,11 +6,10 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
@@ -291,9 +290,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 
 				// Create a new context with an updated block time to simulate a delay
 				newBlockTime := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
-				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{
-					Time: newBlockTime,
-				})
+				suite.ctx = suite.ctx.WithBlockTime(newBlockTime)
 			},
 			recipientAddress: recipientAddr,
 			expErr:           false,
@@ -322,9 +319,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 
 				// Create a new context with an updated block time to simulate a delay
 				newBlockTime := suite.ctx.BlockTime().Add(60 * time.Second)
-				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{
-					Time: newBlockTime,
-				})
+				suite.ctx = suite.ctx.WithBlockTime(newBlockTime)
 
 				// Claim the funds twice
 				msg = &types.MsgClaimBudget{
@@ -939,9 +934,7 @@ func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 	_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
 	suite.Require().NoError(err)
 
-	header := suite.ctx.HeaderInfo()
-	header.Time = expiration.Add(1 * time.Second)
-	suite.ctx = suite.ctx.WithHeaderInfo(header)
+	suite.ctx = suite.ctx.WithBlockTime(expiration.Add(1 * time.Second))
 
 	// If we keep calling WithdrawContinuousFund, it should not error and return always an amount of 0
 	withdrawRes, err := suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})

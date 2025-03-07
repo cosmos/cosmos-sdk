@@ -46,27 +46,27 @@ type KeeperTestSuite struct {
 	queryServer types.QueryServer
 }
 
-func (s *KeeperTestSuite) SetupTest() {
+func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations
-	ctrl := gomock.NewController(s.T())
+	ctrl := gomock.NewController(suite.T())
 	accountKeeper := pooltestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(types.ProtocolPoolDistrAccount).Return(poolDistrAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	accountKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress())
-	s.authKeeper = accountKeeper
+	suite.authKeeper = accountKeeper
 
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
-	s.bankKeeper = bankKeeper
+	suite.bankKeeper = bankKeeper
 
 	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
@@ -75,87 +75,87 @@ func (s *KeeperTestSuite) SetupTest() {
 		bankKeeper,
 		authority,
 	)
-	s.ctx = ctx
-	s.poolKeeper = poolKeeper
+	suite.ctx = ctx
+	suite.poolKeeper = poolKeeper
 
-	err = s.poolKeeper.Params.Set(ctx, types.Params{
+	err = suite.poolKeeper.Params.Set(ctx, types.Params{
 		EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},
 	})
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 
 	types.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, poolkeeper.Querier{Keeper: poolKeeper})
-	s.msgServer = poolkeeper.NewMsgServerImpl(poolKeeper)
-	s.queryServer = poolkeeper.NewQuerier(poolKeeper)
+	suite.msgServer = poolkeeper.NewMsgServerImpl(poolKeeper)
+	suite.queryServer = poolkeeper.NewQuerier(poolKeeper)
 }
 
-func (s *KeeperTestSuite) mockSendCoinsFromModuleToAccount(accAddr sdk.AccAddress) {
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, types.ModuleName, accAddr, gomock.Any()).AnyTimes()
+func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(accAddr sdk.AccAddress) {
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, accAddr, gomock.Any()).AnyTimes()
 }
 
-func (s *KeeperTestSuite) mockWithdrawContinuousFund() {
-	s.authKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(poolAcc).AnyTimes()
+func (suite *KeeperTestSuite) mockWithdrawContinuousFund() {
+	suite.authKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(poolAcc).AnyTimes()
 	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))
-	s.bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	suite.bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 }
 
-func (s *KeeperTestSuite) mockStreamFunds(distributed math.Int) {
-	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
-	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
-	s.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
+func (suite *KeeperTestSuite) mockStreamFunds(distributed math.Int) {
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
+	suite.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
 	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, distributed)
-	s.bankKeeper.EXPECT().GetBalance(s.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), gomock.Any()).AnyTimes()
+	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), gomock.Any()).AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
+func (suite *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	// We'll create 2 continuous funds of 30% each, and the total pool is 1000000, meaning each fund should get 300000
 
-	s.SetupTest()
-	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ProtocolPoolDistrAccount).Return(poolAcc).AnyTimes()
+	suite.SetupTest()
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolAcc).AnyTimes()
 	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000))
-	s.bankKeeper.EXPECT().GetBalance(s.ctx, poolAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000))))
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(400000))))
+	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000))))
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(400000))))
 
-	_, err := s.msgServer.CreateContinuousFund(s.ctx, &types.MsgCreateContinuousFund{
-		Authority:  s.poolKeeper.GetAuthority(),
+	_, err := suite.msgServer.CreateContinuousFund(suite.ctx, &types.MsgCreateContinuousFund{
+		Authority:  suite.poolKeeper.GetAuthority(),
 		Recipient:  "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6",
 		Percentage: math.LegacyMustNewDecFromStr("0.3"),
 	})
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 
-	_, err = s.msgServer.CreateContinuousFund(s.ctx, &types.MsgCreateContinuousFund{
-		Authority:  s.poolKeeper.GetAuthority(),
+	_, err = suite.msgServer.CreateContinuousFund(suite.ctx, &types.MsgCreateContinuousFund{
+		Authority:  suite.poolKeeper.GetAuthority(),
 		Recipient:  "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r",
 		Percentage: math.LegacyMustNewDecFromStr("0.3"),
 	})
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 
-	_ = s.poolKeeper.SetToDistribute(s.ctx)
+	_ = suite.poolKeeper.SetToDistribute(suite.ctx)
 
-	err = s.poolKeeper.IterateAndUpdateFundsDistribution(s.ctx)
-	s.Require().NoError(err)
+	err = suite.poolKeeper.IterateAndUpdateFundsDistribution(suite.ctx)
+	suite.Require().NoError(err)
 
-	err = s.poolKeeper.RecipientFundDistribution.Walk(s.ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
-		strAddr, err := s.authKeeper.AddressCodec().BytesToString(key)
-		s.Require().NoError(err)
+	err = suite.poolKeeper.RecipientFundDistribution.Walk(suite.ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
+		strAddr, err := suite.authKeeper.AddressCodec().BytesToString(key)
+		suite.Require().NoError(err)
 
 		if strAddr == "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6" {
-			s.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
+			suite.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
 		} else if strAddr == "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r" {
-			s.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
+			suite.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
 		}
 		return false, nil
 	})
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestGetCommunityPool() {

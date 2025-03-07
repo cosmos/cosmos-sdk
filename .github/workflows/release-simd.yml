@@ -14,27 +14,26 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23"
           check-latest: true
+      # get 'v*.*.*' part from 'simd/v*.*.*' and save to $GITHUB_ENV
       - name: Set env
-        run: |
-          echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/simd/}" >> $GITHUB_ENV
-          echo "FULL_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/simd/}" >> $GITHUB_ENV
+      # remove the possible pre-existing same tag for cosmos-sdk related tags instead of simd tags
+      # Because goreleaser enforces semantic versioning and will error on non compliant tags.(https://goreleaser.com/limitations/semver/)
       - name: Tag without prefix locally to avoid error in goreleaser
         run: |-
           git tag -d ${{ env.RELEASE_VERSION }} || echo "No such a tag exists before"
           git tag ${{ env.RELEASE_VERSION }} HEAD
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v3
         with:
-          version: v2.7.0
-          args: release --clean
+          # stick to version v0.179.0(https://github.com/cosmos/cosmos-sdk/issues/11125)
+          version: v0.179.0
+          args: release --rm-dist --skip-validate
           workdir: simapp
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: ${{ env.RELEASE_VERSION }}
-          SIMD_FULL_TAG: ${{ env.FULL_TAG }}
+          GORELEASER_CURRENT_TAG: simd/${{ env.RELEASE_VERSION }}

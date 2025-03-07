@@ -12,7 +12,6 @@ builds:
   - main: ./simd
     goos:
       - linux
-      - windows
       - darwin
     goarch:
       - amd64
@@ -22,9 +21,6 @@ builds:
 
 archives:
   - name_template: '{{ replace .Version "simd/" "simd-" }}-{{ .Os }}-{{ .Arch }}'
-    format_overrides:
-      - goos: windows
-        format: zip
 
 checksum:
   name_template: 'SHA256SUMS-{{ replace .Version "simd/" "simd-" }}.txt'

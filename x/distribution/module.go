@@ -239,6 +239,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	var opts []keeper.InitOptions
+	if in.Config.ProtocolPoolEnabled {
+		opts = append(opts, keeper.WithProtocolPoolEnabled())
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -247,6 +252,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.StakingKeeper,
 		feeCollectorName,
 		authority.String(),
+		opts...,
 	)
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)

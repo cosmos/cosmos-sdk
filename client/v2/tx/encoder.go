@@ -73,8 +73,8 @@ func encodeTx(tx Tx) ([]byte, error) {
 	return marshalOption.Marshal(wTx.Tx)
 }
 
-// decodeJsonTx decodes transaction bytes into an apitx.Tx structure using JSON format.
-func decodeJsonTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder {
+// decodeTextTx decodes transaction bytes into an apitx.Tx structure using TEXT format.
+func decodeTextTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder {
 	return func(txBytes []byte) (Tx, error) {
 		jsonTx := new(txv1beta1.Tx)
 		err := protojson.UnmarshalOptions{

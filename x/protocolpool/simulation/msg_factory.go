@@ -1,5 +1,7 @@
 package simulation
 
+/*
+
 import (
 	"context"
 
@@ -8,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
 
 func MsgFundCommunityPoolFactory() simsx.SimMsgFactoryFn[*types.MsgFundCommunityPool] {
 	return func(_ context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgFundCommunityPool) {
@@ -35,3 +38,5 @@ func must[T any](r T, err error) T {
 	}
 	return r
 }
+
+*/

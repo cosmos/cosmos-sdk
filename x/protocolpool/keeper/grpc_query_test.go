@@ -4,10 +4,9 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 func (suite *KeeperTestSuite) TestUnclaimedBudget() {
@@ -16,8 +15,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 	zeroCoin := sdk.NewCoin("foo", math.ZeroInt())
 	nextClaimFrom := startTime.Add(period)
 	secondClaimFrom := nextClaimFrom.Add(period)
-	recipientStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipientAddr)
-	suite.Require().NoError(err)
+	recipientStrAddr := recipientAddr.String()
 	testCases := []struct {
 		name           string
 		preRun         func()

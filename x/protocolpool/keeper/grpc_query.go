@@ -26,7 +26,9 @@ func NewQuerier(keeper Keeper) Querier {
 
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	amount, err := k.Keeper.GetCommunityPool(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	amount, err := k.Keeper.GetCommunityPool(sdkCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +38,8 @@ func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolR
 
 // UnclaimedBudget queries the unclaimed budget for given recipient
 func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedBudgetRequest) (*types.QueryUnclaimedBudgetResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -43,7 +47,7 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid recipient address: %s", err.Error())
 	}
-	budget, err := k.Keeper.BudgetProposal.Get(ctx, address)
+	budget, err := k.Keeper.BudgetProposal.Get(sdkCtx, address)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "no budget proposal found for address: %s", req.Address)

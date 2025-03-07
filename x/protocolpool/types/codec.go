@@ -1,15 +1,15 @@
 package types
 
 import (
-	"cosmossdk.io/core/registry"
-	coretransaction "cosmossdk.io/core/transaction"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations(
-		(*coretransaction.Msg)(nil),
+func RegisterInterfaces(ir codectypes.InterfaceRegistry) {
+	ir.RegisterImplementations(
+		(*sdk.Msg)(nil),
 		&MsgFundCommunityPool{},
 		&MsgCommunityPoolSpend{},
 		&MsgSubmitBudgetProposal{},
@@ -19,5 +19,5 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&MsgWithdrawContinuousFund{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(ir, &_Msg_serviceDesc)
 }

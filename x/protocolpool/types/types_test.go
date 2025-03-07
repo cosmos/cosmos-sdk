@@ -15,7 +15,7 @@ import (
 var hour = time.Hour
 
 func TestRegisterInterfaces(t *testing.T) {
-	interfaceRegistry := codectestutil.NewCodecOptionsWithPrefixes("cosmos", "cosmosval").NewInterfaceRegistry()
+	interfaceRegistry := codectestutil.CodecOptions{}.NewInterfaceRegistry()
 	RegisterInterfaces(interfaceRegistry)
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgFundCommunityPool{}))
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCommunityPoolSpend{}))

@@ -27,7 +27,7 @@ var (
 	poolAcc      = authtypes.NewEmptyModuleAccount(types.ModuleName)
 	streamAcc    = authtypes.NewEmptyModuleAccount(types.StreamAccount)
 	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolDistrAccount)
-	
+
 	recipientAddr = sdk.AccAddress("to1__________________")
 
 	fooCoin  = sdk.NewInt64Coin("foo", 100)

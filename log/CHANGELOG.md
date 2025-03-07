@@ -24,7 +24,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [v1.5.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.5.1) - 2025-03-07
 
-* [#23927](https://github.com/cosmos/cosmos-sdk/pull/23927) Bump sonic json library to [v1.3.1](https://github.com/bytedance/sonic/releases/tag/v1.13.1) for Go 1.24 compatibility.
+* [#23928](https://github.com/cosmos/cosmos-sdk/pull/23928) Bump sonic json library to [v1.3.1](https://github.com/bytedance/sonic/releases/tag/v1.13.1) for Go 1.24 compatibility.
 
 ## [v1.5.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.5.0) - 2024-11-07
 

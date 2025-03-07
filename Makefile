@@ -503,3 +503,9 @@ test-system: build
 	$(MAKE) -C tests/systemtests test
 .PHONY: test-system
 
+
+build-50:
+	git checkout release/v0.50.x
+	make build
+	git checkout release/v0.53.x
+

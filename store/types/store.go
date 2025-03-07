@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"io"
+	"slices"
 
 	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
@@ -96,12 +97,7 @@ func (s *StoreUpgrades) IsAdded(key string) bool {
 	if s == nil {
 		return false
 	}
-	for _, added := range s.Added {
-		if key == added {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s.Added, key)
 }
 
 // IsDeleted returns true if the given key should be deleted
@@ -109,12 +105,7 @@ func (s *StoreUpgrades) IsDeleted(key string) bool {
 	if s == nil {
 		return false
 	}
-	for _, d := range s.Deleted {
-		if d == key {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s.Deleted, key)
 }
 
 // RenamedFrom returns the oldKey if it was renamed

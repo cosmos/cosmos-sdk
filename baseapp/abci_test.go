@@ -2781,6 +2781,20 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 }
 
+func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(1))
+	suite.baseApp.SetStreamingManager(storetypes.StreamingManager{
+		ABCIListeners: []storetypes.ABCIListener{
+			&mockABCIListener{},
+		},
+	})
+
+	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
+		Height: 2,
+	})
+	require.Empty(t, res)
+	require.NotEmpty(t, err)
+}
 func TestABCI_Race_Commit_Query(t *testing.T) {
 	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"))
 	app := suite.baseApp

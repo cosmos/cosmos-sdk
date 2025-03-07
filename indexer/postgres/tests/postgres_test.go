@@ -2,7 +2,6 @@ package tests
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 
@@ -31,8 +30,7 @@ func TestPostgresIndexer(t *testing.T) {
 func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	t.Helper()
 
-	tempDir, err := os.MkdirTemp("", "postgres-indexer-test")
-	require.NoError(t, err)
+	tempDir := t.TempDir()
 
 	dbPort := freeport.GetOne(t)
 	pgConfig := embeddedpostgres.DefaultConfig().
@@ -48,8 +46,6 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	t.Cleanup(func() {
 		cancel()
 		require.NoError(t, pg.Stop())
-		err := os.RemoveAll(tempDir)
-		require.NoError(t, err)
 	})
 
 	debugLog := &strings.Builder{}

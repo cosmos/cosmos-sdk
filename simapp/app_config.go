@@ -1,9 +1,6 @@
 package simapp
 
 import (
-	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
-
 	"time"
 
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -24,6 +21,7 @@ import (
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
+	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
@@ -68,7 +66,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	_ "github.com/cosmos/cosmos-sdk/x/protocolpool" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/slashing"     // import for side-effects
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
+	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

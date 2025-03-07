@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
 	go.uber.org/mock v0.5.0
-	google.golang.org/grpc v1.70.0
+	google.golang.org/grpc v1.71.0
 	google.golang.org/protobuf v1.36.4
 	gotest.tools/v3 v3.5.1
 )

@@ -206,6 +206,45 @@ func (suite *TestSuite) TestGrant() {
 	}
 }
 
+// TestNPEInGrant guards against NPE caused by an uninitialized BankKeeper
+func (suite *TestSuite) TestNPEInGrant() {
+	// Initialize Accounts
+	accs := simtestutil.CreateIncrementalAccounts(2)
+	granter := accs[0]
+	grantee := accs[1]
+	granteeAcc := authtypes.NewBaseAccountWithAddress(grantee)
+
+	// Set the BankKeeper to nil--this is the default value when constructing with NewKeeper
+	suite.authzKeeper = suite.authzKeeper.SetBankKeeper(nil)
+	suite.msgSrvr = suite.authzKeeper
+
+	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee).Return(nil).Times(1)
+	suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), grantee).
+		Return(granteeAcc).
+		Times(1)
+	suite.accountKeeper.EXPECT().SetAccount(gomock.Any(), granteeAcc).Return().Times(1)
+
+	// Call Grant
+	ctx := suite.ctx.WithBlockTime(time.Now())
+	curBlockTime := ctx.BlockTime()
+	grant, err := authz.NewGrant(
+		curBlockTime,
+		banktypes.NewSendAuthorization(
+			sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10))),
+			nil),
+		nil,
+	)
+	suite.Require().NoError(err)
+
+	_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
+		Granter: granter.String(),
+		Grantee: grantee.String(),
+		Grant:   grant,
+	})
+	suite.Require().NoError(err)
+
+}
+
 func (suite *TestSuite) TestRevoke() {
 	addrs := suite.createAccounts(2)
 

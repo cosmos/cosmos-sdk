@@ -104,7 +104,7 @@ Whereas `execute-msg-type-url` and `msgcontents`  corresponds to lockup account 
 
 ### Delegate
 
-The execute message type url for this execution is `cosmos.accounts.defaults.lockup.MsgDelegate`.
+The execute message type url for this execution is `cosmos.accounts.defaults.lockup.v1.MsgDelegate`.
 
 Example of json file:
 
@@ -125,7 +125,7 @@ The `sender` field are the address of the owner of the lockup account. If the se
 
 ### Undelegate
 
-The execute message type url for this execution is `cosmos.accounts.defaults.lockup.MsgUndelegate`.
+The execute message type url for this execution is `cosmos.accounts.defaults.lockup.v1.MsgUndelegate`.
 
 Example of json file:
 
@@ -146,7 +146,7 @@ The `sender` field are the address of the owner of the lockup account. If the se
 
 ### Withdraw reward 
 
-The execute message type url for this execution is `cosmos.accounts.defaults.lockup.MsgWithdrawReward`.
+The execute message type url for this execution is `cosmos.accounts.defaults.lockup.v1.MsgWithdrawReward`.
 
 Example of json file:
 
@@ -163,7 +163,7 @@ The `sender` field are the address of the owner of the lockup account. If the se
 
 ### Withdraw unlocked token
 
-The execute message type url for this execution is `cosmos.accounts.defaults.lockup.MsgWithdraw`.
+The execute message type url for this execution is `cosmos.accounts.defaults.lockup.v1.MsgWithdraw`.
 
 Example of json file:
 
@@ -183,7 +183,7 @@ The `withdrawer` field are the address of the owner of the lockup account. If th
 
 ### Send coins
 
-The execute message type url for this execution is `cosmos.accounts.defaults.lockup.MsgSend`.
+The execute message type url for this execution is `cosmos.accounts.defaults.lockup.v1.MsgSend`.
 
 Example of json file:
 
@@ -213,7 +213,7 @@ simd tx accounts query <account_address> <query-request-type-url> $querycontents
 
 ### Query account info
 
-The query request type url for this query is `cosmos.accounts.defaults.lockup.QueryLockupAccountInfoRequest`. And query json file can be an empty object since `QueryLockupAccountInfoRequest` does not required an input.
+The query request type url for this query is `cosmos.accounts.defaults.lockup.v1.QueryLockupAccountInfoRequest`. And query json file can be an empty object since `QueryLockupAccountInfoRequest` does not required an input.
 
 Account information including:
 
@@ -235,7 +235,7 @@ Account information including:
 Note, can only be queried from a periodic lockup account
 :::
 
-The query request type url for this query is `cosmos.accounts.defaults.lockup.QueryLockingPeriodsRequest`. And query json file can be an empty object since `QueryLockingPeriodsRequest` does not required an input.
+The query request type url for this query is `cosmos.accounts.defaults.lockup.v1.QueryLockingPeriodsRequest`. And query json file can be an empty object since `QueryLockingPeriodsRequest` does not required an input.
 
 Locking periods including:
 

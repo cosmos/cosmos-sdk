@@ -505,13 +505,29 @@ test-system: build-v50 build
 .PHONY: test-system
 
 build-v50:
+	@echo "Stashing any uncommitted changes..."
+	STASH_RESULT=$$(git stash push -m "Temporary stash for v50 build" 2>&1) && \
+	STASHED=false && \
+	if ! echo "$$STASH_RESULT" | grep -q "No local changes to save"; then \
+		STASHED=true; \
+	fi && \
+	echo "Saving current reference..." && \
 	CURRENT_REF=$$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD) && \
+	echo "Checking out release branch..." && \
 	git checkout release/v0.50.x && \
+	echo "Building v50 binary..." && \
 	make build && \
 	mv build/simd build/simdv50 && \
+	echo "Returning to original branch..." && \
 	if [ "$$CURRENT_REF" = "HEAD" ]; then \
 		git checkout $$(git rev-parse HEAD); \
 	else \
 		git checkout $$CURRENT_REF; \
+	fi && \
+	if [ "$$STASHED" = "true" ]; then \
+		echo "Reapplying stashed changes..." && \
+		git stash pop; \
+	else \
+		echo "No stashed changes to reapply."; \
 	fi
 .PHONY: build-v50

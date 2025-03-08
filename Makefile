@@ -504,11 +504,14 @@ test-system: build-v50 build
 	$(MAKE) -C tests/systemtests test
 .PHONY: test-system
 
-
 build-v50:
-	CURRENT_BRANCH=$$(git rev-parse --abbrev-ref HEAD) && \
+	CURRENT_REF=$$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD) && \
 	git checkout release/v0.50.x && \
 	make build && \
 	mv build/simd build/simdv50 && \
-	git checkout $$CURRENT_BRANCH
+	if [ "$$CURRENT_REF" = "HEAD" ]; then \
+		git checkout $$(git rev-parse HEAD); \
+	else \
+		git checkout $$CURRENT_REF; \
+	fi
 .PHONY: build-v50

@@ -1,4 +1,5 @@
-name: v2 core Tests
+name: v2 Core Tests
+
 on:
   pull_request:
   merge_group:
@@ -13,163 +14,85 @@ concurrency:
   group: ci-${{ github.ref }}-v2-tests
   cancel-in-progress: true
 
+env:
+  GO_VERSION: "1.23"
+  TEST_FLAGS: "-mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'"
+
 jobs:
-  runtime-v2:
+  go-tests:
     runs-on: depot-ubuntu-22.04-4
     strategy:
       fail-fast: false
+      matrix:
+        module:
+          - {name: 'runtime-v2', path: 'runtime/v2'}
+          - {name: 'server-v2', path: 'server/v2'}
+          - {name: 'stf', path: 'server/v2/stf'}
+          - {name: 'appmanager', path: 'server/v2/appmanager'}
+          - {name: 'cometbft', path: 'server/v2/cometbft'}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            runtime/v2/*.go
-            runtime/v2/go.mod
-            runtime/v2/go.sum
-      - name: test & coverage report creation
-        if: env.GIT_DIFF
-        run: |
-          cd runtime/v2 && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
 
-  server-v2:
-    runs-on: depot-ubuntu-22.04-4
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: ${{ env.GO_VERSION }}
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            server/v2/*.go
-            server/v2/go.mod
-            server/v2/go.sum
-            server/v2/testdata/*.toml
-      - name: test & coverage report creation
-        if: env.GIT_DIFF
-        run: |
-          cd server/v2 && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
-  stf:
-    runs-on: depot-ubuntu-22.04-4
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            server/v2/stf/**/*.go
-            server/v2/stf/go.mod
-            server/v2/stf/go.sum
-      - name: test & coverage report creation
-        if: env.GIT_DIFF
-        run: |
-          cd server/v2/stf && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
 
-  appmanager:
-    runs-on: depot-ubuntu-22.04-4
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: go.sum
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
-            server/v2/appmanager/**/*.go
-            server/v2/appmanager/go.mod
-            server/v2/appmanager/go.sum
-      - name: test & coverage report creation
-        if: env.GIT_DIFF
-        run: |
-          cd server/v2/appmanager && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
+            ${{ matrix.module.path }}/**/*.go
+            ${{ matrix.module.path }}/go.mod
+            ${{ matrix.module.path }}/go.sum
+            ${{ matrix.module.path }}/testdata/**/*
 
-  cometbft:
-    runs-on: depot-ubuntu-22.04-4
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            server/v2/cometbft/**/*.go
-            server/v2/cometbft/go.mod
-            server/v2/cometbft/go.sum
-      - name: test & coverage report creation
+      - name: Run tests
         if: env.GIT_DIFF
-        run: |
-          cd server/v2/cometbft && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
+        working-directory: ${{ matrix.module.path }}
+        run: go test ${{ env.TEST_FLAGS }}
 
-  test-system-v2:
+  system-tests:
     runs-on: depot-ubuntu-22.04-4
+    needs: go-tests
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
+
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: ${{ env.GO_VERSION }}
           check-latest: true
           cache: true
           cache-dependency-path: |
             simapp/v2/go.sum
             systemtest/go.sum
+
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
             **/*.go
-            go.mod
-            go.sum
             **/go.mod
             **/go.sum
             **/Makefile
             Makefile
-      - name: Install musl lib for simd (docker) binary
+
+      - name: Install dependencies
         if: env.GIT_DIFF
-        run: |
-          sudo apt-get install -y musl
-      - name: system tests v2
+        run: sudo apt-get update && sudo apt-get install -y musl
+
+      - name: Run system tests
         if: env.GIT_DIFF
-        run: |
-          make test-system
-      - uses: actions/upload-artifact@v4
+        run: make test-system
+
+      - name: Upload testnet logs on failure
         if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          name: "testnet-setup"
+          name: testnet-logs-${{ github.sha }}
           path: ./systemtests/testnet/
           retention-days: 3

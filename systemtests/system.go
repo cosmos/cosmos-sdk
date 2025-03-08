@@ -72,7 +72,7 @@ type SystemUnderTest struct {
 	out               io.Writer
 	verbose           bool
 	ChainStarted      bool
-	ProjectName       string
+	projectName       string
 	dirty             bool // requires full reset when marked dirty
 
 	pidsLock sync.RWMutex
@@ -99,7 +99,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		out:               os.Stdout,
 		verbose:           verbose,
 		minGasPrice:       fmt.Sprintf("0.000001%s", sdk.DefaultBondDenom),
-		ProjectName:       "simd",
+		projectName:       "simd",
 		pids:              make(map[int]struct{}, nodesCount),
 	}
 	if len(initer) > 0 {
@@ -143,10 +143,9 @@ func (s *SystemUnderTest) SetupChain() {
 	}
 	s.testnetInitializer.Initialize()
 	s.nodesCount = s.initialNodesCount
-	workDir := WorkDir
 
 	// modify genesis with system test defaults
-	src := filepath.Join(workDir, s.nodePath(0), "config", "genesis.json")
+	src := filepath.Join(WorkDir, s.nodePath(0), "config", "genesis.json")
 	genesisBz, err := os.ReadFile(src) // #nosec G304
 	if err != nil {
 		panic(fmt.Sprintf("failed to load genesis: %s", err))
@@ -620,8 +619,7 @@ func (s *SystemUnderTest) awaitProcessCleanup(cmd *exec.Cmd) {
 
 func (s *SystemUnderTest) withEachNodeHome(cb func(i int, home string)) {
 	for i := 0; i < s.nodesCount; i++ {
-		p := s.nodePath(i)
-		cb(i, p)
+		cb(i, s.nodePath(i))
 	}
 }
 
@@ -632,7 +630,7 @@ func (s *SystemUnderTest) NodeDir(i int) string {
 
 // nodePath returns the path of the node within the work dir. not absolute
 func (s *SystemUnderTest) nodePath(i int) string {
-	return NodePath(i, s.outputDir, s.ProjectName)
+	return NodePath(i, s.outputDir, s.projectName)
 }
 
 func NodePath(n int, outputDir, name string) string {

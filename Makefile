@@ -506,8 +506,9 @@ test-system: build-v50 build
 
 
 build-v50:
-	git checkout release/v0.50.x
-	make build
-	mv build/simd build/simdv50
-	git checkout release/v0.53.x
+	CURRENT_BRANCH=$$(git rev-parse --abbrev-ref HEAD) && \
+	git checkout release/v0.50.x && \
+	make build && \
+	mv build/simd build/simdv50 && \
+	git checkout $$CURRENT_BRANCH
 .PHONY: build-v50

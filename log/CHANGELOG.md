@@ -22,7 +22,11 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-## [v1.5.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.4.1) - 2024-11-07
+## [v1.5.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.5.1) - 2025-03-07
+
+* [#23928](https://github.com/cosmos/cosmos-sdk/pull/23928) Bump sonic json library to [v1.3.1](https://github.com/bytedance/sonic/releases/tag/v1.13.1) for Go 1.24 compatibility.
+
+## [v1.5.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.5.0) - 2024-11-07
 
 * [#22466](https://github.com/cosmos/cosmos-sdk/pull/22466) Disable coloring in testing logger.
 * [#22233](https://github.com/cosmos/cosmos-sdk/pull/22233) Use sonic json library for faster json handling.

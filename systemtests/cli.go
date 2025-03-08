@@ -154,6 +154,14 @@ func (c CLIWrapper) clone(mutator ...func(r *CLIWrapper)) CLIWrapper {
 	return *r
 }
 
+// RunOnly just runs the command, returns the output. and does nothing else
+func (c CLIWrapper) RunOnly(args ...string) (string, bool) {
+	c.t.Helper()
+	args = c.WithTXFlags(args...)
+	output, ok := c.run(args)
+	return output, ok
+}
+
 // Run main entry for executing cli commands.
 // When configured, method blocks until tx is committed.
 func (c CLIWrapper) Run(args ...string) string {

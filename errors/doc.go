@@ -6,7 +6,7 @@
 //
 // This package provides a broad range of errors declared that fits all common
 // cases. If an error is very specific for an extension it can be registered outside
-// of the errors package. If it will be needed my many extensions, please consider
+// of the errors package. If it will be needed by many extensions, please consider
 // registering it in the errors package. To create a new error instance use Register
 // function. You must provide a unique, non zero error code and a short description, for example:
 //

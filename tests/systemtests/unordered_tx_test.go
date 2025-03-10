@@ -126,8 +126,7 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	res, ok = v50CLI.RunOnly(bankSendCmdArgs...)
 	require.True(t, ok)
 
-	response, ok = v50CLI.AwaitTxCommitted(res, 15*time.Second)
-
+	response, ok = v53CLI.AwaitTxCommitted(res, 15*time.Second)
 	require.True(t, ok)
 	code = gjson.Get(response, "code").Int()
 	require.Equal(t, int64(0), code)

@@ -504,31 +504,35 @@ test-system: build-v50 build
 	$(MAKE) -C tests/systemtests test
 .PHONY: test-system
 
-# build-v50 checks out the v0.50.x branch, builds the binary, and renames it to simdv50. 
+# build-v50 checks out the v0.50.x branch, builds the binary, and renames it to simdv50.
 build-v50:
-	@echo "stashing any uncommitted changes..."
-	STASH_RESULT=$$(git stash push -m "Temporary stash for v50 build" 2>&1) && \
-	STASHED=false && \
-	if ! echo "$$STASH_RESULT" | grep -q "no local changes to save"; then \
-		STASHED=true; \
+	@echo "Starting v50 build process..."
+	git_status=$$(git status --porcelain) && \
+	has_changes=false && \
+	if [ -n "$$git_status" ]; then \
+		echo "Stashing uncommitted changes..." && \
+		git stash push -m "Temporary stash for v50 build" && \
+		has_changes=true; \
+	else \
+		echo "No changes to stash"; \
 	fi && \
-	echo "saving current reference..." && \
+	echo "Saving current reference..." && \
 	CURRENT_REF=$$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD) && \
-	echo "checking out release branch..." && \
+	echo "Checking out release branch..." && \
 	git checkout release/v0.50.x && \
-	echo "building v50 binary..." && \
+	echo "Building v50 binary..." && \
 	make build && \
 	mv build/simd build/simdv50 && \
-	echo "returning to original branch..." && \
+	echo "Returning to original branch..." && \
 	if [ "$$CURRENT_REF" = "HEAD" ]; then \
 		git checkout $$(git rev-parse HEAD); \
 	else \
 		git checkout $$CURRENT_REF; \
 	fi && \
-	if [ "$$STASHED" = "true" ]; then \
-		echo "reapplying stashed changes..." && \
-		git stash pop; \
+	if [ "$$has_changes" = "true" ]; then \
+		echo "Reapplying stashed changes..." && \
+		git stash pop || echo "Warning: Could not pop stash, your changes may be in the stash list"; \
 	else \
-		echo "no stashed changes to reapply."; \
+		echo "No changes to reapply"; \
 	fi
 .PHONY: build-v50

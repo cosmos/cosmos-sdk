@@ -31,7 +31,7 @@ The Store struct wraps the underlying `KVStore` (`parent`) with additional data 
 
 ### `cache`
 
-The main mapping of key-value pairs stored in cache. This map contains both keys that are cached from read operations as well as ‘dirty’ keys which map to a value that is potentially different than what is in the underlying `KVStore`.
+The main mapping of key-value pairs stored in cache. This map contains both keys that are cached from read operations as well as `dirty` keys which map to a value that is potentially different than what is in the underlying `KVStore`.
 
 Values that are mapped to in `cache` are wrapped in a `cValue` struct, which contains the value and a boolean flag (`dirty`) representing whether the value has been written since the last write-back to `parent`.
 

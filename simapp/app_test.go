@@ -51,6 +51,8 @@ import (
 	group "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -132,8 +134,11 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	app.InitChain(&abci.RequestInitChain{})
-	app.Commit()
+	_, err := app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name         string
@@ -208,21 +213,22 @@ func TestRunMigrations(t *testing.T) {
 			_, err = app.ModuleManager.RunMigrations(
 				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
 				module.VersionMap{
-					banktypes.ModuleName:     1,
-					authtypes.ModuleName:     auth.AppModule{}.ConsensusVersion(),
-					authz.ModuleName:         authzmodule.AppModule{}.ConsensusVersion(),
-					stakingtypes.ModuleName:  staking.AppModule{}.ConsensusVersion(),
-					minttypes.ModuleName:     mint.AppModule{}.ConsensusVersion(),
-					distrtypes.ModuleName:    distribution.AppModule{}.ConsensusVersion(),
-					slashingtypes.ModuleName: slashing.AppModule{}.ConsensusVersion(),
-					govtypes.ModuleName:      gov.AppModule{}.ConsensusVersion(),
-					grouptypes.ModuleName:    group.AppModule{}.ConsensusVersion(),
-					upgradetypes.ModuleName:  upgrade.AppModule{}.ConsensusVersion(),
-					vestingtypes.ModuleName:  vesting.AppModule{}.ConsensusVersion(),
-					feegrant.ModuleName:      feegrantmodule.AppModule{}.ConsensusVersion(),
-					evidencetypes.ModuleName: evidence.AppModule{}.ConsensusVersion(),
-					genutiltypes.ModuleName:  genutil.AppModule{}.ConsensusVersion(),
-					epochstypes.ModuleName:   epochs.AppModule{}.ConsensusVersion(),
+					banktypes.ModuleName:         1,
+					authtypes.ModuleName:         auth.AppModule{}.ConsensusVersion(),
+					authz.ModuleName:             authzmodule.AppModule{}.ConsensusVersion(),
+					stakingtypes.ModuleName:      staking.AppModule{}.ConsensusVersion(),
+					minttypes.ModuleName:         mint.AppModule{}.ConsensusVersion(),
+					distrtypes.ModuleName:        distribution.AppModule{}.ConsensusVersion(),
+					slashingtypes.ModuleName:     slashing.AppModule{}.ConsensusVersion(),
+					govtypes.ModuleName:          gov.AppModule{}.ConsensusVersion(),
+					grouptypes.ModuleName:        group.AppModule{}.ConsensusVersion(),
+					upgradetypes.ModuleName:      upgrade.AppModule{}.ConsensusVersion(),
+					vestingtypes.ModuleName:      vesting.AppModule{}.ConsensusVersion(),
+					feegrant.ModuleName:          feegrantmodule.AppModule{}.ConsensusVersion(),
+					evidencetypes.ModuleName:     evidence.AppModule{}.ConsensusVersion(),
+					genutiltypes.ModuleName:      genutil.AppModule{}.ConsensusVersion(),
+					epochstypes.ModuleName:       epochs.AppModule{}.ConsensusVersion(),
+					protocolpooltypes.ModuleName: protocolpool.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {

@@ -50,6 +50,10 @@ type coder interface {
 	ABCICode() uint32
 }
 
+type unwrappableError interface {
+	Unwrap() []error
+}
+
 // abciCode tests if given error contains an ABCI code and returns the value of
 // it if available. This function is testing for the causer interface as well
 // and unwraps the error.
@@ -59,6 +63,16 @@ func abciCode(err error) uint32 {
 	}
 
 	for {
+		if c, ok := err.(unwrappableError); ok {
+			errs := c.Unwrap()
+			for _, e := range errs {
+				if e != nil {
+					err = e
+					break
+				}
+			}
+		}
+
 		if c, ok := err.(coder); ok {
 			return c.ABCICode()
 		}

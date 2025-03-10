@@ -122,10 +122,12 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	if err != nil {
 		return err
 	}
+
+	historical.ReferenceCount++
 	if historical.ReferenceCount > 2 {
 		panic("reference count should never exceed 2")
 	}
-	historical.ReferenceCount++
+
 	return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 }
 

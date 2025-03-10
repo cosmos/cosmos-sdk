@@ -136,7 +136,7 @@ func TestUnorderedTimeoutCompat(t *testing.T) {
 			require.NoError(t, err)
 
 			var result map[string]any
-			json.Unmarshal(bz, &result)
+			require.NoError(t, json.Unmarshal(bz, &result))
 
 			require.Equal(t, tc.wantUnordered, result["unordered"])
 
@@ -179,7 +179,7 @@ func TestUnorderedEmpty(t *testing.T) {
 	require.NoError(t, err)
 
 	var result map[string]any
-	json.Unmarshal(bz, &result)
+	require.NoError(t, json.Unmarshal(bz, &result))
 	require.Empty(t, result["unordered"])
 	require.Empty(t, result["timeout_timestamp"])
 }
@@ -213,7 +213,7 @@ func TestUnorderedBusiness(t *testing.T) {
 	require.NoError(t, err)
 
 	var result map[string]any
-	json.Unmarshal(bz, &result)
+	require.NoError(t, json.Unmarshal(bz, &result))
 	require.Equal(t, true, result["unordered"])
 	require.NotEmpty(t, result["timeout_timestamp"])
 	gotTimeStr := result["timeout_timestamp"].(string)

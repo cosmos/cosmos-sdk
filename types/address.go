@@ -363,6 +363,16 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	return ValAddress(bz), nil
 }
 
+// MustValAddressFromBech32 calls ValAddressFromBech32 and panics on error.
+func MustValAddressFromBech32(address string) ValAddress {
+	addr, err := ValAddressFromBech32(address)
+	if err != nil {
+		panic(err)
+	}
+
+	return addr
+}
+
 // Returns boolean for whether two ValAddresses are Equal
 func (va ValAddress) Equals(va2 Address) bool {
 	if va.Empty() && va2.Empty() {

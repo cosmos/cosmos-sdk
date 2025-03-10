@@ -6,23 +6,35 @@ sidebar_position: 0
 
 Here are some production-grade modules that can be used in Cosmos SDK applications, along with their respective documentation:
 
+## Essential Modules
+
+Essential modules include functionality that _must_ be included in your Cosmos SDK blockchain.
+These modules provide the core behaviors that are needed for users and operators such as balance tracking,
+proof-of-stake capabilities and governance.
+
 * [Auth](./auth/README.md) - Authentication of accounts and transactions for Cosmos SDK applications.
-* [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Bank](./bank/README.md) - Token transfer functionalities.
-* [Crisis](./crisis/README.md) - Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
+* [Circuit](./circuit/README.md) - Circuit breaker module for pausing messages.
+* [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
 * [Distribution](./distribution/README.md) - Fee distribution, and staking token provision distribution.
 * [Evidence](./evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.
-* [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
 * [Governance](./gov/README.md) - On-chain proposals and voting.
+* [Genutil](./genutil/README.md) - Genesis utilities for the Cosmos SDK.
 * [Mint](./mint/README.md) - Creation of new units of staking token.
-* [Params](./params/README.md) - Globally available parameter store.
 * [Slashing](./slashing/README.md) - Validator punishment mechanisms.
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.
+
+## Supplementary Modules
+
+Supplementary modules are modules that are maintained in the Cosmos SDK but are not necessary for
+the core functionality of your blockchain.  They can be thought of as ways to extend the
+capabilities of your blockchain or further specialize it.
+
+* [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
+* [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
+* [Group](./group/README.md) - Allows for the creation and management of on-chain multisig accounts.
 * [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/architecture/adr-043-nft-module.html).
-* [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
-* [Circuit](./circuit/README.md) - Circuit breaker module for pausing messages.
-* [Genutil](./genutil/README.md) - Genesis utilities for the Cosmos SDK.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 

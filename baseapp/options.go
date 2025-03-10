@@ -182,7 +182,7 @@ func (app *BaseApp) SetDB(db corestore.KVStoreWithBatch) {
 
 func (app *BaseApp) SetCMS(cms storetypes.CommitMultiStore) {
 	if app.sealed {
-		panic("SetEndBlocker() on sealed BaseApp")
+		panic("SetCMS() on sealed BaseApp")
 	}
 
 	app.cms = cms
@@ -375,7 +375,7 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 // SetCheckTxHandler sets the checkTx function for the BaseApp.
 func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
 	if app.sealed {
-		panic("SetCheckTx() on sealed BaseApp")
+		panic("SetCheckTxHandler() on sealed BaseApp")
 	}
 
 	app.checkTxHandler = handler
@@ -408,6 +408,9 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 
 // SetStreamingManager sets the streaming manager for the BaseApp.
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
+	if app.sealed {
+		panic("SetStreamingManager() on sealed BaseApp")
+	}
 	app.streamingManager = manager
 }
 

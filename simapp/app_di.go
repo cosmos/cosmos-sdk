@@ -81,13 +81,13 @@ type SimApp struct {
 	UpgradeKeeper         *upgradekeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
+	CircuitKeeper         circuitkeeper.Keeper
 
 	// supplementary keepers
 	FeeGrantKeeper feegrantkeeper.Keeper
 	GroupKeeper    groupkeeper.Keeper
 	AuthzKeeper    authzkeeper.Keeper
 	NFTKeeper      nftkeeper.Keeper
-	CircuitKeeper  circuitkeeper.Keeper
 	EpochsKeeper   epochskeeper.Keeper
 
 	// simulation manager

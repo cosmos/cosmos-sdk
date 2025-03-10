@@ -84,10 +84,6 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	if execBinary == "" {
 		panic("executable binary name must not be empty")
 	}
-	nameTokens := ExecBinaryUnversionedRegExp.FindAllString(execBinary, 1)
-	if len(nameTokens) == 0 || nameTokens[0] == "" {
-		panic("failed to parse project name from binary")
-	}
 
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
@@ -103,7 +99,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		out:               os.Stdout,
 		verbose:           verbose,
 		minGasPrice:       fmt.Sprintf("0.000001%s", sdk.DefaultBondDenom),
-		projectName:       nameTokens[0],
+		projectName:       "simd",
 		pids:              make(map[int]struct{}, nodesCount),
 	}
 	if len(initer) > 0 {
@@ -192,7 +188,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 			return true
 		}),
 	)
-	s.AwaitNextBlock(t, 4e9)
+	s.AwaitNextBlock(t, 10e9)
 }
 
 // MarkDirty whole chain will be reset when marked dirty

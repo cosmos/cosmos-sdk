@@ -13,6 +13,52 @@ import (
 	"github.com/creachadair/tomledit/parser"
 )
 
+type LegacySingleNode struct {
+	execBinary        string
+	workDir           string
+	chainID           string
+	outputDir         string
+	initialNodesCount int
+	minGasPrice       string
+	commitTimeout     time.Duration
+	log               func(string)
+}
+
+// NewLegacySingleNodeInitializer constructor
+func NewLegacySingleNodeInitializer(
+	execBinary, workDir, chainID, outputDir string,
+	minGasPrice string,
+	log func(string),
+) *LegacySingleNode {
+	return &LegacySingleNode{
+		execBinary:  execBinary,
+		workDir:     workDir,
+		chainID:     chainID,
+		outputDir:   outputDir,
+		minGasPrice: minGasPrice,
+		log:         log,
+	}
+}
+
+func (s LegacySingleNode) Initialize() {
+	args := []string{
+		"testnet",
+		"init-files",
+		"--chain-id=" + s.chainID,
+		"--output-dir=" + s.outputDir,
+		"--v=1",
+		"--keyring-backend=test",
+		"--minimum-gas-prices=" + s.minGasPrice,
+	}
+
+	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
+	out, err := RunShellCmd(s.execBinary, args...)
+	if err != nil {
+		panic(err)
+	}
+	s.log(out)
+}
+
 // SingleHostTestnetCmdInitializer default testnet cmd that supports the --single-host param
 type SingleHostTestnetCmdInitializer struct {
 	execBinary        string
@@ -43,6 +89,10 @@ func NewSingleHostTestnetCmdInitializer(
 		commitTimeout:     commitTimeout,
 		log:               log,
 	}
+}
+
+func LegacyInitializerWithBinary(binary string, sut *SystemUnderTest) TestnetInitializer {
+	return NewLegacySingleNodeInitializer(binary, WorkDir, sut.chainID, sut.outputDir, sut.minGasPrice, sut.Log)
 }
 
 // InitializerWithBinary creates new SingleHostTestnetCmdInitializer from sut with given binary

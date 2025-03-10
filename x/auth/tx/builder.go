@@ -87,7 +87,9 @@ func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
 }
 
 func (w *wrapper) SetTimeoutTimestamp(timestamp time.Time) {
-	w.tx.Body.TimeoutTimestamp = &timestamp
+	if !timestamp.IsZero() && timestamp.Unix() > 0 {
+		w.tx.Body.TimeoutTimestamp = &timestamp
+	}
 }
 
 func (w *wrapper) GetTimeoutTimeStamp() time.Time {

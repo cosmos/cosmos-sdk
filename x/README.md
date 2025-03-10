@@ -29,7 +29,7 @@ proof-of-stake capabilities and governance.
 
 Supplementary modules are modules that are maintained in the Cosmos SDK but are not necessary for
 the core functionality of your blockchain.  They can be thought of as ways to extend the 
-capabilities of your blockchain or further specialize it. 
+capabilities of your blockchain or further specialize it.
 
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed at the timed tickers.

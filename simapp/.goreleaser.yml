@@ -1,10 +1,8 @@
 project_name: simd
 
-version: 2
-
 release:
   disable: false
-  name_template: "{{.Env.SIMD_FULL_TAG}}"
+  name_template: "{{.Tag}}"
 
 before:
   hooks:
@@ -43,4 +41,4 @@ checksum:
   algorithm: sha256
 
 changelog:
-  disable: true
+  skip: true

@@ -15,8 +15,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-system:
+  setup:
     runs-on: depot-ubuntu-22.04-4
+    outputs:
+      git_diff: ${{ steps.git_diff.outputs.diff }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,7 +41,23 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
-      - name: system tests
-        if: env.GIT_DIFF
+
+  test-system:
+    needs: setup
+    if: needs.setup.outputs.git_diff
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run system tests
         run: |
           make test-system
+
+  test-system-legacy:
+    needs: setup
+    if: needs.setup.outputs.git_diff
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run legacy system tests
+        run: |
+          COSMOS_BUILD_OPTIONS=legacy make test-system

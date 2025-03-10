@@ -55,9 +55,6 @@ func initFixture(t *testing.T) *fixture {
 	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
 
-	akr, err := sdkkeyring.NewAutoCLIKeyring(kr)
-	assert.NilError(t, err)
-
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
 
@@ -76,7 +73,6 @@ func initFixture(t *testing.T) *fixture {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          protoregistry.GlobalFiles,
-			Keyring:               akr,
 			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),

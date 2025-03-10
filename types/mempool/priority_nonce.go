@@ -9,12 +9,11 @@ import (
 	"github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
-	_ Mempool  = (*PriorityNonceMempool[int64])(nil)
-	_ Iterator = (*PriorityNonceIterator[int64])(nil)
+	_ ExtMempool = (*PriorityNonceMempool[int64])(nil)
+	_ Iterator   = (*PriorityNonceIterator[int64])(nil)
 )
 
 type (
@@ -351,9 +350,13 @@ func (i *PriorityNonceIterator[C]) Tx() sdk.Tx {
 //
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
-func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterator {
+func (mp *PriorityNonceMempool[C]) Select(ctx context.Context, txs [][]byte) Iterator {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
+	return mp.doSelect(ctx, txs)
+}
+
+func (mp *PriorityNonceMempool[C]) doSelect(_ context.Context, _ [][]byte) Iterator {
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}
@@ -366,6 +369,17 @@ func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterato
 	}
 
 	return iterator.iteratePriority()
+}
+
+// SelectBy will hold the mutex during the iteration, callback returns if continue.
+func (mp *PriorityNonceMempool[C]) SelectBy(ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
+
+	iter := mp.doSelect(ctx, txs)
+	for iter != nil && callback(iter.Tx()) {
+		iter = iter.Next()
+	}
 }
 
 type reorderKey[C comparable] struct {
@@ -432,7 +446,7 @@ func (mp *PriorityNonceMempool[C]) CountTx() int {
 func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
-	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
 		return err
 	}
@@ -441,7 +455,7 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	}
 
 	sig := sigs[0]
-	sender := sdk.AccAddress(sig.PubKey.Address()).String()
+	sender := sig.Signer.String()
 	nonce := sig.Sequence
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}

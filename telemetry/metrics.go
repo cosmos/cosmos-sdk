@@ -14,6 +14,15 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
+// globalTelemetryEnabled is a private variable that stores the telemetry enabled state.
+// It is set on initialization and does not change for the lifetime of the program.
+var globalTelemetryEnabled bool
+
+// IsTelemetryEnabled provides controlled access to check if telemetry is enabled.
+func IsTelemetryEnabled() bool {
+	return globalTelemetryEnabled
+}
+
 // globalLabels defines the set of global labels that will be applied to all
 // metrics emitted using the telemetry package function wrappers.
 var globalLabels = []metrics.Label{}
@@ -23,6 +32,7 @@ const (
 	FormatDefault    = ""
 	FormatPrometheus = "prometheus"
 	FormatText       = "text"
+	ContentTypeText  = `text/plain; version=` + expfmt.TextVersion + `; charset=utf-8`
 
 	MetricSinkInMem      = "mem"
 	MetricSinkStatsd     = "statsd"
@@ -98,6 +108,7 @@ type GatherResponse struct {
 
 // New creates a new instance of Metrics
 func New(cfg Config) (_ *Metrics, rerr error) {
+	globalTelemetryEnabled = cfg.Enabled
 	if !cfg.Enabled {
 		return nil, nil
 	}
@@ -196,7 +207,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 	buf := &bytes.Buffer{}
 	defer buf.Reset()
 
-	e := expfmt.NewEncoder(buf, expfmt.FmtText)
+	e := expfmt.NewEncoder(buf, expfmt.NewFormat(expfmt.TypeTextPlain))
 
 	for _, mf := range metricsFamilies {
 		if err := e.Encode(mf); err != nil {
@@ -204,7 +215,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 		}
 	}
 
-	return GatherResponse{ContentType: string(expfmt.FmtText), Metrics: buf.Bytes()}, nil
+	return GatherResponse{ContentType: ContentTypeText, Metrics: buf.Bytes()}, nil
 }
 
 // gatherGeneric collects generic metrics and returns a GatherResponse.

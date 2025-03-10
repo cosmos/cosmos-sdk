@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"runtime/pprof"
 	"strings"
 	"time"
@@ -115,8 +116,12 @@ type StartCmdOptions struct {
 	// PostSetup can be used to setup extra services under the same cancellable context,
 	// it's not called in stand-alone mode, only for in-process mode.
 	PostSetup func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
+	// PostSetupStandalone can be used to setup extra services under the same cancellable context,
+	PostSetupStandalone func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
+	// StartCommandHanlder can be used to customize the start command handler
+	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, inProcessConsensus bool, opts StartCmdOptions) error
 }
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -130,6 +135,10 @@ func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Comman
 func StartCmdWithOptions(appCreator types.AppCreator, defaultNodeHome string, opts StartCmdOptions) *cobra.Command {
 	if opts.DBOpener == nil {
 		opts.DBOpener = openDB
+	}
+
+	if opts.StartCommandHandler == nil {
+		opts.StartCommandHandler = start
 	}
 
 	cmd := &cobra.Command{
@@ -187,7 +196,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			}
 
 			err = wrapCPUProfile(serverCtx, func() error {
-				return start(serverCtx, clientCtx, appCreator, withCMT, opts)
+				return opts.StartCommandHandler(serverCtx, clientCtx, appCreator, withCMT, opts)
 			})
 
 			serverCtx.Logger.Debug("received quit signal")
@@ -271,12 +280,15 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		return err
 	}
 
-	cmtCfg := svrCtx.Config
-	home := cmtCfg.RootDir
-
-	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv, metrics)
 	if err != nil {
 		return err
+	}
+
+	if opts.PostSetupStandalone != nil {
+		if err := opts.PostSetupStandalone(svrCtx, clientCtx, ctx, g); err != nil {
+			return err
+		}
 	}
 
 	g.Go(func() error {
@@ -299,8 +311,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	metrics *telemetry.Metrics, opts StartCmdOptions,
 ) error {
 	cmtCfg := svrCtx.Config
-	home := cmtCfg.RootDir
-
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
 	g, ctx := getCtx(svrCtx, true)
@@ -336,7 +346,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		return err
 	}
 
-	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
@@ -467,7 +477,7 @@ func startGrpcServer(
 	}
 
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
-	grpcClient, err := grpc.Dial(
+	grpcClient, err := grpc.Dial( //nolint: staticcheck // ignore this line for this linter
 		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
@@ -499,7 +509,6 @@ func startGrpcServer(
 func startAPIServer(
 	ctx context.Context,
 	g *errgroup.Group,
-	cmtCfg *cmtcfg.Config,
 	svrCfg serverconfig.Config,
 	clientCtx client.Context,
 	svrCtx *Context,
@@ -528,10 +537,6 @@ func startAPIServer(
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
-	if !cfg.Telemetry.Enabled {
-		return nil, nil
-	}
-
 	return telemetry.New(cfg.Telemetry)
 }
 
@@ -606,7 +611,7 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	}
 
 	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
-		app, err = testnetify(svrCtx, home, appCreator, db, traceWriter)
+		app, err = testnetify(svrCtx, appCreator, db, traceWriter)
 		if err != nil {
 			return app, traceCleanupFn, err
 		}
@@ -630,6 +635,10 @@ func InPlaceTestnetCreator(testnetAppCreator types.AppCreator) *cobra.Command {
 	opts := StartCmdOptions{}
 	if opts.DBOpener == nil {
 		opts.DBOpener = openDB
+	}
+
+	if opts.StartCommandHandler == nil {
+		opts.StartCommandHandler = start
 	}
 
 	cmd := &cobra.Command{
@@ -696,7 +705,7 @@ you want to test the upgrade handler itself.
 			serverCtx.Viper.Set(KeyNewOpAddr, newOperatorAddress)
 
 			err = wrapCPUProfile(serverCtx, func() error {
-				return start(serverCtx, clientCtx, testnetAppCreator, withCMT, opts)
+				return opts.StartCommandHandler(serverCtx, clientCtx, testnetAppCreator, withCMT, opts)
 			})
 
 			serverCtx.Logger.Debug("received quit signal")
@@ -719,7 +728,7 @@ you want to test the upgrade handler itself.
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
+func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
@@ -739,6 +748,17 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 	}
 	if err := appGen.SaveAs(genFilePath); err != nil {
 		return nil, err
+	}
+
+	// Regenerate addrbook.json to prevent peers on old network from causing error logs.
+	addrBookPath := filepath.Join(config.RootDir, "config", "addrbook.json")
+	if err := os.Remove(addrBookPath); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed to remove existing addrbook.json: %w", err)
+	}
+
+	emptyAddrBook := []byte("{}")
+	if err := os.WriteFile(addrBookPath, emptyAddrBook, 0o600); err != nil {
+		return nil, fmt.Errorf("failed to create empty addrbook.json: %w", err)
 	}
 
 	// Load the comet genesis doc provider.
@@ -765,9 +785,6 @@ func testnetify(ctx *Context, home string, testnetAppCreator types.AppCreator, d
 		return nil, err
 	}
 	validatorAddress := userPubKey.Address()
-	if err != nil {
-		return nil, err
-	}
 
 	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
 		DiscardABCIResponses: config.Storage.DiscardABCIResponses,

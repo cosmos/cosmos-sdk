@@ -36,7 +36,7 @@ func MigrateGenesisCmd(migrations types.MigrationMap) *cobra.Command {
 		Use:     "migrate [target-version] [genesis-file]",
 		Short:   "Migrate genesis to a specified target version",
 		Long:    "Migrate the source genesis into the target version and print to STDOUT",
-		Example: fmt.Sprintf("%s migrate v0.47 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z", version.AppName),
+		Example: fmt.Sprintf("%s genesis migrate v0.47 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z", version.AppName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return MigrateHandler(cmd, args, migrations)

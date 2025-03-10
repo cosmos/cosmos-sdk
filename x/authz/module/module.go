@@ -113,7 +113,7 @@ type AppModule struct {
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper, bk authz.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
-		keeper:         keeper,
+		keeper:         keeper.SetBankKeeper(bk), // Super ugly hack to not be api breaking in v0.50 and v0.47
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		registry:       registry,
@@ -178,7 +178,7 @@ type ModuleOutputs struct {
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return ModuleOutputs{AuthzKeeper: k, Module: m}
+	return ModuleOutputs{AuthzKeeper: k.SetBankKeeper(in.BankKeeper) /* depinject ux improvement */, Module: m}
 }
 
 // ____________________________________________________________________________

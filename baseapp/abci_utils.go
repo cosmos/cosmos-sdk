@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"slices"
+	"slices" //nolint: gci // ignore this line for this linter
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -12,7 +12,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto" //nolint: gci // ignore this line for this linter
 
 	"cosmossdk.io/core/comet"
 
@@ -279,14 +279,18 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 		}
 
-		iterator := h.mempool.Select(ctx, req.Txs)
 		selectedTxsSignersSeqs := make(map[string]uint64)
-		var selectedTxsNums int
-		for iterator != nil {
-			memTx := iterator.Tx()
+		var (
+			resError        error
+			selectedTxsNums int
+			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
+		)
+		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx sdk.Tx) bool {
 			signerData, err := h.signerExtAdapter.GetSigners(memTx)
 			if err != nil {
-				return nil, err
+				// propagate the error to the caller
+				resError = err
+				return false
 			}
 
 			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
@@ -310,8 +314,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				txSignersSeqs[signer.Signer.String()] = signer.Sequence
 			}
 			if !shouldAdd {
-				iterator = iterator.Next()
-				continue
+				return true
 			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
@@ -320,14 +323,11 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			// check again.
 			txBz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
-				err := h.mempool.Remove(memTx)
-				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					return nil, err
-				}
+				invalidTxs = append(invalidTxs, memTx)
 			} else {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
-					break
+					return false
 				}
 
 				txsLen := len(h.txSelector.SelectedTxs(ctx))
@@ -348,7 +348,18 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				selectedTxsNums = txsLen
 			}
 
-			iterator = iterator.Next()
+			return true
+		})
+
+		if resError != nil {
+			return nil, resError
+		}
+
+		for _, tx := range invalidTxs {
+			err := h.mempool.Remove(tx)
+			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				return nil, err
+			}
 		}
 
 		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil

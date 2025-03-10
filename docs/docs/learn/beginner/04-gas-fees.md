@@ -56,20 +56,24 @@ Gas consumption can be done manually, generally by the module developer in the [
 
 ### Block Gas Meter
 
-`ctx.BlockGasMeter()` is the gas meter used to track gas consumption per block and make sure it does not go above a certain limit. A new instance of the `BlockGasMeter` is created each time [`FinalizeBlock`](../advanced/00-baseapp.md#finalizeblock) is called. The `BlockGasMeter` is finite, and the limit of gas per block is defined in the application's consensus parameters. By default, Cosmos SDK applications use the default consensus parameters provided by CometBFT:
+`ctx.BlockGasMeter()` is the gas meter used to track gas consumption per block and make sure it does not go above a certain limit. 
 
-```go reference
-https://github.com/cometbft/cometbft/blob/v0.37.0/types/params.go#L66-L105
-```
-
-When a new [transaction](../advanced/01-transactions.md) is being processed via `FinalizeBlock`, the current value of `BlockGasMeter` is checked to see if it is above the limit. If it is, the transaction fails and returned to the consensus engine as a failed transaction. This can happen even with the first transaction in a block, as `FinalizeBlock` itself can consume gas. If not, the transaction is processed normally. At the end of `FinalizeBlock`, the gas tracked by `ctx.BlockGasMeter()` is increased by the amount consumed to process the transaction:
+During the genesis phase, gas consumption is unlimited to accommodate initialisation transactions. 
 
 ```go
-ctx.BlockGasMeter().ConsumeGas(
-	ctx.GasMeter().GasConsumedToLimit(),
-	"block gas meter",
-)
+app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
 ```
+
+Following the genesis block, the block gas meter is set to a finite value by the SDK. This transition is facilitated by the consensus engine (e.g., CometBFT) calling the `RequestFinalizeBlock` function, which in turn triggers the SDK's `FinalizeBlock` method. Within `FinalizeBlock`, `internalFinalizeBlock` is executed, performing necessary state updates and function executions. The block gas meter, initialised each with a finite limit, is then incorporated into the context for transaction execution, ensuring gas consumption does not exceed the block's gas limit and is reset at the end of each block.
+
+Modules within the Cosmos SDK can consume block gas at any point during their execution by utilising the `ctx`. This gas consumption primarily occurs during state read/write operations and transaction processing. The block gas meter, accessible via `ctx.BlockGasMeter()`, monitors the total gas usage within a block, enforcing the gas limit to prevent excessive computation. This ensures that gas limits are adhered to on a per-block basis, starting from the first block post-genesis.
+
+```go
+gasMeter := app.getBlockGasMeter(app.finalizeBlockState.Context())
+app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
+```
+
+This above shows the general mechanism for setting the block gas meter with a finite limit based on the block's consensus parameters.
 
 ## AnteHandler
 

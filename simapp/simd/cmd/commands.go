@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"io"
-	"os"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
@@ -16,13 +15,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -106,8 +102,6 @@ custom-field = "{{ .Custom.CustomField }}"`
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	interfaceRegistry codectypes.InterfaceRegistry,
-	appCodec codec.Codec,
 	basicManager module.BasicManager,
 ) {
 	cfg := sdk.GetConfig()
@@ -122,7 +116,11 @@ func initRootCmd(
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
+	server.AddCommandsWithStartCmdOptions(rootCmd, simapp.DefaultNodeHome, newApp, appExport, server.StartCmdOptions{
+		AddFlags: func(startCmd *cobra.Command) {
+			crisis.AddModuleInitFlags(startCmd)
+		},
+	})
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
@@ -132,10 +130,6 @@ func initRootCmd(
 		txCommand(),
 		keys.Commands(),
 	)
-}
-
-func addModuleInitFlags(startCmd *cobra.Command) {
-	crisis.AddModuleInitFlags(startCmd)
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
@@ -159,7 +153,7 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		rpc.QueryEventForTxCmd(),
+		rpc.WaitTxCmd(),
 		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		server.QueryBlocksCmd(),
@@ -220,13 +214,6 @@ func appExport(
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	// this check is necessary as we use the flag in x/upgrade.
-	// we can exit more gracefully by checking the flag here.
-	homePath, ok := appOpts.Get(flags.FlagHome).(string)
-	if !ok || homePath == "" {
-		return servertypes.ExportedApp{}, errors.New("application home not set")
-	}
-
 	viperAppOpts, ok := appOpts.(*viper.Viper)
 	if !ok {
 		return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
@@ -248,14 +235,4 @@ func appExport(
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
-}
-
-var tempDir = func() string {
-	dir, err := os.MkdirTemp("", "simapp")
-	if err != nil {
-		dir = simapp.DefaultNodeHome
-	}
-	defer os.RemoveAll(dir)
-
-	return dir
 }

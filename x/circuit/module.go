@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -21,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -111,10 +109,8 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // InitGenesis performs genesis initialization for the circuit module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	start := time.Now()
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 }

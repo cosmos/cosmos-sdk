@@ -165,7 +165,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
-	defer telemetry.MeasureSince(time.Now(), req.Path)
+	defer telemetry.MeasureSince(telemetry.Now(), req.Path)
 
 	if req.Path == QueryPathBroadcastTx {
 		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil
@@ -783,10 +783,12 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			WithHeaderHash(req.Hash))
 	}
 
-	preBlock, err := app.preBlock(req)
+	preblockEvents, err := app.preBlock(req)
 	if err != nil {
 		return nil, err
 	}
+
+	events = append(events, preblockEvents...)
 
 	// First check for an abort signal after preBlock, as it's the first place
 	// we spend any significant amount of time.
@@ -795,10 +797,6 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		return nil, ctx.Err()
 	default:
 		// continue
-	}
-
-	if preBlock != nil {
-		events = append(events, preBlock.Events...)
 	}
 
 	beginBlock, err := app.beginBlock(req)
@@ -936,10 +934,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case app.haltHeight > 0 && uint64(height) > app.haltHeight:
+	case app.haltHeight > 0 && uint64(height) >= app.haltHeight:
 		halt = true
 
-	case app.haltTime > 0 && time.Unix() > int64(app.haltTime):
+	case app.haltTime > 0 && time.Unix() >= int64(app.haltTime):
 		halt = true
 	}
 
@@ -1316,8 +1314,9 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	header := app.checkState.Context().BlockHeader()
 	ctx := sdk.NewContext(cacheMS, header, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
-		WithBlockHeight(height).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).WithBlockHeader(header)
+		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
+		WithBlockHeader(header).
+		WithBlockHeight(height)
 
 	if height != lastBlockHeight {
 		rms, ok := app.cms.(*rootmulti.Store)

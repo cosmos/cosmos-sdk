@@ -39,6 +39,7 @@ func CommandsWithCustomMigrationMap(txConfig client.TxConfig, moduleBasics modul
 		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, defaultNodeHome, gentxModule.GenTxValidator, txConfig.SigningContext().ValidatorAddressCodec()),
 		ValidateGenesisCmd(moduleBasics),
 		AddGenesisAccountCmd(defaultNodeHome, txConfig.SigningContext().AddressCodec()),
+		AddBulkGenesisAccountCmd(defaultNodeHome, txConfig.SigningContext().AddressCodec()),
 	)
 
 	return cmd

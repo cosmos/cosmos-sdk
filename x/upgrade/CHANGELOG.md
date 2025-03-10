@@ -25,6 +25,28 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.1.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.4) - 2024-07-15
+
+### Improvements
+
+* [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Create upgrade directory only when necessary (upgrade flow and not init flow).
+
+## [v0.1.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.3) - 2024-06-04
+
+* (deps) [#20530](https://github.com/cosmos/cosmos-sdk/pull/20530) Bump vulnerable `github.com/hashicorp/go-getter` to v1.7.4.
+    * In theory, we do not need a new release for this, but we are doing it as `x/upgrade` is used in Cosmovisor.
+
+## [v0.1.2](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.2) - 2024-04-22
+
+### Improvements
+
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Upgrade SDK version due to prometheus breaking change.
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Bump `cosmossdk.io/store` to v1.1.0.
+
+### Bug Fixes
+
+* [#19706](https://github.com/cosmos/cosmos-sdk/pull/19706) Stop treating inline JSON as a URL.
+
 ## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.1) - 2023-12-11
 
 ### Improvements

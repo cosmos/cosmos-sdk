@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -72,11 +73,32 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	if err != nil {
 		return nil, err
 	}
-	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err != nil {
 		return nil, err
 	}
 
-	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
+	// initialize version params with zero value if not set
+	if paramsProto.Version == nil {
+		paramsProto.Version = &cmtproto.VersionParams{}
+	}
+
+	params := cmttypes.ConsensusParamsFromProto(paramsProto)
+
+	nextParams := params.Update(&consensusParams)
+
+	if err := nextParams.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err := params.ValidateUpdate(&consensusParams, sdkCtx.BlockHeader().Height); err != nil {
+		return nil, err
+	}
+
+	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
 		return nil, err
 	}
 

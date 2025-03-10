@@ -280,6 +280,11 @@ During `InputOutputCoins`, the send restriction is applied after the input coins
 
 A send restriction function should make use of a custom value in the context to allow bypassing that specific restriction.
 
+Send Restrictions are not placed on `ModuleToAccount` or `ModuleToModule` transfers. This is done due to modules needing to move funds to user accounts and other module accounts. This is a design decision to allow for more flexibility in the state machine. The state machine should be able to move funds between module accounts and user accounts without restrictions.
+
+Secondly this limitation would limit the usage of the state machine even for itself. users would not be able to receive rewards, not be able to move funds between module accounts. In the case that a user sends funds from a user account to the community pool and then a governance proposal is used to get those tokens into the users account this would fall under the discretion of the app chain developer to what they would like to do here. We can not make strong assumptions here.
+Thirdly, this issue could lead into a chain halt if a token is disabled and the token is moved in the begin/endblock. This is the last reason we see the current change and more damaging then beneficial for users.
+
 For example, in your module's keeper package, you'd define the send restriction function:
 
 ```golang

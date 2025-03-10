@@ -710,24 +710,33 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := []struct {
-		name   string
-		height int64
-		prove  bool
-		expErr bool
+		name         string
+		height       int64
+		headerHeight int64
+		prove        bool
+		expErr       bool
 	}{
-		{"valid height", 2, true, false},
-		{"future height", 10, true, true},
-		{"negative height, prove=true", -1, true, true},
-		{"negative height, prove=false", -1, false, true},
+		{"valid height", 2, 2, true, false},
+		{"valid height with different initial height", 2, 1, true, false},
+		{"future height", 10, 10, true, true},
+		{"negative height, prove=true", -1, -1, true, true},
+		{"negative height, prove=false", -1, -1, false, true},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := app.CreateQueryContext(tc.height, tc.prove)
+			if tc.headerHeight != tc.height {
+				_, err := app.InitChain(&abci.RequestInitChain{
+					InitialHeight: tc.headerHeight,
+				})
+				require.NoError(t, err)
+			}
+			ctx, err := app.CreateQueryContext(tc.height, tc.prove)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+				require.Equal(t, tc.height, ctx.BlockHeight())
 			}
 		})
 	}

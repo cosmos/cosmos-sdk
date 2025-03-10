@@ -1,11 +1,13 @@
 package sims
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -13,6 +15,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -205,11 +208,11 @@ func AppStateRandomizedFn(
 	)
 	appParams.GetOrGenerate(
 		StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
+		func(r *rand.Rand) { initialStake = sdk.DefaultPowerReduction.AddRaw(r.Int63n(1e12)) },
 	)
 	appParams.GetOrGenerate(
 		InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
+		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(299) + 1) },
 	)
 
 	if numInitiallyBonded > numAccs {
@@ -250,19 +253,23 @@ func AppStateRandomizedFn(
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
 func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (genutiltypes.AppGenesis, []simtypes.Account, error) {
-	bytes, err := os.ReadFile(genesisFile)
+	file, err := os.Open(filepath.Clean(genesisFile))
 	if err != nil {
 		panic(err)
 	}
 
-	var genesis genutiltypes.AppGenesis
-	if err = json.Unmarshal(bytes, &genesis); err != nil {
-		return genesis, nil, err
+	genesis, err := genutiltypes.AppGenesisFromReader(bufio.NewReader(file))
+	if err != nil {
+		return *genesis, nil, err
+	}
+
+	if err := file.Close(); err != nil {
+		return *genesis, nil, err
 	}
 
 	var appState map[string]json.RawMessage
 	if err = json.Unmarshal(genesis.AppState, &appState); err != nil {
-		return genesis, nil, err
+		return *genesis, nil, err
 	}
 
 	var authGenesis authtypes.GenesisState
@@ -284,13 +291,13 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 
 		a, ok := acc.GetCachedValue().(sdk.AccountI)
 		if !ok {
-			return genesis, nil, fmt.Errorf("expected account")
+			return *genesis, nil, fmt.Errorf("expected account")
 		}
 
 		// create simulator accounts
-		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: a.GetAddress()}
+		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: a.GetAddress(), ConsKey: ed25519.GenPrivKeyFromSecret(privkeySeed)}
 		newAccs[i] = simAcc
 	}
 
-	return genesis, newAccs, nil
+	return *genesis, newAccs, nil
 }

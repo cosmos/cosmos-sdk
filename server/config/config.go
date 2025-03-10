@@ -275,7 +275,7 @@ func DefaultConfig() *Config {
 			},
 		},
 		Mempool: MempoolConfig{
-			MaxTxs: 5_000,
+			MaxTxs: -1,
 		},
 	}
 }

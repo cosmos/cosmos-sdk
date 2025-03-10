@@ -273,9 +273,9 @@ test-sim-nondeterminism-streaming:
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
-	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestFullAppSimulation -Genesis=${HOME}/.gaiad/config/genesis.json \
-		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
+	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -SigverifyTx=false -v -timeout 24h
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
@@ -287,8 +287,8 @@ test-sim-after-import: runsim
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
-	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.gaiad/config/genesis.json -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
+	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
+	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.simapp/config/genesis.json -SigverifyTx=false -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
@@ -463,10 +463,10 @@ localnet-build-dlv:
 localnet-build-nodes:
 	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
 			  testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
-	docker-compose up -d
+	docker compose up -d
 
 localnet-stop:
-	docker-compose down
+	docker compose down
 
 # localnet-start will run a 4-node testnet locally. The nodes are
 # based off the docker images in: ./contrib/images/simd-env

@@ -260,14 +260,12 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	// Unreleased improvement in v0.51
-	// https://github.com/cosmos/cosmos-sdk/pull/20517
-	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
+	err = k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, fromAddr, amt)
+	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -304,7 +302,7 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 		),
 	})
 

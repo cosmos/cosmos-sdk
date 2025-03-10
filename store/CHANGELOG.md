@@ -23,7 +23,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Unreleased
+> **Disclaimer**: Numbers from v1.0.x to v1.9.x are reserved for the v0.50 line.
+> cosmossdk.io/store compatible with the v0.50 line is tagged from release/v0.50.x
+> Numbers from v1.10.x onwards are reserved for the 0.52+ line.
+> With Cosmos SDK v2 (with store/v2), CometBFT has been pushed to the boundaries, so issues like this
+> are not expected to happen again.
+
+## v1.1.1 (September 06, 2024)
+
+### Improvements
+
+* [#21574](https://github.com/cosmos/cosmos-sdk/pull/21574) Upgrade IVL to IAVL 1.2.0.
+
+## v1.1.0 (March 20, 2024)
+
+### Improvements
+
+* [#19770](https://github.com/cosmos/cosmos-sdk/pull/19770) Upgrade IAVL to IAVL v1.1.1.
 
 ## v1.0.2 (January 10, 2024)
 

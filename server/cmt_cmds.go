@@ -182,7 +182,7 @@ Please refer to each module's documentation for the full set of events to query
 for. Each module documents its respective events under 'xx_events.md'.
 `,
 		Example: fmt.Sprintf(
-			"$ %s query blocks --query \"message.sender='cosmos1...' AND block.height > 7\" --page 1 --limit 30 --order-by ASC",
+			"$ %s query blocks --query \"message.sender='cosmos1...' AND block.height > 7\" --page 1 --limit 30 --order_by asc",
 			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -226,7 +226,7 @@ $ %s query block --%s=%s <hash>
 `,
 			version.AppName, auth.FlagType, auth.TypeHeight,
 			version.AppName, auth.FlagType, auth.TypeHash)),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -234,24 +234,37 @@ $ %s query block --%s=%s <hash>
 			}
 
 			typ, _ := cmd.Flags().GetString(auth.FlagType)
+			if len(args) == 0 {
+				// do not break default v0.50 behavior of block hash
+				// if no args are provided, set the type to height
+				typ = auth.TypeHeight
+			}
 
 			switch typ {
 			case auth.TypeHeight:
-
-				if args[0] == "" {
-					return fmt.Errorf("argument should be a block height")
+				var (
+					err    error
+					height int64
+				)
+				heightStr := ""
+				if len(args) > 0 {
+					heightStr = args[0]
 				}
 
-				// optional height
-				var height *int64
-				if len(args) > 0 {
-					height, err = parseOptionalHeight(args[0])
+				if heightStr == "" {
+					cmd.Println("Falling back to latest block height:")
+					height, err = rpc.GetChainHeight(clientCtx)
 					if err != nil {
-						return err
+						return fmt.Errorf("failed to get chain height: %w", err)
+					}
+				} else {
+					height, err = strconv.ParseInt(heightStr, 10, 64)
+					if err != nil {
+						return fmt.Errorf("failed to parse block height: %w", err)
 					}
 				}
 
-				output, err := rpc.GetBlockByHeight(clientCtx, height)
+				output, err := rpc.GetBlockByHeight(clientCtx, &height)
 				if err != nil {
 					return err
 				}
@@ -311,15 +324,21 @@ func QueryBlockResultsCmd() *cobra.Command {
 			}
 
 			// optional height
-			var height *int64
+			var height int64
 			if len(args) > 0 {
-				height, err = parseOptionalHeight(args[0])
+				height, err = strconv.ParseInt(args[0], 10, 64)
 				if err != nil {
 					return err
 				}
+			} else {
+				cmd.Println("Falling back to latest block height:")
+				height, err = rpc.GetChainHeight(clientCtx)
+				if err != nil {
+					return fmt.Errorf("failed to get chain height: %w", err)
+				}
 			}
 
-			blockRes, err := node.BlockResults(context.Background(), height)
+			blockRes, err := node.BlockResults(context.Background(), &height)
 			if err != nil {
 				return err
 			}
@@ -339,21 +358,6 @@ func QueryBlockResultsCmd() *cobra.Command {
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func parseOptionalHeight(heightStr string) (*int64, error) {
-	h, err := strconv.Atoi(heightStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if h == 0 {
-		return nil, nil
-	}
-
-	tmp := int64(h)
-
-	return &tmp, nil
 }
 
 func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
@@ -381,7 +385,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, uint64(height), nil)
+			return node.BootstrapStateWithGenProvider(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
 		},
 	}
 

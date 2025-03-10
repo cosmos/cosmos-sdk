@@ -39,11 +39,11 @@ which should help provide some liquidity.
 
 It can be broken down in the following way:
 
-* If the inflation rate is below the goal %-bonded the inflation rate will
+* If the actual percentage of bonded tokens is below the goal %-bonded the inflation rate will
    increase until a maximum value is reached
 * If the goal % bonded (67% in Cosmos-Hub) is maintained, then the inflation
    rate will stay constant
-* If the inflation rate is above the goal %-bonded the inflation rate will
+* If the actual percentage of bonded tokens is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
 
 
@@ -61,7 +61,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/
 
 ### Params
 
-The mint module stores it's params in state with the prefix of `0x01`,
+The mint module stores its params in state with the prefix of `0x01`,
 it can be updated with governance or the address with authority.
 
 * Params: `mint/params -> legacy_amino(params)`
@@ -91,7 +91,7 @@ type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, 
 The target annual inflation rate is recalculated each block.
 The inflation is also subject to a rate change (positive or negative)
 depending on the distance from the desired ratio (67%). The maximum rate change
-possible is defined to be 13% per year, however the annual inflation is capped
+possible is defined to be 13% per year, however, the annual inflation is capped
 as between 7% and 20%.
 
 ```go
@@ -169,7 +169,7 @@ A user can query and interact with the `mint` module using the CLI.
 
 #### Query
 
-The `query` commands allow users to query `mint` state.
+The `query` commands allows users to query `mint` state.
 
 ```shell
 simd query mint --help
@@ -177,7 +177,7 @@ simd query mint --help
 
 ##### annual-provisions
 
-The `annual-provisions` command allow users to query the current minting annual provisions value
+The `annual-provisions` command allows users to query the current minting annual provisions value
 
 ```shell
 simd query mint annual-provisions [flags]
@@ -197,7 +197,7 @@ Example Output:
 
 ##### inflation
 
-The `inflation` command allow users to query the current minting inflation value
+The `inflation` command allows users to query the current minting inflation value
 
 ```shell
 simd query mint inflation [flags]
@@ -217,7 +217,7 @@ Example Output:
 
 ##### params
 
-The `params` command allow users to query the current minting parameters
+The `params` command allows users to query the current minting parameters
 
 ```shell
 simd query mint params [flags]
@@ -240,7 +240,7 @@ A user can query the `mint` module using gRPC endpoints.
 
 #### AnnualProvisions
 
-The `AnnualProvisions` endpoint allow users to query the current minting annual provisions value
+The `AnnualProvisions` endpoint allows users to query the current minting annual provisions value
 
 ```shell
 /cosmos.mint.v1beta1.Query/AnnualProvisions
@@ -262,7 +262,7 @@ Example Output:
 
 #### Inflation
 
-The `Inflation` endpoint allow users to query the current minting inflation value
+The `Inflation` endpoint allows users to query the current minting inflation value
 
 ```shell
 /cosmos.mint.v1beta1.Query/Inflation
@@ -284,7 +284,7 @@ Example Output:
 
 #### Params
 
-The `Params` endpoint allow users to query the current minting parameters
+The `Params` endpoint allows users to query the current minting parameters
 
 ```shell
 /cosmos.mint.v1beta1.Query/Params

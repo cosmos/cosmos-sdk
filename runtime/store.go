@@ -24,12 +24,20 @@ func (k kvStoreService) OpenKVStore(ctx context.Context) store.KVStore {
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(k.key))
 }
 
+func NewMemStoreService(storeKey *storetypes.MemoryStoreKey) store.MemoryStoreService {
+	return &memStoreService{key: storeKey}
+}
+
 type memStoreService struct {
 	key *storetypes.MemoryStoreKey
 }
 
 func (m memStoreService) OpenMemoryStore(ctx context.Context) store.KVStore {
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key))
+}
+
+func NewTransientStoreService(storeKey *storetypes.TransientStoreKey) store.TransientStoreService {
+	return &transientStoreService{key: storeKey}
 }
 
 type transientStoreService struct {

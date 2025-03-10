@@ -358,6 +358,11 @@ func (app *BaseApp) SetFauxMerkleMode() {
 	app.fauxMerkleMode = true
 }
 
+// SetNotSigverify during simulation testing, transaction signature verification needs to be ignored.
+func (app *BaseApp) SetNotSigverifyTx() {
+	app.sigverifyTx = false
+}
+
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
@@ -469,4 +474,14 @@ func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 // SetDisableBlockGasMeter sets the disableBlockGasMeter flag for the BaseApp.
 func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
 	app.disableBlockGasMeter = disableBlockGasMeter
+}
+
+// SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
+func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
+	app.msgServiceRouter = msgServiceRouter
+}
+
+// SetGRPCQueryRouter sets the GRPCQueryRouter of the BaseApp.
+func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
+	app.grpcQueryRouter = grpcQueryRouter
 }

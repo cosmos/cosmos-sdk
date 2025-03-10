@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,6 +23,8 @@ import (
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
 func PreBlocker(ctx context.Context, k *keeper.Keeper) (appmodule.ResponsePreBlock, error) {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.HeaderInfo().Height
 	plan, err := k.GetUpgradePlan(ctx)

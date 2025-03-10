@@ -11,6 +11,8 @@ import (
 
 // BeginBlocker mints new tokens for the previous block.
 func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalculationFn) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+
 	// fetch stored minter & params
 	minter, err := k.Minter.Get(ctx)
 	if err != nil {

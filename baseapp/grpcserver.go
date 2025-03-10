@@ -19,9 +19,6 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
-// GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
-func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
-
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 	// Define an interceptor for all gRPC queries: this interceptor will create

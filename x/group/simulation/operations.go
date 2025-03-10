@@ -629,7 +629,7 @@ func SimulateMsgUpdateGroupMembers(
 
 		// set existing random group member weight to zero to remove from the group
 		existigMembers := res.Members
-		if len(existigMembers) > 0 {
+		if len(existigMembers) > 1 {
 			memberToRemove := existigMembers[r.Intn(len(existigMembers))]
 			var isDuplicateMember bool
 			for idx, m := range members {
@@ -1229,13 +1229,19 @@ func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 
 	switch {
 	case groupID > initialGroupID:
-		// select a random ID between [initialGroupID, groupID]
-		groupID = uint64(simtypes.RandIntBetween(r, int(initialGroupID), int(groupID)))
+		// select a random ID between (initialGroupID, groupID]
+		// if there is at least one group information, then the groupID at this time must be greater than or equal to 1
+		groupID = uint64(simtypes.RandIntBetween(r, int(initialGroupID+1), int(groupID+1)))
 
 	default:
 		// This is called on the first call to this function
 		// in order to update the global variable
 		initialGroupID = groupID
+	}
+
+	// when groupID is 0, it proves that SimulateMsgCreateGroup has never been called. that is, no group exists in the chain
+	if groupID == 0 {
+		return nil, simtypes.Account{}, nil, nil
 	}
 
 	res, err := k.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})

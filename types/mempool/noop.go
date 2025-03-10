@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Mempool = (*NoOpMempool)(nil)
+var _ ExtMempool = (*NoOpMempool)(nil)
 
 // NoOpMempool defines a no-op mempool. Transactions are completely discarded and
 // ignored when BaseApp interacts with the mempool.
@@ -16,7 +16,8 @@ var _ Mempool = (*NoOpMempool)(nil)
 // is FIFO-ordered by default.
 type NoOpMempool struct{}
 
-func (NoOpMempool) Insert(context.Context, sdk.Tx) error      { return nil }
-func (NoOpMempool) Select(context.Context, [][]byte) Iterator { return nil }
-func (NoOpMempool) CountTx() int                              { return 0 }
-func (NoOpMempool) Remove(sdk.Tx) error                       { return nil }
+func (NoOpMempool) Insert(context.Context, sdk.Tx) error                  { return nil }
+func (NoOpMempool) Select(context.Context, [][]byte) Iterator             { return nil }
+func (NoOpMempool) SelectBy(context.Context, [][]byte, func(sdk.Tx) bool) {}
+func (NoOpMempool) CountTx() int                                          { return 0 }
+func (NoOpMempool) Remove(sdk.Tx) error                                   { return nil }

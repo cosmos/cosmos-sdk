@@ -1,10 +1,8 @@
 syntax = "proto3";
 
-import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/any.proto";
-import "cosmos/tx/v1beta1/tx.proto";
 
 // AminoSignFee is the legacy amino json sign mode compatible version of txv1beta1.Fee, and differs from that message
 // by the name of the Gas field (GasLimit in txv1beta.Fee).
@@ -27,5 +25,4 @@ message AminoSignDoc {
   string       memo                 = 5 [(amino.dont_omitempty) = true];
   AminoSignFee fee                  = 6 [(amino.dont_omitempty) = true];
   repeated google.protobuf.Any msgs = 7 [(amino.dont_omitempty) = true];
-  cosmos.tx.v1beta1.Tip        tip  = 8;
 }

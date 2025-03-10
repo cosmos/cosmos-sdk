@@ -24,4 +24,4 @@ snapshot:
   name_template: SNAPSHOT-{{ .Commit }}
 
 changelog:
-  skip: false
+  disable: false

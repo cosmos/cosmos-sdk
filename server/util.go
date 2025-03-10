@@ -338,6 +338,36 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator, defaultNodeHome),
+		ModuleHashByHeightQuery(appCreator),
+	)
+}
+
+// AddCommandsWithStartCmdOptions adds server commands with the provided StartCmdOptions.
+func AddCommandsWithStartCmdOptions(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, opts StartCmdOptions) {
+	cometCmd := &cobra.Command{
+		Use:     "comet",
+		Aliases: []string{"cometbft", "tendermint"},
+		Short:   "CometBFT subcommands",
+	}
+
+	cometCmd.AddCommand(
+		ShowNodeIDCmd(),
+		ShowValidatorCmd(),
+		ShowAddressCmd(),
+		VersionCmd(),
+		cmtcmd.ResetAllCmd,
+		cmtcmd.ResetStateCmd,
+		BootstrapStateCmd(appCreator),
+	)
+
+	startCmd := StartCmdWithOptions(appCreator, defaultNodeHome, opts)
+
+	rootCmd.AddCommand(
+		startCmd,
+		cometCmd,
+		ExportCmd(appExport, defaultNodeHome),
+		version.NewVersionCommand(),
+		NewRollbackCmd(appCreator, defaultNodeHome),
 	)
 }
 
@@ -483,7 +513,12 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json"))
+		genesisPathCfg, _ := appOpts.Get("genesis_file").(string)
+		if genesisPathCfg == "" {
+			genesisPathCfg = filepath.Join("config", "genesis.json")
+		}
+
+		reader, err := os.Open(filepath.Join(homeDir, genesisPathCfg))
 		if err != nil {
 			panic(err)
 		}

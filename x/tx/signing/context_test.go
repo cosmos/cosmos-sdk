@@ -14,6 +14,58 @@ import (
 	"cosmossdk.io/x/tx/internal/testpb"
 )
 
+var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{
+	Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner{
+		{
+			Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner{
+				{
+					Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner_Bottom{
+						{
+							Signer: []string{hex.EncodeToString([]byte("foo")), hex.EncodeToString([]byte("bar"))},
+						},
+					},
+				},
+			},
+		},
+		{
+			Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner{
+				{
+					Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner_Bottom{
+						{
+							Signer: []string{hex.EncodeToString([]byte("baz"))},
+						},
+					},
+				},
+				{
+					Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner_Bottom{
+						{
+							Signer: []string{hex.EncodeToString([]byte("qux")), hex.EncodeToString([]byte("fuz"))},
+						},
+						{
+							Signer: []string{hex.EncodeToString([]byte("bing")), hex.EncodeToString([]byte("bap"))},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+func TestGetGetSignersFnConcurrent(t *testing.T) {
+	ctx, err := NewContext(Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
+	})
+	require.NoError(t, err)
+
+	desc := (&testpb.RepeatedSigner{}).ProtoReflect().Descriptor()
+	for i := 0; i < 50; i++ {
+		go func() {
+			_, _ = ctx.getGetSignersFn(desc)
+		}()
+	}
+}
+
 func TestGetSigners(t *testing.T) {
 	ctx, err := NewContext(Options{
 		AddressCodec:          dummyAddressCodec{},
@@ -88,7 +140,18 @@ func TestGetSigners(t *testing.T) {
 			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
-			name: "nested repeated",
+			name: "deeply nested",
+			msg: &testpb.DeeplyNestedSigner{
+				InnerOne: &testpb.DeeplyNestedSigner_InnerOne{
+					InnerTwo: &testpb.DeeplyNestedSigner_InnerOne_InnerTwo{
+						Signer: hex.EncodeToString([]byte("foo")),
+					},
+				},
+			},
+			want: [][]byte{[]byte("foo")},
+		},
+		{
+			name: "nested repeated #1",
 			msg: &testpb.NestedRepeatedSigner{Inner: &testpb.NestedRepeatedSigner_Inner{
 				Signer: []string{
 					hex.EncodeToString([]byte("foo")),
@@ -96,6 +159,11 @@ func TestGetSigners(t *testing.T) {
 				},
 			}},
 			want: [][]byte{[]byte("foo"), []byte("bar")},
+		},
+		{
+			name: "nested repeated #2",
+			msg:  deeplyNestedRepeatedSigner,
+			want: [][]byte{[]byte("foo"), []byte("bar"), []byte("baz"), []byte("qux"), []byte("fuz"), []byte("bing"), []byte("bap")},
 		},
 		{
 			name: "repeated nested repeated",
@@ -143,6 +211,27 @@ func TestGetSigners(t *testing.T) {
 			require.Equal(t, test.want, signers)
 		})
 	}
+}
+
+func TestMaxRecursionDepth(t *testing.T) {
+	ctx, err := NewContext(Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
+		MaxRecursionDepth:     1,
+	})
+	require.NoError(t, err)
+
+	_, err = ctx.GetSigners(deeplyNestedRepeatedSigner)
+	require.ErrorContains(t, err, "maximum recursion depth exceeded")
+
+	ctx, err = NewContext(Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
+		MaxRecursionDepth:     5,
+	})
+	require.NoError(t, err)
+	_, err = ctx.GetSigners(deeplyNestedRepeatedSigner)
+	require.NoError(t, err)
 }
 
 func TestDefineCustomGetSigners(t *testing.T) {

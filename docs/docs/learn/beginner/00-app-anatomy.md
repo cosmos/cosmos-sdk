@@ -274,6 +274,6 @@ The following is the `go.mod` of the [Cosmos Hub](https://github.com/cosmos/gaia
 https://github.com/cosmos/gaia/blob/26ae7c2/go.mod#L1-L28
 ```
 
-For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`appd`](#node-client) and [`appd`](#application-interface).
+For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`Node Client`](#node-client) and [`Application Interface`](#application-interface).
 
 Here is an example of the [Cosmos Hub Makefile](https://github.com/cosmos/gaia/blob/main/Makefile).

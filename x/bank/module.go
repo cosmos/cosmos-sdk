@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
+	"sort"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/address"
@@ -19,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -154,10 +154,8 @@ func (AppModule) QuerierRoute() string { return types.RouterKey }
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	start := time.Now()
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, &genesisState)
 }
@@ -199,8 +197,10 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 // App Wiring Setup
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
+	appmodule.Register(
+		&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(InvokeSetSendRestrictions),
 	)
 }
 
@@ -258,4 +258,40 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(in.Cdc, &bankKeeper, in.AccountKeeper, in.LegacySubspace)
 
 	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
+}
+
+func InvokeSetSendRestrictions(
+	config *modulev1.Module,
+	keeper keeper.BaseKeeper,
+	restrictions map[string]types.SendRestrictionFn,
+) error {
+	if config == nil {
+		return nil
+	}
+
+	modules := maps.Keys(restrictions)
+	order := config.RestrictionsOrder
+	if len(order) == 0 {
+		order = modules
+		sort.Strings(order)
+	}
+
+	if len(order) != len(modules) {
+		return fmt.Errorf("len(restrictions order: %v) != len(restriction modules: %v)", order, modules)
+	}
+
+	if len(modules) == 0 {
+		return nil
+	}
+
+	for _, module := range order {
+		restriction, ok := restrictions[module]
+		if !ok {
+			return fmt.Errorf("can't find send restriction for module %s", module)
+		}
+
+		keeper.AppendSendRestriction(restriction)
+	}
+
+	return nil
 }

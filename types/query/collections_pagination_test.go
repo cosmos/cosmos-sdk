@@ -83,6 +83,16 @@ func TestCollectionPagination(t *testing.T) {
 			},
 			expResults: createResults(299, 200),
 		},
+		"with key and reverse": {
+			req: &PageRequest{
+				Key:     encodeKey(199),
+				Reverse: true,
+			},
+			expResp: &PageResponse{
+				NextKey: encodeKey(99),
+			},
+			expResults: createResults(199, 100),
+		},
 		"with offset and count total": {
 			req: &PageRequest{
 				Offset:     50,

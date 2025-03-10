@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -38,7 +37,11 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	for cmdName, subCmdDescriptor := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			subCmd = topLevelCmd(cmd.Context(), cmdName, fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service))
+			short := subCmdDescriptor.Short
+			if short == "" {
+				short = fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service)
+			}
+			subCmd = topLevelCmd(cmd.Context(), cmdName, short)
 		}
 
 		// Add recursive sub-commands if there are any. This is used for nested services.
@@ -46,7 +49,9 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			return err
 		}
 
-		cmd.AddCommand(subCmd)
+		if !subCmdDescriptor.EnhanceCustomCommand {
+			cmd.AddCommand(subCmd)
+		}
 	}
 
 	if cmdDescriptor.Service == "" {
@@ -56,7 +61,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 
 	descriptor, err := b.FileResolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
-		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
+		return fmt.Errorf("can't find service %s: %w", cmdDescriptor.Service, err)
 	}
 	service := descriptor.(protoreflect.ServiceDescriptor)
 	methods := service.Methods()
@@ -83,7 +88,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			continue
 		}
 
-		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
+		if !util.IsSupportedVersion(methodDescriptor) {
 			continue
 		}
 
@@ -98,9 +103,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			continue
 		}
 
-		if methodCmd != nil {
-			cmd.AddCommand(methodCmd)
-		}
+		cmd.AddCommand(methodCmd)
 	}
 
 	return nil
@@ -108,7 +111,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 
 // BuildMsgMethodCommand returns a command that outputs the JSON representation of the message.
 func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
+	execFunc := func(cmd *cobra.Command, input protoreflect.Message) error {
 		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
@@ -117,11 +120,11 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		clientCtx = clientCtx.WithCmdContext(cmd.Context())
 		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
 
-		// set signer to signer field if empty
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
-		if addr := input.Get(fd).String(); addr == "" {
-			addressCodec := b.Builder.AddressCodec
+		addressCodec := b.Builder.AddressCodec
 
+		// set signer to signer field if empty
+		if addr := input.Get(fd).String(); addr == "" {
 			scalarType, ok := flag.GetScalarType(fd)
 			if ok {
 				// override address codec if validator or consensus address
@@ -149,16 +152,19 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		proto.Merge(msg, input.Interface())
 
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-	})
+	}
+
+	cmd, err := b.buildMethodCommandCommon(descriptor, options, execFunc)
+	if err != nil {
+		return nil, err
+	}
 
 	if b.AddTxConnFlags != nil {
 		b.AddTxConnFlags(cmd)
 	}
 
 	// silence usage only for inner txs & queries commands
-	if cmd != nil {
-		cmd.SilenceUsage = true
-	}
+	cmd.SilenceUsage = true
 
-	return cmd, err
+	return cmd, nil
 }

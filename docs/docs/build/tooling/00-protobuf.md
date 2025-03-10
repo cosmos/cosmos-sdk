@@ -98,7 +98,7 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.lock#L1-L16
 
 #### `buf.yaml`
 
-`buf.yaml` defines the [name of your package](https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L3), which [breakage checker](https://docs.buf.build/tour/detect-breaking-changes) to use and how to [lint your protobuf files](https://docs.buf.build/tour/lint-your-api). 
+`buf.yaml` defines the [name of your package](https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L3), which [breakage checker](https://docs.buf.build/tour/detect-breaking-changes) to use and how to [lint your protobuf files](https://buf.build/docs/tutorials/getting-started-with-buf-cli#lint-your-api). 
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L1-L24

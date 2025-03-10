@@ -168,6 +168,7 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeProposalDeposit,
+			sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddr.String()),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 		),

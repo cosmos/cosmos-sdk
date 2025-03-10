@@ -8,6 +8,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
@@ -181,6 +182,7 @@ type ModuleInputs struct {
 	AddressCodec address.Codec
 
 	AppOpts servertypes.AppOptions `optional:"true"`
+	Viper   *viper.Viper           `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -197,7 +199,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	if in.AppOpts != nil {
+	if in.Viper != nil { // viper takes precedence over app options
+		for _, h := range in.Viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+			skipUpgradeHeights[int64(h)] = true
+		}
+
+		homePath = in.Viper.GetString(flags.FlagHome)
+	} else if in.AppOpts != nil {
 		for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 			skipUpgradeHeights[int64(h)] = true
 		}

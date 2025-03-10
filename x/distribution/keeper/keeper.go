@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // Keeper of the distribution store
@@ -31,13 +32,29 @@ type Keeper struct {
 	FeePool collections.Item[types.FeePool]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
+
+	protocolPoolEnabled bool
+}
+
+type InitOptions func(*Keeper)
+
+// WithProtocolPoolEnabled will enable the protocol pool functionality in x/distribution, directing
+// community pool funds to x/protocolpool
+func WithProtocolPoolEnabled() InitOptions {
+	return func(k *Keeper) {
+		k.protocolPoolEnabled = true
+	}
 }
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, storeService store.KVStoreService,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
+	cdc codec.BinaryCodec,
+	storeService store.KVStoreService,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
 	feeCollectorName, authority string,
+	opts ...InitOptions,
 ) Keeper {
 	// ensure distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -46,15 +63,16 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		storeService:     storeService,
-		cdc:              cdc,
-		authKeeper:       ak,
-		bankKeeper:       bk,
-		stakingKeeper:    sk,
-		feeCollectorName: feeCollectorName,
-		authority:        authority,
-		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		storeService:        storeService,
+		cdc:                 cdc,
+		authKeeper:          ak,
+		bankKeeper:          bk,
+		stakingKeeper:       sk,
+		feeCollectorName:    feeCollectorName,
+		authority:           authority,
+		Params:              collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		FeePool:             collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		protocolPoolEnabled: false,
 	}
 
 	schema, err := sb.Build()
@@ -62,6 +80,19 @@ func NewKeeper(
 		panic(err)
 	}
 	k.Schema = schema
+
+	for _, opt := range opts {
+		opt(&k)
+	}
+
+	if k.protocolPoolEnabled {
+		// ensure protocolpool module account is set if we are enabling it
+		// this will ensure that funds can be transferred to it.
+		if addr := ak.GetModuleAddress(protocolpooltypes.ModuleName); addr == nil {
+			panic(fmt.Sprintf("%s module account has not been set", protocolpooltypes.ModuleName))
+		}
+	}
+
 	return k
 }
 

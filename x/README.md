@@ -28,13 +28,8 @@ proof-of-stake capabilities and governance.
 ## Supplementary Modules
 
 Supplementary modules are modules that are maintained in the Cosmos SDK but are not necessary for
-<<<<<<< HEAD
 the core functionality of your blockchain.  They can be thought of as ways to extend the 
-capabilities of your blockchain or further specialize it. 
-=======
-the core functionality of your blockchain.  They can be thought of as ways to extend the
 capabilities of your blockchain or further specialize it.
->>>>>>> 548ca00b1 (docs: add x/ docs (#23955))
 
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed at the timed tickers.
@@ -65,8 +60,4 @@ The CosmWasm module enables smart contracts, learn more by going to their [docum
 
 ## EVM
 
-<<<<<<< HEAD
 Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://docs.evmos.org/modules/evm/).
-=======
-Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://docs.evmos.org/modules/evm/).
->>>>>>> 548ca00b1 (docs: add x/ docs (#23955))

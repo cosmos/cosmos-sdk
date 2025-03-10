@@ -14,14 +14,12 @@ import (
 )
 
 type LegacySingleNode struct {
-	execBinary        string
-	workDir           string
-	chainID           string
-	outputDir         string
-	initialNodesCount int
-	minGasPrice       string
-	commitTimeout     time.Duration
-	log               func(string)
+	execBinary  string
+	workDir     string
+	chainID     string
+	outputDir   string
+	minGasPrice string
+	log         func(string)
 }
 
 // NewLegacySingleNodeInitializer constructor

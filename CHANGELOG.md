@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (types) [#23919](https://github.com/cosmos/cosmos-sdk/pull/23919) Add MustValAddressFromBech32 function.
 * (all) [23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support.
   * Adds a `--timeout-timestamp` flag that allows users to specify a block time at which the unordered transactions should expire from the mempool.
 * (x/epochs) [#23815](https://github.com/cosmos/cosmos-sdk/pull/23815) Upstream `x/epochs` from Osmosis
@@ -57,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [#23860](https://github.com/cosmos/cosmos-sdk/pull/23860) Add missing `unordered` field for legacy amino signing of tx body.
 * (x/bank) [#23836](https://github.com/cosmos/cosmos-sdk/pull/23836) Fix `DenomMetadata` rpc allow value with slashes.
 * (query) [87d3a43](https://github.com/cosmos/cosmos-sdk/commit/87d3a432af95f4cf96aa02351ed5fcc51cca6e7b) Fix collection filtered pagination.
+* (sims) [#23952](https://github.com/cosmos/cosmos-sdk/pull/23952) Use liveness matrix for validator sign status in sims
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20
 

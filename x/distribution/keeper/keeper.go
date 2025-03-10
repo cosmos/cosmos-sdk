@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -14,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // Keeper of the distribution store

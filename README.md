@@ -40,6 +40,11 @@ If you want to get started quickly and learn how to build on top of Cosmos SDK, 
 
 For more information, see the [Cosmos SDK Documentation](https://docs.cosmos.network).
 
+## Modules
+
+The Cosmos SDK maintains a set of modules that can be included in your blockchain application.  For more information
+on modules, see our [introduction doc](./x/README.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute and participate in our [dev calls](./CONTRIBUTING.md#teams-dev-calls).

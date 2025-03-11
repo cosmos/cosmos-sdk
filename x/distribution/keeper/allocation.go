@@ -149,10 +149,6 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 //	distribute from the distribution module account to the x/protocolpool account
 //	update the bookkept value in x/distribution
 func (k Keeper) sendCommunityPoolToProtocolPool(ctx sdk.Context) error {
-	if k.protocolPoolEnabled {
-		return nil
-	}
-
 	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return err

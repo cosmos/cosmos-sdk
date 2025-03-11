@@ -309,7 +309,7 @@ static int secp256k1_fe_cmp_var(const secp256k1_fe *a, const secp256k1_fe *b) {
     secp256k1_fe_verify(a);
     secp256k1_fe_verify(b);
 #endif
-    for (i = 9; i >= 0; i--) {
+    for (i = 0; i < 10; i++) {
         if (a->n[i] > b->n[i]) {
             return 1;
         }

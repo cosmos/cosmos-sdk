@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -140,4 +141,31 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	return k.SetValidatorOutstandingRewards(ctx, valBz, outstanding)
+}
+
+// sendCommunityPoolToProtocolPool does the following:
+//
+//	truncate the community pool value (DecCoins) to sdk.Coins
+//	distribute from the distribution module account to the x/protocolpool account
+//	update the bookkept value in x/distribution
+func (k Keeper) sendCommunityPoolToProtocolPool(ctx sdk.Context) error {
+	if k.protocolPoolEnabled {
+		return nil
+	}
+
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	if feePool.CommunityPool.IsZero() {
+		return nil
+	}
+
+	amt, re := feePool.CommunityPool.TruncateDecimal()
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ProtocolPoolDistrAccount, amt); err != nil {
+		return err
+	}
+
+	return k.FeePool.Set(ctx, types.FeePool{CommunityPool: re})
 }

@@ -220,7 +220,7 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 	// update commission rate of node0 validator
 	// generate new gentx and copy it to genesis.json before starting network
 	outFile := filepath.Join(t.TempDir(), "gentx.json")
-	rsp := cli.RunCommandWithArgs("genesis", "gentx", "node0", "100000000"+distrTestDenom, "--chain-id="+cli.ChainID(), "--commission-rate=0.01", "--home", systest.Sut.NodeDir(0), "--keyring-backend=test", "--output-document="+outFile)
+	_ = cli.RunCommandWithArgs("genesis", "gentx", "node0", "100000000"+distrTestDenom, "--chain-id="+cli.ChainID(), "--commission-rate=0.01", "--home", systest.Sut.NodeDir(0), "--keyring-backend=test", "--output-document="+outFile)
 	updatedGentxBz, err := os.ReadFile(outFile) // #nosec G304
 	require.NoError(t, err)
 
@@ -243,7 +243,7 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	// delegate some tokens to valOperAddr
-	rsp = cli.RunAndWait("tx", "staking", "delegate", valOperAddr, "100000000"+distrTestDenom, "--from="+delAddr)
+	rsp := cli.RunAndWait("tx", "staking", "delegate", valOperAddr, "100000000"+distrTestDenom, "--from="+delAddr)
 	systest.RequireTxSuccess(t, rsp)
 
 	systest.Sut.AwaitNBlocks(t, 5)

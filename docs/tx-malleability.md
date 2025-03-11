@@ -16,10 +16,13 @@ processor decoded and re-encoded the transaction with different encoding rules (
 As long as no malleability is present in the signature bytes themselves, clients _should_ query transactions by signature instead of hash.
 
 Not being cognizant of this risk may lead clients to submit the same transaction multiple times if they believe that 
-earlier transactions had failed or gotten lost in processing, which is somewhat akin to faulty replay protection.
+earlier transactions had failed or gotten lost in processing.
+This could be an attack vector against users if wallets primarily query transactions by hash.
+
 If the state machine were to rely on transaction hashes as a replay mechanism itself, this would be faulty and not 
 provide the intended replay protection. Instead, the state machine should rely on deterministic representations of
-transactions rather than raw encoding if they want to provide some replay protection that doesn't rely on a monotonically
+transactions rather than the raw encoding, or other nonces,
+if they want to provide some replay protection that doesn't rely on a monotonically
 increasing account sequence number.
 
 

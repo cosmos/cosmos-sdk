@@ -13,7 +13,7 @@ The malleability of transactions poses the following potential risks to end user
 
 If a client generates a transaction, keeps a record of its hash and then attempts to query nodes to check the transaction's status, this process may falsely conclude that the transaction had not been processed if an intermediary
 processor decoded and re-encoded the transaction with different encoding rules (either maliciously or unintentionally).
-As long as no malleability is present the signature bytes themselves, clients SHOULD query transactions by signature instead of hash.
+As long as no malleability is present in the signature bytes themselves, clients _should_ query transactions by signature instead of hash.
 
 Not being cognizant of this risk may lead clients to submit the same transaction multiple times if they believe that 
 earlier transactions had failed or gotten lost in processing, which is somewhat akin to faulty replay protection.

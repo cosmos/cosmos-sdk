@@ -243,7 +243,7 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	// delegate some tokens to valOperAddr
-	rsp = cli.RunAndWait("tx", "staking", "delegate", valOperAddr, "100000000"+distrTestDenom, "--from="+delAddr)
+	rsp := cli.RunAndWait("tx", "staking", "delegate", valOperAddr, "100000000"+distrTestDenom, "--from="+delAddr)
 	systest.RequireTxSuccess(t, rsp)
 
 	systest.Sut.AwaitNBlocks(t, 5)

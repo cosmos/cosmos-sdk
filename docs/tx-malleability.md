@@ -37,7 +37,7 @@ Cosmos SDK transactions are encoded using protobuf binary encoding when they are
 * `varint`s can include extra ignored bits
 * extra fields may be added and are usually simply ignored by decoders. [ADR 020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md#unknown-field-filtering) specifies that in general such extra fields should cause messages and transactions to be rejected)
 
-When using `SIGN_MODE_DIRECT` most of the above malleabilities will not be tolerated because:
+When using `SIGN_MODE_DIRECT` none of the above malleabilities will be tolerated because:
 * signatures of messages and extensions must be done over the raw encoded bytes of those fields
 * the outer tx envelope (`TxRaw`) must follow ADR 027 rules or be rejected
 

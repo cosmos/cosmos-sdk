@@ -69,3 +69,66 @@ highly manual process, and developers could easily make the mistake of updating 
 without paying any attention to the implementation of `GetSignBytes` for Amino JSON. This is a critical
 vulnerability in which unsigned content can now get into the transaction and signature verification will
 pass.
+
+## Sign Mode Risk Summary and Recommendations
+
+The sign modes officially supported by the SDK are `SIGN_MODE_DIRECT`, `SIGN_MODE_TEXTUAL`, `SIGN_MODE_DIRECT_AUX`,
+and `SIGN_MODE_LEGACY_AMINO_JSON`.
+`SIGN_MODE_LEGACY_AMINO_JSON` is used commonly by wallets and is currently the only sign mode supported on Nano Ledger hardware devices
+(although `SIGN_MODE_TEXTUAL` was designed to also support hardware devices).
+`SIGN_MODE_DIRECT` is the simplest sign mode and its usage is also fairly common.
+`SIGN_MODE_DIRECT_AUX` is a variant of `SIGN_MODE_DIRECT` that can be used by auxiliary signers in a multi-signer
+transaction by those signers who are not paying gas.
+`SIGN_MODE_TEXTUAL` was intended as a replacement for `SIGN_MODE_LEGACY_AMINO_JSON`, but as far as we know it
+has not been adopted by any clients yet and thus is not in active use.
+
+All known malleability concerns have been addressed in the current implementation of `SIGN_MODE_DIRECT`.
+The only known malleability that could occur with a transaction signed with `SIGN_MODE_DIRECT` would
+need to be in the signature bytes themselves.
+Since signatures are not signed over, it is impossible for any sign mode to address this directly
+and instead signature algorithms need to take care to reject any non-canonically encoded signature bytes
+to prevent malleability.
+
+`SIGN_MODE_DIRECT_AUX` provides the same level of safety as `SIGN_MODE_DIRECT` because
+* the raw encoded `TxBody` bytes are signed over in `SignDocDirectAux`, and
+* a transaction using `SIGN_MODE_DIRECT_AUX` still requires the primary signer to sign the transaction with `SIGN_MODE_DIRECT`
+
+`SIGN_MODE_TEXTUAL` also provides the same level of safety as `SIGN_MODE_DIRECT` because the hash of the raw encoded
+`TxBody` and `AuthInfo` bytes are signed over.
+
+
+Unfortunately, the vast majority of unaddressed malleability risks affect `SIGN_MODE_LEGACY_AMINO_JSON` and this
+sign mode is still commonly used.
+It is recommended that the following improvements be made to Amino JSON signing:
+* hashes of `TxBody` and `AuthInfo` should be added to `StdSignDoc` so that encoding-level malleablity is addressed
+* when constructing `StdSignDoc`, [protoreflect](https://pkg.go.dev/google.golang.org/protobuf/reflect/protoreflect) API should be used to ensure that there no fields in `TxBody` or `AuthInfo` which do not have a mapping in `StdSignDoc` have been set
+* fields present in `TxBody` or `AuthInfo` that are not present in `StdSignDoc` (such as extension options) should
+be added to `StdSignDoc` if possible
+
+## Testing
+
+To test that transactions are resistant to malleability,
+we can develop a test suite to run against all sign modes that
+attempts to manipulate transaction bytes in the following ways:
+- changing protobuf encoding by
+  - reordering fields
+  - setting default values
+  - adding extra bits to varints, or
+  - setting new unknown fields
+- modifying integer and decimal values encoded as strings with leading or trailing zeros
+
+Whenever any of these manipulations is done, we should observe that the sign doc bytes for the sign mode being
+tested also change, meaning that the corresponding signatures will also have to change.
+
+In the case of Amino JSON, we should also develop tests which ensure that if any `TxBody` or `AuthInfo`
+field not supported by Amino's `StdSignDoc` is set that signing fails.
+
+In the general case of transaction decoding, we should have unit tests to ensure that
+- any `TxRaw` bytes which do not follow ADR 027 canonical encoding cause decoding to fail, and
+- any top-level transaction elements including `TxBody`, `AuthInfo`, public keys, and messages which
+have unknown fields set cause the transaction to be rejected
+(this ensures that ADR 020 unknown field filtering is properly applied)
+
+For each supported signature algorithm,
+there should also be unit tests to ensure that signatures must be encoded canonically
+or get rejected.

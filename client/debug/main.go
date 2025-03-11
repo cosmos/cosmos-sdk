@@ -157,17 +157,17 @@ func getPubKeyFromRawString(pkstr, keytype string) (cryptotypes.PubKey, error) {
 		}
 	}
 
-	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
+	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
@@ -206,7 +206,7 @@ func PubkeyRawCmd() *cobra.Command {
 			var consensusPub string
 			edPK, ok := pk.(*ed25519.PubKey)
 			if ok && pubkeyType == ed {
-				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK) //nolint:staticcheck // we do old keys, they're keys after all.
+				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK)
 				if err != nil {
 					return err
 				}
@@ -219,11 +219,11 @@ func PubkeyRawCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk) //nolint:staticcheck // we do old keys, they're keys after all.
+			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk)
 			if err != nil {
 				return err
 			}
-			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk) //nolint:staticcheck // we do old keys, they're keys after all.
+			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk)
 			if err != nil {
 				return err
 			}

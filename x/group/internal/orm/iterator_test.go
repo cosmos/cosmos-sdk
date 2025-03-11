@@ -240,7 +240,7 @@ func TestPaginate(t *testing.T) {
 	}
 
 	for _, g := range []testdata.TableModel{t1, t2, t3, t4, t5} {
-		g := g
+
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}

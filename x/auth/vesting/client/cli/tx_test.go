@@ -118,7 +118,6 @@ func (s *CLITestSuite) TestNewMsgCreateVestingAccountCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
@@ -198,7 +197,6 @@ func (s *CLITestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
@@ -258,7 +256,6 @@ func (s *CLITestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

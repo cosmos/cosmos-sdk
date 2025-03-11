@@ -99,8 +99,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		),
 	)
 
-	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
-	return nil
+	return k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 }
 
 // withdraw rewards from a delegation

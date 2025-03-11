@@ -47,15 +47,20 @@ In addition to being aware of the general non-determinism of protobuf binary, de
 
 [ADR 020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md#unknown-field-filtering) specifies some provisions for "non-critical" fields which can safely be ignored by older servers. In practice, I have not seen any valid usages of this. It is something in the design that maintainers should be aware of, but it may not be necessary or even 100% safe.
 
-### Non-deterministic Value Encoding (Signatures, Numbers, etc.)
+### Non-deterministic Value Encoding
 
 In addition to the non-determinism present in protobuf binary itself, some protobuf field data is encoded using a micro-format which itself may not be deterministic. Consider for instance integer or decimal encoding. Some decoders may allow for the presence of leading or trailing zeros without changing the logical meaning, ex. `00100` vs `100` or `100.00` vs `100`. So if a sign mode encodes numbers deterministically, but decoders accept multiple representations,
 a user may sign over the value `100` while `0100` gets encoded. This would be possible with Amino JSON to the extent that the integer decoder accepts leading zeros. I believe the current `Int` implementation will reject this, however, it is
 probably possible to encode a octal or hexadecimal representation in the transaction whereas the user signs over a decimal integer.
 
+### Signature Encoding
+
 Signatures themselves are encoded using a micro-format specific to the signature algorithm being used and sometimes these
 micro-formats can allow for non-determinism (multiple valid bytes for the same signature).
-I believe we have made sure that the algorithms used in the SDK reject non-canonical signature bytes.
+Most of the signature algorithms supported by the SDK should reject non-canonical bytes in their current implementation.
+However, the `Multisignature` protobuf type uses normal protobuf encoding and there is no check as to whether the
+decoded bytes followed canonical ADR 027 rules or not. Therefore, multisig transactions can have malleability in
+their signatures.
 Any new or custom signature algorithms must make sure that they reject any non-canonical bytes, otherwise even
 with `SIGN_MODE_DIRECT` there can be transaction hash malleability by re-encoding signatures with a non-canonical
 representation.
@@ -88,6 +93,8 @@ need to be in the signature bytes themselves.
 Since signatures are not signed over, it is impossible for any sign mode to address this directly
 and instead signature algorithms need to take care to reject any non-canonically encoded signature bytes
 to prevent malleability.
+For the known malleability of the `Multisignature` type, we should make sure that any valid signatures
+were encoded following canonical ADR 027 rules when doing signature verification.
 
 `SIGN_MODE_DIRECT_AUX` provides the same level of safety as `SIGN_MODE_DIRECT` because
 * the raw encoded `TxBody` bytes are signed over in `SignDocDirectAux`, and
@@ -95,7 +102,6 @@ to prevent malleability.
 
 `SIGN_MODE_TEXTUAL` also provides the same level of safety as `SIGN_MODE_DIRECT` because the hash of the raw encoded
 `TxBody` and `AuthInfo` bytes are signed over.
-
 
 Unfortunately, the vast majority of unaddressed malleability risks affect `SIGN_MODE_LEGACY_AMINO_JSON` and this
 sign mode is still commonly used.

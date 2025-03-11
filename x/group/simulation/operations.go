@@ -629,7 +629,7 @@ func SimulateMsgUpdateGroupMembers(
 
 		// set existing random group member weight to zero to remove from the group
 		existigMembers := res.Members
-		if len(existigMembers) > 0 {
+		if len(existigMembers) > 1 {
 			memberToRemove := existigMembers[r.Intn(len(existigMembers))]
 			var isDuplicateMember bool
 			for idx, m := range members {

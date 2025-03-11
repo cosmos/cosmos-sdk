@@ -239,7 +239,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	var opts []keeper.InitOptions
+	var opts []keeper.InitOption
 	if in.Config.ProtocolPoolEnabled {
 		opts = append(opts, keeper.WithProtocolPoolEnabled())
 	}

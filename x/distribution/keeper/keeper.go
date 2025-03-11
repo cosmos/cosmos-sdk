@@ -36,11 +36,11 @@ type Keeper struct {
 	protocolPoolEnabled bool
 }
 
-type InitOptions func(*Keeper)
+type InitOption func(*Keeper)
 
 // WithProtocolPoolEnabled will enable the protocol pool functionality in x/distribution, directing
 // community pool funds to x/protocolpool
-func WithProtocolPoolEnabled() InitOptions {
+func WithProtocolPoolEnabled() InitOption {
 	return func(k *Keeper) {
 		k.protocolPoolEnabled = true
 	}
@@ -54,7 +54,7 @@ func NewKeeper(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	feeCollectorName, authority string,
-	opts ...InitOptions,
+	opts ...InitOption,
 ) Keeper {
 	// ensure distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {

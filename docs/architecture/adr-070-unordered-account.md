@@ -18,16 +18,18 @@ the use of a time-based, ephemeral sequence.
 
 ## Context
 
-Sequence value prevents replay-attack and ensures the transactions from the same sender are included into blocks and executed
-in sequential order. However, this makes it tricky to reliably send many concurrent transactions from the
-same sender. IBC relayers and crypto exchanges are examples of victims of such limitations.
+Account sequence values serve to prevent replay-attacks and ensure transactions from the same sender are included into blocks and executed
+in sequential order. Unfortunately, this makes it difficult to reliably send many concurrent transactions from the
+same sender. Victims of such limitations include IBC relayers and crypto exchanges.
 
 ## Decision
 
 We propose adding a boolean field `unordered` and a uint64 field `timeout_timestamp` to the transaction body.
 
-Unordered transactions will bypass the sequence rules and follow the rules described
-below, without impacting regular, ordered transactions; they'll follow the sequence rules the same as before.
+Unordered transactions will bypass the traditional account sequence rules and follow the rules described
+below, without impacting traditional ordered transactions; they'll follow the sequence rules the same as before.
+
+We will introduce new storage of time-based, ephemeral unordered sequences using the SDK's existing KV Store library.
 
 When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s bech32 address
 will be recorded to state (i.e. `542939323/cosmos1v1234567890AbcDeF`).
@@ -35,7 +37,7 @@ will be recorded to state (i.e. `542939323/cosmos1v1234567890AbcDeF`).
 New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
 
 - Define an upper bound for the value of `timeout_timestamp` (i.e. 10 minutes).
-- Implement a PreBlocker method that removes state entries with a `timeout_timestamp` earlier than the current block time.
+- Extend the PreBlocker method to remove state entries with a `timeout_timestamp` earlier than the current block time.
 
 ### Transaction Format
 
@@ -50,13 +52,12 @@ message TxBody {
 
 ### Replay Protection
 
-We facilitate replay protection by storing the concatenation of the timeout timestamp value and the sender's address, henceforth called "unordered sequence",
-in the Cosmos SDK KV store. Upon transaction ingress, we check if the transaction's unordered
+We facilitate replay protection by storing the unordered sequence, in the Cosmos SDK KV store. Upon transaction ingress, we check if the transaction's unordered
 sequence exists in state, or if the TTL value is stale, i.e. before the current block time. If so, we reject it. Otherwise,
 we add the unordered sequence to state.
 
-The state is evaluated during `PreBlocker`, and all stale transactions, i.e. a transaction's TTL value that is now beyond
-the committed block, are removed from state.
+The state is evaluated during `PreBlocker`. All transactions with an unordered sequence earlier than the current block time
+will be deleted.
 
 ```golang
 package unorderedtx
@@ -238,9 +239,9 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
     return nil
   }
 
-  // TODO: get sender address or sorted multi-sender addresses
+  addr := getSender(tx)
 
-  contains, err := d.txManager.Contains(ctx, "", uint64(unorderedTx.GetTimeoutTimeStamp().UnixNano()))
+  contains, err := d.txManager.Contains(ctx, sender, uint64(unorderedTx.GetTimeoutTimeStamp().UnixNano()))
   if err != nil {
     return errorsmod.Wrap(
       sdkerrors.ErrIO,
@@ -254,7 +255,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
     )
   }
 
-  if err := d.txManager.Add(ctx, "", uint64(unorderedTx.GetTimeoutTimeStamp().UnixNano())); err != nil {
+  if err := d.txManager.Add(ctx, sender, uint64(unorderedTx.GetTimeoutTimeStamp().UnixNano())); err != nil {
     return errorsmod.Wrap(
       sdkerrors.ErrIO,
       "failed to add unordered nonce to state",
@@ -271,16 +272,13 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 Unordered sequences provide a simple, straightforward mechanism to protect against both transaction malleability and
 transaction duplication. It is important to note, however, that the unordered sequence must still be unique, however
 the value is not required to be strictly increasing as with regular sequences, and the order in which the node receives
-the transactions no longer matters. Relayers should implement batch sending similar to the pseudocode below:
+the transactions no longer matters. Relayers can handle setting timeouts similarly to the code below:
 
 ```go
-
 for _, tx := range txs {
-	tx.Timeout = time.Now() + 1 * time.Nanosecond
+	tx.SetTimeoutTimestamp(time.Now() + 1 * time.Nanosecond)
 }
-
 ```
-
 
 ### State Management
 
@@ -288,15 +286,16 @@ The storage of unordered sequences will be facilitated using the Cosmos SDK's KV
 
 ## Consequences
 
-* Usage of Cosmos SDK KV store is slower in comparison to using a non merklized store or ad-hoc methods.
+* Usage of Cosmos SDK KV store is slower in comparison to using a non merklized store or ad-hoc methods, and block times may slow down as a result.
 
 ### Positive
 
-* Support unordered transaction inclusion.
+* Support unordered transaction inclusion, enabling the ability to "fire and forget" many transactions at once.
 
 ### Negative
 
 * Requires additional storage overhead.
+* Requirement of unique timestamps per transaction causes a small amount of additional overhead for clients. Clients must ensure each transaction's timeout timestamp is different. However, nanosecond differentials suffice.
 
 ## References
 

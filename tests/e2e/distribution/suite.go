@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -39,12 +39,13 @@ import (
 type E2ETestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	protocolPoolEnabled bool
+	cfg                 network.Config
+	network             *network.Network
 }
 
-func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
-	return &E2ETestSuite{cfg: cfg}
+func NewE2ETestSuite(protocolPoolEnabled bool) *E2ETestSuite {
+	return &E2ETestSuite{protocolPoolEnabled: protocolPoolEnabled}
 }
 
 func findAndReplaceModuleConfig(moduleConfig []*appv1alpha1.ModuleConfig, cfg *appv1alpha1.ModuleConfig) ([]*appv1alpha1.ModuleConfig, error) {
@@ -71,7 +72,7 @@ func initNetworkConfig(t *testing.T, protocolPoolEnabled bool) network.Config {
 	})
 	require.NoError(t, err)
 
-	t.Log("setting up the e2e test suite", moduleConfig)
+	t.Log("setting up the e2e test suite", "protocolPoolEnabled", protocolPoolEnabled)
 
 	// application configuration (used by depinject)
 	AppConfig := depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
@@ -100,7 +101,7 @@ func initNetworkConfig(t *testing.T, protocolPoolEnabled bool) network.Config {
 func (s *E2ETestSuite) SetupSuite() {
 	s.T().Log("setting up e2e test suite")
 
-	cfg := initNetworkConfig(s.T(), false)
+	cfg := initNetworkConfig(s.T(), s.protocolPoolEnabled)
 
 	cfg.NumValidators = 1
 	s.cfg = cfg

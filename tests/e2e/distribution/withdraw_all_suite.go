@@ -22,16 +22,22 @@ import (
 type WithdrawAllTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	protocolPoolEnabled bool
+	cfg                 network.Config
+	network             *network.Network
+}
+
+func NewWithdrawAllTestSuite(protocolPoolEnabled bool) *WithdrawAllTestSuite {
+	return &WithdrawAllTestSuite{protocolPoolEnabled: protocolPoolEnabled}
 }
 
 func (s *WithdrawAllTestSuite) SetupSuite() {
-	cfg := initNetworkConfig(s.T(), false)
+	s.T().Log("setting up withdraw all e2e test suite")
+
+	cfg := initNetworkConfig(s.T(), s.protocolPoolEnabled)
 	cfg.NumValidators = 2
 	s.cfg = cfg
 
-	s.T().Log("setting up e2e test suite")
 	network, err := network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 	s.network = network
@@ -41,7 +47,7 @@ func (s *WithdrawAllTestSuite) SetupSuite() {
 
 // TearDownSuite cleans up the curret test network after _each_ test.
 func (s *WithdrawAllTestSuite) TearDownSuite() {
-	s.T().Log("tearing down e2e test suite")
+	s.T().Log("tearing down withdraw all e2e test suite")
 	s.network.Cleanup()
 }
 

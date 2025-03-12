@@ -17,14 +17,19 @@ import (
 type GRPCQueryTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	protocolPoolEnabled bool
+	cfg                 network.Config
+	network             *network.Network
+}
+
+func NewGRPCQueryTestSuite(protocolPoolEnabled bool) *GRPCQueryTestSuite {
+	return &GRPCQueryTestSuite{protocolPoolEnabled: protocolPoolEnabled}
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
-	s.T().Log("setting up e2e test suite")
+	s.T().Log("setting up grpc e2e test suite")
 
-	cfg := initNetworkConfig(s.T(), false)
+	cfg := initNetworkConfig(s.T(), s.protocolPoolEnabled)
 
 	cfg.NumValidators = 1
 	s.cfg = cfg
@@ -38,7 +43,7 @@ func (s *GRPCQueryTestSuite) SetupSuite() {
 
 // TearDownSuite cleans up the curret test network after _each_ test.
 func (s *GRPCQueryTestSuite) TearDownSuite() {
-	s.T().Log("tearing down e2e test suite1")
+	s.T().Log("tearing down grpc e2e test suite")
 	s.network.Cleanup()
 }
 

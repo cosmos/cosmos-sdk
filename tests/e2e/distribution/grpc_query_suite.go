@@ -6,8 +6,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/simapp"
-
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +24,8 @@ type GRPCQueryTestSuite struct {
 func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e test suite")
 
-	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	cfg := initNetworkConfig(s.T(), false)
+
 	cfg.NumValidators = 1
 	s.cfg = cfg
 

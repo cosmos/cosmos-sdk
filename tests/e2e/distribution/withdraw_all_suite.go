@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -29,7 +27,7 @@ type WithdrawAllTestSuite struct {
 }
 
 func (s *WithdrawAllTestSuite) SetupSuite() {
-	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	cfg := initNetworkConfig(s.T(), false)
 	cfg.NumValidators = 2
 	s.cfg = cfg
 

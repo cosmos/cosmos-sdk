@@ -4,11 +4,17 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/stretchr/testify/require"
+	"testing"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
@@ -19,8 +25,14 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -35,6 +47,52 @@ func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
 	return &E2ETestSuite{cfg: cfg}
 }
 
+func findAndReplaceModuleConfig(moduleConfig []*appv1alpha1.ModuleConfig, cfg *appv1alpha1.ModuleConfig) ([]*appv1alpha1.ModuleConfig, error) {
+	for i, module := range moduleConfig {
+		if module.Name == cfg.Name {
+			moduleConfig[i] = cfg
+			return moduleConfig, nil
+		}
+	}
+
+	return moduleConfig, fmt.Errorf("module %s not found", cfg.Name)
+}
+
+func initNetworkConfig(t *testing.T, protocolPoolEnabled bool) network.Config {
+	t.Helper()
+
+	// overwrite the module config so that protocolpool is disabled
+	moduleConfig := simapp.ModuleConfig
+	moduleConfig, err := findAndReplaceModuleConfig(moduleConfig, &appv1alpha1.ModuleConfig{
+		Name: distrtypes.ModuleName,
+		Config: appconfig.WrapAny(&distrmodulev1.Module{
+			ProtocolPoolEnabled: protocolPoolEnabled,
+		}),
+	})
+	require.NoError(t, err)
+
+	t.Log("setting up the e2e test suite", moduleConfig)
+
+	// application configuration (used by depinject)
+	AppConfig := depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
+		Modules: moduleConfig,
+	}),
+		depinject.Supply(
+			// supply custom module basics
+			map[string]module.AppModuleBasic{
+				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+				govtypes.ModuleName: gov.NewAppModuleBasic(
+					[]govclient.ProposalHandler{},
+				),
+			},
+		),
+	)
+
+	cfg, err := network.DefaultConfigWithAppConfig(AppConfig)
+	require.NoError(t, err)
+	return cfg
+}
+
 // SetupSuite creates a new network for _each_ e2e test. We create a new
 // network for each test because there are some state modifications that are
 // needed to be made in order to make useful queries. However, we don't want
@@ -42,7 +100,8 @@ func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
 func (s *E2ETestSuite) SetupSuite() {
 	s.T().Log("setting up e2e test suite")
 
-	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	cfg := initNetworkConfig(s.T(), false)
+
 	cfg.NumValidators = 1
 	s.cfg = cfg
 

@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/x/upgrade v0.1.4
-	github.com/cosmos/cosmos-sdk v0.50.12
+	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pelletier/go-toml/v2 v2.2.3

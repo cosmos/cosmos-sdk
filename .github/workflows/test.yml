@@ -114,9 +114,40 @@ jobs:
           name: "${{ github.sha }}-integration-coverage"
           path: ./tests/integration-profile.out
 
+  test-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
+      - name: e2e tests
+        if: env.GIT_DIFF
+        run: |
+          make test-e2e-cov
+      - uses: actions/upload-artifact@v4
+        if: env.GIT_DIFF
+        with:
+          name: "${{ github.sha }}-e2e-coverage"
+          path: ./tests/e2e-profile.out
+
   repo-analysis:
     runs-on: depot-ubuntu-22.04-4
-    needs: [tests, test-integration]
+    needs: [tests, test-integration, test-e2e]
     steps:
       - uses: actions/checkout@v4
       - uses: technote-space/get-diff-action@v6.1.2
@@ -324,28 +355,6 @@ jobs:
           cd schema
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
 
-  test-schema-testing:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          cache: true
-          cache-dependency-path: schema/testing/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            schema/testing/**/*.go
-            schema/testing/go.mod
-            schema/testing/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd schema
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic ./...
-
   test-collections:
     runs-on: depot-ubuntu-22.04-4
     steps:
@@ -537,52 +546,6 @@ jobs:
           cd x/circuit
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
 
-  test-x-distribution:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/distribution/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/distribution/**/*.go
-            x/distribution/go.mod
-            x/distribution/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/distribution
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-protocolpool:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/protocolpool/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/protocolpool/**/*.go
-            x/protocolpool/go.mod
-            x/protocolpool/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/protocolpool
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
   test-x-feegrant:
     runs-on: depot-ubuntu-22.04-4
     steps:
@@ -650,213 +613,6 @@ jobs:
         if: env.GIT_DIFF
         run: |
           cd x/upgrade
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-group:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/group/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/group/**/*.go
-            x/group/go.mod
-            x/group/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/group
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-gov:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/gov/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/gov/**/*.go
-            x/gov/go.mod
-            x/gov/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/gov
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-slashing:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/slashing/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/slashing/**/*.go
-            x/slashing/go.mod
-            x/slashing/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/slashing
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-staking:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/staking/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/staking/**/*.go
-            x/staking/go.mod
-            x/staking/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/staking
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-authz:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/authz/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/authz/**/*.go
-            x/authz/go.mod
-            x/authz/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/authz
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-bank:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/bank/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/bank/**/*.go
-            x/bank/go.mod
-            x/bank/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/bank
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-mint:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/mint/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/mint/**/*.go
-            x/mint/go.mod
-            x/mint/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/mint
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-epochs:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/epochs/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/epochs/**/*.go
-            x/epochs/go.mod
-            x/epochs/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/epochs
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-
-  test-x-consensus:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/consensus/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/consensus/**/*.go
-            x/consensus/go.mod
-            x/consensus/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/consensus
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
 
   test-tools-benchmark:

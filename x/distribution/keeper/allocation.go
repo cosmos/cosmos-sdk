@@ -159,7 +159,11 @@ func (k Keeper) sendCommunityPoolToProtocolPool(ctx sdk.Context) error {
 	}
 
 	amt, remaining := feePool.CommunityPool.TruncateDecimal()
-	ctx.Logger().Info("sending distribution community pool amount to protocol pool", "amount", amt.String(), "remaining", remaining.String())
+	ctx.Logger().Info(
+		"sending distribution community pool amount to protocol pool",
+		"amount", amt.String(),
+		"remaining", remaining.String(),
+	)
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, protocolpooltypes.ProtocolPoolDistrAccount, amt); err != nil {
 		return err
 	}

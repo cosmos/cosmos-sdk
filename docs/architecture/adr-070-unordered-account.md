@@ -2,214 +2,132 @@
 
 ## Changelog
 
-* Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
-* Jan 30, 2024: Include section on deterministic transaction encoding
+- Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
+- Jan 30, 2024: Include section on deterministic transaction encoding
+- Mar 12, 2025: Revise implementation to use Cosmos SDK KV Store and require unique timeouts per-address (@technicallyty)
 
 ## Status
 
-ACCEPTED
+Draft
 
 ## Abstract
 
 We propose a way to do replay-attack protection without enforcing the order of
-transactions, without requiring the use of nonces. In this way, we can support
-un-ordered transaction inclusion.
+transactions and without requiring the use of monotonically increasing sequences. Instead, we propose
+the use of a time-based, ephemeral sequence.
 
 ## Context
 
-As of today, the nonce value (account sequence number) prevents replay-attack and
-ensures the transactions from the same sender are included into blocks and executed
-in sequential order. However it makes it tricky to send many transactions from the
-same sender concurrently in a reliable way. IBC relayer and crypto exchanges are
-typical examples of such use cases.
+Sequence value prevents replay-attack and ensures the transactions from the same sender are included into blocks and executed
+in sequential order. However, this makes it tricky to reliably send many concurrent transactions from the
+same sender. IBC relayers and crypto exchanges are examples of victims of such limitations.
 
 ## Decision
 
-We propose to add a boolean field `unordered` to transaction body to mark "un-ordered"
-transactions.
+We propose adding a boolean field `unordered` and a uint64 field `timeout_timestamp` to the transaction body.
 
-Un-ordered transactions will bypass the nonce rules and follow the rules described
-below instead, in contrary, the default ordered transactions are not impacted by
-this proposal, they'll follow the nonce rules the same as before.
+Unordered transactions will bypass the sequence rules and follow the rules described
+below, without impacting regular, ordered transactions; they'll follow the sequence rules the same as before.
 
-When an un-ordered transaction is included into a block, the transaction hash is
-recorded in a dictionary. New transactions are checked against this dictionary for
-duplicates, and to prevent the dictionary grow indefinitely, the transaction must
-specify `timeout_timestamp` for expiration, so it's safe to removed it from the
-dictionary after it's expired.
+When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s bech32 address
+will be recorded to state (i.e. `542939323/cosmos1v1234567890AbcDeF`).
 
-The dictionary can be simply implemented as an in-memory golang map, a preliminary
-analysis shows that the memory consumption won't be too big, for example `32M = 32 * 1024 * 1024`
-can support 1024 blocks where each block contains 1024 unordered transactions. For
-safety, we should limit the range of `timeout_timestamp` to prevent very long expiration,
-and limit the size of the dictionary.
+New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
+
+- Define an upper bound for the value of `timeout_timestamp` (i.e. 10 minutes).
+- Implement a PreBlocker method that removes state entries with a `timeout_timestamp` earlier than the current block time.
 
 ### Transaction Format
 
 ```protobuf
 message TxBody {
   ...
-
+          
   bool unordered = 4;
+  google.protobuf.Timestamp timeout_timestamp = 5
 }
 ```
 
 ### Replay Protection
 
-In order to provide replay protection, a user should ensure that the transaction's
-TTL value is relatively short-lived but long enough to provide enough time to be
-included in a block, e.g. ~10 minutes.
+We facilitate replay protection by storing the concatenation of the timeout timestamp value and the sender's address, henceforth called "unordered sequence",
+in the Cosmos SDK KV store. Upon transaction ingress, we check if the transaction's unordered
+sequence exists in state, or if the TTL value is stale, i.e. before the current block time. If so, we reject it. Otherwise,
+we add the unordered sequence to state.
 
-We facilitate this by storing the transaction's hash in a durable map, `UnorderedTxManager`,
-to prevent duplicates, i.e. replay attacks. Upon transaction ingress during `CheckTx`,
-we check if the transaction's hash exists in this map or if the TTL value is stale,
-i.e. before the current block time. If so, we reject it. Upon inclusion in a block
-during `DeliverTx`, the transaction's hash is set in the map along with it's TTL
-value.
-
-This map is evaluated at the end of each block, e.g. ABCI `Commit`, and all stale
-transactions, i.e. transactions's TTL value who's now beyond the committed block,
-are purged from the map.
-
-An important point to note is that in theory, it may be possible to submit an unordered
-transaction twice, or multiple times, before the transaction is included in a block.
-However, we'll note a few important layers of protection and mitigation:
-
-* Assuming CometBFT is used as the underlying consensus engine and a non-noop mempool
-  is used, CometBFT will reject the duplicate for you.
-* For applications that leverage ABCI++, `ProcessProposal` should evaluate and reject
-  malicious proposals with duplicate transactions.
-* For applications that leverage their own application mempool, their mempool should
-  reject the duplicate for you.
-* Finally, worst case if the duplicate transaction is somehow selected for a block
-  proposal, 2nd and all further attempts to evaluate it, will fail during `DeliverTx`,
-  so worst case you just end up filling up block space with a duplicate transaction.
+The state is evaluated during `PreBlocker`, and all stale transactions, i.e. a transaction's TTL value that is now beyond
+the committed block, are removed from state.
 
 ```golang
-type TxHash [32]byte
+package unorderedtx
 
-const PurgeLoopSleepMS = 500
+import (
+  "fmt"
+  "time"
 
-// UnorderedTxManager contains the tx hash dictionary for duplicates checking,
-// and expire them when block production progresses.
-type UnorderedTxManager struct {
-  // blockCh defines a channel to receive newly committed block time
-  blockCh chan time.Time
+  sdk "github.com/cosmos/cosmos-sdk/types"
 
-  mu sync.RWMutex
-	// txHashes defines a map from tx hash -> TTL value, which is used for duplicate
-	// checking and replay protection, as well as purging the map when the TTL is
-	// expired.
-	txHashes map[TxHash]time.Time
+  "cosmossdk.io/collections"
+  "cosmossdk.io/core/store"
+)
+
+const (
+  // DefaultMaxTimeoutDuration defines the default maximum duration an unordered transaction
+  // can set.
+  DefaultMaxTimeoutDuration = time.Minute * 10
+)
+
+type UnorderedSequence string
+
+func NewUnorderedSequence(addr string, timestamp uint64) UnorderedSequence {
+  return UnorderedSequence(fmt.Sprintf("%d/%s", timestamp, addr))
 }
 
-func NewUnorderedTxManager() *UnorderedTxManager {
-  m := &UnorderedTxManager{
-		blockCh:  make(chan time.Time, 16),
-		txHashes: make(map[TxHash]time.Time),
+// Manager contains the tx hash dictionary for duplicates checking, and expire
+// them when block production progresses.
+type Manager struct {
+  kvStore store.KVStoreService
+}
+
+func NewManager(kvStore store.KVStoreService) *Manager {
+  m := &Manager{
+    kvStore: kvStore,
   }
 
- return m
+  return m
 }
 
-func (m *UnorderedTxManager) Start() {
-  go m.purgeLoop()
+func (m *Manager) Contains(ctx sdk.Context, sender string, timestamp uint64) (bool, error) {
+  return m.kvStore.OpenKVStore(ctx).Has([]byte(NewUnorderedSequence(sender, timestamp)))
 }
 
-func (m *UnorderedTxManager) Close() error {
-  close(m.blockCh)
-  m.blockCh = nil
-  return nil
+func (m *Manager) Add(ctx sdk.Context, sender string, timestamp uint64) error {
+  return m.kvStore.OpenKVStore(ctx).Set([]byte(NewUnorderedSequence(sender, timestamp)), []byte(byte(0x0)))
 }
 
-func (m *UnorderedTxManager) Contains(hash TxHash)  bool{
-  m.mu.RLock()
-  defer m.mu.RUnlock()
+func (m *Manager) RemoveExpired(ctx sdk.Context) error {
+  kvStore := m.kvStore.OpenKVStore(ctx)
+  it, err := kvStore.Iterator(nil, []byte(NewUnorderedSequence("", uint64(ctx.BlockTime().UnixNano()))))
+  if err != nil {
+    return err
+  }
+  defer it.Close()
 
-  _, ok := m.txHashes[hash]
-  return ok
-}
+  keys := make([][]byte, 0)
+  for ; it.Valid(); it.Next() {
+    keys = append(keys, it.Key())
+  }
 
-func (m *UnorderedTxManager) Size() int {
-  m.mu.RLock()
-  defer m.mu.RUnlock()
-
-  return len(m.txHashes)
-}
-
-func (m *UnorderedTxManager) Add(hash TxHash, expire time.Time) {
-  m.mu.Lock()
-  defer m.mu.Unlock()
-
-  m.txHashes[hash] = expire
-}
-
-// OnNewBlock send the latest block time to the background purge loop, which
-// should be called in ABCI Commit event.
-func (m *UnorderedTxManager) OnNewBlock(blockTime time.Time) {
-  m.blockCh <- blockTime
-}
-
-// expiredTxs returns expired tx hashes based on the provided block time.
-func (m *UnorderedTxManager) expiredTxs(blockTime time.Time) []TxHash {
-  m.mu.RLock()
-  defer m.mu.RUnlock()
-
-  var result []TxHash
-  for txHash, expire := range m.txHashes {
-    if blockTime.After(expire) {
-      result = append(result, txHash)
+  for _, key := range keys {
+    err := kvStore.Delete(key)
+    if err != nil {
+      return err
     }
   }
 
-  return result
+  return nil
 }
 
-func (m *UnorderedTxManager) purge(txHashes []TxHash) {
-  m.mu.Lock()
-  defer m.mu.Unlock()
-
-  for _, txHash := range txHashes {
-    delete(m.txHashes, txHash)
-  }
-}
-
-
-// purgeLoop removes expired tx hashes in the background
-func (m *UnorderedTxManager) purgeLoop() error {
-  for {
-		latestTime, ok := m.batchReceive()
-		if !ok {
-			// channel closed
-			return
-		}
-
-		hashes := m.expiredTxs(latestTime)
-		if len(hashes) > 0 {
-			m.purge(hashes)
-		}
-	}
-}
-
-
-// channelBatchRecv try to exhaust the channel buffer when it's not empty,
-// and block when it's empty.
-func channelBatchRecv[T any](ch <-chan *T) []*T {
-	item := <-ch  // block if channel is empty
-	if item == nil {
-		// channel is closed
-		return nil
-	}
-
-	remaining := len(ch)
-	result := make([]*T, 0, remaining+1)
-	result = append(result, item)
-	for i := 0; i < remaining; i++ {
-		result = append(result, <-ch)
-	}
-
-	return result
-}
 ```
 
 ### AnteHandler Decorator
@@ -228,110 +146,159 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 }
 ```
 
-In addition, we need to introduce a new decorator to perform the un-ordered transaction
-verification and map lookup.
+We also introduce a new decorator to perform the unordered transaction verification.
 
 ```golang
-const (
-	// DefaultMaxTimeoutDuration defines the default maximum duration an un-ordered transaction
-	// can set.
-	DefaultMaxTimeoutDuration = time.Minute * 40
+package ante
+
+import (
+  "time"
+
+  sdk "github.com/cosmos/cosmos-sdk/types"
+  sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+  "github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+
+  errorsmod "cosmossdk.io/errors"
 )
 
-type DedupTxDecorator struct {
-  m *UnorderedTxManager
-  maxTimeoutDuration time.Time
+var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
+
+// UnorderedTxDecorator defines an AnteHandler decorator that is responsible for
+// checking if a transaction is intended to be unordered and, if so, evaluates
+// the transaction accordingly. An unordered transaction will bypass having its
+// nonce incremented, which allows fire-and-forget transaction broadcasting,
+// removing the necessity of ordering on the sender-side.
+//
+// The transaction sender must ensure that unordered=true and a timeout_height
+// is appropriately set. The AnteHandler will check that the transaction is not
+// a duplicate and will evict it from state when the timeout is reached.
+//
+// The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
+// chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
+type UnorderedTxDecorator struct {
+  // maxUnOrderedTTL defines the maximum TTL a transaction can define.
+  maxTimeoutDuration time.Duration
+  txManager          *unorderedtx.Manager
 }
 
-func (d *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-  // only apply to un-ordered transactions
-  if !tx.UnOrdered() {
-    return next(ctx, tx, simulate)
+func NewUnorderedTxDecorator(
+        maxDuration time.Duration,
+        m *unorderedtx.Manager,
+) *UnorderedTxDecorator {
+  return &UnorderedTxDecorator{
+    maxTimeoutDuration: maxDuration,
+    txManager:          m,
+  }
+}
+
+func (d *UnorderedTxDecorator) AnteHandle(
+        ctx sdk.Context,
+        tx sdk.Tx,
+        _ bool,
+        next sdk.AnteHandler,
+) (sdk.Context, error) {
+  if err := d.ValidateTx(ctx, tx); err != nil {
+    return ctx, err
+  }
+  return next(ctx, tx, false)
+}
+
+func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
+  unorderedTx, ok := tx.(sdk.TxWithUnordered)
+  if !ok || !unorderedTx.GetUnordered() {
+    // If the transaction does not implement unordered capabilities or has the
+    // unordered value as false, we bypass.
+    return nil
   }
 
-  headerInfo := d.env.HeaderService.HeaderInfo(ctx)
-	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
-	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_timestamp set")
-	}
-	if timeoutTimestamp.Before(headerInfo.Time) {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_timestamp that has already passed")
-	}
-	if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %s", d.maxTimeoutDuration.String())
-	}
+  blockTime := ctx.BlockTime()
+  timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
+  if timeoutTimestamp.IsZero() || timeoutTimestamp.UnixNano() == 0 {
+    return errorsmod.Wrap(
+      sdkerrors.ErrInvalidRequest,
+      "unordered transaction must have timeout_timestamp set",
+    )
+  }
+  if timeoutTimestamp.Before(blockTime) {
+    return errorsmod.Wrap(
+      sdkerrors.ErrInvalidRequest,
+      "unordered transaction has a timeout_timestamp that has already passed",
+    )
+  }
+  if timeoutTimestamp.After(blockTime.Add(d.maxTimeoutDuration)) {
+    return errorsmod.Wrapf(
+      sdkerrors.ErrInvalidRequest,
+      "unordered tx ttl exceeds %s",
+      d.maxTimeoutDuration.String(),
+    )
+  }
 
-  	// in order to create a deterministic hash based on the tx, we need to hash the contents of the tx with signature
-	// Get a Buffer from the pool
-	buf := bufPool.Get().(*bytes.Buffer)
-	// Make sure to reset the buffer
-	buf.Reset()
+  execMode := ctx.ExecMode()
+  if execMode == sdk.ExecModeSimulate {
+    return nil
+  }
 
-	// Use the buffer
-	for _, msg := range tx.GetMsgs() {
-		// loop through the messages and write them to the buffer
-		// encoding the msg to bytes makes it deterministic within the state machine.
-		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
-		bz, err := proto.Marshal(msg)
-		if err != nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal message")
-		}
+  // TODO: get sender address or sorted multi-sender addresses
 
-		buf.Write(bz)
-	}
+  contains, err := d.txManager.Contains(ctx, "", uint64(unorderedTx.GetTimeoutTimeStamp().UnixNano()))
+  if err != nil {
+    return errorsmod.Wrap(
+      sdkerrors.ErrIO,
+      "failed to check contains",
+    )
+  }
+  if contains {
+    return errorsmod.Wrap(
+      sdkerrors.ErrInvalidRequest,
+      "tx is duplicated",
+    )
+  }
 
-  // check for duplicates
- 	// check for duplicates
-	if d.txManager.Contains(txHash) {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
-	}
+  if err := d.txManager.Add(ctx, "", uint64(unorderedTx.GetTimeoutTimeStamp().UnixNano())); err != nil {
+    return errorsmod.Wrap(
+      sdkerrors.ErrIO,
+      "failed to add unordered nonce to state",
+    )
+  }
 
-	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
-		// a new tx included in the block, add the hash to the unordered tx manager
-		d.txManager.Add(txHash, ttl)
-	}
-
-  return next(ctx, tx, simulate)
+  return nil
 }
+
 ```
 
-### Transaction Hashes
+### Unordered Sequences
 
-It is absolutely vital that transaction hashes are deterministic, i.e. transaction
-encoding is not malleable. If a given transaction, which is otherwise valid, can
-be encoded to produce different hashes, which reflect the same valid transaction,
-then a duplicate unordered transaction can be submitted and included in a block.
+Unordered sequences provide a simple, straightforward mechanism to protect against both transaction malleability and
+transaction duplication. It is important to note, however, that the unordered sequence must still be unique, however
+the value is not required to be strictly increasing as with regular sequences, and the order in which the node receives
+the transactions no longer matters. Relayers should implement batch sending similar to the pseudocode below:
 
-In order to prevent this, the decoded transaction contents is taken. Starting with the content of the transaction we marshal the transaction in order to prevent a client reordering the transaction. Next we include the gas and timeout timestamp as part of the identifier. All these fields are signed over in the transaction payload. If one of them changes the signature will not match the transaction.
+```go
+
+for _, tx := range txs {
+	tx.Timeout = time.Now() + 1 * time.Nanosecond
+}
+
+```
+
 
 ### State Management
 
-On start up, the node needs to ensure the TxManager's state contains all un-expired
-transactions that have been committed to the chain. This is critical since if the
-state is not properly initialized, the node will not reject duplicate transactions
-and thus will not provide replay protection, and will likely get an app hash mismatch error.
-
-We propose to write all un-expired unordered transactions from the TxManager's to
-file on disk. On start up, the node will read this file and re-populate the TxManager's
-map. The write to file will happen when the node gracefully shuts down on `Close()`.
-
-Note, this is not a perfect solution, in the context of store v1. With store v2,
-we can omit explicit file handling altogether and simply write the all the transactions
-to non-consensus state, i.e State Storage (SS).
-
-Alternatively, we can write all the transactions to consensus state.
+The storage of unordered sequences will be facilitated using the Cosmos SDK's KV Store service.
 
 ## Consequences
 
+* Usage of Cosmos SDK KV store is slower in comparison to using a non merklized store or ad-hoc methods.
+
 ### Positive
 
-* Support un-ordered and concurrent transaction inclusion.
+* Support unordered transaction inclusion.
 
 ### Negative
 
-* Requires additional storage overhead and management of processed unordered
-  transactions that exist outside of consensus state.
+* Requires additional storage overhead.
 
 ## References
 
 * https://github.com/cosmos/cosmos-sdk/issues/13009
+

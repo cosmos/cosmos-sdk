@@ -73,11 +73,11 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	senderAddr := v53CLI.AddKeyFromSeed("account1", testSeed)
 
 	//// Now we're going to switch to a v.50 chain.
-	legacyBinary := systest.WorkDir + "/binaries/simdv50"
+	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
 
 	// setup the v50 chain. v53 made some changes to testnet command, so we'll have to adjust here.
 	// this only uses 1 node.
-	legacySut := systest.NewSystemUnderTest(legacyBinary, systest.Verbose, 1, 1*time.Second)
+	legacySut := systest.NewSystemUnderTest("simd", systest.Verbose, 1, 1*time.Second)
 	legacySut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, legacySut))
 	legacySut.SetupChain()
 	legacySut.SetExecBinary(legacyBinary) // doing this because of a bug. for some reason it sets my exec binary to the legacyBinary appended to itself. so (legacy/bin/path/legacy/bin/path)

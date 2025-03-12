@@ -84,7 +84,10 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	if execBinary == "" {
 		panic("executable binary name must not be empty")
 	}
-
+	nameTokens := ExecBinaryUnversionedRegExp.FindAllString(execBinary, 1)
+	if len(nameTokens) == 0 || nameTokens[0] == "" {
+		panic("failed to parse project name from binary: " + execBinary)
+	}
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
 		chainID:           "testing",
@@ -99,7 +102,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		out:               os.Stdout,
 		verbose:           verbose,
 		minGasPrice:       fmt.Sprintf("0.000001%s", sdk.DefaultBondDenom),
-		projectName:       "simd",
+		projectName:       nameTokens[0],
 		pids:              make(map[int]struct{}, nodesCount),
 	}
 	if len(initer) > 0 {

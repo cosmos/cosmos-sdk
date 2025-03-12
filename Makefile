@@ -499,7 +499,8 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 test-system: build-v50 build
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
-	cp $(BUILDDIR)/simdv50 ./tests/systemtests/binaries/
+	mkdir -p ./tests/systemtests/binaries/v0.50
+	mv $(BUILDDIR)/simdv50 ./tests/systemtests/binaries/v0.50/simd
 	$(MAKE) -C tests/systemtests test
 .PHONY: test-system
 

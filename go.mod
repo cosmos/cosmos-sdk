@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/tx v0.13.7
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.2.0
-	github.com/bits-and-blooms/bitset v1.20.0
+	github.com/bits-and-blooms/bitset v1.22.0
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.11.3

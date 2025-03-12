@@ -160,9 +160,9 @@ func (a *App) Load(loadLatest bool) error {
 
 // PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-	if a.UnorderedTxManager != nil {
-		a.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
-	}
+	//if a.UnorderedTxManager != nil {
+	//	a.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+	//}
 	return a.ModuleManager.PreBlock(ctx)
 }
 

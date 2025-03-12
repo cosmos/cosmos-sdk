@@ -28,7 +28,7 @@ func TestUnorderedTxDecorator_OrderedTx(t *testing.T) {
 
 	SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, ante.DefaultSha256GasCost))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm))
 
 	tx, txBz := genUnorderedTx(t, false, time.Time{})
 	ctx := sdk.Context{}.WithTxBytes(txBz)

@@ -1,6 +1,7 @@
 package distribution
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -493,13 +494,19 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
-
 		s.Run(tc.name, func() {
-			if tc.expErr {
+			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
+
+			switch {
+			case tc.expErr:
 				s.Require().Error(err)
-			} else {
+			case s.protocolPoolEnabled:
+				s.Require().NoError(err)
+				var errMessage sdktestutil.ErrorResponse
+				s.Require().NoError(json.Unmarshal(resp, &errMessage))
+				s.Require().Equal(2, errMessage.Code)
+				s.Require().Equal("protocol pool is enabled - to query CommunityPool use the query exposed by x/protocolpool: invalid request: unknown request", errMessage.Message)
+			default:
 				s.Require().NoError(err)
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())

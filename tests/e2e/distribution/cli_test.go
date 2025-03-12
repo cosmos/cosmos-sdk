@@ -16,10 +16,10 @@ func TestE2ETestSuite(t *testing.T) {
 
 func TestGRPCQueryTestSuite(t *testing.T) {
 	suite.Run(t, NewGRPCQueryTestSuite(false))
-	// suite.Run(t, NewGRPCQueryTestSuite(true))
+	suite.Run(t, NewGRPCQueryTestSuite(true))
 }
 
 func TestWithdrawAllSuite(t *testing.T) {
 	suite.Run(t, NewWithdrawAllTestSuite(false))
-	// suite.Run(t, NewWithdrawAllTestSuite(true))
+	suite.Run(t, NewWithdrawAllTestSuite(true))
 }

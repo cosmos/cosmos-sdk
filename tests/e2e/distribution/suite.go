@@ -424,16 +424,21 @@ func (s *E2ETestSuite) TestNewFundCommunityPoolCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewFundCommunityPoolCmd(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			switch {
+			case tc.expectErr:
 				s.Require().Error(err)
-			} else {
+			case s.protocolPoolEnabled:
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType))
+				txResp := tc.respType.(*sdk.TxResponse)
+				// expect 18 because we cannot submit to distribution
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, 18))
+			default:
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 

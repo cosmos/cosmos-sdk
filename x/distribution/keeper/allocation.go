@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -10,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

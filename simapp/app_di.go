@@ -70,23 +70,25 @@ type SimApp struct {
 
 	UnorderedTxManager *unorderedtx.Manager
 
-	// keepers
+	// essential keepers
 	AccountKeeper         authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.Keeper
+	BankKeeper            bankkeeper.BaseKeeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             *govkeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitKeeper         circuitkeeper.Keeper
-	EpochsKeeper          epochskeeper.Keeper
+
+	// supplementary keepers
+	FeeGrantKeeper feegrantkeeper.Keeper
+	GroupKeeper    groupkeeper.Keeper
+	AuthzKeeper    authzkeeper.Keeper
+	NFTKeeper      nftkeeper.Keeper
+	EpochsKeeper   epochskeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager

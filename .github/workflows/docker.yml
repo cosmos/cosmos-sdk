@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       tags:
-        description: "SDK version (e.g 0.47.1)"
+        description: "SDK version (e.g v0.47.1)"
         required: true
         type: string
 
@@ -36,6 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: "{{ inputs.tags != '' && inputs.tags || '' }}"
           fetch-depth: 0
 
       - name: Extract Docker metadata
@@ -47,7 +48,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}.{{minor}}.{{patch}}
-            type=semver,pattern=v{{version}},value=v${{ inputs.tags }},enable=${{ inputs.tags != '' }}
+            type=semver,pattern={{version}},value=v${{ inputs.tags }},enable=${{ inputs.tags != '' }}
           flavor: |
             latest=false
 

@@ -168,6 +168,7 @@ replace github.com/cosmos/cosmos-sdk => ./../../
 
 // TODO remove post spinning out all modules
 replace (
+	cosmossdk.io/errors => github.com/mmsqe/cosmos-sdk/errors v0.0.0-20250215043036-b091ac7b6902
 	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/staking => ./../../x/staking
 )

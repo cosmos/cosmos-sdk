@@ -1,11 +1,14 @@
 package ante
 
 import (
+	"slices"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
 )
@@ -87,9 +90,14 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 		return nil
 	}
 
-	// TODO: get sender address or sorted multi-sender addresses
+	signerAddrs, err := getSigners(tx)
+	if err != nil {
+		return err
+	}
+	slices.Sort(signerAddrs)
+	signers := strings.Join(signerAddrs, ",")
 
-	contains, err := d.txManager.Contains(ctx, "", uint64(unorderedTx.GetTimeoutTimeStamp().Unix()))
+	contains, err := d.txManager.Contains(ctx, signers, uint64(unorderedTx.GetTimeoutTimeStamp().Unix()))
 	if err != nil {
 		return errorsmod.Wrap(
 			sdkerrors.ErrIO,
@@ -103,7 +111,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 		)
 	}
 
-	if err := d.txManager.Add(ctx, "", uint64(unorderedTx.GetTimeoutTimeStamp().Unix())); err != nil {
+	if err := d.txManager.Add(ctx, signers, uint64(unorderedTx.GetTimeoutTimeStamp().Unix())); err != nil {
 		return errorsmod.Wrap(
 			sdkerrors.ErrIO,
 			"failed to add unordered nonce to state",
@@ -111,4 +119,22 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	}
 
 	return nil
+}
+
+func getSigners(tx sdk.Tx) ([]string, error) {
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+	}
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return nil, err
+	}
+
+	addresses := make([]string, 0, len(sigs))
+	for _, sig := range sigs {
+		addresses = append(addresses, sig.PubKey.Address().String())
+	}
+
+	return addresses, nil
 }

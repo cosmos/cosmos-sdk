@@ -285,6 +285,14 @@ for _, tx := range txs {
 
 The storage of unordered sequences will be facilitated using the Cosmos SDK's KV Store service.
 
+## Note On Previous Iteration
+
+The previous iteration of unordered transactions worked by using an ad-hoc state-management system that posed severe 
+risks and a vector for duplicated tx processing. It relied on graceful app closure which would flush the current state
+of the unordered sequence mapping. If the 2/3's of the network crashed, and the graceful closure did not trigger, 
+the system would lose track of all sequences in the mapping, allowing those transactions to be replayed. The 
+implementation proposed in the updated version of this ADR solves this by writing directly to the Cosmos KV Store.
+
 ## Consequences
 
 * Usage of Cosmos SDK KV store is slower in comparison to using a non merklized store or ad-hoc methods, and block times may slow down as a result.

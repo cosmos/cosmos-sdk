@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: "{{ inputs.tags != '' && inputs.tags || '' }}"
+          ref: "${{ inputs.tags != '' && inputs.tags || '' }}"
           fetch-depth: 0
 
       - name: Extract Docker metadata

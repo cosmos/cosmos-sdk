@@ -50,6 +50,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* (baseapp) [#22692](https://github.com/cosmos/cosmos-sdk/pull/22692) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
+
 ### Bug Fixes
 
 * (x/auth) [#23741](https://github.com/cosmos/cosmos-sdk/pull/23741) Support legacy global AccountNumber.
@@ -59,6 +61,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Removed
 
 * (tools/hub) [#23562](https://github.com/cosmos/cosmos-sdk/pull/23562) Remove `tools/hubl`. A similar tool will be maintained in [ignite](https://www.github.com/ignite/cli).
+
 
 ### API Breaking Changes
 

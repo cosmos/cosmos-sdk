@@ -273,7 +273,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 Unordered sequences provide a simple, straightforward mechanism to protect against both transaction malleability and
 transaction duplication. It is important to note, however, that the unordered sequence must still be unique, however
 the value is not required to be strictly increasing as with regular sequences, and the order in which the node receives
-the transactions no longer matters. Relayers can handle setting timeouts similarly to the code below:
+the transactions no longer matters. Clients can handle setting timeouts similarly to the code below:
 
 ```go
 for _, tx := range txs {

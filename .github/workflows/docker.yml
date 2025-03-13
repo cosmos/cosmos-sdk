@@ -15,13 +15,14 @@ on:
   workflow_dispatch:
     inputs:
       tags:
-        description: "SDK version (e.g 0.47.1)"
+        description: "SDK version (e.g v0.47.1)"
         required: true
         type: string
 
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -35,6 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: "${{ inputs.tags != '' && inputs.tags || '' }}"
           fetch-depth: 0
 
       - name: Extract Docker metadata
@@ -45,13 +47,14 @@ jobs:
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern=v{{major}}.{{minor}}
-            type=semver,pattern={{version}},value=v${{ inputs.tags }},enable=${{ inputs.tags != '' }}
+            type=semver,pattern=v{{major}}.{{minor}}.{{patch}}
+            type=semver,pattern=v{{version}},value=${{ inputs.tags }},enable=${{ inputs.tags != '' }}
           flavor: |
             latest=false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
+      - uses: depot/setup-action@v1
       - name: Log into registry ${{ env.REGISTRY }}
         if: ${{ github.event_name != 'pull_request' }}
         uses: docker/login-action@v3
@@ -59,7 +62,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Publish to GitHub Packages
         uses: depot/build-push-action@v1
         with:
@@ -69,3 +71,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: false

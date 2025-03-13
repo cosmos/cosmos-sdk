@@ -55,7 +55,7 @@ message TxBody {
 
 We facilitate replay protection by storing the unordered sequence, in the Cosmos SDK KV store. Upon transaction ingress, we check if the transaction's unordered
 sequence exists in state, or if the TTL value is stale, i.e. before the current block time. If so, we reject it. Otherwise,
-we add the unordered sequence to state.
+we add the unordered sequence to state. This section of the state will belong to the `x/auth` module.
 
 The state is evaluated during `PreBlocker`. All transactions with an unordered sequence earlier than the current block time
 will be deleted.
@@ -277,6 +277,7 @@ the transactions no longer matters. Relayers can handle setting timeouts similar
 
 ```go
 for _, tx := range txs {
+	tx.SetUnordered(true)
 	tx.SetTimeoutTimestamp(time.Now() + 1 * time.Nanosecond)
 }
 ```
@@ -292,6 +293,8 @@ risks and a vector for duplicated tx processing. It relied on graceful app closu
 of the unordered sequence mapping. If the 2/3's of the network crashed, and the graceful closure did not trigger, 
 the system would lose track of all sequences in the mapping, allowing those transactions to be replayed. The 
 implementation proposed in the updated version of this ADR solves this by writing directly to the Cosmos KV Store.
+
+Additionally, the previous iteration relied on using hashes to create what we call an "unordered sequence." 
 
 ## Consequences
 

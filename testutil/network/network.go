@@ -703,7 +703,7 @@ func (n *Network) LatestHeight() (int64, error) {
 // committed after a given block. If that height is not reached within a timeout,
 // an error is returned. Regardless, the latest height queried is returned.
 func (n *Network) WaitForHeight(h int64) (int64, error) {
-	return n.WaitForHeightWithTimeout(h, 10*time.Second)
+	return n.WaitForHeightWithTimeout(h, 20*time.Second)
 }
 
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can

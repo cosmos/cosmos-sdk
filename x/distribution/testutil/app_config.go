@@ -23,5 +23,4 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.GenutilModule(),
 	configurator.DistributionModule(),
 	configurator.MintModule(),
-	configurator.ProtocolPoolModule(),
 )

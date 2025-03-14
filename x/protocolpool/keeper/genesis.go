@@ -73,29 +73,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 		return fmt.Errorf("total to be distributed is greater than the last balance: %s > %s", totalToBeDistributed, data.LastBalance.Amount)
 	}
 
-	// ensure module accounts are set.  They will only not be set in the case where no balances have been set in genesis.
-	k.checkModuleAccountsExist(ctx, types.ModuleName)
-	k.checkModuleAccountsExist(ctx, types.StreamAccount)
-	k.checkModuleAccountsExist(ctx, types.ProtocolPoolDistrAccount)
-
 	return nil
-}
-
-func (k Keeper) checkModuleAccountsExist(ctx sdk.Context, module string) {
-	// ensure stream account is set
-	if addr := k.authKeeper.GetModuleAddress(module); addr == nil {
-		panic(fmt.Sprintf(errModuleAccountNotSet, module))
-	}
-
-	moduleAcc := k.authKeeper.GetModuleAccount(ctx, module)
-	if moduleAcc == nil {
-		panic(fmt.Sprintf("%s module account has not been set", module))
-	}
-
-	balances := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
-	if balances.IsZero() {
-		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
-	}
 }
 
 func (k Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {

@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -46,10 +45,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-	}
-
-	if options.UnorderedTxManager != nil {
-		anteDecorators = append(anteDecorators, ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.UnorderedTxManager))
+		ante.NewUnorderedTxDecorator(options.AccountKeeper.GetUnorderedTxManager()),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

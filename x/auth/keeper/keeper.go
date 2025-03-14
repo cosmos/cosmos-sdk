@@ -102,6 +102,8 @@ type AccountKeeper struct {
 	Params        collections.Item[types.Params]
 	AccountNumber collections.Sequence
 	Accounts      *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
+
+	utxm *UnorderedTxManager
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -134,6 +136,7 @@ func NewAccountKeeper(
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		utxm:          NewUnorderedTxManager(storeService),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -275,4 +278,8 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 		panic(err)
 	}
 	return params
+}
+
+func (ak AccountKeeper) GetUnorderedTxManager() *UnorderedTxManager {
+	return ak.utxm
 }

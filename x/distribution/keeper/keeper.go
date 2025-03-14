@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // Keeper of the distribution store
@@ -34,22 +33,14 @@ type Keeper struct {
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 
 	protocolPoolEnabled   bool
-	externalCommunityPool protocolpooltypes.ExternalCommunityPoolKeeper
+	externalCommunityPool types.ExternalCommunityPoolKeeper
 }
 
 type InitOption func(*Keeper)
 
-// WithProtocolPoolEnabled will enable the protocol pool functionality in x/distribution, directing
-// community pool funds to x/protocolpool
-func WithProtocolPoolEnabled() InitOption {
-	return func(k *Keeper) {
-		k.protocolPoolEnabled = true
-	}
-}
-
 // WithExternalCommunityPool will enable the external pool functionality in x/distribution, directing
 // community pool funds to the provided keeper.
-func WithExternalCommunityPool(poolKeeper protocolpooltypes.ExternalCommunityPoolKeeper) InitOption {
+func WithExternalCommunityPool(poolKeeper types.ExternalCommunityPoolKeeper) InitOption {
 	return func(k *Keeper) {
 		k.externalCommunityPool = poolKeeper
 	}
@@ -81,7 +72,6 @@ func NewKeeper(
 		authority:             authority,
 		Params:                collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		FeePool:               collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
-		protocolPoolEnabled:   false,
 		externalCommunityPool: nil,
 	}
 
@@ -98,8 +88,8 @@ func NewKeeper(
 	if k.externalCommunityPool != nil {
 		// ensure external module account is set if we are enabling it
 		// this will ensure that funds can be transferred to it.
-		if addr := ak.GetModuleAddress(k.externalCommunityPool.GetCommunityPoolModuleAddress()); addr == nil {
-			panic(fmt.Sprintf("%s module account has not been set", k.externalCommunityPool.GetCommunityPoolModuleAddress()))
+		if addr := ak.GetModuleAddress(k.externalCommunityPool.GetCommunityPoolModule()); addr == nil {
+			panic(fmt.Sprintf("%s module account has not been set", k.externalCommunityPool.GetCommunityPoolModule()))
 		}
 	}
 

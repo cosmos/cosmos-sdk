@@ -62,6 +62,9 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 
 // SetTimeoutTimestamp sets a timeout timestamp in the tx.
 func (b *AuxTxBuilder) SetTimeoutTimestamp(timestamp time.Time) {
+	// Only set TimeoutTimestamp if we have a non-zero time.Time.
+	// Setting timestamppb.New() with a zero/default value time.Time results in a non-zero timestamppb.Timestamp,
+	// which causes the value to show up in the signature - breaking <v0.53.x compatability.
 	if !timestamp.IsZero() && timestamp.Unix() > 0 {
 		b.checkEmptyFields()
 		b.body.TimeoutTimestamp = timestamppb.New(timestamp)

@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	// just arbitrarily picking some upper bound number.
 	unorderedSequencePrefix = collections.NewPrefix(90)
 )
 

@@ -37,7 +37,7 @@ func NewUnorderedTxDecorator(
 	utxm *authkeeper.UnorderedTxManager,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
-		maxTimeoutDuration: 30 * time.Minute,
+		maxTimeoutDuration: 10 * time.Minute,
 		txManager:          utxm,
 	}
 }

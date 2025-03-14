@@ -57,77 +57,79 @@ We facilitate replay protection by storing the unordered sequence, in the Cosmos
 sequence exists in state, or if the TTL value is stale, i.e. before the current block time. If so, we reject it. Otherwise,
 we add the unordered sequence to state. This section of the state will belong to the `x/auth` module.
 
-The state is evaluated during `PreBlocker`. All transactions with an unordered sequence earlier than the current block time
+The state is evaluated during x/auth's `PreBlocker`. All transactions with an unordered sequence earlier than the current block time
 will be deleted.
 
+```go
+func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
+	err := am.accountKeeper.GetUnorderedTxManager().RemoveExpired(sdk.UnwrapSDKContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+	return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
+}
+```
+
 ```golang
-package unorderedtx
+package keeper
 
 import (
-  "fmt"
-  "time"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-  sdk "github.com/cosmos/cosmos-sdk/types"
-
-  "cosmossdk.io/collections"
-  "cosmossdk.io/core/store"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 )
 
-const (
-  // DefaultMaxTimeoutDuration defines the default maximum duration an unordered transaction
-  // can set.
-  DefaultMaxTimeoutDuration = time.Minute * 10
+var (
+	// just arbitrarily picking some upper bound number.
+	unorderedSequencePrefix = collections.NewPrefix(90)
 )
 
-type UnorderedSequence string
-
-func NewUnorderedSequence(addr string, timestamp uint64) UnorderedSequence {
-  return UnorderedSequence(fmt.Sprintf("%d/%s", timestamp, addr))
+type UnorderedTxManager struct {
+	unorderedSequences collections.KeySet[collections.Pair[uint64, string]]
 }
 
-// Manager contains the tx hash dictionary for duplicates checking, and expire
-// them when block production progresses.
-type Manager struct {
-  kvStore store.KVStoreService
+func NewUnorderedTxManager(kvStore store.KVStoreService) *UnorderedTxManager {
+	sb := collections.NewSchemaBuilder(kvStore)
+	m := &UnorderedTxManager{
+		unorderedSequences: collections.NewKeySet(
+			sb,
+			unorderedSequencePrefix,
+			"unordered_sequences",
+			collections.PairKeyCodec(collections.Uint64Key, collections.StringKey),
+		),
+	}
+	return m
 }
 
-func NewManager(kvStore store.KVStoreService) *Manager {
-  m := &Manager{
-    kvStore: kvStore,
-  }
-
-  return m
+func (m *UnorderedTxManager) Contains(ctx sdk.Context, sender string, timestamp uint64) (bool, error) {
+	return m.unorderedSequences.Has(ctx, collections.Join(timestamp, sender))
 }
 
-func (m *Manager) Contains(ctx sdk.Context, sender string, timestamp uint64) (bool, error) {
-  return m.kvStore.OpenKVStore(ctx).Has([]byte(NewUnorderedSequence(sender, timestamp)))
+func (m *UnorderedTxManager) Add(ctx sdk.Context, sender string, timestamp uint64) error {
+	return m.unorderedSequences.Set(ctx, collections.Join(timestamp, sender))
 }
 
-func (m *Manager) Add(ctx sdk.Context, sender string, timestamp uint64) error {
-  return m.kvStore.OpenKVStore(ctx).Set([]byte(NewUnorderedSequence(sender, timestamp)), []byte(byte(0x0)))
-}
+func (m *UnorderedTxManager) RemoveExpired(ctx sdk.Context) error {
+	blkTime := ctx.BlockTime().UnixNano()
+	it, err := m.unorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[uint64, string](uint64(blkTime)))
+	if err != nil {
+		return err
+	}
+	defer it.Close()
 
-func (m *Manager) RemoveExpired(ctx sdk.Context) error {
-  kvStore := m.kvStore.OpenKVStore(ctx)
-  it, err := kvStore.Iterator(nil, []byte(NewUnorderedSequence("", uint64(ctx.BlockTime().UnixNano()))))
-  if err != nil {
-    return err
-  }
-  defer it.Close()
+	keys, err := it.Keys()
+	if err != nil {
+		return err
+	}
 
-  keys := make([][]byte, 0)
-  for ; it.Valid(); it.Next() {
-    keys = append(keys, it.Key())
-  }
+	for _, key := range keys {
+		if err := m.unorderedSequences.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
 
-  for _, key := range keys {
-    err := kvStore.Delete(key)
-    if err != nil {
-      return err
-    }
-  }
-
-  return nil
+	return nil
 }
 
 ```
@@ -154,13 +156,16 @@ We also introduce a new decorator to perform the unordered transaction verificat
 package ante
 
 import (
-  "time"
+	"slices"
+	"strings"
+	"time"
 
-  sdk "github.com/cosmos/cosmos-sdk/types"
-  sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-  "github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-  errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
@@ -178,92 +183,114 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
 // chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
 type UnorderedTxDecorator struct {
-  // maxUnOrderedTTL defines the maximum TTL a transaction can define.
-  maxTimeoutDuration time.Duration
-  txManager          *unorderedtx.Manager
+	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
+	maxTimeoutDuration time.Duration
+	txManager          *authkeeper.UnorderedTxManager
 }
 
 func NewUnorderedTxDecorator(
-        maxDuration time.Duration,
-        m *unorderedtx.Manager,
+	utxm *authkeeper.UnorderedTxManager,
 ) *UnorderedTxDecorator {
-  return &UnorderedTxDecorator{
-    maxTimeoutDuration: maxDuration,
-    txManager:          m,
-  }
+	return &UnorderedTxDecorator{
+		maxTimeoutDuration: 10 * time.Minute,
+		txManager:          utxm,
+	}
 }
 
 func (d *UnorderedTxDecorator) AnteHandle(
-        ctx sdk.Context,
-        tx sdk.Tx,
-        _ bool,
-        next sdk.AnteHandler,
+	ctx sdk.Context,
+	tx sdk.Tx,
+	_ bool,
+	next sdk.AnteHandler,
 ) (sdk.Context, error) {
-  if err := d.ValidateTx(ctx, tx); err != nil {
-    return ctx, err
-  }
-  return next(ctx, tx, false)
+	if err := d.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+	return next(ctx, tx, false)
 }
 
 func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
-  unorderedTx, ok := tx.(sdk.TxWithUnordered)
-  if !ok || !unorderedTx.GetUnordered() {
-    // If the transaction does not implement unordered capabilities or has the
-    // unordered value as false, we bypass.
-    return nil
-  }
+	unorderedTx, ok := tx.(sdk.TxWithUnordered)
+	if !ok || !unorderedTx.GetUnordered() {
+		// If the transaction does not implement unordered capabilities or has the
+		// unordered value as false, we bypass.
+		return nil
+	}
 
-  blockTime := ctx.BlockTime()
-  timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
-  if timeoutTimestamp.IsZero() || timeoutTimestamp.UnixNano() == 0 {
-    return errorsmod.Wrap(
-      sdkerrors.ErrInvalidRequest,
-      "unordered transaction must have timeout_timestamp set",
-    )
-  }
-  if timeoutTimestamp.Before(blockTime) {
-    return errorsmod.Wrap(
-      sdkerrors.ErrInvalidRequest,
-      "unordered transaction has a timeout_timestamp that has already passed",
-    )
-  }
-  if timeoutTimestamp.After(blockTime.Add(d.maxTimeoutDuration)) {
-    return errorsmod.Wrapf(
-      sdkerrors.ErrInvalidRequest,
-      "unordered tx ttl exceeds %s",
-      d.maxTimeoutDuration.String(),
-    )
-  }
+	blockTime := ctx.BlockTime()
+	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
+	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"unordered transaction must have timeout_timestamp set",
+		)
+	}
+	if timeoutTimestamp.Before(blockTime) {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"unordered transaction has a timeout_timestamp that has already passed",
+		)
+	}
+	if timeoutTimestamp.After(blockTime.Add(d.maxTimeoutDuration)) {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"unordered tx ttl exceeds %s",
+			d.maxTimeoutDuration.String(),
+		)
+	}
 
-  execMode := ctx.ExecMode()
-  if execMode == sdk.ExecModeSimulate {
-    return nil
-  }
+	execMode := ctx.ExecMode()
+	if execMode == sdk.ExecModeSimulate {
+		return nil
+	}
 
-  addr := getSender(tx)
+	signerAddrs, err := getSigners(tx)
+	if err != nil {
+		return err
+	}
+	slices.Sort(signerAddrs)
+	signers := strings.Join(signerAddrs, ",")
 
-  contains, err := d.txManager.Contains(ctx, sender, uint64(unorderedTx.GetTimeoutTimeStamp().UnixNano()))
-  if err != nil {
-    return errorsmod.Wrap(
-      sdkerrors.ErrIO,
-      "failed to check contains",
-    )
-  }
-  if contains {
-    return errorsmod.Wrap(
-      sdkerrors.ErrInvalidRequest,
-      "tx is duplicated",
-    )
-  }
+	contains, err := d.txManager.Contains(ctx, signers, uint64(unorderedTx.GetTimeoutTimeStamp().Unix()))
+	if err != nil {
+		return errorsmod.Wrap(
+			sdkerrors.ErrIO,
+			"failed to check contains",
+		)
+	}
+	if contains {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"tx is duplicated",
+		)
+	}
 
-  if err := d.txManager.Add(ctx, sender, uint64(unorderedTx.GetTimeoutTimeStamp().UnixNano())); err != nil {
-    return errorsmod.Wrap(
-      sdkerrors.ErrIO,
-      "failed to add unordered nonce to state",
-    )
-  }
+	if err := d.txManager.Add(ctx, signers, uint64(unorderedTx.GetTimeoutTimeStamp().Unix())); err != nil {
+		return errorsmod.Wrap(
+			sdkerrors.ErrIO,
+			"failed to add unordered nonce to state",
+		)
+	}
 
-  return nil
+	return nil
+}
+
+func getSigners(tx sdk.Tx) ([]string, error) {
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+	}
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return nil, err
+	}
+
+	addresses := make([]string, 0, len(sigs))
+	for _, sig := range sigs {
+		addresses = append(addresses, sig.PubKey.Address().String())
+	}
+
+	return addresses, nil
 }
 
 ```

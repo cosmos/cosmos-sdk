@@ -32,7 +32,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
 	require.NoError(t, err)
 
-	addr, mnemonic, err := GenerateSaveCoinKey(kb, "keyname", "", false, hd.Secp256k1, types.GetConfig().GetFullBIP44Path())
+	addr, mnemonic, err := GenerateSaveCoinKey(kb, "keyname", "", false, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test key was actually saved
@@ -58,15 +58,15 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	keyname := "justakey"
-	addr1, _, err := GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1, types.GetConfig().GetFullBIP44Path())
+	addr1, _, err := GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test overwrite with overwrite=false
-	_, _, err = GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1, types.GetConfig().GetFullBIP44Path())
+	_, _, err = GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1)
 	require.Error(t, err)
 
 	// Test overwrite with overwrite=true
-	addr2, _, err := GenerateSaveCoinKey(kb, keyname, "", true, hd.Secp256k1, types.GetConfig().GetFullBIP44Path())
+	addr2, _, err := GenerateSaveCoinKey(kb, keyname, "", true, hd.Secp256k1)
 	require.NoError(t, err)
 
 	require.NotEqual(t, addr1, addr2)

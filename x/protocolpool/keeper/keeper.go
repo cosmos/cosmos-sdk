@@ -18,6 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
+// assert that this keeper can be used by x/distribution
+var _ types.ExternalCommunityPoolKeeper = &Keeper{}
+
 type Keeper struct {
 	storeService store.KVStoreService
 
@@ -86,6 +89,12 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 // GetAuthority returns the x/protocolpool module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// GetCommunityPoolModuleAddress gets the address that funds should be sent to for the community pool.
+// This is the address that x/distribution will send funds to for external management.
+func (k Keeper) GetCommunityPoolModuleAddress() string {
+	return types.ProtocolPoolDistrAccount
 }
 
 // FundCommunityPool allows an account to directly fund the community fund pool.

@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/v1"
 	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -239,16 +240,24 @@ func TestPeriodicAccountSendCoinsUnauthorized(t *testing.T) {
 	require.True(t, unlocked.AmountOf("test").Equal(math.NewInt(10)), "expected all tokens to be unlocked")
 	require.True(t, locked.AmountOf("test").Equal(math.ZeroInt()), "expected no locked tokens")
 
-	ctx2, _ := newMockContext2(t)
+	ctx2, ss2 := newMockContext2(t)
 	sdkCtx2 := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx2).WithHeaderInfo(header.Info{
-		Time: startTime.Add(3 * time.Minute),
+		Time: time.Now(),
+	})
+	acc2 := setupPeriodicAccount(t, sdkCtx2, ss2)
+	// Fast-forward block time so that all tokens are unlocked.
+	startTime2, err := acc2.StartTime.Get(sdkCtx2)
+	require.NoError(t, err)
+	// In our setup, the total locking periods add up to 3 minutes.
+	sdkCtx2 = sdkCtx2.WithHeaderInfo(header.Info{
+		Time: startTime2.Add(3 * time.Minute),
 	})
 	// Attempt to send coins using an unauthorized sender "hacker" instead of "owner".
 	_, err = acc.SendCoins(sdkCtx2, &lockuptypes.MsgSend{
 		ToAddress: "receiver",
 		Amount:    sdk.NewCoins(sdk.NewCoin("test", math.NewInt(5))),
 	})
-	require.Error(t, err, "non-owner should not be able to send coins")
+	require.ErrorContains(t, err, "sender is not the owner of this vesting account", "non-owner should not be able to send coins")
 }
 
 // Create new mock context with different sender
@@ -267,6 +276,8 @@ func newMockContext2(t *testing.T) (context.Context, store.KVStoreService) {
 		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 			typeUrl := sdk.MsgTypeURL(req)
 			switch typeUrl {
+			case "/cosmos.staking.v1beta1.QueryParamsRequest":
+				return &stakingtypes.QueryParamsResponse{}, nil
 			default:
 				return nil, errors.New("unrecognized request type")
 			}

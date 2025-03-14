@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
@@ -225,14 +225,14 @@ func (s *GRPCWebTestSuite) makeGrpcRequest(
 			break
 		}
 		if readCount != 5 || err != nil {
-			return nil, Trailer{}, nil, fmt.Errorf("Unexpected end of body in preamble: %v", err)
+			return nil, Trailer{}, nil, fmt.Errorf("Unexpected end of body in preamble: %w", err)
 		}
 		payloadLength := binary.BigEndian.Uint32(grpcPreamble[1:])
 		payloadBytes := make([]byte, payloadLength)
 
 		readCount, err = reader.Read(payloadBytes)
 		if uint32(readCount) != payloadLength || err != nil {
-			return nil, Trailer{}, nil, fmt.Errorf("Unexpected end of msg: %v", err)
+			return nil, Trailer{}, nil, fmt.Errorf("Unexpected end of msg: %w", err)
 		}
 		if grpcPreamble[0]&(1<<7) == (1 << 7) { // MSB signifies the trailer parser
 			trailers = readTrailersFromBytes(s.T(), payloadBytes)

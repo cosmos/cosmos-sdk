@@ -32,6 +32,7 @@ linters:
     - typecheck
     - unconvert
     - unused
+    - usetesting
 
 issues:
   exclude-dirs:
@@ -118,6 +119,5 @@ linters-settings:
     disabled-checks:
       - regexpMust
       - appendAssign
-      - ifElseChain
   unused:
     local-variables-are-used: false

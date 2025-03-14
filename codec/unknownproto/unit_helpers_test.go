@@ -22,7 +22,6 @@ func TestWireTypeToString(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(fmt.Sprintf("wireType=%d", tt.typ), func(t *testing.T) {
 			if g, w := wireTypeToString(tt.typ), tt.want; g != w {
 				t.Fatalf("Mismatch:\nGot:  %q\nWant: %q\n", g, w)

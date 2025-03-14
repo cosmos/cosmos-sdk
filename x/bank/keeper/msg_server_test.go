@@ -52,7 +52,6 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			_, err := suite.msgServer.UpdateParams(suite.ctx, tc.input)
 
@@ -140,7 +139,6 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(minterAcc)
 			suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
@@ -237,7 +235,6 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(minterAcc)
 			suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)

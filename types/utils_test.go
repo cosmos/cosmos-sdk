@@ -33,7 +33,7 @@ func (s *utilsTestSuite) TestTimeFormatAndParse() {
 		{"2011-01-10T23:10:05.758230235Z", "2011-01-10T23:10:05.758230235", true},
 	}
 	for _, tc := range cases {
-		tc := tc
+
 		timeFromRFC, err := time.Parse(time.RFC3339Nano, tc.RFC3339NanoStr)
 		s.Require().Nil(err)
 		timeFromSDKFormat, err := time.Parse(sdk.SortableTimeFormat, tc.SDKSortableTimeStr)
@@ -116,8 +116,6 @@ func (s *utilsTestSuite) TestParseTime() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			tm, err := sdk.ParseTime(tc.input)
 			if tc.expectErr {

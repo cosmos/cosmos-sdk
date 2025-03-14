@@ -85,12 +85,12 @@ type SimApp struct {
 	CircuitKeeper         circuitkeeper.Keeper
 
 	// supplementary keepers
-	FeeGrantKeeper feegrantkeeper.Keeper
-	GroupKeeper    groupkeeper.Keeper
-	AuthzKeeper    authzkeeper.Keeper
-	NFTKeeper      nftkeeper.Keeper
-	EpochsKeeper   epochskeeper.Keeper
-  ProtocolPoolKeeper protocolpoolkeeper.Keeper
+	FeeGrantKeeper     feegrantkeeper.Keeper
+	GroupKeeper        groupkeeper.Keeper
+	AuthzKeeper        authzkeeper.Keeper
+	NFTKeeper          nftkeeper.Keeper
+	EpochsKeeper       epochskeeper.Keeper
+	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager

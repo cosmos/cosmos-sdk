@@ -46,6 +46,7 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
@@ -89,6 +90,7 @@ type SimApp struct {
 	AuthzKeeper    authzkeeper.Keeper
 	NFTKeeper      nftkeeper.Keeper
 	EpochsKeeper   epochskeeper.Keeper
+  ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -189,6 +191,7 @@ func NewSimApp(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitKeeper,
 		&app.EpochsKeeper,
+		&app.ProtocolPoolKeeper,
 	); err != nil {
 		panic(err)
 	}

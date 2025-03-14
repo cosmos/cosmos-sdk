@@ -164,6 +164,12 @@ func (k Keeper) sendCommunityPoolToExternalPool(ctx sdk.Context) error {
 		"amount", amt.String(),
 		"remaining", remaining.String(),
 	)
+
+	// return early if the amount is zero
+	if amt.IsZero() {
+		return nil
+	}
+
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.externalCommunityPool.GetCommunityPoolModule(), amt); err != nil {
 		return err
 	}

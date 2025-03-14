@@ -321,7 +321,9 @@ of the unordered sequence mapping. If the 2/3's of the network crashed, and the 
 the system would lose track of all sequences in the mapping, allowing those transactions to be replayed. The 
 implementation proposed in the updated version of this ADR solves this by writing directly to the Cosmos KV Store.
 
-Additionally, the previous iteration relied on using hashes to create what we call an "unordered sequence." 
+Additionally, the previous iteration relied on using hashes to create what we call an "unordered sequence." There are known
+issues with transaction malleability in Cosmos SDK signing modes. This ADR gets away from this problem by enforcing
+single-use unordered nonces, instead of deriving nonces from bytes in the transaction.
 
 ## Consequences
 

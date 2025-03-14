@@ -2217,7 +2217,7 @@ type Module struct {
 	SkipStoreKeys []string `protobuf:"bytes,11,rep,name=skip_store_keys,json=skipStoreKeys,proto3" json:"skip_store_keys,omitempty"`
 	// order_migrations defines the order in which module migrations are performed.
 	// If this is left empty, it uses the default migration order.
-	// https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.47.0-alpha2/types/module#DefaultMigrationsOrder
+	// https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types/module#DefaultMigrationsOrder
 	OrderMigrations []string `protobuf:"bytes,7,rep,name=order_migrations,json=orderMigrations,proto3" json:"order_migrations,omitempty"`
 	// precommiters specifies the module names of the precommiters
 	// to call in the order in which they should be called. If this is left empty

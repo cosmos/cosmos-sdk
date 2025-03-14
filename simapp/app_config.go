@@ -240,10 +240,8 @@ var (
 				Config: appconfig.WrapAny(&upgrademodulev1.Module{}),
 			},
 			{
-				Name: distrtypes.ModuleName,
-				Config: appconfig.WrapAny(&distrmodulev1.Module{
-					ProtocolPoolEnabled: true,
-				}),
+				Name:   distrtypes.ModuleName,
+				Config: appconfig.WrapAny(&distrmodulev1.Module{}),
 			},
 			{
 				Name:   evidencetypes.ModuleName,

@@ -1,4 +1,4 @@
-package protocolpool
+package testutil
 
 import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -10,6 +10,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/protocolpool"   // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 )
 
@@ -23,4 +24,5 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.GenutilModule(),
 	configurator.DistributionModule(),
 	configurator.MintModule(),
+	configurator.ProtocolPoolModule(),
 )

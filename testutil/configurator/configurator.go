@@ -61,6 +61,7 @@ func defaultConfig() *Config {
 			"consensus",
 			"vesting",
 			"circuit",
+			"protocolpool",
 		},
 		EndBlockersOrder: []string{
 			"gov",
@@ -81,6 +82,7 @@ func defaultConfig() *Config {
 			"upgrade",
 			"vesting",
 			"circuit",
+			"protocolpool",
 		},
 		InitGenesisOrder: []string{
 			"auth",
@@ -101,6 +103,7 @@ func defaultConfig() *Config {
 			"upgrade",
 			"vesting",
 			"circuit",
+			"protocolpool",
 		},
 		setInitGenesis: true,
 	}
@@ -155,6 +158,9 @@ func AuthModule() ModuleOption {
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
+					{Account: protocolpooltypes.ModuleName},
+					{Account: protocolpooltypes.ProtocolPoolDistrAccount},
+					{Account: protocolpooltypes.StreamAccount},
 				},
 			}),
 		}

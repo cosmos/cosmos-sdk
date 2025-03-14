@@ -364,8 +364,8 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	if k.protocolPoolEnabled {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "protocol pool is enabled - to query CommunityPool use the query exposed by x/protocolpool")
+	if k.externalCommunityPoolEnabled() {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the CommunityPool query exposed by the external community pool")
 	}
 
 	pool, err := k.FeePool.Get(ctx)

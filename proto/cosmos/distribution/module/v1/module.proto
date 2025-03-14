@@ -14,8 +14,4 @@ message Module {
 
   // authority defines the custom module authority. If not set, defaults to the governance module.
   string authority = 2;
-
-  // ProtocolPoolEnabled determines whether the protocol pool is to be enabled, meaning community pool funds
-  // will be directed to x/protocolpool.
-  bool protocol_pool_enabled = 3;
 }

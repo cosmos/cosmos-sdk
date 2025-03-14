@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // Keeper of the distribution store
@@ -33,16 +32,16 @@ type Keeper struct {
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 
-	protocolPoolEnabled bool
+	externalCommunityPool types.ExternalCommunityPoolKeeper
 }
 
 type InitOption func(*Keeper)
 
-// WithProtocolPoolEnabled will enable the protocol pool functionality in x/distribution, directing
-// community pool funds to x/protocolpool
-func WithProtocolPoolEnabled() InitOption {
+// WithExternalCommunityPool will enable the external pool functionality in x/distribution, directing
+// community pool funds to the provided keeper.
+func WithExternalCommunityPool(poolKeeper types.ExternalCommunityPoolKeeper) InitOption {
 	return func(k *Keeper) {
-		k.protocolPoolEnabled = true
+		k.externalCommunityPool = poolKeeper
 	}
 }
 
@@ -63,16 +62,16 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		storeService:        storeService,
-		cdc:                 cdc,
-		authKeeper:          ak,
-		bankKeeper:          bk,
-		stakingKeeper:       sk,
-		feeCollectorName:    feeCollectorName,
-		authority:           authority,
-		Params:              collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		FeePool:             collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
-		protocolPoolEnabled: false,
+		storeService:          storeService,
+		cdc:                   cdc,
+		authKeeper:            ak,
+		bankKeeper:            bk,
+		stakingKeeper:         sk,
+		feeCollectorName:      feeCollectorName,
+		authority:             authority,
+		Params:                collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		FeePool:               collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		externalCommunityPool: nil,
 	}
 
 	schema, err := sb.Build()
@@ -85,11 +84,11 @@ func NewKeeper(
 		opt(&k)
 	}
 
-	if k.protocolPoolEnabled {
-		// ensure protocolpool module account is set if we are enabling it
+	if k.externalCommunityPool != nil {
+		// ensure external module account is set if we are enabling it
 		// this will ensure that funds can be transferred to it.
-		if addr := ak.GetModuleAddress(protocolpooltypes.ModuleName); addr == nil {
-			panic(fmt.Sprintf("%s module account has not been set", protocolpooltypes.ModuleName))
+		if addr := ak.GetModuleAddress(k.externalCommunityPool.GetCommunityPoolModule()); addr == nil {
+			panic(fmt.Sprintf("%s module account has not been set", k.externalCommunityPool.GetCommunityPoolModule()))
 		}
 	}
 
@@ -99,6 +98,12 @@ func NewKeeper(
 // GetAuthority returns the x/distribution module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// externalCommunityPoolEnabled is a helper function to denote whether the x/distribution module
+// is using its native community pool, or using an external pool.
+func (k Keeper) externalCommunityPoolEnabled() bool {
+	return k.externalCommunityPool != nil
 }
 
 // Logger returns a module-specific logger.
@@ -134,7 +139,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 	return nil
 }
 
-// withdraw rewards from a delegation
+// WithdrawDelegationRewards withdraws rewards from a delegation
 func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {

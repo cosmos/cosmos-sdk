@@ -32,7 +32,6 @@ type Keeper struct {
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 
-	protocolPoolEnabled   bool
 	externalCommunityPool types.ExternalCommunityPoolKeeper
 }
 
@@ -99,6 +98,12 @@ func NewKeeper(
 // GetAuthority returns the x/distribution module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// externalCommunityPoolEnabled is a helper function to denote whether the x/distribution module
+// is using its native community pool, or using an external pool.
+func (k Keeper) externalCommunityPoolEnabled() bool {
+	return k.externalCommunityPool != nil
 }
 
 // Logger returns a module-specific logger.

@@ -103,8 +103,8 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 }
 
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	if k.protocolPoolEnabled {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "protocol pool is enabled - to call FundCommunityPool use the method exposed by x/protocolpool")
+	if k.externalCommunityPoolEnabled() {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the FundCommunityPool method exposed by the external community pool")
 	}
 
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
@@ -145,8 +145,8 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
-	if k.protocolPoolEnabled {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "protocol pool is enabled - to call CommunityPoolSpend use the method exposed by x/protocolpool")
+	if k.externalCommunityPoolEnabled() {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled -  use the DistributFromCommunityPool method exposed by the external community pool")
 	}
 
 	if err := k.validateAuthority(msg.Authority); err != nil {

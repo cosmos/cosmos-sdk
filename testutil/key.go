@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GenerateCoinKey generates a new key mnemonic along with its addrress.
+// GenerateCoinKey generates a new key mnemonic along with its address.
 func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddress, string, error) {
 	// generate a private key, with mnemonic
 	info, secret, err := keyring.NewInMemory(cdc).NewMnemonic(
@@ -28,7 +28,7 @@ func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddres
 	return addr, secret, nil
 }
 
-// GenerateSaveCoinKey generates a new key mnemonic with its addrress.
+// GenerateSaveCoinKey generates a new key mnemonic with its address.
 // If mnemonic is provided then it's used for key generation.
 // The key is saved in the keyring. The function returns error if overwrite=true and the key
 // already exists.

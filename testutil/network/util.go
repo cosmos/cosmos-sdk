@@ -46,7 +46,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		tmCfg,
 		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewCommittingClientCreator(app),
+		proxy.NewLocalClientCreator(app),
 		genDocProvider,
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(tmCfg.Instrumentation),

@@ -1,147 +1,167 @@
 package unorderedtx_test
 
-/*
 import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	storetypes "cosmossdk.io/store/types"
 )
 
-func TestUnorderedTxManager_Close(t *testing.T) {
-	txm := unorderedtx.NewManager(t.TempDir())
-	txm.Start()
-
-	require.NoError(t, txm.Close())
-	require.Panics(t, func() { txm.Close() })
-}
-
-func TestUnorderedTxManager_SimpleSize(t *testing.T) {
-	txm := unorderedtx.NewManager(t.TempDir())
-	defer func() {
-		require.NoError(t, txm.Close())
-	}()
-
-	txm.Start()
-
-	txm.Add(unorderedtx.TxHash{0xFF}, time.Now())
-	txm.Add(unorderedtx.TxHash{0xAA}, time.Now())
-	txm.Add(unorderedtx.TxHash{0xCC}, time.Now())
-
-	require.Equal(t, 3, txm.Size())
-}
-
-func TestUnorderedTxManager_SimpleContains(t *testing.T) {
-	txm := unorderedtx.NewManager(t.TempDir())
-	defer func() {
-		require.NoError(t, txm.Close())
-	}()
-
-	txm.Start()
-
-	for i := 0; i < 10; i++ {
-		txHash := unorderedtx.TxHash{byte(i)}
-		txm.Add(txHash, time.Now())
-		require.True(t, txm.Contains(txHash))
-	}
-
-	for i := 10; i < 20; i++ {
-		txHash := unorderedtx.TxHash{byte(i)}
-		require.False(t, txm.Contains(txHash))
-	}
-}
-
-func TestUnorderedTxManager_InitEmpty(t *testing.T) {
-	txm := unorderedtx.NewManager(t.TempDir())
-	defer func() {
-		require.NoError(t, txm.Close())
-	}()
-
-	txm.Start()
-
-	require.NoError(t, txm.OnInit())
-}
-
-func TestUnorderedTxManager_CloseInit(t *testing.T) {
-	dataDir := t.TempDir()
-	txm := unorderedtx.NewManager(dataDir)
-	txm.Start()
-
-	// add a handful of unordered txs
-	for i := 0; i < 100; i++ {
-		txm.Add(unorderedtx.TxHash{byte(i)}, time.Now())
-	}
-
-	// close the manager, which should flush all unexpired txs to file
-	require.NoError(t, txm.Close())
-
-	// create a new manager, start it
-	txm2 := unorderedtx.NewManager(dataDir)
-	defer func() {
-		require.NoError(t, txm2.Close())
-	}()
-
-	// start and execute OnInit, which should load the unexpired txs from file
-	txm2.Start()
-	require.NoError(t, txm2.OnInit())
-	require.Equal(t, 100, txm2.Size())
-
-	for i := 0; i < 100; i++ {
-		require.True(t, txm2.Contains(unorderedtx.TxHash{byte(i)}))
-	}
-}
-
-func TestUnorderedTxManager_Flow(t *testing.T) {
-	txm := unorderedtx.NewManager(t.TempDir())
-	defer func() {
-		require.NoError(t, txm.Close())
-	}()
-
-	txm.Start()
-
-	currentTime := time.Now()
-
-	// Seed the manager with a txs, some of which should eventually be purged and
-	// the others will remain. Txs with TTL less than or equal to 50 should be purged.
-	for i := 1; i <= 100; i++ {
-		txHash := unorderedtx.TxHash{byte(i)}
-
-		if i <= 50 {
-			txm.Add(txHash, currentTime.Add(time.Millisecond*500*time.Duration(i)))
-		} else {
-			txm.Add(txHash, currentTime.Add(time.Hour))
-		}
-	}
-
-	// start a goroutine that mimics new blocks being made every 500ms
-	doneBlockCh := make(chan bool)
-	go func() {
-		ticker := time.NewTicker(time.Millisecond * 500)
-		defer ticker.Stop()
-
-		for t := range ticker.C {
-			txm.OnNewBlock(t)
-
-			if t.After(currentTime.Add(time.Millisecond * 500 * time.Duration(50))) {
-				doneBlockCh <- true
-				return
-			}
-		}
-	}()
-
-	// Eventually all the txs that should be expired by block 50 should be purged.
-	// The remaining txs should remain.
-	require.Eventually(
-		t,
-		func() bool {
-			return txm.Size() == 50
-		},
-		2*time.Minute,
-		5*time.Second,
+func TestManager(t *testing.T) {
+	var (
+		mgr *unorderedtx.Manager
+		ctx sdk.Context
 	)
+	reset := func() {
+		mockStoreKey := storetypes.NewKVStoreKey("test")
+		storeService := runtime.NewKVStoreService(mockStoreKey)
+		ctx = testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx
+		mgr = unorderedtx.NewManager(storeService)
+	}
 
-	<-doneBlockCh
+	type utxSequence struct {
+		sender  string
+		timeout time.Time
+	}
+	testCases := map[string]struct {
+		addFunc           []utxSequence
+		blockTime         time.Time
+		expectContains    []utxSequence
+		expectNotContains []utxSequence
+	}{
+		"transactions are not removed when block time is before every utx": {
+			addFunc: []utxSequence{
+				{
+					"cosmos1",
+					time.Unix(10, 0),
+				},
+				{
+					"cosmos2",
+					time.Unix(10, 0),
+				},
+				{
+					"cosmos3",
+					time.Unix(10, 0),
+				},
+			},
+			blockTime: time.Unix(5, 0),
+			expectContains: []utxSequence{
+				{
+					"cosmos1",
+					time.Unix(10, 0),
+				},
+				{
+					"cosmos2",
+					time.Unix(10, 0),
+				},
+				{
+					"cosmos3",
+					time.Unix(10, 0),
+				},
+			},
+		},
+		"transactions are all removed when block time is equal to every utx": {
+			addFunc: []utxSequence{
+				{
+					"cosmos1",
+					time.Unix(10, 0),
+				},
+				{
+					"cosmos2",
+					time.Unix(10, 0),
+				},
+				{
+					"cosmos3",
+					time.Unix(10, 0),
+				},
+			},
+			blockTime: time.Unix(150, 10),
+			expectNotContains: []utxSequence{
+				{
+					"cosmos1",
+					time.Unix(10, 0),
+				},
+				{
+					"cosmos2",
+					time.Unix(10, 0),
+				},
+				{
+					"cosmos3",
+					time.Unix(10, 0),
+				},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		reset()
+		t.Run(name, func(t *testing.T) {
+			ctx = ctx.WithBlockTime(tc.blockTime)
+			for _, seq := range tc.addFunc {
+				err := mgr.Add(ctx, seq.sender, uint64(seq.timeout.UnixNano()))
+				t.Logf("added transaction: %d/%s", seq.timeout.UnixNano(), seq.sender)
+				require.NoError(t, err)
+			}
+			t.Logf("removing txs. block_time: %d", tc.blockTime.UnixNano())
+			err := mgr.RemoveExpired(ctx)
+			require.NoError(t, err)
+
+			for _, seq := range tc.expectNotContains {
+				has, err := mgr.Contains(ctx, seq.sender, uint64(seq.timeout.UnixNano()))
+				require.NoError(t, err)
+				require.False(t, has, "should not contain %s", seq.sender)
+			}
+			for _, seq := range tc.expectContains {
+				has, err := mgr.Contains(ctx, seq.sender, uint64(seq.timeout.UnixNano()))
+				require.NoError(t, err)
+				require.True(t, has)
+			}
+		})
+	}
+
 }
-*/
+
+func TestRemove(t *testing.T) {
+	mockStoreKey := storetypes.NewKVStoreKey("test")
+	storeService := runtime.NewKVStoreService(mockStoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
+	mgr := unorderedtx.NewManager(storeService)
+
+	sender := "cosmos1"
+	timeout := time.Unix(100, 0)
+	err := mgr.Add(testCtx.Ctx, sender, uint64(timeout.Unix()))
+	require.NoError(t, err)
+
+	// it should have the tx in state.
+	ok, err := mgr.Contains(testCtx.Ctx, sender, uint64(timeout.Unix()))
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	// lets test calling remove with a block time that is before it's expiry.
+	blockTime := time.Unix(90, 0)
+	testCtx.Ctx = testCtx.Ctx.WithBlockTime(blockTime)
+
+	// it should still have it, since 90 is before 100.
+	err = mgr.RemoveExpired(testCtx.Ctx)
+	require.NoError(t, err)
+	ok, err = mgr.Contains(testCtx.Ctx, sender, uint64(timeout.Unix()))
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	// lets test with the block time after the tx.
+	blockTime = time.Unix(101, 0)
+	testCtx.Ctx = testCtx.Ctx.WithBlockTime(blockTime)
+
+	// it should be removed since 101 is greater than 100.
+	err = mgr.RemoveExpired(testCtx.Ctx)
+	require.NoError(t, err)
+	ok, err = mgr.Contains(testCtx.Ctx, sender, uint64(timeout.Unix()))
+	require.NoError(t, err)
+	require.False(t, ok)
+}

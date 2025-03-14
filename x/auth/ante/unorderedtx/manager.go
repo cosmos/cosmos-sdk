@@ -1,11 +1,11 @@
 package unorderedtx
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 )
 
@@ -15,50 +15,68 @@ const (
 	DefaultMaxTimeoutDuration = time.Minute * 40
 )
 
-type UnorderedSequence string
+var (
+	unorderedSequencePrefix = collections.NewPrefix(0)
+)
+
+type UnorderedSequence []byte
 
 func NewUnorderedSequence(addr string, timestamp uint64) UnorderedSequence {
-	return UnorderedSequence(fmt.Sprintf("%d/%s", timestamp, addr))
+	tsBz := sdk.Uint64ToBigEndian(timestamp)
+	tsBz = append(tsBz, []byte("/"+addr)...)
+	return tsBz
+}
+
+func (u UnorderedSequence) String() string {
+	return string(u)
 }
 
 // Manager contains the tx hash dictionary for duplicates checking, and expire
 // them when block production progresses.
 type Manager struct {
-	kvStore store.KVStoreService
+	unorderedSequences collections.KeySet[[]byte]
 }
 
 func NewManager(kvStore store.KVStoreService) *Manager {
+	sb := collections.NewSchemaBuilder(kvStore)
+
 	m := &Manager{
-		kvStore: kvStore,
+		unorderedSequences: collections.NewKeySet(
+			sb,
+			unorderedSequencePrefix,
+			"unordered_sequences",
+			collections.BytesKey,
+		),
 	}
 
 	return m
 }
 
 func (m *Manager) Contains(ctx sdk.Context, sender string, timestamp uint64) (bool, error) {
-	return m.kvStore.OpenKVStore(ctx).Has([]byte(NewUnorderedSequence(sender, timestamp)))
+	return m.unorderedSequences.Has(ctx, NewUnorderedSequence(sender, timestamp))
 }
 
 func (m *Manager) Add(ctx sdk.Context, sender string, timestamp uint64) error {
-	return m.kvStore.OpenKVStore(ctx).Set([]byte(NewUnorderedSequence(sender, timestamp)), []byte(byte(0x0)))
+	return m.unorderedSequences.Set(ctx, NewUnorderedSequence(sender, timestamp))
 }
 
 func (m *Manager) RemoveExpired(ctx sdk.Context) error {
-	kvStore := m.kvStore.OpenKVStore(ctx)
-	it, err := kvStore.Iterator(nil, []byte(NewUnorderedSequence("", uint64(ctx.BlockTime().Unix()))))
+
+	keyEnd := sdk.Uint64ToBigEndian(uint64(ctx.BlockTime().UnixNano()))
+	keyEnd = append(keyEnd, []byte("/")...)
+	it, err := m.unorderedSequences.IterateRaw(ctx, nil, keyEnd, collections.OrderAscending)
 	if err != nil {
 		return err
 	}
 	defer it.Close()
 
-	keys := make([][]byte, 0)
-	for ; it.Valid(); it.Next() {
-		keys = append(keys, it.Key())
+	keys, err := it.Keys()
+	if err != nil {
+		return err
 	}
 
 	for _, key := range keys {
-		err := kvStore.Delete(key)
-		if err != nil {
+		if err := m.unorderedSequences.Remove(ctx, key); err != nil {
 			return err
 		}
 	}

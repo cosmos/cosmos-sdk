@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	"testing"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/math"
@@ -39,40 +39,38 @@ import (
 type E2ETestSuite struct {
 	suite.Suite
 
-	protocolPoolEnabled bool
+	externalPoolEnabled bool
 	cfg                 network.Config
 	network             *network.Network
 }
 
-func NewE2ETestSuite(protocolPoolEnabled bool) *E2ETestSuite {
-	return &E2ETestSuite{protocolPoolEnabled: protocolPoolEnabled}
+func NewE2ETestSuite(externalPoolEnabled bool) *E2ETestSuite {
+	return &E2ETestSuite{externalPoolEnabled: externalPoolEnabled}
 }
 
-func findAndReplaceModuleConfig(moduleConfig []*appv1alpha1.ModuleConfig, cfg *appv1alpha1.ModuleConfig) ([]*appv1alpha1.ModuleConfig, error) {
-	for i, module := range moduleConfig {
-		if module.Name == cfg.Name {
-			moduleConfig[i] = cfg
-			return moduleConfig, nil
+func removeModuleConfig(moduleConfig []*appv1alpha1.ModuleConfig, target string) []*appv1alpha1.ModuleConfig {
+	newConfig := make([]*appv1alpha1.ModuleConfig, 0, len(moduleConfig))
+	for _, mod := range moduleConfig {
+		if mod.Name != target {
+			newConfig = append(newConfig, mod)
 		}
 	}
 
-	return moduleConfig, fmt.Errorf("module %s not found", cfg.Name)
+	return newConfig
 }
 
-func initNetworkConfig(t *testing.T, protocolPoolEnabled bool) network.Config {
+func initNetworkConfig(t *testing.T, externalPoolEnabled bool) network.Config {
 	t.Helper()
 
-	// overwrite the module config so that protocolpool is disabled
 	moduleConfig := simapp.ModuleConfig
-	moduleConfig, err := findAndReplaceModuleConfig(moduleConfig, &appv1alpha1.ModuleConfig{
-		Name: distrtypes.ModuleName,
-		Config: appconfig.WrapAny(&distrmodulev1.Module{
-			ProtocolPoolEnabled: protocolPoolEnabled,
-		}),
-	})
-	require.NoError(t, err)
+	var err error
 
-	t.Log("setting up the e2e test suite", "protocolPoolEnabled", protocolPoolEnabled)
+	// overwrite the module config so that protocolpool is removed "disabling" it
+	if !externalPoolEnabled {
+		moduleConfig = removeModuleConfig(moduleConfig, protocolpooltypes.ModuleName)
+	}
+
+	t.Log("setting up the e2e test suite", "externalPoolEnabled", externalPoolEnabled)
 
 	// application configuration (used by depinject)
 	AppConfig := depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
@@ -101,7 +99,7 @@ func initNetworkConfig(t *testing.T, protocolPoolEnabled bool) network.Config {
 func (s *E2ETestSuite) SetupSuite() {
 	s.T().Log("setting up e2e test suite")
 
-	cfg := initNetworkConfig(s.T(), s.protocolPoolEnabled)
+	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
 
 	cfg.NumValidators = 1
 	s.cfg = cfg
@@ -432,7 +430,7 @@ func (s *E2ETestSuite) TestNewFundCommunityPoolCmd() {
 			switch {
 			case tc.expectErr:
 				s.Require().Error(err)
-			case s.protocolPoolEnabled:
+			case s.externalPoolEnabled:
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType))
 				txResp := tc.respType.(*sdk.TxResponse)

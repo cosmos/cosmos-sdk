@@ -1,4 +1,4 @@
-package testutil
+package protocolpool
 
 import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -23,5 +23,4 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.GenutilModule(),
 	configurator.DistributionModule(),
 	configurator.MintModule(),
-	configurator.ProtocolPoolModule(),
 )

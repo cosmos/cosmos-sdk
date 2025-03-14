@@ -30,8 +30,8 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 		}
 
 		// every 1000 blocks send whole coins from community pool to x/protocolpool if enabled
-		if height%truncationBlockInterval == 0 && k.protocolPoolEnabled {
-			if err := k.sendCommunityPoolToProtocolPool(ctx); err != nil {
+		if height%truncationBlockInterval == 0 && k.externalCommunityPoolEnabled() {
+			if err := k.sendCommunityPoolToExternalPool(ctx); err != nil {
 				return err
 			}
 		}

@@ -18,19 +18,19 @@ import (
 type GRPCQueryTestSuite struct {
 	suite.Suite
 
-	protocolPoolEnabled bool
+	externalPoolEnabled bool
 	cfg                 network.Config
 	network             *network.Network
 }
 
-func NewGRPCQueryTestSuite(protocolPoolEnabled bool) *GRPCQueryTestSuite {
-	return &GRPCQueryTestSuite{protocolPoolEnabled: protocolPoolEnabled}
+func NewGRPCQueryTestSuite(externalPoolEnabled bool) *GRPCQueryTestSuite {
+	return &GRPCQueryTestSuite{externalPoolEnabled: externalPoolEnabled}
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up grpc e2e test suite")
 
-	cfg := initNetworkConfig(s.T(), s.protocolPoolEnabled)
+	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
 
 	cfg.NumValidators = 1
 	s.cfg = cfg
@@ -500,12 +500,12 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 			switch {
 			case tc.expErr:
 				s.Require().Error(err)
-			case s.protocolPoolEnabled:
+			case s.externalPoolEnabled:
 				s.Require().NoError(err)
 				var errMessage sdktestutil.ErrorResponse
 				s.Require().NoError(json.Unmarshal(resp, &errMessage))
 				s.Require().Equal(2, errMessage.Code)
-				s.Require().Equal("protocol pool is enabled - to query CommunityPool use the query exposed by x/protocolpool: invalid request: unknown request", errMessage.Message)
+				s.Require().Equal("external community pool is enabled - use the CommunityPool query exposed by the external community pool: invalid request: unknown request", errMessage.Message)
 			default:
 				s.Require().NoError(err)
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))

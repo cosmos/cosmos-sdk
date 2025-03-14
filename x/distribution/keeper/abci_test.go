@@ -31,6 +31,22 @@ var (
 	testProposerAddress = sdk.ConsAddress("test")
 )
 
+var _ disttypes.ExternalCommunityPoolKeeper = &mockProtocolPoolKeeper{}
+
+type mockProtocolPoolKeeper struct{}
+
+func (m mockProtocolPoolKeeper) GetCommunityPoolModule() string {
+	return protocolpooltypes.ProtocolPoolDistrAccount
+}
+
+func (m mockProtocolPoolKeeper) FundCommunityPool(_ sdk.Context, _ sdk.Coins, _ sdk.AccAddress) error {
+	panic("do not use me")
+}
+
+func (m mockProtocolPoolKeeper) DistributeFromCommunityPool(_ sdk.Context, _ sdk.Coins, _ sdk.AccAddress) error {
+	panic("do not use me")
+}
+
 type testSetup struct {
 	testCtx       testutil.TestContext
 	bankKeeper    *distrtestutil.MockBankKeeper
@@ -58,9 +74,9 @@ func setupTest(t *testing.T, protocolPoolEnabled bool) testSetup {
 
 	var opts []keeper.InitOption
 	if protocolPoolEnabled {
-		opts = append(opts, keeper.WithProtocolPoolEnabled())
+		opts = append(opts, keeper.WithExternalCommunityPool(mockProtocolPoolKeeper{}))
 		// expect that we will verify that this module account is set
-		accountKeeper.EXPECT().GetModuleAddress(protocolpooltypes.ModuleName).Return(protocolPoolAcc.GetAddress()).AnyTimes()
+		accountKeeper.EXPECT().GetModuleAddress(protocolpooltypes.ProtocolPoolDistrAccount).Return(protocolPoolAcc.GetAddress()).AnyTimes()
 	}
 
 	distrKeeper := keeper.NewKeeper(
@@ -74,6 +90,7 @@ func setupTest(t *testing.T, protocolPoolEnabled bool) testSetup {
 		opts...,
 	)
 
+	// empty initialize
 	err := distrKeeper.FeePool.Set(testCtx.Ctx, disttypes.FeePool{
 		CommunityPool: sdk.NewDecCoins(),
 	})

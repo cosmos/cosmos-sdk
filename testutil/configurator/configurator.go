@@ -17,12 +17,14 @@ import (
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
+	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
@@ -305,6 +307,15 @@ func CircuitModule() ModuleOption {
 		config.ModuleConfigs["circuit"] = &appv1alpha1.ModuleConfig{
 			Name:   "circuit",
 			Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
+		}
+	}
+}
+
+func ProtocolPoolModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[protocolpooltypes.ModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   protocolpooltypes.ModuleName,
+			Config: appconfig.WrapAny(&protocolpoolmodulev1.Module{}),
 		}
 	}
 }

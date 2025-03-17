@@ -77,3 +77,20 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		TranchesLeft:    budget.TranchesLeft,
 	}, nil
 }
+
+// Params
+func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	params, err := k.Keeper.Params.Get(sdkCtx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, "params not found")
+		}
+		return nil, err
+	}
+
+	return &types.QueryParamsResponse{
+		Params: params,
+	}, nil
+}

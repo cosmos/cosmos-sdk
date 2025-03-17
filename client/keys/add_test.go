@@ -211,7 +211,7 @@ func Test_runAddCmdMultisigDupKeys(t *testing.T) {
 	mockIn.Reset("y\n")
 	require.Error(t, cmd.ExecuteContext(ctx))
 	mockIn.Reset("y\n")
-	require.EqualError(t, cmd.ExecuteContext(ctx), "duplicate multisig keys: keyname1")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "duplicate multisig keys found: keyname1")
 }
 
 func Test_runAddCmdMultisigMultipleDupKeys(t *testing.T) {

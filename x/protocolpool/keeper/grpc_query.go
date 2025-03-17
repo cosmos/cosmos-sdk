@@ -9,9 +9,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -75,5 +75,26 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		NextClaimFrom:   &nextClaimFrom,
 		Period:          budget.Period,
 		TranchesLeft:    budget.TranchesLeft,
+	}, nil
+}
+
+// Params queries params of x/protocolpool module.
+func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	params, err := k.Keeper.Params.Get(sdkCtx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, "params not found")
+		}
+		return nil, err
+	}
+
+	return &types.QueryParamsResponse{
+		Params: params,
 	}, nil
 }

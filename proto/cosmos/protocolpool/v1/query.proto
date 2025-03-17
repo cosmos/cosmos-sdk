@@ -9,6 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "cosmos/protocolpool/v1/types.proto";
 
 // Query defines the gRPC querier service for community pool module.
 service Query {
@@ -20,6 +21,11 @@ service Query {
   // UnclaimedBudget queries the remaining budget left to be claimed and it gives overall budget allocation view.
   rpc UnclaimedBudget(QueryUnclaimedBudgetRequest) returns (QueryUnclaimedBudgetResponse) {
     option (google.api.http).get = "/cosmos/protocolpool/v1/unclaimed_budget/{address}";
+  }
+
+  // Params returns the total set of x/protocolpool parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/protocolpool/v1/params";
   }
 }
 
@@ -56,4 +62,12 @@ message QueryUnclaimedBudgetResponse {
   google.protobuf.Duration period = 4 [(gogoproto.stdduration) = true];
   // tranches_left is the number of tranches left for the amount to be distributed
   uint64 tranches_left = 5;
+}
+
+// QueryParamsRequest is the response type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
 }

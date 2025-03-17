@@ -8563,6 +8563,8 @@ type TxBody struct {
 	// Note, when set to true, the existing 'timeout_timestamp' value must
 	// be set and will be used to correspond to a timestamp in which the transaction is deemed
 	// valid.
+	//
+	// Since: cosmos-sdk 0.53
 	Unordered bool `protobuf:"varint,4,opt,name=unordered,proto3" json:"unordered,omitempty"`
 	// timeout_timestamp is the block time after which this transaction will not
 	// be processed by the chain.
@@ -8570,6 +8572,8 @@ type TxBody struct {
 	// Note, if unordered=true this value MUST be set
 	// and will act as a short-lived TTL in which the transaction is deemed valid
 	// and kept in memory to prevent duplicates.
+	//
+	// Since: cosmos-sdk 0.53
 	TimeoutTimestamp *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty"`
 	// extension_options are arbitrary options that can be added by chains
 	// when the default options are not sufficient. If any of these are present

@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/stretchr/testify v1.10.0
-	pgregory.net/rapid v1.1.0
+	pgregory.net/rapid v1.2.0
 	sigs.k8s.io/yaml v1.4.0
 )
 

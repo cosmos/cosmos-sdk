@@ -103,7 +103,7 @@ type AccountKeeper struct {
 	AccountNumber collections.Sequence
 	Accounts      *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 
-	utxm *UnorderedTxManager
+	utxm UnorderedTxManager
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -280,6 +280,6 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	return params
 }
 
-func (ak AccountKeeper) GetUnorderedTxManager() *UnorderedTxManager {
+func (ak AccountKeeper) GetUnorderedTxManager() UnorderedTxManager {
 	return ak.utxm
 }

@@ -20,6 +20,7 @@ type HandlerOptions struct {
 	SignModeHandler        *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker           TxFeeChecker
+	EnableUnorderedTxs     bool
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -51,7 +52,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		NewIncrementSequenceDecorator(options.AccountKeeper),
-		NewUnorderedTxDecorator(options.AccountKeeper.GetUnorderedTxManager()),
+	}
+
+	if options.EnableUnorderedTxs {
+		NewUnorderedTxDecorator(options.AccountKeeper.GetUnorderedTxManager())
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

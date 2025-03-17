@@ -12,6 +12,7 @@ import (
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/14647
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -49,6 +50,7 @@ type AnteTestSuite struct {
 	ctx            sdk.Context
 	clientCtx      client.Context
 	txBuilder      client.TxBuilder
+	store          store.KVStoreService
 	accountKeeper  keeper.AccountKeeper
 	bankKeeper     *authtestutil.MockBankKeeper
 	txBankKeeper   *txtestutil.MockBankKeeper
@@ -65,6 +67,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.feeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
+	suite.store = runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1) // app.BaseApp.NewContext(isCheckTx, cmtproto.Header{}).WithBlockHeight(1)
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
@@ -79,7 +82,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		suite.encCfg.Codec, runtime.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
+		suite.encCfg.Codec, suite.store, types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
 		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)

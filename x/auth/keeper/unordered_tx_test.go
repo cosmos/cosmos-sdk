@@ -15,7 +15,7 @@ import (
 
 func TestManager(t *testing.T) {
 	var (
-		mgr *keeper.UnorderedTxManager
+		mgr keeper.UnorderedTxManager
 		ctx sdk.Context
 	)
 	reset := func() {
@@ -285,7 +285,7 @@ func TestManager(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx = ctx.WithBlockTime(tc.blockTime)
 			for _, seq := range tc.addFunc {
-				err := mgr.Add(ctx, seq.sender, uint64(seq.timeout.UnixNano()))
+				err := mgr.Add(ctx, seq.sender, seq.timeout)
 				t.Logf("added transaction: %d/%s", seq.timeout.UnixNano(), seq.sender)
 				require.NoError(t, err)
 			}
@@ -294,12 +294,12 @@ func TestManager(t *testing.T) {
 			require.NoError(t, err)
 
 			for _, seq := range tc.expectNotContains {
-				has, err := mgr.Contains(ctx, seq.sender, uint64(seq.timeout.UnixNano()))
+				has, err := mgr.Contains(ctx, seq.sender, seq.timeout)
 				require.NoError(t, err)
 				require.False(t, has, "should not contain %s", seq.sender)
 			}
 			for _, seq := range tc.expectContains {
-				has, err := mgr.Contains(ctx, seq.sender, uint64(seq.timeout.UnixNano()))
+				has, err := mgr.Contains(ctx, seq.sender, seq.timeout)
 				require.NoError(t, err)
 				require.True(t, has, "expected to contain %d/%s", uint64(seq.timeout.UnixNano()), seq.sender)
 			}

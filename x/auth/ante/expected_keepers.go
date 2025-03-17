@@ -19,7 +19,7 @@ type AccountKeeper interface {
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	AddressCodec() address.Codec
-	GetUnorderedTxManager() *keeper.UnorderedTxManager
+	GetUnorderedTxManager() keeper.UnorderedTxManager
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

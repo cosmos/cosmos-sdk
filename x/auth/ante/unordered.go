@@ -30,11 +30,11 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
 	maxTimeoutDuration time.Duration
-	txManager          *authkeeper.UnorderedTxManager
+	txManager          authkeeper.UnorderedTxManager
 }
 
 func NewUnorderedTxDecorator(
-	utxm *authkeeper.UnorderedTxManager,
+	utxm authkeeper.UnorderedTxManager,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxTimeoutDuration: 10 * time.Minute,
@@ -96,7 +96,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	slices.Sort(signerAddrs)
 	signers := strings.Join(signerAddrs, ",")
 
-	contains, err := d.txManager.Contains(ctx, signers, uint64(unorderedTx.GetTimeoutTimeStamp().Unix()))
+	contains, err := d.txManager.Contains(ctx, signers, unorderedTx.GetTimeoutTimeStamp())
 	if err != nil {
 		return errorsmod.Wrap(
 			sdkerrors.ErrIO,
@@ -110,7 +110,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 		)
 	}
 
-	if err := d.txManager.Add(ctx, signers, uint64(unorderedTx.GetTimeoutTimeStamp().Unix())); err != nil {
+	if err := d.txManager.Add(ctx, signers, unorderedTx.GetTimeoutTimeStamp()); err != nil {
 		return errorsmod.Wrap(
 			sdkerrors.ErrIO,
 			"failed to add unordered nonce to state",

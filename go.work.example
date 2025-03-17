@@ -1,5 +1,6 @@
 go 1.23
 
+toolchain go1.23.6
 
 use (
 	.
@@ -10,9 +11,9 @@ use (
 	./errors
 	./math
 	./orm
-	./tx
 	./simapp
 	./tests
-	./tools/rosetta
 	./tools/cosmovisor
+	./tools/rosetta
+	./tx
 )

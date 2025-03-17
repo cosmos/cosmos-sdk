@@ -177,22 +177,45 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 				return err
 			}
 
-			seenKeys := make(map[string]struct{})
+			seenKeys := make(map[string]struct{})      // Tracks unique keys
+			duplicateKeys := make(map[string]struct{}) // Stores duplicate keys (only once)
+
+			for _, keyName := range multisigKeys {
+				if _, exists := seenKeys[keyName]; exists {
+					duplicateKeys[keyName] = struct{}{} // Store duplicate key once
+				} else {
+					seenKeys[keyName] = struct{}{} // Add new key to the set
+				}
+			}
+
+			if len(duplicateKeys) > 0 {
+				keysList := make([]string, 0, len(duplicateKeys))
+				for key := range duplicateKeys {
+					keysList = append(keysList, key) // Collect duplicate keys
+				}
+				sort.Strings(keysList) // Sort duplicates for consistent output
+
+				return fmt.Errorf("duplicate multisig keys found: %s", strings.Join(keysList, ", "))
+			}
+
+			// Process multisig keys only if no duplicates are found
+			pks = make([]cryptotypes.PubKey, len(multisigKeys))
+
+			// Declare variables outside the loop to avoid redeclaration issues
+			var k *keyring.Record
+			var key cryptotypes.PubKey
+
 			for i, keyName := range multisigKeys {
-				if _, ok := seenKeys[keyName]; ok {
-					return fmt.Errorf("duplicate multisig keys: %s", keyName)
-				}
-				seenKeys[keyName] = struct{}{}
-
-				k, err := kb.Key(keyName)
+				k, err = kb.Key(keyName)
 				if err != nil {
 					return err
 				}
 
-				key, err := k.GetPubKey()
+				key, err = k.GetPubKey()
 				if err != nil {
 					return err
 				}
+
 				pks[i] = key
 			}
 

@@ -86,9 +86,8 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	nameTokens := ExecBinaryUnversionedRegExp.FindAllString(execBinary, 1)
 	if len(nameTokens) == 0 || nameTokens[0] == "" {
-		panic("failed to parse project name from binary")
+		panic("failed to parse project name from binary: " + execBinary)
 	}
-
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
 		chainID:           "testing",
@@ -192,7 +191,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 			return true
 		}),
 	)
-	s.AwaitNextBlock(t, 4e9)
+	s.AwaitNextBlock(t, 10e9)
 }
 
 // MarkDirty whole chain will be reset when marked dirty

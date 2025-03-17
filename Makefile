@@ -496,9 +496,43 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-test-system: build
+test-system: build-v50 build
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+	mkdir -p ./tests/systemtests/binaries/v0.50
+	mv $(BUILDDIR)/simdv50 ./tests/systemtests/binaries/v0.50/simd
 	$(MAKE) -C tests/systemtests test
 .PHONY: test-system
 
+# build-v50 checks out the v0.50.x branch, builds the binary, and renames it to simdv50.
+build-v50:
+	@echo "Starting v50 build process..."
+	git_status=$$(git status --porcelain) && \
+	has_changes=false && \
+	if [ -n "$$git_status" ]; then \
+		echo "Stashing uncommitted changes..." && \
+		git stash push -m "Temporary stash for v50 build" && \
+		has_changes=true; \
+	else \
+		echo "No changes to stash"; \
+	fi && \
+	echo "Saving current reference..." && \
+	CURRENT_REF=$$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD) && \
+	echo "Checking out release branch..." && \
+	git checkout release/v0.50.x && \
+	echo "Building v50 binary..." && \
+	make build && \
+	mv build/simd build/simdv50 && \
+	echo "Returning to original branch..." && \
+	if [ "$$CURRENT_REF" = "HEAD" ]; then \
+		git checkout $$(git rev-parse HEAD); \
+	else \
+		git checkout $$CURRENT_REF; \
+	fi && \
+	if [ "$$has_changes" = "true" ]; then \
+		echo "Reapplying stashed changes..." && \
+		git stash pop || echo "Warning: Could not pop stash, your changes may be in the stash list"; \
+	else \
+		echo "No changes to reapply"; \
+	fi
+.PHONY: build-v50

@@ -47,7 +47,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 
-	if options.SignModeHandler != nil {
+	if options.EnableUnorderedTxs {
 		anteDecorators = append(anteDecorators, ante.NewUnorderedTxDecorator(options.AccountKeeper.GetUnorderedTxManager()))
 	}
 

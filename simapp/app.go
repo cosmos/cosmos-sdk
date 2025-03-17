@@ -668,11 +668,12 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:   app.AccountKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+				EnableUnorderedTxs: true,
+				AccountKeeper:      app.AccountKeeper,
+				BankKeeper:         app.BankKeeper,
+				SignModeHandler:    txConfig.SignModeHandler(),
+				FeegrantKeeper:     app.FeeGrantKeeper,
+				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
 			},
 			&app.CircuitKeeper,
 		},

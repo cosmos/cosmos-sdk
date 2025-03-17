@@ -2,7 +2,7 @@ package maps
 
 import (
 	"fmt"
-        "maps"
+	"maps"
 	"strings"
 )
 

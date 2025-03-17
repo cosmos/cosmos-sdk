@@ -26,17 +26,14 @@ func init() {
 	)
 }
 
-type StoreKeyRegistrar interface {
-	RegisterKey(string)
-}
+type KVStoreServiceFactory func([]byte) store.KVStoreService
 
 type Input struct {
 	depinject.In
 
 	Logger       log.Logger
 	Cfg          *modulev1.Module
-	Registrar    StoreKeyRegistrar `optional:"true"`
-	StoreFactory store.KVStoreServiceFactory
+	StoreFactory KVStoreServiceFactory
 }
 
 func ProvideModule(
@@ -49,10 +46,6 @@ func ProvideModule(
 		return nil, err
 	}
 	for _, sk := range storeKeys {
-		// app v2 case
-		if in.Registrar != nil {
-			in.Registrar.RegisterKey(sk)
-		}
 		kvService := in.StoreFactory(unsafeStrToBytes(sk))
 		kvMap[sk] = kvService
 	}

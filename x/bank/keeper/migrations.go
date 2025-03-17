@@ -24,10 +24,9 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	return v2.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
 }
 
-// Migrate2to3 migrates x/bank storage from version 2 to 3.
+// Migrate2to3 is a no-op to because the migration would take too long to run.
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return nil // Disable heavy denom index migration
-	// return v3.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
 }
 
 // Migrate3to4 migrates x/bank storage from version 3 to 4.

@@ -14,7 +14,7 @@ type queryRouterCustom struct {
 	routes map[string]sdk.Querier
 }
 
-// NewQueryRouter returns a reference to a new QueryRouter. This should be used for register custom abci
+// NewQueryRouter returns a reference to a new QueryRouter. This should be used to register custom abci
 // query handlers on the base application.
 func NewQueryRouter() sdk.QueryRouter {
 	return &queryRouterCustom{

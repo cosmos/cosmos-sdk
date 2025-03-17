@@ -149,7 +149,7 @@ func (app *BaseApp) SetVersion(v string) {
 	app.version = v
 }
 
-// SetAppVersion sets the application's version this is used as part of the
+// SetAppVersion sets the application's version. This is used as part of the
 // header in blocks and is returned to the consensus engine in EndBlock.
 func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
 	if app.versionModifier == nil {

@@ -25,7 +25,7 @@ func NewGRPCQueryTestSuite() *GRPCQueryTestSuite {
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
-	s.T().Log("setting up grpc e2e test suite")
+	s.T().Log("setting up grpc x/protocolpool e2e test suite")
 
 	cfg := initNetworkConfig(s.T())
 
@@ -41,7 +41,7 @@ func (s *GRPCQueryTestSuite) SetupSuite() {
 
 // TearDownSuite cleans up the curret test network after _each_ test.
 func (s *GRPCQueryTestSuite) TearDownSuite() {
-	s.T().Log("tearing down grpc e2e test suite")
+	s.T().Log("tearing down grpc x/protocolpool e2e test suite")
 	s.network.Cleanup()
 }
 
@@ -57,7 +57,7 @@ func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 	}{
 		{
 			"gRPC request params",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/params", baseURL),
+			fmt.Sprintf("%s/cosmos/protocolpool/v1beta1/params", baseURL),
 			&types.QueryParamsResponse{},
 			&types.QueryParamsResponse{
 				Params: types.DefaultParams(),

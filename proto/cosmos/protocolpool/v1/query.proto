@@ -37,8 +37,8 @@ message QueryCommunityPoolRequest {}
 // RPC method.
 message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
-  repeated cosmos.base.v1beta1.DecCoin pool = 1
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin pool = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 // QueryUnclaimedBudgetRequest is the request type for the Query/UnclaimedBudgetRequest

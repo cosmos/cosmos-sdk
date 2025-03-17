@@ -24,9 +24,13 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		ContinuousFund: []*ContinuousFund{},
 		Budget:         []*Budget{},
-		Params: &Params{
-			EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},
-		},
+		Params:         DefaultParams(),
+	}
+}
+
+func DefaultParams() *Params {
+	return &Params{
+		EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},
 	}
 }
 

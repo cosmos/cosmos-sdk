@@ -1,4 +1,4 @@
-package distribution
+package protocolpool
 
 import (
 	"context"
@@ -46,25 +46,12 @@ func NewE2ETestSuite() *E2ETestSuite {
 	return &E2ETestSuite{}
 }
 
-func removeModuleConfig(moduleConfig []*appv1alpha1.ModuleConfig, target string) []*appv1alpha1.ModuleConfig {
-	newConfig := make([]*appv1alpha1.ModuleConfig, 0, len(moduleConfig))
-	for _, mod := range moduleConfig {
-		if mod.Name != target {
-			newConfig = append(newConfig, mod)
-		}
-	}
-
-	return newConfig
-}
-
 func initNetworkConfig(t *testing.T) network.Config {
 	t.Helper()
 
-	moduleConfig := simapp.ModuleConfig
-
 	// application configuration (used by depinject)
 	AppConfig := depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
-		Modules: moduleConfig,
+		Modules: simapp.ModuleConfig,
 	}),
 		depinject.Supply(
 			// supply custom module basics

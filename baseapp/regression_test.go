@@ -34,7 +34,7 @@ func TestNilCmsCheckBeforeSeal(t *testing.T) {
 	require.Nil(t, err, "app.Init MUST now succeed")
 	require.True(t, app.IsSealed(), "the app must now be sealed")
 
-	// 3. Now we should expect that panic.
+	// 3. Now we should expect a panic because the app is sealed.
 	require.Panics(t, func() {
 		_ = app.Init()
 	})

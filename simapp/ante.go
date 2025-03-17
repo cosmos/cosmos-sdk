@@ -45,7 +45,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		ante.NewUnorderedTxDecorator(options.AccountKeeper.GetUnorderedTxManager()),
+	}
+
+	if options.SignModeHandler != nil {
+		anteDecorators = append(anteDecorators, ante.NewUnorderedTxDecorator(options.AccountKeeper.GetUnorderedTxManager()))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

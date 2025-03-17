@@ -52,3 +52,83 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 		return cli.QueryBalance(account2Addr, "stake") == 5000
 	}, 10*systest.Sut.BlockTime(), 200*time.Millisecond, "TX was not executed before timeout")
 }
+
+func TestTxBackwardsCompatability(t *testing.T) {
+	// Scenario:
+	// A transaction generated from a v0.53 chain without unordered and timeout_timestamp flags set should succeed.
+	// Conversely, a transaction generated from a v0.53 chain with unordered and timeout_timestamp flags set should fail.
+	var (
+		denom                = "stake"
+		transferAmount int64 = 1000
+		testSeed             = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
+	)
+	systest.Sut.ResetChain(t)
+
+	v53CLI := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	// we just get val addr for an address to send things to.
+	valAddr := v53CLI.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// generate a deterministic account. we'll use this seed again later in the v50 chain.
+	senderAddr := v53CLI.AddKeyFromSeed("account1", testSeed)
+
+	//// Now we're going to switch to a v.50 chain.
+	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
+
+	// setup the v50 chain. v53 made some changes to testnet command, so we'll have to adjust here.
+	// this only uses 1 node.
+	legacySut := systest.NewSystemUnderTest("simd", systest.Verbose, 1, 1*time.Second)
+	// we need to explicitly set this here as the constructor infers the exec binary is in the "binaries" directory.
+	legacySut.SetExecBinary(legacyBinary)
+	legacySut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, legacySut))
+	legacySut.SetupChain()
+	v50CLI := systest.NewCLIWrapper(t, legacySut, systest.Verbose)
+	v50CLI.AddKeyFromSeed("account1", testSeed)
+	legacySut.ModifyGenesisCLI(t,
+		// add some bogus accounts because the v53 chain had 4 nodes which takes account numbers 1-4.
+		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("foo"), "10000000000stake"},
+		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("bar"), "10000000000stake"},
+		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("baz"), "10000000000stake"},
+		// we need our sender to be account 5 because that's how it was signed in the v53 scenario.
+		[]string{"genesis", "add-genesis-account", senderAddr, "10000000000stake"},
+	)
+
+	legacySut.StartChain(t)
+
+	bankSendCmdArgs := []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}
+	res, ok := v53CLI.RunOnly(bankSendCmdArgs...)
+	require.True(t, ok)
+
+	response, ok := v50CLI.AwaitTxCommitted(res, 15*time.Second)
+	require.True(t, ok)
+	code := gjson.Get(response, "code").Int()
+	require.Equal(t, int64(0), code)
+
+	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct", "--unordered", "--timeout-timestamp=10000"}
+	res, ok = v53CLI.RunOnly(bankSendCmdArgs...)
+	require.True(t, ok)
+
+	code = gjson.Get(res, "code").Int()
+	require.Equal(t, int64(2), code)
+	require.Contains(t, res, "errUnknownField")
+	legacySut.StopChain()
+
+	// Now start a v53 chain, and send a transaction from a v50 client.
+	// generate a deterministic account. we'll use this seed again later in the v50 chain.
+	systest.Sut.SetupChain()
+	systest.Sut.ModifyGenesisCLI(t,
+		// we need our sender to be account 5 because that's how it was signed in the v53 scenario.
+		[]string{"genesis", "add-genesis-account", senderAddr, "10000000000stake"},
+	)
+	systest.Sut.StartChain(t)
+
+	senderAddr = v50CLI.AddKeyFromSeed("account1", testSeed)
+	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}
+	res, ok = v50CLI.RunOnly(bankSendCmdArgs...)
+	require.True(t, ok)
+
+	response, ok = v53CLI.AwaitTxCommitted(res, 15*time.Second)
+	require.True(t, ok)
+	code = gjson.Get(response, "code").Int()
+	require.Equal(t, int64(0), code)
+}

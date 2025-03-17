@@ -50,8 +50,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (gRPC) [#23844](https://github.com/cosmos/cosmos-sdk/pull/23844) Add debug log prints for each gRPC request.
 
+
 ### Bug Fixes
 
+* (baseapp) [#24027](https://github.com/cosmos/cosmos-sdk/pull/24027) Ensure that `BaseApp.Init` checks that the commit multistore is set to protect against nil dereferences.
+* (x/group) [GHSA-47ww-ff84-4jrg](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-47ww-ff84-4jrg) Fix x/group can halt when erroring in EndBlocker
 * (x/distribution) [#23934](https://github.com/cosmos/cosmos-sdk/pull/23934) Fix vulnerability in `incrementReferenceCount` in distribution.
 * (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.
 * (query) [#23883](https://github.com/cosmos/cosmos-sdk/pull/23883) Fix NPE in query pagination.

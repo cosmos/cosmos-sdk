@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestCommunityPool() {
 			name:      "nil request	- error",
 			req:       nil,
 			expErr:    true,
-			expErrMsg: "",
+			expErrMsg: "rpc error: code = InvalidArgument desc = empty request",
 		},
 		{
 			name: "valid",

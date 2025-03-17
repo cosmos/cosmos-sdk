@@ -188,6 +188,9 @@ type BaseApp struct {
 	// by developers.
 	optimisticExec *oe.OptimisticExecution
 
+	// includeNestedMsgsGas holds a set of message types for which gas costs for its nested messages are calculated.
+	includeNestedMsgsGas map[string]struct{}
+
 	// disableBlockGasMeter will disable the block gas meter if true, block gas meter is tricky to support
 	// when executing transactions in parallel.
 	// when disabled, the block gas meter in context is a noop one.
@@ -240,6 +243,9 @@ func NewBaseApp(
 	}
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
+	}
+	if app.includeNestedMsgsGas == nil {
+		app.includeNestedMsgsGas = make(map[string]struct{})
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
@@ -814,6 +820,10 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	return endblock, nil
 }
 
+type HasNestedMsgs interface {
+	GetMsgs() ([]sdk.Msg, error)
+}
+
 // runTx processes a transaction within a given execution mode, encoded transaction
 // bytes, and the decoded transaction itself. All state transitions occur through
 // a cached Context depending on the mode provided. State only gets persisted
@@ -958,6 +968,14 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
 	}
 
+	if mode == execModeSimulate {
+		for _, msg := range msgs {
+			nestedErr := app.simulateNestedMessages(ctx, msg)
+			if nestedErr != nil {
+				return gInfo, nil, anteEvents, nestedErr
+			}
+		}
+	}
 	// Run optional postHandlers (should run regardless of the execution result).
 	//
 	// Note: If the postHandler fails, we also revert the runMsgs state.
@@ -1064,6 +1082,49 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil
+}
+
+// simulateNestedMessages simulates a message nested messages.
+func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg sdk.Msg) error {
+	nestedMsgs, ok := msg.(HasNestedMsgs)
+	if !ok {
+		return nil
+	}
+
+	msgs, err := nestedMsgs.GetMsgs()
+	if err != nil {
+		return err
+	}
+
+	if err := validateBasicTxMsgs(msgs); err != nil {
+		return err
+	}
+
+	for _, msg := range msgs {
+		err = app.simulateNestedMessages(ctx, msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	protoMessages := make([]protov2.Message, len(msgs))
+	for i, msg := range msgs {
+		_, protoMsg, err := app.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return err
+		}
+		protoMessages[i] = protoMsg
+	}
+
+	initialGas := ctx.GasMeter().GasConsumed()
+	_, err = app.runMsgs(ctx, msgs, protoMessages, execModeSimulate)
+	if err == nil {
+		if _, includeGas := app.includeNestedMsgsGas[sdk.MsgTypeURL(msg)]; !includeGas {
+			consumedGas := ctx.GasMeter().GasConsumed() - initialGas
+			ctx.GasMeter().RefundGas(consumedGas, "simulation of nested messages")
+		}
+	}
+	return err
 }
 
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.

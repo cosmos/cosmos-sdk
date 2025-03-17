@@ -98,7 +98,7 @@ func (s *GRPCQueryTestSuite) TestQueryCommunityPoolGRPC() {
 			url:      fmt.Sprintf("%s/cosmos/protocolpool/v1/community_pool", baseURL),
 			respType: &types.QueryCommunityPoolResponse{},
 			expected: &types.QueryCommunityPoolResponse{
-				Pool: sdk.NewDecCoins(sdk.NewDecCoin(s.cfg.BondDenom, math.ZeroInt())),
+				Pool: sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.ZeroInt())),
 			},
 		},
 	}

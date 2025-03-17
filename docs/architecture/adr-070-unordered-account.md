@@ -33,8 +33,8 @@ We will introduce new storage of time-based, ephemeral unordered sequences using
 Specifically, we will leverage the existing x/auth KV store to store the unordered sequences.
 
 When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s bech32 address
-will be recorded to state (i.e. `542939323/cosmos1v1234567890AbcDeF`). In cases of multi-party signing, we will use a
-comma-separated list of the addresses that signed the transaction (i.e. `5532231/cosmosv11,cosmosv12,cosmosv13`)
+will be recorded to state (i.e. `542939323/cosmos1v1234567890AbcDeF`). In cases of multi-party signing, we will use a sorted,
+comma-separated list of the public key addresses that signed the transaction (i.e. `5532231/5AEKNF,5AEKNE,5AEKNR`)
 
 New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
 

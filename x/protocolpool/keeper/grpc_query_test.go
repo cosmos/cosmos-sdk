@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"go.uber.org/mock/gomock"
 	"time"
+
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 

@@ -3,11 +3,9 @@ package rpc
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"strings"
 	"time"
 
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
@@ -96,41 +94,39 @@ func QueryEventForTxCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
-			if err != nil {
-				return err
-			}
-			if err := c.Start(); err != nil {
-				return err
-			}
-			defer c.Stop() //nolint:errcheck // ignore stop error
 
+			hash := args[0]
+
+			// XXX: We use a hardcoded 15 second timeout for compatibility with v0.47,
+			// but this will be configurable sometime in v0.50.
+			// You can use Agoric's -bblock if you don't want any timeout.
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 			defer cancel()
 
-			hash := args[0]
-			query := fmt.Sprintf("%s='%s' AND %s='%s'", tmtypes.EventTypeKey, tmtypes.EventTx, tmtypes.TxHashKey, hash)
-			const subscriber = "subscriber"
-			eventCh, err := c.Subscribe(ctx, subscriber, query)
-			if err != nil {
-				return fmt.Errorf("failed to subscribe to tx: %w", err)
-			}
-			defer c.UnsubscribeAll(context.Background(), subscriber) //nolint:errcheck // ignore unsubscribe error
-
-			select {
-			case evt := <-eventCh:
-				if txe, ok := evt.Data.(tmtypes.EventDataTx); ok {
-					res := &coretypes.ResultBroadcastTxCommit{
-						DeliverTx: txe.Result,
-						Hash:      tmtypes.Tx(txe.Tx).Hash(),
-						Height:    txe.Height,
-					}
-					return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
+			// We block here until the event is received, but only if the above
+			// context timeout doesn't happen first.
+			waitTx := <-client.WaitTx(ctx, clientCtx.NodeURI, hash)
+			if evt := waitTx.BlockInclusion; evt != nil {
+				// There was block inclusion, so print the event.
+				res := &coretypes.ResultBroadcastTxCommit{
+					DeliverTx: evt.Result,
+					Hash:      tmtypes.Tx(evt.Tx).Hash(),
+					Height:    evt.Height,
 				}
-			case <-ctx.Done():
-				return errors.ErrLogic.Wrapf("timed out waiting for event, the transaction could have already been included or wasn't yet included")
+
+				err = clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
 			}
-			return nil
+
+			// Check for waiting errors, if any.
+			if waitTx.Err != nil {
+				if ctx.Err() == context.DeadlineExceeded {
+					return errors.ErrLogic.Wrapf("timed out waiting for event, the transaction could have already been included or wasn't yet included")
+				}
+				return waitTx.Err
+			}
+
+			// Propagate the printing error, if any.
+			return err
 		},
 	}
 

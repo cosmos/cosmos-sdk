@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
@@ -507,11 +506,4 @@ func (k Keeper) validateContinuousFund(ctx sdk.Context, msg types.MsgCreateConti
 	}
 
 	return nil
-}
-
-func (k Keeper) BeginBlocker(ctx sdk.Context) error {
-	start := telemetry.Now()
-	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
-
-	return k.SetToDistribute(ctx)
 }

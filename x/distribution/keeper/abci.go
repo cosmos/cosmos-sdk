@@ -6,8 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-const truncationBlockInterval = 1000
-
 // BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block.
 func (k Keeper) BeginBlocker(ctx sdk.Context) error {
@@ -29,8 +27,8 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 			return err
 		}
 
-		// every 1000 blocks send whole coins from community pool to x/protocolpool if enabled
-		if height%truncationBlockInterval == 0 && k.externalCommunityPoolEnabled() {
+		// send whole coins from community pool to x/protocolpool if enabled
+		if k.externalCommunityPoolEnabled() {
 			if err := k.sendCommunityPoolToExternalPool(ctx); err != nil {
 				return err
 			}

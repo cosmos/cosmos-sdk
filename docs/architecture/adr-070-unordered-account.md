@@ -29,7 +29,8 @@ We propose adding a boolean field `unordered` and a uint64 field `timeout_timest
 Unordered transactions will bypass the traditional account sequence rules and follow the rules described
 below, without impacting traditional ordered transactions; they'll follow the sequence rules the same as before.
 
-We will introduce new storage of time-based, ephemeral unordered sequences using the SDK's existing KV Store library.
+We will introduce new storage of time-based, ephemeral unordered sequences using the SDK's existing KV Store library. 
+Specifically, we will leverage the existing x/auth KV store to store the unordered sequences.
 
 When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s bech32 address
 will be recorded to state (i.e. `542939323/cosmos1v1234567890AbcDeF`). In cases of multi-party signing, we will use a

@@ -96,6 +96,7 @@ func TestAppImportExport(t *testing.T) {
 				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
 				stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
 				stakingtypes.UnbondingTypeKey,
+				stakingtypes.ValidatorUpdatesKey, // todo (Alex): double check why there is a diff with test-sim-import-export
 			},
 			authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
 			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},

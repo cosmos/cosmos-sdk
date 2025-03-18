@@ -1,10 +1,28 @@
-# Cosmos SDK Transaction Malleability Risks
+# Cosmos SDK Transaction Malleability Risk Review and Recommendations
+
+## Changelog
+
+* 2025-03-10: Initial draft (@aaronc)
+
+## Status
+
+PROPOSED: Not Implemented
+
+## Abstract
+
+Several encoding and sign mode related issues have historically resulted in the possibility
+that Cosmos SDK transactions may be re-encoded in such a way as to change their hash
+(and in rare cases, their meaning) without invalidating the signature.
+This document details these cases, their potential risks, the extent to which they have been
+addressed, and provides recommendations for future improvements.
+
+## Review
 
 One naive assumption about Cosmos SDK transactions is that hashing the raw bytes of a submitted transaction creates a safe unique identifier for the transaction. In reality, there are multiple ways in which transactions could be manipulated to create different transaction bytes (and as a result different hashes) that still pass signature verification.
 
 This document attempts to enumerate the various potential transaction "malleability" risks that we have identified and the extent to which they have or have not been addressed in various sign modes. We also identify vulnerabilities that could be introduced if developers make changes in the future without careful consideration of the complexities involved with transaction encoding, sign modes and signatures.
 
-## Risks Associated with Malleability
+### Risks Associated with Malleability
 
 The malleability of transactions poses the following potential risks to end users:
 * unsigned data could get added to transactions and be processed by state machines
@@ -26,9 +44,9 @@ if they want to provide some replay protection that doesn't rely on a monotonica
 increasing account sequence number.
 
 
-## Sources of Malleability
+### Sources of Malleability
 
-### Non-deterministic Protobuf Encoding
+#### Non-deterministic Protobuf Encoding
 
 Cosmos SDK transactions are encoded using protobuf binary encoding when they are submitted to the network. Protobuf binary is not inherently a deterministic encoding meaning that the same logical payload could have several valid bytes representations. In a basic sense, this means that protobuf in general can be decoded and re-encoded to produce a different byte stream (and thus different hash) without changing the logical meaning of the bytes. [ADR 027: Deterministic Protobuf Serialization](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-027-deterministic-protobuf-serialization.md) describes in detail what needs to be done to produce what we consider to be a "canonical", deterministic protobuf serialization. Briefly, the following sources of malleability at the encoding level have been identified and are addressed by this specification:
 * fields can be emitted in any order
@@ -47,13 +65,13 @@ In addition to being aware of the general non-determinism of protobuf binary, de
 
 [ADR 020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md#unknown-field-filtering) specifies some provisions for "non-critical" fields which can safely be ignored by older servers. In practice, I have not seen any valid usages of this. It is something in the design that maintainers should be aware of, but it may not be necessary or even 100% safe.
 
-### Non-deterministic Value Encoding
+#### Non-deterministic Value Encoding
 
 In addition to the non-determinism present in protobuf binary itself, some protobuf field data is encoded using a micro-format which itself may not be deterministic. Consider for instance integer or decimal encoding. Some decoders may allow for the presence of leading or trailing zeros without changing the logical meaning, ex. `00100` vs `100` or `100.00` vs `100`. So if a sign mode encodes numbers deterministically, but decoders accept multiple representations,
 a user may sign over the value `100` while `0100` gets encoded. This would be possible with Amino JSON to the extent that the integer decoder accepts leading zeros. I believe the current `Int` implementation will reject this, however, it is
 probably possible to encode a octal or hexadecimal representation in the transaction whereas the user signs over a decimal integer.
 
-### Signature Encoding
+#### Signature Encoding
 
 Signatures themselves are encoded using a micro-format specific to the signature algorithm being used and sometimes these
 micro-formats can allow for non-determinism (multiple valid bytes for the same signature).
@@ -65,7 +83,7 @@ Any new or custom signature algorithms must make sure that they reject any non-c
 with `SIGN_MODE_DIRECT` there can be transaction hash malleability by re-encoding signatures with a non-canonical
 representation.
 
-### Fields not covered by Amino JSON
+#### Fields not covered by Amino JSON
 
 Another area that needs to be addressed carefully is the discrepancy between `StdSignDoc` used for `SIGN_MODE_LEGACY_AMINO_JSON` and the actual contents of `TxBody` and `AuthInfo`. If fields get added
 to `TxBody` or `AuthInfo`, they must either have a corresponding representing in `StdSignDoc` or Amino
@@ -75,7 +93,7 @@ without paying any attention to the implementation of `GetSignBytes` for Amino J
 vulnerability in which unsigned content can now get into the transaction and signature verification will
 pass.
 
-## Sign Mode Risk Summary and Recommendations
+## Sign Mode Summary and Recommendations
 
 The sign modes officially supported by the SDK are `SIGN_MODE_DIRECT`, `SIGN_MODE_TEXTUAL`, `SIGN_MODE_DIRECT_AUX`,
 and `SIGN_MODE_LEGACY_AMINO_JSON`.
@@ -138,3 +156,9 @@ have unknown fields set cause the transaction to be rejected
 For each supported signature algorithm,
 there should also be unit tests to ensure that signatures must be encoded canonically
 or get rejected.
+
+## References
+
+* [ADR 027: Deterministic Protobuf Serialization](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-027-deterministic-protobuf-serialization.md)
+* [ADR 020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md#unknown-field-filtering)
+

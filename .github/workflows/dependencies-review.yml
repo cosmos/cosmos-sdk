@@ -39,6 +39,6 @@ jobs:
           message: |
             ⚠️ **govulncheck found vulnerabilities:**
              ```
-            ${{ steps.govulncheck.outputs.result }}
+            ${{ steps.govuln.outputs.result }}
             ```
           message-id: govulncheck-warning

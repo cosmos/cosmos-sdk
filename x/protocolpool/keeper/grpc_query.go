@@ -9,9 +9,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 var _ types.QueryServer = Querier{}

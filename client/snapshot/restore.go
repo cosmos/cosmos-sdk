@@ -14,7 +14,7 @@ import (
 )
 
 // RestoreSnapshotCmd returns a command to restore a snapshot
-func RestoreSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
+func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restore <height> <format>",
 		Short: "Restore app state from local snapshot",

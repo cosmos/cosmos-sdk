@@ -19,7 +19,7 @@ import (
 )
 
 // ModuleHashByHeightQuery retrieves the module hashes at a given height.
-func ModuleHashByHeightQuery(appCreator types.AppCreator) *cobra.Command {
+func ModuleHashByHeightQuery[T types.Application](appCreator types.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "module-hash-by-height [height]",
 		Short:   "Get module hashes at a given height",
@@ -51,7 +51,7 @@ func ModuleHashByHeightQuery(appCreator types.AppCreator) *cobra.Command {
 	return cmd
 }
 
-func getModuleHashesAtHeight(svrCtx *Context, appCreator types.AppCreator, height int64) (*storetypes.CommitInfo, error) {
+func getModuleHashesAtHeight[T types.Application](svrCtx *Context, appCreator types.AppCreator[T], height int64) (*storetypes.CommitInfo, error) {
 	home := svrCtx.Config.RootDir
 	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {

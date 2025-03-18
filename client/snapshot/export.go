@@ -10,7 +10,7 @@ import (
 )
 
 // ExportSnapshotCmd returns a command to take a snapshot of the application state
-func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
+func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export app state to snapshot store",

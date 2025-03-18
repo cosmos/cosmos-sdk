@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/gov) [#24044](https://github.com/cosmos/cosmos-sdk/pull/24044) Fix some places in which we call Remove inside a Walk (x/gov).
 * (baseapp) [#24027](https://github.com/cosmos/cosmos-sdk/pull/24027) Ensure that `BaseApp.Init` checks that the commit multistore is set to protect against nil dereferences.
 * (x/group) [GHSA-47ww-ff84-4jrg](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-47ww-ff84-4jrg) Fix x/group can halt when erroring in EndBlocker
 * (x/distribution) [#23934](https://github.com/cosmos/cosmos-sdk/pull/23934) Fix vulnerability in `incrementReferenceCount` in distribution.

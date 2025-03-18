@@ -33,7 +33,7 @@ We will introduce new storage of time-based, ephemeral unordered sequences using
 Specifically, we will leverage the existing x/auth KV store to store the unordered sequences.
 
 When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s PubKey address
-will be recorded to state (i.e. `542939323/cosmos1v1234567890AbcDeF`). In cases of multi-party signing, we will use a sorted,
+bytes will be recorded to state (i.e. `542939323/<pubkey_btyes>`). In cases of multi-party signing, we will use a sorted,
 comma-separated list of the public key addresses that signed the transaction (i.e. `5532231/5AEKNF,5AEKNE,5AEKNR`)
 
 New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
@@ -314,21 +314,20 @@ for _, tx := range txs {
 
 The storage of unordered sequences will be facilitated using the Cosmos SDK's KV Store service.
 
-## Note On Previous Iteration
+## Note On Previous Design Iteration
 
 The previous iteration of unordered transactions worked by using an ad-hoc state-management system that posed severe 
 risks and a vector for duplicated tx processing. It relied on graceful app closure which would flush the current state
 of the unordered sequence mapping. If the 2/3's of the network crashed, and the graceful closure did not trigger, 
 the system would lose track of all sequences in the mapping, allowing those transactions to be replayed. The 
 implementation proposed in the updated version of this ADR solves this by writing directly to the Cosmos KV Store.
+While this is less performant, for the initial implementation we opted to choose a safer path and postpone performance optimizations until we have more data on real-world impacts and a more battle-tested approach to optimization.
 
 Additionally, the previous iteration relied on using hashes to create what we call an "unordered sequence." There are known
 issues with transaction malleability in Cosmos SDK signing modes. This ADR gets away from this problem by enforcing
 single-use unordered nonces, instead of deriving nonces from bytes in the transaction.
 
 ## Consequences
-
-* Usage of Cosmos SDK KV store is slower in comparison to using a non merklized store or ad-hoc methods, and block times may slow down as a result.
 
 ### Positive
 
@@ -338,6 +337,7 @@ single-use unordered nonces, instead of deriving nonces from bytes in the transa
 
 * Requires additional storage overhead.
 * Requirement of unique timestamps per transaction causes a small amount of additional overhead for clients. Clients must ensure each transaction's timeout timestamp is different. However, nanosecond differentials suffice.
+* Usage of Cosmos SDK KV store is slower in comparison to using a non merklized store or ad-hoc methods, and block times may slow down as a result.
 
 ## References
 

@@ -12,6 +12,9 @@ import (
 	"sort"
 	"strings"
 
+	"maps"
+	"slices"
+
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -191,6 +194,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			if len(duplicateKeys) > 0 {
 				keysListSeq := maps.Keys(duplicateKeys)
 				keysList := slices.Sorted(keysListSeq)
+
 				return fmt.Errorf("duplicate multisig keys found: %s", strings.Join(keysList, ", "))
 			}
 

@@ -3,115 +3,68 @@
 package systemtests
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
+	"cosmossdk.io/systemtests"
+	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/gjson"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/sjson"
-
-	systest "cosmossdk.io/systemtests"
 )
 
 const (
-	distrTestDenom = "stake"
+	stakingModule      = "staking"
+	distributionModule = "distribution"
+	protocolPoolModule = "protocolpool"
+
+	stakingToken = "stake"
 )
 
 func TestQueryProtocolPool(t *testing.T) {
-	// scenario: test distribution validator gsrpc gateway queries
-	// given a running chain
+	// Scenario:
+	// delegate tokens to validator
+	// check distribution
 
-	systest.Sut.ResetChain(t)
-	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	sut := systemtests.Sut
+	sut.ResetChain(t)
 
-	// get validator address
-	valAddr := cli.GetKeyAddr("node0")
-	require.NotEmpty(t, valAddr)
-	valOperAddr := cli.GetKeyAddrPrefix("node0", "val")
-	require.NotEmpty(t, valOperAddr)
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
 
-	// update commission rate of node0 validator
-	// generate new gentx and copy it to genesis.json before starting network
-	outFile := filepath.Join(t.TempDir(), "gentx.json")
-	_ = cli.RunCommandWithArgs("genesis", "gentx", "node0", "100000000"+distrTestDenom, "--chain-id="+cli.ChainID(), "--commission-rate=0.01", "--home", systest.Sut.NodeDir(0), "--keyring-backend=test", "--output-document="+outFile)
-	updatedGentxBz, err := os.ReadFile(outFile) // #nosec G304
-	require.NoError(t, err)
-
-	systest.Sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
-		state, err := sjson.SetRawBytes(genesis, "app_state.genutil.gen_txs.0", updatedGentxBz)
-		require.NoError(t, err)
-		return state
-	})
-
-	// create new address which will be used as delegator address
-	delAddr := cli.AddKey("delAddr")
-	require.NotEmpty(t, delAddr)
-
-	var initialAmount int64 = 1000000000
-	initialBalance := fmt.Sprintf("%d%s", initialAmount, distrTestDenom)
-	systest.Sut.ModifyGenesisCLI(t,
-		[]string{"genesis", "add-genesis-account", delAddr, initialBalance},
+	// add genesis account with some tokens
+	account1Addr := cli.AddKey("account1")
+	sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", account1Addr, "1000000000000stake"},
 	)
 
-	systest.Sut.StartChain(t)
+	sut.StartChain(t)
 
-	// delegate some tokens to valOperAddr
-	rsp := cli.RunAndWait("tx", "staking", "delegate", valOperAddr, "100000000"+distrTestDenom, "--from="+delAddr)
-	systest.RequireTxSuccess(t, rsp)
+	// query validator address to delegate tokens
+	rsp := cli.CustomQuery("q", stakingModule, "validators")
+	valAddr := gjson.Get(rsp, "validators.#.operator_address").Array()[0].String()
 
-	systest.Sut.AwaitNBlocks(t, 5, 20*time.Second)
+	// stake tokens
+	rsp = cli.Run("tx", stakingModule, "delegate", valAddr, "10000000000stake", "--from="+account1Addr, "--fees=1stake")
+	systemtests.RequireTxSuccess(t, rsp)
 
-	baseurl := systest.Sut.APIAddress()
+	t.Log(cli.QueryBalance(account1Addr, stakingToken))
+	assert.Equal(t, int64(989999999999), cli.QueryBalance(account1Addr, stakingToken))
 
-	// test delegator rewards grpc endpoint
-	delegatorRewardsURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/rewards`
-	expectedAmountOutput := `{"denom":"stake","amount":"0.121275000000000000"}`
-	rewardsOutput := fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[%s]}],"total":[%s]}`, valOperAddr, expectedAmountOutput, expectedAmountOutput)
+	rsp = cli.CustomQuery("q", stakingModule, "delegation", account1Addr, valAddr)
+	assert.Equal(t, "10000000000", gjson.Get(rsp, "delegation_response.balance.amount").String(), rsp)
+	assert.Equal(t, stakingToken, gjson.Get(rsp, "delegation_response.balance.denom").String(), rsp)
 
-	delegatorRewardsTestCases := []systest.RestTestCase{
-		{
-			Name:    "valid rewards request with valid delegator address",
-			Url:     fmt.Sprintf(delegatorRewardsURL, delAddr),
-			ExpCode: http.StatusOK,
-			ExpOut:  rewardsOutput,
-		},
-		{
-			Name:    "valid request(specific validator rewards)",
-			Url:     fmt.Sprintf(delegatorRewardsURL+`/%s`, delAddr, valOperAddr),
-			ExpCode: http.StatusOK,
-			ExpOut:  fmt.Sprintf(`{"rewards":[%s]}`, expectedAmountOutput),
-		},
-	}
-	systest.RunRestQueriesIgnoreNumbers(t, delegatorRewardsTestCases...)
+	failingCli := cli.WithRunErrorMatcher(func(t assert.TestingT, err error, msgAndArgs ...interface{}) (ok bool) {
+		assert.Error(t, err)
+		return false
+	})
+	// query the community pool - should fail for x/distribution
+	rsp = failingCli.CustomQuery("q", distributionModule, "community-pool")
 
-	// test delegator validators grpc endpoint
-	delegatorValsURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/validators`
-	valsTestCases := []systest.RestTestCase{
-		{
-			Name:    "gRPC request delegator validators with valid delegator address",
-			Url:     fmt.Sprintf(delegatorValsURL, delAddr),
-			ExpCode: http.StatusOK,
-			ExpOut:  fmt.Sprintf(`{"validators":["%s"]}`, valOperAddr),
-		},
-	}
-	systest.RunRestQueries(t, valsTestCases...)
+	// query will work for x/protocolpool
+	rsp = cli.CustomQuery("q", protocolPoolModule, "community-pool")
+	assert.True(t, gjson.Get(rsp, "pool.0.amount").Int() > 0, rsp)
+	assert.Equal(t, stakingToken, gjson.Get(rsp, "pool.0.denom").String(), rsp)
 
-	// test withdraw address grpc endpoint
-	withdrawAddrURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/withdraw_address`
-	withdrawAddrTestCases := []systest.RestTestCase{
-		{
-			Name:    "gRPC request withdraw address with valid delegator address",
-			Url:     fmt.Sprintf(withdrawAddrURL, delAddr),
-			ExpCode: http.StatusOK,
-			ExpOut:  fmt.Sprintf(`{"withdraw_address":"%s"}`, delAddr),
-		},
-	}
-	systest.RunRestQueries(t, withdrawAddrTestCases...)
+	t.Log("block height", sut.CurrentHeight(), "\n")
 
-	// attempt to check the community pool in x/distribution
+	sut.AwaitNBlocks(t, 5)
+	t.Log("block height", sut.CurrentHeight(), "\n")
 
-	// attempt to check the community pool in x/protocolpool
 }

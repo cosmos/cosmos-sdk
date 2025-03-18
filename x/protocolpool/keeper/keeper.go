@@ -453,7 +453,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSub
 		return nil, errors.New("invalid budget proposal: budget per tranche cannot be zero")
 	}
 
-	if err := validateAmount(sdk.NewCoins(*bp.BudgetPerTranche)); err != nil {
+	if err := validateAmount(sdk.NewCoins(bp.BudgetPerTranche)); err != nil {
 		return nil, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
@@ -470,7 +470,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSub
 		return nil, errors.New("invalid budget proposal: tranches must be greater than zero")
 	}
 
-	if bp.Period == nil || *bp.Period == 0 {
+	if bp.Period == 0 {
 		return nil, errors.New("invalid budget proposal: period length should be greater than zero")
 	}
 
@@ -478,7 +478,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSub
 	updatedBudget := types.Budget{
 		RecipientAddress: bp.RecipientAddress,
 		BudgetPerTranche: bp.BudgetPerTranche,
-		LastClaimedAt:    bp.StartTime,
+		LastClaimedAt:    *bp.StartTime,
 		TranchesLeft:     bp.Tranches,
 		Period:           bp.Period,
 	}

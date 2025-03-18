@@ -59,12 +59,18 @@ func TestQueryProtocolPool(t *testing.T) {
 
 	// query will work for x/protocolpool
 	rsp = cli.CustomQuery("q", protocolPoolModule, "community-pool")
-	assert.True(t, gjson.Get(rsp, "pool.0.amount").Int() > 0, rsp)
+	poolAmount := gjson.Get(rsp, "pool.0.amount").Int()
+	assert.True(t, poolAmount > 0, rsp)
 	assert.Equal(t, stakingToken, gjson.Get(rsp, "pool.0.denom").String(), rsp)
 
 	t.Log("block height", sut.CurrentHeight(), "\n")
 
 	sut.AwaitNBlocks(t, 5)
 	t.Log("block height", sut.CurrentHeight(), "\n")
+
+	rsp = cli.CustomQuery("q", protocolPoolModule, "community-pool")
+	newPoolAmount := gjson.Get(rsp, "pool.0.amount").Int()
+	assert.Equal(t, stakingToken, gjson.Get(rsp, "pool.0.denom").String(), rsp)
+	assert.True(t, newPoolAmount > poolAmount, rsp)
 
 }

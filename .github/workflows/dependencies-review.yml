@@ -28,13 +28,15 @@ jobs:
       - name: "Go vulnerability check"
         id: govuln
         run: |
-          make vulncheck | tee govulncheck-output.txt || true
+          make vulncheck 2>&1 | tee govulncheck-output.txt || true
           echo "govulncheck_output<<EOF" >> $GITHUB_ENV
           cat govulncheck-output.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
         continue-on-error: true
+      - name: Debug govulncheck Output
+        run: cat govulncheck-output.txt || echo "govulncheck-output.txt is empty!"
       - name: Comment on PR
-        if: steps.govuln.outcome == 'failure'
+        if: env.govulncheck_output != ''
         uses: mshick/add-pr-comment@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}

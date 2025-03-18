@@ -15,6 +15,7 @@ func TestGenericMapValue_Set(t *testing.T) {
 		initialMap  map[string]int
 		expectMap   map[string]int
 		expectError bool
+		changed     bool
 	}{
 		{
 			name:       "basic key-value pairs",
@@ -46,6 +47,25 @@ func TestGenericMapValue_Set(t *testing.T) {
 			initialMap:  map[string]int{},
 			expectError: true,
 		},
+		{
+			name:        "empty string input",
+			input:       "",
+			initialMap:  map[string]int{},
+			expectError: true,
+		},
+		{
+			name:        "empty value",
+			input:       "key=",
+			initialMap:  map[string]int{},
+			expectError: true,
+		},
+		{
+			name:       "append to existing map",
+			input:      "key3=3",
+			initialMap: map[string]int{"key1": 1, "key2": 2},
+			expectMap:  map[string]int{"key1": 1, "key2": 2, "key3": 3},
+			changed:    true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -55,13 +75,12 @@ func TestGenericMapValue_Set(t *testing.T) {
 			maps.Copy(mapVal, tc.initialMap)
 
 			gm := newGenericMapValue(mapVal, &mapVal)
+			gm.changed = tc.changed
 			gm.Options = genericMapValueOptions[string, int]{
 				keyParser: func(s string) (string, error) {
 					return s, nil
 				},
-				valueParser: func(s string) (int, error) {
-					return strconv.Atoi(s)
-				},
+				valueParser: strconv.Atoi,
 				genericType: "map[string]int",
 			}
 
@@ -85,9 +104,7 @@ func TestGenericMapValue_Changed(t *testing.T) {
 		keyParser: func(s string) (string, error) {
 			return s, nil
 		},
-		valueParser: func(s string) (int, error) {
-			return strconv.Atoi(s)
-		},
+		valueParser: strconv.Atoi,
 		genericType: "map[string]int",
 	}
 

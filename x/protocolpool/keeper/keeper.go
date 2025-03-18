@@ -448,13 +448,20 @@ func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddres
 	return amount, nil
 }
 
-func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
+// validateAndUpdateBudgetProposal validates the Budget included in a MsgSubmitBudgetProposal as follows:
+// - BudgetPerTranche must be nonzero
+// - the budget amount must be a valid sdk.Coin
+// - the startTime must be valid (after current blocktime)
+// - - if the startTime was nil, set it to the current blocktime
+// - number of tranches must be nonzero
+// - period duration must be nonzero
+func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSubmitBudgetProposal) (types.Budget, error) {
 	if bp.BudgetPerTranche.IsZero() {
-		return nil, errors.New("invalid budget proposal: budget per tranche cannot be zero")
+		return types.Budget{}, errors.New("invalid budget proposal: budget per tranche cannot be zero")
 	}
 
 	if err := validateAmount(sdk.NewCoins(bp.BudgetPerTranche)); err != nil {
-		return nil, fmt.Errorf("invalid budget proposal: %w", err)
+		return types.Budget{}, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
 	currentTime := ctx.BlockTime()
@@ -463,15 +470,15 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSub
 	}
 
 	if currentTime.After(*bp.StartTime) {
-		return nil, errors.New("invalid budget proposal: start time cannot be less than the current block time")
+		return types.Budget{}, errors.New("invalid budget proposal: start time cannot be less than the current block time")
 	}
 
 	if bp.Tranches == 0 {
-		return nil, errors.New("invalid budget proposal: tranches must be greater than zero")
+		return types.Budget{}, errors.New("invalid budget proposal: tranches must be greater than zero")
 	}
 
 	if bp.Period == 0 {
-		return nil, errors.New("invalid budget proposal: period length should be greater than zero")
+		return types.Budget{}, errors.New("invalid budget proposal: period length should be greater than zero")
 	}
 
 	// Create and return an updated budget proposal
@@ -483,7 +490,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSub
 		Period:           bp.Period,
 	}
 
-	return &updatedBudget, nil
+	return updatedBudget, nil
 }
 
 // validateContinuousFund validates the fields of the CreateContinuousFund message.

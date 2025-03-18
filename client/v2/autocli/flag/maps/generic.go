@@ -1,6 +1,11 @@
 package maps
 
 import (
+<<<<<<< HEAD
+=======
+	"fmt"
+	"maps"
+>>>>>>> ef81fc89a (refactor(client): use map.Copy for cleaner map handling (#24022))
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -45,9 +50,7 @@ func (gm *genericMapValue[K, V]) Set(val string) error {
 	if !gm.changed {
 		*gm.value = out
 	} else {
-		for k, v := range out {
-			(*gm.value)[k] = v
-		}
+		maps.Copy(*gm.value, out)
 	}
 	gm.changed = true
 	return nil

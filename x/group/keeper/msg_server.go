@@ -996,7 +996,6 @@ func (k Keeper) getGroupMember(ctx context.Context, member *group.GroupMember) (
 	switch err := k.groupMemberTable.GetOne(kvStore,
 		orm.PrimaryKey(member, k.accKeeper.AddressCodec()), &groupMember); {
 	case err == nil:
-		break
 	case sdkerrors.ErrNotFound.Is(err):
 		return nil, sdkerrors.ErrNotFound.Wrapf("%s is not part of group %d", member.Member.Address, member.GroupId)
 	default:

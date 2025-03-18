@@ -703,7 +703,7 @@ func (n *Network) LatestHeight() (int64, error) {
 // committed after a given block. If that height is not reached within a timeout,
 // an error is returned. Regardless, the latest height queried is returned.
 func (n *Network) WaitForHeight(h int64) (int64, error) {
-	return n.WaitForHeightWithTimeout(h, 10*time.Second)
+	return n.WaitForHeightWithTimeout(h, 20*time.Second)
 }
 
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can
@@ -745,7 +745,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 // blocks has been reached.
 func (n *Network) RetryForBlocks(retryFunc func() error, blocks int) error {
 	for i := 0; i < blocks; i++ {
-		n.WaitForNextBlock()
+		_ = n.WaitForNextBlock() // ignore the error as we use the retry for validation
 		err := retryFunc()
 		if err == nil {
 			return nil

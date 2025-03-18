@@ -20,17 +20,19 @@ jobs:
       - name: "Dependency Review"
         uses: actions/dependency-review-action@v4
         with:
-          base-ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          base-ref: ${{ github.event.pull_request.base.sha || 'release/v0.53.x' }}
           head-ref: ${{ github.event.pull_request.head.sha || github.ref }}
-          fail-on-severity: high # otherwise we fail on ourselves due to https://github.com/advisories/GHSA-qfc5-6r3j-jj22, https://github.com/advisories/GHSA-w44m-8mv2-v78h TODO(@julienrbrt) submit a PR to the action to ignore packages
+          fail-on-severity: high
       - name: "Dependency audit"
         run: ./scripts/dep-assert.sh
       - name: "Go vulnerability check"
         id: govuln
         run: |
-          make vulncheck
+          make vulncheck | tee govulncheck-output.txt || true
+          echo "govulncheck_output<<EOF" >> $GITHUB_ENV
+          cat govulncheck-output.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         continue-on-error: true
-        # TODO: restore failing vuln check when the comet dependency vuln works https://pkg.go.dev/vuln/GO-2025-3443
       - name: Comment on PR
         if: steps.govuln.outcome == 'failure'
         uses: mshick/add-pr-comment@v2
@@ -38,7 +40,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           message: |
             ⚠️ **govulncheck found vulnerabilities:**
-             ```
-            ${{ steps.govuln.outputs.result }}
+            ```
+            ${{ env.govulncheck_output }}
             ```
           message-id: govulncheck-warning

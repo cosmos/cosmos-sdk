@@ -23,6 +23,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 		input     *types.MsgSubmitBudgetProposal
 		expErr    bool
 		expErrMsg string
+		expBudget types.Budget
 	}{
 		"empty recipient address": {
 			input: &types.MsgSubmitBudgetProposal{
@@ -118,6 +119,14 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				Period:           period,
 			},
 			expErr: false,
+			expBudget: types.Budget{
+				RecipientAddress: recipientStrAddr,
+				ClaimedAmount:    nil,
+				LastClaimedAt:    startTime,
+				TranchesLeft:     2,
+				BudgetPerTranche: fooCoin2,
+				Period:           period,
+			},
 		},
 	}
 
@@ -131,6 +140,11 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
+				accAddr, err := sdk.AccAddressFromBech32(tc.input.RecipientAddress)
+				suite.Require().NoError(err)
+				budget, err := suite.poolKeeper.Budgets.Get(suite.ctx, accAddr)
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expBudget, budget)
 			}
 		})
 	}
@@ -170,7 +184,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					LastClaimedAt:    startTime,
 					BudgetPerTranche: fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 			},
 			recipientAddress: recipientAddr,
@@ -188,12 +202,12 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Period:           period,
 					BudgetPerTranche: fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 			},
 			recipientAddress: recipientAddr,
 			expErr:           true,
-			expErrMsg:        "budget period has not passed yet",
+			expErrMsg:        "budget period of 0.016667 hours has not passed yet",
 		},
 		"valid claim": {
 			preRun: func() {
@@ -205,7 +219,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Period:           period,
 					BudgetPerTranche: fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 			},
 			recipientAddress: recipientAddr,
@@ -222,7 +236,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Period:           period,
 					BudgetPerTranche: fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 
 				// fast forward the block time by 240 hours
@@ -232,7 +246,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			recipientAddress: recipientAddr,
 			claimableFunds:   sdk.NewInt64Coin("foo", 100), // claiming the whole budget, 2 * 50foo = 100foo
 			postRun: func() {
-				prop, err := suite.poolKeeper.BudgetProposal.Get(suite.ctx, recipientAddr)
+				prop, err := suite.poolKeeper.Budgets.Get(suite.ctx, recipientAddr)
 				suite.Require().NoError(err)
 				suite.Require().Equal(uint64(0), prop.TranchesLeft)
 				// check if the lastClaimedAt is correct (in this case 2 periods after the start time)
@@ -249,7 +263,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Period:           period,
 					BudgetPerTranche: fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 
 				// Claim the funds once
@@ -262,7 +276,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			},
 			recipientAddress: recipientAddr,
 			expErr:           true,
-			expErrMsg:        "budget period has not passed yet",
+			expErrMsg:        "budget period of 0.016667 hours has not passed yet",
 		},
 		"valid double claim attempt": {
 			preRun: func() {
@@ -277,7 +291,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Period:           oneMonthPeriod,
 					BudgetPerTranche: fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 
 				// Claim the funds once
@@ -306,7 +320,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 					Period:           period,
 					BudgetPerTranche: fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 
 				// Claim the funds once
@@ -377,7 +391,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 		withdrawnAmount  sdk.Coins
 	}{
 		"empty recipient": {
-			recipientAddress: []sdk.AccAddress{sdk.AccAddress([]byte(""))},
+			recipientAddress: []sdk.AccAddress{sdk.AccAddress("")},
 			expErr:           true,
 			expErrMsg:        "invalid recipient address",
 		},

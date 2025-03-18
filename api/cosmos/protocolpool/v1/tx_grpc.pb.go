@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Msg_FundCommunityPool_FullMethodName      = "/cosmos.protocolpool.v1.Msg/FundCommunityPool"
 	Msg_CommunityPoolSpend_FullMethodName     = "/cosmos.protocolpool.v1.Msg/CommunityPoolSpend"
-	Msg_SubmitBudgetProposal_FullMethodName   = "/cosmos.protocolpool.v1.Msg/SubmitBudgetProposal"
+	Msg_CreateBudget_FullMethodName           = "/cosmos.protocolpool.v1.Msg/CreateBudget"
 	Msg_ClaimBudget_FullMethodName            = "/cosmos.protocolpool.v1.Msg/ClaimBudget"
 	Msg_CreateContinuousFund_FullMethodName   = "/cosmos.protocolpool.v1.Msg/CreateContinuousFund"
 	Msg_WithdrawContinuousFund_FullMethodName = "/cosmos.protocolpool.v1.Msg/WithdrawContinuousFund"
@@ -43,8 +43,8 @@ type MsgClient interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
-	// SubmitBudgetProposal defines a method to set a budget proposal.
-	SubmitBudgetProposal(ctx context.Context, in *MsgSubmitBudgetProposal, opts ...grpc.CallOption) (*MsgSubmitBudgetProposalResponse, error)
+	// CreateBudget defines a method to create a budget.
+	CreateBudget(ctx context.Context, in *MsgCreateBudget, opts ...grpc.CallOption) (*MsgCreateBudgetResponse, error)
 	// ClaimBudget defines a method to claim the distributed budget.
 	ClaimBudget(ctx context.Context, in *MsgClaimBudget, opts ...grpc.CallOption) (*MsgClaimBudgetResponse, error)
 	// CreateContinuousFund defines a method to add funds continuously.
@@ -86,10 +86,10 @@ func (c *msgClient) CommunityPoolSpend(ctx context.Context, in *MsgCommunityPool
 	return out, nil
 }
 
-func (c *msgClient) SubmitBudgetProposal(ctx context.Context, in *MsgSubmitBudgetProposal, opts ...grpc.CallOption) (*MsgSubmitBudgetProposalResponse, error) {
+func (c *msgClient) CreateBudget(ctx context.Context, in *MsgCreateBudget, opts ...grpc.CallOption) (*MsgCreateBudgetResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgSubmitBudgetProposalResponse)
-	err := c.cc.Invoke(ctx, Msg_SubmitBudgetProposal_FullMethodName, in, out, cOpts...)
+	out := new(MsgCreateBudgetResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateBudget_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +160,8 @@ type MsgServer interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
-	// SubmitBudgetProposal defines a method to set a budget proposal.
-	SubmitBudgetProposal(context.Context, *MsgSubmitBudgetProposal) (*MsgSubmitBudgetProposalResponse, error)
+	// CreateBudget defines a method to create a budget.
+	CreateBudget(context.Context, *MsgCreateBudget) (*MsgCreateBudgetResponse, error)
 	// ClaimBudget defines a method to claim the distributed budget.
 	ClaimBudget(context.Context, *MsgClaimBudget) (*MsgClaimBudgetResponse, error)
 	// CreateContinuousFund defines a method to add funds continuously.
@@ -189,8 +189,8 @@ func (UnimplementedMsgServer) FundCommunityPool(context.Context, *MsgFundCommuni
 func (UnimplementedMsgServer) CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPoolSpend not implemented")
 }
-func (UnimplementedMsgServer) SubmitBudgetProposal(context.Context, *MsgSubmitBudgetProposal) (*MsgSubmitBudgetProposalResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SubmitBudgetProposal not implemented")
+func (UnimplementedMsgServer) CreateBudget(context.Context, *MsgCreateBudget) (*MsgCreateBudgetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateBudget not implemented")
 }
 func (UnimplementedMsgServer) ClaimBudget(context.Context, *MsgClaimBudget) (*MsgClaimBudgetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClaimBudget not implemented")
@@ -264,20 +264,20 @@ func _Msg_CommunityPoolSpend_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SubmitBudgetProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSubmitBudgetProposal)
+func _Msg_CreateBudget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateBudget)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).SubmitBudgetProposal(ctx, in)
+		return srv.(MsgServer).CreateBudget(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_SubmitBudgetProposal_FullMethodName,
+		FullMethod: Msg_CreateBudget_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SubmitBudgetProposal(ctx, req.(*MsgSubmitBudgetProposal))
+		return srv.(MsgServer).CreateBudget(ctx, req.(*MsgCreateBudget))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -388,8 +388,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CommunityPoolSpend_Handler,
 		},
 		{
-			MethodName: "SubmitBudgetProposal",
-			Handler:    _Msg_SubmitBudgetProposal_Handler,
+			MethodName: "CreateBudget",
+			Handler:    _Msg_CreateBudget_Handler,
 		},
 		{
 			MethodName: "ClaimBudget",

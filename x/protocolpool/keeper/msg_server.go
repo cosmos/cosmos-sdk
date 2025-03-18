@@ -55,7 +55,7 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 
 	// set budget proposal in state
 	// Note: If two budgets to the same address are created, the budget would be updated with the new budget.
-	err = k.BudgetProposal.Set(sdkCtx, recipient, budgetProposal)
+	err = k.Budgets.Set(sdkCtx, recipient, budgetProposal)
 	if err != nil {
 		return nil, err
 	}

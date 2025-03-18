@@ -49,7 +49,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 		if err != nil {
 			return fmt.Errorf("failed to decode recipient address: %w", err)
 		}
-		if err = k.BudgetProposal.Set(ctx, recipientAddress, *budget); err != nil {
+		if err = k.Budgets.Set(ctx, recipientAddress, *budget); err != nil {
 			return fmt.Errorf("failed to set budget for recipient %s: %w", recipientAddress, err)
 		}
 	}
@@ -109,7 +109,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 	}
 
 	var budget []*types.Budget
-	err = k.BudgetProposal.Walk(ctx, nil, func(key sdk.AccAddress, value types.Budget) (stop bool, err error) {
+	err = k.Budgets.Walk(ctx, nil, func(key sdk.AccAddress, value types.Budget) (stop bool, err error) {
 		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
 		if err != nil {
 			return true, err

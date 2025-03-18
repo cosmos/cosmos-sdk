@@ -31,8 +31,9 @@ type Keeper struct {
 	authority string
 
 	// State
-	Schema         collections.Schema
-	BudgetProposal collections.Map[sdk.AccAddress, types.Budget]
+	Schema collections.Schema
+	// Budgets key: RecipientAddr | value: Budget
+	Budgets        collections.Map[sdk.AccAddress, types.Budget]
 	ContinuousFund collections.Map[sdk.AccAddress, types.ContinuousFund]
 	// RecipientFundDistribution key: RecipientAddr | value: Claimable amount
 	RecipientFundDistribution collections.Map[sdk.AccAddress, types.DistributionAmount]
@@ -68,7 +69,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 		bankKeeper:                bk,
 		cdc:                       cdc,
 		authority:                 authority,
-		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
+		Budgets:                   collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
 		ContinuousFund:            collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
 		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, codec.CollValue[types.DistributionAmount](cdc)),
 		Distributions:             collections.NewMap(sb, types.DistributionsKey, "distributions", sdk.TimeKey, codec.CollValue[types.DistributionAmount](cdc)),
@@ -361,7 +362,7 @@ func (k Keeper) getClaimableFunds(ctx sdk.Context, recipientAddr string) (amount
 		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
 
-	budget, err := k.BudgetProposal.Get(ctx, recipient)
+	budget, err := k.Budgets.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return sdk.Coin{}, fmt.Errorf("no budget found for recipient: %s", recipientAddr)
@@ -378,7 +379,7 @@ func (k Keeper) getClaimableFunds(ctx sdk.Context, recipientAddr string) (amount
 		// check that total budget amount left to distribute equals zero
 		if totalBudgetAmountLeft.Equal(zeroAmount) {
 			// remove the entry of budget ended recipient
-			if err := k.BudgetProposal.Remove(ctx, recipient); err != nil {
+			if err := k.Budgets.Remove(ctx, recipient); err != nil {
 				return sdk.Coin{}, err
 			}
 			// Return the end of the budget
@@ -391,7 +392,7 @@ func (k Keeper) getClaimableFunds(ctx sdk.Context, recipientAddr string) (amount
 	// Check if the distribution time has not reached
 	if !budget.LastClaimedAt.IsZero() {
 		if currentTime.Before(budget.LastClaimedAt) {
-			return sdk.Coin{}, errors.New("distribution has not started yet")
+			return sdk.Coin{}, fmt.Errorf("distribution has not started yet: start time: %s", budget.LastClaimedAt.String())
 		}
 	}
 
@@ -400,16 +401,16 @@ func (k Keeper) getClaimableFunds(ctx sdk.Context, recipientAddr string) (amount
 		budget.ClaimedAmount = &zeroCoin
 	}
 
-	return k.calculateClaimableFunds(ctx, recipient, budget, currentTime)
+	return k.calculateClaimableFunds(ctx, recipient, budget)
 }
 
-func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddress, budget types.Budget, currentTime time.Time) (amount sdk.Coin, err error) {
+func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddress, budget types.Budget) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
-	timeElapsed := currentTime.Sub(budget.LastClaimedAt)
+	timeElapsed := ctx.BlockTime().Sub(budget.LastClaimedAt)
 
 	// Check the time elapsed has passed period length
 	if timeElapsed < budget.Period {
-		return sdk.Coin{}, errors.New("budget period has not passed yet")
+		return sdk.Coin{}, fmt.Errorf("budget period of %f hours has not passed yet", budget.Period.Hours())
 	}
 
 	// Calculate how many periods have passed
@@ -441,7 +442,7 @@ func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddres
 	ctx.Logger().Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
 	// Save the updated budget in the state
-	if err := k.BudgetProposal.Set(ctx, recipient, budget); err != nil {
+	if err := k.Budgets.Set(ctx, recipient, budget); err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while updating the budget for recipient %s", budget.RecipientAddress)
 	}
 

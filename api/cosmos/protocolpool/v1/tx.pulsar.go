@@ -1911,35 +1911,35 @@ func (x *fastReflection_MsgCommunityPoolSpendResponse) ProtoMethods() *protoifac
 }
 
 var (
-	md_MsgSubmitBudgetProposal                    protoreflect.MessageDescriptor
-	fd_MsgSubmitBudgetProposal_authority          protoreflect.FieldDescriptor
-	fd_MsgSubmitBudgetProposal_recipient_address  protoreflect.FieldDescriptor
-	fd_MsgSubmitBudgetProposal_budget_per_tranche protoreflect.FieldDescriptor
-	fd_MsgSubmitBudgetProposal_start_time         protoreflect.FieldDescriptor
-	fd_MsgSubmitBudgetProposal_tranches           protoreflect.FieldDescriptor
-	fd_MsgSubmitBudgetProposal_period             protoreflect.FieldDescriptor
+	md_MsgCreateBudget                    protoreflect.MessageDescriptor
+	fd_MsgCreateBudget_authority          protoreflect.FieldDescriptor
+	fd_MsgCreateBudget_recipient_address  protoreflect.FieldDescriptor
+	fd_MsgCreateBudget_budget_per_tranche protoreflect.FieldDescriptor
+	fd_MsgCreateBudget_start_time         protoreflect.FieldDescriptor
+	fd_MsgCreateBudget_tranches           protoreflect.FieldDescriptor
+	fd_MsgCreateBudget_period             protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_protocolpool_v1_tx_proto_init()
-	md_MsgSubmitBudgetProposal = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgSubmitBudgetProposal")
-	fd_MsgSubmitBudgetProposal_authority = md_MsgSubmitBudgetProposal.Fields().ByName("authority")
-	fd_MsgSubmitBudgetProposal_recipient_address = md_MsgSubmitBudgetProposal.Fields().ByName("recipient_address")
-	fd_MsgSubmitBudgetProposal_budget_per_tranche = md_MsgSubmitBudgetProposal.Fields().ByName("budget_per_tranche")
-	fd_MsgSubmitBudgetProposal_start_time = md_MsgSubmitBudgetProposal.Fields().ByName("start_time")
-	fd_MsgSubmitBudgetProposal_tranches = md_MsgSubmitBudgetProposal.Fields().ByName("tranches")
-	fd_MsgSubmitBudgetProposal_period = md_MsgSubmitBudgetProposal.Fields().ByName("period")
+	md_MsgCreateBudget = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCreateBudget")
+	fd_MsgCreateBudget_authority = md_MsgCreateBudget.Fields().ByName("authority")
+	fd_MsgCreateBudget_recipient_address = md_MsgCreateBudget.Fields().ByName("recipient_address")
+	fd_MsgCreateBudget_budget_per_tranche = md_MsgCreateBudget.Fields().ByName("budget_per_tranche")
+	fd_MsgCreateBudget_start_time = md_MsgCreateBudget.Fields().ByName("start_time")
+	fd_MsgCreateBudget_tranches = md_MsgCreateBudget.Fields().ByName("tranches")
+	fd_MsgCreateBudget_period = md_MsgCreateBudget.Fields().ByName("period")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgSubmitBudgetProposal)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgCreateBudget)(nil)
 
-type fastReflection_MsgSubmitBudgetProposal MsgSubmitBudgetProposal
+type fastReflection_MsgCreateBudget MsgCreateBudget
 
-func (x *MsgSubmitBudgetProposal) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgSubmitBudgetProposal)(x)
+func (x *MsgCreateBudget) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateBudget)(x)
 }
 
-func (x *MsgSubmitBudgetProposal) slowProtoReflect() protoreflect.Message {
+func (x *MsgCreateBudget) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1951,43 +1951,43 @@ func (x *MsgSubmitBudgetProposal) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgSubmitBudgetProposal_messageType fastReflection_MsgSubmitBudgetProposal_messageType
-var _ protoreflect.MessageType = fastReflection_MsgSubmitBudgetProposal_messageType{}
+var _fastReflection_MsgCreateBudget_messageType fastReflection_MsgCreateBudget_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateBudget_messageType{}
 
-type fastReflection_MsgSubmitBudgetProposal_messageType struct{}
+type fastReflection_MsgCreateBudget_messageType struct{}
 
-func (x fastReflection_MsgSubmitBudgetProposal_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgSubmitBudgetProposal)(nil)
+func (x fastReflection_MsgCreateBudget_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateBudget)(nil)
 }
-func (x fastReflection_MsgSubmitBudgetProposal_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgSubmitBudgetProposal)
+func (x fastReflection_MsgCreateBudget_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateBudget)
 }
-func (x fastReflection_MsgSubmitBudgetProposal_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgSubmitBudgetProposal
+func (x fastReflection_MsgCreateBudget_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateBudget
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgSubmitBudgetProposal) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgSubmitBudgetProposal
+func (x *fastReflection_MsgCreateBudget) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateBudget
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgSubmitBudgetProposal) Type() protoreflect.MessageType {
-	return _fastReflection_MsgSubmitBudgetProposal_messageType
+func (x *fastReflection_MsgCreateBudget) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateBudget_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgSubmitBudgetProposal) New() protoreflect.Message {
-	return new(fastReflection_MsgSubmitBudgetProposal)
+func (x *fastReflection_MsgCreateBudget) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateBudget)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgSubmitBudgetProposal) Interface() protoreflect.ProtoMessage {
-	return (*MsgSubmitBudgetProposal)(x)
+func (x *fastReflection_MsgCreateBudget) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateBudget)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1995,40 +1995,40 @@ func (x *fastReflection_MsgSubmitBudgetProposal) Interface() protoreflect.ProtoM
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgSubmitBudgetProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgCreateBudget) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Authority != "" {
 		value := protoreflect.ValueOfString(x.Authority)
-		if !f(fd_MsgSubmitBudgetProposal_authority, value) {
+		if !f(fd_MsgCreateBudget_authority, value) {
 			return
 		}
 	}
 	if x.RecipientAddress != "" {
 		value := protoreflect.ValueOfString(x.RecipientAddress)
-		if !f(fd_MsgSubmitBudgetProposal_recipient_address, value) {
+		if !f(fd_MsgCreateBudget_recipient_address, value) {
 			return
 		}
 	}
 	if x.BudgetPerTranche != nil {
 		value := protoreflect.ValueOfMessage(x.BudgetPerTranche.ProtoReflect())
-		if !f(fd_MsgSubmitBudgetProposal_budget_per_tranche, value) {
+		if !f(fd_MsgCreateBudget_budget_per_tranche, value) {
 			return
 		}
 	}
 	if x.StartTime != nil {
 		value := protoreflect.ValueOfMessage(x.StartTime.ProtoReflect())
-		if !f(fd_MsgSubmitBudgetProposal_start_time, value) {
+		if !f(fd_MsgCreateBudget_start_time, value) {
 			return
 		}
 	}
 	if x.Tranches != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.Tranches)
-		if !f(fd_MsgSubmitBudgetProposal_tranches, value) {
+		if !f(fd_MsgCreateBudget_tranches, value) {
 			return
 		}
 	}
 	if x.Period != nil {
 		value := protoreflect.ValueOfMessage(x.Period.ProtoReflect())
-		if !f(fd_MsgSubmitBudgetProposal_period, value) {
+		if !f(fd_MsgCreateBudget_period, value) {
 			return
 		}
 	}
@@ -2045,25 +2045,25 @@ func (x *fastReflection_MsgSubmitBudgetProposal) Range(f func(protoreflect.Field
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgSubmitBudgetProposal) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgCreateBudget) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.authority":
 		return x.Authority != ""
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.recipient_address":
 		return x.RecipientAddress != ""
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.budget_per_tranche":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.budget_per_tranche":
 		return x.BudgetPerTranche != nil
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.start_time":
 		return x.StartTime != nil
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.tranches":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.tranches":
 		return x.Tranches != uint64(0)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.period":
 		return x.Period != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudget"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudget does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2073,25 +2073,25 @@ func (x *fastReflection_MsgSubmitBudgetProposal) Has(fd protoreflect.FieldDescri
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgSubmitBudgetProposal) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgCreateBudget) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.authority":
 		x.Authority = ""
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.recipient_address":
 		x.RecipientAddress = ""
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.budget_per_tranche":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.budget_per_tranche":
 		x.BudgetPerTranche = nil
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.start_time":
 		x.StartTime = nil
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.tranches":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.tranches":
 		x.Tranches = uint64(0)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.period":
 		x.Period = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudget"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudget does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2101,31 +2101,31 @@ func (x *fastReflection_MsgSubmitBudgetProposal) Clear(fd protoreflect.FieldDesc
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgSubmitBudgetProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateBudget) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.authority":
 		value := x.Authority
 		return protoreflect.ValueOfString(value)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.recipient_address":
 		value := x.RecipientAddress
 		return protoreflect.ValueOfString(value)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.budget_per_tranche":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.budget_per_tranche":
 		value := x.BudgetPerTranche
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.start_time":
 		value := x.StartTime
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.tranches":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.tranches":
 		value := x.Tranches
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.period":
 		value := x.Period
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudget"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposal does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudget does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2139,25 +2139,25 @@ func (x *fastReflection_MsgSubmitBudgetProposal) Get(descriptor protoreflect.Fie
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgSubmitBudgetProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgCreateBudget) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.authority":
 		x.Authority = value.Interface().(string)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.recipient_address":
 		x.RecipientAddress = value.Interface().(string)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.budget_per_tranche":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.budget_per_tranche":
 		x.BudgetPerTranche = value.Message().Interface().(*v1beta1.Coin)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.start_time":
 		x.StartTime = value.Message().Interface().(*timestamppb.Timestamp)
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.tranches":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.tranches":
 		x.Tranches = value.Uint()
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.period":
 		x.Period = value.Message().Interface().(*durationpb.Duration)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudget"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudget does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2171,72 +2171,72 @@ func (x *fastReflection_MsgSubmitBudgetProposal) Set(fd protoreflect.FieldDescri
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgSubmitBudgetProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateBudget) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.budget_per_tranche":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.budget_per_tranche":
 		if x.BudgetPerTranche == nil {
 			x.BudgetPerTranche = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.BudgetPerTranche.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.start_time":
 		if x.StartTime == nil {
 			x.StartTime = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.StartTime.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.period":
 		if x.Period == nil {
 			x.Period = new(durationpb.Duration)
 		}
 		return protoreflect.ValueOfMessage(x.Period.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.authority":
-		panic(fmt.Errorf("field authority of message cosmos.protocolpool.v1.MsgSubmitBudgetProposal is not mutable"))
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.recipient_address":
-		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.MsgSubmitBudgetProposal is not mutable"))
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.tranches":
-		panic(fmt.Errorf("field tranches of message cosmos.protocolpool.v1.MsgSubmitBudgetProposal is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCreateBudget.authority":
+		panic(fmt.Errorf("field authority of message cosmos.protocolpool.v1.MsgCreateBudget is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCreateBudget.recipient_address":
+		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.MsgCreateBudget is not mutable"))
+	case "cosmos.protocolpool.v1.MsgCreateBudget.tranches":
+		panic(fmt.Errorf("field tranches of message cosmos.protocolpool.v1.MsgCreateBudget is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudget"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudget does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgSubmitBudgetProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateBudget) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.authority":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.authority":
 		return protoreflect.ValueOfString("")
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.recipient_address":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.recipient_address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.budget_per_tranche":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.budget_per_tranche":
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.start_time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.tranches":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.tranches":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period":
+	case "cosmos.protocolpool.v1.MsgCreateBudget.period":
 		m := new(durationpb.Duration)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudget"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudget does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgSubmitBudgetProposal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgCreateBudget) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgSubmitBudgetProposal", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCreateBudget", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2244,7 +2244,7 @@ func (x *fastReflection_MsgSubmitBudgetProposal) WhichOneof(d protoreflect.Oneof
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgSubmitBudgetProposal) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgCreateBudget) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2255,7 +2255,7 @@ func (x *fastReflection_MsgSubmitBudgetProposal) GetUnknown() protoreflect.RawFi
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgSubmitBudgetProposal) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgCreateBudget) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2267,7 +2267,7 @@ func (x *fastReflection_MsgSubmitBudgetProposal) SetUnknown(fields protoreflect.
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgSubmitBudgetProposal) IsValid() bool {
+func (x *fastReflection_MsgCreateBudget) IsValid() bool {
 	return x != nil
 }
 
@@ -2277,9 +2277,9 @@ func (x *fastReflection_MsgSubmitBudgetProposal) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgSubmitBudgetProposal) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgCreateBudget) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgSubmitBudgetProposal)
+		x := input.Message.Interface().(*MsgCreateBudget)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2324,7 +2324,7 @@ func (x *fastReflection_MsgSubmitBudgetProposal) ProtoMethods() *protoiface.Meth
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgSubmitBudgetProposal)
+		x := input.Message.Interface().(*MsgCreateBudget)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2415,7 +2415,7 @@ func (x *fastReflection_MsgSubmitBudgetProposal) ProtoMethods() *protoiface.Meth
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgSubmitBudgetProposal)
+		x := input.Message.Interface().(*MsgCreateBudget)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2447,10 +2447,10 @@ func (x *fastReflection_MsgSubmitBudgetProposal) ProtoMethods() *protoiface.Meth
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitBudgetProposal: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateBudget: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitBudgetProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateBudget: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2680,23 +2680,23 @@ func (x *fastReflection_MsgSubmitBudgetProposal) ProtoMethods() *protoiface.Meth
 }
 
 var (
-	md_MsgSubmitBudgetProposalResponse protoreflect.MessageDescriptor
+	md_MsgCreateBudgetResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_protocolpool_v1_tx_proto_init()
-	md_MsgSubmitBudgetProposalResponse = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgSubmitBudgetProposalResponse")
+	md_MsgCreateBudgetResponse = File_cosmos_protocolpool_v1_tx_proto.Messages().ByName("MsgCreateBudgetResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgSubmitBudgetProposalResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgCreateBudgetResponse)(nil)
 
-type fastReflection_MsgSubmitBudgetProposalResponse MsgSubmitBudgetProposalResponse
+type fastReflection_MsgCreateBudgetResponse MsgCreateBudgetResponse
 
-func (x *MsgSubmitBudgetProposalResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgSubmitBudgetProposalResponse)(x)
+func (x *MsgCreateBudgetResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateBudgetResponse)(x)
 }
 
-func (x *MsgSubmitBudgetProposalResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgCreateBudgetResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2708,43 +2708,43 @@ func (x *MsgSubmitBudgetProposalResponse) slowProtoReflect() protoreflect.Messag
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgSubmitBudgetProposalResponse_messageType fastReflection_MsgSubmitBudgetProposalResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgSubmitBudgetProposalResponse_messageType{}
+var _fastReflection_MsgCreateBudgetResponse_messageType fastReflection_MsgCreateBudgetResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateBudgetResponse_messageType{}
 
-type fastReflection_MsgSubmitBudgetProposalResponse_messageType struct{}
+type fastReflection_MsgCreateBudgetResponse_messageType struct{}
 
-func (x fastReflection_MsgSubmitBudgetProposalResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgSubmitBudgetProposalResponse)(nil)
+func (x fastReflection_MsgCreateBudgetResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateBudgetResponse)(nil)
 }
-func (x fastReflection_MsgSubmitBudgetProposalResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgSubmitBudgetProposalResponse)
+func (x fastReflection_MsgCreateBudgetResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateBudgetResponse)
 }
-func (x fastReflection_MsgSubmitBudgetProposalResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgSubmitBudgetProposalResponse
+func (x fastReflection_MsgCreateBudgetResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateBudgetResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgSubmitBudgetProposalResponse
+func (x *fastReflection_MsgCreateBudgetResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateBudgetResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgSubmitBudgetProposalResponse_messageType
+func (x *fastReflection_MsgCreateBudgetResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateBudgetResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgSubmitBudgetProposalResponse)
+func (x *fastReflection_MsgCreateBudgetResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateBudgetResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgSubmitBudgetProposalResponse)(x)
+func (x *fastReflection_MsgCreateBudgetResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateBudgetResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -2752,7 +2752,7 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) Interface() protoreflec
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgCreateBudgetResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -2766,13 +2766,13 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) Range(f func(protorefle
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgCreateBudgetResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudgetResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudgetResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2782,13 +2782,13 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) Has(fd protoreflect.Fie
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgCreateBudgetResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudgetResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudgetResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2798,13 +2798,13 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) Clear(fd protoreflect.F
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateBudgetResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudgetResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudgetResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2818,13 +2818,13 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) Get(descriptor protoref
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgCreateBudgetResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudgetResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudgetResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2838,36 +2838,36 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) Set(fd protoreflect.Fie
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateBudgetResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudgetResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudgetResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateBudgetResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCreateBudgetResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.MsgCreateBudgetResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgCreateBudgetResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.MsgCreateBudgetResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2875,7 +2875,7 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) WhichOneof(d protorefle
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgCreateBudgetResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2886,7 +2886,7 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) GetUnknown() protorefle
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgCreateBudgetResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2898,7 +2898,7 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) SetUnknown(fields proto
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) IsValid() bool {
+func (x *fastReflection_MsgCreateBudgetResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -2908,9 +2908,9 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgSubmitBudgetProposalResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgCreateBudgetResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgSubmitBudgetProposalResponse)
+		x := input.Message.Interface().(*MsgCreateBudgetResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2932,7 +2932,7 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) ProtoMethods() *protoif
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgSubmitBudgetProposalResponse)
+		x := input.Message.Interface().(*MsgCreateBudgetResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2962,7 +2962,7 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) ProtoMethods() *protoif
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgSubmitBudgetProposalResponse)
+		x := input.Message.Interface().(*MsgCreateBudgetResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2994,10 +2994,10 @@ func (x *fastReflection_MsgSubmitBudgetProposalResponse) ProtoMethods() *protoif
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitBudgetProposalResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateBudgetResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitBudgetProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateBudgetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -7979,8 +7979,8 @@ func (*MsgCommunityPoolSpendResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{3}
 }
 
-// MsgSubmitBudgetProposal defines budget proposal type.
-type MsgSubmitBudgetProposal struct {
+// MsgCreateBudget defines budget creation type.
+type MsgCreateBudget struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -8003,8 +8003,8 @@ type MsgSubmitBudgetProposal struct {
 	Period *durationpb.Duration `protobuf:"bytes,6,opt,name=period,proto3" json:"period,omitempty"`
 }
 
-func (x *MsgSubmitBudgetProposal) Reset() {
-	*x = MsgSubmitBudgetProposal{}
+func (x *MsgCreateBudget) Reset() {
+	*x = MsgCreateBudget{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -8012,69 +8012,69 @@ func (x *MsgSubmitBudgetProposal) Reset() {
 	}
 }
 
-func (x *MsgSubmitBudgetProposal) String() string {
+func (x *MsgCreateBudget) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgSubmitBudgetProposal) ProtoMessage() {}
+func (*MsgCreateBudget) ProtoMessage() {}
 
-// Deprecated: Use MsgSubmitBudgetProposal.ProtoReflect.Descriptor instead.
-func (*MsgSubmitBudgetProposal) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgCreateBudget.ProtoReflect.Descriptor instead.
+func (*MsgCreateBudget) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *MsgSubmitBudgetProposal) GetAuthority() string {
+func (x *MsgCreateBudget) GetAuthority() string {
 	if x != nil {
 		return x.Authority
 	}
 	return ""
 }
 
-func (x *MsgSubmitBudgetProposal) GetRecipientAddress() string {
+func (x *MsgCreateBudget) GetRecipientAddress() string {
 	if x != nil {
 		return x.RecipientAddress
 	}
 	return ""
 }
 
-func (x *MsgSubmitBudgetProposal) GetBudgetPerTranche() *v1beta1.Coin {
+func (x *MsgCreateBudget) GetBudgetPerTranche() *v1beta1.Coin {
 	if x != nil {
 		return x.BudgetPerTranche
 	}
 	return nil
 }
 
-func (x *MsgSubmitBudgetProposal) GetStartTime() *timestamppb.Timestamp {
+func (x *MsgCreateBudget) GetStartTime() *timestamppb.Timestamp {
 	if x != nil {
 		return x.StartTime
 	}
 	return nil
 }
 
-func (x *MsgSubmitBudgetProposal) GetTranches() uint64 {
+func (x *MsgCreateBudget) GetTranches() uint64 {
 	if x != nil {
 		return x.Tranches
 	}
 	return 0
 }
 
-func (x *MsgSubmitBudgetProposal) GetPeriod() *durationpb.Duration {
+func (x *MsgCreateBudget) GetPeriod() *durationpb.Duration {
 	if x != nil {
 		return x.Period
 	}
 	return nil
 }
 
-// MsgSubmitBudgetProposalResponse defines the response to executing a
-// MsgSubmitBudgetProposal message.
-type MsgSubmitBudgetProposalResponse struct {
+// MsgCreateBudgetResponse defines the response to executing a
+// MsgCreateBudget message.
+type MsgCreateBudgetResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgSubmitBudgetProposalResponse) Reset() {
-	*x = MsgSubmitBudgetProposalResponse{}
+func (x *MsgCreateBudgetResponse) Reset() {
+	*x = MsgCreateBudgetResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_protocolpool_v1_tx_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -8082,14 +8082,14 @@ func (x *MsgSubmitBudgetProposalResponse) Reset() {
 	}
 }
 
-func (x *MsgSubmitBudgetProposalResponse) String() string {
+func (x *MsgCreateBudgetResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgSubmitBudgetProposalResponse) ProtoMessage() {}
+func (*MsgCreateBudgetResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgSubmitBudgetProposalResponse.ProtoReflect.Descriptor instead.
-func (*MsgSubmitBudgetProposalResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgCreateBudgetResponse.ProtoReflect.Descriptor instead.
+func (*MsgCreateBudgetResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{5}
 }
 
@@ -8570,34 +8570,33 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x69, 0x6e, 0x73, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0e, 0x82, 0xe7, 0xb0,
 	0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x1f, 0x0a, 0x1d, 0x4d,
 	0x73, 0x67, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53,
-	0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x91, 0x03, 0x0a,
-	0x17, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74,
-	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68,
-	0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
-	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
-	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79,
-	0x12, 0x45, 0x0a, 0x11, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
-	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
-	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x4d, 0x0a, 0x12, 0x62, 0x75, 0x64, 0x67, 0x65,
-	0x74, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
-	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04,
-	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x10, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x65, 0x72, 0x54,
-	0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x12, 0x3f, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f,
-	0x74, 0x69, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x73, 0x74,
-	0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63,
-	0x68, 0x65, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63,
-	0x68, 0x65, 0x73, 0x12, 0x3b, 0x0a, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x06, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08,
-	0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64,
-	0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79,
-	0x22, 0x21, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64,
-	0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x89, 0x03, 0x0a,
+	0x0f, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74,
+	0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61,
+	0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x45, 0x0a, 0x11, 0x72, 0x65, 0x63, 0x69,
+	0x70, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x72,
+	0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
+	0x4d, 0x0a, 0x12, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x74, 0x72,
+	0x61, 0x6e, 0x63, 0x68, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x10, 0x62, 0x75,
+	0x64, 0x67, 0x65, 0x74, 0x50, 0x65, 0x72, 0x54, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x12, 0x3f,
+	0x0a, 0x0a, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04,
+	0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x73, 0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12,
+	0x1a, 0x0a, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x08, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x12, 0x3b, 0x0a, 0x06, 0x70,
+	0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf, 0x1f, 0x01,
+	0x52, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61,
+	0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
 	0x6e, 0x73, 0x65, 0x22, 0x6f, 0x0a, 0x0e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42,
 	0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x45, 0x0a, 0x11, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65,
 	0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
@@ -8694,7 +8693,7 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61,
 	0x6d, 0x73, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
 	0x74, 0x79, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xf9, 0x07,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xe0, 0x07,
 	0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x77, 0x0a, 0x11, 0x46, 0x75, 0x6e, 0x64, 0x43, 0x6f, 0x6d,
 	0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
@@ -8710,69 +8709,68 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x65, 0x6e, 0x64, 0x1a, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
 	0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x53, 0x70, 0x65,
-	0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x53,
-	0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x70,
-	0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f,
-	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a,
-	0x0b, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x26, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
-	0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75,
-	0x64, 0x67, 0x65, 0x74, 0x1a, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43,
-	0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x2f, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70,
-	0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
-	0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x1a, 0x37,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x86, 0x01, 0x0a, 0x16, 0x57, 0x69, 0x74, 0x68,
-	0x64, 0x72, 0x61, 0x77, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75,
-	0x6e, 0x64, 0x12, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57,
-	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75,
-	0x73, 0x46, 0x75, 0x6e, 0x64, 0x1a, 0x39, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
-	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x80, 0x01, 0x0a, 0x14, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69,
-	0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
-	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74,
-	0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73,
+	0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x68, 0x0a, 0x0c, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
-	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e,
-	0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x7d, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x42, 0x75, 0x64,
+	0x67, 0x65, 0x74, 0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x2f, 0x2e, 0x63,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x0b, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64,
+	0x67, 0x65, 0x74, 0x12, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x1a, 0x2e, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f,
+	0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x42, 0x75, 0x64,
+	0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73,
+	0x46, 0x75, 0x6e, 0x64, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75,
+	0x73, 0x46, 0x75, 0x6e, 0x64, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f,
+	0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x86,
+	0x01, 0x0a, 0x16, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x43, 0x6f, 0x6e, 0x74, 0x69,
+	0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x43, 0x6f,
+	0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x1a, 0x39, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
-	0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x13, 0xca,
-	0xb4, 0x2d, 0x0f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x20, 0x30, 0x2e,
-	0x34, 0x37, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xd7, 0x01, 0x0a, 0x1a, 0x63, 0x6f,
-	0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
-	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50,
-	0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73,
+	0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
+	0x77, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x14, 0x43, 0x61, 0x6e, 0x63,
+	0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64,
+	0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e,
+	0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e,
+	0x64, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61,
+	0x6e, 0x63, 0x65, 0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75,
+	0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7d, 0x0a, 0x0c, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x13, 0xca, 0xb4, 0x2d, 0x0f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2d, 0x73, 0x64, 0x6b, 0x20, 0x30, 0x2e, 0x34, 0x37, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01,
+	0x42, 0xd7, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42,
+	0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56,
+	0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
-	0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -8793,8 +8791,8 @@ var file_cosmos_protocolpool_v1_tx_proto_goTypes = []interface{}{
 	(*MsgFundCommunityPoolResponse)(nil),      // 1: cosmos.protocolpool.v1.MsgFundCommunityPoolResponse
 	(*MsgCommunityPoolSpend)(nil),             // 2: cosmos.protocolpool.v1.MsgCommunityPoolSpend
 	(*MsgCommunityPoolSpendResponse)(nil),     // 3: cosmos.protocolpool.v1.MsgCommunityPoolSpendResponse
-	(*MsgSubmitBudgetProposal)(nil),           // 4: cosmos.protocolpool.v1.MsgSubmitBudgetProposal
-	(*MsgSubmitBudgetProposalResponse)(nil),   // 5: cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse
+	(*MsgCreateBudget)(nil),                   // 4: cosmos.protocolpool.v1.MsgCreateBudget
+	(*MsgCreateBudgetResponse)(nil),           // 5: cosmos.protocolpool.v1.MsgCreateBudgetResponse
 	(*MsgClaimBudget)(nil),                    // 6: cosmos.protocolpool.v1.MsgClaimBudget
 	(*MsgClaimBudgetResponse)(nil),            // 7: cosmos.protocolpool.v1.MsgClaimBudgetResponse
 	(*MsgCreateContinuousFund)(nil),           // 8: cosmos.protocolpool.v1.MsgCreateContinuousFund
@@ -8813,9 +8811,9 @@ var file_cosmos_protocolpool_v1_tx_proto_goTypes = []interface{}{
 var file_cosmos_protocolpool_v1_tx_proto_depIdxs = []int32{
 	16, // 0: cosmos.protocolpool.v1.MsgFundCommunityPool.amount:type_name -> cosmos.base.v1beta1.Coin
 	16, // 1: cosmos.protocolpool.v1.MsgCommunityPoolSpend.amount:type_name -> cosmos.base.v1beta1.Coin
-	16, // 2: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.budget_per_tranche:type_name -> cosmos.base.v1beta1.Coin
-	17, // 3: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.start_time:type_name -> google.protobuf.Timestamp
-	18, // 4: cosmos.protocolpool.v1.MsgSubmitBudgetProposal.period:type_name -> google.protobuf.Duration
+	16, // 2: cosmos.protocolpool.v1.MsgCreateBudget.budget_per_tranche:type_name -> cosmos.base.v1beta1.Coin
+	17, // 3: cosmos.protocolpool.v1.MsgCreateBudget.start_time:type_name -> google.protobuf.Timestamp
+	18, // 4: cosmos.protocolpool.v1.MsgCreateBudget.period:type_name -> google.protobuf.Duration
 	16, // 5: cosmos.protocolpool.v1.MsgClaimBudgetResponse.amount:type_name -> cosmos.base.v1beta1.Coin
 	17, // 6: cosmos.protocolpool.v1.MsgCreateContinuousFund.expiry:type_name -> google.protobuf.Timestamp
 	17, // 7: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_time:type_name -> google.protobuf.Timestamp
@@ -8824,7 +8822,7 @@ var file_cosmos_protocolpool_v1_tx_proto_depIdxs = []int32{
 	19, // 10: cosmos.protocolpool.v1.MsgUpdateParams.params:type_name -> cosmos.protocolpool.v1.Params
 	0,  // 11: cosmos.protocolpool.v1.Msg.FundCommunityPool:input_type -> cosmos.protocolpool.v1.MsgFundCommunityPool
 	2,  // 12: cosmos.protocolpool.v1.Msg.CommunityPoolSpend:input_type -> cosmos.protocolpool.v1.MsgCommunityPoolSpend
-	4,  // 13: cosmos.protocolpool.v1.Msg.SubmitBudgetProposal:input_type -> cosmos.protocolpool.v1.MsgSubmitBudgetProposal
+	4,  // 13: cosmos.protocolpool.v1.Msg.CreateBudget:input_type -> cosmos.protocolpool.v1.MsgCreateBudget
 	6,  // 14: cosmos.protocolpool.v1.Msg.ClaimBudget:input_type -> cosmos.protocolpool.v1.MsgClaimBudget
 	8,  // 15: cosmos.protocolpool.v1.Msg.CreateContinuousFund:input_type -> cosmos.protocolpool.v1.MsgCreateContinuousFund
 	12, // 16: cosmos.protocolpool.v1.Msg.WithdrawContinuousFund:input_type -> cosmos.protocolpool.v1.MsgWithdrawContinuousFund
@@ -8832,7 +8830,7 @@ var file_cosmos_protocolpool_v1_tx_proto_depIdxs = []int32{
 	14, // 18: cosmos.protocolpool.v1.Msg.UpdateParams:input_type -> cosmos.protocolpool.v1.MsgUpdateParams
 	1,  // 19: cosmos.protocolpool.v1.Msg.FundCommunityPool:output_type -> cosmos.protocolpool.v1.MsgFundCommunityPoolResponse
 	3,  // 20: cosmos.protocolpool.v1.Msg.CommunityPoolSpend:output_type -> cosmos.protocolpool.v1.MsgCommunityPoolSpendResponse
-	5,  // 21: cosmos.protocolpool.v1.Msg.SubmitBudgetProposal:output_type -> cosmos.protocolpool.v1.MsgSubmitBudgetProposalResponse
+	5,  // 21: cosmos.protocolpool.v1.Msg.CreateBudget:output_type -> cosmos.protocolpool.v1.MsgCreateBudgetResponse
 	7,  // 22: cosmos.protocolpool.v1.Msg.ClaimBudget:output_type -> cosmos.protocolpool.v1.MsgClaimBudgetResponse
 	9,  // 23: cosmos.protocolpool.v1.Msg.CreateContinuousFund:output_type -> cosmos.protocolpool.v1.MsgCreateContinuousFundResponse
 	13, // 24: cosmos.protocolpool.v1.Msg.WithdrawContinuousFund:output_type -> cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse
@@ -8901,7 +8899,7 @@ func file_cosmos_protocolpool_v1_tx_proto_init() {
 			}
 		}
 		file_cosmos_protocolpool_v1_tx_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSubmitBudgetProposal); i {
+			switch v := v.(*MsgCreateBudget); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8913,7 +8911,7 @@ func file_cosmos_protocolpool_v1_tx_proto_init() {
 			}
 		}
 		file_cosmos_protocolpool_v1_tx_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSubmitBudgetProposalResponse); i {
+			switch v := v.(*MsgCreateBudgetResponse); i {
 			case 0:
 				return &v.state
 			case 1:

@@ -24,15 +24,15 @@ same sender. Victims of such limitations include IBC relayers and crypto exchang
 
 ## Decision
 
-We propose adding a boolean field `unordered` and a uint64 field `timeout_timestamp` to the transaction body.
+We propose adding a boolean field `unordered` and a google.protobuf.Timestamp field `timeout_timestamp` to the transaction body.
 
 Unordered transactions will bypass the traditional account sequence rules and follow the rules described
-below, without impacting traditional ordered transactions; they'll follow the sequence rules the same as before.
+below, without impacting traditional ordered transactions which will follow the same sequence rules as before.
 
 We will introduce new storage of time-based, ephemeral unordered sequences using the SDK's existing KV Store library. 
 Specifically, we will leverage the existing x/auth KV store to store the unordered sequences.
 
-When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s bech32 address
+When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s PubKey address
 will be recorded to state (i.e. `542939323/cosmos1v1234567890AbcDeF`). In cases of multi-party signing, we will use a sorted,
 comma-separated list of the public key addresses that signed the transaction (i.e. `5532231/5AEKNF,5AEKNE,5AEKNR`)
 

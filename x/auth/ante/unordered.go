@@ -1,8 +1,6 @@
 package ante
 
 import (
-	"slices"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +9,11 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
+)
+
+const (
+	// MaxTimeoutDuration defines the maximum TTL a transaction can define.
+	MaxTimeoutDuration = 10 * time.Minute
 )
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
@@ -28,17 +31,14 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
 // chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
 type UnorderedTxDecorator struct {
-	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
-	maxTimeoutDuration time.Duration
-	txManager          authkeeper.UnorderedTxManager
+	txManager authkeeper.UnorderedTxManager
 }
 
 func NewUnorderedTxDecorator(
 	utxm authkeeper.UnorderedTxManager,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
-		maxTimeoutDuration: 10 * time.Minute,
-		txManager:          utxm,
+		txManager: utxm,
 	}
 }
 
@@ -76,11 +76,11 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 			"unordered transaction has a timeout_timestamp that has already passed",
 		)
 	}
-	if timeoutTimestamp.After(blockTime.Add(d.maxTimeoutDuration)) {
+	if timeoutTimestamp.After(blockTime.Add(MaxTimeoutDuration)) {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"unordered tx ttl exceeds %s",
-			d.maxTimeoutDuration.String(),
+			MaxTimeoutDuration.String(),
 		)
 	}
 
@@ -93,34 +93,34 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	if err != nil {
 		return err
 	}
-	slices.Sort(signerAddrs)
-	signers := strings.Join(signerAddrs, ",")
 
-	contains, err := d.txManager.Contains(ctx, signers, unorderedTx.GetTimeoutTimeStamp())
-	if err != nil {
-		return errorsmod.Wrap(
-			sdkerrors.ErrIO,
-			"failed to check contains",
-		)
-	}
-	if contains {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"tx is duplicated",
-		)
-	}
+	for _, signerAddr := range signerAddrs {
+		contains, err := d.txManager.Contains(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp())
+		if err != nil {
+			return errorsmod.Wrapf(
+				sdkerrors.ErrIO,
+				"failed to check contains for signer %x", signerAddr,
+			)
+		}
+		if contains {
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"tx is duplicated for signer %x", signerAddr,
+			)
+		}
 
-	if err := d.txManager.Add(ctx, signers, unorderedTx.GetTimeoutTimeStamp()); err != nil {
-		return errorsmod.Wrap(
-			sdkerrors.ErrIO,
-			"failed to add unordered nonce to state",
-		)
+		if err := d.txManager.Add(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
+			return errorsmod.Wrapf(
+				sdkerrors.ErrIO,
+				"failed to add unordered nonce to state for signer %x", signerAddr,
+			)
+		}
 	}
 
 	return nil
 }
 
-func getSigners(tx sdk.Tx) ([]string, error) {
+func getSigners(tx sdk.Tx) ([][]byte, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
@@ -130,9 +130,9 @@ func getSigners(tx sdk.Tx) ([]string, error) {
 		return nil, err
 	}
 
-	addresses := make([]string, 0, len(sigs))
+	addresses := make([][]byte, 0, len(sigs))
 	for _, sig := range sigs {
-		addresses = append(addresses, sig.PubKey.Address().String())
+		addresses = append(addresses, sig.PubKey.Bytes())
 	}
 
 	return addresses, nil

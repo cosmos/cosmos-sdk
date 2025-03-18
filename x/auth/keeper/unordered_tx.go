@@ -17,16 +17,16 @@ var (
 // UnorderedTxManager manages the ephemeral timeout sequences from unordered transactions.
 type UnorderedTxManager interface {
 	// Contains reports whether the sender has used the timestamp already.
-	Contains(ctx sdk.Context, sender string, timestamp time.Time) (bool, error)
+	Contains(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error)
 	// Add marks the timestamp as used for the sender.
 	// Further transactions sent from this sender with this timestamp will fail.
-	Add(ctx sdk.Context, sender string, timestamp time.Time) error
+	Add(ctx sdk.Context, sender []byte, timestamp time.Time) error
 	// RemoveExpired removes all sequences whose timestamp value is before the current block time.
 	RemoveExpired(ctx sdk.Context) error
 }
 
 type unorderedTxManagerImpl struct {
-	unorderedSequences collections.KeySet[collections.Pair[uint64, string]]
+	unorderedSequences collections.KeySet[collections.Pair[uint64, []byte]]
 }
 
 func NewUnorderedTxManager(kvStore store.KVStoreService) UnorderedTxManager {
@@ -36,23 +36,23 @@ func NewUnorderedTxManager(kvStore store.KVStoreService) UnorderedTxManager {
 			sb,
 			unorderedSequencePrefix,
 			"unordered_sequences",
-			collections.PairKeyCodec(collections.Uint64Key, collections.StringKey),
+			collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
 		),
 	}
 	return m
 }
 
-func (m *unorderedTxManagerImpl) Contains(ctx sdk.Context, sender string, timestamp time.Time) (bool, error) {
+func (m *unorderedTxManagerImpl) Contains(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error) {
 	return m.unorderedSequences.Has(ctx, collections.Join(uint64(timestamp.UnixNano()), sender))
 }
 
-func (m *unorderedTxManagerImpl) Add(ctx sdk.Context, sender string, timestamp time.Time) error {
+func (m *unorderedTxManagerImpl) Add(ctx sdk.Context, sender []byte, timestamp time.Time) error {
 	return m.unorderedSequences.Set(ctx, collections.Join(uint64(timestamp.UnixNano()), sender))
 }
 
 func (m *unorderedTxManagerImpl) RemoveExpired(ctx sdk.Context) error {
 	blkTime := ctx.BlockTime().UnixNano()
-	it, err := m.unorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[uint64, string](uint64(blkTime)))
+	it, err := m.unorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[uint64, []byte](uint64(blkTime)))
 	if err != nil {
 		return err
 	}

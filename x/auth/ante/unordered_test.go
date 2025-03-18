@@ -1,8 +1,6 @@
 package ante_test
 
 import (
-	"slices"
-	"strings"
 	"testing"
 	"time"
 
@@ -28,7 +26,7 @@ func TestUnorderedAnte(t *testing.T) {
 		execMode    sdk.ExecMode
 		expectedErr string
 	}{
-		"normal tx should just skip": {
+		"normal/ordered tx should just skip": {
 			runTx: func() sdk.Tx {
 				return genTestTx(t, genTxOptions{})
 			},
@@ -52,7 +50,7 @@ func TestUnorderedAnte(t *testing.T) {
 		},
 		"timeout before current block time should fail": {
 			runTx: func() sdk.Tx {
-				return genTestTx(t, genTxOptions{unordered: true, timestamp: time.Unix(10, 0)})
+				return genTestTx(t, genTxOptions{unordered: true, timestamp: time.Unix(7, 0)})
 			},
 			blockTime:   time.Unix(10, 1),
 			execMode:    sdk.ExecModeFinalize,
@@ -67,7 +65,7 @@ func TestUnorderedAnte(t *testing.T) {
 		},
 		"timeout after the max duration should fail": {
 			runTx: func() sdk.Tx {
-				return genTestTx(t, genTxOptions{unordered: true, timestamp: time.Unix(10, 0).Add(11 * time.Minute)})
+				return genTestTx(t, genTxOptions{unordered: true, timestamp: time.Unix(10, 0).Add(ante.MaxTimeoutDuration)})
 			},
 			blockTime:   time.Unix(10, 0),
 			execMode:    sdk.ExecModeFinalize,
@@ -80,7 +78,6 @@ func TestUnorderedAnte(t *testing.T) {
 					genTxOptions{unordered: true, timestamp: time.Unix(10, 0), pk: testPK, addr: testAddr},
 				)
 				return []sdk.Tx{tx}
-
 			},
 			runTx: func() sdk.Tx {
 				return genTestTx(
@@ -145,6 +142,8 @@ func TestMultiSignerUnorderedTx(t *testing.T) {
 	pk2, pubKey2, _ := testdata.KeyTestPubAddr()
 	pk3, pubKey3, _ := testdata.KeyTestPubAddr()
 
+	pubKeys := []cryptotypes.PubKey{pubKey1, pubKey2, pubKey3}
+
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 	storeService := runtime.NewKVStoreService(mockStoreKey)
 	ctx := testutil.DefaultContextWithDB(
@@ -157,16 +156,16 @@ func TestMultiSignerUnorderedTx(t *testing.T) {
 
 	timeout := time.Unix(10, 0)
 	tx := genMultiSignedUnorderedTx(t, addr1, timeout, []cryptotypes.PrivKey{pk1, pk2, pk3})
-	senders := []string{pubKey1.Address().String(), pubKey2.Address().String(), pubKey3.Address().String()}
-	slices.Sort(senders)
-	sendersStr := strings.Join(senders, ",")
 
 	newCtx, err := chain(ctx, tx, false)
 	require.NoError(t, err)
 
-	ok, err := mgr.Contains(newCtx, sendersStr, timeout)
-	require.NoError(t, err)
-	require.True(t, ok)
+	for _, pubKey := range pubKeys {
+		ok, err := mgr.Contains(newCtx, pubKey.Bytes(), timeout)
+		require.NoError(t, err)
+		require.True(t, ok)
+	}
+
 }
 
 type genTxOptions struct {

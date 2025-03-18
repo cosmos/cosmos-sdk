@@ -26,7 +26,7 @@ func TestManager(t *testing.T) {
 	}
 
 	type utxSequence struct {
-		sender  string
+		sender  []byte
 		timeout time.Time
 	}
 	testCases := map[string]struct {
@@ -38,30 +38,30 @@ func TestManager(t *testing.T) {
 		"transactions are not removed when block time is before every utx": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos3",
+					[]byte("cosmos3"),
 					time.Unix(10, 0),
 				},
 			},
 			blockTime: time.Unix(5, 0),
 			expectContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos3",
+					[]byte("cosmos3"),
 					time.Unix(10, 0),
 				},
 			},
@@ -69,30 +69,30 @@ func TestManager(t *testing.T) {
 		"transactions are removed if their timeout is equal to the block time": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos3",
+					[]byte("cosmos3"),
 					time.Unix(10, 0),
 				},
 			},
 			blockTime: time.Unix(10, 10),
 			expectNotContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos3",
+					[]byte("cosmos3"),
 					time.Unix(10, 0),
 				},
 			},
@@ -100,32 +100,32 @@ func TestManager(t *testing.T) {
 		"only some txs are removed": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(15, 0),
 				},
 				{
-					"cosmos3",
+					[]byte("cosmos3"),
 					time.Unix(20, 0),
 				},
 			},
 			blockTime: time.Unix(16, 10),
 			expectContains: []utxSequence{
 				{
-					"cosmos3",
+					[]byte("cosmos3"),
 					time.Unix(20, 0),
 				},
 			},
 			expectNotContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(15, 0),
 				},
 			},
@@ -140,22 +140,22 @@ func TestManager(t *testing.T) {
 		"multiple senders with same timestamp": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(10, 0),
 				},
 			},
 			blockTime: time.Unix(10, 1),
 			expectNotContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(10, 0),
 				},
 			},
@@ -164,32 +164,32 @@ func TestManager(t *testing.T) {
 		"same sender with multiple timestamps": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(15, 0),
 				},
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(20, 0),
 				},
 			},
 			blockTime: time.Unix(16, 0),
 			expectContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(20, 0),
 				},
 			},
 			expectNotContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(15, 0),
 				},
 			},
@@ -198,18 +198,18 @@ func TestManager(t *testing.T) {
 		"duplicate transaction (same sender and timestamp)": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0), // Duplicate entry
 				},
 			},
 			blockTime: time.Unix(5, 0),
 			expectContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 0),
 				},
 			},
@@ -217,32 +217,32 @@ func TestManager(t *testing.T) {
 		"nanosecond precision boundary test": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 999999998),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(10, 999999999),
 				},
 				{
-					"cosmos3",
+					[]byte("cosmos3"),
 					time.Unix(11, 0),
 				},
 			},
 			blockTime: time.Unix(10, 999999999),
 			expectContains: []utxSequence{
 				{
-					"cosmos3",
+					[]byte("cosmos3"),
 					time.Unix(11, 0),
 				},
 			},
 			expectNotContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(10, 999999998),
 				},
 				{
-					"cosmos2",
+					[]byte("cosmos2"),
 					time.Unix(10, 999999999),
 				},
 			},
@@ -251,14 +251,14 @@ func TestManager(t *testing.T) {
 		"zero timestamp test": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(0, 0),
 				},
 			},
 			blockTime: time.Unix(1, 0),
 			expectNotContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(0, 0),
 				},
 			},
@@ -266,14 +266,14 @@ func TestManager(t *testing.T) {
 		"far future timestamp": {
 			addFunc: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(2^30, 0), // Very far in the future
 				},
 			},
 			blockTime: time.Unix(10, 0),
 			expectContains: []utxSequence{
 				{
-					"cosmos1",
+					[]byte("cosmos1"),
 					time.Unix(2^30, 0),
 				},
 			},

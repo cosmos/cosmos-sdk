@@ -2642,7 +2642,7 @@ func TestOptimisticExecution(t *testing.T) {
 }
 
 func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
-	pool := mempool.NewPriorityMempool[int64](mempool.PriorityNonceMempoolConfig[int64]{
+	pool := mempool.NewPriorityMempool(mempool.PriorityNonceMempoolConfig[int64]{
 		TxPriority:      mempool.NewDefaultTxPriority(),
 		MaxTx:           0,
 		SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),

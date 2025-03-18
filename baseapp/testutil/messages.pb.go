@@ -6,10 +6,10 @@ package testutil
 import (
 	context "context"
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -380,7 +380,7 @@ var xxx_messageInfo_MsgSendResponse proto.InternalMessageInfo
 
 type MsgNestedMessages struct {
 	Messages []*types.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
-	Signer   string     `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
+	Signer   string       `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (m *MsgNestedMessages) Reset()         { *m = MsgNestedMessages{} }
@@ -585,6 +585,7 @@ func _Counter_IncrementCounter_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+var Counter_serviceDesc = _Counter_serviceDesc
 var _Counter_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Counter",
 	HandlerType: (*CounterServer)(nil),
@@ -657,6 +658,7 @@ func _Counter2_IncrementCounter_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+var Counter2_serviceDesc = _Counter2_serviceDesc
 var _Counter2_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Counter2",
 	HandlerType: (*Counter2Server)(nil),
@@ -729,6 +731,7 @@ func _KeyValue_Set_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+var KeyValue_serviceDesc = _KeyValue_serviceDesc
 var _KeyValue_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "KeyValue",
 	HandlerType: (*KeyValueServer)(nil),
@@ -801,6 +804,7 @@ func _Send_Send_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+var Send_serviceDesc = _Send_serviceDesc
 var _Send_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Send",
 	HandlerType: (*SendServer)(nil),
@@ -873,6 +877,7 @@ func _NestedMessages_Check_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+var NestedMessages_serviceDesc = _NestedMessages_serviceDesc
 var _NestedMessages_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "NestedMessages",
 	HandlerType: (*NestedMessagesServer)(nil),

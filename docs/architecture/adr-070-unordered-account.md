@@ -33,8 +33,8 @@ We will introduce new storage of time-based, ephemeral unordered sequences using
 Specifically, we will leverage the existing x/auth KV store to store the unordered sequences.
 
 When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s PubKey address
-bytes will be recorded to state (i.e. `542939323/<pubkey_btyes>`). In cases of multi-party signing, we will use a sorted,
-comma-separated list of the public key addresses that signed the transaction (i.e. `5532231/5AEKNF,5AEKNE,5AEKNR`)
+bytes will be recorded to state (i.e. `542939323/<pubkey_btyes>`). In cases of multi-party signing, one entry per signer
+will be recorded to state.
 
 New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
 
@@ -87,7 +87,7 @@ var (
 )
 
 type UnorderedTxManager struct {
-	unorderedSequences collections.KeySet[collections.Pair[uint64, string]]
+	unorderedSequences collections.KeySet[collections.Pair[uint64, []byte]]
 }
 
 func NewUnorderedTxManager(kvStore store.KVStoreService) *UnorderedTxManager {
@@ -97,23 +97,23 @@ func NewUnorderedTxManager(kvStore store.KVStoreService) *UnorderedTxManager {
 			sb,
 			unorderedSequencePrefix,
 			"unordered_sequences",
-			collections.PairKeyCodec(collections.Uint64Key, collections.StringKey),
+			collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
 		),
 	}
 	return m
 }
 
-func (m *UnorderedTxManager) Contains(ctx sdk.Context, sender string, timestamp uint64) (bool, error) {
+func (m *UnorderedTxManager) Contains(ctx sdk.Context, sender []byte, timestamp uint64) (bool, error) {
 	return m.unorderedSequences.Has(ctx, collections.Join(timestamp, sender))
 }
 
-func (m *UnorderedTxManager) Add(ctx sdk.Context, sender string, timestamp uint64) error {
+func (m *UnorderedTxManager) Add(ctx sdk.Context, sender []byte, timestamp uint64) error {
 	return m.unorderedSequences.Set(ctx, collections.Join(timestamp, sender))
 }
 
 func (m *UnorderedTxManager) RemoveExpired(ctx sdk.Context) error {
 	blkTime := ctx.BlockTime().UnixNano()
-	it, err := m.unorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[uint64, string](uint64(blkTime)))
+	it, err := m.unorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[uint64, []byte](uint64(blkTime)))
 	if err != nil {
 		return err
 	}
@@ -249,34 +249,35 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	if err != nil {
 		return err
 	}
-	slices.Sort(signerAddrs)
-	signers := strings.Join(signerAddrs, ",")
+	
+	for _, signer := range signerAddrs {
+		contains, err := d.txManager.Contains(ctx, signer, uint64(unorderedTx.GetTimeoutTimeStamp().Unix()))
+		if err != nil {
+			return errorsmod.Wrap(
+				sdkerrors.ErrIO,
+				"failed to check contains",
+			)
+		}
+		if contains {
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"tx is duplicated for signer %x", signer,
+			)
+		}
 
-	contains, err := d.txManager.Contains(ctx, signers, uint64(unorderedTx.GetTimeoutTimeStamp().Unix()))
-	if err != nil {
-		return errorsmod.Wrap(
-			sdkerrors.ErrIO,
-			"failed to check contains",
-		)
-	}
-	if contains {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"tx is duplicated",
-		)
-	}
-
-	if err := d.txManager.Add(ctx, signers, uint64(unorderedTx.GetTimeoutTimeStamp().Unix())); err != nil {
-		return errorsmod.Wrap(
-			sdkerrors.ErrIO,
-			"failed to add unordered nonce to state",
-		)
-	}
-
+		if err := d.txManager.Add(ctx, signer, uint64(unorderedTx.GetTimeoutTimeStamp().Unix())); err != nil {
+			return errorsmod.Wrap(
+				sdkerrors.ErrIO,
+				"failed to add unordered sequence to state",
+			)
+		}
+    }
+	
+	
 	return nil
 }
 
-func getSigners(tx sdk.Tx) ([]string, error) {
+func getSigners(tx sdk.Tx) ([][]byte, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
@@ -286,9 +287,9 @@ func getSigners(tx sdk.Tx) ([]string, error) {
 		return nil, err
 	}
 
-	addresses := make([]string, 0, len(sigs))
+	addresses := make([][]byte, 0, len(sigs))
 	for _, sig := range sigs {
-		addresses = append(addresses, sig.PubKey.Address().String())
+		addresses = append(addresses, sig.PubKey.Address().Bytes())
 	}
 
 	return addresses, nil
@@ -321,7 +322,7 @@ risks and a vector for duplicated tx processing. It relied on graceful app closu
 of the unordered sequence mapping. If the 2/3's of the network crashed, and the graceful closure did not trigger, 
 the system would lose track of all sequences in the mapping, allowing those transactions to be replayed. The 
 implementation proposed in the updated version of this ADR solves this by writing directly to the Cosmos KV Store.
-While this is less performant, for the initial implementation we opted to choose a safer path and postpone performance optimizations until we have more data on real-world impacts and a more battle-tested approach to optimization.
+While this is less performant, for the initial implementation, we opted to choose a safer path and postpone performance optimizations until we have more data on real-world impacts and a more battle-tested approach to optimization.
 
 Additionally, the previous iteration relied on using hashes to create what we call an "unordered sequence." There are known
 issues with transaction malleability in Cosmos SDK signing modes. This ADR gets away from this problem by enforcing
@@ -337,7 +338,7 @@ single-use unordered nonces, instead of deriving nonces from bytes in the transa
 
 * Requires additional storage overhead.
 * Requirement of unique timestamps per transaction causes a small amount of additional overhead for clients. Clients must ensure each transaction's timeout timestamp is different. However, nanosecond differentials suffice.
-* Usage of Cosmos SDK KV store is slower in comparison to using a non merklized store or ad-hoc methods, and block times may slow down as a result.
+* Usage of Cosmos SDK KV store is slower in comparison to using a non-merklized store or ad-hoc methods, and block times may slow down as a result.
 
 ## References
 

@@ -36,7 +36,7 @@ func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (
 	return &types.MsgClaimBudgetResponse{Amount: amount}, nil
 }
 
-func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmitBudgetProposal) (*types.MsgSubmitBudgetProposalResponse, error) {
+func (k MsgServer) CreateBudget(ctx context.Context, msg *types.MsgCreateBudget) (*types.MsgCreateBudgetResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
@@ -59,7 +59,7 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 	if err != nil {
 		return nil, err
 	}
-	return &types.MsgSubmitBudgetProposalResponse{}, nil
+	return &types.MsgCreateBudgetResponse{}, nil
 }
 
 func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {

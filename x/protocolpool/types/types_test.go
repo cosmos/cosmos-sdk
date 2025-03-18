@@ -19,7 +19,7 @@ func TestRegisterInterfaces(t *testing.T) {
 	RegisterInterfaces(interfaceRegistry)
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgFundCommunityPool{}))
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCommunityPoolSpend{}))
-	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgSubmitBudgetProposal{}))
+	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCreateBudget{}))
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgClaimBudget{}))
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCreateContinuousFund{}))
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCancelContinuousFund{}))

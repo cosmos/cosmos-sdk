@@ -407,7 +407,6 @@ func (k Keeper) getClaimableFunds(ctx sdk.Context, recipientAddr string) (amount
 func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddress, budget types.Budget) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
 	timeElapsed := ctx.BlockTime().Sub(budget.LastClaimedAt)
-
 	// Check the time elapsed has passed period length
 	if timeElapsed < budget.Period {
 		return sdk.Coin{}, fmt.Errorf("budget period of %f hours has not passed yet", budget.Period.Hours())
@@ -456,7 +455,7 @@ func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddres
 // - - if the startTime was nil, set it to the current blocktime
 // - number of tranches must be nonzero
 // - period duration must be nonzero
-func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSubmitBudgetProposal) (types.Budget, error) {
+func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgCreateBudget) (types.Budget, error) {
 	if bp.BudgetPerTranche.IsZero() {
 		return types.Budget{}, errors.New("invalid budget proposal: budget per tranche cannot be zero")
 	}

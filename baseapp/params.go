@@ -6,7 +6,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
-var InitialAppVersion uint64 = 0
+var InitialAppVersion uint64
 
 // ParamStore defines the interface the parameter store used by the BaseApp must
 // fulfill.

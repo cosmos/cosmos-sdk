@@ -32,11 +32,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 	}
 	for _, budget := range data.Budget {
 		// Validate StartTime
-		if budget.LastClaimedAt == nil || budget.LastClaimedAt.IsZero() {
-			budget.LastClaimedAt = &currentTime
+		if budget.LastClaimedAt.IsZero() {
+			budget.LastClaimedAt = currentTime
 		}
 		// ignore budgets with period <= 0 || nil
-		if budget.Period == nil || (budget.Period != nil && budget.Period.Seconds() <= 0) {
+		if budget.Period.Seconds() <= 0 {
 			continue
 		}
 

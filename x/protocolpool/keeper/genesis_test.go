@@ -28,10 +28,10 @@ func (suite *KeeperTestSuite) TestInitExportGenesis() {
 			{
 				RecipientAddress: "cosmos1qy3529yj3v4xw2z3vz3vz3vz3vz3vz3v3k0vyf",
 				ClaimedAmount:    &sdk.Coin{},
-				LastClaimedAt:    &time.Time{},
+				LastClaimedAt:    time.Time{},
 				TranchesLeft:     10,
-				BudgetPerTranche: &sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
-				Period:           &hour,
+				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
+				Period:           hour,
 			},
 		},
 	)

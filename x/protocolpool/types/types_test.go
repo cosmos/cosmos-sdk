@@ -61,10 +61,10 @@ func TestValidateGenesis(t *testing.T) {
 			{
 				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
 				ClaimedAmount:    &sdk.Coin{},
-				LastClaimedAt:    &time.Time{},
+				LastClaimedAt:    time.Time{},
 				TranchesLeft:     10,
-				BudgetPerTranche: &sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
-				Period:           &hour,
+				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
+				Period:           hour,
 			},
 		},
 	)
@@ -92,10 +92,10 @@ func TestValidateBudget(t *testing.T) {
 			Budget{
 				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
 				ClaimedAmount:    &sdk.Coin{},
-				LastClaimedAt:    &time.Time{},
+				LastClaimedAt:    time.Time{},
 				TranchesLeft:     10,
-				BudgetPerTranche: &sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
-				Period:           &hour,
+				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
+				Period:           hour,
 			},
 			"",
 		},
@@ -110,15 +110,7 @@ func TestValidateBudget(t *testing.T) {
 			"zero budget per tranche",
 			Budget{
 				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				BudgetPerTranche: &sdk.Coin{Denom: "stake", Amount: math.NewInt(0)},
-			},
-			"budget per tranche cannot be zero",
-		},
-		{
-			"nil budget per tranche",
-			Budget{
-				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				BudgetPerTranche: nil,
+				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(0)},
 			},
 			"budget per tranche cannot be zero",
 		},
@@ -126,7 +118,7 @@ func TestValidateBudget(t *testing.T) {
 			"negative budget per tranche",
 			Budget{
 				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				BudgetPerTranche: &sdk.Coin{Denom: "stake", Amount: math.NewInt(-100)},
+				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(-100)},
 			},
 			"-100stake: invalid coins",
 		},
@@ -135,7 +127,7 @@ func TestValidateBudget(t *testing.T) {
 			Budget{
 				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
 				TranchesLeft:     0,
-				BudgetPerTranche: &sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
+				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
 			},
 			"invalid budget proposal: tranches must be greater than zero",
 		},
@@ -144,10 +136,10 @@ func TestValidateBudget(t *testing.T) {
 			Budget{
 				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
 				ClaimedAmount:    &sdk.Coin{},
-				LastClaimedAt:    &time.Time{},
+				LastClaimedAt:    time.Time{},
 				TranchesLeft:     10,
-				BudgetPerTranche: &sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
-				Period:           nil,
+				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
+				Period:           0,
 			},
 			"invalid budget proposal: period length should be greater than zero",
 		},

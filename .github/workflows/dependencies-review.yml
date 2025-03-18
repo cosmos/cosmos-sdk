@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write  # Allow commenting on PRs
 
 jobs:
   dependency-review:

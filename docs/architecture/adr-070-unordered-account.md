@@ -4,11 +4,11 @@
 
 - Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
 - Jan 30, 2024: Include section on deterministic transaction encoding
-- Mar 12, 2025: Revise implementation to use Cosmos SDK KV Store and require unique timeouts per-address (@technicallyty)
+- Mar 18, 2025: Revise implementation to use Cosmos SDK KV Store and require unique timeouts per-address (@technicallyty)
 
 ## Status
 
-Draft
+ACCEPTED Not Implemented
 
 ## Abstract
 
@@ -18,7 +18,7 @@ the use of a time-based, ephemeral sequence.
 
 ## Context
 
-Account sequence values serve to prevent replay-attacks and ensure transactions from the same sender are included into blocks and executed
+Account sequence values serve to prevent replay attacks and ensure transactions from the same sender are included into blocks and executed
 in sequential order. Unfortunately, this makes it difficult to reliably send many concurrent transactions from the
 same sender. Victims of such limitations include IBC relayers and crypto exchanges.
 
@@ -32,14 +32,14 @@ below, without impacting traditional ordered transactions which will follow the 
 We will introduce new storage of time-based, ephemeral unordered sequences using the SDK's existing KV Store library. 
 Specifically, we will leverage the existing x/auth KV store to store the unordered sequences.
 
-When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s PubKey address
+When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s PubKey
 bytes will be recorded to state (i.e. `542939323/<pubkey_btyes>`). In cases of multi-party signing, one entry per signer
 will be recorded to state.
 
 New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
 
 - Define an upper bound for the value of `timeout_timestamp` (i.e. 10 minutes).
-- Extend the PreBlocker method to remove state entries with a `timeout_timestamp` earlier than the current block time.
+- Add PreBlocker method x/auth that removes state entries with a `timeout_timestamp` earlier than the current block time.
 
 ### Transaction Format
 
@@ -54,9 +54,9 @@ message TxBody {
 
 ### Replay Protection
 
-We facilitate replay protection by storing the unordered sequence, in the Cosmos SDK KV store. Upon transaction ingress, we check if the transaction's unordered
+We facilitate replay protection by storing the unordered sequence in the Cosmos SDK KV store. Upon transaction ingress, we check if the transaction's unordered
 sequence exists in state, or if the TTL value is stale, i.e. before the current block time. If so, we reject it. Otherwise,
-we add the unordered sequence to state. This section of the state will belong to the `x/auth` module.
+we add the unordered sequence to the state. This section of the state will belong to the `x/auth` module.
 
 The state is evaluated during x/auth's `PreBlocker`. All transactions with an unordered sequence earlier than the current block time
 will be deleted.
@@ -137,9 +137,9 @@ func (m *UnorderedTxManager) RemoveExpired(ctx sdk.Context) error {
 
 ### AnteHandler Decorator
 
-In order to facilitate bypassing nonce verification, we have to modify the existing
+To facilitate bypassing nonce verification, we must modify the existing
 `IncrementSequenceDecorator` AnteHandler decorator to skip the nonce verification
-when the transaction is marked as un-ordered.
+when the transaction is marked as unordered.
 
 ```golang
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
@@ -300,9 +300,9 @@ func getSigners(tx sdk.Tx) ([][]byte, error) {
 ### Unordered Sequences
 
 Unordered sequences provide a simple, straightforward mechanism to protect against both transaction malleability and
-transaction duplication. It is important to note, however, that the unordered sequence must still be unique, however
+transaction duplication. It is important to note that the unordered sequence must still be unique. However,
 the value is not required to be strictly increasing as with regular sequences, and the order in which the node receives
-the transactions no longer matters. Clients can handle setting timeouts similarly to the code below:
+the transactions no longer matters. Clients can handle building unordered transactions similarly to the code below:
 
 ```go
 for _, tx := range txs {

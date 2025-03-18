@@ -26,16 +26,19 @@ jobs:
       - name: "Dependency audit"
         run: ./scripts/dep-assert.sh
       - name: "Go vulnerability check"
+        id: govuln
         run: |
-          make vulncheck | tee govulncheck-output.txt || true
+          make vulncheck
         continue-on-error: true
         # TODO: restore failing vuln check when the comet dependency vuln works https://pkg.go.dev/vuln/GO-2025-3443
       - name: Comment on PR
+        if: steps.govuln.outcome == 'failure'
         uses: mshick/add-pr-comment@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           message: |
             ⚠️ **govulncheck found vulnerabilities:**
+             ```
+            ${{ steps.govulncheck.outputs.result }}
             ```
-            $(cat govulncheck-output.txt)
-            ```
+          message-id: govulncheck-warning

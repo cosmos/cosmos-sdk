@@ -85,9 +85,8 @@ representation.
 
 #### Fields not covered by Amino JSON
 
-Another area that needs to be addressed carefully is the discrepancy between `StdSignDoc` used for `SIGN_MODE_LEGACY_AMINO_JSON` and the actual contents of `TxBody` and `AuthInfo`. If fields get added
-to `TxBody` or `AuthInfo`, they must either have a corresponding representing in `StdSignDoc` or Amino
-JSON signatures must be rejected when those new fields are set. Making sure that this is done is a
+Another area that needs to be addressed carefully is the discrepancy between `AminoSignDoc`(see [`aminojson.proto`](../../x/tx/signing/aminojson/internal/aminojsonpb/aminojson.proto)) used for `SIGN_MODE_LEGACY_AMINO_JSON` and the actual contents of `TxBody` and `AuthInfo` (see [`tx.proto`](../../proto/cosmos/tx/v1beta1/tx.proto)).
+If fields get added to `TxBody` or `AuthInfo`, they must either have a corresponding representing in `AminoSignDoc` or Amino JSON signatures must be rejected when those new fields are set. Making sure that this is done is a
 highly manual process, and developers could easily make the mistake of updating `TxBody` or `AuthInfo`
 without paying any attention to the implementation of `GetSignBytes` for Amino JSON. This is a critical
 vulnerability in which unsigned content can now get into the transaction and signature verification will
@@ -124,10 +123,10 @@ were encoded following canonical ADR 027 rules when doing signature verification
 Unfortunately, the vast majority of unaddressed malleability risks affect `SIGN_MODE_LEGACY_AMINO_JSON` and this
 sign mode is still commonly used.
 It is recommended that the following improvements be made to Amino JSON signing:
-* hashes of `TxBody` and `AuthInfo` should be added to `StdSignDoc` so that encoding-level malleablity is addressed
-* when constructing `StdSignDoc`, [protoreflect](https://pkg.go.dev/google.golang.org/protobuf/reflect/protoreflect) API should be used to ensure that there no fields in `TxBody` or `AuthInfo` which do not have a mapping in `StdSignDoc` have been set
-* fields present in `TxBody` or `AuthInfo` that are not present in `StdSignDoc` (such as extension options) should
-be added to `StdSignDoc` if possible
+* hashes of `TxBody` and `AuthInfo` should be added to `AminoSignDoc` so that encoding-level malleablity is addressed
+* when constructing `AminoSignDoc`, [protoreflect](https://pkg.go.dev/google.golang.org/protobuf/reflect/protoreflect) API should be used to ensure that there no fields in `TxBody` or `AuthInfo` which do not have a mapping in `AminoSignDoc` have been set
+* fields present in `TxBody` or `AuthInfo` that are not present in `AminoSignDoc` (such as extension options) should
+be added to `AminoSignDoc` if possible
 
 ## Testing
 
@@ -145,7 +144,7 @@ Whenever any of these manipulations is done, we should observe that the sign doc
 tested also change, meaning that the corresponding signatures will also have to change.
 
 In the case of Amino JSON, we should also develop tests which ensure that if any `TxBody` or `AuthInfo`
-field not supported by Amino's `StdSignDoc` is set that signing fails.
+field not supported by Amino's `AminoSignDoc` is set that signing fails.
 
 In the general case of transaction decoding, we should have unit tests to ensure that
 - any `TxRaw` bytes which do not follow ADR 027 canonical encoding cause decoding to fail, and
@@ -161,4 +160,6 @@ or get rejected.
 
 * [ADR 027: Deterministic Protobuf Serialization](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-027-deterministic-protobuf-serialization.md)
 * [ADR 020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md#unknown-field-filtering)
+* [`aminojson.proto`](../../x/tx/signing/aminojson/internal/aminojsonpb/aminojson.proto)
+* [`tx.proto`](../../proto/cosmos/tx/v1beta1/tx.proto)
 

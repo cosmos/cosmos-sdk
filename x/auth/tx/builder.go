@@ -87,7 +87,12 @@ func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
 }
 
 func (w *wrapper) SetTimeoutTimestamp(timestamp time.Time) {
-	w.tx.Body.TimeoutTimestamp = &timestamp
+	// Only set TimeoutTimestamp if we have a non-zero time.Time.
+	// Setting timestamppb.New() with a zero/default value time.Time results in a non-zero timestamppb.Timestamp,
+	// which causes the value to show up in the signature - breaking <v0.53.x compatibility.
+	if !timestamp.IsZero() && timestamp.Unix() > 0 {
+		w.tx.Body.TimeoutTimestamp = &timestamp
+	}
 }
 
 func (w *wrapper) GetTimeoutTimeStamp() time.Time {

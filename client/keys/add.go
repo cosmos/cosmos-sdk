@@ -189,12 +189,8 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 
 			if len(duplicateKeys) > 0 {
-				keysList := make([]string, 0, len(duplicateKeys))
-				for key := range duplicateKeys {
-					keysList = append(keysList, key) // Collect duplicate keys
-				}
-				sort.Strings(keysList) // Sort duplicates for consistent output
-
+				keysListSeq := maps.Keys(duplicateKeys)
+				keysList := slices.Sorted(keysListSeq)
 				return fmt.Errorf("duplicate multisig keys found: %s", strings.Join(keysList, ", "))
 			}
 

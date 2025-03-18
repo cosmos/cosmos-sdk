@@ -26,6 +26,15 @@ jobs:
         run: ./scripts/dep-assert.sh
       - name: "Go vulnerability check"
         run: |
-          make vulncheck || echo "::warning file=govulncheck::Vulnerabilities detected, check logs!"
+          make vulncheck | tee govulncheck-output.txt || true
         continue-on-error: true
         # TODO: restore failing vuln check when the comet dependency vuln works https://pkg.go.dev/vuln/GO-2025-3443
+      - name: Comment on PR
+        uses: mshick/add-pr-comment@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          message: |
+            ⚠️ **govulncheck found vulnerabilities:**
+            ```
+            $(cat govulncheck-output.txt)
+            ```

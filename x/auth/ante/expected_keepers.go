@@ -20,11 +20,11 @@ type AccountKeeper interface {
 	AddressCodec() address.Codec
 }
 
-// UnorderedSequenceManager defines the contract needed for UnorderedSequence management.
-type UnorderedSequenceManager interface {
-	RemoveExpiredUnorderedSequences(ctx sdk.Context) error
-	AddUnorderedSequence(ctx sdk.Context, sender []byte, timestamp time.Time) error
-	ContainsUnorderedSequence(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error)
+// UnorderedNonceManager defines the contract needed for UnorderedNonce management.
+type UnorderedNonceManager interface {
+	RemoveExpiredUnorderedNonces(ctx sdk.Context) error
+	AddUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) error
+	ContainsUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error)
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

@@ -28,13 +28,13 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // a duplicate and will evict it from state when the timeout is reached.
 //
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
-// chain to ensure that during DeliverTx, the transaction is added to the UnorderedSequenceManager.
+// chain to ensure that during DeliverTx, the transaction is added to the UnorderedNonceManager.
 type UnorderedTxDecorator struct {
-	txManager UnorderedSequenceManager
+	txManager UnorderedNonceManager
 }
 
 func NewUnorderedTxDecorator(
-	utxm UnorderedSequenceManager,
+	utxm UnorderedNonceManager,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		txManager: utxm,
@@ -94,7 +94,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	}
 
 	for _, signerAddr := range signerAddrs {
-		contains, err := d.txManager.ContainsUnorderedSequence(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp())
+		contains, err := d.txManager.ContainsUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp())
 		if err != nil {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrIO,
@@ -108,7 +108,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 			)
 		}
 
-		if err := d.txManager.AddUnorderedSequence(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
+		if err := d.txManager.AddUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrIO,
 				"failed to add unordered nonce to state for signer %x", signerAddr,

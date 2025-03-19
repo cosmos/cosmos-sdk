@@ -13,14 +13,14 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper            AccountKeeper
-	BankKeeper               types.BankKeeper
-	ExtensionOptionChecker   ExtensionOptionChecker
-	FeegrantKeeper           FeegrantKeeper
-	SignModeHandler          *txsigning.HandlerMap
-	SigGasConsumer           func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
-	TxFeeChecker             TxFeeChecker
-	UnorderedSequenceManager UnorderedSequenceManager
+	AccountKeeper          AccountKeeper
+	BankKeeper             types.BankKeeper
+	ExtensionOptionChecker ExtensionOptionChecker
+	FeegrantKeeper         FeegrantKeeper
+	SignModeHandler        *txsigning.HandlerMap
+	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+	TxFeeChecker           TxFeeChecker
+	UnorderedNonceManager  UnorderedNonceManager
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -54,8 +54,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 
-	if options.UnorderedSequenceManager != nil {
-		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(options.UnorderedSequenceManager))
+	if options.UnorderedNonceManager != nil {
+		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(options.UnorderedNonceManager))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

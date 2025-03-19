@@ -298,21 +298,21 @@ func TestManager(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx = ctx.WithBlockTime(tc.blockTime)
 			for _, seq := range tc.addFunc {
-				err := mgr.AddUnorderedSequence(ctx, seq.sender, seq.timeout)
+				err := mgr.AddUnorderedNonce(ctx, seq.sender, seq.timeout)
 				t.Logf("added transaction: %d/%s", seq.timeout.UnixNano(), seq.sender)
 				require.NoError(t, err)
 			}
 			t.Logf("removing txs. block_time: %d", tc.blockTime.UnixNano())
-			err := mgr.RemoveExpiredUnorderedSequences(ctx)
+			err := mgr.RemoveExpiredUnorderedNonces(ctx)
 			require.NoError(t, err)
 
 			for _, seq := range tc.expectNotContains {
-				has, err := mgr.ContainsUnorderedSequence(ctx, seq.sender, seq.timeout)
+				has, err := mgr.ContainsUnorderedNonce(ctx, seq.sender, seq.timeout)
 				require.NoError(t, err)
 				require.False(t, has, "should not contain %s", seq.sender)
 			}
 			for _, seq := range tc.expectContains {
-				has, err := mgr.ContainsUnorderedSequence(ctx, seq.sender, seq.timeout)
+				has, err := mgr.ContainsUnorderedNonce(ctx, seq.sender, seq.timeout)
 				require.NoError(t, err)
 				require.True(t, has, "expected to contain %d/%s", uint64(seq.timeout.UnixNano()), seq.sender)
 			}

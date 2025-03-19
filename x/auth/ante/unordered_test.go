@@ -180,7 +180,7 @@ func TestMultiSignerUnorderedTx(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, pubKey := range pubKeys {
-		ok, err := mgr.ContainsUnorderedSequence(newCtx, pubKey.Bytes(), timeout)
+		ok, err := mgr.ContainsUnorderedNonce(newCtx, pubKey.Bytes(), timeout)
 		require.NoError(t, err)
 		require.True(t, ok)
 	}

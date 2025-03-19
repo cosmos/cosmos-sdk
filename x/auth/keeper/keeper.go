@@ -99,11 +99,11 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	Schema             collections.Schema
-	Params             collections.Item[types.Params]
-	AccountNumber      collections.Sequence
-	Accounts           *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
-	UnorderedSequences collections.KeySet[collections.Pair[int64, []byte]]
+	Schema          collections.Schema
+	Params          collections.Item[types.Params]
+	AccountNumber   collections.Sequence
+	Accounts        *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
+	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -126,17 +126,17 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
-		addressCodec:       ac,
-		bech32Prefix:       bech32Prefix,
-		storeService:       storeService,
-		proto:              proto,
-		cdc:                cdc,
-		permAddrs:          permAddrs,
-		authority:          authority,
-		Params:             collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:      collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
-		Accounts:           collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
-		UnorderedSequences: collections.NewKeySet(sb, types.UnorderedSequencesKey, "unordered_sequences", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
+		addressCodec:    ac,
+		bech32Prefix:    bech32Prefix,
+		storeService:    storeService,
+		proto:           proto,
+		cdc:             cdc,
+		permAddrs:       permAddrs,
+		authority:       authority,
+		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -284,21 +284,21 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 // Unordered Sequence management methods
 // -------------------------------------
 
-// ContainsUnorderedSequence reports whether the sender has used this timestamp already.
-func (ak AccountKeeper) ContainsUnorderedSequence(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error) {
-	return ak.UnorderedSequences.Has(ctx, collections.Join(timestamp.UnixNano(), sender))
+// ContainsUnorderedNonce reports whether the sender has used this timestamp already.
+func (ak AccountKeeper) ContainsUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error) {
+	return ak.UnorderedNonces.Has(ctx, collections.Join(timestamp.UnixNano(), sender))
 }
 
-// AddUnorderedSequence adds a new unordered sequence for the sender.
-func (ak AccountKeeper) AddUnorderedSequence(ctx sdk.Context, sender []byte, timestamp time.Time) error {
-	return ak.UnorderedSequences.Set(ctx, collections.Join(timestamp.UnixNano(), sender))
+// AddUnorderedNonce adds a new unordered sequence for the sender.
+func (ak AccountKeeper) AddUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) error {
+	return ak.UnorderedNonces.Set(ctx, collections.Join(timestamp.UnixNano(), sender))
 }
 
-// RemoveExpiredUnorderedSequences removes all unordered sequences that has a timestamp value before
+// RemoveExpiredUnorderedNonces removes all unordered sequences that has a timestamp value before
 // the current block time.
-func (ak AccountKeeper) RemoveExpiredUnorderedSequences(ctx sdk.Context) error {
+func (ak AccountKeeper) RemoveExpiredUnorderedNonces(ctx sdk.Context) error {
 	blkTime := ctx.BlockTime().UnixNano()
-	it, err := ak.UnorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[int64, []byte](blkTime))
+	it, err := ak.UnorderedNonces.Iterate(ctx, collections.NewPrefixUntilPairRange[int64, []byte](blkTime))
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func (ak AccountKeeper) RemoveExpiredUnorderedSequences(ctx sdk.Context) error {
 	}
 
 	for _, key := range keys {
-		if err := ak.UnorderedSequences.Remove(ctx, key); err != nil {
+		if err := ak.UnorderedNonces.Remove(ctx, key); err != nil {
 			return err
 		}
 	}

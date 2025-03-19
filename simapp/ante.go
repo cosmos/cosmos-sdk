@@ -47,8 +47,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 
-	if options.UnorderedSequenceManager != nil {
-		anteDecorators = append(anteDecorators, ante.NewUnorderedTxDecorator(options.UnorderedSequenceManager))
+	if options.UnorderedNonceManager != nil {
+		anteDecorators = append(anteDecorators, ante.NewUnorderedTxDecorator(options.UnorderedNonceManager))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

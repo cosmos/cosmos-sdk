@@ -12,8 +12,8 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -35,37 +35,34 @@ const (
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
-// It calls appStateFnWithExtendedCb with nil rawStateCb.
+// It calls AppStateFnWithExtendedCb with nil rawStateCb.
 func AppStateFn(
 	cdc codec.JSONCodec,
-	addresCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
 ) simtypes.AppStateFn {
-	return appStateFnWithExtendedCb(cdc, addresCodec, validatorCodec, simManager, genesisState, nil)
+	return AppStateFnWithExtendedCb(cdc, simManager, genesisState, nil)
 }
 
-// appStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
-// It calls appStateFnWithExtendedCbs with nil moduleStateCb.
-func appStateFnWithExtendedCb(
+// AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
+// It calls AppStateFnWithExtendedCbs with nil moduleStateCb.
+func AppStateFnWithExtendedCb(
 	cdc codec.JSONCodec,
-	addresCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
 	rawStateCb func(rawState map[string]json.RawMessage),
 ) simtypes.AppStateFn {
-	return appStateFnWithExtendedCbs(cdc, addresCodec, validatorCodec, simManager, genesisState, nil, rawStateCb)
+	return AppStateFnWithExtendedCbs(cdc, simManager, genesisState, nil, rawStateCb)
 }
 
-// appStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
+// AppStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 // genesisState is the default genesis state of the whole app.
 // moduleStateCb is the callback function to access moduleState.
 // rawStateCb is the callback function to extend rawState.
-func appStateFnWithExtendedCbs(
+func AppStateFnWithExtendedCbs(
 	cdc codec.JSONCodec,
-	addressCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
 	moduleStateCb func(moduleName string, genesisState interface{}),
@@ -110,11 +107,11 @@ func appStateFnWithExtendedCbs(
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState, addressCodec, validatorCodec)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState, addressCodec, validatorCodec)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -201,7 +198,6 @@ func AppStateRandomizedFn(
 	genesisTimestamp time.Time,
 	appParams simtypes.AppParams,
 	genesisState map[string]json.RawMessage,
-	addressCodec, validatorCodec address.Codec,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
 	// generate a random amount of initial stake coins and a random initial

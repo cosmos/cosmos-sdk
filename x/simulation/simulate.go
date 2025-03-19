@@ -192,7 +192,7 @@ func SimulateFromSeedX(
 		pastVoteInfos = append(pastVoteInfos, finalizeBlockReq.DecidedLastCommit.Votes)
 
 		// Run the BeginBlock handler
-		logWriter.AddEntry(BeginBlockEntry(blockTime, blockHeight))
+		logWriter.AddEntry(BeginBlockEntry(blockHeight))
 
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
@@ -236,7 +236,7 @@ func SimulateFromSeedX(
 
 		blockHeight++
 
-		logWriter.AddEntry(EndBlockEntry(blockTime, blockHeight))
+		logWriter.AddEntry(EndBlockEntry(blockHeight))
 
 		blockTime = blockTime.Add(time.Duration(minTimePerBlock) * time.Second)
 		blockTime = blockTime.Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
@@ -337,7 +337,7 @@ func createBlockSimulator(tb testing.TB, printProgress bool, w io.Writer, params
 			opMsg.LogEvent(event)
 
 			if !config.Lean || opMsg.OK {
-				logWriter.AddEntry(MsgEntry(header.Time, header.Height, int64(i), opMsg))
+				logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
 			}
 
 			if err != nil {
@@ -395,7 +395,7 @@ func runQueuedOperations(
 		opMsg.LogEvent(event)
 
 		if !lean || opMsg.OK {
-			logWriter.AddEntry((QueuedMsgEntry(blockTime, int64(height), opMsg)))
+			logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
 		}
 
 		if err != nil {
@@ -425,7 +425,7 @@ func runQueuedTimeOperations(tb testing.TB, queueOps []simulation.FutureOperatio
 		opMsg.LogEvent(event)
 
 		if !lean || opMsg.OK {
-			logWriter.AddEntry(QueuedMsgEntry(currentTime, int64(height), opMsg))
+			logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))
 		}
 
 		if err != nil {

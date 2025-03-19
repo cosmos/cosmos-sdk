@@ -50,7 +50,7 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid recipient address: %s", err.Error())
 	}
-	budget, err := k.Keeper.BudgetProposal.Get(sdkCtx, address)
+	budget, err := k.Keeper.Budgets.Get(sdkCtx, address)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "no budget proposal found for address: %s", req.Address)

@@ -106,6 +106,7 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 			coin.Amount = balanceAmt
 		case lockedAmt.LT(balanceAmt):
 			coin.Amount = balanceAmt.Sub(lockedAmt)
+		}
 		return coin, nil
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {

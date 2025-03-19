@@ -12,14 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
-// validateAndUpdateBudgetProposal validates the Budget included in a MsgCreateBudget as follows:
+// validateAndUpdateBudget validates the Budget included in a MsgCreateBudget as follows:
 // - BudgetPerTranche must be nonzero
 // - the budget amount must be a valid sdk.Coin
 // - the startTime must be valid (after current blocktime)
 // - - if the startTime was nil, set it to the current blocktime
 // - number of tranches must be nonzero
 // - period duration must be nonzero
-func validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgCreateBudget) (types.Budget, error) {
+func validateAndUpdateBudget(ctx sdk.Context, bp types.MsgCreateBudget) (types.Budget, error) {
 	if bp.BudgetPerTranche.IsZero() {
 		return types.Budget{}, errors.New("invalid budget proposal: budget per tranche cannot be zero")
 	}

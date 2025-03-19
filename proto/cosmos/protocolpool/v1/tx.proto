@@ -42,9 +42,7 @@ service Msg {
 
   // UpdateParams defines a governance operation for updating the x/protocolpool module parameters.
   // The authority is defined in the keeper.
-  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
-  }
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgFundCommunityPool allows an account to directly

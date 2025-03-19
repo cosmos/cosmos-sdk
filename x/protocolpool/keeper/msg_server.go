@@ -47,14 +47,14 @@ func (k MsgServer) CreateBudget(ctx context.Context, msg *types.MsgCreateBudget)
 		return nil, err
 	}
 
-	budgetProposal, err := validateAndUpdateBudgetProposal(sdkCtx, *msg)
+	budget, err := validateAndUpdateBudget(sdkCtx, *msg)
 	if err != nil {
 		return nil, err
 	}
 
 	// set budget proposal in state
 	// Note: If two budgets to the same address are created, the budget would be updated with the new budget.
-	err = k.Budgets.Set(sdkCtx, recipient, budgetProposal)
+	err = k.Budgets.Set(sdkCtx, recipient, budget)
 	if err != nil {
 		return nil, err
 	}

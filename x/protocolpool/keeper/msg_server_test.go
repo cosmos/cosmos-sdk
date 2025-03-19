@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			expErrMsg:        "invalid recipient address: empty address string is not allowed",
 		},
 		"no budget found": {
-			recipientAddress: sdk.AccAddress([]byte("acc1__________")),
+			recipientAddress: sdk.AccAddress("acc1__________"),
 			expErr:           true,
 			expErrMsg:        "no budget found for recipient",
 		},

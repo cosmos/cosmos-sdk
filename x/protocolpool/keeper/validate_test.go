@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
-// TestValidateAndUpdateBudgetProposal tests the validateAndUpdateBudgetProposal function.
-func TestValidateAndUpdateBudgetProposal(t *testing.T) {
+// TestValidateAndUpdateBudget tests the validateAndUpdateBudget function.
+func TestValidateAndUpdateBudget(t *testing.T) {
 	// Set up some reference times.
 	now := time.Now()
 	future := now.Add(1 * time.Hour)
@@ -140,7 +140,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Execute the function under test.
-			budget, err := validateAndUpdateBudgetProposal(tc.ctx, tc.bp)
+			budget, err := validateAndUpdateBudget(tc.ctx, tc.bp)
 
 			if tc.expErr {
 				require.Error(t, err, "expected an error but got none")

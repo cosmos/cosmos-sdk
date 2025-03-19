@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TxCmd(name string) *cobra.Command {
@@ -41,9 +42,9 @@ func QueryCmd(name string) *cobra.Command {
 
 func GetTxInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "init <account-type> <json-message>",
+		Use:   "init <account-type> <json-message> <fund>[,<fund>...]",
 		Short: "Initialize a new account",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -69,10 +70,15 @@ func GetTxInitCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			funds, err := sdk.ParseCoinsNormalized(args[2])
+			if err != nil {
+				return err
+			}
 			msg := v1.MsgInit{
 				Sender:      sender,
 				AccountType: args[0],
 				Message:     msgBytes,
+				Funds:       funds,
 			}
 
 			isGenesis, err := cmd.Flags().GetBool("genesis")

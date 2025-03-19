@@ -25,8 +25,8 @@ service Msg {
   // keeper.
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
-  // SubmitBudgetProposal defines a method to set a budget proposal.
-  rpc SubmitBudgetProposal(MsgSubmitBudgetProposal) returns (MsgSubmitBudgetProposalResponse);
+  // CreateBudget defines a method to create a budget.
+  rpc CreateBudget(MsgCreateBudget) returns (MsgCreateBudgetResponse);
 
   // ClaimBudget defines a method to claim the distributed budget.
   rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);
@@ -42,9 +42,7 @@ service Msg {
 
   // UpdateParams defines a governance operation for updating the x/protocolpool module parameters.
   // The authority is defined in the keeper.
-  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
-  }
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgFundCommunityPool allows an account to directly
@@ -79,8 +77,8 @@ message MsgCommunityPoolSpend {
 // MsgCommunityPoolSpend message.
 message MsgCommunityPoolSpendResponse {}
 
-// MsgSubmitBudgetProposal defines budget proposal type.
-message MsgSubmitBudgetProposal {
+// MsgCreateBudget defines budget creation type.
+message MsgCreateBudget {
   option (cosmos.msg.v1.signer) = "authority";
 
   // Authority is the address that controls the module (defaults to x/gov unless overwritten).
@@ -100,9 +98,9 @@ message MsgSubmitBudgetProposal {
   google.protobuf.Duration period = 6 [(gogoproto.stdduration) = true];
 }
 
-// MsgSubmitBudgetProposalResponse defines the response to executing a
-// MsgSubmitBudgetProposal message.
-message MsgSubmitBudgetProposalResponse {}
+// MsgCreateBudgetResponse defines the response to executing a
+// MsgCreateBudget message.
+message MsgCreateBudgetResponse {}
 
 // MsgClaimBudget defines a message for claiming the distributed budget.
 message MsgClaimBudget {

@@ -93,7 +93,7 @@ func SimulateFromSeedX(
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
-	r := rand.New(NewByteSource(config.FuzzSeed, config.Seed))
+	r := rand.New(newByteSource(config.FuzzSeed, config.Seed))
 	params := RandomParams(r)
 
 	startTime := time.Now()
@@ -449,24 +449,24 @@ const (
 	rngMask = rngMax - 1
 )
 
-// ByteSource offers deterministic pseudo-random numbers for math.Rand with fuzzer support.
+// byteSource offers deterministic pseudo-random numbers for math.Rand with fuzzer support.
 // The 'seed' data is read in big endian to uint64. When exhausted,
 // it falls back to a standard random number generator initialized with a specific 'seed' value.
-type ByteSource struct {
+type byteSource struct {
 	seed     *bytes.Reader
 	fallback *rand.Rand
 }
 
-// NewByteSource creates a new ByteSource with a specified byte slice and seed. This gives a fixed sequence of pseudo-random numbers.
+// newByteSource creates a new byteSource with a specified byte slice and seed. This gives a fixed sequence of pseudo-random numbers.
 // Initially, it utilizes the byte slice. Once that's exhausted, it continues generating numbers using the provided seed.
-func NewByteSource(fuzzSeed []byte, seed int64) *ByteSource {
-	return &ByteSource{
+func newByteSource(fuzzSeed []byte, seed int64) *byteSource {
+	return &byteSource{
 		seed:     bytes.NewReader(fuzzSeed),
 		fallback: rand.New(rand.NewSource(seed)),
 	}
 }
 
-func (s *ByteSource) Uint64() uint64 {
+func (s *byteSource) Uint64() uint64 {
 	if s.seed.Len() < 8 {
 		return s.fallback.Uint64()
 	}
@@ -477,7 +477,7 @@ func (s *ByteSource) Uint64() uint64 {
 	return binary.BigEndian.Uint64(b[:])
 }
 
-func (s *ByteSource) Int63() int64 {
+func (s *byteSource) Int63() int64 {
 	return int64(s.Uint64() & rngMask)
 }
-func (s *ByteSource) Seed(seed int64) {}
+func (s *byteSource) Seed(seed int64) {}

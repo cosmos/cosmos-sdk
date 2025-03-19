@@ -31,7 +31,7 @@ func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {
 	return accs[idx], idx
 }
 
-// RandomAccounts deterministic generates n random accounts without duplicates.
+// RandomAccounts deterministically generates n random accounts without duplicates.
 func RandomAccounts(r *rand.Rand, n int) []Account {
 	accs := make([]Account, n)
 	idx := make(map[string]struct{}, n)

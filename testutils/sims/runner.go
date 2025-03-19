@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -99,6 +100,9 @@ func RunWithSeeds[T SimulationApp](
 	t.Helper()
 	cfg := cli.NewConfigFromFlags()
 	cfg.ChainID = SimAppChainID
+	if deprecatedParams := cli.GetDeprecatedFlagUsed(); len(deprecatedParams) != 0 {
+		fmt.Printf("Warning: Deprecated flag are used: %s", strings.Join(deprecatedParams, ","))
+	}
 	for i := range seeds {
 		seed := seeds[i]
 		t.Run(fmt.Sprintf("seed: %d", seed), func(t *testing.T) {

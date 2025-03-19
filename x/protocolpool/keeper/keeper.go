@@ -31,15 +31,14 @@ type Keeper struct {
 	authority string
 
 	// State
-	Schema collections.Schema
-	// Budgets key: RecipientAddr | value: Budget
-	Budgets        collections.Map[sdk.AccAddress, types.Budget]
-	ContinuousFund collections.Map[sdk.AccAddress, types.ContinuousFund]
+	Schema          collections.Schema
+	Budgets         collections.Map[sdk.AccAddress, types.Budget]
+	ContinuousFunds collections.Map[sdk.AccAddress, types.ContinuousFund]
 	// RecipientFundDistribution key: RecipientAddr | value: Claimable amount
-	RecipientFundDistribution collections.Map[sdk.AccAddress, types.DistributionAmount]
-	Distributions             collections.Map[time.Time, types.DistributionAmount] // key: time.Time, denom | value: amounts
-	LastBalance               collections.Item[types.DistributionAmount]
-	Params                    collections.Item[types.Params]
+	RecipientFundDistributions collections.Map[sdk.AccAddress, types.DistributionAmount]
+	Distributions              collections.Map[time.Time, types.DistributionAmount] // key: time.Time, denom | value: amounts
+	LastBalance                collections.Item[types.DistributionAmount]
+	Params                     collections.Item[types.Params]
 }
 
 const (
@@ -64,17 +63,17 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 	sb := collections.NewSchemaBuilder(storeService)
 
 	keeper := Keeper{
-		storeService:              storeService,
-		authKeeper:                ak,
-		bankKeeper:                bk,
-		cdc:                       cdc,
-		authority:                 authority,
-		Budgets:                   collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
-		ContinuousFund:            collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
-		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, codec.CollValue[types.DistributionAmount](cdc)),
-		Distributions:             collections.NewMap(sb, types.DistributionsKey, "distributions", sdk.TimeKey, codec.CollValue[types.DistributionAmount](cdc)),
-		LastBalance:               collections.NewItem(sb, types.LastBalanceKey, "last_balance", codec.CollValue[types.DistributionAmount](cdc)),
-		Params:                    collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		storeService:               storeService,
+		authKeeper:                 ak,
+		bankKeeper:                 bk,
+		cdc:                        cdc,
+		authority:                  authority,
+		Budgets:                    collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
+		ContinuousFunds:            collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
+		RecipientFundDistributions: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, codec.CollValue[types.DistributionAmount](cdc)),
+		Distributions:              collections.NewMap(sb, types.DistributionsKey, "distributions", sdk.TimeKey, codec.CollValue[types.DistributionAmount](cdc)),
+		LastBalance:                collections.NewItem(sb, types.LastBalanceKey, "last_balance", codec.CollValue[types.DistributionAmount](cdc)),
+		Params:                     collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -125,7 +124,7 @@ func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error) {
 
 func (k Keeper) withdrawRecipientFunds(ctx sdk.Context, recipient []byte) (sdk.Coins, error) {
 	// get allocated continuous fund
-	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
+	fundsAllocated, err := k.RecipientFundDistributions.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, types.ErrNoRecipientFound
@@ -139,7 +138,7 @@ func (k Keeper) withdrawRecipientFunds(ctx sdk.Context, recipient []byte) (sdk.C
 	}
 
 	// reset fund distribution
-	err = k.RecipientFundDistribution.Set(ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
+	err = k.RecipientFundDistributions.Set(ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +187,7 @@ func (k Keeper) SetToDistribute(ctx sdk.Context) error {
 	// Check if there are any recipients to distribute to, if not, send straight to the community pool and avoid
 	// setting the distributions
 	hasContinuousFunds := false
-	err = k.ContinuousFund.Walk(ctx, nil, func(_ sdk.AccAddress, _ types.ContinuousFund) (bool, error) {
+	err = k.ContinuousFunds.Walk(ctx, nil, func(_ sdk.AccAddress, _ types.ContinuousFund) (bool, error) {
 		hasContinuousFunds = true
 		return true, nil
 	})
@@ -219,9 +218,11 @@ func (k Keeper) SetToDistribute(ctx sdk.Context) error {
 
 func (k Keeper) IterateAndUpdateFundsDistribution(ctx sdk.Context) error {
 	// first we get all the continuous funds, and keep a list of the ones that expired so we can delete later
-	var funds []types.ContinuousFund
-	var toDelete [][]byte
-	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
+	var (
+		funds    []types.ContinuousFund
+		toDelete [][]byte
+	)
+	err := k.ContinuousFunds.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
 		funds = append(funds, cf)
 
 		// check if the continuous fund has expired, and add it to the list of funds to delete
@@ -310,7 +311,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx sdk.Context) error {
 			return err
 		}
 
-		toClaim, err := k.RecipientFundDistribution.Get(ctx, bzAddr)
+		toClaim, err := k.RecipientFundDistributions.Get(ctx, bzAddr)
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
 				toClaim = types.DistributionAmount{Amount: sdk.NewCoins()}
@@ -320,14 +321,14 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx sdk.Context) error {
 		}
 
 		toClaim.Amount = toClaim.Amount.Add(distributeToRecipient[recipient]...)
-		if err = k.RecipientFundDistribution.Set(ctx, bzAddr, toClaim); err != nil {
+		if err = k.RecipientFundDistributions.Set(ctx, bzAddr, toClaim); err != nil {
 			return err
 		}
 	}
 
 	// delete expired continuous funds
 	for _, recipient := range toDelete {
-		if err = k.ContinuousFund.Remove(ctx, recipient); err != nil {
+		if err = k.ContinuousFunds.Remove(ctx, recipient); err != nil {
 			return err
 		}
 	}

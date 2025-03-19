@@ -26,7 +26,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 		if err != nil {
 			return fmt.Errorf("failed to decode recipient address: %w", err)
 		}
-		if err := k.ContinuousFund.Set(ctx, recipientAddress, *cf); err != nil {
+		if err := k.ContinuousFunds.Set(ctx, recipientAddress, *cf); err != nil {
 			return fmt.Errorf("failed to set continuous fund for recipient %s: %w", recipientAddress, err)
 		}
 	}
@@ -82,7 +82,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 	}
 
 	// withdraw all rewards before exporting genesis
-	if err := k.RecipientFundDistribution.Walk(ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
+	if err := k.RecipientFundDistributions.Walk(ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
 		if _, err := k.withdrawRecipientFunds(ctx, key.Bytes()); err != nil {
 			return true, err
 		}
@@ -92,7 +92,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 	}
 
 	var cf []*types.ContinuousFund
-	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+	err := k.ContinuousFunds.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
 		if err != nil {
 			return true, err

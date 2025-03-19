@@ -1220,7 +1220,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 			)
 	}
 
-	if height <= 1 && prove {
+	if height == 1 && prove {
 		return sdk.Context{},
 			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,

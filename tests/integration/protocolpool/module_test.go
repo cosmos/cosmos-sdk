@@ -9,11 +9,13 @@ import (
 	"cosmossdk.io/log"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/testutil"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 func TestCreateTestModule(t *testing.T) {
-	_, err := simtestutil.SetupAtGenesis(
+	app, err := simtestutil.SetupAtGenesis(
 		depinject.Configs(
 			testutil.AppConfig,
 			depinject.Supply(log.NewNopLogger()),
@@ -21,4 +23,11 @@ func TestCreateTestModule(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
+	gotModule, found := app.ModuleManager.Modules[types.ModuleName]
+	assert.Assert(t, found)
+	assert.Assert(t, gotModule != nil)
+
+	gotModule, found = app.ModuleManager.Modules[distrtypes.ModuleName]
+	assert.Assert(t, found)
+	assert.Assert(t, gotModule != nil)
 }

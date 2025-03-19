@@ -23,6 +23,7 @@ func (suite *KeeperTestSuite) TestMsgCreateBudget() {
 		input     *types.MsgCreateBudget
 		expErr    bool
 		expErrMsg string
+		expBudget types.Budget
 	}{
 		"empty recipient address": {
 			input: &types.MsgCreateBudget{
@@ -118,6 +119,14 @@ func (suite *KeeperTestSuite) TestMsgCreateBudget() {
 				Period:           period,
 			},
 			expErr: false,
+			expBudget: types.Budget{
+				RecipientAddress: recipientStrAddr,
+				ClaimedAmount:    nil,
+				LastClaimedAt:    startTime,
+				TranchesLeft:     2,
+				BudgetPerTranche: fooCoin2,
+				Period:           period,
+			},
 		},
 	}
 
@@ -131,6 +140,11 @@ func (suite *KeeperTestSuite) TestMsgCreateBudget() {
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
+				accAddr, err := sdk.AccAddressFromBech32(tc.input.RecipientAddress)
+				suite.Require().NoError(err)
+				budget, err := suite.poolKeeper.Budgets.Get(suite.ctx, accAddr)
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expBudget, budget)
 			}
 		})
 	}
@@ -193,7 +207,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			},
 			recipientAddress: recipientAddr,
 			expErr:           true,
-			expErrMsg:        "budget period has not passed yet",
+			expErrMsg:        "budget period of 0.016667 hours has not passed yet",
 		},
 		"valid claim": {
 			preRun: func() {
@@ -262,7 +276,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			},
 			recipientAddress: recipientAddr,
 			expErr:           true,
-			expErrMsg:        "budget period has not passed yet",
+			expErrMsg:        "budget period of 0.016667 hours has not passed yet",
 		},
 		"valid double claim attempt": {
 			preRun: func() {
@@ -377,7 +391,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 		withdrawnAmount  sdk.Coins
 	}{
 		"empty recipient": {
-			recipientAddress: []sdk.AccAddress{sdk.AccAddress([]byte(""))},
+			recipientAddress: []sdk.AccAddress{sdk.AccAddress("")},
 			expErr:           true,
 			expErrMsg:        "invalid recipient address",
 		},

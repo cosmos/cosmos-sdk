@@ -228,14 +228,14 @@ func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration
 	return "", false
 }
 
-// Keys wasmd keys CLI command
+// Keys runs the keys CLI command
 func (c CLIWrapper) Keys(args ...string) string {
 	args = c.WithKeyringFlags(args...)
 	out, _ := c.run(args)
 	return out
 }
 
-// CustomQuery main entrypoint for wasmd CLI queries
+// CustomQuery main entrypoint for CLI queries
 func (c CLIWrapper) CustomQuery(args ...string) string {
 	args = c.WithQueryFlags(args...)
 	out, _ := c.run(args)
@@ -460,6 +460,14 @@ func (c CLIWrapper) Version() string {
 	v, ok := c.run([]string{"version"})
 	require.True(c.t, ok)
 	return v
+}
+
+func (c CLIWrapper) GetFeeAmount(t *testing.T) sdk.Coins {
+	t.Helper()
+	fees, err := sdk.ParseCoinsNormalized(c.fees)
+	require.NoError(t, err)
+
+	return fees
 }
 
 // RequireTxSuccess require the received response to contain the success code

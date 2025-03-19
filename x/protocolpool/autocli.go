@@ -41,10 +41,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}},
 				},
 				{
-					RpcMethod: "SubmitBudgetProposal",
-					Use:       "submit-budget-proposal <recipient> <budget-per-tranche> <start-time> <tranches> <period>",
-					Short:     "Submit a budget proposal",
-					Example:   fmt.Sprintf(`$ %s tx protocolpool submit-budget-proposal cosmos1... 1000000uatom 2023-10-31T12:34:56.789Z 10 1000 --from mykey`, version.AppName),
+					RpcMethod: "CreateBudget",
+					Use:       "create-budget <recipient> <budget-per-tranche> <start-time> <tranches> <period>",
+					Short:     "Create a budget",
+					Example:   fmt.Sprintf(`$ %s tx protocolpool create-budget cosmos1... 1000000uatom 2023-10-31T12:34:56.789Z 10 1000 --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "recipient_address"},
 						{ProtoField: "budget_per_tranche"},

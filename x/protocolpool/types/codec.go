@@ -13,7 +13,7 @@ func RegisterInterfaces(ir codectypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgFundCommunityPool{},
 		&MsgCommunityPoolSpend{},
-		&MsgSubmitBudgetProposal{},
+		&MsgCreateBudget{},
 		&MsgClaimBudget{},
 		&MsgCreateContinuousFund{},
 		&MsgCancelContinuousFund{},
@@ -30,7 +30,7 @@ func RegisterInterfaces(ir codectypes.InterfaceRegistry) {
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgFundCommunityPool{}, "cosmos-sdk/pp/MsgFundCommunityPool")
 	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/pp/MsgCommunityPoolSpend")
-	legacy.RegisterAminoMsg(cdc, &MsgSubmitBudgetProposal{}, "cosmos-sdk/pp/MsgSubmitBudgetProposal")
+	legacy.RegisterAminoMsg(cdc, &MsgCreateBudget{}, "cosmos-sdk/pp/MsgCreateBudget")
 	legacy.RegisterAminoMsg(cdc, &MsgClaimBudget{}, "cosmos-sdk/pp/MsgClaimBudget")
 	legacy.RegisterAminoMsg(cdc, &MsgCreateContinuousFund{}, "cosmos-sdk/pp/MsgCreateContinuousFund")
 	legacy.RegisterAminoMsg(cdc, &MsgCancelContinuousFund{}, "cosmos-sdk/pp/MsgCancelContinuousFund")

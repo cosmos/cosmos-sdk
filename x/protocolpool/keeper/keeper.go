@@ -448,7 +448,7 @@ func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddres
 	return amount, nil
 }
 
-func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
+func (k Keeper) validateAndUpdateBudget(ctx sdk.Context, bp types.MsgCreateBudget) (*types.Budget, error) {
 	if bp.BudgetPerTranche.IsZero() {
 		return nil, errors.New("invalid budget proposal: budget per tranche cannot be zero")
 	}

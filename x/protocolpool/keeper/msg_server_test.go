@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
-func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
+func (suite *KeeperTestSuite) TestMsgCreateBudget() {
 	invalidCoin := sdk.NewInt64Coin("foo", 0)
 	startTime := suite.ctx.BlockTime().Add(10 * time.Second)
 	invalidStartTime := suite.ctx.BlockTime().Add(-15 * time.Second)
@@ -20,12 +20,12 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 	zeroPeriod := time.Duration(0) * time.Second
 	recipientStrAddr := recipientAddr.String()
 	testCases := map[string]struct {
-		input     *types.MsgSubmitBudgetProposal
+		input     *types.MsgCreateBudget
 		expErr    bool
 		expErrMsg string
 	}{
 		"empty recipient address": {
-			input: &types.MsgSubmitBudgetProposal{
+			input: &types.MsgCreateBudget{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: "",
 				BudgetPerTranche: &fooCoin,
@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			expErrMsg: "empty address string is not allowed",
 		},
 		"empty authority": {
-			input: &types.MsgSubmitBudgetProposal{
+			input: &types.MsgCreateBudget{
 				Authority:        "",
 				RecipientAddress: recipientStrAddr,
 				BudgetPerTranche: &fooCoin,
@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			expErrMsg: "empty address string is not allowed",
 		},
 		"invalid authority": {
-			input: &types.MsgSubmitBudgetProposal{
+			input: &types.MsgCreateBudget{
 				Authority:        "invalid_authority",
 				RecipientAddress: recipientStrAddr,
 				BudgetPerTranche: &fooCoin,
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			expErrMsg: "invalid authority",
 		},
 		"invalid budget": {
-			input: &types.MsgSubmitBudgetProposal{
+			input: &types.MsgCreateBudget{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
 				BudgetPerTranche: &invalidCoin,
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			expErrMsg: "budget per tranche cannot be zero",
 		},
 		"invalid start time": {
-			input: &types.MsgSubmitBudgetProposal{
+			input: &types.MsgCreateBudget{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
 				BudgetPerTranche: &fooCoin,
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			expErrMsg: "start time cannot be less than the current block time",
 		},
 		"invalid tranches": {
-			input: &types.MsgSubmitBudgetProposal{
+			input: &types.MsgCreateBudget{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
 				BudgetPerTranche: &fooCoin,
@@ -97,7 +97,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			expErrMsg: "tranches must be greater than zero",
 		},
 		"invalid period": {
-			input: &types.MsgSubmitBudgetProposal{
+			input: &types.MsgCreateBudget{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
 				BudgetPerTranche: &fooCoin,
@@ -109,7 +109,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			expErrMsg: "period length should be greater than zero",
 		},
 		"all good": {
-			input: &types.MsgSubmitBudgetProposal{
+			input: &types.MsgCreateBudget{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
 				BudgetPerTranche: &fooCoin2,
@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 		suite.Run(name, func() {
 			suite.SetupTest()
 
-			_, err := suite.msgServer.SubmitBudgetProposal(suite.ctx, tc.input)
+			_, err := suite.msgServer.CreateBudget(suite.ctx, tc.input)
 			if tc.expErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 			expErrMsg:        "invalid recipient address: empty address string is not allowed",
 		},
 		"no budget found": {
-			recipientAddress: sdk.AccAddress([]byte("acc1__________")),
+			recipientAddress: sdk.AccAddress("acc1__________"),
 			expErr:           true,
 			expErrMsg:        "no budget found for recipient",
 		},

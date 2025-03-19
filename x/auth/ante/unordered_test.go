@@ -4,6 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -15,9 +19,6 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
-
-	storetypes "cosmossdk.io/store/types"
 )
 
 func TestUnorderedAnte(t *testing.T) {
@@ -99,7 +100,6 @@ func TestUnorderedAnte(t *testing.T) {
 					genTxOptions{unordered: true, timestamp: time.Unix(10, 0), pk: testPK, addr: testAddr},
 				)
 				return []sdk.Tx{tx}
-
 			},
 			runTx: func() sdk.Tx {
 				return genTestTx(
@@ -138,7 +138,7 @@ func TestUnorderedAnte(t *testing.T) {
 					require.NoError(t, err)
 				}
 			}
-			ctx, err = chain(ctx, tc.runTx(), false)
+			_, err = chain(ctx, tc.runTx(), false)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {
@@ -184,7 +184,6 @@ func TestMultiSignerUnorderedTx(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, ok)
 	}
-
 }
 
 type genTxOptions struct {

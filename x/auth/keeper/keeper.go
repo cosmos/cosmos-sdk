@@ -103,7 +103,7 @@ type AccountKeeper struct {
 	Params             collections.Item[types.Params]
 	AccountNumber      collections.Sequence
 	Accounts           *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
-	UnorderedSequences collections.KeySet[collections.Pair[uint64, []byte]]
+	UnorderedSequences collections.KeySet[collections.Pair[int64, []byte]]
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -136,7 +136,7 @@ func NewAccountKeeper(
 		Params:             collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber:      collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:           collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
-		UnorderedSequences: collections.NewKeySet(sb, types.UnorderedSequencesKey, "unordered_sequences", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey)),
+		UnorderedSequences: collections.NewKeySet(sb, types.UnorderedSequencesKey, "unordered_sequences", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -286,19 +286,19 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 
 // ContainsUnorderedSequence reports whether the sender has used this timestamp already.
 func (ak AccountKeeper) ContainsUnorderedSequence(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error) {
-	return ak.UnorderedSequences.Has(ctx, collections.Join(uint64(timestamp.UnixNano()), sender))
+	return ak.UnorderedSequences.Has(ctx, collections.Join(timestamp.UnixNano(), sender))
 }
 
 // AddUnorderedSequence adds a new unordered sequence for the sender.
 func (ak AccountKeeper) AddUnorderedSequence(ctx sdk.Context, sender []byte, timestamp time.Time) error {
-	return ak.UnorderedSequences.Set(ctx, collections.Join(uint64(timestamp.UnixNano()), sender))
+	return ak.UnorderedSequences.Set(ctx, collections.Join(timestamp.UnixNano(), sender))
 }
 
 // RemoveExpiredUnorderedSequences removes all unordered sequences that has a timestamp value before
 // the current block time.
 func (ak AccountKeeper) RemoveExpiredUnorderedSequences(ctx sdk.Context) error {
 	blkTime := ctx.BlockTime().UnixNano()
-	it, err := ak.UnorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[uint64, []byte](uint64(blkTime)))
+	it, err := ak.UnorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[int64, []byte](blkTime))
 	if err != nil {
 		return err
 	}

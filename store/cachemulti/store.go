@@ -3,7 +3,6 @@ package cachemulti
 import (
 	"fmt"
 	"io"
-
 	"maps"
 
 	corestore "cosmossdk.io/core/store"

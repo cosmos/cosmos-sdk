@@ -3,11 +3,10 @@ package types
 import (
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 
 	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-
-	"maps"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"

@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 					Period:           &period,
 					BudgetPerTranche: &fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 			},
 			req: &types.QueryUnclaimedBudgetRequest{
@@ -79,7 +79,7 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 					Period:           &period,
 					BudgetPerTranche: &fooCoin2,
 				}
-				err := suite.poolKeeper.BudgetProposal.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
 				suite.Require().NoError(err)
 
 				// Claim the funds once

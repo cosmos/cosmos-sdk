@@ -48,7 +48,7 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 		return nil, err
 	}
 
-	budgetProposal, err := k.validateAndUpdateBudgetProposal(sdkCtx, *msg)
+	budgetProposal, err := validateAndUpdateBudgetProposal(sdkCtx, *msg)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Validate the message fields
-	err = k.validateContinuousFund(sdkCtx, *msg)
+	err = validateContinuousFund(sdkCtx, *msg)
 	if err != nil {
 		return nil, err
 	}

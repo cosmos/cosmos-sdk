@@ -455,7 +455,7 @@ func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddres
 // - - if the startTime was nil, set it to the current blocktime
 // - number of tranches must be nonzero
 // - period duration must be nonzero
-func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSubmitBudgetProposal) (types.Budget, error) {
+func validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSubmitBudgetProposal) (types.Budget, error) {
 	if bp.BudgetPerTranche.IsZero() {
 		return types.Budget{}, errors.New("invalid budget proposal: budget per tranche cannot be zero")
 	}
@@ -494,7 +494,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgSub
 }
 
 // validateContinuousFund validates the fields of the CreateContinuousFund message.
-func (k Keeper) validateContinuousFund(ctx sdk.Context, msg types.MsgCreateContinuousFund) error {
+func validateContinuousFund(ctx sdk.Context, msg types.MsgCreateContinuousFund) error {
 	// Validate percentage
 	if msg.Percentage.IsZero() || msg.Percentage.IsNil() {
 		return errors.New("percentage cannot be zero or empty")

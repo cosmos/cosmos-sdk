@@ -38,13 +38,13 @@ CommunityPoolSpend can be called by the module authority (default governance mod
 
 ### SubmitBudgetProposal
 
-SubmitBudgetProposal is a message used to propose a budget allocation for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
+CreateBudget is a message used to create a budget allocation for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
 
 It's the responsibility of users to actively claim their allocated funds based on the terms of the approved budget proposals.
 
 ```protobuf
-  // SubmitBudgetProposal defines a method to set a budget proposal.
-  rpc SubmitBudgetProposal(MsgSubmitBudgetProposal) returns (MsgSubmitBudgetProposalResponse);
+  // CreateBudget defines a method to create a budget.
+  rpc CreateBudget(MsgCreateBudget) returns (MsgCreateBudgetResponse);
 ```
 
 ### ClaimBudget
@@ -116,7 +116,7 @@ func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coin
 }
 ```
 
-### MsgSubmitBudgetProposal
+### MsgCreateBudget
 
 This message is used to submit a budget proposal to allocate funds for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
 

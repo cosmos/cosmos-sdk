@@ -285,7 +285,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgDeposit(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, simulation.NewSharedState())
+	op := simulation.SimulateMsgDeposit(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -325,15 +325,15 @@ func TestSimulateMsgVote(t *testing.T) {
 	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 
-	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
+	require.NoError(t, suite.GovKeeper.ActivateVotingPeriod(ctx, proposal))
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
-
+	require.NoError(t, err)
 	// execute operation
-	op := simulation.SimulateMsgVote(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, simulation.NewSharedState())
+	op := simulation.SimulateMsgVote(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -379,7 +379,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgVoteWeighted(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, simulation.NewSharedState())
+	op := simulation.SimulateMsgVoteWeighted(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 

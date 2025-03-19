@@ -44,23 +44,23 @@ const (
 	DefaultWeightMsgCancelProposal = 5
 )
 
-// SharedState shared state between message invocations
-type SharedState struct {
+// sharedState shared state between message invocations
+type sharedState struct {
 	minProposalID atomic.Uint64
 }
 
-// NewSharedState constructor
-func NewSharedState() *SharedState {
-	r := &SharedState{}
+// newSharedState constructor
+func newSharedState() *sharedState {
+	r := &sharedState{}
 	r.setMinProposalID(unsetProposalID)
 	return r
 }
 
-func (s *SharedState) getMinProposalID() uint64 {
+func (s *sharedState) getMinProposalID() uint64 {
 	return s.minProposalID.Load()
 }
 
-func (s *SharedState) setMinProposalID(id uint64) {
+func (s *sharedState) setMinProposalID(id uint64) {
 	s.minProposalID.Store(id)
 }
 
@@ -140,19 +140,19 @@ func WeightedOperations(
 			),
 		)
 	}
-	state := NewSharedState()
+	state := newSharedState()
 	wGovOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgDeposit,
-			SimulateMsgDeposit(txGen, ak, bk, k, state),
+			simulateMsgDeposit(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVote,
-			SimulateMsgVote(txGen, ak, bk, k, state),
+			simulateMsgVote(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVoteWeighted,
-			SimulateMsgVoteWeighted(txGen, ak, bk, k, state),
+			simulateMsgVoteWeighted(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgCancelProposal,
@@ -312,13 +312,13 @@ func simulateMsgSubmitProposal(
 		whoVotes = whoVotes[:numVotes]
 		params, _ := k.Params.Get(ctx)
 		votingPeriod := params.VotingPeriod
-
+		s := newSharedState()
 		fops := make([]simtypes.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fops[i] = simtypes.FutureOperation{
 				BlockTime: whenVote,
-				Op:        operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID), nil),
+				Op:        operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID), s),
 			}
 		}
 
@@ -327,12 +327,22 @@ func simulateMsgSubmitProposal(
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgDeposit(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgDeposit(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgDeposit(
+	txGen client.TxConfig,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	k *keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -388,12 +398,22 @@ func SimulateMsgDeposit(
 }
 
 // SimulateMsgVote generates a MsgVote with random values.
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgVote(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgVote(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgVote(
+	txGen client.TxConfig,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	k *keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return operationSimulateMsgVote(txGen, ak, bk, k, simtypes.Account{}, -1, s)
 }
@@ -405,7 +425,7 @@ func operationSimulateMsgVote(
 	k *keeper.Keeper,
 	simAccount simtypes.Account,
 	proposalIDInt int64,
-	s *SharedState,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -458,7 +478,16 @@ func SimulateMsgVoteWeighted(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgVoteWeighted(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgVoteWeighted(
+	txGen client.TxConfig,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	k *keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return operationSimulateMsgVoteWeighted(txGen, ak, bk, k, simtypes.Account{}, -1, s)
 }
@@ -470,7 +499,7 @@ func operationSimulateMsgVoteWeighted(
 	k *keeper.Keeper,
 	simAccount simtypes.Account,
 	proposalIDInt int64,
-	s *SharedState,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -652,7 +681,7 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 // (defined in gov GenesisState) and the latest proposal ID
 // that matches a given Status.
 // It does not provide a default ID.
-func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus, s *SharedState) (proposalID uint64, found bool) {
+func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus, s *sharedState) (proposalID uint64, found bool) {
 	proposalID, _ = k.ProposalID.Peek(ctx)
 	if initialProposalID := s.getMinProposalID(); initialProposalID == unsetProposalID {
 		s.setMinProposalID(proposalID)

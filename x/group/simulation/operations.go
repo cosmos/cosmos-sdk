@@ -58,7 +58,7 @@ const (
 	OpMsgLeaveGroup                      = "ops_weight_msg_leave_group"
 )
 
-// If update group or group policy txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
+// If update group or group policy txn's executed, `simulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
 // That's why we have less weight for update group & group-policy txn's.
 const (
 	WeightMsgCreateGroup                     = 100
@@ -77,23 +77,23 @@ const (
 	WeightMsgCreateGroupWithPolicy           = 50
 )
 
-// SharedState shared state between message invocations
-type SharedState struct {
+// sharedState shared state between message invocations
+type sharedState struct {
 	minGroupID atomic.Uint64
 }
 
-// NewSharedState constructor
-func NewSharedState() *SharedState {
-	r := &SharedState{}
+// newSharedState constructor
+func newSharedState() *sharedState {
+	r := &sharedState{}
 	r.setMinGroupID(unsetGroupID)
 	return r
 }
 
-func (s *SharedState) getMinGroupID() uint64 {
+func (s *sharedState) getMinGroupID() uint64 {
 	return s.minGroupID.Load()
 }
 
-func (s *SharedState) setMinGroupID(id uint64) {
+func (s *sharedState) setMinGroupID(id uint64) {
 	s.minGroupID.Store(id)
 }
 
@@ -166,14 +166,14 @@ func WeightedOperations(
 
 	pCdc := codec.NewProtoCodec(registry)
 
-	state := NewSharedState()
+	state := newSharedState()
 
 	// create two proposals for weightedOperations
 	var createProposalOps simulation.WeightedOperations
 	for i := 0; i < 2; i++ {
 		createProposalOps = append(createProposalOps, simulation.NewWeightedOperation(
 			weightMsgSubmitProposal,
-			SimulateMsgSubmitProposal(pCdc, txGen, ak, bk, k, state),
+			simulateMsgSubmitProposal(pCdc, txGen, ak, bk, k, state),
 		))
 	}
 
@@ -184,7 +184,7 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgCreateGroupPolicy,
-			SimulateMsgCreateGroupPolicy(pCdc, txGen, ak, bk, k, state),
+			simulateMsgCreateGroupPolicy(pCdc, txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgCreateGroupWithPolicy,
@@ -195,43 +195,43 @@ func WeightedOperations(
 	wPostCreateProposalOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			WeightMsgWithdrawProposal,
-			SimulateMsgWithdrawProposal(pCdc, txGen, ak, bk, k, state),
+			simulateMsgWithdrawProposal(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVote,
-			SimulateMsgVote(pCdc, txGen, ak, bk, k, state),
+			simulateMsgVote(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgExec,
-			SimulateMsgExec(pCdc, txGen, ak, bk, k, state),
+			simulateMsgExec(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupMetadata,
-			SimulateMsgUpdateGroupMetadata(pCdc, txGen, ak, bk, k, state),
+			simulateMsgUpdateGroupMetadata(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupAdmin,
-			SimulateMsgUpdateGroupAdmin(pCdc, txGen, ak, bk, k, state),
+			simulateMsgUpdateGroupAdmin(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupMembers,
-			SimulateMsgUpdateGroupMembers(pCdc, txGen, ak, bk, k, state),
+			simulateMsgUpdateGroupMembers(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupPolicyAdmin,
-			SimulateMsgUpdateGroupPolicyAdmin(pCdc, txGen, ak, bk, k, state),
+			simulateMsgUpdateGroupPolicyAdmin(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupPolicyDecisionPolicy,
-			SimulateMsgUpdateGroupPolicyDecisionPolicy(pCdc, txGen, ak, bk, k, state),
+			simulateMsgUpdateGroupPolicyDecisionPolicy(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupPolicyMetadata,
-			SimulateMsgUpdateGroupPolicyMetadata(pCdc, txGen, ak, bk, k, state),
+			simulateMsgUpdateGroupPolicyMetadata(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgLeaveGroup,
-			SimulateMsgLeaveGroup(pCdc, txGen, k, ak, bk, state),
+			simulateMsgLeaveGroup(txGen, k, ak, bk, state),
 		),
 	}
 
@@ -239,6 +239,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateGroup generates a MsgCreateGroup with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgCreateGroup(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -286,6 +287,7 @@ func SimulateMsgCreateGroup(
 }
 
 // SimulateMsgCreateGroupWithPolicy generates a MsgCreateGroupWithPolicy with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgCreateGroupWithPolicy(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -350,13 +352,24 @@ func SimulateMsgCreateGroupWithPolicy(
 }
 
 // SimulateMsgCreateGroupPolicy generates a NewMsgCreateGroupPolicy with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgCreateGroupPolicy(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgCreateGroupPolicy(cdc, txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgCreateGroupPolicy(
+	cdc *codec.ProtoCodec,
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -417,13 +430,24 @@ func SimulateMsgCreateGroupPolicy(
 }
 
 // SimulateMsgSubmitProposal generates a NewMsgSubmitProposal with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgSubmitProposal(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgSubmitProposal(cdc, txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgSubmitProposal(
+	cdc *codec.ProtoCodec,
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -499,13 +523,23 @@ func SimulateMsgSubmitProposal(
 }
 
 // SimulateMsgUpdateGroupAdmin generates a MsgUpdateGroupAdmin with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupAdmin(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgUpdateGroupAdmin(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgUpdateGroupAdmin(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -565,13 +599,23 @@ func SimulateMsgUpdateGroupAdmin(
 }
 
 // SimulateMsgUpdateGroupMetadata generates a MsgUpdateGroupMetadata with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupMetadata(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgUpdateGroupMetadata(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgUpdateGroupMetadata(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -622,13 +666,23 @@ func SimulateMsgUpdateGroupMetadata(
 }
 
 // SimulateMsgUpdateGroupMembers generates a MsgUpdateGroupMembers with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupMembers(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgUpdateGroupMembers(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgUpdateGroupMembers(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -706,13 +760,23 @@ func SimulateMsgUpdateGroupMembers(
 }
 
 // SimulateMsgUpdateGroupPolicyAdmin generates a MsgUpdateGroupPolicyAdmin with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupPolicyAdmin(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgUpdateGroupPolicyAdmin(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgUpdateGroupPolicyAdmin(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -771,14 +835,24 @@ func SimulateMsgUpdateGroupPolicyAdmin(
 	}
 }
 
-// // SimulateMsgUpdateGroupPolicyDecisionPolicy generates a NewMsgUpdateGroupPolicyDecisionPolicy with random values
+// SimulateMsgUpdateGroupPolicyDecisionPolicy generates a NewMsgUpdateGroupPolicyDecisionPolicy with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgUpdateGroupPolicyDecisionPolicy(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgUpdateGroupPolicyDecisionPolicy(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -836,14 +910,24 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 	}
 }
 
-// // SimulateMsgUpdateGroupPolicyMetadata generates a MsgUpdateGroupPolicyMetadata with random values
+// SimulateMsgUpdateGroupPolicyMetadata generates a MsgUpdateGroupPolicyMetadata with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupPolicyMetadata(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgUpdateGroupPolicyMetadata(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgUpdateGroupPolicyMetadata(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -894,13 +978,24 @@ func SimulateMsgUpdateGroupPolicyMetadata(
 }
 
 // SimulateMsgWithdrawProposal generates a MsgWithdrawProposal with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgWithdrawProposal(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgWithdrawProposal(txGen, ak, bk, k, newSharedState())
+}
+
+// simulateMsgWithdrawProposal generates a MsgWithdrawProposal with random values
+func simulateMsgWithdrawProposal(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -990,7 +1085,6 @@ func SimulateMsgWithdrawProposal(
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-
 		if err != nil {
 			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
 				return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "no-op:group/group-policy was modified"), nil, nil
@@ -1003,13 +1097,23 @@ func SimulateMsgWithdrawProposal(
 }
 
 // SimulateMsgVote generates a MsgVote with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgVote(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgVote(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgVote(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -1099,7 +1203,6 @@ func SimulateMsgVote(
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-
 		if err != nil {
 			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
 				return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "no-op:group/group-policy was modified"), nil, nil
@@ -1111,14 +1214,24 @@ func SimulateMsgVote(
 	}
 }
 
-// // SimulateMsgExec generates a MsgExec with random values
+// SimulateMsgExec generates a MsgExec with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgExec(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgExec(txGen, ak, bk, k, newSharedState())
+}
+
+func simulateMsgExec(
+	txGen client.TxConfig,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	k keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -1193,13 +1306,23 @@ func SimulateMsgExec(
 }
 
 // SimulateMsgLeaveGroup generates a MsgLeaveGroup with random values
+// Deprecated: this is an internal method and will be removed
 func SimulateMsgLeaveGroup(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
 	k keeper.Keeper,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
-	s *SharedState,
+) simtypes.Operation {
+	return simulateMsgLeaveGroup(txGen, k, ak, bk, newSharedState())
+}
+
+func simulateMsgLeaveGroup(
+	txGen client.TxConfig,
+	k keeper.Keeper,
+	ak group.AccountKeeper,
+	bk group.BankKeeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -1258,7 +1381,7 @@ func SimulateMsgLeaveGroup(
 }
 
 func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
-	ctx sdk.Context, accounts []simtypes.Account, s *SharedState,
+	ctx sdk.Context, accounts []simtypes.Account, s *sharedState,
 ) (groupInfo *group.GroupInfo, acc simtypes.Account, account sdk.AccountI, err error) {
 	groupID := k.GetGroupSequence(ctx)
 
@@ -1296,7 +1419,7 @@ func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 }
 
 func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
-	ctx sdk.Context, accounts []simtypes.Account, s *SharedState,
+	ctx sdk.Context, accounts []simtypes.Account, s *sharedState,
 ) (groupInfo *group.GroupInfo, groupPolicyInfo *group.GroupPolicyInfo, acc simtypes.Account, account sdk.AccountI, err error) {
 	groupInfo, _, _, err = randomGroup(r, k, ak, ctx, accounts, s)
 	if err != nil {

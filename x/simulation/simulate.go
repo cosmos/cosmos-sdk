@@ -57,7 +57,7 @@ func initChain(
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
-func SimulateFromSeed( // exists for backwards compatibility only
+func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
 	app *baseapp.BaseApp,

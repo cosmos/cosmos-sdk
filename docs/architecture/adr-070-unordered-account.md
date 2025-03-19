@@ -32,8 +32,8 @@ below, without impacting traditional ordered transactions which will follow the 
 We will introduce new storage of time-based, ephemeral unordered sequences using the SDK's existing KV Store library. 
 Specifically, we will leverage the existing x/auth KV store to store the unordered sequences.
 
-When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s PubKey
-bytes will be recorded to state (i.e. `542939323/<pubkey_btyes>`). In cases of multi-party signing, one entry per signer
+When an unordered transaction is included in a block, a concatenation of the `timeout_timestamp` and sender’s address bytes
+will be recorded to state (i.e. `542939323/<address_bytes>`). In cases of multi-party signing, one entry per signer
 will be recorded to state.
 
 New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
@@ -63,7 +63,7 @@ will be deleted.
 
 ```go
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
-	err := am.accountKeeper.GetUnorderedTxManager().RemoveExpired(sdk.UnwrapSDKContext(ctx))
+	err := am.accountKeeper.RemoveExpired(sdk.UnwrapSDKContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -86,32 +86,20 @@ var (
 	unorderedSequencePrefix = collections.NewPrefix(90)
 )
 
-type UnorderedTxManager struct {
+type AccountKeeper struct {
+	// ...
 	unorderedSequences collections.KeySet[collections.Pair[uint64, []byte]]
 }
 
-func NewUnorderedTxManager(kvStore store.KVStoreService) *UnorderedTxManager {
-	sb := collections.NewSchemaBuilder(kvStore)
-	m := &UnorderedTxManager{
-		unorderedSequences: collections.NewKeySet(
-			sb,
-			unorderedSequencePrefix,
-			"unordered_sequences",
-			collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
-		),
-	}
-	return m
-}
-
-func (m *UnorderedTxManager) Contains(ctx sdk.Context, sender []byte, timestamp uint64) (bool, error) {
+func (m *AccountKeeper) Contains(ctx sdk.Context, sender []byte, timestamp uint64) (bool, error) {
 	return m.unorderedSequences.Has(ctx, collections.Join(timestamp, sender))
 }
 
-func (m *UnorderedTxManager) Add(ctx sdk.Context, sender []byte, timestamp uint64) error {
+func (m *AccountKeeper) Add(ctx sdk.Context, sender []byte, timestamp uint64) error {
 	return m.unorderedSequences.Set(ctx, collections.Join(timestamp, sender))
 }
 
-func (m *UnorderedTxManager) RemoveExpired(ctx sdk.Context) error {
+func (m *AccountKeeper) RemoveExpired(ctx sdk.Context) error {
 	blkTime := ctx.BlockTime().UnixNano()
 	it, err := m.unorderedSequences.Iterate(ctx, collections.NewPrefixUntilPairRange[uint64, []byte](uint64(blkTime)))
 	if err != nil {
@@ -182,15 +170,15 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // a duplicate and will evict it from state when the timeout is reached.
 //
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
-// chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
+// chain to ensure that during DeliverTx, the transaction is added to the unordered sequence state.
 type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
 	maxTimeoutDuration time.Duration
-	txManager          *authkeeper.UnorderedTxManager
+	txManager          authkeeper.UnorderedTxManager
 }
 
 func NewUnorderedTxDecorator(
-	utxm *authkeeper.UnorderedTxManager,
+	utxm authkeeper.UnorderedTxManager,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxTimeoutDuration: 10 * time.Minute,
@@ -282,17 +270,7 @@ func getSigners(tx sdk.Tx) ([][]byte, error) {
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return nil, err
-	}
-
-	addresses := make([][]byte, 0, len(sigs))
-	for _, sig := range sigs {
-		addresses = append(addresses, sig.PubKey.Address().Bytes())
-	}
-
-	return addresses, nil
+	return sigTx.GetSigners()
 }
 
 ```

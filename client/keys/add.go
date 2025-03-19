@@ -8,12 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
+	"slices"
 	"sort"
 	"strings"
-
-	"maps"
-	"slices"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"

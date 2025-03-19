@@ -225,7 +225,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	assert.NilError(t, err)
 
 	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SpendableBalances, 2032, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SpendableBalances, 1675, false)
 }
 
 func TestGRPCQueryTotalSupply(t *testing.T) {

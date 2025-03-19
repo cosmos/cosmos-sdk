@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -95,22 +96,26 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	zeroAmt := math.ZeroInt()
+	allLocked := k.LockedCoins(sdkCtx, addr)
+	// print looked coins
+	fmt.Println(allLocked)
 
-	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], _ math.Int) (coin sdk.Coin, err error) {
-		return sdk.NewCoin(key.K2(), zeroAmt), nil
+	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], balanceAmt math.Int) (sdk.Coin, error) {
+		denom := key.K2()
+		coin := sdk.NewCoin(denom, zeroAmt)
+		lockedAmt := allLocked.AmountOf(denom)
+		switch {
+		case !lockedAmt.IsPositive():
+			coin.Amount = balanceAmt
+		case lockedAmt.LT(balanceAmt):
+			coin.Amount = balanceAmt.Sub(lockedAmt)
+		return coin, nil
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
 
-	result := sdk.NewCoins()
-	spendable := k.SpendableCoins(sdkCtx, addr)
-
-	for _, c := range balances {
-		result = append(result, sdk.NewCoin(c.Denom, spendable.AmountOf(c.Denom)))
-	}
-
-	return &types.QuerySpendableBalancesResponse{Balances: result, Pagination: pageRes}, nil
+	return &types.QuerySpendableBalancesResponse{Balances: balances, Pagination: pageRes}, nil
 }
 
 // SpendableBalanceByDenom implements a gRPC query handler for retrieving an account's

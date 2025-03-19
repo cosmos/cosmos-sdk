@@ -54,6 +54,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* [#24060](https://github.com/cosmos/cosmos-sdk/pull/24060) Fix handling of negative spendable balances.
+    * The `SpendableBalances` query now correctly reports spendable balances when one or more denoms are negative (used to report all zeros). Also, this query now looks up only the balances for the requested page.
+    * The `SpendableCoins` keeper method now returns the positive spendable balances even when one or more denoms have more locked than available (used to return an empty `Coins`).
+    * The `SpendableCoin` keeper method now returns a zero coin if there's more locked than available (used to return a negative coin).
 * (client/keys) [#24041](https://github.com/cosmos/cosmos-sdk/pull/24041) `keys delete` won't terminate when a key is not found, but will log the error.
 * (baseapp) [#24027](https://github.com/cosmos/cosmos-sdk/pull/24027) Ensure that `BaseApp.Init` checks that the commit multistore is set to protect against nil dereferences.
 * (x/group) [GHSA-47ww-ff84-4jrg](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-47ww-ff84-4jrg) Fix x/group can halt when erroring in EndBlocker

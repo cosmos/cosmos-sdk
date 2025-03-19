@@ -134,6 +134,7 @@ func SetIncludeNestedMsgsGas(msgs []sdk.Msg) func(*BaseApp) {
 		}
 	}
 }
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

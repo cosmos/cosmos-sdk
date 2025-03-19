@@ -15,6 +15,8 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
 
+	"maps"
+
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
@@ -389,9 +391,7 @@ func (rs *Store) getTracingContext() types.TraceContext {
 	}
 
 	ctx := types.TraceContext{}
-	for k, v := range rs.traceContext {
-		ctx[k] = v
-	}
+	maps.Copy(ctx, rs.traceContext)
 
 	return ctx
 }

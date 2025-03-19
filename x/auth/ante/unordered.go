@@ -11,11 +11,20 @@ import (
 )
 
 const (
-	// MaxTimeoutDuration defines the maximum TTL a transaction can define.
-	MaxTimeoutDuration = 10 * time.Minute
+	// DefaultMaxTimoutDuration defines a default maximum TTL a transaction can define.
+	DefaultMaxTimoutDuration = 10 * time.Minute
 )
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
+
+type UnorderedTxDecoratorOptions func(*UnorderedTxDecorator)
+
+// WithTimeoutDuration allows for changing the timeout duration for unordered txs.
+func WithTimeoutDuration(duration time.Duration) UnorderedTxDecoratorOptions {
+	return func(utx *UnorderedTxDecorator) {
+		utx.maxTxTimeoutDuration = duration
+	}
+}
 
 // UnorderedTxDecorator defines an AnteHandler decorator that is responsible for
 // checking if a transaction is intended to be unordered and, if so, evaluates
@@ -30,15 +39,23 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
 // chain to ensure that during DeliverTx, the transaction is added to the UnorderedNonceManager.
 type UnorderedTxDecorator struct {
-	txManager UnorderedNonceManager
+	maxTxTimeoutDuration time.Duration
+	txManager            UnorderedNonceManager
 }
 
 func NewUnorderedTxDecorator(
 	utxm UnorderedNonceManager,
+	opts ...UnorderedTxDecoratorOptions,
 ) *UnorderedTxDecorator {
-	return &UnorderedTxDecorator{
-		txManager: utxm,
+	utx := &UnorderedTxDecorator{
+		maxTxTimeoutDuration: DefaultMaxTimoutDuration,
+		txManager:            utxm,
 	}
+	for _, opt := range opts {
+		opt(utx)
+	}
+
+	return utx
 }
 
 func (d *UnorderedTxDecorator) AnteHandle(
@@ -75,11 +92,11 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 			"unordered transaction has a timeout_timestamp that has already passed",
 		)
 	}
-	if timeoutTimestamp.After(blockTime.Add(MaxTimeoutDuration)) {
+	if timeoutTimestamp.After(blockTime.Add(d.maxTxTimeoutDuration)) {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"unordered tx ttl exceeds %s",
-			MaxTimeoutDuration.String(),
+			d.maxTxTimeoutDuration.String(),
 		)
 	}
 

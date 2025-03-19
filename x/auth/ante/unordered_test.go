@@ -68,7 +68,7 @@ func TestUnorderedAnte(t *testing.T) {
 		},
 		"timeout after the max duration should fail": {
 			runTx: func() sdk.Tx {
-				return genTestTx(t, genTxOptions{unordered: true, timestamp: time.Unix(10, 1).Add(ante.MaxTimeoutDuration)})
+				return genTestTx(t, genTxOptions{unordered: true, timestamp: time.Unix(10, 1).Add(ante.DefaultMaxTimoutDuration)})
 			},
 			blockTime:   time.Unix(10, 0),
 			execMode:    sdk.ExecModeFinalize,

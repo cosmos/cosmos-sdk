@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"time"
+
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -13,14 +15,15 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper          AccountKeeper
-	BankKeeper             types.BankKeeper
-	ExtensionOptionChecker ExtensionOptionChecker
-	FeegrantKeeper         FeegrantKeeper
-	SignModeHandler        *txsigning.HandlerMap
-	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
-	TxFeeChecker           TxFeeChecker
-	UnorderedNonceManager  UnorderedNonceManager
+	AccountKeeper                 AccountKeeper
+	BankKeeper                    types.BankKeeper
+	ExtensionOptionChecker        ExtensionOptionChecker
+	FeegrantKeeper                FeegrantKeeper
+	SignModeHandler               *txsigning.HandlerMap
+	SigGasConsumer                func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+	TxFeeChecker                  TxFeeChecker
+	UnorderedNonceManager         UnorderedNonceManager
+	UnorderedTxMaxTimeoutDuration time.Duration
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -55,7 +58,11 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	if options.UnorderedNonceManager != nil {
-		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(options.UnorderedNonceManager))
+		var opts []UnorderedTxDecoratorOptions
+		if options.UnorderedTxMaxTimeoutDuration != 0 {
+			opts = append(opts, WithTimeoutDuration(options.UnorderedTxMaxTimeoutDuration))
+		}
+		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(options.UnorderedNonceManager, opts...))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

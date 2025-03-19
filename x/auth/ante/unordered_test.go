@@ -149,11 +149,11 @@ func TestUnorderedAnte(t *testing.T) {
 }
 
 func TestMultiSignerUnorderedTx(t *testing.T) {
-	pk1, pubKey1, addr1 := testdata.KeyTestPubAddr()
-	pk2, pubKey2, _ := testdata.KeyTestPubAddr()
-	pk3, pubKey3, _ := testdata.KeyTestPubAddr()
+	pk1, _, addr1 := testdata.KeyTestPubAddr()
+	pk2, _, addr2 := testdata.KeyTestPubAddr()
+	pk3, _, addr3 := testdata.KeyTestPubAddr()
 
-	pubKeys := []cryptotypes.PubKey{pubKey1, pubKey2, pubKey3}
+	signerAddrs := []sdk.AccAddress{addr1, addr2, addr3}
 
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 	storeService := runtime.NewKVStoreService(mockStoreKey)
@@ -179,8 +179,8 @@ func TestMultiSignerUnorderedTx(t *testing.T) {
 	newCtx, err := chain(ctx, tx, false)
 	require.NoError(t, err)
 
-	for _, pubKey := range pubKeys {
-		ok, err := mgr.ContainsUnorderedNonce(newCtx, pubKey.Bytes(), timeout)
+	for _, addr := range signerAddrs {
+		ok, err := mgr.ContainsUnorderedNonce(newCtx, addr.Bytes(), timeout)
 		require.NoError(t, err)
 		require.True(t, ok)
 	}

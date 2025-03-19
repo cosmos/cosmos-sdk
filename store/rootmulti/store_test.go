@@ -67,7 +67,7 @@ func TestCacheMultiStore(t *testing.T) {
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	cacheMulti := ms.CacheMultiStore()
-	require.IsType(t, cachemulti.Store{}, cacheMulti)
+	require.IsType(t, &cachemulti.Store{}, cacheMulti)
 }
 
 func TestCacheMultiStoreWithVersion(t *testing.T) {
@@ -819,10 +819,10 @@ func TestCacheWraps(t *testing.T) {
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	cacheWrapper := multi.CacheWrap()
-	require.IsType(t, cachemulti.Store{}, cacheWrapper)
+	require.IsType(t, &cachemulti.Store{}, cacheWrapper)
 
 	cacheWrappedWithTrace := multi.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, cachemulti.Store{}, cacheWrappedWithTrace)
+	require.IsType(t, &cachemulti.Store{}, cacheWrappedWithTrace)
 }
 
 func TestTraceConcurrency(t *testing.T) {

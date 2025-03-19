@@ -32,6 +32,10 @@ type Store struct {
 	parent        types.KVStore
 }
 
+type PooledStore struct {
+	Store
+}
+
 var _ types.CacheKVStore = (*Store)(nil)
 
 // NewStore creates a new Store object
@@ -42,6 +46,31 @@ func NewStore(parent types.KVStore) *Store {
 		sortedCache:   internal.NewBTree(),
 		parent:        parent,
 	}
+}
+
+var storePool = sync.Pool{
+	New: func() any {
+		return &PooledStore{
+			Store: Store{
+				cache:         make(map[string]*cValue),
+				unsortedCache: make(map[string]struct{}),
+				sortedCache:   internal.NewBTree(),
+			},
+		}
+	},
+}
+
+func (store *PooledStore) Release() {
+	store.resetCaches()
+	store.parent = nil
+	store.mtx = sync.Mutex{}
+	storePool.Put(store)
+}
+
+func NewPooledStore(parent types.KVStore) *PooledStore {
+	store := storePool.Get().(*PooledStore)
+	store.parent = parent
+	return store
 }
 
 // GetStoreType implements Store.
@@ -112,7 +141,7 @@ func (store *Store) resetCaches() {
 			delete(store.unsortedCache, key)
 		}
 	}
-	store.sortedCache = internal.NewBTree()
+	store.sortedCache.Clear()
 }
 
 // Write implements Cachetypes.KVStore.
@@ -121,7 +150,7 @@ func (store *Store) Write() {
 	defer store.mtx.Unlock()
 
 	if len(store.cache) == 0 && len(store.unsortedCache) == 0 {
-		store.sortedCache = internal.NewBTree()
+		store.sortedCache.Clear()
 		return
 	}
 

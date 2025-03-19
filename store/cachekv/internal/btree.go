@@ -36,6 +36,10 @@ func NewBTree() BTree {
 	}
 }
 
+func (bt BTree) Clear() {
+	bt.tree.Clear()
+}
+
 func (bt BTree) Set(key, value []byte) {
 	bt.tree.Set(newItem(key, value))
 }

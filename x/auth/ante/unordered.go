@@ -125,15 +125,5 @@ func getSigners(tx sdk.Tx) ([][]byte, error) {
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return nil, err
-	}
-
-	addresses := make([][]byte, 0, len(sigs))
-	for _, sig := range sigs {
-		addresses = append(addresses, sig.PubKey.Bytes())
-	}
-
-	return addresses, nil
+	return sigTx.GetSigners()
 }

@@ -55,7 +55,7 @@ func (k MsgServer) CreateBudget(ctx context.Context, msg *types.MsgCreateBudget)
 
 	// set budget proposal in state
 	// Note: If two budgets to the same address are created, the budget would be updated with the new budget.
-	err = k.BudgetProposal.Set(sdkCtx, recipient, *budget)
+	err = k.Budgets.Set(sdkCtx, recipient, *budget)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
-	has, err := k.ContinuousFund.Has(sdkCtx, recipient)
+	has, err := k.ContinuousFunds.Has(sdkCtx, recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	// Check if total funds percentage exceeds 100%
 	// If exceeds, we should not setup continuous fund proposal.
 	totalStreamFundsPercentage := math.LegacyZeroDec()
-	err = k.Keeper.ContinuousFund.Walk(sdkCtx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+	err = k.Keeper.ContinuousFunds.Walk(sdkCtx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value.Percentage)
 		return false, nil
 	})
@@ -162,12 +162,12 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Set continuous fund to the state
-	err = k.ContinuousFund.Set(sdkCtx, recipient, cf)
+	err = k.ContinuousFunds.Set(sdkCtx, recipient, cf)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.RecipientFundDistribution.Set(sdkCtx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
+	err = k.RecipientFundDistributions.Set(sdkCtx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 	if err != nil {
 		return nil, err
 	}
@@ -223,11 +223,11 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
-	if err := k.ContinuousFund.Remove(sdkCtx, recipient); err != nil {
+	if err := k.ContinuousFunds.Remove(sdkCtx, recipient); err != nil {
 		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
-	if err := k.RecipientFundDistribution.Remove(sdkCtx, recipient); err != nil {
+	if err := k.RecipientFundDistributions.Remove(sdkCtx, recipient); err != nil {
 		return nil, fmt.Errorf("failed to remove recipient fund distribution for recipient %s: %w", msg.RecipientAddress, err)
 	}
 

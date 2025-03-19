@@ -155,7 +155,6 @@ func (s *CLITestSuite) TestNewCmdSubmitProposal() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitProposal()
 
@@ -248,7 +247,6 @@ func (s *CLITestSuite) TestNewCmdSubmitLegacyProposal() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitLegacyProposal()
 
@@ -312,7 +310,6 @@ func (s *CLITestSuite) TestNewCmdDeposit() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdDeposit()
 
@@ -390,7 +387,6 @@ func (s *CLITestSuite) TestNewCmdVote() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdVote()
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
@@ -491,7 +487,6 @@ func (s *CLITestSuite) TestNewCmdWeightedVote() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdWeightedVote()
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)

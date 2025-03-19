@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"testing"
@@ -20,9 +21,11 @@ import (
 func Test_runDeleteCmd(t *testing.T) {
 	// Now add a temporary keybase
 	kbHome := t.TempDir()
+	errBuf := new(bytes.Buffer)
 	cmd := DeleteKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	cmd.SetErr(errBuf)
 
 	yesF, _ := cmd.Flags().GetBool(flagYes)
 	forceF, _ := cmd.Flags().GetBool(flagForce)
@@ -53,8 +56,10 @@ func Test_runDeleteCmd(t *testing.T) {
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	err = cmd.ExecuteContext(ctx)
-	require.Error(t, err)
-	require.EqualError(t, err, "blah.info: key not found")
+	require.NoError(t, err)
+
+	output := errBuf.String()
+	require.Contains(t, output, "key blah not found")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{

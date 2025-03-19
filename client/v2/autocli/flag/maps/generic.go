@@ -2,6 +2,7 @@ package maps
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 )
 
@@ -44,9 +45,7 @@ func (gm *genericMapValue[K, V]) Set(val string) error {
 	if !gm.changed {
 		*gm.value = out
 	} else {
-		for k, v := range out {
-			(*gm.value)[k] = v
-		}
+		maps.Copy(*gm.value, out)
 	}
 	gm.changed = true
 	return nil

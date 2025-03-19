@@ -790,33 +790,40 @@ func (k Keeper) Vote(ctx context.Context, msg *group.MsgVote) (*group.MsgVoteRes
 // doTallyAndUpdate performs a tally, and, if the tally result is final, then:
 // - updates the proposal's `Status` and `FinalTallyResult` fields,
 // - prune all the votes.
-func (k Keeper) doTallyAndUpdate(ctx context.Context, p *group.Proposal, groupInfo group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
+func (k Keeper) doTallyAndUpdate(ctx context.Context, proposal *group.Proposal, groupInfo group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy, err := policyInfo.GetDecisionPolicy()
 	if err != nil {
 		return err
 	}
 
-	tallyResult, err := k.Tally(ctx, *p, policyInfo.GroupId)
-	if err != nil {
-		return err
+	var result group.DecisionPolicyResult
+	tallyResult, err := k.Tally(ctx, *proposal, policyInfo.GroupId)
+	if err == nil {
+		result, err = policy.Allow(tallyResult, groupInfo.TotalWeight)
 	}
-
-	result, err := policy.Allow(tallyResult, groupInfo.TotalWeight)
 	if err != nil {
-		return errorsmod.Wrap(err, "policy allow")
+		if err := k.pruneVotes(ctx, proposal.Id); err != nil {
+			return err
+		}
+		proposal.Status = group.PROPOSAL_STATUS_REJECTED
+		return k.EventService.EventManager(ctx).Emit(
+			&group.EventTallyError{
+				ProposalId:   proposal.Id,
+				ErrorMessage: err.Error(),
+			})
 	}
 
 	// If the result was final (i.e. enough votes to pass) or if the voting
 	// period ended, then we consider the proposal as final.
-	if isFinal := result.Final || k.HeaderService.HeaderInfo(ctx).Time.After(p.VotingPeriodEnd); isFinal {
-		if err := k.pruneVotes(ctx, p.Id); err != nil {
+	if isFinal := result.Final || k.HeaderService.HeaderInfo(ctx).Time.After(proposal.VotingPeriodEnd); isFinal {
+		if err := k.pruneVotes(ctx, proposal.Id); err != nil {
 			return err
 		}
-		p.FinalTallyResult = tallyResult
+		proposal.FinalTallyResult = tallyResult
 		if result.Allow {
-			p.Status = group.PROPOSAL_STATUS_ACCEPTED
+			proposal.Status = group.PROPOSAL_STATUS_ACCEPTED
 		} else {
-			p.Status = group.PROPOSAL_STATUS_REJECTED
+			proposal.Status = group.PROPOSAL_STATUS_REJECTED
 		}
 
 	}

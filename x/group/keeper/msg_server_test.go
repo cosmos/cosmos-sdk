@@ -401,7 +401,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				{
 					Member:  &group.Member{Address: member2, Weight: "2", AddedAt: s.blockTime},
 					GroupId: groupID,
-				}},
+				},
+			},
 		},
 		"remove existing member": {
 			req: &group.MsgUpdateGroupMembers{
@@ -420,7 +421,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				{
 					Member:  &group.Member{Address: member2, Weight: "2", AddedAt: s.blockTime},
 					GroupId: groupID,
-				}},
+				},
+			},
 		},
 		"remove unknown member": {
 			req: &group.MsgUpdateGroupMembers{
@@ -443,7 +445,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				}, {
 					Member:  &group.Member{Address: member2, Weight: "2", AddedAt: s.blockTime},
 					GroupId: groupID,
-				}},
+				},
+			},
 		},
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupMembers{

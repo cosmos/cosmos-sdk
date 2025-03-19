@@ -98,10 +98,12 @@ type listenerWrapper struct {
 	txDecoder sdk.TxDecoder
 }
 
-// NewListenerWrapper creates a new listenerWrapper.
-// It is only used for testing purposes.
-func NewListenerWrapper(listener appdata.Listener) listenerWrapper {
-	return listenerWrapper{listener: listener}
+// NewListenerWrapper creates a new ABCIListener that wraps an appdata.Listener.
+// This is primarily intended for testing purposes, although you could use
+// this for a custom indexing setup.
+// Generally, you should use BaseApp.EnableIndexer to enable the built-in indexer.
+func NewListenerWrapper(listener appdata.Listener, txDecoder sdk.TxDecoder) storetypes.ABCIListener {
+	return listenerWrapper{listener: listener, txDecoder: txDecoder}
 }
 
 func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {

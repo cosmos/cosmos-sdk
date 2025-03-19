@@ -15,14 +15,18 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper                 AccountKeeper
-	BankKeeper                    types.BankKeeper
-	ExtensionOptionChecker        ExtensionOptionChecker
-	FeegrantKeeper                FeegrantKeeper
-	SignModeHandler               *txsigning.HandlerMap
-	SigGasConsumer                func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
-	TxFeeChecker                  TxFeeChecker
-	UnorderedNonceManager         UnorderedNonceManager
+	AccountKeeper          AccountKeeper
+	BankKeeper             types.BankKeeper
+	ExtensionOptionChecker ExtensionOptionChecker
+	FeegrantKeeper         FeegrantKeeper
+	SignModeHandler        *txsigning.HandlerMap
+	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+	TxFeeChecker           TxFeeChecker
+	// UnorderedNonceManager is an opt-in feature for x/auth.
+	// When set, this application will be able to receive and process unordered transactions.
+	UnorderedNonceManager UnorderedNonceManager
+	// UnorderedTxMaxTimeoutDuration is an optional timeout duration for `x/auth`'s unordered transaction feature.
+	// When unset, a default of 10 minutes is used.
 	UnorderedTxMaxTimeoutDuration time.Duration
 }
 

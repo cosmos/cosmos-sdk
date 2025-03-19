@@ -512,7 +512,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				suite.Require().NoError(suite.govKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
 
 				req = &v1.QueryVoteRequest{
@@ -627,7 +627,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				suite.Require().NoError(suite.govKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
 
 				req = &v1beta1.QueryVoteRequest{
@@ -731,7 +731,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				votes = []*v1.Vote{
 					{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: v1.NewNonSplitVoteOption(v1.OptionAbstain)},
 					{ProposalId: proposal.Id, Voter: addrs[1].String(), Options: v1.NewNonSplitVoteOption(v1.OptionYes)},
@@ -835,7 +835,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				votes = []v1beta1.Vote{
 					{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionAbstain)},
 					{ProposalId: proposal.Id, Voter: addrs[1].String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes)},
@@ -1501,7 +1501,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					Metadata:        "proposal metadata",
 				}
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
@@ -1526,7 +1526,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					Metadata:        "proposal metadata",
 				}
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
@@ -1551,7 +1551,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 					Metadata:        "proposal metadata",
 				}
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1.TallyResult{
@@ -1669,7 +1669,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 					Metadata:        "proposal metadata",
 				}
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1beta1.TallyResult{
@@ -1694,7 +1694,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 					Metadata:        "proposal metadata",
 				}
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1beta1.TallyResult{
@@ -1719,7 +1719,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 					Metadata:        "proposal metadata",
 				}
 				err := suite.govKeeper.SetProposal(ctx, proposal)
-				suite.Require().Error(err)
+				suite.Require().NoError(err)
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
 				expTally = &v1beta1.TallyResult{

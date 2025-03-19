@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (baseapp) [#24042](https://github.com/cosmos/cosmos-sdk/pull/24042) Fixed a data race inside BaseApp.getContext, found by end-to-end (e2e) tests.
 * (client/server) [#24059](https://github.com/cosmos/cosmos-sdk/pull/24059) Consistently set viper prefix in client and server. It defaults for the binary name for both client and server.
 * (client/keys) [#24041](https://github.com/cosmos/cosmos-sdk/pull/24041) `keys delete` won't terminate when a key is not found, but will log the error.
 * (baseapp) [#24027](https://github.com/cosmos/cosmos-sdk/pull/24027) Ensure that `BaseApp.Init` checks that the commit multistore is set to protect against nil dereferences.

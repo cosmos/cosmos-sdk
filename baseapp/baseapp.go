@@ -620,11 +620,21 @@ func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte) sdk.Conte
 	return ctx
 }
 
+type poolingStore interface {
+	storetypes.MultiStore
+	CacheMultiStorePooled() storetypes.PooledCacheMultiStore
+}
+
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
-	msCache := ms.CacheMultiStore()
+	var msCache storetypes.CacheMultiStore
+	if msPooled, ok := ms.(poolingStore); ok {
+		msCache = msPooled.CacheMultiStorePooled()
+	} else {
+		msCache = ms.CacheMultiStore()
+	}
 	if msCache.TracingEnabled() {
 		msCache = msCache.SetTracingContext(
 			map[string]any{
@@ -839,6 +849,9 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
+		if pooledMSCache, ok := msCache.(storetypes.PooledCacheMultiStore); ok {
+			defer pooledMSCache.Release()
+		}
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 
@@ -889,6 +902,9 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
+	if pooledMSCache, ok := msCache.(storetypes.PooledCacheMultiStore); ok {
+		defer pooledMSCache.Release()
+	}
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a

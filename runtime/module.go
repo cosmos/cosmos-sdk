@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"fmt"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"os"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -119,7 +120,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 		msgServiceRouter:  msgServiceRouter,
 		grpcQueryRouter:   grpcQueryRouter,
 	}
-	appBuilder := &AppBuilder{app}
+	appBuilder := &AppBuilder{app: app}
 
 	return cdc, amino, appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
 }
@@ -136,6 +137,7 @@ type AppInputs struct {
 	InterfaceRegistry  codectypes.InterfaceRegistry
 	LegacyAmino        *codec.LegacyAmino
 	Logger             log.Logger
+	AppOptions         servertypes.AppOptions `optional:"true"`
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -144,6 +146,8 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.config = inputs.Config
 	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
+	inputs.AppBuilder.appOptions = inputs.AppOptions
+
 	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 
 	for name, mod := range inputs.Modules {

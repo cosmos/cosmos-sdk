@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	err = suite.poolKeeper.IterateAndUpdateFundsDistribution(suite.ctx)
 	suite.Require().NoError(err)
 
-	err = suite.poolKeeper.RecipientFundDistribution.Walk(suite.ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
+	err = suite.poolKeeper.RecipientFundDistributions.Walk(suite.ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
 		strAddr, err := suite.authKeeper.AddressCodec().BytesToString(key)
 		suite.Require().NoError(err)
 
@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	addrBz, err := addrCdc.StringToBytes(addrStr)
 	suite.Require().NoError(err)
 
-	err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, addrBz, types.ContinuousFund{
+	err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, addrBz, types.ContinuousFund{
 		Recipient:  addrStr,
 		Percentage: math.LegacyMustNewDecFromStr("0.3"),
 		Expiry:     nil,

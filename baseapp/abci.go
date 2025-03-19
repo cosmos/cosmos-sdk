@@ -1251,7 +1251,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		return sdk.Context{},
 			errorsmod.Wrapf(
 				sdkerrors.ErrInvalidHeight,
-				"header height in all state context is not latest height (%d)", lastBlockHeight,
+				"context did not contain latest block height in either check state or finalize block state (%d)", lastBlockHeight,
 			)
 	}
 

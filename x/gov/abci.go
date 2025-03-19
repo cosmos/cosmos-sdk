@@ -3,6 +3,7 @@ package gov
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -273,7 +274,8 @@ func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgService
 ) (res *sdk.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICKED: %v", msg, r)
+			ctx.Logger().Error("panic recovered", "error", r, "stack", string(debug.Stack()))
+			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICKED: %v: %s", msg, r, string(debug.Stack()))
 		}
 	}()
 	res, err = handler(ctx, msg)

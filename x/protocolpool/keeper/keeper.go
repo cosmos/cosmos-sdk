@@ -219,8 +219,8 @@ func (k Keeper) SetToDistribute(ctx sdk.Context) error {
 
 func (k Keeper) IterateAndUpdateFundsDistribution(ctx sdk.Context) error {
 	// first we get all the continuous funds, and keep a list of the ones that expired so we can delete later
-	funds := []types.ContinuousFund{}
-	toDelete := [][]byte{}
+	var funds []types.ContinuousFund
+	var toDelete [][]byte
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
 		funds = append(funds, cf)
 
@@ -465,7 +465,7 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx sdk.Context, bp types.MsgCre
 	}
 
 	currentTime := ctx.BlockTime()
-	if bp.StartTime.IsZero() || bp.StartTime == nil {
+	if bp.StartTime == nil || bp.StartTime.IsZero() {
 		bp.StartTime = &currentTime
 	}
 

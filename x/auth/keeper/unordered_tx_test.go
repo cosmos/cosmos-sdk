@@ -7,7 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -15,14 +18,24 @@ import (
 
 func TestManager(t *testing.T) {
 	var (
-		mgr keeper.UnorderedTxManager
+		mgr keeper.AccountKeeper
 		ctx sdk.Context
 	)
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	reset := func() {
 		mockStoreKey := storetypes.NewKVStoreKey("test")
 		storeService := runtime.NewKVStoreService(mockStoreKey)
 		ctx = testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx
-		mgr = keeper.NewUnorderedTxManager(storeService)
+		mgr = keeper.NewAccountKeeper(
+			encCfg.Codec,
+			storeService,
+			types.ProtoBaseAccount,
+			nil,
+			authcodec.NewBech32Codec("cosmos"),
+			"cosmos",
+			types.NewModuleAddress("gov").String(),
+		)
+
 	}
 
 	type utxSequence struct {
@@ -285,21 +298,21 @@ func TestManager(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx = ctx.WithBlockTime(tc.blockTime)
 			for _, seq := range tc.addFunc {
-				err := mgr.Add(ctx, seq.sender, seq.timeout)
+				err := mgr.AddUnorderedSequence(ctx, seq.sender, seq.timeout)
 				t.Logf("added transaction: %d/%s", seq.timeout.UnixNano(), seq.sender)
 				require.NoError(t, err)
 			}
 			t.Logf("removing txs. block_time: %d", tc.blockTime.UnixNano())
-			err := mgr.RemoveExpired(ctx)
+			err := mgr.RemoveExpiredUnorderedSequences(ctx)
 			require.NoError(t, err)
 
 			for _, seq := range tc.expectNotContains {
-				has, err := mgr.Contains(ctx, seq.sender, seq.timeout)
+				has, err := mgr.ContainsUnorderedSequence(ctx, seq.sender, seq.timeout)
 				require.NoError(t, err)
 				require.False(t, has, "should not contain %s", seq.sender)
 			}
 			for _, seq := range tc.expectContains {
-				has, err := mgr.Contains(ctx, seq.sender, seq.timeout)
+				has, err := mgr.ContainsUnorderedSequence(ctx, seq.sender, seq.timeout)
 				require.NoError(t, err)
 				require.True(t, has, "expected to contain %d/%s", uint64(seq.timeout.UnixNano()), seq.sender)
 			}

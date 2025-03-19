@@ -2,8 +2,7 @@ package ante
 
 import (
 	"context"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"time"
 
 	"cosmossdk.io/core/address"
 
@@ -19,7 +18,13 @@ type AccountKeeper interface {
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	AddressCodec() address.Codec
-	GetUnorderedTxManager() keeper.UnorderedTxManager
+}
+
+// UnorderedSequenceManager defines the contract needed for UnorderedSequence management.
+type UnorderedSequenceManager interface {
+	RemoveExpiredUnorderedSequences(ctx sdk.Context) error
+	AddUnorderedSequence(ctx sdk.Context, sender []byte, timestamp time.Time) error
+	ContainsUnorderedSequence(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error)
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

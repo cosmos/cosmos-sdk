@@ -9,9 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -117,7 +120,15 @@ func TestUnorderedAnte(t *testing.T) {
 				mockStoreKey,
 				storetypes.NewTransientStoreKey("transient_test"),
 			).Ctx.WithBlockTime(tc.blockTime).WithExecMode(tc.execMode)
-			mgr := keeper.NewUnorderedTxManager(storeService)
+			mgr := keeper.NewAccountKeeper(
+				moduletestutil.MakeTestEncodingConfig().Codec,
+				storeService,
+				types.ProtoBaseAccount,
+				nil,
+				authcodec.NewBech32Codec("cosmos"),
+				"cosmos",
+				types.NewModuleAddress("gov").String(),
+			)
 			chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(mgr))
 			var err error
 			if tc.addTxs != nil {
@@ -151,7 +162,15 @@ func TestMultiSignerUnorderedTx(t *testing.T) {
 		mockStoreKey,
 		storetypes.NewTransientStoreKey("transient_test"),
 	).Ctx.WithBlockTime(time.Unix(9, 0))
-	mgr := keeper.NewUnorderedTxManager(storeService)
+	mgr := keeper.NewAccountKeeper(
+		moduletestutil.MakeTestEncodingConfig().Codec,
+		storeService,
+		types.ProtoBaseAccount,
+		nil,
+		authcodec.NewBech32Codec("cosmos"),
+		"cosmos",
+		types.NewModuleAddress("gov").String(),
+	)
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(mgr))
 
 	timeout := time.Unix(10, 0)
@@ -161,7 +180,7 @@ func TestMultiSignerUnorderedTx(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, pubKey := range pubKeys {
-		ok, err := mgr.Contains(newCtx, pubKey.Bytes(), timeout)
+		ok, err := mgr.ContainsUnorderedSequence(newCtx, pubKey.Bytes(), timeout)
 		require.NoError(t, err)
 		require.True(t, ok)
 	}

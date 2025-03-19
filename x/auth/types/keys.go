@@ -28,4 +28,7 @@ var (
 
 	// AccountNumberStoreKeyPrefix prefix for account-by-id store
 	AccountNumberStoreKeyPrefix = collections.NewPrefix("accountNumber")
+
+	// UnorderedSequencesKey prefix for the unordered sequence storage.
+	UnorderedSequencesKey = collections.NewPrefix(90)
 )

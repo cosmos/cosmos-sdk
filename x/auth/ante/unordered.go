@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -29,13 +28,13 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // a duplicate and will evict it from state when the timeout is reached.
 //
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
-// chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
+// chain to ensure that during DeliverTx, the transaction is added to the UnorderedSequenceManager.
 type UnorderedTxDecorator struct {
-	txManager authkeeper.UnorderedTxManager
+	txManager UnorderedSequenceManager
 }
 
 func NewUnorderedTxDecorator(
-	utxm authkeeper.UnorderedTxManager,
+	utxm UnorderedSequenceManager,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		txManager: utxm,
@@ -95,7 +94,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	}
 
 	for _, signerAddr := range signerAddrs {
-		contains, err := d.txManager.Contains(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp())
+		contains, err := d.txManager.ContainsUnorderedSequence(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp())
 		if err != nil {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrIO,
@@ -109,7 +108,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 			)
 		}
 
-		if err := d.txManager.Add(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
+		if err := d.txManager.AddUnorderedSequence(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrIO,
 				"failed to add unordered nonce to state for signer %x", signerAddr,

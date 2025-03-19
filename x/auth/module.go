@@ -96,7 +96,7 @@ type AppModule struct {
 }
 
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
-	err := am.accountKeeper.GetUnorderedTxManager().RemoveExpired(sdk.UnwrapSDKContext(ctx))
+	err := am.accountKeeper.RemoveExpiredUnorderedSequences(sdk.UnwrapSDKContext(ctx))
 	if err != nil {
 		return nil, err
 	}

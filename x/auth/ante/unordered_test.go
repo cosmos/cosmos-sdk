@@ -174,7 +174,7 @@ func TestMultiSignerUnorderedTx(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(mgr))
 
 	timeout := time.Unix(10, 0)
-	tx := genMultiSignedUnorderedTx(t, addr1, timeout, []cryptotypes.PrivKey{pk1, pk2, pk3})
+	tx := genMultiSignedUnorderedTx(t, signerAddrs, timeout, []cryptotypes.PrivKey{pk1, pk2, pk3})
 
 	newCtx, err := chain(ctx, tx, false)
 	require.NoError(t, err)
@@ -227,17 +227,20 @@ func genTestTx(t *testing.T, options genTxOptions) sdk.Tx {
 	return tx
 }
 
-func genMultiSignedUnorderedTx(t *testing.T, addr1 sdk.AccAddress, ts time.Time, pks []cryptotypes.PrivKey) sdk.Tx {
+func genMultiSignedUnorderedTx(t *testing.T, addrs []sdk.AccAddress, ts time.Time, pks []cryptotypes.PrivKey) sdk.Tx {
 	t.Helper()
 
 	s := SetupTestSuite(t, true)
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
 	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
+	msgs := make([]sdk.Msg, 0, len(addrs))
+	for _, addr := range addrs {
+		msgs = append(msgs, testdata.NewTestMsg(addr))
+	}
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	require.NoError(t, s.txBuilder.SetMsgs(msg))
+	require.NoError(t, s.txBuilder.SetMsgs(msgs...))
 
 	s.txBuilder.SetFeeAmount(feeAmount)
 	s.txBuilder.SetGasLimit(gasLimit)

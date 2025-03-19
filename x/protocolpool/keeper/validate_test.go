@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestValidateAndUpdateBudgetProposal tests the validateAndUpdateBudgetProposal function.
-func TestValidateAndUpdateBudgetProposal(t *testing.T) {
+// TestValidateAndUpdateBudget tests the validateAndUpdateBudget function.
+func TestValidateAndUpdateBudget(t *testing.T) {
 	// Set up some reference times.
 	now := time.Now()
 	future := now.Add(1 * time.Hour)
@@ -25,7 +25,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 	tests := []struct {
 		name      string
 		ctx       sdk.Context
-		bp        types.MsgSubmitBudgetProposal
+		bp        types.MsgCreateBudget
 		expBudget types.Budget
 		expErr    bool
 		errMsg    string // expected error substring
@@ -33,7 +33,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 		{
 			name: "zero budget per tranche",
 			ctx:  baseCtx,
-			bp: types.MsgSubmitBudgetProposal{
+			bp: types.MsgCreateBudget{
 				BudgetPerTranche: sdk.NewCoin("stake", math.NewInt(0)),
 				StartTime:        &future,
 				Tranches:         1,
@@ -46,7 +46,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 		{
 			name: "invalid coin amount (negative)",
 			ctx:  baseCtx,
-			bp: types.MsgSubmitBudgetProposal{
+			bp: types.MsgCreateBudget{
 				// Assuming validateAmount will reject negative coins.
 				BudgetPerTranche: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(-100)},
 				StartTime:        &future,
@@ -60,7 +60,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 		{
 			name: "start time in past",
 			ctx:  baseCtx,
-			bp: types.MsgSubmitBudgetProposal{
+			bp: types.MsgCreateBudget{
 				BudgetPerTranche: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
 				StartTime:        &past,
 				Tranches:         1,
@@ -73,7 +73,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 		{
 			name: "zero tranches",
 			ctx:  baseCtx,
-			bp: types.MsgSubmitBudgetProposal{
+			bp: types.MsgCreateBudget{
 				BudgetPerTranche: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
 				StartTime:        &future,
 				Tranches:         0,
@@ -86,7 +86,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 		{
 			name: "zero period",
 			ctx:  baseCtx,
-			bp: types.MsgSubmitBudgetProposal{
+			bp: types.MsgCreateBudget{
 				BudgetPerTranche: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
 				StartTime:        &future,
 				Tranches:         1,
@@ -99,7 +99,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 		{
 			name: "valid proposal with explicit start time",
 			ctx:  sdk.Context{}.WithBlockTime(now),
-			bp: types.MsgSubmitBudgetProposal{
+			bp: types.MsgCreateBudget{
 				BudgetPerTranche: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
 				StartTime:        &future,
 				Tranches:         5,
@@ -118,7 +118,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 		{
 			name: "valid proposal with nil start time",
 			ctx:  sdk.Context{}.WithBlockTime(now),
-			bp: types.MsgSubmitBudgetProposal{
+			bp: types.MsgCreateBudget{
 				BudgetPerTranche: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
 				StartTime:        nil, // should be set to current block time
 				Tranches:         5,
@@ -139,7 +139,7 @@ func TestValidateAndUpdateBudgetProposal(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Execute the function under test.
-			budget, err := validateAndUpdateBudgetProposal(tc.ctx, tc.bp)
+			budget, err := validateAndUpdateBudget(tc.ctx, tc.bp)
 
 			if tc.expErr {
 				require.Error(t, err, "expected an error but got none")

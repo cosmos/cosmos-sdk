@@ -13,6 +13,11 @@ import (
 const (
 	// DefaultMaxTimoutDuration defines a default maximum TTL a transaction can define.
 	DefaultMaxTimoutDuration = 10 * time.Minute
+	// DefaultUnorderedTxGasCost defines a default gas cost for unordered transactions.
+	// We must charge extra gas for unordered transactions
+	// as they incur extra processing time for cleaning up the expired txs in x/auth PreBlocker.
+	// Note: this value was chosen by 2x-ing the cost of fetching and removing an unordered nonce entry.
+	DefaultUnorderedTxGasCost = uint64(2240)
 )
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
@@ -23,6 +28,12 @@ type UnorderedTxDecoratorOptions func(*UnorderedTxDecorator)
 func WithTimeoutDuration(duration time.Duration) UnorderedTxDecoratorOptions {
 	return func(utx *UnorderedTxDecorator) {
 		utx.maxTxTimeoutDuration = duration
+	}
+}
+
+func WithUnorderedTxGasCost(cost uint64) UnorderedTxDecoratorOptions {
+	return func(utx *UnorderedTxDecorator) {
+		utx.txGasCost = cost
 	}
 }
 
@@ -40,6 +51,7 @@ func WithTimeoutDuration(duration time.Duration) UnorderedTxDecoratorOptions {
 // chain to ensure that during DeliverTx, the transaction is added to the UnorderedNonceManager.
 type UnorderedTxDecorator struct {
 	maxTxTimeoutDuration time.Duration
+	txGasCost            uint64
 	txManager            UnorderedNonceManager
 }
 
@@ -49,6 +61,7 @@ func NewUnorderedTxDecorator(
 ) *UnorderedTxDecorator {
 	utx := &UnorderedTxDecorator{
 		maxTxTimeoutDuration: DefaultMaxTimoutDuration,
+		txGasCost:            DefaultUnorderedTxGasCost,
 		txManager:            utxm,
 	}
 	for _, opt := range opts {
@@ -99,6 +112,8 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 			d.maxTxTimeoutDuration.String(),
 		)
 	}
+
+	ctx.GasMeter().ConsumeGas(d.txGasCost, "unordered tx")
 
 	execMode := ctx.ExecMode()
 	if execMode == sdk.ExecModeSimulate {

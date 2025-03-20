@@ -95,6 +95,8 @@ type AppModule struct {
 	legacySubspace exported.Subspace
 }
 
+// PreBlock cleans up expired unordered transaction nonces from state.
+// Please ensure to add `x/auth`'s module name to the OrderPreBlocker list in your application.
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
 	err := am.accountKeeper.RemoveExpiredUnorderedNonces(sdk.UnwrapSDKContext(ctx))
 	if err != nil {

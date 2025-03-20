@@ -27,7 +27,7 @@ require (
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
-	github.com/tidwall/sjson v1.2.5
+	github.com/tidwall/sjson v1.2.5 // indirect
 )
 
 require (

@@ -25,15 +25,18 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 
 	amount, err := k.Keeper.GetCommunityPool(sdkCtx)
 	if err != nil {
 		return nil, err
 	}
-	decCoins := sdk.NewDecCoinsFromCoins(amount...)
-	return &types.QueryCommunityPoolResponse{Pool: decCoins}, nil
+	return &types.QueryCommunityPoolResponse{Pool: amount}, nil
 }
 
 // UnclaimedBudget queries the unclaimed budget for given recipient

@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
-	"github.com/stretchr/testify/require"
 )
 
 // TestValidateAndUpdateBudget tests the validateAndUpdateBudget function.

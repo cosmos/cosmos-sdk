@@ -18,19 +18,20 @@ var (
 	FlagExportStatePathValue    string
 	FlagExportStatsPathValue    string
 	FlagSeedValue               int64
-	FlagInitialBlockHeightValue uint64
-	FlagNumBlocksValue          uint64
+	FlagInitialBlockHeightValue int
+	FlagNumBlocksValue          int
 	FlagBlockSizeValue          int
 	FlagLeanValue               bool
 	FlagCommitValue             bool
 	FlagDBBackendValue          string
 
 	FlagVerboseValue     bool
-	FlagPeriodValue      uint
 	FlagGenesisTimeValue int64
 	FlagSigverifyTxValue bool
 	FlagFauxMerkle       bool
 
+	// Deprecated: This flag is unused and will be removed in a future release.
+	FlagPeriodValue uint
 	// Deprecated: This flag is unused and will be removed in a future release.
 	FlagEnabledValue bool
 	// Deprecated: This flag is unused and will be removed in a future release.
@@ -47,9 +48,10 @@ func GetSimulatorFlags() {
 	flag.StringVar(&FlagExportParamsPathValue, "ExportParamsPath", "", "custom file path to save the exported params JSON")
 	flag.IntVar(&FlagExportParamsHeightValue, "ExportParamsHeight", 0, "height to which export the randomly generated params")
 	flag.StringVar(&FlagExportStatePathValue, "ExportStatePath", "", "custom file path to save the exported app state JSON")
+	flag.StringVar(&FlagExportStatsPathValue, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
 	flag.Int64Var(&FlagSeedValue, "Seed", DefaultSeedValue, "simulation random seed")
-	flag.Uint64Var(&FlagInitialBlockHeightValue, "InitialBlockHeight", 1, "initial block to start the simulation")
-	flag.Uint64Var(&FlagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
+	flag.IntVar(&FlagInitialBlockHeightValue, "InitialBlockHeight", 1, "initial block to start the simulation")
+	flag.IntVar(&FlagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
 	flag.BoolVar(&FlagCommitValue, "Commit", true, "have the simulation commit")
@@ -58,10 +60,10 @@ func GetSimulatorFlags() {
 	// simulation flags
 	flag.BoolVar(&FlagVerboseValue, "Verbose", false, "verbose log output")
 	flag.Int64Var(&FlagGenesisTimeValue, "GenesisTime", time.Now().Unix(), "use current time as genesis UNIX time for default")
-	flag.UintVar(&FlagPeriodValue, "Period", 0, "run slow invariants only once every period assertions")
 	flag.BoolVar(&FlagSigverifyTxValue, "SigverifyTx", true, "whether to sigverify check for transaction ")
 	flag.BoolVar(&FlagFauxMerkle, "FauxMerkle", false, "use faux merkle instead of iavl")
 
+	flag.UintVar(&FlagPeriodValue, "Period", 0, "run slow invariants only once every period assertions")
 	flag.BoolVar(&FlagEnabledValue, "Enabled", false, "This parameter is unused and will be removed")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "This parameter is unused and will be removed")
 	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "This parameter is unused and will be removed")
@@ -83,7 +85,6 @@ func NewConfigFromFlags() simulation.Config {
 		BlockSize:          FlagBlockSizeValue,
 		Lean:               FlagLeanValue,
 		Commit:             FlagCommitValue,
-		PeriodValue:        FlagPeriodValue,
 		DBBackend:          FlagDBBackendValue,
 	}
 }
@@ -96,6 +97,7 @@ func GetDeprecatedFlagUsed() []string {
 		"Enabled",
 		"SimulateEveryOperation",
 		"PrintAllInvariants",
+		"Period",
 	} {
 		if flag.Lookup(flagName) != nil {
 			usedFlags = append(usedFlags, flagName)

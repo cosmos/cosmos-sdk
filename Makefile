@@ -314,12 +314,6 @@ test-sim-multi-seed-short:
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
 		-NumBlocks=50 -Period=10
 
-test-sim-benchmark-invariants:
-	@echo "Running simulation invariant benchmarks..."
-	cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -bench=BenchmarkInvariants -tags='sims' -run=^$ \
-	-NumBlocks=1000 -BlockSize=200 \
-	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
-
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-nondeterminism-streaming \

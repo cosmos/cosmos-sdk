@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -127,7 +126,7 @@ func RunWithSeeds[T SimulationApp](
 				app.GetBaseApp(),
 				stateFactory.AppStateFn,
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simtestutil.SimulationOperations(app, stateFactory.Codec, tCfg, testInstance.App.TxConfig()),
+				simtestutil.BuildSimulationOperations(app, stateFactory.Codec, tCfg, testInstance.App.TxConfig()),
 				stateFactory.BlockedAddr,
 				tCfg,
 				stateFactory.Codec,
@@ -191,7 +190,6 @@ func NewSimulationAppInstance[T SimulationApp](
 	})
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
-	appOptions[server.FlagInvCheckPeriod] = cli.FlagPeriodValue
 
 	app := appFactory(logger, db, nil, true, appOptions, baseapp.SetChainID(SimAppChainID))
 	if !cli.FlagSigverifyTxValue {

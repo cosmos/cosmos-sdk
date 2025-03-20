@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -51,7 +52,14 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app runtime.AppI, cdc codec.Codec, config simtypes.Config, txConfig client.TxConfig) []simtypes.WeightedOperation {
+// Deprecated: use BuildSimulationOperations with TxConfig
+func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
+	return BuildSimulationOperations(app, cdc, config, moduletestutil.MakeTestTxConfig())
+}
+
+// BuildSimulationOperations retrieves the simulation params from the provided file path
+// and returns all the modules weighted operations
+func BuildSimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config, txConfig client.TxConfig) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,

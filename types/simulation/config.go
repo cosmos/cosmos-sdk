@@ -13,22 +13,25 @@ type Config struct {
 	ExportStatsPath    string // custom file path to save the exported simulation statistics JSON
 
 	Seed               int64  // simulation random seed
-	InitialBlockHeight uint64 // initial block to start the simulation
+	InitialBlockHeight int    // initial block to start the simulation
 	GenesisTime        int64  // genesis time to start the simulation
-	NumBlocks          uint64 // number of new blocks to simulate from the initial block height
+	NumBlocks          int    // number of new blocks to simulate from the initial block height
 	BlockSize          int    // operations per block
 	ChainID            string // chain-id used on the simulation
 
 	Lean   bool // lean simulation log output
 	Commit bool // have the simulation commit
 
-	PeriodValue uint
-
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
 	FuzzSeed    []byte
 	TB          testing.TB
 	FauxMerkle  bool
+
+	// Deprecated: unused and will be removed
+	OnOperation bool // run slow invariants every operation
+	// Deprecated: unused and will be removed
+	AllInvariants bool // print all failed invariants if a broken invariant is found
 }
 
 func (c Config) shallowCopy() Config {

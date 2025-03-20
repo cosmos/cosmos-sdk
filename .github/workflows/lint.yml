@@ -31,7 +31,7 @@ jobs:
         if: env.GIT_DIFF
         id: lint_long
         run: |
-          make lint-changes
+          make lint
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         with:

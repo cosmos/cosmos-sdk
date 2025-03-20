@@ -59,8 +59,6 @@ type Keyring interface {
 	// Get the backend type used in the keyring config: "file", "os", "kwallet", "pass", "test", "memory".
 	Backend() string
 
-	// Get the db keyring used in the keystore.
-	DB() keyring.Keyring
 	// List all keys.
 	List() ([]*Record, error)
 
@@ -105,6 +103,13 @@ type Keyring interface {
 	Exporter
 
 	Migrator
+}
+
+type KeyringWithDB interface {
+	Keyring
+
+	// Get the db keyring used in the keystore.
+	DB() keyring.Keyring
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.

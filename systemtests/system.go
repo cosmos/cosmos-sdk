@@ -86,9 +86,8 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	nameTokens := ExecBinaryUnversionedRegExp.FindAllString(execBinary, 1)
 	if len(nameTokens) == 0 || nameTokens[0] == "" {
-		panic("failed to parse project name from binary")
+		panic("failed to parse project name from binary: " + execBinary)
 	}
-
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
 		chainID:           "testing",
@@ -192,7 +191,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 			return true
 		}),
 	)
-	s.AwaitNextBlock(t, 4e9)
+	s.AwaitNextBlock(t, 10e9)
 }
 
 // MarkDirty whole chain will be reset when marked dirty
@@ -569,7 +568,7 @@ func (s *SystemUnderTest) ForEachNodeExecAndWait(t *testing.T, cmds ...[]string)
 func MustRunShellCmd(t *testing.T, cmd string, args ...string) string {
 	t.Helper()
 	out, err := RunShellCmd(cmd, args...)
-	require.NoError(t, err)
+	require.NoError(t, err, out)
 	return out
 }
 
@@ -579,7 +578,7 @@ func RunShellCmd(cmd string, args ...string) (string, error) {
 		args...,
 	)
 	c.Dir = WorkDir
-	out, err := c.Output()
+	out, err := c.CombinedOutput()
 	if err != nil {
 		return string(out), fmt.Errorf("run `%s %s`: out: %s: %w", cmd, strings.Join(args, " "), string(out), err)
 	}

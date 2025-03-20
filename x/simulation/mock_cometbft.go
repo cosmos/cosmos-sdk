@@ -149,10 +149,13 @@ func RandomRequestFinalizeBlock(
 			signed = false
 		}
 
+		var commitStatus cmtproto.BlockIDFlag
 		if signed {
 			event("begin_block", "signing", "signed")
+			commitStatus = cmtproto.BlockIDFlagCommit
 		} else {
 			event("begin_block", "signing", "missed")
+			commitStatus = cmtproto.BlockIDFlagAbsent
 		}
 
 		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
@@ -165,7 +168,7 @@ func RandomRequestFinalizeBlock(
 				Address: pubkey.Address(),
 				Power:   mVal.val.Power,
 			},
-			BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			BlockIdFlag: commitStatus,
 		}
 	}
 

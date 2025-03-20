@@ -33,7 +33,7 @@ const (
 	// private key representations used by RFC 8032.
 	SeedSize = 32
 
-	keyType = "ed25519"
+	KeyType = "ed25519"
 )
 
 var (
@@ -91,7 +91,7 @@ func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 }
 
 func (privKey *PrivKey) Type() string {
-	return keyType
+	return KeyType
 }
 
 // MarshalAmino overrides Amino binary marshaling.
@@ -192,7 +192,7 @@ func (pubKey *PubKey) String() string {
 }
 
 func (pubKey *PubKey) Type() string {
-	return keyType
+	return KeyType
 }
 
 func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {

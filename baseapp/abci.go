@@ -283,6 +283,10 @@ func (app *BaseApp) OfferSnapshot(req *abci.RequestOfferSnapshot) (*abci.Respons
 		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
 
 	default:
+		// CometBFT errors are defined here: https://github.com/cometbft/cometbft/blob/main/statesync/syncer.go
+		// It may happen that in case of a CometBFT error, such as a timeout (which occurs after two minutes),
+		// the process is aborted. This is done intentionally because deleting the database programmatically
+		// can lead to more complicated situations.
 		app.logger.Error(
 			"failed to restore snapshot",
 			"height", req.Snapshot.Height,
@@ -1184,9 +1188,15 @@ func checkNegativeHeight(height int64) error {
 	return nil
 }
 
-// createQueryContext creates a new sdk.Context for a query, taking as args
+// CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
 func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
+	return app.CreateQueryContextWithCheckHeader(height, prove, true)
+}
+
+// CreateQueryContextWithCheckHeader creates a new sdk.Context for a query, taking as args
+// the block height, whether the query needs a proof or not, and whether to check the header or not.
+func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
@@ -1210,12 +1220,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	// when a client did not provide a query height, manually inject the latest
-	if height == 0 {
-		height = lastBlockHeight
-	}
-
-	if height <= 1 && prove {
+	if height == 1 && prove {
 		return sdk.Context{},
 			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
@@ -1223,33 +1228,63 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
+	var header *cmtproto.Header
+	isLatest := height == 0
+	for _, state := range []*state{
+		app.checkState,
+		app.finalizeBlockState,
+	} {
+		if state != nil {
+			// branch the commit multi-store for safety
+			h := state.Context().BlockHeader()
+			if isLatest {
+				lastBlockHeight = qms.LatestVersion()
+			}
+			if !checkHeader || !isLatest || isLatest && h.Height == lastBlockHeight {
+				header = &h
+				break
+			}
+		}
+	}
+
+	if header == nil {
+		return sdk.Context{},
+			errorsmod.Wrapf(
+				sdkerrors.ErrInvalidHeight,
+				"context did not contain latest block height in either check state or finalize block state (%d)", lastBlockHeight,
+			)
+	}
+
+	// when a client did not provide a query height, manually inject the latest
+	if isLatest {
+		height = lastBlockHeight
+	}
+
 	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			errorsmod.Wrapf(
-				sdkerrors.ErrInvalidRequest,
+				sdkerrors.ErrNotFound,
 				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
 			)
 	}
 
 	// branch the commit multi-store for safety
-	header := app.checkState.Context().BlockHeader()
-	ctx := sdk.NewContext(cacheMS, header, true, app.logger).
+	ctx := sdk.NewContext(cacheMS, *header, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
-		WithBlockHeader(header).
+		WithBlockHeader(*header).
 		WithBlockHeight(height)
 
-	if height != lastBlockHeight {
+	if !isLatest {
 		rms, ok := app.cms.(*rootmulti.Store)
 		if ok {
 			cInfo, err := rms.GetCommitInfo(height)
 			if cInfo != nil && err == nil {
-				ctx = ctx.WithBlockTime(cInfo.Timestamp)
+				ctx = ctx.WithBlockHeight(height).WithBlockTime(cInfo.Timestamp)
 			}
 		}
 	}
-
 	return ctx, nil
 }
 

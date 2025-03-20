@@ -18,15 +18,15 @@ message Budget {
   cosmos.base.v1beta1.Coin claimed_amount = 2;
   // last_claimed_at is the time when the budget was last successfully claimed or distributed.
   // It is used to track the next starting claim time for fund distribution.
-  google.protobuf.Timestamp last_claimed_at = 3 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp last_claimed_at = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   // tranches_left is the number of tranches left for the amount to be distributed.
   uint64 tranches_left = 4;
   // budget_per_tranche is the amount allocated per tranche.
-  cosmos.base.v1beta1.Coin budget_per_tranche = 5;
+  cosmos.base.v1beta1.Coin budget_per_tranche = 5 [(gogoproto.nullable) = false];
   // Period is the time interval(number of seconds) at which funds distribution should be performed.
   // For example, if a period is set to 3600, it represents an action that
   // should occur every hour (3600 seconds).
-  google.protobuf.Duration period = 6 [(gogoproto.stdduration) = true];
+  google.protobuf.Duration period = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // ContinuousFund defines the fields of continuous fund proposal.

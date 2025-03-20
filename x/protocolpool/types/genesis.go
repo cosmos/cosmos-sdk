@@ -51,7 +51,7 @@ func validateBudget(bp Budget) error {
 	}
 
 	// Validate BudgetPerTranche
-	if bp.BudgetPerTranche == nil || bp.BudgetPerTranche.IsZero() {
+	if bp.BudgetPerTranche.IsZero() {
 		return errors.New("budget per tranche cannot be zero")
 	}
 	if err := bp.BudgetPerTranche.Validate(); err != nil {
@@ -62,7 +62,7 @@ func validateBudget(bp Budget) error {
 		return errors.New("invalid budget proposal: tranches must be greater than zero")
 	}
 
-	if bp.Period == nil || *bp.Period == 0 {
+	if bp.Period == 0 {
 		return errors.New("invalid budget proposal: period length should be greater than zero")
 	}
 	return nil

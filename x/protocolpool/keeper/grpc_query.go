@@ -70,12 +70,12 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		unclaimedBudget = totalBudgetAmountLeft
 	}
 
-	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period)
+	nextClaimFrom := budget.LastClaimedAt.Add(budget.Period)
 
 	return &types.QueryUnclaimedBudgetResponse{
-		ClaimedAmount:   budget.ClaimedAmount,
-		UnclaimedAmount: &unclaimedBudget,
-		NextClaimFrom:   &nextClaimFrom,
+		ClaimedAmount:   *budget.ClaimedAmount,
+		UnclaimedAmount: unclaimedBudget,
+		NextClaimFrom:   nextClaimFrom,
 		Period:          budget.Period,
 		TranchesLeft:    budget.TranchesLeft,
 	}, nil

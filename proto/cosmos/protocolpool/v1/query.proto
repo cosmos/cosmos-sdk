@@ -52,14 +52,14 @@ message QueryUnclaimedBudgetRequest {
 // RPC method.
 message QueryUnclaimedBudgetResponse {
   // claimed_amount is the budget amount already claimed by the recipient
-  cosmos.base.v1beta1.Coin claimed_amount = 1;
+  cosmos.base.v1beta1.Coin claimed_amount = 1 [(gogoproto.nullable) = false];
   // unclaimed_amount is the remaining budget amount that is unclaimed by the recipient
-  cosmos.base.v1beta1.Coin unclaimed_amount = 2;
+  cosmos.base.v1beta1.Coin unclaimed_amount = 2 [(gogoproto.nullable) = false];
   // next_claim_from is the next starting claim time for fund distribution.
   // It represents the time when we can claim funds after the period time interval has passed.
-  google.protobuf.Timestamp next_claim_from = 3 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp next_claim_from = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   // period is the time interval for fund distribution
-  google.protobuf.Duration period = 4 [(gogoproto.stdduration) = true];
+  google.protobuf.Duration period = 4 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
   // tranches_left is the number of tranches left for the amount to be distributed
   uint64 tranches_left = 5;
 }

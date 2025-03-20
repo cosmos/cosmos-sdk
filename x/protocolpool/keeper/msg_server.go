@@ -2,10 +2,9 @@ package keeper
 
 import (
 	"context"
-	errorspkg "errors"
+	"errors"
 	"fmt"
 
-	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +47,7 @@ func (k MsgServer) CreateBudget(ctx context.Context, msg *types.MsgCreateBudget)
 		return nil, err
 	}
 
-	budget, err := k.validateAndUpdateBudget(sdkCtx, *msg)
+	budget, err := validateAndUpdateBudget(sdkCtx, *msg)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +128,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Validate the message fields
-	err = k.validateContinuousFund(sdkCtx, *msg)
+	err = validateContinuousFund(sdkCtx, *msg)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +218,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 
 	// withdraw funds if any are allocated
 	withdrawnFunds, err := k.withdrawRecipientFunds(sdkCtx, recipient)
-	if err != nil && !errorspkg.Is(err, types.ErrNoRecipientFound) {
+	if err != nil && !errors.Is(err, types.ErrNoRecipientFound) {
 		return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
@@ -251,28 +250,4 @@ func (k MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
-}
-
-func (k *Keeper) validateAuthority(authority string) error {
-	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
-	if k.authority != authority {
-		return errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
-	}
-
-	return nil
-}
-
-func validateAmount(amount sdk.Coins) error {
-	if amount == nil {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, "amount cannot be nil")
-	}
-
-	if err := amount.Validate(); err != nil {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
-	}
-
-	return nil
 }

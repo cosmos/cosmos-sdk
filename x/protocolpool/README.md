@@ -36,26 +36,6 @@ CommunityPoolSpend can be called by the module authority (default governance mod
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 ```
 
-### SubmitBudgetProposal
-
-CreateBudget is a message used to create a budget allocation for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
-
-It's the responsibility of users to actively claim their allocated funds based on the terms of the approved budget proposals.
-
-```protobuf
-  // CreateBudget defines a method to create a budget.
-  rpc CreateBudget(MsgCreateBudget) returns (MsgCreateBudgetResponse);
-```
-
-### ClaimBudget
-
-ClaimBudget is a message used to claim funds from a previously submitted budget proposal. When a budget proposal is approved and funds are allocated, recipients can use this message to claim their share of the budget. Funds are distributed in tranches over specific periods, and users can claim their share of budget at the appropriate time.
-
-```protobuf
-  // ClaimBudget defines a method to claim the distributed budget.
-  rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);
-```
-
 ### CreateContinuousFund
 
 CreateContinuousFund is a message used to initiate a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. The fund distribution continues until expiry time is reached or continuous fund request is canceled.
@@ -114,49 +94,6 @@ The message will fail under the following conditions:
 func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
-```
-
-### MsgCreateBudget
-
-This message is used to submit a budget proposal to allocate funds for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
-
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/cosmos/protocolpool/v1/tx.proto#L75-L94
-```
-
-The message will fail under the following conditions:
-
-* The budget per tranche is zero.
-* The recipient address is empty or restricted.
-* The start time is less than current block time.
-* The number of tranches is not a positive integer.
-* The period length is not a positive integer.
-
-:::warning
-If two budgets to the same address are created, the budget would be updated with the new budget.
-:::
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/msg_server.go#L37-L59
-```
-
-### MsgClaimBudget
-
-This message is used to claim funds from a previously submitted budget proposal. When a budget proposal is passed and funds are allocated, recipients can use this message to claim their share of the budget.
-
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolpool/v1/tx.proto#L100-L104
-```
-
-The message will fail under the following conditions:
-
-- The recipient address is empty or restricted.
-- The budget proposal for the recipient does not exist.
-- The budget proposal has not reached its distribution start time.
-- The budget proposal's distribution period has not passed yet.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/msg_server.go#L28-L35
 ```
 
 ### MsgCreateContinuousFund

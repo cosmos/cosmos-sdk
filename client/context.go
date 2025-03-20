@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
@@ -266,7 +268,14 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 // client-side config from the config file.
 func (ctx Context) WithViper(prefix string) Context {
 	v := viper.New()
+
+	if prefix == "" {
+		executableName, _ := os.Executable()
+		prefix = path.Base(executableName)
+	}
+
 	v.SetEnvPrefix(prefix)
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	v.AutomaticEnv()
 	ctx.Viper = v
 	return ctx

@@ -297,7 +297,6 @@ test-sim-after-import:
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -tags='sims' -run TestAppSimulationAfterImport \
 		-NumBlocks=50 -Period=5
 
-
 test-sim-custom-genesis-multi-seed:
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
@@ -322,8 +321,7 @@ test-sim-import-export \
 test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
-test-sim-multi-seed-long \
-test-sim-benchmark-invariants
+test-sim-multi-seed-long
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

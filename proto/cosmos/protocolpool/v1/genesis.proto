@@ -9,10 +9,10 @@ import "google/protobuf/timestamp.proto";
 
 // GenesisState defines the protocolpool module's genesis state.
 message GenesisState {
-  // ContinuousFund defines the continuous funds at genesis.
-  repeated ContinuousFund continuous_fund = 1;
+  // ContinuousFunds defines the continuous funds at genesis.
+  repeated ContinuousFund continuous_funds = 1;
 
-  // params defines the parameters of this module, currently only contains the
+  // Params defines the parameters of this module, currently only contains the
   // denoms that will be used for continuous fund distributions.
   Params params = 2;
 }

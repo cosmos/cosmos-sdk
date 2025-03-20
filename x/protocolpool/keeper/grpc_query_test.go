@@ -214,4 +214,4 @@ func (suite *KeeperTestSuite) TestCommunityPool() {
 			}
 		})
 	}
-
+}

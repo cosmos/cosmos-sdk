@@ -58,7 +58,6 @@ func TestBitArrayEqual(t *testing.T) {
 		{name: "different should not be equal", b1: big1, b2: big2, eq: false},
 	}
 	for _, tc := range cases {
-
 		t.Run(tc.name, func(t *testing.T) {
 			eq := tc.b1.Equal(tc.b2)
 			require.Equal(t, tc.eq, eq)
@@ -102,7 +101,6 @@ func TestJSONMarshalUnmarshal(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-
 		t.Run(tc.bA.String(), func(t *testing.T) {
 			bz, err := json.Marshal(tc.bA)
 			require.NoError(t, err)
@@ -162,7 +160,6 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-
 		t.Run(tc.bA.String(), func(t *testing.T) {
 			bz := tc.bA.CompactMarshal()
 

@@ -60,7 +60,6 @@ func (s *IntegrationTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.UpdateParams(s.ctx, tc.request)
 			if tc.expectErr {

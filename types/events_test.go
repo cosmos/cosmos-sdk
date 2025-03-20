@@ -268,7 +268,6 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 	}
 
 	for name, tc := range testCases {
-
 		s.T().Run(name, func(_ *testing.T) {
 			s.Require().Equal(tc.expected, sdk.MarkEventsToIndex(tc.events, tc.indexSet))
 		})

@@ -146,7 +146,6 @@ func TestGenesisStateValidate(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-
 		t.Run(tc.name, func(tt *testing.T) {
 			err := tc.genesisState.Validate()
 

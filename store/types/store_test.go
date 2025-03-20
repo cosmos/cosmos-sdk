@@ -53,7 +53,6 @@ func TestStoreUpgrades(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-
 		t.Run(name, func(t *testing.T) {
 			for _, r := range tc.expectAdd {
 				assert.Equal(t, tc.upgrades.IsAdded(r.key), true)

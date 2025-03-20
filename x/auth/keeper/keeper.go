@@ -281,7 +281,7 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 }
 
 // -------------------------------------
-// Unordered Sequence management methods
+// Unordered Nonce management methods
 // -------------------------------------
 
 // ContainsUnorderedNonce reports whether the sender has used this timeout already.
@@ -289,12 +289,12 @@ func (ak AccountKeeper) ContainsUnorderedNonce(ctx sdk.Context, sender []byte, t
 	return ak.UnorderedNonces.Has(ctx, collections.Join(timeout.UnixNano(), sender))
 }
 
-// AddUnorderedNonce adds a new unordered sequence for the sender.
+// AddUnorderedNonce adds a new unordered nonce for the sender.
 func (ak AccountKeeper) AddUnorderedNonce(ctx sdk.Context, sender []byte, timeout time.Time) error {
 	return ak.UnorderedNonces.Set(ctx, collections.Join(timeout.UnixNano(), sender))
 }
 
-// RemoveExpiredUnorderedNonces removes all unordered sequences that has a timeout value before
+// RemoveExpiredUnorderedNonces removes all unordered nonces that have a timeout value before
 // the current block time.
 func (ak AccountKeeper) RemoveExpiredUnorderedNonces(ctx sdk.Context) error {
 	blkTime := ctx.BlockTime().UnixNano()

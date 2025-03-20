@@ -77,3 +77,24 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		TranchesLeft:    budget.TranchesLeft,
 	}, nil
 }
+
+// Params queries params of x/protocolpool module.
+func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	params, err := k.Keeper.Params.Get(sdkCtx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, "params not found")
+		}
+		return nil, err
+	}
+
+	return &types.QueryParamsResponse{
+		Params: params,
+	}, nil
+}

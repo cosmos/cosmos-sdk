@@ -121,3 +121,49 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestParams() {
+	expectedParams := *types.DefaultGenesisState().Params
+	err := suite.poolKeeper.Params.Set(suite.ctx, expectedParams)
+	suite.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		preRun    func()
+		req       *types.QueryParamsRequest
+		expErr    bool
+		expErrMsg string
+		resp      *types.QueryParamsResponse
+	}{
+		{
+			name:      "nil request	- error",
+			req:       nil,
+			expErr:    true,
+			expErrMsg: "rpc error: code = InvalidArgument desc = empty request",
+		},
+		{
+			name:      "valid",
+			req:       &types.QueryParamsRequest{},
+			expErr:    false,
+			expErrMsg: "empty address string is not allowed",
+			resp: &types.QueryParamsResponse{
+				Params: expectedParams,
+			},
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			resp, err := suite.queryServer.Params(suite.ctx, tc.req)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.resp, resp)
+			}
+		})
+	}
+}

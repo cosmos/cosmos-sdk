@@ -1,11 +1,13 @@
 module cosmossdk.io/simapp
 
-go 1.23.0
+go 1.23.2
+
+toolchain go1.23.6
 
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e
-	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/collections v1.1.1-0.20250320184848-d40a667874bb // indirect
 	cosmossdk.io/core v0.11.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
@@ -42,6 +44,7 @@ require (
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cloud.google.com/go/storage v1.49.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -227,6 +230,7 @@ require (
 replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/log => ../log
+	cosmossdk.io/core => ../core
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

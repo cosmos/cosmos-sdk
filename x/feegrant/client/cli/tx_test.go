@@ -412,7 +412,6 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))

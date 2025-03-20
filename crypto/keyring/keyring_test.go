@@ -2002,7 +2002,7 @@ func TestRenameKey(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		kr := newKeyring(t, "testKeyring")
 		t.Run(tc.name, func(t *testing.T) {
 			tc.run(kr)

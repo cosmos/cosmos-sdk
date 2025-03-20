@@ -91,7 +91,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolp
 
 ```go
 func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
-	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
+	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.CommunityPoolAccount, amount)
 }
 ```
 

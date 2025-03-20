@@ -982,7 +982,7 @@ func (suite *KeeperTestSuite) TestFundCommunityPool() {
 	senderAddr := sender.String()
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sender, types.ModuleName, amount).Return(nil).Times(1)
+	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sender, types.CommunityPoolAccount, amount).Return(nil).Times(1)
 
 	_, err := suite.msgServer.FundCommunityPool(suite.ctx, &types.MsgFundCommunityPool{
 		Amount:    amount,
@@ -996,7 +996,7 @@ func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
 	recipientAddr := recipient.String()
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, recipient, amount).Return(nil).Times(1)
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CommunityPoolAccount, recipient, amount).Return(nil).Times(1)
 
 	_, err := suite.msgServer.CommunityPoolSpend(suite.ctx, &types.MsgCommunityPoolSpend{
 		Authority: suite.poolKeeper.GetAuthority(),

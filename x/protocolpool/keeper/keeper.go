@@ -46,8 +46,8 @@ const (
 func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, bk types.BankKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
-	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
-		panic(fmt.Sprintf(errModuleAccountNotSet, types.ModuleName))
+	if addr := ak.GetModuleAddress(types.CommunityPoolAccount); addr == nil {
+		panic(fmt.Sprintf(errModuleAccountNotSet, types.CommunityPoolAccount))
 	}
 	// ensure stream account is set
 	if addr := ak.GetModuleAddress(types.StreamAccount); addr == nil {
@@ -90,13 +90,13 @@ func (k Keeper) GetAuthority() string {
 
 // FundCommunityPool allows an account to directly fund the community fund pool.
 func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender []byte) error {
-	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
+	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.CommunityPoolAccount, amount)
 }
 
 // DistributeFromCommunityPool distributes funds from the protocolpool module account to
 // a receiver address.
 func (k Keeper) DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr []byte) error {
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.CommunityPoolAccount, receiveAddr, amount)
 }
 
 // DistributeFromStreamFunds distributes funds from the protocolpool's stream module account to
@@ -107,9 +107,9 @@ func (k Keeper) DistributeFromStreamFunds(ctx sdk.Context, amount sdk.Coins, rec
 
 // GetCommunityPool gets the community pool balance.
 func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error) {
-	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.CommunityPoolAccount)
 	if moduleAccount == nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ModuleName)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.CommunityPoolAccount)
 	}
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
@@ -189,7 +189,7 @@ func (k Keeper) SetToDistribute(ctx sdk.Context) error {
 
 	// if there are no continuous funds, send all the funds to the community pool and reset the last balance
 	if !hasContinuousFunds {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, amountToDistribute); err != nil {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.CommunityPoolAccount, amountToDistribute); err != nil {
 			return err
 		}
 
@@ -284,7 +284,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx sdk.Context) error {
 
 	poolFunds := totalDistributionAmounts.Sub(effectiveDistributionAmounts...)
 	if !poolFunds.IsZero() {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolFunds); err != nil {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.CommunityPoolAccount, poolFunds); err != nil {
 			return err
 		}
 	}

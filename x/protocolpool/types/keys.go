@@ -6,6 +6,9 @@ const (
 	// ModuleName is the module name constant used in many places
 	ModuleName = "protocolpool"
 
+	// CommunityPoolAccount is the name constant used for the community pool.
+	CommunityPoolAccount = "protocolpool_community_pool"
+
 	// StreamAccount is the name constant used for stream account
 	StreamAccount = "stream_acc"
 

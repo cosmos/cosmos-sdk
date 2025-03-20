@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	poolAcc      = authtypes.NewEmptyModuleAccount(types.ModuleName)
+	poolAcc      = authtypes.NewEmptyModuleAccount(types.CommunityPoolAccount)
 	streamAcc    = authtypes.NewEmptyModuleAccount(types.StreamAccount)
 	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolDistrAccount)
 
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	accountKeeper := pooltestutil.NewMockAccountKeeper(ctrl)
-	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress())
+	accountKeeper.EXPECT().GetModuleAddress(types.CommunityPoolAccount).Return(poolAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(types.ProtocolPoolDistrAccount).Return(poolDistrAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	accountKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress())
@@ -91,18 +91,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(accAddr sdk.AccAddress) {
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, accAddr, gomock.Any()).AnyTimes()
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.CommunityPoolAccount, accAddr, gomock.Any()).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockWithdrawContinuousFund() {
-	suite.authKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(poolAcc).AnyTimes()
+	suite.authKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.CommunityPoolAccount).Return(poolAcc).AnyTimes()
 	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))
 	suite.bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
 	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockStreamFunds(distributed math.Int) {
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.CommunityPoolAccount).Return(poolAcc).AnyTimes()
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
 	suite.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
 	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, distributed)
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) TestGetCommunityPool() {
 	suite.SetupTest()
 
 	expectedBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(poolAcc).Times(1)
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.CommunityPoolAccount).Return(poolAcc).Times(1)
 	suite.bankKeeper.EXPECT().GetAllBalances(suite.ctx, poolAcc.GetAddress()).Return(expectedBalance).Times(1)
 
 	balance, err := suite.poolKeeper.GetCommunityPool(suite.ctx)
@@ -170,10 +170,10 @@ func (suite *KeeperTestSuite) TestGetCommunityPool() {
 	suite.Require().Equal(expectedBalance, balance)
 
 	// Test error case when module account doesn't exist
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(nil).Times(1)
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.CommunityPoolAccount).Return(nil).Times(1)
 	_, err = suite.poolKeeper.GetCommunityPool(suite.ctx)
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "module account protocolpool does not exist")
+	suite.Require().Contains(err.Error(), "module account protocolpool_community_pool does not exist")
 }
 
 func (suite *KeeperTestSuite) TestSetToDistribute() {

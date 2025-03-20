@@ -343,18 +343,6 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 	app.prepareProposal = handler
 }
 
-<<<<<<< HEAD
-=======
-// SetCheckTxHandler sets the checkTx function for the BaseApp.
-func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
-	if app.sealed {
-		panic("SetCheckTxHandler() on sealed BaseApp")
-	}
-
-	app.checkTxHandler = handler
-}
-
->>>>>>> a9e7d5b5a (fix: correct panic messages and enforce sealing check in SetStreamingManager (#23951))
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
 	if app.sealed {
 		panic("SetExtendVoteHandler() on sealed BaseApp")

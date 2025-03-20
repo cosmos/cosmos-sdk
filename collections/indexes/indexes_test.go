@@ -3,7 +3,7 @@ package indexes
 import (
 	"context"
 
-	"cosmossdk.io/core/testing"
+	"cosmossdk.io/collections/internal/coretesting"
 
 	store "cosmossdk.io/collections/corecompat"
 )

@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/collections/internal/coretesting"
 )
 
 func TestQuad(t *testing.T) {

@@ -10,8 +10,6 @@ TODO: update docs to reflect that this module is supplemental
 
 `x/protocolpool` is a module that handle functionality around community pool funds. This provides a separate module account for community pool making it easier to track the pool assets. We no longer track community pool assets in distribution module, but instead in this protocolpool module. Funds are migrated from the distribution module's community pool to protocolpool's module account.
 
-The module is also designed with a lazy "claim-based" system, which means that users are required to actively claim allocated funds from allocated budget if any budget proposal has been submitted and passed. The module does not automatically distribute funds to recipients. This design choice allows for more flexibility and control over fund distribution.
-
 ## State Transitions
 
 ### FundCommunityPool
@@ -36,7 +34,7 @@ CommunityPoolSpend can be called by the module authority (default governance mod
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 ```
 
-### SubmitBudgetProposal
+### CreateBudget
 
 CreateBudget is a message used to create a budget allocation for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
 
@@ -49,7 +47,7 @@ It's the responsibility of users to actively claim their allocated funds based o
 
 ### ClaimBudget
 
-ClaimBudget is a message used to claim funds from a previously submitted budget proposal. When a budget proposal is approved and funds are allocated, recipients can use this message to claim their share of the budget. Funds are distributed in tranches over specific periods, and users can claim their share of budget at the appropriate time.
+ClaimBudget is a message used to claim funds from a previously submitted budget. When a budget proposal is approved and funds are allocated, recipients can use this message to claim their share of the budget. Funds are distributed in tranches over specific periods, and users can claim their share of budget at the appropriate time.
 
 ```protobuf
   // ClaimBudget defines a method to claim the distributed budget.
@@ -142,7 +140,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 
 ### MsgClaimBudget
 
-This message is used to claim funds from a previously submitted budget proposal. When a budget proposal is passed and funds are allocated, recipients can use this message to claim their share of the budget.
+This message is used to claim funds from a previously submitted budget. When a budget proposal is passed and funds are allocated, recipients can use this message to claim their share of the budget.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolpool/v1/tx.proto#L100-L104
@@ -161,7 +159,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 
 ### MsgCreateContinuousFund
 
-This message is used to create a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. This fund distribution continues until expiry time is reached or continuous fund request is canceled.
+This message is used to create a continuous fund for a specific recipient. The proposed percentage of funds will be distributed every begin blocker iteration. This fund distribution continues until expiry time is reached or continuous fund request is canceled.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolpool/v1/tx.proto#L114-L130
@@ -183,7 +181,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 
 ### MsgCancelContinuousFund
 
-This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each end block, and the state object will be removed. Users should be cautious when canceling continuous funds, as it may affect the planned distribution for the recipient.
+This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each begin block, and the state object will be removed. Users should be cautious when canceling continuous funds, as it may affect the planned distribution for the recipient.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/proto/cosmos/protocolpool/v1/tx.proto#L136-L161

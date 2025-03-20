@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (crypto/ledger) [#24036](https://github.com/cosmos/cosmos-sdk/pull/24036) Improve error message when deriving paths using index > 100
 * (gRPC) [#23844](https://github.com/cosmos/cosmos-sdk/pull/23844) Add debug log prints for each gRPC request.
+* (grpcserver) [#24073](https://github.com/cosmos/cosmos-sdk/pull/24073) Adds error handling for out-of-gas panics in grpc query handlers.
 
 ### Bug Fixes
 

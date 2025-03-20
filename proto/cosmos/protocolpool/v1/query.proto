@@ -7,8 +7,6 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 import "cosmos/protocolpool/v1/types.proto";
 
 // Query defines the gRPC querier service for community pool module.
@@ -56,20 +54,19 @@ message QueryContinuousFundRequest {
 // QueryUnclaimedBudgetResponse is the response type for the Query/ContinuousFund
 // RPC method.
 message QueryContinuousFundResponse {
-
+  // ContinuousFunds is the given continuous fund returned in the query.
+  ContinuousFund continuous_fund = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryContinuousFundRequest is the request type for the Query/ContinuousFunds
 // RPC method.
-message QueryContinuousFundsRequest {
-  // address is the recipient address to query unclaimed budget amount for.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
+message QueryContinuousFundsRequest {}
 
 // QueryUnclaimedBudgetResponse is the response type for the Query/ContinuousFunds
 // RPC method.
 message QueryContinuousFundsResponse {
-
+  // ContinuousFunds defines all continuous funds in state.
+  repeated ContinuousFund continuous_funds = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest is the response type for the Query/Params RPC method.

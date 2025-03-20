@@ -8,7 +8,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
@@ -65,124 +64,16 @@ func (x *_GenesisState_1_list) IsValid() bool {
 	return x.list != nil
 }
 
-var _ protoreflect.List = (*_GenesisState_2_list)(nil)
-
-type _GenesisState_2_list struct {
-	list *[]*Budget
-}
-
-func (x *_GenesisState_2_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_GenesisState_2_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_GenesisState_2_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Budget)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_GenesisState_2_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Budget)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_GenesisState_2_list) AppendMutable() protoreflect.Value {
-	v := new(Budget)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_2_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_GenesisState_2_list) NewElement() protoreflect.Value {
-	v := new(Budget)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_2_list) IsValid() bool {
-	return x.list != nil
-}
-
-var _ protoreflect.List = (*_GenesisState_4_list)(nil)
-
-type _GenesisState_4_list struct {
-	list *[]*Distribution
-}
-
-func (x *_GenesisState_4_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_GenesisState_4_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_GenesisState_4_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Distribution)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_GenesisState_4_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Distribution)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_GenesisState_4_list) AppendMutable() protoreflect.Value {
-	v := new(Distribution)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_4_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_GenesisState_4_list) NewElement() protoreflect.Value {
-	v := new(Distribution)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_4_list) IsValid() bool {
-	return x.list != nil
-}
-
 var (
-	md_GenesisState                 protoreflect.MessageDescriptor
-	fd_GenesisState_continuous_fund protoreflect.FieldDescriptor
-	fd_GenesisState_budget          protoreflect.FieldDescriptor
-	fd_GenesisState_last_balance    protoreflect.FieldDescriptor
-	fd_GenesisState_distributions   protoreflect.FieldDescriptor
-	fd_GenesisState_params          protoreflect.FieldDescriptor
+	md_GenesisState                  protoreflect.MessageDescriptor
+	fd_GenesisState_continuous_funds protoreflect.FieldDescriptor
+	fd_GenesisState_params           protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_protocolpool_v1_genesis_proto_init()
 	md_GenesisState = File_cosmos_protocolpool_v1_genesis_proto.Messages().ByName("GenesisState")
-	fd_GenesisState_continuous_fund = md_GenesisState.Fields().ByName("continuous_fund")
-	fd_GenesisState_budget = md_GenesisState.Fields().ByName("budget")
-	fd_GenesisState_last_balance = md_GenesisState.Fields().ByName("last_balance")
-	fd_GenesisState_distributions = md_GenesisState.Fields().ByName("distributions")
+	fd_GenesisState_continuous_funds = md_GenesisState.Fields().ByName("continuous_funds")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
 }
 
@@ -251,27 +142,9 @@ func (x *fastReflection_GenesisState) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.ContinuousFund) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_1_list{list: &x.ContinuousFund})
-		if !f(fd_GenesisState_continuous_fund, value) {
-			return
-		}
-	}
-	if len(x.Budget) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_2_list{list: &x.Budget})
-		if !f(fd_GenesisState_budget, value) {
-			return
-		}
-	}
-	if x.LastBalance != nil {
-		value := protoreflect.ValueOfMessage(x.LastBalance.ProtoReflect())
-		if !f(fd_GenesisState_last_balance, value) {
-			return
-		}
-	}
-	if len(x.Distributions) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_4_list{list: &x.Distributions})
-		if !f(fd_GenesisState_distributions, value) {
+	if len(x.ContinuousFunds) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_1_list{list: &x.ContinuousFunds})
+		if !f(fd_GenesisState_continuous_funds, value) {
 			return
 		}
 	}
@@ -296,14 +169,8 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.GenesisState.continuous_fund":
-		return len(x.ContinuousFund) != 0
-	case "cosmos.protocolpool.v1.GenesisState.budget":
-		return len(x.Budget) != 0
-	case "cosmos.protocolpool.v1.GenesisState.last_balance":
-		return x.LastBalance != nil
-	case "cosmos.protocolpool.v1.GenesisState.distributions":
-		return len(x.Distributions) != 0
+	case "cosmos.protocolpool.v1.GenesisState.continuous_funds":
+		return len(x.ContinuousFunds) != 0
 	case "cosmos.protocolpool.v1.GenesisState.params":
 		return x.Params != nil
 	default:
@@ -322,14 +189,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.GenesisState.continuous_fund":
-		x.ContinuousFund = nil
-	case "cosmos.protocolpool.v1.GenesisState.budget":
-		x.Budget = nil
-	case "cosmos.protocolpool.v1.GenesisState.last_balance":
-		x.LastBalance = nil
-	case "cosmos.protocolpool.v1.GenesisState.distributions":
-		x.Distributions = nil
+	case "cosmos.protocolpool.v1.GenesisState.continuous_funds":
+		x.ContinuousFunds = nil
 	case "cosmos.protocolpool.v1.GenesisState.params":
 		x.Params = nil
 	default:
@@ -348,26 +209,11 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.GenesisState.continuous_fund":
-		if len(x.ContinuousFund) == 0 {
+	case "cosmos.protocolpool.v1.GenesisState.continuous_funds":
+		if len(x.ContinuousFunds) == 0 {
 			return protoreflect.ValueOfList(&_GenesisState_1_list{})
 		}
-		listValue := &_GenesisState_1_list{list: &x.ContinuousFund}
-		return protoreflect.ValueOfList(listValue)
-	case "cosmos.protocolpool.v1.GenesisState.budget":
-		if len(x.Budget) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_2_list{})
-		}
-		listValue := &_GenesisState_2_list{list: &x.Budget}
-		return protoreflect.ValueOfList(listValue)
-	case "cosmos.protocolpool.v1.GenesisState.last_balance":
-		value := x.LastBalance
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.GenesisState.distributions":
-		if len(x.Distributions) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_4_list{})
-		}
-		listValue := &_GenesisState_4_list{list: &x.Distributions}
+		listValue := &_GenesisState_1_list{list: &x.ContinuousFunds}
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.protocolpool.v1.GenesisState.params":
 		value := x.Params
@@ -392,20 +238,10 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.GenesisState.continuous_fund":
+	case "cosmos.protocolpool.v1.GenesisState.continuous_funds":
 		lv := value.List()
 		clv := lv.(*_GenesisState_1_list)
-		x.ContinuousFund = *clv.list
-	case "cosmos.protocolpool.v1.GenesisState.budget":
-		lv := value.List()
-		clv := lv.(*_GenesisState_2_list)
-		x.Budget = *clv.list
-	case "cosmos.protocolpool.v1.GenesisState.last_balance":
-		x.LastBalance = value.Message().Interface().(*DistributionAmount)
-	case "cosmos.protocolpool.v1.GenesisState.distributions":
-		lv := value.List()
-		clv := lv.(*_GenesisState_4_list)
-		x.Distributions = *clv.list
+		x.ContinuousFunds = *clv.list
 	case "cosmos.protocolpool.v1.GenesisState.params":
 		x.Params = value.Message().Interface().(*Params)
 	default:
@@ -428,28 +264,11 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.GenesisState.continuous_fund":
-		if x.ContinuousFund == nil {
-			x.ContinuousFund = []*ContinuousFund{}
+	case "cosmos.protocolpool.v1.GenesisState.continuous_funds":
+		if x.ContinuousFunds == nil {
+			x.ContinuousFunds = []*ContinuousFund{}
 		}
-		value := &_GenesisState_1_list{list: &x.ContinuousFund}
-		return protoreflect.ValueOfList(value)
-	case "cosmos.protocolpool.v1.GenesisState.budget":
-		if x.Budget == nil {
-			x.Budget = []*Budget{}
-		}
-		value := &_GenesisState_2_list{list: &x.Budget}
-		return protoreflect.ValueOfList(value)
-	case "cosmos.protocolpool.v1.GenesisState.last_balance":
-		if x.LastBalance == nil {
-			x.LastBalance = new(DistributionAmount)
-		}
-		return protoreflect.ValueOfMessage(x.LastBalance.ProtoReflect())
-	case "cosmos.protocolpool.v1.GenesisState.distributions":
-		if x.Distributions == nil {
-			x.Distributions = []*Distribution{}
-		}
-		value := &_GenesisState_4_list{list: &x.Distributions}
+		value := &_GenesisState_1_list{list: &x.ContinuousFunds}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.protocolpool.v1.GenesisState.params":
 		if x.Params == nil {
@@ -469,18 +288,9 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.GenesisState.continuous_fund":
+	case "cosmos.protocolpool.v1.GenesisState.continuous_funds":
 		list := []*ContinuousFund{}
 		return protoreflect.ValueOfList(&_GenesisState_1_list{list: &list})
-	case "cosmos.protocolpool.v1.GenesisState.budget":
-		list := []*Budget{}
-		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
-	case "cosmos.protocolpool.v1.GenesisState.last_balance":
-		m := new(DistributionAmount)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.GenesisState.distributions":
-		list := []*Distribution{}
-		return protoreflect.ValueOfList(&_GenesisState_4_list{list: &list})
 	case "cosmos.protocolpool.v1.GenesisState.params":
 		m := new(Params)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -553,24 +363,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if len(x.ContinuousFund) > 0 {
-			for _, e := range x.ContinuousFund {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if len(x.Budget) > 0 {
-			for _, e := range x.Budget {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if x.LastBalance != nil {
-			l = options.Size(x.LastBalance)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if len(x.Distributions) > 0 {
-			for _, e := range x.Distributions {
+		if len(x.ContinuousFunds) > 0 {
+			for _, e := range x.ContinuousFunds {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -620,57 +414,11 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x2a
+			dAtA[i] = 0x12
 		}
-		if len(x.Distributions) > 0 {
-			for iNdEx := len(x.Distributions) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Distributions[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x22
-			}
-		}
-		if x.LastBalance != nil {
-			encoded, err := options.Marshal(x.LastBalance)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.Budget) > 0 {
-			for iNdEx := len(x.Budget) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Budget[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x12
-			}
-		}
-		if len(x.ContinuousFund) > 0 {
-			for iNdEx := len(x.ContinuousFund) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.ContinuousFund[iNdEx])
+		if len(x.ContinuousFunds) > 0 {
+			for iNdEx := len(x.ContinuousFunds) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ContinuousFunds[iNdEx])
 				if err != nil {
 					return protoiface.MarshalOutput{
 						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -735,7 +483,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ContinuousFund", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ContinuousFunds", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -762,116 +510,12 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.ContinuousFund = append(x.ContinuousFund, &ContinuousFund{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ContinuousFund[len(x.ContinuousFund)-1]); err != nil {
+				x.ContinuousFunds = append(x.ContinuousFunds, &ContinuousFund{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ContinuousFunds[len(x.ContinuousFunds)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
 			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Budget", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Budget = append(x.Budget, &Budget{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Budget[len(x.Budget)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LastBalance", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.LastBalance == nil {
-					x.LastBalance = &DistributionAmount{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.LastBalance); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Distributions", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Distributions = append(x.Distributions, &Distribution{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Distributions[len(x.Distributions)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 5:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
 				}
@@ -942,520 +586,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var (
-	md_Distribution        protoreflect.MessageDescriptor
-	fd_Distribution_time   protoreflect.FieldDescriptor
-	fd_Distribution_amount protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_cosmos_protocolpool_v1_genesis_proto_init()
-	md_Distribution = File_cosmos_protocolpool_v1_genesis_proto.Messages().ByName("Distribution")
-	fd_Distribution_time = md_Distribution.Fields().ByName("time")
-	fd_Distribution_amount = md_Distribution.Fields().ByName("amount")
-}
-
-var _ protoreflect.Message = (*fastReflection_Distribution)(nil)
-
-type fastReflection_Distribution Distribution
-
-func (x *Distribution) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Distribution)(x)
-}
-
-func (x *Distribution) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_protocolpool_v1_genesis_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_Distribution_messageType fastReflection_Distribution_messageType
-var _ protoreflect.MessageType = fastReflection_Distribution_messageType{}
-
-type fastReflection_Distribution_messageType struct{}
-
-func (x fastReflection_Distribution_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Distribution)(nil)
-}
-func (x fastReflection_Distribution_messageType) New() protoreflect.Message {
-	return new(fastReflection_Distribution)
-}
-func (x fastReflection_Distribution_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Distribution
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_Distribution) Descriptor() protoreflect.MessageDescriptor {
-	return md_Distribution
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Distribution) Type() protoreflect.MessageType {
-	return _fastReflection_Distribution_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Distribution) New() protoreflect.Message {
-	return new(fastReflection_Distribution)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_Distribution) Interface() protoreflect.ProtoMessage {
-	return (*Distribution)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_Distribution) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Time != nil {
-		value := protoreflect.ValueOfMessage(x.Time.ProtoReflect())
-		if !f(fd_Distribution_time, value) {
-			return
-		}
-	}
-	if x.Amount != nil {
-		value := protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
-		if !f(fd_Distribution_amount, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_Distribution) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Distribution.time":
-		return x.Time != nil
-	case "cosmos.protocolpool.v1.Distribution.amount":
-		return x.Amount != nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Distribution"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.Distribution does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Distribution) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Distribution.time":
-		x.Time = nil
-	case "cosmos.protocolpool.v1.Distribution.amount":
-		x.Amount = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Distribution"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.Distribution does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Distribution) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.Distribution.time":
-		value := x.Time
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.Distribution.amount":
-		value := x.Amount
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Distribution"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.Distribution does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Distribution) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Distribution.time":
-		x.Time = value.Message().Interface().(*timestamppb.Timestamp)
-	case "cosmos.protocolpool.v1.Distribution.amount":
-		x.Amount = value.Message().Interface().(*DistributionAmount)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Distribution"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.Distribution does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Distribution) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Distribution.time":
-		if x.Time == nil {
-			x.Time = new(timestamppb.Timestamp)
-		}
-		return protoreflect.ValueOfMessage(x.Time.ProtoReflect())
-	case "cosmos.protocolpool.v1.Distribution.amount":
-		if x.Amount == nil {
-			x.Amount = new(DistributionAmount)
-		}
-		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Distribution"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.Distribution does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Distribution) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Distribution.time":
-		m := new(timestamppb.Timestamp)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.Distribution.amount":
-		m := new(DistributionAmount)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.Distribution"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.Distribution does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Distribution) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.Distribution", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Distribution) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Distribution) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_Distribution) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_Distribution) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Distribution)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.Time != nil {
-			l = options.Size(x.Time)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Amount != nil {
-			l = options.Size(x.Amount)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Distribution)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.Amount != nil {
-			encoded, err := options.Marshal(x.Amount)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if x.Time != nil {
-			encoded, err := options.Marshal(x.Time)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Distribution)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Distribution: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Distribution: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Time == nil {
-					x.Time = &timestamppb.Timestamp{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Time); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Amount == nil {
-					x.Amount = &DistributionAmount{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -1475,20 +605,11 @@ type GenesisState struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// ContinuousFund defines the continuous funds at genesis.
-	ContinuousFund []*ContinuousFund `protobuf:"bytes,1,rep,name=continuous_fund,json=continuousFund,proto3" json:"continuous_fund,omitempty"`
-	// Budget defines the budget proposals at genesis.
-	Budget []*Budget `protobuf:"bytes,2,rep,name=budget,proto3" json:"budget,omitempty"`
-	// last_balance contains the amount of tokens yet to be distributed, will be zero if
-	// there are no funds to distribute.
-	LastBalance *DistributionAmount `protobuf:"bytes,3,opt,name=last_balance,json=lastBalance,proto3" json:"last_balance,omitempty"`
-	// distributions contains the list of distributions to be made to continuous
-	// funds and budgets. It contains time in order to distribute to non-expired
-	// funds only.
-	Distributions []*Distribution `protobuf:"bytes,4,rep,name=distributions,proto3" json:"distributions,omitempty"`
-	// params defines the parameters of this module, currently only contains the
+	// ContinuousFunds defines the continuous funds at genesis.
+	ContinuousFunds []*ContinuousFund `protobuf:"bytes,1,rep,name=continuous_funds,json=continuousFunds,proto3" json:"continuous_funds,omitempty"`
+	// Params defines the parameters of this module, currently only contains the
 	// denoms that will be used for continuous fund distributions.
-	Params *Params `protobuf:"bytes,5,opt,name=params,proto3" json:"params,omitempty"`
+	Params *Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -1511,30 +632,9 @@ func (*GenesisState) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_genesis_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GenesisState) GetContinuousFund() []*ContinuousFund {
+func (x *GenesisState) GetContinuousFunds() []*ContinuousFund {
 	if x != nil {
-		return x.ContinuousFund
-	}
-	return nil
-}
-
-func (x *GenesisState) GetBudget() []*Budget {
-	if x != nil {
-		return x.Budget
-	}
-	return nil
-}
-
-func (x *GenesisState) GetLastBalance() *DistributionAmount {
-	if x != nil {
-		return x.LastBalance
-	}
-	return nil
-}
-
-func (x *GenesisState) GetDistributions() []*Distribution {
-	if x != nil {
-		return x.Distributions
+		return x.ContinuousFunds
 	}
 	return nil
 }
@@ -1542,54 +642,6 @@ func (x *GenesisState) GetDistributions() []*Distribution {
 func (x *GenesisState) GetParams() *Params {
 	if x != nil {
 		return x.Params
-	}
-	return nil
-}
-
-// Distribution time with amount tuple
-type Distribution struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// time at which this distribution was made, in order to distribute to non-expired funds only
-	// and funds that existed at that time. Because we don't distribute right away, we keep track
-	// of the time of distribution.
-	Time *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=time,proto3" json:"time,omitempty"`
-	// amount is the list of coins to be distributed.
-	Amount *DistributionAmount `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (x *Distribution) Reset() {
-	*x = Distribution{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_protocolpool_v1_genesis_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Distribution) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Distribution) ProtoMessage() {}
-
-// Deprecated: Use Distribution.ProtoReflect.Descriptor instead.
-func (*Distribution) Descriptor() ([]byte, []int) {
-	return file_cosmos_protocolpool_v1_genesis_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Distribution) GetTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.Time
-	}
-	return nil
-}
-
-func (x *Distribution) GetAmount() *DistributionAmount {
-	if x != nil {
-		return x.Amount
 	}
 	return nil
 }
@@ -1604,56 +656,32 @@ var file_cosmos_protocolpool_v1_genesis_proto_rawDesc = []byte{
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70,
 	0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f,
-	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xf0, 0x02, 0x0a, 0x0c, 0x47, 0x65,
-	0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x4f, 0x0a, 0x0f, 0x63, 0x6f,
-	0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x5f, 0x66, 0x75, 0x6e, 0x64, 0x18, 0x01, 0x20,
+	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x9f, 0x01, 0x0a, 0x0c, 0x47, 0x65, 0x6e,
+	0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x57, 0x0a, 0x10, 0x63, 0x6f, 0x6e,
+	0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x5f, 0x66, 0x75, 0x6e, 0x64, 0x73, 0x18, 0x01, 0x20,
 	0x03, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e,
-	0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x0e, 0x63, 0x6f, 0x6e,
-	0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x36, 0x0a, 0x06, 0x62,
-	0x75, 0x64, 0x67, 0x65, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f,
-	0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x06, 0x62, 0x75, 0x64,
-	0x67, 0x65, 0x74, 0x12, 0x53, 0x0a, 0x0c, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x62, 0x61, 0x6c, 0x61,
-	0x6e, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
-	0x76, 0x31, 0x2e, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x41,
-	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0b, 0x6c, 0x61, 0x73,
-	0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x4a, 0x0a, 0x0d, 0x64, 0x69, 0x73, 0x74,
-	0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
-	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
-	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0d, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
-	0x69, 0x6f, 0x6e, 0x73, 0x12, 0x36, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x05,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x8e, 0x01, 0x0a,
-	0x0c, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x34, 0x0a,
-	0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
-	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x04, 0x74,
-	0x69, 0x6d, 0x65, 0x12, 0x48, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x73,
-	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x42,
-	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0xdc, 0x01,
-	0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65,
-	0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
-	0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
-	0x6f, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
-	0x2e, 0x56, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
-	0x6f, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f,
+	0x00, 0x52, 0x0f, 0x63, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e,
+	0x64, 0x73, 0x12, 0x36, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0xdc, 0x01, 0x0a, 0x1a, 0x63,
+	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73,
+	0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f,
+	0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76,
+	0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31,
+	0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c,
+	0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
+	0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -1668,29 +696,20 @@ func file_cosmos_protocolpool_v1_genesis_proto_rawDescGZIP() []byte {
 	return file_cosmos_protocolpool_v1_genesis_proto_rawDescData
 }
 
-var file_cosmos_protocolpool_v1_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cosmos_protocolpool_v1_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cosmos_protocolpool_v1_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil),          // 0: cosmos.protocolpool.v1.GenesisState
-	(*Distribution)(nil),          // 1: cosmos.protocolpool.v1.Distribution
-	(*ContinuousFund)(nil),        // 2: cosmos.protocolpool.v1.ContinuousFund
-	(*Budget)(nil),                // 3: cosmos.protocolpool.v1.Budget
-	(*DistributionAmount)(nil),    // 4: cosmos.protocolpool.v1.DistributionAmount
-	(*Params)(nil),                // 5: cosmos.protocolpool.v1.Params
-	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(*GenesisState)(nil),   // 0: cosmos.protocolpool.v1.GenesisState
+	(*ContinuousFund)(nil), // 1: cosmos.protocolpool.v1.ContinuousFund
+	(*Params)(nil),         // 2: cosmos.protocolpool.v1.Params
 }
 var file_cosmos_protocolpool_v1_genesis_proto_depIdxs = []int32{
-	2, // 0: cosmos.protocolpool.v1.GenesisState.continuous_fund:type_name -> cosmos.protocolpool.v1.ContinuousFund
-	3, // 1: cosmos.protocolpool.v1.GenesisState.budget:type_name -> cosmos.protocolpool.v1.Budget
-	4, // 2: cosmos.protocolpool.v1.GenesisState.last_balance:type_name -> cosmos.protocolpool.v1.DistributionAmount
-	1, // 3: cosmos.protocolpool.v1.GenesisState.distributions:type_name -> cosmos.protocolpool.v1.Distribution
-	5, // 4: cosmos.protocolpool.v1.GenesisState.params:type_name -> cosmos.protocolpool.v1.Params
-	6, // 5: cosmos.protocolpool.v1.Distribution.time:type_name -> google.protobuf.Timestamp
-	4, // 6: cosmos.protocolpool.v1.Distribution.amount:type_name -> cosmos.protocolpool.v1.DistributionAmount
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	1, // 0: cosmos.protocolpool.v1.GenesisState.continuous_funds:type_name -> cosmos.protocolpool.v1.ContinuousFund
+	2, // 1: cosmos.protocolpool.v1.GenesisState.params:type_name -> cosmos.protocolpool.v1.Params
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_protocolpool_v1_genesis_proto_init() }
@@ -1712,18 +731,6 @@ func file_cosmos_protocolpool_v1_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_protocolpool_v1_genesis_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Distribution); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1731,7 +738,7 @@ func file_cosmos_protocolpool_v1_genesis_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_protocolpool_v1_genesis_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

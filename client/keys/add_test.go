@@ -222,7 +222,7 @@ func Test_runAddCmdMultisigMultipleDupKeys(t *testing.T) {
 	kbHome := t.TempDir()
 
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
+	_, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
 	clientCtx := client.Context{}.
@@ -234,13 +234,6 @@ func Test_runAddCmdMultisigMultipleDupKeys(t *testing.T) {
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
-
-	t.Cleanup(func() {
-		_ = kb.Delete("key1")
-		_ = kb.Delete("key2")
-		_ = kb.Delete("key3")
-		_ = kb.Delete("multisigname")
-	})
 
 	// Create test keys
 	for _, keyName := range []string{"key1", "key2", "key3"} {

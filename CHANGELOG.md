@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (crypto/ledger) [#24036](https://github.com/cosmos/cosmos-sdk/pull/24036) Improve error message when deriving paths using index > 100
 * (gRPC) [#23844](https://github.com/cosmos/cosmos-sdk/pull/23844) Add debug log prints for each gRPC request.
+* (server) [#24072](https://github.com/cosmos/cosmos-sdk/pull/24072) Return BlockHeader by shallow copy in server Context.
 
 ### Bug Fixes
 
@@ -69,6 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (query) [87d3a43](https://github.com/cosmos/cosmos-sdk/commit/87d3a432af95f4cf96aa02351ed5fcc51cca6e7b) Fix collection filtered pagination.
 * (sims) [#23952](https://github.com/cosmos/cosmos-sdk/pull/23952) Use liveness matrix for validator sign status in sims
 * (baseapp) [#24055](https://github.com/cosmos/cosmos-sdk/pull/24055) Align block header when query with latest height.
+* (baseapp) [#24074](https://github.com/cosmos/cosmos-sdk/pull/24074) Use CometBFT's ComputeProtoSizeForTxs in defaultTxSelector.SelectTxForProposal for consistency.
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20
 

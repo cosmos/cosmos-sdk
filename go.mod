@@ -43,6 +43,7 @@ require (
 	github.com/magiconair/properties v1.8.9
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-isatty v0.0.20
+	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/prometheus/client_golang v1.21.1
 	github.com/prometheus/common v0.62.0
 	github.com/rs/zerolog v1.33.0
@@ -166,6 +167,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
+	rsc.io/qr v0.2.0 // indirect
 )
 
 // Here are the short-lived replace from the Cosmos SDK

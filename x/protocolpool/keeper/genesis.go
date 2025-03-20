@@ -71,6 +71,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 	if totalToBeDistributed.IsAnyGT(data.LastBalance.Amount) || !totalToBeDistributed.DenomsSubsetOf(data.LastBalance.Amount) {
 		return fmt.Errorf("total to be distributed is greater than the last balance: %s > %s", totalToBeDistributed, data.LastBalance.Amount)
 	}
+
 	return nil
 }
 

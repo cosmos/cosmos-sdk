@@ -7,6 +7,11 @@ import (
 	"net/http"
 )
 
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 // GetRequestWithHeaders defines a wrapper around an HTTP GET request with a provided URL
 // and custom headers
 // An error is returned if the request or reading the body fails.

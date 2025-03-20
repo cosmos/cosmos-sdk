@@ -1,12 +1,11 @@
 package distribution
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/simapp"
 
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -19,14 +18,20 @@ import (
 type GRPCQueryTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	externalPoolEnabled bool
+	cfg                 network.Config
+	network             *network.Network
+}
+
+func NewGRPCQueryTestSuite(externalPoolEnabled bool) *GRPCQueryTestSuite {
+	return &GRPCQueryTestSuite{externalPoolEnabled: externalPoolEnabled}
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
-	s.T().Log("setting up e2e test suite")
+	s.T().Log("setting up grpc e2e test suite")
 
-	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
+
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
@@ -39,7 +44,7 @@ func (s *GRPCQueryTestSuite) SetupSuite() {
 
 // TearDownSuite cleans up the curret test network after _each_ test.
 func (s *GRPCQueryTestSuite) TearDownSuite() {
-	s.T().Log("tearing down e2e test suite1")
+	s.T().Log("tearing down grpc e2e test suite")
 	s.network.Cleanup()
 }
 
@@ -489,13 +494,19 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
-
 		s.Run(tc.name, func() {
-			if tc.expErr {
+			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
+
+			switch {
+			case tc.expErr:
 				s.Require().Error(err)
-			} else {
+			case s.externalPoolEnabled:
+				s.Require().NoError(err)
+				var errMessage sdktestutil.ErrorResponse
+				s.Require().NoError(json.Unmarshal(resp, &errMessage))
+				s.Require().Equal(2, errMessage.Code)
+				s.Require().Equal("external community pool is enabled - use the CommunityPool query exposed by the external community pool: invalid request: unknown request", errMessage.Message)
+			default:
 				s.Require().NoError(err)
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())

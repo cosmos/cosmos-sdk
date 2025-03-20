@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestManager(t *testing.T) {

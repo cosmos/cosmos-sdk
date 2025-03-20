@@ -48,11 +48,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	if options.UnorderedNonceManager != nil {
-		var opts []ante.UnorderedTxDecoratorOptions
-		if options.UnorderedTxMaxTimeoutDuration != 0 {
-			opts = append(opts, ante.WithTimeoutDuration(options.UnorderedTxMaxTimeoutDuration))
-		}
-		anteDecorators = append(anteDecorators, ante.NewUnorderedTxDecorator(options.UnorderedNonceManager, opts...))
+		anteDecorators = append(anteDecorators, ante.NewUnorderedTxDecorator(options.UnorderedNonceManager, options.UnorderedTxOptions...))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

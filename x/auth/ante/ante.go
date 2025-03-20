@@ -1,8 +1,6 @@
 package ante
 
 import (
-	"time"
-
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -25,9 +23,7 @@ type HandlerOptions struct {
 	// UnorderedNonceManager is an opt-in feature for x/auth.
 	// When set, this application will be able to receive and process unordered transactions.
 	UnorderedNonceManager UnorderedNonceManager
-	// UnorderedTxMaxTimeoutDuration is an optional timeout duration for `x/auth`'s unordered transaction feature.
-	// When unset, a default of 10 minutes is used.
-	UnorderedTxMaxTimeoutDuration time.Duration
+	UnorderedTxOptions    []UnorderedTxDecoratorOptions
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -62,11 +58,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	if options.UnorderedNonceManager != nil {
-		var opts []UnorderedTxDecoratorOptions
-		if options.UnorderedTxMaxTimeoutDuration != 0 {
-			opts = append(opts, WithTimeoutDuration(options.UnorderedTxMaxTimeoutDuration))
-		}
-		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(options.UnorderedNonceManager, opts...))
+		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(options.UnorderedNonceManager, options.UnorderedTxOptions...))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

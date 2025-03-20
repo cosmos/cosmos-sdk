@@ -5,7 +5,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write  # Allow commenting on PRs
 
 jobs:
   dependency-review:
@@ -13,7 +12,8 @@ jobs:
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - name: "Setup Go"
+        uses: actions/setup-go@v5
         with:
           go-version: "1.23"
           check-latest: true
@@ -28,15 +28,19 @@ jobs:
       - name: "Go vulnerability check"
         id: govuln
         run: |
-          # Run the vulnerability check and capture its output
+          # Run the vulnerability check and capture its output (ignoring non-zero exit codes)
           make vulncheck 2>&1 | tee govulncheck-output.txt || true
-      
-          # Filter out the specific vulnerability to ignore
-          grep -v "GO-2025-3443" govulncheck-output.txt > govulncheck-output.filtered.txt
-      
-          # If the filtered output is not empty, then there are other vulnerabilities
-          if [ -s govulncheck-output.filtered.txt ]; then
-            echo "Other vulnerabilities found:"
-            cat govulncheck-output.filtered.txt
-            exit 1
-          fi
+
+          # Extract vulnerability identifiers from the output (e.g., GO-2025-3443)
+          vulnerabilities=$(grep -o 'GO-[0-9]\{4\}-[0-9]\+' govulncheck-output.txt | sort | uniq)
+          echo "Detected vulnerabilities: $vulnerabilities"
+
+          # Check if any vulnerability other than GO-2025-3443 exists
+          for vuln in $vulnerabilities; do
+            if [ "$vuln" != "GO-2025-3443" ]; then
+              echo "Found vulnerability $vuln, failing..."
+              exit 1
+            fi
+          done
+
+          echo "Only known vulnerability (GO-2025-3443) present. Continuing."

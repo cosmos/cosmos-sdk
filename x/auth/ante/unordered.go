@@ -120,7 +120,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 		return nil
 	}
 
-	signerAddrs, err := getSigners(tx)
+	signerAddrs, err := extractSignersBytes(tx)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	return nil
 }
 
-func getSigners(tx sdk.Tx) ([][]byte, error) {
+func extractSignersBytes(tx sdk.Tx) ([][]byte, error) {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")

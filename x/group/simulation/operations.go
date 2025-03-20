@@ -58,7 +58,7 @@ const (
 	OpMsgLeaveGroup                      = "ops_weight_msg_leave_group"
 )
 
-// If update group or group policy txn's executed, `simulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
+// If update group or group policy txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
 // That's why we have less weight for update group & group-policy txn's.
 const (
 	WeightMsgCreateGroup                     = 100
@@ -100,9 +100,9 @@ func (s *sharedState) setMinGroupID(id uint64) {
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
-	appParams simtypes.AppParams, cdc codec.JSONCodec, txGen client.TxConfig,
+	appParams simtypes.AppParams, _ codec.JSONCodec, txGen client.TxConfig,
 	ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper,
-	appCdc cdctypes.AnyUnpacker,
+	_ cdctypes.AnyUnpacker,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGroup                     int
@@ -241,7 +241,7 @@ func WeightedOperations(
 // SimulateMsgCreateGroup generates a MsgCreateGroup with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgCreateGroup(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -289,7 +289,7 @@ func SimulateMsgCreateGroup(
 // SimulateMsgCreateGroupWithPolicy generates a MsgCreateGroupWithPolicy with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgCreateGroupWithPolicy(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -322,7 +322,7 @@ func SimulateMsgCreateGroupWithPolicy(
 			GroupPolicyMetadata: simtypes.RandStringOfLength(r, 10),
 			GroupPolicyAsAdmin:  r.Float32() < 0.5,
 		}
-		msg.SetDecisionPolicy(decisionPolicy)
+		err = msg.SetDecisionPolicy(decisionPolicy)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, sdk.MsgTypeURL(msg), "unable to set decision policy"), nil, err
 		}
@@ -364,7 +364,7 @@ func SimulateMsgCreateGroupPolicy(
 }
 
 func simulateMsgCreateGroupPolicy(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -442,7 +442,7 @@ func SimulateMsgSubmitProposal(
 }
 
 func simulateMsgSubmitProposal(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -525,7 +525,7 @@ func simulateMsgSubmitProposal(
 // SimulateMsgUpdateGroupAdmin generates a MsgUpdateGroupAdmin with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupAdmin(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -601,7 +601,7 @@ func simulateMsgUpdateGroupAdmin(
 // SimulateMsgUpdateGroupMetadata generates a MsgUpdateGroupMetadata with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupMetadata(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -668,7 +668,7 @@ func simulateMsgUpdateGroupMetadata(
 // SimulateMsgUpdateGroupMembers generates a MsgUpdateGroupMembers with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupMembers(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -762,7 +762,7 @@ func simulateMsgUpdateGroupMembers(
 // SimulateMsgUpdateGroupPolicyAdmin generates a MsgUpdateGroupPolicyAdmin with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupPolicyAdmin(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -838,7 +838,7 @@ func simulateMsgUpdateGroupPolicyAdmin(
 // SimulateMsgUpdateGroupPolicyDecisionPolicy generates a NewMsgUpdateGroupPolicyDecisionPolicy with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupPolicyDecisionPolicy(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -913,7 +913,7 @@ func simulateMsgUpdateGroupPolicyDecisionPolicy(
 // SimulateMsgUpdateGroupPolicyMetadata generates a MsgUpdateGroupPolicyMetadata with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgUpdateGroupPolicyMetadata(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -980,7 +980,7 @@ func simulateMsgUpdateGroupPolicyMetadata(
 // SimulateMsgWithdrawProposal generates a MsgWithdrawProposal with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgWithdrawProposal(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -1099,7 +1099,7 @@ func simulateMsgWithdrawProposal(
 // SimulateMsgVote generates a MsgVote with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgVote(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -1217,7 +1217,7 @@ func simulateMsgVote(
 // SimulateMsgExec generates a MsgExec with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgExec(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
@@ -1308,7 +1308,7 @@ func simulateMsgExec(
 // SimulateMsgLeaveGroup generates a MsgLeaveGroup with random values
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgLeaveGroup(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	k keeper.Keeper,
 	ak group.AccountKeeper,
@@ -1504,12 +1504,8 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.MemberRe
 		}
 	}
 
-	max := 5
-	if len(accounts) < max {
-		max = len(accounts)
-	}
-
-	membersLen := simtypes.RandIntBetween(r, 1, max)
+	maxMembers := min(len(accounts), 5)
+	membersLen := simtypes.RandIntBetween(r, 1, maxMembers)
 	members := make([]group.MemberRequest, membersLen)
 
 	for i := 0; i < membersLen; i++ {

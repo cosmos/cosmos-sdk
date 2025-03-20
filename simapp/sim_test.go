@@ -36,8 +36,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// SimAppChainID hardcoded chainID for simulation
-
 var FlagEnableStreamingValue bool
 
 // Get flags every time the simulator is run
@@ -71,6 +69,7 @@ var (
 
 func TestAppImportExport(t *testing.T) {
 	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
+		t.Helper()
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
@@ -115,6 +114,7 @@ func TestAppImportExport(t *testing.T) {
 //	run new instance for n blocks
 func TestAppSimulationAfterImport(t *testing.T) {
 	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
+		t.Helper()
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
@@ -193,6 +193,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	appHashResults := make(map[int64][][]byte)
 	appSimLogger := make(map[int64][]simulation.LogWriter)
 	captureAndCheckHash := func(t *testing.T, ti sims.TestInstance[*SimApp]) {
+		t.Helper()
 		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
 		mx.Lock()
 		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
@@ -228,7 +229,8 @@ type ComparableStoreApp interface {
 	GetStoreKeys() []storetypes.StoreKey
 }
 
-func AssertEqualStores(t *testing.T, app ComparableStoreApp, newApp ComparableStoreApp, storeDecoders simtypes.StoreDecoderRegistry, skipPrefixes map[string][][]byte) {
+func AssertEqualStores(t *testing.T, app, newApp ComparableStoreApp, storeDecoders simtypes.StoreDecoderRegistry, skipPrefixes map[string][][]byte) {
+	t.Helper()
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 

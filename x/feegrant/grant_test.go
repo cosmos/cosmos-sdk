@@ -80,7 +80,7 @@ func TestGrant(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		tc := tc
+
 		t.Run(name, func(t *testing.T) {
 			grant, err := feegrant.NewGrant(tc.granter, tc.grantee, &feegrant.BasicAllowance{
 				SpendLimit: tc.limit,

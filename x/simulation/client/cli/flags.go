@@ -63,7 +63,7 @@ func GetSimulatorFlags() {
 	flag.BoolVar(&FlagSigverifyTxValue, "SigverifyTx", true, "whether to sigverify check for transaction ")
 	flag.BoolVar(&FlagFauxMerkle, "FauxMerkle", false, "use faux merkle instead of iavl")
 
-	flag.UintVar(&FlagPeriodValue, "Period", 0, "run slow invariants only once every period assertions")
+	flag.UintVar(&FlagPeriodValue, "Period", 0, "This parameter is unused and will be removed")
 	flag.BoolVar(&FlagEnabledValue, "Enabled", false, "This parameter is unused and will be removed")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "This parameter is unused and will be removed")
 	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "This parameter is unused and will be removed")

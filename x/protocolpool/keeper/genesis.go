@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
@@ -39,78 +37,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 }
 
 func (k Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
-	// refresh all funds
-	if err := k.IterateAndUpdateFundsDistribution(ctx); err != nil {
-		return nil, err
-	}
-
-	// withdraw all rewards before exporting genesis
-	if err := k.RecipientFundDistributions.Walk(ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
-		if _, err := k.withdrawRecipientFunds(ctx, key.Bytes()); err != nil {
-			return true, err
-		}
-		return false, nil
-	}); err != nil {
-		return nil, err
-	}
-
-	var cf []*types.ContinuousFund
-	err := k.ContinuousFunds.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
-		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
-		if err != nil {
-			return true, err
-		}
-		cf = append(cf, &types.ContinuousFund{
-			Recipient:  recipient,
-			Percentage: value.Percentage,
-			Expiry:     value.Expiry,
-		})
-		return false, nil
-	})
+	cf, err := k.GetAllContinuousFunds(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var budget []*types.Budget
-	err = k.Budgets.Walk(ctx, nil, func(key sdk.AccAddress, value types.Budget) (stop bool, err error) {
-		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
-		if err != nil {
-			return true, err
-		}
-		budget = append(budget, &types.Budget{
-			RecipientAddress: recipient,
-			ClaimedAmount:    value.ClaimedAmount,
-			LastClaimedAt:    value.LastClaimedAt,
-			TranchesLeft:     value.TranchesLeft,
-			Period:           value.Period,
-			BudgetPerTranche: value.BudgetPerTranche,
-		})
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	genState := types.NewGenesisState(cf, budget)
-
-	lastBalance, err := k.LastBalance.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	genState.LastBalance = lastBalance
-
-	err = k.Distributions.Walk(ctx, nil, func(key time.Time, value types.DistributionAmount) (stop bool, err error) {
-		genState.Distributions = append(genState.Distributions, &types.Distribution{
-			Time:   &key,
-			Amount: value,
-		})
-
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
-	}
+	genState := types.NewGenesisState(cf)
 
 	params, err := k.Params.Get(ctx)
 	if err != nil {

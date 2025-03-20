@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -113,11 +112,6 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %s", totalStreamFundsPercentage.Sub(msg.Percentage).MulInt64(100).TruncateInt().String())
 	}
 
-	// Distribute funds to avoid giving this new fund more than it should get
-	if err := k.IterateAndUpdateFundsDistribution(sdkCtx); err != nil {
-		return nil, err
-	}
-
 	// Create continuous fund proposal
 	cf := types.ContinuousFund{
 		Recipient:  msg.Recipient,
@@ -127,11 +121,6 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 
 	// Set continuous fund to the state
 	err = k.ContinuousFunds.Set(sdkCtx, recipient, cf)
-	if err != nil {
-		return nil, err
-	}
-
-	err = k.RecipientFundDistributions.Set(sdkCtx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 	if err != nil {
 		return nil, err
 	}
@@ -155,30 +144,14 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	canceledHeight := sdkCtx.BlockHeight()
 	canceledTime := sdkCtx.BlockTime()
 
-	// distribute funds before withdrawing
-	if err = k.IterateAndUpdateFundsDistribution(sdkCtx); err != nil {
-		return nil, err
-	}
-
-	// withdraw funds if any are allocated
-	withdrawnFunds, err := k.withdrawRecipientFunds(sdkCtx, recipient)
-	if err != nil && !errors.Is(err, types.ErrNoRecipientFound) {
-		return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %w", msg.RecipientAddress, err)
-	}
-
 	if err := k.ContinuousFunds.Remove(sdkCtx, recipient); err != nil {
 		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
-	if err := k.RecipientFundDistributions.Remove(sdkCtx, recipient); err != nil {
-		return nil, fmt.Errorf("failed to remove recipient fund distribution for recipient %s: %w", msg.RecipientAddress, err)
-	}
-
 	return &types.MsgCancelContinuousFundResponse{
-		CanceledTime:           canceledTime,
-		CanceledHeight:         uint64(canceledHeight),
-		RecipientAddress:       msg.RecipientAddress,
-		WithdrawnAllocatedFund: withdrawnFunds,
+		CanceledTime:     canceledTime,
+		CanceledHeight:   uint64(canceledHeight),
+		RecipientAddress: msg.RecipientAddress,
 	}, nil
 }
 

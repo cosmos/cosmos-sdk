@@ -144,6 +144,28 @@ func (k Keeper) SetToDistribute(ctx sdk.Context) error {
 	return nil
 }
 
+// TODO: test
+func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, error) {
+	var cf []types.ContinuousFund
+	err := k.ContinuousFunds.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
+		if err != nil {
+			return true, err
+		}
+		cf = append(cf, types.ContinuousFund{
+			Recipient:  recipient,
+			Percentage: value.Percentage,
+			Expiry:     value.Expiry,
+		})
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return cf, nil
+}
+
 func (k *Keeper) validateAuthority(authority string) error {
 	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)

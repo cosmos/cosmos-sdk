@@ -16,7 +16,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 		return fmt.Errorf("failed to set params: %w", err)
 	}
 
-	for _, cf := range data.ContinuousFund {
+	for _, cf := range data.ContinuousFunds {
 		// ignore expired ContinuousFunds
 		if cf.Expiry != nil && cf.Expiry.Before(currentTime) {
 			continue
@@ -26,51 +26,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 		if err != nil {
 			return fmt.Errorf("failed to decode recipient address: %w", err)
 		}
-		if err := k.ContinuousFunds.Set(ctx, recipientAddress, *cf); err != nil {
+		if err := k.ContinuousFunds.Set(ctx, recipientAddress, cf); err != nil {
 			return fmt.Errorf("failed to set continuous fund for recipient %s: %w", recipientAddress, err)
 		}
 	}
-	for _, budget := range data.Budget {
-		// Validate StartTime
-		if budget.LastClaimedAt.IsZero() {
-			budget.LastClaimedAt = currentTime
-		}
-		// ignore budgets with period <= 0 || nil
-		if budget.Period.Seconds() <= 0 {
-			continue
-		}
 
-		// ignore budget with start time < currentTime
-		if budget.LastClaimedAt.Before(currentTime) {
-			continue
-		}
-
-		recipientAddress, err := k.authKeeper.AddressCodec().StringToBytes(budget.RecipientAddress)
-		if err != nil {
-			return fmt.Errorf("failed to decode recipient address: %w", err)
-		}
-		if err = k.Budgets.Set(ctx, recipientAddress, *budget); err != nil {
-			return fmt.Errorf("failed to set budget for recipient %s: %w", recipientAddress, err)
-		}
-	}
-
-	if err := k.LastBalance.Set(ctx, data.LastBalance); err != nil {
-		return fmt.Errorf("failed to set last balance: %w", err)
-	}
-
-	totalToBeDistributed := sdk.NewCoins()
-	for _, distribution := range data.Distributions {
-		totalToBeDistributed = totalToBeDistributed.Add(distribution.Amount.Amount...)
-		if err := k.Distributions.Set(ctx, *distribution.Time, distribution.Amount); err != nil {
-			return fmt.Errorf("failed to set distribution: %w", err)
-		}
-	}
+	// todo:  validate all continuous funds
 
 	// sanity check to avoid trying to distribute more than what is available
-
-	if totalToBeDistributed.IsAnyGT(data.LastBalance.Amount) || !totalToBeDistributed.DenomsSubsetOf(data.LastBalance.Amount) {
-		return fmt.Errorf("total to be distributed is greater than the last balance: %s > %s", totalToBeDistributed, data.LastBalance.Amount)
-	}
 
 	return nil
 }

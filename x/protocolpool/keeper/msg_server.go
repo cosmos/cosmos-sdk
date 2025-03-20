@@ -24,43 +24,6 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &MsgServer{Keeper: keeper}
 }
 
-func (k MsgServer) ClaimBudget(ctx context.Context, msg *types.MsgClaimBudget) (*types.MsgClaimBudgetResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	amount, err := k.claimFunds(sdkCtx, msg.RecipientAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.MsgClaimBudgetResponse{Amount: amount}, nil
-}
-
-func (k MsgServer) CreateBudget(ctx context.Context, msg *types.MsgCreateBudget) (*types.MsgCreateBudgetResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
-		return nil, err
-	}
-
-	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	budget, err := validateAndUpdateBudget(sdkCtx, *msg)
-	if err != nil {
-		return nil, err
-	}
-
-	// set budget proposal in state
-	// Note: If two budgets to the same address are created, the budget would be updated with the new budget.
-	err = k.Budgets.Set(sdkCtx, recipient, budget)
-	if err != nil {
-		return nil, err
-	}
-	return &types.MsgCreateBudgetResponse{}, nil
-}
-
 func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -107,6 +70,8 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
 
+// TODO: just add to state
+// check all continuous funds and see if we are under the exceeding limit
 func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -174,28 +139,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	return &types.MsgCreateContinuousFundResponse{}, nil
 }
 
-func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWithdrawContinuousFund) (*types.MsgWithdrawContinuousFundResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
-	}
-
-	err = k.IterateAndUpdateFundsDistribution(sdkCtx)
-	if err != nil {
-		return nil, fmt.Errorf("error while iterating all the continuous funds: %w", err)
-	}
-
-	// withdraw continuous fund
-	withdrawnAmount, err := k.withdrawRecipientFunds(sdkCtx, recipient)
-	if err != nil {
-		return nil, fmt.Errorf("error while withdrawing recipient funds for recipient: %w", err)
-	}
-
-	return &types.MsgWithdrawContinuousFundResponse{Amount: withdrawnAmount}, nil
-}
-
+// TODO: just remove from state
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

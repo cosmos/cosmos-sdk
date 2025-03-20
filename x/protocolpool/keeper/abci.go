@@ -10,5 +10,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 	start := telemetry.Now()
 	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 
+	// TODO: // if block ... distribute
 	return k.SetToDistribute(ctx)
 }

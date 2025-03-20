@@ -19,11 +19,8 @@ func TestRegisterInterfaces(t *testing.T) {
 	RegisterInterfaces(interfaceRegistry)
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgFundCommunityPool{}))
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCommunityPoolSpend{}))
-	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCreateBudget{}))
-	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgClaimBudget{}))
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCreateContinuousFund{}))
 	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgCancelContinuousFund{}))
-	require.NoError(t, interfaceRegistry.EnsureRegistered(&MsgWithdrawContinuousFund{}))
 }
 
 func TestNewMsgFundCommunityPool(t *testing.T) {
@@ -50,21 +47,11 @@ func TestValidateGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	gs := NewGenesisState(
-		[]*ContinuousFund{
+		[]ContinuousFund{
 			{
 				Recipient:  "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
 				Percentage: math.LegacyMustNewDecFromStr("0.1"),
 				Expiry:     nil,
-			},
-		},
-		[]*Budget{
-			{
-				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				ClaimedAmount:    &sdk.Coin{},
-				LastClaimedAt:    time.Time{},
-				TranchesLeft:     10,
-				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
-				Period:           hour,
 			},
 		},
 	)
@@ -72,87 +59,9 @@ func TestValidateGenesis(t *testing.T) {
 	err = ValidateGenesis(gs)
 	require.NoError(t, err)
 
-	gs.Budget[0].RecipientAddress = ""
+	gs.ContinuousFunds[0].Recipient = ""
 	err = ValidateGenesis(gs)
 	require.EqualError(t, err, "recipient cannot be empty")
-
-	gs.ContinuousFund[0].Recipient = ""
-	err = ValidateGenesis(gs)
-	require.EqualError(t, err, "recipient cannot be empty")
-}
-
-func TestValidateBudget(t *testing.T) {
-	testCases := []struct {
-		name      string
-		budget    Budget
-		expErrMsg string
-	}{
-		{
-			"valid budget",
-			Budget{
-				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				ClaimedAmount:    &sdk.Coin{},
-				LastClaimedAt:    time.Time{},
-				TranchesLeft:     10,
-				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
-				Period:           hour,
-			},
-			"",
-		},
-		{
-			"empty recipient",
-			Budget{
-				RecipientAddress: "",
-			},
-			"recipient cannot be empty",
-		},
-		{
-			"zero budget per tranche",
-			Budget{
-				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(0)},
-			},
-			"budget per tranche cannot be zero",
-		},
-		{
-			"negative budget per tranche",
-			Budget{
-				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(-100)},
-			},
-			"-100stake: invalid coins",
-		},
-		{
-			"zero tranches left",
-			Budget{
-				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				TranchesLeft:     0,
-				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
-			},
-			"invalid budget proposal: tranches must be greater than zero",
-		},
-		{
-			"zero period",
-			Budget{
-				RecipientAddress: "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				ClaimedAmount:    &sdk.Coin{},
-				LastClaimedAt:    time.Time{},
-				TranchesLeft:     10,
-				BudgetPerTranche: sdk.Coin{Denom: "stake", Amount: math.NewInt(100)},
-				Period:           0,
-			},
-			"invalid budget proposal: period length should be greater than zero",
-		},
-	}
-
-	for _, tc := range testCases {
-		err := validateBudget(tc.budget)
-		if tc.expErrMsg == "" {
-			require.NoError(t, err)
-		} else {
-			require.EqualError(t, err, tc.expErrMsg)
-		}
-	}
 }
 
 func TestValidateContinuousFund(t *testing.T) {

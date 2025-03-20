@@ -3,27 +3,21 @@ package types
 import (
 	"errors"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func NewGenesisState(cf []*ContinuousFund, budget []*Budget) *GenesisState {
+func NewGenesisState(cf []ContinuousFund) *GenesisState {
 	return &GenesisState{
-		ContinuousFund: cf,
-		Budget:         budget,
-		LastBalance:    DistributionAmount{Amount: sdk.NewCoins()},
-		Distributions:  []*Distribution{},
-		Params:         &Params{},
+		ContinuousFunds: cf,
+		Params:          &Params{},
 	}
 }
 
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		ContinuousFund: []*ContinuousFund{},
-		Budget:         []*Budget{},
+		ContinuousFunds: []ContinuousFund{},
 		Params: &Params{
 			EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},
 		},
@@ -32,38 +26,10 @@ func DefaultGenesisState() *GenesisState {
 
 // ValidateGenesis validates the genesis state of protocolpool genesis input
 func ValidateGenesis(gs *GenesisState) error {
-	for _, cf := range gs.ContinuousFund {
-		if err := validateContinuousFund(*cf); err != nil {
+	for _, cf := range gs.ContinuousFunds {
+		if err := validateContinuousFund(cf); err != nil {
 			return err
 		}
-	}
-	for _, bp := range gs.Budget {
-		if err := validateBudget(*bp); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func validateBudget(bp Budget) error {
-	if bp.RecipientAddress == "" {
-		return errors.New("recipient cannot be empty")
-	}
-
-	// Validate BudgetPerTranche
-	if bp.BudgetPerTranche.IsZero() {
-		return errors.New("budget per tranche cannot be zero")
-	}
-	if err := bp.BudgetPerTranche.Validate(); err != nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, bp.BudgetPerTranche.String())
-	}
-
-	if bp.TranchesLeft == 0 {
-		return errors.New("invalid budget proposal: tranches must be greater than zero")
-	}
-
-	if bp.Period == 0 {
-		return errors.New("invalid budget proposal: period length should be greater than zero")
 	}
 	return nil
 }

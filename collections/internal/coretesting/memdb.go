@@ -8,7 +8,7 @@ import (
 
 	"github.com/tidwall/btree"
 
-	"cosmossdk.io/core/store"
+	store "cosmossdk.io/collections/corecompat"
 )
 
 const (
@@ -258,8 +258,6 @@ func (mi *memIterator) assertValid() {
 	}
 }
 
-var _ store.KVStoreWithBatch = (*MemDB)(nil)
-
 // MemDB is a simple in-memory key-value store with Batch support.
 type MemDB struct {
 	kv  MemKV
@@ -267,7 +265,7 @@ type MemDB struct {
 }
 
 // NewMemDB creates a new MemDB.
-func NewMemDB() store.KVStoreWithBatch {
+func NewMemDB() store.KVStore {
 	return &MemDB{kv: NewMemKV()}
 }
 
@@ -339,16 +337,6 @@ func (db *MemDB) Close() error {
 	return nil
 }
 
-// NewBatch returns a new memDBBatch.
-func (db *MemDB) NewBatch() store.Batch {
-	return newMemDBBatch(db)
-}
-
-// NewBatchWithSize returns a new memDBBatch with the given size.
-func (db *MemDB) NewBatchWithSize(size int) store.Batch {
-	return newMemDBBatch(db)
-}
-
 // memDBBatch operations
 type opType int
 
@@ -369,8 +357,6 @@ type memDBBatch struct {
 	ops  []operation
 	size int
 }
-
-var _ store.Batch = (*memDBBatch)(nil)
 
 // newMemDBBatch creates a new memDBBatch
 func newMemDBBatch(db *MemDB) *memDBBatch {

@@ -1,6 +1,8 @@
 package baseapp
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -147,9 +149,14 @@ func (app *BaseApp) SetVersion(v string) {
 	app.version = v
 }
 
-// SetProtocolVersion sets the application's protocol version
-func (app *BaseApp) SetProtocolVersion(v uint64) {
-	app.appVersion = v
+// SetAppVersion sets the application's version. This is used as part of the
+// header in blocks and is returned to the consensus engine in EndBlock.
+func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
+	if app.versionModifier == nil {
+		return errors.New("version modifier must be set to set app version")
+	}
+
+	return app.versionModifier.SetAppVersion(ctx, v)
 }
 
 func (app *BaseApp) SetDB(db dbm.DB) {
@@ -309,6 +316,15 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 // SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 	app.txEncoder = txEncoder
+}
+
+// SetVersionModifier sets the version modifier for the BaseApp that allows to set the app version.
+func (app *BaseApp) SetVersionModifier(versionModifier VersionModifier) {
+	if app.sealed {
+		panic("SetVersionModifier() on sealed BaseApp")
+	}
+
+	app.versionModifier = versionModifier
 }
 
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.

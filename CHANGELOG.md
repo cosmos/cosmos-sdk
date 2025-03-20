@@ -36,7 +36,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.50.x-celestia]
+
+* (baseapp) [#1](https://github.com/01builders/cosmos-sdk/pull/1) `SetProtocolVersion` has been renamed to `SetAppVersion`. It now updates the consensus params in baseapp's `ParamStore`.
+* (baseapp) [#2](https://github.com/01builders/cosmos-sdk/pull/2) Re-add query router for custom abci queries.
+* (x/auth/vesting) [#3](https://github.com/01builders/cosmos-sdk/pull/3) Add start time for continuous vesting accounts.
+* (testing) [#5](https://github.com/01builders/cosmos-sdk/pull/5) Add `MakeTestEncodingConfigWithOpts` to pass `testutil.CodecOptions` when creating `TestEncodingConfig`.
+* (x/bank) [#6](https://github.com/01builders/cosmos-sdk/pull/6) Change denom index bank migration to noOp.
+* (x/auth) [#7](https://github.com/01builders/cosmos-sdk/pull/7) Support legacy global AccountNumber.
+* (crypto/keyring) [#8](https://github.com/01builders/cosmos-sdk/pull/8) Fix error wrapping in pkg crypto/keyring. Removed `cockroachdb/errors` in favour of `errorsmod.Wrap`.
+* (x/consensus) [#9](https://github.com/01builders/cosmos-sdk/pull/9) Address bug where sending `MsgUpdateParams` to `x/consensus` would overwrite `AppVersion` with zero value. Always use existing `AppVersion` param.
+
+## [Unreleased-Cosmos-SDK]
 
 ### Bug Fixes
 

@@ -67,14 +67,19 @@ func (s *VestingAccountTestSuite) SetupTest() {
 
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
-	endTime := now.Add(24 * time.Hour)
+	startTime := now.Add(24 * time.Hour)
+	endTime := startTime.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
-	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
+	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, startTime.Unix(), endTime.Unix())
 	require.NoError(t, err)
 
-	// require no coins vested in the very beginning of the vesting schedule
+	// require no coins vested _before_ the start time of the vesting schedule
 	vestedCoins := cva.GetVestedCoins(now)
+	require.Nil(t, vestedCoins)
+
+	// require no coins vested _before_ the very beginning of the vesting schedule
+	vestedCoins = cva.GetVestedCoins(startTime.Add(-1))
 	require.Nil(t, vestedCoins)
 
 	// require all coins vested at the end of the vesting schedule
@@ -82,55 +87,78 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, vestedCoins)
 
 	// require 50% of coins vested
-	vestedCoins = cva.GetVestedCoins(now.Add(12 * time.Hour))
+	vestedCoins = cva.GetVestedCoins(startTime.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestedCoins)
 
+	// require 75% of coins vested
+	vestedCoins = cva.GetVestedCoins(startTime.Add(18 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75)}, vestedCoins)
+
 	// require 100% of coins vested
-	vestedCoins = cva.GetVestedCoins(now.Add(48 * time.Hour))
+	vestedCoins = cva.GetVestedCoins(endTime)
 	require.Equal(t, origCoins, vestedCoins)
 }
 
 func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
-	endTime := now.Add(24 * time.Hour)
+	startTime := now.Add(24 * time.Hour)
+	endTime := startTime.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
-	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
+	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, startTime.Unix(), endTime.Unix())
 	require.NoError(t, err)
 
-	// require all coins vesting in the beginning of the vesting schedule
+	// require all coins vesting before the start time of the vesting schedule
 	vestingCoins := cva.GetVestingCoins(now)
+	require.Equal(t, origCoins, vestingCoins)
+
+	// require all coins vesting right before the start time of the vesting schedule
+	vestingCoins = cva.GetVestingCoins(startTime.Add(-1))
 	require.Equal(t, origCoins, vestingCoins)
 
 	// require no coins vesting at the end of the vesting schedule
 	vestingCoins = cva.GetVestingCoins(endTime)
 	require.Equal(t, emptyCoins, vestingCoins)
 
-	// require 50% of coins vesting
-	vestingCoins = cva.GetVestingCoins(now.Add(12 * time.Hour))
+	// require 50% of coins vesting in the middle between start and end time
+	vestingCoins = cva.GetVestingCoins(startTime.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestingCoins)
+
+	// require 25% of coins vesting after 3/4 of the time between start and end time has passed
+	vestingCoins = cva.GetVestingCoins(startTime.Add(18 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}, vestingCoins)
 }
 
 func TestSpendableCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
-	endTime := now.Add(24 * time.Hour)
+	startTime := now.Add(24 * time.Hour)
+	endTime := startTime.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
-	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
+	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, startTime.Unix(), endTime.Unix())
 	require.NoError(t, err)
 
-	// require that all original coins are locked at the end of the vesting
+	// require that all original coins are locked before the beginning of the vesting
 	// schedule
 	lockedCoins := cva.LockedCoins(now)
 	require.Equal(t, origCoins, lockedCoins)
 
-	// require that there exist no locked coins in the beginning of the
+	// require that all original coins are locked at the beginning of the vesting
+	// schedule
+	lockedCoins = cva.LockedCoins(startTime)
+	require.Equal(t, origCoins, lockedCoins)
+
+	// require that there exist no locked coins in the end of the vesting schedule
 	lockedCoins = cva.LockedCoins(endTime)
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all vested coins (50%) are spendable
-	lockedCoins = cva.LockedCoins(now.Add(12 * time.Hour))
+	lockedCoins = cva.LockedCoins(startTime.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
+
+	// require 25% of coins vesting after 3/4 of the time between start and end time has passed
+	lockedCoins = cva.LockedCoins(startTime.Add(18 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}, lockedCoins)
 }
 
 func TestTrackDelegationContVestingAcc(t *testing.T) {

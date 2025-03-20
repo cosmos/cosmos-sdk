@@ -18,6 +18,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -57,6 +58,9 @@ func (m *mockABCIListener) ListenCommit(ctx context.Context, commit abci.Respons
 
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
+	ctx := suite.baseApp.NewContext(true)
+	err := suite.baseApp.StoreConsensusParams(ctx, cmttypes.DefaultConsensusParams().ToProto())
+	require.NoError(t, err)
 
 	reqInfo := abci.RequestInfo{}
 	res, err := suite.baseApp.Info(&reqInfo)
@@ -68,7 +72,18 @@ func TestABCI_Info(t *testing.T) {
 	require.Equal(t, t.Name(), res.GetData())
 	require.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, appHash, res.LastBlockAppHash)
-	require.Equal(t, suite.baseApp.AppVersion(), res.AppVersion)
+	appVersion, err := suite.baseApp.AppVersion(ctx)
+	require.NoError(t, err)
+	require.Equal(t, appVersion, res.AppVersion)
+
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
+	require.NoError(t, suite.baseApp.SetAppVersion(ctx, 1))
+	res, err = suite.baseApp.Info(&reqInfo)
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), res.AppVersion)
 }
 
 func TestABCI_First_block_Height(t *testing.T) {

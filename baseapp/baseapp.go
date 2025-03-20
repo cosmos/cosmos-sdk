@@ -67,6 +67,7 @@ type BaseApp struct {
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
+	customQueryRouter sdk.QueryRouter             // router for redirecting custom abci query requests
 	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -87,6 +88,7 @@ type BaseApp struct {
 	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
 	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
 	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
+	versionModifier    VersionModifier                // interface to get and set the app version
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -162,10 +164,6 @@ type BaseApp struct {
 	// application's version string
 	version string
 
-	// application's protocol version that increments on every upgrade
-	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
-	appVersion uint64
-
 	// recovery handler for app.runTx method
 	runTxRecoveryMiddleware recoveryMiddleware
 
@@ -203,17 +201,18 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger,
-		name:             name,
-		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
-		storeLoader:      DefaultStoreLoader,
-		grpcQueryRouter:  NewGRPCQueryRouter(),
-		msgServiceRouter: NewMsgServiceRouter(),
-		txDecoder:        txDecoder,
-		fauxMerkleMode:   false,
-		sigverifyTx:      true,
-		queryGasLimit:    math.MaxUint64,
+		logger:            logger,
+		name:              name,
+		db:                db,
+		cms:               store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		storeLoader:       DefaultStoreLoader,
+		customQueryRouter: NewQueryRouter(),
+		grpcQueryRouter:   NewGRPCQueryRouter(),
+		msgServiceRouter:  NewMsgServiceRouter(),
+		txDecoder:         txDecoder,
+		fauxMerkleMode:    false,
+		sigverifyTx:       true,
+		queryGasLimit:     math.MaxUint64,
 	}
 
 	for _, option := range options {
@@ -257,8 +256,12 @@ func (app *BaseApp) Name() string {
 }
 
 // AppVersion returns the application's protocol version.
-func (app *BaseApp) AppVersion() uint64 {
-	return app.appVersion
+func (app *BaseApp) AppVersion(ctx context.Context) (uint64, error) {
+	if app.versionModifier == nil {
+		return 0, errors.New("app.versionModifier is nil")
+	}
+
+	return app.versionModifier.AppVersion(ctx)
 }
 
 // Version returns the application's version string.
@@ -275,6 +278,9 @@ func (app *BaseApp) Logger() log.Logger {
 func (app *BaseApp) Trace() bool {
 	return app.trace
 }
+
+// CustomQueryRouter returns the custom QueryRouter of a BaseApp.
+func (app *BaseApp) CustomQueryRouter() sdk.QueryRouter { return app.customQueryRouter }
 
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
@@ -540,9 +546,6 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 
 // StoreConsensusParams sets the consensus parameters to the BaseApp's param
 // store.
-//
-// NOTE: We're explicitly not storing the CometBFT app_version in the param store.
-// It's stored instead in the x/upgrade store, with its own bump logic.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
 		return errors.New("cannot store consensus params with no params store set")

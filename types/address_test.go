@@ -308,7 +308,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				acc.String(),
 				prefix+types.PrefixAccount), acc.String())
 
-			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32Pub,
 				prefix+types.PrefixPublic))
@@ -322,7 +322,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				val.String(),
 				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ValPub,
 				prefix+types.PrefixValidator+types.PrefixPublic))
@@ -336,7 +336,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				cons.String(),
 				prefix+types.PrefixConsensus+types.PrefixAddress))
 
-			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ConsPub,
 				prefix+types.PrefixConsensus+types.PrefixPublic))
@@ -453,7 +453,6 @@ func (s *addressTestSuite) TestBech32ifyAddressBytes() {
 		{"20-byte address", args{"prefixb", addr20byte}, "prefixb1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnrujsuw", false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			got, err := types.Bech32ifyAddressBytes(tt.args.prefix, tt.args.bs)
 			if (err != nil) != tt.wantErr {
@@ -486,7 +485,6 @@ func (s *addressTestSuite) TestMustBech32ifyAddressBytes() {
 		{"20-byte address", args{"prefixb", addr20byte}, "prefixb1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnrujsuw", false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			if tt.wantPanic {
 				require.Panics(t, func() { types.MustBech32ifyAddressBytes(tt.args.prefix, tt.args.bs) })

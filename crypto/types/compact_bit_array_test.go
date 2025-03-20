@@ -58,7 +58,6 @@ func TestBitArrayEqual(t *testing.T) {
 		{name: "different should not be equal", b1: big1, b2: big2, eq: false},
 	}
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			eq := tc.b1.Equal(tc.b2)
 			require.Equal(t, tc.eq, eq)
@@ -102,7 +101,6 @@ func TestJSONMarshalUnmarshal(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.bA.String(), func(t *testing.T) {
 			bz, err := json.Marshal(tc.bA)
 			require.NoError(t, err)
@@ -162,7 +160,6 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.bA.String(), func(t *testing.T) {
 			bz := tc.bA.CompactMarshal()
 
@@ -209,8 +206,6 @@ func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
 		{`"______________xx"`, []int{14, 15}, []int{0, 1}},
 	}
 	for tcIndex, tc := range testCases {
-		tc := tc
-		tcIndex := tcIndex
 		t.Run(tc.marshalledBA, func(t *testing.T) {
 			var bA *CompactBitArray
 			err := json.Unmarshal([]byte(tc.marshalledBA), &bA)
@@ -283,7 +278,6 @@ func TestNewCompactBitArrayCrashWithLimits(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(fmt.Sprintf("%d", tt.in), func(t *testing.T) {
 			got := NewCompactBitArray(tt.in)
 			if g := got != nil; g != tt.mustPass {

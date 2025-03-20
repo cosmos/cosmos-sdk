@@ -87,7 +87,6 @@ func TestKeeper(t *testing.T) {
 
 	// Set params
 	for i, kv := range kvs {
-		kv := kv
 		require.NotPanics(t, func() { space.Set(ctx, []byte(kv.key), kv.param) }, "space.Set panics, tc #%d", i)
 	}
 
@@ -120,14 +119,13 @@ func TestKeeper(t *testing.T) {
 
 	// Test invalid space.Get
 	for i, kv := range kvs {
-		kv := kv
+
 		var param bool
 		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), &param) }, "invalid space.Get not panics, tc #%d", i)
 	}
 
 	// Test invalid space.Set
 	for i, kv := range kvs {
-		kv := kv
 		require.Panics(t, func() { space.Set(ctx, []byte(kv.key), true) }, "invalid space.Set not panics, tc #%d", i)
 	}
 

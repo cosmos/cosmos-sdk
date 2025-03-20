@@ -78,7 +78,7 @@ func (s *System) MustRun(t TestingT, args ...string) RunResult {
 }
 
 // MustRunC calls s.RunWithInput, but also calls t.FailNow if RunResult.Err is not nil.
-func (s *System) MustRunC(t TestingT, ctx context.Context, args ...string) RunResult { //nolint:revive // As a variation of MustRun, t is more important than ctx.
+func (s *System) MustRunC(t TestingT, ctx context.Context, args ...string) RunResult {
 	t.Helper()
 
 	return s.MustRunWithInputC(t, ctx, bytes.NewReader(nil), args...)
@@ -92,7 +92,7 @@ func (s *System) MustRunWithInput(t TestingT, in io.Reader, args ...string) RunR
 }
 
 // MustRunWithInputC calls s.RunWithInputC, but also calls t.FailNow if RunResult.Err is not nil.
-func (s *System) MustRunWithInputC(t TestingT, ctx context.Context, in io.Reader, args ...string) RunResult { //nolint:revive // As a variation of MustRun, t is more important than ctx.
+func (s *System) MustRunWithInputC(t TestingT, ctx context.Context, in io.Reader, args ...string) RunResult {
 	t.Helper()
 
 	res := s.RunWithInputC(ctx, in, args...)

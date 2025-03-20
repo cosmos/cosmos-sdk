@@ -639,7 +639,7 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	}
 
 	if err := ValidateDenom(denomStr); err != nil {
-		return DecCoin{}, fmt.Errorf("invalid denom cannot contain spaces: %s", err)
+		return DecCoin{}, fmt.Errorf("invalid denom cannot contain spaces: %w", err)
 	}
 
 	return NewDecCoinFromDec(denomStr, amount), nil

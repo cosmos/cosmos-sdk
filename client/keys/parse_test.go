@@ -25,7 +25,6 @@ func TestParseKey(t *testing.T) {
 		{"hex", []string{hexstr}, false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.wantErr, doParseKey(ParseKeyStringCommand(), config, tt.args) != nil)
 		})

@@ -292,7 +292,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, tc.input)

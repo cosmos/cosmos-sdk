@@ -162,7 +162,7 @@ func (app *BaseApp) SetDB(db dbm.DB) {
 
 func (app *BaseApp) SetCMS(cms storetypes.CommitMultiStore) {
 	if app.sealed {
-		panic("SetEndBlocker() on sealed BaseApp")
+		panic("SetCMS() on sealed BaseApp")
 	}
 
 	app.cms = cms
@@ -343,6 +343,18 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 	app.prepareProposal = handler
 }
 
+<<<<<<< HEAD
+=======
+// SetCheckTxHandler sets the checkTx function for the BaseApp.
+func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
+	if app.sealed {
+		panic("SetCheckTxHandler() on sealed BaseApp")
+	}
+
+	app.checkTxHandler = handler
+}
+
+>>>>>>> a9e7d5b5a (fix: correct panic messages and enforce sealing check in SetStreamingManager (#23951))
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
 	if app.sealed {
 		panic("SetExtendVoteHandler() on sealed BaseApp")
@@ -370,6 +382,9 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 
 // SetStreamingManager sets the streaming manager for the BaseApp.
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
+	if app.sealed {
+		panic("SetStreamingManager() on sealed BaseApp")
+	}
 	app.streamingManager = manager
 }
 

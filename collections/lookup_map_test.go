@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/testing"
+	"cosmossdk.io/collections/internal/coretesting"
 )
 
 func TestLookupMap(t *testing.T) {

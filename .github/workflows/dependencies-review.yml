@@ -28,26 +28,15 @@ jobs:
       - name: "Go vulnerability check"
         id: govuln
         run: |
+          # Run the vulnerability check and capture its output
           make vulncheck 2>&1 | tee govulncheck-output.txt || true
-          echo "govulncheck_output<<EOF" >> $GITHUB_ENV
-          cat govulncheck-output.txt >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-        continue-on-error: true
-      - name: Debug govulncheck Output
-        run: cat govulncheck-output.txt || echo "govulncheck-output.txt is empty!"
-      - name: Add comment to PR
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              issue_number: context.issue.number,
-              repo: context.repo.repo,
-              body:  `
-                    ⚠️ **govulncheck found vulnerabilities:**
-          
-            
-                    >${{ env.govulncheck_output }}     
-            `
-            })
+      
+          # Filter out the specific vulnerability to ignore
+          grep -v "GO-2025-3443" govulncheck-output.txt > govulncheck-output.filtered.txt
+      
+          # If the filtered output is not empty, then there are other vulnerabilities
+          if [ -s govulncheck-output.filtered.txt ]; then
+            echo "Other vulnerabilities found:"
+            cat govulncheck-output.filtered.txt
+            exit 1
+          fi

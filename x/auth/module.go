@@ -36,6 +36,7 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
+	_ appmodule.HasPreBlocker    = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )
@@ -92,6 +93,16 @@ type AppModule struct {
 
 	// legacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
+}
+
+// PreBlock cleans up expired unordered transaction nonces from state.
+// Please ensure to add `x/auth`'s module name to the OrderPreBlocker list in your application.
+func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
+	err := am.accountKeeper.RemoveExpiredUnorderedNonces(sdk.UnwrapSDKContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+	return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.

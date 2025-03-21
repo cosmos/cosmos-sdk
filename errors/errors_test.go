@@ -5,7 +5,7 @@ import (
 )
 
 func TestABCIError(t *testing.T) {
-	if err := ABCIError(testCodespace, 2, "custom"); err.Error() != "custom: tx parse error" {
+	if err := ABCIError(testCodespace, ErrTxDecode.ABCICode(), "custom"); err.Error() != "custom: tx parse error" {
 		t.Errorf("expected error message: custom: tx parse error, got: %v", err.Error())
 	}
 	if err := ABCIError("unknown", 1, "custom"); err.Error() != "custom: unknown" {

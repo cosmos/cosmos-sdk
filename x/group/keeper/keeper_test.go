@@ -264,7 +264,6 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 	}
 
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			pID := spec.preRun(s.sdkCtx)
 

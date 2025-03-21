@@ -335,11 +335,10 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			proposalID := spec.setupProposal(ctx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(module.EndBlocker(spec.newCtx, s.groupKeeper))
 
 			if spec.expErrMsg != "" && spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				_, err = s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
@@ -538,10 +537,9 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 
 	for msg, spec := range specs {
 		s.Run(msg, func() {
-			spec := spec
 			pID := spec.preRun(ctx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(module.EndBlocker(spec.newCtx, s.groupKeeper))
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pID,
 			})

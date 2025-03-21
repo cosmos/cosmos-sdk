@@ -40,8 +40,9 @@ import (
 )
 
 var (
-	_ simtypes.WeightedProposalMsg     = MockWeightedProposals{}
-	_ simtypes.WeightedProposalContent = MockWeightedProposals{} //nolint:staticcheck keeping around for legacy testing
+	_ simtypes.WeightedProposalMsg = MockWeightedProposals{}
+	//nolint:staticcheck // keeping around for legacy testing
+	_ simtypes.WeightedProposalContent = MockWeightedProposals{}
 )
 
 type MockWeightedProposals struct {

@@ -774,6 +774,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 	fromAddr := accAddrs[0]
 	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
 	inputAccs := []sdk.AccountI{fromAcc}
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, inputAccs[0].GetAddress()).Return(inputAccs[0]).AnyTimes()
 	toAddr1 := accAddrs[1]
 	toAddr2 := accAddrs[2]
 
@@ -858,7 +859,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			},
 			expErr: "restriction test error",
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(959), newBarCoin(412)),
+				from: sdk.NewCoins(newFooCoin(959), newBarCoin(500)),
 				to1:  sdk.NewCoins(newFooCoin(15)),
 				to2:  sdk.NewCoins(newFooCoin(26)),
 			},
@@ -887,7 +888,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 				},
 			},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(948), newBarCoin(400)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
 				to1:  sdk.NewCoins(newFooCoin(26)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
 			},
@@ -917,8 +918,8 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			},
 			expErr: "second restriction error",
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(904), newBarCoin(400)),
-				to1:  sdk.NewCoins(newFooCoin(38)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
+				to1:  sdk.NewCoins(newFooCoin(26)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
 			},
 		},
@@ -946,8 +947,8 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 				},
 			},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(904), newBarCoin(365)),
-				to1:  sdk.NewCoins(newFooCoin(38), newBarCoin(25)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(453)),
+				to1:  sdk.NewCoins(newFooCoin(26), newBarCoin(25)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(22)),
 			},
 		},
@@ -960,7 +961,6 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			actualRestrictionArgs = nil
 			suite.bankKeeper.SetSendRestriction(tc.fn)
 			ctx := suite.ctx
-			suite.mockInputOutputCoins(inputAccs, tc.outputAddrs)
 			input := banktypes.Input{
 				Address: fromAddr.String(),
 				Coins:   tc.inputCoins,

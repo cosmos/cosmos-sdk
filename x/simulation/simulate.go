@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io"
 	"math/rand"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"

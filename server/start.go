@@ -807,7 +807,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	}
 	res, err := proxyApp.Query().Info(context, proxy.RequestInfo)
 	if err != nil {
-		return nil, fmt.Errorf("error calling Info: %v", err)
+		return nil, fmt.Errorf("error calling Info: %w", err)
 	}
 	err = proxyApp.Stop()
 	if err != nil {

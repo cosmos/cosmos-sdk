@@ -16,7 +16,6 @@ import (
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -32,7 +31,6 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app               *runtime.App
 	ctx               sdk.Context
 	addrs             []sdk.AccAddress
 	groupKeeper       keeper.Keeper
@@ -575,8 +573,12 @@ func submitProposal(s *IntegrationTestSuite, ctx context.Context, msgs []sdk.Msg
 }
 
 func submitProposalAndVote(
-	s *IntegrationTestSuite, ctx context.Context, msgs []sdk.Msg, //nolint:revive // context-as-argument: context.Context should be the first parameter of a function
-	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption,
+	s *IntegrationTestSuite,
+	ctx context.Context,
+	msgs []sdk.Msg,
+	proposers []string,
+	groupPolicyAddr sdk.AccAddress,
+	voteOption group.VoteOption,
 ) (uint64, error) {
 	myProposalID, err := submitProposal(s, ctx, msgs, proposers, groupPolicyAddr)
 	if err != nil {

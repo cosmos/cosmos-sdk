@@ -136,7 +136,7 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 
 	cmd := cli.NewMultiSendTxCmd(address.NewBech32Codec("cosmos"))
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	extraArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

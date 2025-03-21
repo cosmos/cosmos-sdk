@@ -184,16 +184,20 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
 	assert.NilError(t, err)
 
-	app.InitChain(&abci.RequestInitChain{
+	_, err = app.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   appGenesis.AppState,
-	},
-	)
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	})
+	assert.NilError(t, err)
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
-	app.Commit()
+	assert.NilError(t, err)
+
+	_, err = app.Commit()
+	assert.NilError(t, err)
 
 	cmd := server.ExportCmd(
 		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {

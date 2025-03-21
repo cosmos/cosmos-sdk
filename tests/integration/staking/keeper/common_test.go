@@ -53,6 +53,8 @@ func init() {
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
+	t.Helper()
+
 	return t, exp.MinEqual(&got), "expected:\n%v\ngot:\n%v", exp, got
 }
 
@@ -65,6 +67,8 @@ func generateAddresses(f *fixture, numAddrs int) ([]sdk.AccAddress, []sdk.ValAdd
 }
 
 func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+	t.Helper()
+
 	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.sdkCtx, 5, f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 300))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(5)
@@ -93,6 +97,7 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 
 func initFixture(tb testing.TB) *fixture {
 	tb.Helper()
+
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey,
 	)

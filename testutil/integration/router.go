@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
+
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -106,7 +107,7 @@ func NewIntegrationApp(
 	if err != nil {
 		panic(fmt.Errorf("failed to commit application: %w", err))
 	}
-	
+
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
 	return &App{

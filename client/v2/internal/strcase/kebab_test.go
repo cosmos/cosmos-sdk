@@ -9,6 +9,8 @@ import (
 )
 
 func toKebab(tb testing.TB) {
+	tb.Helper()
+
 	cases := [][]string{
 		{"testCase", "test-case"},
 		{"TestCase", "test-case"},

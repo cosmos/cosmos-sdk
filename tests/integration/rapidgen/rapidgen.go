@@ -273,8 +273,8 @@ var (
 
 		GenType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, GenOpts),
 
-		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),
-		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()),
+		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       //nolint:staticcheck
+		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), //nolint:staticcheck
 		GenType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, GenOpts.WithDisallowNil()),
 
 		GenType(&vestingtypes.BaseVestingAccount{}, &vestingapi.BaseVestingAccount{}, GenOpts.WithDisallowNil()),

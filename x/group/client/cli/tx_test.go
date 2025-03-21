@@ -1118,7 +1118,7 @@ func (s *CLITestSuite) TestTxSubmitProposal() {
 	proposalFile := testutil.WriteToNewTempFile(s.T(), string(bz))
 
 	cmd := groupcli.MsgSubmitProposalCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	testCases := []struct {
 		name         string

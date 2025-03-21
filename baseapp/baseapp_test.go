@@ -140,7 +140,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 		_, _, addr := testdata.KeyTestPubAddr()
 		txs := [][]byte{}
 		for txNum := 0; txNum < cfg.blockTxs; txNum++ {
-			msgs := []sdk.Msg{}
+			var msgs []sdk.Msg
 			for msgNum := 0; msgNum < 100; msgNum++ {
 				key := []byte(fmt.Sprintf("%v", keyCounter))
 				value := make([]byte, 10000)
@@ -153,7 +153,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 			}
 
 			builder := suite.txConfig.NewTxBuilder()
-			builder.SetMsgs(msgs...)
+			require.NoError(t, builder.SetMsgs(msgs...))
 			setTxSignature(t, builder, 0)
 
 			txBytes, err := suite.txConfig.TxEncoder()(builder.GetTx())
@@ -549,7 +549,8 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 		require.PanicsWithValue(t, customPanicMsg, func() {
 			bz, err := suite.txConfig.TxEncoder()(tx)
 			require.NoError(t, err)
-			suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{bz}})
+			_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{bz}})
+			require.Error(t, err)
 		})
 	}
 }
@@ -623,7 +624,8 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
 
-	suite.baseApp.Commit()
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
 }
 
 func TestBaseAppPostHandler(t *testing.T) {
@@ -869,16 +871,16 @@ func TestGetMaximumBlockGas(t *testing.T) {
 
 	ctx := suite.baseApp.NewContext(true)
 
-	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}})
+	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}}))
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -1}})
+	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -1}}))
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}})
+	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}}))
 	require.Equal(t, uint64(5000000), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -5000000}})
+	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -5000000}}))
 	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
 }
 

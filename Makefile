@@ -389,14 +389,16 @@ lint-install:
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
 
 lint:
-	@echo "--> Running linter"
+	@echo "--> Running linter on diffed files only."
+	$(MAKE) lint-install
+	@./scripts/go-lint-changes.bash --timeout=15m
+
+
+lint-all:
+	@echo "--> Running linter on all files"
 	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
 
-lint-changes:
-	@echo "--> Running linter"
-	$(MAKE) lint-install
-	@./scripts/go-lint-changes.bash --timeout=15m
 
 lint-fix:
 	@echo "--> Running linter"

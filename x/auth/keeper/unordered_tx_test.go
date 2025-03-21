@@ -11,10 +11,9 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestManager(t *testing.T) {

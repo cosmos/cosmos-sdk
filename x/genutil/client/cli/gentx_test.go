@@ -113,7 +113,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 
 		dir := s.T().TempDir()
 		genTxFile := filepath.Join(dir, "myTx")

@@ -115,7 +115,7 @@ func initRootCmd(
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommandsWithStartCmdOptions(rootCmd, simapp.DefaultNodeHome, newApp, appExport, server.StartCmdOptions{
+	server.AddCommandsWithStartCmdOptions(rootCmd, simapp.DefaultNodeHome, newApp, appExport, server.StartCmdOptions[servertypes.Application]{
 		AddFlags: func(startCmd *cobra.Command) {
 		},
 	})

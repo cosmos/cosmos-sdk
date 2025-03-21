@@ -5,9 +5,9 @@ go 1.23.0
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/log => ../../log
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
-	cosmossdk.io/store => ../../store
 )
 
 require (

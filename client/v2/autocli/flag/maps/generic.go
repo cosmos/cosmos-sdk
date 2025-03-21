@@ -29,15 +29,15 @@ func (gm *genericMapValue[K, V]) Set(val string) error {
 	ss := strings.Split(val, ",")
 	out := make(map[K]V, len(ss))
 	for _, pair := range ss {
-		kv := strings.SplitN(pair, "=", 2)
-		if len(kv) != 2 {
+		key, value, found := strings.Cut(pair, "=")
+		if !found {
 			return fmt.Errorf("%s must be formatted as key=value", pair)
 		}
-		key, err := gm.Options.keyParser(kv[0])
+		parsedKey, err := gm.Options.keyParser(key)
 		if err != nil {
 			return err
 		}
-		out[key], err = gm.Options.valueParser(kv[1])
+		out[parsedKey], err = gm.Options.valueParser(value)
 		if err != nil {
 			return err
 		}

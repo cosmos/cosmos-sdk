@@ -117,9 +117,9 @@ func (s *TestSuite) SetupTest() {
 	s.groupPolicyAddr = addrbz
 
 	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
-	s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
+	s.Require().NoError(s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}))
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
-	s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
+	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 }
 
 func (s *TestSuite) setNextAccount() {
@@ -135,7 +135,7 @@ func (s *TestSuite) setNextAccount() {
 
 	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(ac)
 	s.Require().NoError(err)
-	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
+	s.Require().NoError(groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal))
 
 	s.Require().NoError(err)
 
@@ -267,7 +267,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		s.Run(msg, func() {
 			pID := spec.preRun(s.sdkCtx)
 
-			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			s.Require().NoError(module.EndBlocker(spec.newCtx, s.groupKeeper))
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pID,
 			})
@@ -451,7 +451,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
+	s.NotPanics(func() { _ = module.EndBlocker(ctx, s.groupKeeper) })
 }
 
 // TestTallyProposalsAtVPEnd_GroupMemberLeaving test that the node doesn't
@@ -513,7 +513,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 
 	// Tally the result. This saves the tally result to state.
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
+	s.NotPanics(func() { _ = module.EndBlocker(ctx, s.groupKeeper) })
 
 	// member 2 (high weight) leaves group.
 	_, err = s.groupKeeper.LeaveGroup(ctx, &group.MsgLeaveGroup{
@@ -523,5 +523,5 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
+	s.NotPanics(func() { _ = module.EndBlocker(ctx, s.groupKeeper) })
 }

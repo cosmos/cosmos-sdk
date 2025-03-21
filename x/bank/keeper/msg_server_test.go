@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(minterAcc)
-			suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
+			_ = suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
 			if !tc.expErr {
 				suite.mockSendCoins(suite.ctx, minterAcc, baseAcc.GetAddress())
 			}
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.mockMintCoins(minterAcc)
-			suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
+			_ = suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
 			if !tc.expErr {
 				suite.mockInputOutputCoins([]sdk.AccountI{minterAcc}, accAddrs[:2])
 			}

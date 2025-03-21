@@ -32,6 +32,8 @@ var (
 )
 
 func buildTx(t *testing.T, bldr *wrapper) {
+	t.Helper()
+
 	bldr.SetFeeAmount(coins)
 	bldr.SetGasLimit(gas)
 	bldr.SetMemo(memo)

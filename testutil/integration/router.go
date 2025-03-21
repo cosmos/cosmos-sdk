@@ -133,7 +133,7 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	}
 
 	if cfg.AutomaticCommit {
-		defer app.Commit()
+		defer app.Commit() //nolint:errcheck // not needed in testing
 	}
 
 	if cfg.AutomaticFinalizeBlock {

@@ -628,7 +628,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 	ledgerPubKey := priv.PubKey()
 	pubKey, err := k.GetPubKey()

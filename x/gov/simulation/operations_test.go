@@ -41,7 +41,7 @@ import (
 
 var (
 	_ simtypes.WeightedProposalMsg     = MockWeightedProposals{}
-	_ simtypes.WeightedProposalContent = MockWeightedProposals{}
+	_ simtypes.WeightedProposalContent = MockWeightedProposals{} // nolint: keeping around for legacy testing
 )
 
 type MockWeightedProposals struct {
@@ -79,7 +79,7 @@ func mockWeightedProposalMsg(n int) []simtypes.WeightedProposalMsg {
 	return wpc
 }
 
-// nolint
+// nolint // keeping this legacy proposal for testing
 func mockWeightedLegacyProposalContent(n int) []simtypes.WeightedProposalContent {
 	wpc := make([]simtypes.WeightedProposalContent, n)
 	for i := 0; i < n; i++ {
@@ -412,6 +412,8 @@ type suite struct {
 
 // returns context and an app with updated mint keeper
 func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
+	t.Helper()
+
 	res := suite{}
 
 	app, err := simtestutil.Setup(
@@ -438,10 +440,16 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 }
 
 func getTestingAccounts(
-	t *testing.T, r *rand.Rand,
-	accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper,
-	ctx sdk.Context, n int,
+	t *testing.T,
+	r *rand.Rand,
+	accountKeeper authkeeper.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+	stakingKeeper *stakingkeeper.Keeper,
+	ctx sdk.Context,
+	n int,
 ) []simtypes.Account {
+	t.Helper()
+
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)

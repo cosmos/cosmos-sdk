@@ -160,15 +160,15 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 
 	// setup validator0 by consensus address
-	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	suite.Require().NoError(suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0))
 	val0ConsAddress, err := validator0.GetConsAddr()
 	suite.Require().NoError(err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
-	suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
+	suite.Require().NoError(suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info))
 
 	// put validator0 in jail
-	suite.stakingKeeper.Jail(ctx, val0ConsAddress)
+	suite.Require().NoError(suite.stakingKeeper.Jail(ctx, val0ConsAddress))
 
 	// setup self delegation
 	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
@@ -219,7 +219,10 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
 
-	stakingKeeper.SetValidator(ctx, validator)
+	err = stakingKeeper.SetValidator(ctx, validator)
+	if err != nil {
+		return stakingtypes.Validator{}, fmt.Errorf("failed to set validator: %w", err)
+	}
 
 	return validator, nil
 }

@@ -301,7 +301,8 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 	pub := &ed25519.PubKey{Key: pubBz}
 	for length := 1; length < 10; length++ {
 		for times := 1; times < 20; times++ {
-			rand.Read(pub.Key[:])
+			_, err := rand.Read(pub.Key[:])
+			s.Require().NoError(err)
 			// Test if randomly generated prefix of a given length works
 			prefix := RandString(length)
 
@@ -355,7 +356,8 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 func (s *addressTestSuite) TestAddressInterface() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
-	rand.Read(pub.Key)
+	_, err := rand.Read(pub.Key)
+	s.Require().NoError(err)
 
 	addrs := []types.Address{
 		types.ConsAddress(pub.Address()),

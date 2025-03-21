@@ -245,6 +245,8 @@ func (s *GRPCWebTestSuite) makeGrpcRequest(
 }
 
 func readTrailersFromBytes(t *testing.T, dataBytes []byte) Trailer {
+	t.Helper()
+
 	bufferReader := bytes.NewBuffer(dataBytes)
 	tp := textproto.NewReader(bufio.NewReader(bufferReader))
 

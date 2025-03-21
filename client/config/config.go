@@ -75,7 +75,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	// when client.toml does not exist create and init with default values
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
-			return ctx, fmt.Errorf("couldn't make client config: %v", err)
+			return ctx, fmt.Errorf("couldn't make client config: %w", err)
 		}
 
 		if ctx.ChainID != "" {

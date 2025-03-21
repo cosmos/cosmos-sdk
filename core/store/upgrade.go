@@ -1,5 +1,7 @@
 package store
 
+import "slices"
+
 // StoreUpgrades defines a series of transformations to apply the multistore db upon load
 type StoreUpgrades struct {
 	Added   []string `json:"added"`
@@ -11,12 +13,7 @@ func (s *StoreUpgrades) IsAdded(key string) bool {
 	if s == nil {
 		return false
 	}
-	for _, added := range s.Added {
-		if key == added {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s.Added, key)
 }
 
 // IsDeleted returns true if the given key should be deleted
@@ -24,10 +21,5 @@ func (s *StoreUpgrades) IsDeleted(key string) bool {
 	if s == nil {
 		return false
 	}
-	for _, d := range s.Deleted {
-		if d == key {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s.Deleted, key)
 }

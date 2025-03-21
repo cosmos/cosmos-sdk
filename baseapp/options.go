@@ -162,7 +162,7 @@ func (app *BaseApp) SetDB(db dbm.DB) {
 
 func (app *BaseApp) SetCMS(cms storetypes.CommitMultiStore) {
 	if app.sealed {
-		panic("SetEndBlocker() on sealed BaseApp")
+		panic("SetCMS() on sealed BaseApp")
 	}
 
 	app.cms = cms
@@ -370,6 +370,9 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 
 // SetStreamingManager sets the streaming manager for the BaseApp.
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
+	if app.sealed {
+		panic("SetStreamingManager() on sealed BaseApp")
+	}
 	app.streamingManager = manager
 }
 

@@ -5,11 +5,11 @@ import (
 )
 
 func TestABCIError(t *testing.T) {
-	if err := ABCIError(testCodespace, ErrTxDecode.ABCICode(), "custom"); err.Error() != "custom: tx parse error" {
-		t.Errorf("expected error message: custom: tx parse error, got: %v", err.Error())
+	if err := ABCIError(testCodespace, ErrTxDecode.ABCICode(), "custom"); err.Error() != "custom: [testtesttest:2] tx parse error" {
+		t.Errorf("expected error message: custom: [testtesttest:2] tx parse error, got: %v", err.Error())
 	}
-	if err := ABCIError("unknown", 1, "custom"); err.Error() != "custom: unknown" {
-		t.Errorf("expected error message: custom: unknown, got: %v", err.Error())
+	if err := ABCIError("unknown", 1, "custom"); err.Error() != "custom: [unknown:1] unknown" {
+		t.Errorf("expected error message: custom: [unknown:1] unknown, got: %v", err.Error())
 	}
 }
 

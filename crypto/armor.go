@@ -3,6 +3,7 @@ package crypto
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 
@@ -104,7 +105,7 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	if err != nil {
-		return nil, "", fmt.Errorf("couldn't unarmor bytes: %v", err)
+		return nil, "", fmt.Errorf("couldn't unarmor bytes: %w", err)
 	}
 
 	switch header[headerVersion] {
@@ -240,7 +241,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 
-		if err == xsalsa20symmetric.ErrCiphertextDecrypt {
+		if errors.Is(err, xsalsa20symmetric.ErrCiphertextDecrypt) {
 			return privKey, sdkerrors.ErrWrongPassword
 		}
 	default:

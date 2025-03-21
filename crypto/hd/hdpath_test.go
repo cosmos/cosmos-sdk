@@ -295,7 +295,6 @@ func TestDerivePrivateKeyForPathDoNotCrash(t *testing.T) {
 	}
 
 	for _, path := range paths {
-		path := path
 		t.Run(path, func(t *testing.T) {
 			_, _ = hd.DerivePrivateKeyForPath([32]byte{}, [32]byte{}, path)
 		})

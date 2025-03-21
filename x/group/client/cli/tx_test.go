@@ -130,7 +130,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
 	cmd := groupcli.MsgCreateGroupCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	validMembers := fmt.Sprintf(`{"members": [{
 		"address": "%s",
@@ -234,7 +234,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
 
 	cmd := groupcli.MsgUpdateGroupAdminCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	ctx := svrcmd.CreateExecuteContext(context.Background())
 	cmd.SetContext(ctx)
@@ -362,7 +362,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMetadata() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
 	cmd := groupcli.MsgUpdateGroupMetadataCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	testCases := []struct {
 		name         string
@@ -456,7 +456,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 	groupPolicyAddress := accounts[2]
 
 	cmd := groupcli.MsgUpdateGroupMembersCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	groupID := "1"
 
@@ -568,7 +568,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
 	cmd := groupcli.MsgCreateGroupWithPolicyCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	validMembers := fmt.Sprintf(`{"members": [{
 		"address": "%s",
@@ -696,7 +696,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 	invalidPercentageDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"2", "windows":{"voting_period":"1s"}}`)
 
 	cmd := groupcli.MsgCreateGroupPolicyCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	testCases := []struct {
 		name         string
@@ -827,7 +827,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyAdmin() {
 	commonFlags = append(commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
 	cmd := groupcli.MsgUpdateGroupPolicyAdminCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	testCases := []struct {
 		name         string
@@ -929,7 +929,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	percentageDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "windows":{"voting_period":"40000s"}}`)
 
 	cmd := groupcli.MsgUpdateGroupPolicyDecisionPolicyCmd(address.NewBech32Codec("cosmos"))
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	testCases := []struct {
 		name         string
@@ -1027,7 +1027,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
 	commonFlags = append(commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
 	cmd := groupcli.MsgUpdateGroupPolicyMetadataCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	testCases := []struct {
 		name         string
@@ -1205,7 +1205,7 @@ func (s *CLITestSuite) TestTxVote() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 4)
 
 	cmd := groupcli.MsgVoteCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	ids := make([]string, 4)
 	for i := 0; i < len(ids); i++ {
@@ -1308,7 +1308,7 @@ func (s *CLITestSuite) TestTxWithdrawProposal() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
 	cmd := groupcli.MsgWithdrawProposalCmd()
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	ids := make([]string, 2)
 	ids[0] = "1"

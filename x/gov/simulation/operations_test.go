@@ -79,6 +79,7 @@ func mockWeightedProposalMsg(n int) []simtypes.WeightedProposalMsg {
 	return wpc
 }
 
+// nolint
 func mockWeightedLegacyProposalContent(n int) []simtypes.WeightedProposalContent {
 	wpc := make([]simtypes.WeightedProposalContent, n)
 	for i := 0; i < n; i++ {

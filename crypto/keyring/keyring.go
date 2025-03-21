@@ -517,7 +517,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 }
 
 func wrapKeyNotFound(err error, msg string) error {
-	if err == keyring.ErrKeyNotFound {
+	if errors.Is(err, keyring.ErrKeyNotFound) {
 		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, msg)
 	}
 	return err

@@ -237,7 +237,7 @@ func typeForName(name string) (reflect.Type, error) {
 }
 
 func fileDescContainingExtension(st reflect.Type, ext int32) (*dpb.FileDescriptorProto, error) {
-	m, ok := reflect.Zero(reflect.PtrTo(st)).Interface().(proto.Message)
+	m, ok := reflect.Zero(reflect.PointerTo(st)).Interface().(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}

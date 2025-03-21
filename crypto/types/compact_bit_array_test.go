@@ -206,8 +206,6 @@ func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
 		{`"______________xx"`, []int{14, 15}, []int{0, 1}},
 	}
 	for tcIndex, tc := range testCases {
-
-		tcIndex := tcIndex
 		t.Run(tc.marshalledBA, func(t *testing.T) {
 			var bA *CompactBitArray
 			err := json.Unmarshal([]byte(tc.marshalledBA), &bA)

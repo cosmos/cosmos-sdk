@@ -87,7 +87,6 @@ func WeightedOperations(
 	// generate the weighted operations for the proposal msgs
 	var wProposalOps simulation.WeightedOperations
 	for _, wMsg := range wMsgs {
-		wMsg := wMsg // pin variable
 		var weight int
 		appParams.GetOrGenerate(wMsg.AppParamsKey(), &weight, nil,
 			func(_ *rand.Rand) { weight = wMsg.DefaultWeight() },
@@ -105,7 +104,6 @@ func WeightedOperations(
 	// generate the weighted operations for the proposal contents
 	var wLegacyProposalOps simulation.WeightedOperations
 	for _, wContent := range wContents {
-		wContent := wContent // pin variable
 		var weight int
 		appParams.GetOrGenerate(wContent.AppParamsKey(), &weight, nil,
 			func(_ *rand.Rand) { weight = wContent.DefaultWeight() },

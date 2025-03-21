@@ -83,13 +83,13 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 		}
 
 		if err := writeConfigToFile(configFilePath, conf); err != nil {
-			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
+			return ctx, fmt.Errorf("could not write client config to the file: %w", err)
 		}
 	}
 
 	conf, err := getClientConfig(configPath, ctx.Viper)
 	if err != nil {
-		return ctx, fmt.Errorf("couldn't get client config: %v", err)
+		return ctx, fmt.Errorf("couldn't get client config: %w", err)
 	}
 	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
 	ctx = ctx.WithOutputFormat(conf.Output).
@@ -106,7 +106,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	// https://github.com/cosmos/cosmos-sdk/issues/8986
 	client, err := client.NewClientFromNode(conf.Node)
 	if err != nil {
-		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", err)
+		return ctx, fmt.Errorf("couldn't get client from nodeURI: %w", err)
 	}
 
 	ctx = ctx.WithNodeURI(conf.Node).

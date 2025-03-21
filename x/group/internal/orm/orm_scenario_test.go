@@ -274,7 +274,6 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	for i, m := range tms {
 		gCtx.ResetGasMeter()
 
-		m := m
 		err = k.primaryKeyTable.Delete(gCtx.KVStore(store), &m)
 
 		require.NoError(t, err)
@@ -335,7 +334,8 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 		it, err := k.autoUInt64TableModelByMetadataIndex.Get(store, exp)
 		require.NoError(t, err)
 		var all []testdata.TableModel
-		ReadAll(it, &all)
+		_, err = ReadAll(it, &all)
+		require.NoError(t, err)
 		require.Len(t, all, 1)
 		assert.Equal(t, loaded, all[0])
 	}

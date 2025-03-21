@@ -133,7 +133,8 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 
 	for blockN := 0; blockN < nBlocks; blockN++ {
 
-		suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
+		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
+		require.NoError(t, err)
 
 		ctx := getFinalizeBlockStateCtx(suite.baseApp)
 		sm := ctx.StreamingManager()

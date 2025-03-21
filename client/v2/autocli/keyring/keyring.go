@@ -14,7 +14,7 @@ var KeyringContextKey struct{}
 
 var _ Keyring = &KeyringImpl{}
 
-type KeyringImpl struct { //nolint:revive // stuttering is fine
+type KeyringImpl struct {
 	k Keyring
 }
 

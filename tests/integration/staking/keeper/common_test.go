@@ -92,6 +92,7 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 }
 
 func initFixture(tb testing.TB) *fixture {
+	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey,
 	)

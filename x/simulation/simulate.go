@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"io"
 	"math/rand"
 	"os"
@@ -230,7 +231,8 @@ func SimulateFromSeed(
 		logWriter.AddEntry(EndBlockEntry(blockHeight))
 
 		if config.Commit {
-			app.Commit()
+			_, err = app.Commit()
+			require.NoError(tb, err)
 		}
 
 		if proposerAddress == nil {

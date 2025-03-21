@@ -95,10 +95,12 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				app.FinalizeBlock(&abci.RequestFinalizeBlock{
+				_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 					Height: i,
 				})
-				app.Commit()
+				assert.NilError(t, err)
+				_, err = app.Commit()
+				assert.NilError(t, err)
 			}
 
 			output := &bytes.Buffer{}

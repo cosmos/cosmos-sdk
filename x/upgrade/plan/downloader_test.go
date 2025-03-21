@@ -129,6 +129,7 @@ func requireFileEquals(t *testing.T, path string, tf *TestFile) {
 
 // makeFileUrl converts the given path to a URL with the correct checksum query parameter.
 func makeFileURL(t *testing.T, path string) string {
+	t.Helper()
 	f, err := os.Open(path)
 	require.NoError(t, err, "opening file")
 	defer f.Close()

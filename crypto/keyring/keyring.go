@@ -50,8 +50,9 @@ const (
 )
 
 var (
-	_                          Keyring = &keystore{}
-	maxPassphraseEntryAttempts         = 3
+	_                          Keyring       = &keystore{}
+	_                          KeyringWithDB = &keystore{}
+	maxPassphraseEntryAttempts               = 3
 )
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.

@@ -41,7 +41,7 @@ import (
 
 var (
 	_ simtypes.WeightedProposalMsg     = MockWeightedProposals{}
-	_ simtypes.WeightedProposalContent = MockWeightedProposals{} //nolint: keeping around for legacy testing
+	_ simtypes.WeightedProposalContent = MockWeightedProposals{} //nolint:staticcheck keeping around for legacy testing
 )
 
 type MockWeightedProposals struct {
@@ -62,6 +62,7 @@ func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
 	}
 }
 
+//nolint:staticcheck // retaining legacy content to maintain gov functionality
 func (m MockWeightedProposals) ContentSimulatorFn() simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
 		return v1beta1.NewTextProposal(

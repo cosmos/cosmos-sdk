@@ -52,7 +52,7 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 
 		intHeight, err := strconv.ParseInt(string(strHeight), 10, 64)
 		if err != nil {
-			return fmt.Errorf("can't parse height from key %q to int64: %v", strHeight, err)
+			return fmt.Errorf("can't parse height from key %q to int64: %w", strHeight, err)
 		}
 
 		newStoreKey := GetHistoricalInfoKey(intHeight)

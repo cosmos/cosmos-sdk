@@ -530,7 +530,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 }
 
 func wrapKeyNotFound(err error, msg string) error {
-	if err == keyring.ErrKeyNotFound {
+	if errors.Is(err, keyring.ErrKeyNotFound) {
 		return errorsmod.Wrap(sdkerrors.ErrKeyNotFound, msg)
 	}
 	return err
@@ -628,7 +628,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 	ledgerPubKey := priv.PubKey()
 	pubKey, err := k.GetPubKey()

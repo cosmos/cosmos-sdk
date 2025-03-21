@@ -129,8 +129,6 @@ func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -224,8 +222,6 @@ func (s *E2ETestSuite) TestNewWithdrawAllRewardsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewWithdrawAllRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
@@ -309,8 +305,6 @@ func (s *E2ETestSuite) TestNewSetWithdrawAddrCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewSetWithdrawAddrCmd(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
@@ -364,8 +358,6 @@ func (s *E2ETestSuite) TestNewFundCommunityPoolCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewFundCommunityPoolCmd(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"math"
 	"sort"
 	"strings"
@@ -383,9 +384,7 @@ func (rs *Store) getTracingContext() types.TraceContext {
 	}
 
 	ctx := types.TraceContext{}
-	for k, v := range rs.traceContext {
-		ctx[k] = v
-	}
+	maps.Copy(ctx, rs.traceContext)
 
 	return ctx
 }

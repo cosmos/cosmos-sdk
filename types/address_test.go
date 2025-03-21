@@ -58,14 +58,17 @@ func (s *addressTestSuite) TestEmptyAddresses() {
 	s.Require().Equal((types.ConsAddress{}).String(), "")
 
 	accAddr, err := types.AccAddressFromBech32("")
+	s.Require().NotNil(accAddr)
 	s.Require().True(accAddr.Empty())
 	s.Require().Error(err)
 
 	valAddr, err := types.ValAddressFromBech32("")
+	s.Require().NotNil(accAddr)
 	s.Require().True(valAddr.Empty())
 	s.Require().Error(err)
 
 	consAddr, err := types.ConsAddressFromBech32("")
+	s.Require().NotNil(accAddr)
 	s.Require().True(consAddr.Empty())
 	s.Require().Error(err)
 }
@@ -92,7 +95,8 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 	pub := &ed25519.PubKey{Key: pubBz}
 
 	for i := 0; i < 1000; i++ {
-		rand.Read(pub.Key)
+		_, err := rand.Read(pub.Key)
+		s.Require().NoError(err)
 
 		acc := types.AccAddress(pub.Address())
 		res := types.AccAddress{}
@@ -101,7 +105,7 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err := types.AccAddressFromBech32(str)
+		res, err = types.AccAddressFromBech32(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -133,7 +137,8 @@ func (s *addressTestSuite) TestAddrCache() {
 	// Use a random key
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
-	rand.Read(pub.Key)
+	_, err := rand.Read(pub.Key)
+	s.Require().NoError(err)
 
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
@@ -170,7 +175,8 @@ func (s *addressTestSuite) TestAddrCacheDisabled() {
 	// Use a random key
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
-	rand.Read(pub.Key)
+	_, err := rand.Read(pub.Key)
+	s.Require().NoError(err)
 
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
@@ -202,7 +208,8 @@ func (s *addressTestSuite) TestValAddr() {
 	pub := &ed25519.PubKey{Key: pubBz}
 
 	for i := 0; i < 20; i++ {
-		rand.Read(pub.Key)
+		_, err := rand.Read(pub.Key)
+		s.Require().NoError(err)
 
 		acc := types.ValAddress(pub.Address())
 		res := types.ValAddress{}
@@ -211,7 +218,7 @@ func (s *addressTestSuite) TestValAddr() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err := types.ValAddressFromBech32(str)
+		res, err = types.ValAddressFromBech32(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -243,7 +250,8 @@ func (s *addressTestSuite) TestConsAddress() {
 	pub := &ed25519.PubKey{Key: pubBz}
 
 	for i := 0; i < 20; i++ {
-		rand.Read(pub.Key[:])
+		_, err := rand.Read(pub.Key)
+		s.Require().NoError(err)
 
 		acc := types.ConsAddress(pub.Address())
 		res := types.ConsAddress{}
@@ -252,7 +260,7 @@ func (s *addressTestSuite) TestConsAddress() {
 		s.testMarshal(&acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err := types.ConsAddressFromBech32(str)
+		res, err = types.ConsAddressFromBech32(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 
@@ -308,7 +316,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				acc.String(),
 				prefix+types.PrefixAccount), acc.String())
 
-			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32Pub,
 				prefix+types.PrefixPublic))
@@ -322,7 +330,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				val.String(),
 				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ValPub,
 				prefix+types.PrefixValidator+types.PrefixPublic))
@@ -336,7 +344,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				cons.String(),
 				prefix+types.PrefixConsensus+types.PrefixAddress))
 
-			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub) //nolint:staticcheck // SA1019: legacybech32 is deprecated: use the bech32 package instead.
+			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ConsPub,
 				prefix+types.PrefixConsensus+types.PrefixPublic))

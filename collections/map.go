@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
-	"cosmossdk.io/core/store"
+	store "cosmossdk.io/collections/corecompat"
 )
 
 // Map represents the basic collections object.

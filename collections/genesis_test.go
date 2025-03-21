@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/collections/corecompat"
 )
 
 func TestDefaultGenesis(t *testing.T) {
@@ -110,7 +110,7 @@ func initFixture(t *testing.T) *testFixture {
 	}
 }
 
-func createTestGenesisSource(t *testing.T) appmodule.GenesisSource {
+func createTestGenesisSource(t *testing.T) corecompat.GenesisSource {
 	t.Helper()
 	expectedOrder := []string{"item", "key_set", "map", "sequence"}
 	currentIndex := 0

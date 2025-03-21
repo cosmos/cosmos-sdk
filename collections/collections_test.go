@@ -7,8 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/core/testing"
+	"cosmossdk.io/collections/internal/coretesting"
+
+	store "cosmossdk.io/collections/corecompat"
 )
 
 func deps() (store.KVStoreService, context.Context) {

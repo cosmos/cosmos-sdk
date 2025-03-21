@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

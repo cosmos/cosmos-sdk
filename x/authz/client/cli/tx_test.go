@@ -592,7 +592,6 @@ func (s *CLITestSuite) TestCmdRevokeAuthorizations() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdRevokeAuthorization(addresscodec.NewBech32Codec("cosmos"))
 
@@ -727,7 +726,6 @@ func (s *CLITestSuite) TestNewExecGenericAuthorized() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 
@@ -812,7 +810,6 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := s.clientCtx

@@ -2416,7 +2416,7 @@ func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
 			require.NoError(migrator.Migrate3to4(ctx))
 
 			newParams := bankKeeper.GetParams(ctx)
-			require.Len(newParams.SendEnabled, 0)
+			require.Len(newParams.SendEnabled, 0) //nolint // just using this for testing when migrating legacy
 			require.Equal(def, newParams.DefaultSendEnabled)
 
 			for _, se := range params.SendEnabled {

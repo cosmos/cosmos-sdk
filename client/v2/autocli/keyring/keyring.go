@@ -20,7 +20,8 @@ type KeyringImpl struct {
 
 // NewKeyringInContext returns a new context with the keyring set.
 func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
-	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k))
+	// TODO: should this be fixed?
+	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k)) //nolint:staticcheck // we can ignore this safely until we make a fix for this
 }
 
 func NewKeyringImpl(k Keyring) *KeyringImpl {

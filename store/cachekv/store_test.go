@@ -545,7 +545,6 @@ func assertIterateDomainCheck(t *testing.T, st types.KVStore, mem dbm.DB, r []ke
 	require.NoError(t, err)
 
 	krc := newKeyRangeCounter(r)
-	i := 0
 
 	for ; krc.valid(); krc.next() {
 		require.True(t, itr.Valid())
@@ -562,7 +561,6 @@ func assertIterateDomainCheck(t *testing.T, st types.KVStore, mem dbm.DB, r []ke
 
 		itr.Next()
 		itr2.Next()
-		i++
 	}
 
 	require.False(t, itr.Valid())

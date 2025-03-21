@@ -81,7 +81,6 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 
 	handler := signModeLegacyAminoJSONHandler{}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			bldr := newBuilder(nil)
 			buildTx(t, bldr)
@@ -182,7 +181,6 @@ func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 
 	handler := signModeLegacyAminoJSONHandler{}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			bldr := newBuilder(nil)
 			buildTx(t, bldr)

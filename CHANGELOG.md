@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (crypto/keyring) [#24040](https://github.com/cosmos/cosmos-sdk/pull/24040) Expose the db keyring used in the keystore.
 * (types) [#23919](https://github.com/cosmos/cosmos-sdk/pull/23919) Add MustValAddressFromBech32 function.
 * (all) [#23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support.
     * Adds a `--timeout-timestamp` flag that allows users to specify a block time at which the unordered transactions should expire from the mempool.

@@ -529,14 +529,18 @@ func TestMultiStore_Pruning(t *testing.T) {
 				ms.Commit()
 			}
 
+			for _, v := range tc.deleted {
+				// Ensure async pruning is done
+				checkErr := func() bool {
+					_, err := ms.CacheMultiStoreWithVersion(v)
+					return err != nil
+				}
+				require.Eventually(t, checkErr, 1*time.Second, 10*time.Millisecond, "expected error when loading height: %d", v)
+			}
+
 			for _, v := range tc.saved {
 				_, err := ms.CacheMultiStoreWithVersion(v)
 				require.NoError(t, err, "expected no error when loading height: %d", v)
-			}
-
-			for _, v := range tc.deleted {
-				_, err := ms.CacheMultiStoreWithVersion(v)
-				require.Error(t, err, "expected error when loading height: %d", v)
 			}
 		})
 	}
@@ -561,16 +565,6 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 
 	require.Equal(t, numVersions, lastCommitInfo.Version)
 
-	for v := int64(1); v < numVersions-int64(keepRecent); v++ {
-		err := ms.LoadVersion(v)
-		require.Error(t, err, "expected error when loading pruned height: %d", v)
-	}
-
-	for v := (numVersions - int64(keepRecent)); v < numVersions; v++ {
-		err := ms.LoadVersion(v)
-		require.NoError(t, err, "expected no error when loading height: %d", v)
-	}
-
 	// Get latest
 	err := ms.LoadVersion(numVersions - 1)
 	require.NoError(t, err)
@@ -585,6 +579,18 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 	// Ensure that can commit one more height with no panic
 	lastCommitInfo = ms.Commit()
 	require.Equal(t, numVersions+1, lastCommitInfo.Version)
+
+	isPruned := func() bool {
+		ls := ms.Commit() // to flush the batch with the pruned heights
+		for v := int64(1); v < numVersions-int64(keepRecent); v++ {
+			if err := ms.LoadVersion(v); err == nil {
+				require.NoError(t, ms.LoadVersion(ls.Version)) // load latest
+				return false
+			}
+		}
+		return true
+	}
+	require.Eventually(t, isPruned, 1000*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
 }
 
 func TestMultiStore_PruningRestart(t *testing.T) {
@@ -615,10 +621,18 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	actualHeightToPrune = ms.pruningManager.GetPruningHeight(ms.LatestVersion())
 	require.Equal(t, int64(8), actualHeightToPrune)
 
-	for v := int64(1); v <= actualHeightToPrune; v++ {
-		_, err := ms.CacheMultiStoreWithVersion(v)
-		require.Error(t, err, "expected error when loading height: %d", v)
+	// Ensure async pruning is done
+	isPruned := func() bool {
+		ms.Commit() // to flush the batch with the pruned heights
+		for v := int64(1); v <= actualHeightToPrune; v++ {
+			if _, err := ms.CacheMultiStoreWithVersion(v); err == nil {
+				return false
+			}
+		}
+		return true
 	}
+
+	require.Eventually(t, isPruned, 1*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
 }
 
 // TestUnevenStoresHeightCheck tests if loading root store correctly errors when

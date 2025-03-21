@@ -50,8 +50,9 @@ const (
 )
 
 var (
-	_                          Keyring = &keystore{}
-	maxPassphraseEntryAttempts         = 3
+	_                          Keyring       = &keystore{}
+	_                          KeyringWithDB = &keystore{}
+	maxPassphraseEntryAttempts               = 3
 )
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
@@ -102,6 +103,13 @@ type Keyring interface {
 	Exporter
 
 	Migrator
+}
+
+type KeyringWithDB interface {
+	Keyring
+
+	// Get the db keyring used in the keystore.
+	DB() keyring.Keyring
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.
@@ -256,6 +264,11 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 	}
 
 	return crypto.ArmorPubKeyBytes(bz, key.Type()), nil
+}
+
+// DB returns the db keyring used in the keystore
+func (ks keystore) DB() keyring.Keyring {
+	return ks.db
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {

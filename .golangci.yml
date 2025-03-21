@@ -6,6 +6,7 @@ run:
     - e2e
     - ledger
     - test_ledger_mock
+    - sims
 
 linters:
   disable-all: true

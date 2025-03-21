@@ -316,13 +316,13 @@ func sign(device SECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte, p2 byte) ([]
 func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error) {
 	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
-		return nil, fmt.Errorf("please open the %v app on the Ledger device - error: %v", options.appName, err)
+		return nil, fmt.Errorf("please open the %v app on the Ledger device - error: %w", options.appName, err)
 	}
 
 	// re-serialize in the 33-byte compressed format
 	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing public key: %v", err)
+		return nil, fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
@@ -331,7 +331,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 	return options.createPubkey(compressedPublicKey), nil
 }
 
-// getPubKeyAddr reads the pubkey and the address from a ledger device.
+// getPubKeyAddrSafe reads the pubkey and the address from a ledger device.
 // This function is marked as Safe as it will require user confirmation and
 // account and index will be shown in the device.
 //
@@ -340,13 +340,19 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
-		return nil, "", fmt.Errorf("%w: address rejected for path %s", err, path.String())
+		// Check special case if user is trying to use an index > 100
+		if path.AddressIndex > 100 {
+			return nil, "", fmt.Errorf("%w: cannot derive paths where index > 100: %s "+
+				"This is a security measure to avoid very hard to find derivation paths introduced by a possible attacker. "+
+				"You can disable this by setting expert mode in your ledger device. Do this at your own risk", err, path)
+		}
+		return nil, "", fmt.Errorf("%w: address rejected for path %s", err, path)
 	}
 
 	// re-serialize in the 33-byte compressed format
 	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
-		return nil, "", fmt.Errorf("error parsing public key: %v", err)
+		return nil, "", fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)

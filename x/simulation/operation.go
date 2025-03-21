@@ -79,7 +79,6 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps, futureOps []simula
 	}
 
 	for _, futureOp := range futureOps {
-		futureOp := futureOp
 		if futureOp.BlockHeight != 0 {
 			if val, ok := queuedOps[futureOp.BlockHeight]; ok {
 				queuedOps[futureOp.BlockHeight] = append(val, futureOp.Op)

@@ -202,50 +202,49 @@ func Test_runAddCmdDryRun(t *testing.T) {
 		},
 	}
 	for _, tt := range testData {
-		tt :=
-			t.Run(tt.name, func(t *testing.T) {
-				cmd := AddKeyCommand()
-				cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := AddKeyCommand()
+			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
-				kbHome := t.TempDir()
-				mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+			kbHome := t.TempDir()
+			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
-				kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
-				require.NoError(t, err)
+			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
+			require.NoError(t, err)
 
-				clientCtx := client.Context{}.
-					WithCodec(cdc).
-					WithKeyringDir(kbHome).
-					WithKeyring(kb)
-				ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+			clientCtx := client.Context{}.
+				WithCodec(cdc).
+				WithKeyringDir(kbHome).
+				WithKeyring(kb)
+			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-				path := sdk.GetConfig().GetFullBIP44Path()
-				_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
-				require.NoError(t, err)
+			path := sdk.GetConfig().GetFullBIP44Path()
+			_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
+			require.NoError(t, err)
 
-				t.Cleanup(func() {
-					_ = kb.Delete("subkey")
-				})
-
-				b := bytes.NewBufferString("")
-				cmd.SetOut(b)
-
-				cmd.SetArgs(tt.args)
-				require.NoError(t, cmd.ExecuteContext(ctx))
-
-				if tt.added {
-					_, err := kb.Key("testkey")
-					require.NoError(t, err)
-
-					out, err := io.ReadAll(b)
-					require.NoError(t, err)
-					require.Contains(t, string(out), "name: testkey")
-				} else {
-					_, err = kb.Key("testkey")
-					require.Error(t, err)
-					require.Equal(t, "testkey.info: key not found", err.Error())
-				}
+			t.Cleanup(func() {
+				_ = kb.Delete("subkey")
 			})
+
+			b := bytes.NewBufferString("")
+			cmd.SetOut(b)
+
+			cmd.SetArgs(tt.args)
+			require.NoError(t, cmd.ExecuteContext(ctx))
+
+			if tt.added {
+				_, err := kb.Key("testkey")
+				require.NoError(t, err)
+
+				out, err := io.ReadAll(b)
+				require.NoError(t, err)
+				require.Contains(t, string(out), "name: testkey")
+			} else {
+				_, err = kb.Key("testkey")
+				require.Error(t, err)
+				require.Equal(t, "testkey.info: key not found", err.Error())
+			}
+		})
 	}
 }
 

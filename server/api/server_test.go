@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -221,7 +222,7 @@ func (s *GRPCWebTestSuite) makeGrpcRequest(
 	for {
 		grpcPreamble := []byte{0, 0, 0, 0, 0}
 		readCount, err := reader.Read(grpcPreamble)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if readCount != 5 || err != nil {
@@ -262,7 +263,7 @@ func readTrailersFromBytes(t *testing.T, dataBytes []byte) Trailer {
 	// Second, replace header names because gRPC Web trailer names must be lower-case.
 	for {
 		line, err := tp.ReadLine()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		require.NoError(t, err, "failed to read header line")

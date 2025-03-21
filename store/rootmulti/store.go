@@ -920,7 +920,7 @@ loop:
 	for {
 		snapshotItem = snapshottypes.SnapshotItem{}
 		err := protoReader.ReadMsg(&snapshotItem)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")

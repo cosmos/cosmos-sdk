@@ -474,8 +474,6 @@ func (s *CLITestSuite) TestNewDelegateCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
@@ -556,8 +554,6 @@ func (s *CLITestSuite) TestNewRedelegateCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
@@ -619,8 +615,6 @@ func (s *CLITestSuite) TestNewUnbondCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
@@ -698,8 +692,6 @@ func (s *CLITestSuite) TestNewCancelUnbondingDelegationCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {

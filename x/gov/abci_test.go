@@ -414,8 +414,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
-			require.NoError(t, err)
+			require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
 
 			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -468,8 +467,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	// validate that the proposal fails/has been rejected
-	err = gov.EndBlocker(ctx, suite.GovKeeper)
-	require.NoError(t, err)
+	require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
 
 	// check proposal events
 	events := ctx.EventManager().Events()
@@ -583,8 +581,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here the expedited proposal is converted to regular after expiry.
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
-			require.NoError(t, err)
+			require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
 
 			if tc.expeditedPasses {
 				checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
@@ -639,8 +636,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here we validate the converted regular proposal
-			err = gov.EndBlocker(ctx, suite.GovKeeper)
-			require.NoError(t, err)
+			require.NoError(t, gov.EndBlocker(ctx, suite.GovKeeper))
 
 			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -676,6 +672,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
 	t.Helper()
+
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 
 	for i := 0; i < len(addrs); i++ {
@@ -704,6 +701,7 @@ func getDepositMultiplier(expedited bool) int64 {
 
 func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	t.Helper()
+
 	err := k.ActiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})
@@ -713,6 +711,7 @@ func checkActiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) 
 
 func checkInactiveProposalsQueue(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	t.Helper()
+
 	err := k.InactiveProposalsQueue.Walk(ctx, collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime()), func(key collections.Pair[time.Time, uint64], value uint64) (stop bool, err error) {
 		return false, err
 	})

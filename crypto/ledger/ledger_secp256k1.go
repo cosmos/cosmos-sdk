@@ -316,13 +316,13 @@ func sign(device SECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte, p2 byte) ([]
 func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error) {
 	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
-		return nil, fmt.Errorf("please open the %v app on the Ledger device - error: %v", options.appName, err)
+		return nil, fmt.Errorf("please open the %v app on the Ledger device - error: %w", options.appName, err)
 	}
 
 	// re-serialize in the 33-byte compressed format
 	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing public key: %v", err)
+		return nil, fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
@@ -352,7 +352,7 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types
 	// re-serialize in the 33-byte compressed format
 	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
-		return nil, "", fmt.Errorf("error parsing public key: %v", err)
+		return nil, "", fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)

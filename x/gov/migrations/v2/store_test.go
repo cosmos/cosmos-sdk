@@ -80,7 +80,7 @@ func TestMigrateStore(t *testing.T) {
 		store.Set(tc.oldKey, tc.oldValue)
 	}
 
-	// Run migratio
+	// Run migration
 	storeService := runtime.NewKVStoreService(govKey)
 	err := v2.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err)

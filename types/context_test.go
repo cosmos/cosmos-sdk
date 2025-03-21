@@ -139,7 +139,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), struct{}{}, "value")
+	newContext := context.WithValue(ctx.Context(), struct{}{}, "value") //nolint:staticcheck // this is fine for testing
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
@@ -237,7 +237,7 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
 
 	// test unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, struct{}{}, "bar")
+	ctx = context.WithValue(sdkCtx, struct{}{}, "bar") //nolint:staticcheck // this is fine for testing
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
 }

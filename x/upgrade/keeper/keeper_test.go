@@ -169,7 +169,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 	}
 
 	for _, tc := range cases {
-
 		s.Run(tc.name, func() {
 			// reset suite
 			s.SetupTest()

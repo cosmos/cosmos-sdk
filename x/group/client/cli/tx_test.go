@@ -207,7 +207,6 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 			cmd.SetContext(ctx)
@@ -334,7 +333,6 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
@@ -428,7 +426,6 @@ func (s *CLITestSuite) TestTxUpdateGroupMetadata() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
@@ -542,7 +539,6 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

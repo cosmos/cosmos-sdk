@@ -62,7 +62,6 @@ func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
 	}
 }
 
-// nolint: // this is fine for testing
 func (m MockWeightedProposals) ContentSimulatorFn() simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
 		return v1beta1.NewTextProposal(

@@ -937,10 +937,10 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	// because DIRECT doesn't support multi signers via the CLI.
 	// Since we use amino, we don't need to pre-populate signer_infos.
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetMsgs(
+	s.Require().NoError(txBuilder.SetMsgs(
 		banktypes.NewMsgSend(val0, addr1, sdk.NewCoins(val0Coin)),
 		banktypes.NewMsgSend(val1, addr1, sdk.NewCoins(val1Coin)),
-	)
+	))
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	signers, err := txBuilder.GetTx().GetSigners()

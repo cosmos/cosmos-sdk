@@ -39,6 +39,8 @@ type fixture struct {
 }
 
 func initFixture(t *testing.T) *fixture {
+	t.Helper()
+
 	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
 	ac := addresscodec.NewBech32Codec("cosmos")
 	mockStoreKey := storetypes.NewKVStoreKey("test")

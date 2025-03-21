@@ -39,6 +39,8 @@ func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool
 }
 
 func initFixture(t *testing.T) *fixture {
+	t.Helper()
+
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 	mockclientCtx := client.Context{}.

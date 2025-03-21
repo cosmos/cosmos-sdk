@@ -26,6 +26,8 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	t.Helper()
+
 	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)

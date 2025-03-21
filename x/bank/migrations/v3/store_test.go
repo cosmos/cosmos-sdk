@@ -35,7 +35,7 @@ func TestMigrateStore(t *testing.T) {
 	)
 
 	for _, b := range balances {
-		bz, err := encCfg.Codec.Marshal(&b) //nolint:gosec // G601: Implicit memory aliasing in for loop.
+		bz, err := encCfg.Codec.Marshal(&b)
 		require.NoError(t, err)
 
 		prefixAccStore.Set([]byte(b.Denom), bz)

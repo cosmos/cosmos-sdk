@@ -271,7 +271,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		},
 		"distribution/community_pool_spend_proposal_with_deposit": {
 			gogo:   &disttypes.CommunityPoolSpendProposalWithDeposit{},
-			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{}, //nolint:staticcheck // keep test as is testing legacy parity
+			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{},
 		},
 		"distribution/msg_withdraw_delegator_reward": {
 			gogo:   &disttypes.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},

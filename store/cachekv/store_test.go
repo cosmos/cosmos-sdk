@@ -474,6 +474,7 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 		err := truth.Set(keyFmt(k), valFmt(k))
 		require.NoError(t, err)
 	case opSetRange:
+		require.True(t, len(args) > 1)
 		start := args[0]
 		end := args[1]
 		setRange(t, st, truth, start, end)
@@ -483,6 +484,7 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 		err := truth.Delete(keyFmt(k))
 		require.NoError(t, err)
 	case opDelRange:
+		require.True(t, len(args) > 1)
 		start := args[0]
 		end := args[1]
 		deleteRange(t, st, truth, start, end)

@@ -207,26 +207,6 @@ func TestManager(t *testing.T) {
 				},
 			},
 		},
-
-		"duplicate transaction (same sender and timestamp)": {
-			addFunc: []utxSequence{
-				{
-					[]byte("cosmos1"),
-					time.Unix(10, 0),
-				},
-				{
-					[]byte("cosmos1"),
-					time.Unix(10, 0), // Duplicate entry
-				},
-			},
-			blockTime: time.Unix(5, 0),
-			expectContains: []utxSequence{
-				{
-					[]byte("cosmos1"),
-					time.Unix(10, 0),
-				},
-			},
-		},
 		"nanosecond precision boundary test": {
 			addFunc: []utxSequence{
 				{
@@ -298,7 +278,7 @@ func TestManager(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx = ctx.WithBlockTime(tc.blockTime)
 			for _, seq := range tc.addFunc {
-				err := mgr.AddUnorderedNonce(ctx, seq.sender, seq.timeout)
+				err := mgr.TryAddUnorderedNonce(ctx, seq.sender, seq.timeout)
 				t.Logf("added transaction: %d/%s", seq.timeout.UnixNano(), seq.sender)
 				require.NoError(t, err)
 			}
@@ -318,4 +298,27 @@ func TestManager(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCannotAddDuplicate(t *testing.T) {
+	mockStoreKey := storetypes.NewKVStoreKey("test")
+	storeService := runtime.NewKVStoreService(mockStoreKey)
+	ctx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx
+	mgr := keeper.NewAccountKeeper(
+		moduletestutil.MakeTestEncodingConfig().Codec,
+		storeService,
+		types.ProtoBaseAccount,
+		nil,
+		authcodec.NewBech32Codec("cosmos"),
+		"cosmos",
+		types.NewModuleAddress("gov").String(),
+	)
+
+	addUser := []byte("foo")
+	timeout := time.Unix(10, 0)
+	err := mgr.TryAddUnorderedNonce(ctx, addUser, timeout)
+	require.NoError(t, err)
+
+	err = mgr.TryAddUnorderedNonce(ctx, addUser, timeout)
+	require.ErrorContains(t, err, "already used timeout")
 }

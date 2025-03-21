@@ -91,7 +91,7 @@ func TestUnorderedAnte(t *testing.T) {
 			},
 			blockTime:   time.Unix(5, 0),
 			execMode:    sdk.ExecModeFinalize,
-			expectedErr: "tx is duplicated",
+			expectedErr: "already used timeout",
 		},
 		"duplicate doesn't matter if we're in simulate mode": {
 			addTxs: func() []sdk.Tx {

@@ -289,8 +289,16 @@ func (ak AccountKeeper) ContainsUnorderedNonce(ctx sdk.Context, sender []byte, t
 	return ak.UnorderedNonces.Has(ctx, collections.Join(timeout.UnixNano(), sender))
 }
 
-// AddUnorderedNonce adds a new unordered nonce for the sender.
-func (ak AccountKeeper) AddUnorderedNonce(ctx sdk.Context, sender []byte, timeout time.Time) error {
+// TryAddUnorderedNonce tries to add a new unordered nonce for the sender.
+func (ak AccountKeeper) TryAddUnorderedNonce(ctx sdk.Context, sender []byte, timeout time.Time) error {
+	alreadyHas, err := ak.ContainsUnorderedNonce(ctx, sender, timeout)
+	if err != nil {
+		return fmt.Errorf("failed to check unordered nonce in storage: %w", err)
+	}
+	if alreadyHas {
+		return fmt.Errorf("sender %s has already used timeout %d", sdk.AccAddress(sender).String(), timeout.UnixNano())
+	}
+
 	return ak.UnorderedNonces.Set(ctx, collections.Join(timeout.UnixNano(), sender))
 }
 

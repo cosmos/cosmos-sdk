@@ -23,8 +23,7 @@ type AccountKeeper interface {
 // UnorderedNonceManager defines the contract needed for UnorderedNonce management.
 type UnorderedNonceManager interface {
 	RemoveExpiredUnorderedNonces(ctx sdk.Context) error
-	AddUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) error
-	ContainsUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) (bool, error)
+	TryAddUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) error
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

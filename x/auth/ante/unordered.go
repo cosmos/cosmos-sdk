@@ -126,24 +126,10 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	}
 
 	for _, signerAddr := range signerAddrs {
-		contains, err := d.txManager.ContainsUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp())
-		if err != nil {
-			return errorsmod.Wrapf(
-				sdkerrors.ErrIO,
-				"failed to check contains for signer %x", signerAddr,
-			)
-		}
-		if contains {
+		if err := d.txManager.TryAddUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
-				"tx is duplicated for signer %x", signerAddr,
-			)
-		}
-
-		if err := d.txManager.AddUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
-			return errorsmod.Wrapf(
-				sdkerrors.ErrIO,
-				"failed to add unordered nonce to state for signer %x", signerAddr,
+				"failed to add unordered nonce: %s", err,
 			)
 		}
 	}

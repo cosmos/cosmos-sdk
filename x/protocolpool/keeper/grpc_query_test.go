@@ -11,99 +11,92 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
-func (suite *KeeperTestSuite) TestUnclaimedBudget() {
-	startTime := suite.ctx.BlockTime().Add(-70 * time.Second)
-	period := time.Duration(60) * time.Second
-	zeroCoin := sdk.NewCoin("foo", math.ZeroInt())
-	nextClaimFrom := startTime.Add(period)
-	secondClaimFrom := nextClaimFrom.Add(period)
+// TODO convert to ContinuousFunds
+func (suite *KeeperTestSuite) TestContinuousFunds() {
+	t := time.Now()
 	recipientStrAddr := recipientAddr.String()
+	recipientStrAddr2 := recipientAddr2.String()
 	testCases := []struct {
 		name           string
 		preRun         func()
-		req            *types.QueryUnclaimedBudgetRequest
+		req            *types.QueryContinuousFundsRequest
 		expErr         bool
 		expErrMsg      string
 		unclaimedFunds *sdk.Coin
-		resp           *types.QueryUnclaimedBudgetResponse
+		resp           *types.QueryContinuousFundsResponse
 	}{
 		{
-			name: "empty recipient address",
-			req: &types.QueryUnclaimedBudgetRequest{
-				Address: "",
-			},
+			name:      "empty recipient address",
+			req:       &types.QueryContinuousFundsRequest{},
 			expErr:    true,
 			expErrMsg: "empty address string is not allowed",
 		},
 		{
-			name: "no budget proposal found",
-			req: &types.QueryUnclaimedBudgetRequest{
-				Address: recipientStrAddr,
-			},
+			name:      "no budget proposal found",
+			req:       &types.QueryContinuousFundsRequest{},
 			expErr:    true,
 			expErrMsg: "no budget proposal found for address",
 		},
 		{
-			name: "valid case",
+			name: "valid case - single",
 			preRun: func() {
 				// Prepare a valid budget proposal
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					LastClaimedAt:    startTime,
-					TranchesLeft:     2,
-					Period:           period,
-					BudgetPerTranche: fooCoin2,
+				fund := types.ContinuousFund{
+					Recipient:  recipientStrAddr,
+					Percentage: math.LegacyMustNewDecFromStr("0.1"),
 				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
 				suite.Require().NoError(err)
 			},
-			req: &types.QueryUnclaimedBudgetRequest{
-				Address: recipientStrAddr,
-			},
+			req:            &types.QueryContinuousFundsRequest{},
 			expErr:         false,
 			unclaimedFunds: &fooCoin,
-			resp: &types.QueryUnclaimedBudgetResponse{
-				ClaimedAmount:   zeroCoin,
-				UnclaimedAmount: fooCoin,
-				NextClaimFrom:   nextClaimFrom,
-				Period:          period,
-				TranchesLeft:    2,
+			resp: &types.QueryContinuousFundsResponse{
+				ContinuousFunds: []types.ContinuousFund{
+					{
+						Recipient:  recipientStrAddr,
+						Percentage: math.LegacyMustNewDecFromStr("0.1"),
+					},
+				},
 			},
 		},
 		{
-			name: "valid case with claim",
+			name: "valid case - multiple",
 			preRun: func() {
 				// Prepare a valid budget proposal
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					LastClaimedAt:    startTime,
-					TranchesLeft:     2,
-					Period:           period,
-					BudgetPerTranche: fooCoin2,
+				fund1 := types.ContinuousFund{
+					Recipient:  recipientStrAddr,
+					Percentage: math.LegacyMustNewDecFromStr("0.1"),
+					Expiry:     &t,
 				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund1)
 				suite.Require().NoError(err)
 
-				// Claim the funds once
-				msg := &types.MsgClaimBudget{
-					RecipientAddress: recipientStrAddr,
+				// Prepare a valid budget proposal
+				fund2 := types.ContinuousFund{
+					Recipient:  recipientStrAddr2,
+					Percentage: math.LegacyMustNewDecFromStr("0.2"),
+					Expiry:     &t,
 				}
-				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
-				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
+				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr2, fund2)
 				suite.Require().NoError(err)
 			},
-
-			req: &types.QueryUnclaimedBudgetRequest{
-				Address: recipientStrAddr,
-			},
+			req:            &types.QueryContinuousFundsRequest{},
 			expErr:         false,
-			unclaimedFunds: &fooCoin2,
-			resp: &types.QueryUnclaimedBudgetResponse{
-				ClaimedAmount:   fooCoin2,
-				UnclaimedAmount: fooCoin2,
-				NextClaimFrom:   secondClaimFrom,
-				Period:          period,
-				TranchesLeft:    1,
+			unclaimedFunds: &fooCoin,
+			resp: &types.QueryContinuousFundsResponse{
+				ContinuousFunds: []types.ContinuousFund{
+					{
+						Recipient:  recipientStrAddr,
+						Percentage: math.LegacyMustNewDecFromStr("0.1"),
+						Expiry:     &t,
+					},
+					{
+						Recipient:  recipientStrAddr2,
+						Percentage: math.LegacyMustNewDecFromStr("0.2"),
+						Expiry:     &t,
+					},
+				},
 			},
 		},
 	}
@@ -112,7 +105,101 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			if tc.preRun != nil {
 				tc.preRun()
 			}
-			resp, err := suite.queryServer.UnclaimedBudget(suite.ctx, tc.req)
+			resp, err := suite.queryServer.ContinuousFunds(suite.ctx, tc.req)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.resp, resp)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestContinuousFund() {
+	t := time.Now()
+	recipientStrAddr := recipientAddr.String()
+	testCases := []struct {
+		name           string
+		preRun         func()
+		req            *types.QueryContinuousFundRequest
+		expErr         bool
+		expErrMsg      string
+		unclaimedFunds *sdk.Coin
+		resp           *types.QueryContinuousFundResponse
+	}{
+		{
+			name: "empty recipient address",
+			req: &types.QueryContinuousFundRequest{
+				Address: "",
+			},
+			expErr:    true,
+			expErrMsg: "empty address string is not allowed",
+		},
+		{
+			name: "no continuous fund found",
+			req: &types.QueryContinuousFundRequest{
+				Address: recipientStrAddr,
+			},
+			expErr:    true,
+			expErrMsg: "rpc error: code = NotFound desc = not found",
+		},
+		{
+			name: "valid case - no expiry",
+			preRun: func() {
+				// Prepare a valid budget proposal
+				fund := types.ContinuousFund{
+					Recipient:  recipientStrAddr,
+					Percentage: math.LegacyMustNewDecFromStr("0.1"),
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+			},
+			req: &types.QueryContinuousFundRequest{
+				Address: recipientStrAddr,
+			},
+			expErr:         false,
+			unclaimedFunds: &fooCoin,
+			resp: &types.QueryContinuousFundResponse{
+				ContinuousFund: types.ContinuousFund{
+					Recipient:  recipientStrAddr,
+					Percentage: math.LegacyMustNewDecFromStr("0.1"),
+				},
+			},
+		},
+		{
+			name: "valid case",
+			preRun: func() {
+				// Prepare a valid budget proposal
+				fund := types.ContinuousFund{
+					Recipient:  recipientStrAddr,
+					Percentage: math.LegacyMustNewDecFromStr("0.1"),
+					Expiry:     &t,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+			},
+			req: &types.QueryContinuousFundRequest{
+				Address: recipientStrAddr,
+			},
+			expErr:         false,
+			unclaimedFunds: &fooCoin,
+			resp: &types.QueryContinuousFundResponse{
+				ContinuousFund: types.ContinuousFund{
+					Recipient:  recipientStrAddr,
+					Percentage: math.LegacyMustNewDecFromStr("0.1"),
+					Expiry:     &t,
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			resp, err := suite.queryServer.ContinuousFund(suite.ctx, tc.req)
 			if tc.expErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expErrMsg)

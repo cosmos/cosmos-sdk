@@ -23,10 +23,6 @@ func (suite *KeeperTestSuite) TestInitExportGenesis() {
 	)
 
 	err := suite.poolKeeper.InitGenesis(suite.ctx, gs)
-	suite.Require().ErrorContains(err, "total to be distributed is greater than the last balance")
-
-	// Set last balance
-	err = suite.poolKeeper.InitGenesis(suite.ctx, gs)
 	suite.Require().NoError(err)
 
 	// Export

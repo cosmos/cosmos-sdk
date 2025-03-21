@@ -68,7 +68,12 @@ func (k Querier) ContinuousFunds(ctx context.Context, req *types.QueryContinuous
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	a, err := k.Keeper.ContinuousFunds.Iterate(sdkCtx, func() {})
+	funds, err := k.GetAllContinuousFunds(sdkCtx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Errorf("failed to fetch continuous funds: %w", err).Error())
+	}
+
+	return &types.QueryContinuousFundsResponse{ContinuousFunds: funds}, nil
 }
 
 // Params queries params of x/protocolpool module.

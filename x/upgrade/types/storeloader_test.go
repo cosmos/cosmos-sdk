@@ -45,6 +45,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	t.Helper()
 	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)

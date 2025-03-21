@@ -3,6 +3,7 @@ package cachemulti
 import (
 	"fmt"
 	"io"
+	"maps"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -94,9 +95,7 @@ func (cms Store) SetTracer(w io.Writer) types.MultiStore {
 // necessary between tracing operations. It returns a modified MultiStore.
 func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 	if cms.traceContext != nil {
-		for k, v := range tc {
-			cms.traceContext[k] = v
-		}
+		maps.Copy(cms.traceContext, tc)
 	} else {
 		cms.traceContext = tc
 	}

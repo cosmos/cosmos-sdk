@@ -20,7 +20,7 @@ https://github.com/cosmos/cosmos-sdk/blob/31c604762a434c7b676b6a89897ecbd7c4653a
 
 ## CheckTx Handler
 
-`CheckTxHandler` allows users to extend the logic of `CheckTx`. `CheckTxHandler` is called by pasding context and the transaction bytes received through ABCI. It is required that the handler returns deterministic results given the same transaction bytes. 
+`CheckTxHandler` allows users to extend the logic of `CheckTx`. `CheckTxHandler` is called by passing context and the transaction bytes received through ABCI. It is required that the handler returns deterministic results given the same transaction bytes. 
 
 :::note
 we return the raw decoded transaction here to avoid decoding it twice.

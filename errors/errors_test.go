@@ -205,8 +205,8 @@ func (s *errorsTestSuite) TestWrappedUnwrapFail() {
 }
 
 func (s *errorsTestSuite) TestABCIError() {
-	s.Require().Equal("custom: tx parse error", ABCIError(testCodespace, 2, "custom").Error())
-	s.Require().Equal("custom: unknown", ABCIError("unknown", 1, "custom").Error())
+	s.Require().Equal("custom: [testtesttest:2] tx parse error", ABCIError(testCodespace, ErrTxDecode.ABCICode(), "custom").Error())
+	s.Require().Equal("custom: [unknown:1] unknown", ABCIError("unknown", 1, "custom").Error())
 }
 
 func (s *errorsTestSuite) TestGRPCStatus() {

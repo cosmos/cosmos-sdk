@@ -103,7 +103,7 @@ func New(codespace string, code uint32, desc string) *Error {
 }
 
 func (e Error) Error() string {
-	return e.desc
+	return fmt.Sprintf("[%s:%d] %s", e.codespace, e.code, e.desc)
 }
 
 func (e Error) ABCICode() uint32 {

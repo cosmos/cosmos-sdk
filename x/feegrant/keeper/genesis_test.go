@@ -130,7 +130,6 @@ func TestInitGenesis(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			f := initFixture(t)
 			if !tc.invalidAddr {

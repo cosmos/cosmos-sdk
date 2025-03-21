@@ -290,6 +290,7 @@ func (ak AccountKeeper) ContainsUnorderedNonce(ctx sdk.Context, sender []byte, t
 }
 
 // TryAddUnorderedNonce tries to add a new unordered nonce for the sender.
+// If the sender already has an entry with the provided timeout, an error is returned.
 func (ak AccountKeeper) TryAddUnorderedNonce(ctx sdk.Context, sender []byte, timeout time.Time) error {
 	alreadyHas, err := ak.ContainsUnorderedNonce(ctx, sender, timeout)
 	if err != nil {

@@ -24,7 +24,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
-	iter, err := k.InactiveProposalsQueue.Iterate(ctx, rng)
+	iter, err := keeper.InactiveProposalsQueue.Iterate(ctx, rng)
 	if err != nil {
 		return err
 	}
@@ -35,18 +35,18 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	}
 
 	for _, prop := range inactiveProps {
-		proposal, err := k.Proposals.Get(ctx, prop.Key.K2())
+		proposal, err := keeper.Proposals.Get(ctx, prop.Key.K2())
 		if err != nil {
 			// if the proposal has an encoding error, this means it cannot be processed by x/gov
 			// this could be due to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
 				proposal.Id = prop.Key.K2()
-				if err := failUnsupportedProposal(logger, ctx, k, proposal, err.Error(), false); err != nil {
+				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error(), false); err != nil {
 					return err
 				}
 
-				if err = k.DeleteProposal(ctx, proposal.Id); err != nil {
+				if err = keeper.DeleteProposal(ctx, proposal.Id); err != nil {
 					return err
 				}
 
@@ -56,18 +56,18 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			return err
 		}
 
-		if err = k.DeleteProposal(ctx, proposal.Id); err != nil {
+		if err = keeper.DeleteProposal(ctx, proposal.Id); err != nil {
 			return err
 		}
 
-		params, err := k.Params.Get(ctx)
+		params, err := keeper.Params.Get(ctx)
 		if err != nil {
 			return err
 		}
 		if !params.BurnProposalDepositPrevote {
-			err = k.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+			err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 		} else {
-			err = k.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
+			err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
 		}
 
 		if err != nil {
@@ -76,11 +76,11 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		// called when proposal become inactive
 		cacheCtx, writeCache := ctx.CacheContext()
-		err = k.Hooks().AfterProposalFailedMinDeposit(cacheCtx, proposal.Id)
+		err = keeper.Hooks().AfterProposalFailedMinDeposit(cacheCtx, proposal.Id)
 		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
 			writeCache()
 		} else {
-			k.Logger(ctx).Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
+			keeper.Logger(ctx).Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
 		}
 
 		ctx.EventManager().EmitEvent(
@@ -103,7 +103,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
 	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
-	iter, err = k.ActiveProposalsQueue.Iterate(ctx, rng)
+	iter, err = keeper.ActiveProposalsQueue.Iterate(ctx, rng)
 	if err != nil {
 		return err
 	}
@@ -114,18 +114,18 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	}
 
 	for _, prop := range activeProps {
-		proposal, err := k.Proposals.Get(ctx, prop.Key.K2())
+		proposal, err := keeper.Proposals.Get(ctx, prop.Key.K2())
 		if err != nil {
 			// if the proposal has an encoding error, this means it cannot be processed by x/gov
 			// this could be due to some types missing their registration
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
 				proposal.Id = prop.Key.K2()
-				if err := failUnsupportedProposal(logger, ctx, k, proposal, err.Error(), true); err != nil {
+				if err := failUnsupportedProposal(logger, ctx, keeper, proposal, err.Error(), true); err != nil {
 					return err
 				}
 
-				if err = k.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
+				if err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
 					return err
 				}
 
@@ -137,7 +137,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		var tagValue, logMsg string
 
-		passes, burnDeposits, tallyResults, err := k.Tally(ctx, proposal)
+		passes, burnDeposits, tallyResults, err := keeper.Tally(ctx, proposal)
 		if err != nil {
 			return err
 		}
@@ -148,16 +148,16 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		// EXCEPT when an expedited proposal fails.
 		if !(proposal.Expedited && !passes) {
 			if burnDeposits {
-				err = k.DeleteAndBurnDeposits(ctx, proposal.Id)
+				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 			} else {
-				err = k.RefundAndDeleteDeposits(ctx, proposal.Id)
+				err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
 			}
 			if err != nil {
 				return err
 			}
 		}
 
-		if err = k.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
+		if err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
 			return err
 		}
 
@@ -186,7 +186,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 			// execute all messages
 			for idx, msg = range messages {
-				handler := k.Router().Handler(msg)
+				handler := keeper.Router().Handler(msg)
 				var res *sdk.Result
 				res, err = safeExecuteHandler(cacheCtx, msg, handler)
 				if err != nil {
@@ -220,14 +220,14 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
 			proposal.Expedited = false
-			params, err := k.Params.Get(ctx)
+			params, err := keeper.Params.Get(ctx)
 			if err != nil {
 				return err
 			}
 			endTime := proposal.VotingStartTime.Add(*params.VotingPeriod)
 			proposal.VotingEndTime = &endTime
 
-			err = k.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
+			err = keeper.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
 			if err != nil {
 				return err
 			}
@@ -243,18 +243,18 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		proposal.FinalTallyResult = &tallyResults
 
-		err = k.SetProposal(ctx, proposal)
+		err = keeper.SetProposal(ctx, proposal)
 		if err != nil {
 			return err
 		}
 
 		// when proposal become active
 		cacheCtx, writeCache := ctx.CacheContext()
-		err = k.Hooks().AfterProposalVotingPeriodEnded(cacheCtx, proposal.Id)
+		err = keeper.Hooks().AfterProposalVotingPeriodEnded(cacheCtx, proposal.Id)
 		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
 			writeCache()
 		} else {
-			k.Logger(ctx).Error("failed to execute AfterProposalVotingPeriodEnded hook", "error", err)
+			keeper.Logger(ctx).Error("failed to execute AfterProposalVotingPeriodEnded hook", "error", err)
 		}
 
 		logger.Info(

@@ -897,7 +897,6 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 
 			return nil
 		}()
-
 		if err != nil {
 			return err
 		}

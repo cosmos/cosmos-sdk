@@ -464,7 +464,7 @@ func randInt(n int) int {
 	return unsafe.NewRand().Int() % n
 }
 
-// useful for replaying a error case if we find one
+// useful for replaying an error case if we find one
 func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int) {
 	t.Helper()
 	switch op {
@@ -476,7 +476,7 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 	case opSetRange:
 		require.True(t, len(args) > 1)
 		start := args[0]
-		end := args[1]
+		end := args[1] //nolint:gosec // this is not out of range
 		setRange(t, st, truth, start, end)
 	case opDel:
 		k := args[0]
@@ -486,7 +486,7 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 	case opDelRange:
 		require.True(t, len(args) > 1)
 		start := args[0]
-		end := args[1]
+		end := args[1] //nolint:gosec // this is not out of range
 		deleteRange(t, st, truth, start, end)
 	case opWrite:
 		st.Write()

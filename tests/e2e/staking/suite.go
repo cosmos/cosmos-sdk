@@ -153,4 +153,5 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 		return nil
 	}, 10)
+	// TODO: revisit if this test is doing anything useful
 }

@@ -782,7 +782,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgLeaveGroup(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.groupKeeper, suite.accountKeeper, suite.bankKeeper)
+	op := simulation.SimulateMsgLeaveGroup(nil, suite.txConfig, suite.groupKeeper, suite.accountKeeper, suite.bankKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

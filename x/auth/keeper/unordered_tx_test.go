@@ -3,9 +3,11 @@ package keeper_test
 import (
 	"testing"
 	"time"
-	
+
 	"github.com/stretchr/testify/require"
 
+	storetypes "cosmossdk.io/store/types"
+	
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,8 +15,6 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	storetypes "cosmossdk.io/store/types"
 )
 
 func TestManager(t *testing.T) {

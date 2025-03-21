@@ -4,11 +4,17 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
+	"testing"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
@@ -19,20 +25,71 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type E2ETestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	externalPoolEnabled bool
+	cfg                 network.Config
+	network             *network.Network
 }
 
-func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
-	return &E2ETestSuite{cfg: cfg}
+func NewE2ETestSuite(externalPoolEnabled bool) *E2ETestSuite {
+	return &E2ETestSuite{externalPoolEnabled: externalPoolEnabled}
+}
+
+func removeModuleConfig(moduleConfig []*appv1alpha1.ModuleConfig, target string) []*appv1alpha1.ModuleConfig {
+	newConfig := make([]*appv1alpha1.ModuleConfig, 0, len(moduleConfig))
+	for _, mod := range moduleConfig {
+		if mod.Name != target {
+			newConfig = append(newConfig, mod)
+		}
+	}
+
+	return newConfig
+}
+
+func initNetworkConfig(t *testing.T, externalPoolEnabled bool) network.Config {
+	t.Helper()
+
+	moduleConfig := simapp.ModuleConfig
+	var err error
+
+	// overwrite the module config so that protocolpool is removed "disabling" it
+	if !externalPoolEnabled {
+		moduleConfig = removeModuleConfig(moduleConfig, protocolpooltypes.ModuleName)
+	}
+
+	t.Log("setting up the e2e test suite", "externalPoolEnabled", externalPoolEnabled)
+
+	// application configuration (used by depinject)
+	AppConfig := depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
+		Modules: moduleConfig,
+	}),
+		depinject.Supply(
+			// supply custom module basics
+			map[string]module.AppModuleBasic{
+				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+				govtypes.ModuleName: gov.NewAppModuleBasic(
+					[]govclient.ProposalHandler{},
+				),
+			},
+		),
+	)
+
+	cfg, err := network.DefaultConfigWithAppConfig(AppConfig)
+	require.NoError(t, err)
+	return cfg
 }
 
 // SetupSuite creates a new network for _each_ e2e test. We create a new
@@ -42,7 +99,8 @@ func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
 func (s *E2ETestSuite) SetupSuite() {
 	s.T().Log("setting up e2e test suite")
 
-	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
+
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
@@ -364,16 +422,21 @@ func (s *E2ETestSuite) TestNewFundCommunityPoolCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewFundCommunityPoolCmd(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			switch {
+			case tc.expectErr:
 				s.Require().Error(err)
-			} else {
+			case s.externalPoolEnabled:
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType))
+				txResp := tc.respType.(*sdk.TxResponse)
+				// expect 18 because we cannot submit to distribution
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, 18))
+			default:
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 

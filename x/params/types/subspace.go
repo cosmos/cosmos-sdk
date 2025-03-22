@@ -93,7 +93,7 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error
 	}
 
 	if err := attr.vfn(value); err != nil {
-		return fmt.Errorf("invalid parameter value: %s", err)
+		return fmt.Errorf("invalid parameter value: %w", err)
 	}
 
 	return nil

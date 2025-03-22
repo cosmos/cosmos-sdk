@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"sort"
 
+	dbm "github.com/cosmos/cosmos-db"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	dbm "github.com/cosmos/cosmos-db"
 )
 
 // CreateMultiStore is a helper for setting up multiple stores for provided modules.

@@ -42,7 +42,6 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
-	_ module.HasInvariants       = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )
@@ -142,9 +141,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.Acc
 		legacySubspace: ss,
 	}
 }
-
-// RegisterInvariants is deprecated and will be removed in the next Cosmos SDK release.
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // QuerierRoute returns the bank module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }

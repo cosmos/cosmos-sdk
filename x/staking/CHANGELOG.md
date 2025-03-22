@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315), [#22556](https://github.com/cosmos/cosmos-sdk/pull/22556) Create metadata type and add metadata field in validator details proto
     * Add parsing of `metadata-profile-pic-uri` in `create-validator` JSON.
     * Add cli flag: `metadata-profile-pic-uri` to `edit-validator` cmd.
+    
+### Improvements
+
+* Optimize validator endblock by reducing bech32 conversions, resulting in significant performance improvement
 
 ### API Breaking Changes
 

@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"testing"
 
-	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
@@ -104,10 +103,6 @@ func initFixture(tb testing.TB) *fixture {
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
 
 	logger := log.NewTestLogger(tb)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, cmtprototypes.Header{}, true, logger)
-
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
@@ -145,7 +140,7 @@ func initFixture(tb testing.TB) *fixture {
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName: authModule,
 		banktypes.ModuleName: bankModule,
 		types.ModuleName:     stakingModule,

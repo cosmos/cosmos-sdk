@@ -3,9 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"gotest.tools/v3/assert"
-
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -56,10 +53,6 @@ func initFixture(tb testing.TB) *fixture {
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, gov.AppModuleBasic{}).Codec
 
 	logger := log.NewTestLogger(tb)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
-
 	authority := authtypes.NewModuleAddress(types.ModuleName)
 
 	maccPerms := map[string][]string{
@@ -94,9 +87,6 @@ func initFixture(tb testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	// set default staking params
-	assert.NilError(tb, stakingKeeper.SetParams(newCtx, stakingtypes.DefaultParams()))
-
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
@@ -117,13 +107,10 @@ func initFixture(tb testing.TB) *fixture {
 		types.DefaultConfig(),
 		authority.String(),
 	)
-	err := govKeeper.ProposalID.Set(newCtx, 1)
-	assert.NilError(tb, err)
+
 	govRouter := v1beta1.NewRouter()
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)
-	err = govKeeper.Params.Set(newCtx, v1.DefaultParams())
-	assert.NilError(tb, err)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
@@ -131,7 +118,7 @@ func initFixture(tb testing.TB) *fixture {
 	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)
 	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,
 		banktypes.ModuleName:    bankModule,
 		distrtypes.ModuleName:   distrModule,

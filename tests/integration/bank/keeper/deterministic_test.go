@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
@@ -70,10 +69,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
 
 	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
-
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
@@ -105,7 +100,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName: authModule,
 		banktypes.ModuleName: bankModule,
 	})

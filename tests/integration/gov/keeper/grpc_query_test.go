@@ -16,9 +16,7 @@ import (
 func TestGRPCQueryTally(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-
 	ctx, queryClient := f.ctx, f.queryClient
-
 	addrs, _ := createValidators(t, f, []int64{5, 5, 5})
 
 	var (

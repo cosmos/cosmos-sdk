@@ -10,8 +10,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -33,16 +31,14 @@ const appName = "integration-app"
 type App struct {
 	*baseapp.BaseApp
 
-	ctx           sdk.Context
-	logger        log.Logger
-	moduleManager module.Manager
-	queryHelper   *baseapp.QueryServiceTestHelper
+	ctx         sdk.Context
+	logger      log.Logger
+	queryHelper *baseapp.QueryServiceTestHelper
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application
 // is able to route messages to their respective handlers.
 func NewIntegrationApp(
-	sdkCtx sdk.Context,
 	logger log.Logger,
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
@@ -60,9 +56,11 @@ func NewIntegrationApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), append(baseAppOptions, baseapp.SetChainID(appName))...)
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
+	bApp.SetInitChainer(func(sdkCtx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
+				m.InitGenesis(sdkCtx, appCodec, m.DefaultGenesis(appCodec))
+			} else if m, ok := mod.(module.HasABCIGenesis); ok {
 				m.InitGenesis(sdkCtx, appCodec, m.DefaultGenesis(appCodec))
 			}
 		}
@@ -70,10 +68,10 @@ func NewIntegrationApp(
 		return &cmtabcitypes.ResponseInitChain{}, nil
 	})
 
-	bApp.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
+	bApp.SetBeginBlocker(func(sdkCtx sdk.Context) (sdk.BeginBlock, error) {
 		return moduleManager.BeginBlock(sdkCtx)
 	})
-	bApp.SetEndBlocker(func(_ sdk.Context) (sdk.EndBlock, error) {
+	bApp.SetEndBlocker(func(sdkCtx sdk.Context) (sdk.EndBlock, error) {
 		return moduleManager.EndBlock(sdkCtx)
 	})
 
@@ -81,7 +79,7 @@ func NewIntegrationApp(
 	router.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(router)
 
-	if keys[consensusparamtypes.StoreKey] != nil {
+	if consensusKey := keys[consensusparamtypes.StoreKey]; consensusKey != nil {
 		// set baseApp param store
 		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
@@ -108,14 +106,13 @@ func NewIntegrationApp(
 		panic(fmt.Errorf("failed to commit application: %w", err))
 	}
 
-	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
+	sdkCtx := bApp.NewContext(true).WithBlockHeader(cmtproto.Header{ChainID: appName})
 
 	return &App{
-		BaseApp:       bApp,
-		logger:        logger,
-		ctx:           ctx,
-		moduleManager: *moduleManager,
-		queryHelper:   baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
+		BaseApp:     bApp,
+		logger:      logger,
+		ctx:         sdkCtx,
+		queryHelper: baseapp.NewQueryServerTestHelper(sdkCtx, interfaceRegistry),
 	}
 }
 
@@ -168,6 +165,21 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	return response, nil
 }
 
+// NextBlock advances the chain height and returns the new height.
+func (app *App) NextBlock(txsblob ...[]byte) (int64, error) {
+	height := app.LastBlockHeight() + 1
+	if _, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{
+		Txs:               txsblob, // txsBlob are raw txs to be executed in the block
+		Height:            height,
+		DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{}},
+	}); err != nil {
+		return 0, fmt.Errorf("failed to run finalize block: %w", err)
+	}
+
+	_, err := app.Commit()
+	return height, err
+}
+
 // Context returns the application context. It can be unwrapped to a sdk.Context,
 // with the sdk.UnwrapSDKContext function.
 func (app *App) Context() context.Context {
@@ -178,17 +190,4 @@ func (app *App) Context() context.Context {
 // It can be used when registering query services.
 func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 	return app.queryHelper
-}
-
-// CreateMultiStore is a helper for setting up multiple stores for provided modules.
-func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger) storetypes.CommitMultiStore {
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, logger, metrics.NewNoOpMetrics())
-
-	for key := range keys {
-		cms.MountStoreWithDB(keys[key], storetypes.StoreTypeIAVL, db)
-	}
-
-	_ = cms.LoadLatestVersion()
-	return cms
 }

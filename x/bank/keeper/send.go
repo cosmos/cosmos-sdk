@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -117,7 +118,10 @@ func (k BaseSendKeeper) GetAuthority() string {
 
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx context.Context) (params types.Params) {
-	p, _ := k.Params.Get(ctx)
+	p, err := k.Params.Get(ctx) // TODO: testing err handling, rm after check
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		panic(err)
+	}
 	return p
 }
 

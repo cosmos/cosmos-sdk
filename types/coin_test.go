@@ -298,6 +298,49 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 	}
 }
 
+func (s *coinTestSuite) TestIsGTCoin() {
+	cases := []struct {
+		inputOne sdk.Coin
+		inputTwo sdk.Coin
+		expected bool
+		panics   bool
+	}{
+		{
+			inputOne: sdk.NewInt64Coin(testDenom1, 2),
+			inputTwo: sdk.NewInt64Coin(testDenom1, 1),
+			expected: true,
+			panics:   false,
+		},
+		{
+			inputOne: sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo: sdk.NewInt64Coin(testDenom1, 1),
+			expected: false,
+			panics:   false,
+		},
+		{
+			inputOne: sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo: sdk.NewInt64Coin(testDenom1, 2),
+			expected: false,
+			panics:   false,
+		},
+		{
+			inputOne: sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo: sdk.NewInt64Coin(testDenom2, 1),
+			expected: false,
+			panics:   true,
+		},
+	}
+
+	for tcIndex, tc := range cases {
+		if tc.panics {
+			s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsGT(tc.inputTwo)
+			s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)
+		}
+	}
+}
+
 func (s *coinTestSuite) TestIsGTECoin() {
 	cases := []struct {
 		inputOne sdk.Coin
@@ -651,7 +694,6 @@ func (s *coinTestSuite) TestSafeSubCoin() {
 	}
 
 	for _, tc := range cases {
-
 		res, err := tc.inputOne.SafeSub(tc.inputTwo)
 		if err != nil {
 			s.Require().Contains(err.Error(), tc.expErrMsg)
@@ -1282,7 +1324,6 @@ func (s *coinTestSuite) TestCoinValidate() {
 	}
 
 	for _, tc := range testCases {
-
 		t := s.T()
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.coin.Validate()

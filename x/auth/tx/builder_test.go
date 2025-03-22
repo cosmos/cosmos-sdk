@@ -1,7 +1,11 @@
 package tx
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
+	testutil2 "github.com/cosmos/cosmos-sdk/testutil"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -11,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -332,4 +337,23 @@ func TestBuilderFeeGranter(t *testing.T) {
 	// set fee granter
 	txBuilder.SetFeeGranter(addr1)
 	require.Equal(t, addr1.String(), sdk.AccAddress(txBuilder.GetTx().FeeGranter()).String())
+}
+
+func TestBuilderWithTimeoutTimestamp(t *testing.T) {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	interfaceRegistry := cdc.InterfaceRegistry()
+	interfaceRegistry.SigningContext()
+	txConfig := NewTxConfig(cdc, DefaultSignModes)
+	txBuilder := txConfig.NewTxBuilder()
+	txBuilder.SetTimeoutTimestamp(time.Unix(1, 0))
+	encodedTx, err := txConfig.TxJSONEncoder()(txBuilder.GetTx())
+	require.NoError(t, err)
+	file := testutil2.WriteToNewTempFile(t, string(encodedTx))
+	clientCtx := client.Context{InterfaceRegistry: interfaceRegistry, TxConfig: txConfig}
+	decodedTx, err := authclient.ReadTxFromFile(clientCtx, file.Name())
+	require.NoError(t, err)
+	txBldr, err := txConfig.WrapTxBuilder(decodedTx)
+	require.NoError(t, err)
+	b := txBldr.(*wrapper)
+	require.False(t, b.tx.Body.TimeoutTimestamp.IsZero())
 }

@@ -12,6 +12,9 @@ import (
 	"testing"
 	"time"
 
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/store"
+
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
@@ -72,6 +75,15 @@ func newUpgradeFileWatcher(cfg *Config) (*fileWatcher, error) {
 func (fw *fileWatcher) Stop() {
 	close(fw.cancel)
 	fw.ticker.Stop()
+}
+
+func (fw *fileWatcher) IsStop() bool {
+	select {
+	case <-fw.cancel:
+		return true
+	default:
+		return false
+	}
 }
 
 // MonitorUpdate pools the filesystem to check for new upgrade currentInfo.
@@ -185,6 +197,19 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 func (fw *fileWatcher) checkHeight() (int64, error) {
 	if testing.Testing() { // we cannot test the command in the test environment
 		return 0, errUntestAble
+	}
+
+	if fw.IsStop() {
+		result, err := exec.Command(fw.currentBin, "config", "get", "config", "db_backend", "--home", fw.daemonHome).CombinedOutput() //nolint:gosec // we want to execute the config command
+		if err != nil {
+			result = []byte("goleveldb") // set default value, old version may not have config command
+		}
+		blockStoreDB, err := dbm.NewDB("blockstore", dbm.BackendType(result), filepath.Join(fw.daemonHome, "data"))
+		if err != nil {
+			return 0, err
+		}
+		defer blockStoreDB.Close()
+		return store.NewBlockStore(blockStoreDB).Height(), nil
 	}
 
 	result, err := exec.Command(fw.currentBin, "status", "--home", fw.daemonHome).CombinedOutput() //nolint:gosec // we want to execute the status command

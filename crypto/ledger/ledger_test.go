@@ -32,6 +32,8 @@ func TestPublicKeyUnsafe(t *testing.T) {
 }
 
 func checkDefaultPubKey(t *testing.T, priv types.LedgerPrivKey) {
+	t.Helper()
+
 	require.NotNil(t, priv)
 	expectedPkStr := "PubKeySecp256k1{034FEF9CD7C4C63588D3B03FEB5281B9D232CBA34D6F3D71AEE59211FFBFE1FE87}"
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",

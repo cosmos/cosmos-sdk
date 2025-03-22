@@ -7,6 +7,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
@@ -31,16 +32,19 @@ func TestRollback(t *testing.T) {
 			AppHash: app.LastCommitID().Hash,
 		}
 
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
+		require.NoError(t, err)
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
-		app.Commit()
+		require.NoError(t, err)
+		_, err = app.Commit()
+		require.NoError(t, err)
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
@@ -63,14 +67,17 @@ func TestRollback(t *testing.T) {
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
+		require.NoError(t, err)
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("VALUE%d", i)))
-		app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: header.Height,
 		})
-		app.Commit()
+		require.NoError(t, err)
+		_, err = app.Commit()
+		require.NoError(t, err)
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())

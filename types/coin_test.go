@@ -305,10 +305,30 @@ func (s *coinTestSuite) TestIsGTCoin() {
 		expected bool
 		panics   bool
 	}{
-		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), true, false},
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), false, false},
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false, false},
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
+		{
+			inputOne: sdk.NewInt64Coin(testDenom1, 2),
+			inputTwo: sdk.NewInt64Coin(testDenom1, 1),
+			expected: true,
+			panics:   false,
+		},
+		{
+			inputOne: sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo: sdk.NewInt64Coin(testDenom1, 1),
+			expected: false,
+			panics:   false,
+		},
+		{
+			inputOne: sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo: sdk.NewInt64Coin(testDenom1, 2),
+			expected: false,
+			panics:   false,
+		},
+		{
+			inputOne: sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo: sdk.NewInt64Coin(testDenom2, 1),
+			expected: false,
+			panics:   true,
+		},
 	}
 
 	for tcIndex, tc := range cases {

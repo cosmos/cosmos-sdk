@@ -25,52 +25,95 @@ func TestNewManager(t *testing.T) {
 
 func TestStrategies(t *testing.T) {
 	testcases := map[string]struct {
-		strategy         types.PruningOptions
-		snapshotInterval uint64
-		strategyToAssert types.PruningStrategy
-		isValid          bool
+		strategy               types.PruningOptions
+		firstSnapshotInterval  uint64
+		secondSnapshotInterval uint64
+		strategyToAssert       types.PruningStrategy
+		isValid                bool
 	}{
 		"prune nothing - no snapshot": {
 			strategy:         types.NewPruningOptions(types.PruningNothing),
 			strategyToAssert: types.PruningNothing,
 		},
 		"prune nothing - snapshot": {
-			strategy:         types.NewPruningOptions(types.PruningNothing),
-			strategyToAssert: types.PruningNothing,
-			snapshotInterval: 100,
+			strategy:               types.NewPruningOptions(types.PruningNothing),
+			strategyToAssert:       types.PruningNothing,
+			firstSnapshotInterval:  100,
+			secondSnapshotInterval: 100,
+		},
+		"prune nothing - snapshot - change interval": {
+			strategy:               types.NewPruningOptions(types.PruningNothing),
+			strategyToAssert:       types.PruningNothing,
+			firstSnapshotInterval:  100,
+			secondSnapshotInterval: 200,
 		},
 		"prune default - no snapshot": {
 			strategy:         types.NewPruningOptions(types.PruningDefault),
 			strategyToAssert: types.PruningDefault,
 		},
 		"prune default - snapshot": {
-			strategy:         types.NewPruningOptions(types.PruningDefault),
-			strategyToAssert: types.PruningDefault,
-			snapshotInterval: 100,
+			strategy:               types.NewPruningOptions(types.PruningDefault),
+			strategyToAssert:       types.PruningDefault,
+			firstSnapshotInterval:  100,
+			secondSnapshotInterval: 100,
+		},
+		"prune default - snapshot - change interval": {
+			strategy:               types.NewPruningOptions(types.PruningDefault),
+			strategyToAssert:       types.PruningDefault,
+			firstSnapshotInterval:  100,
+			secondSnapshotInterval: 150,
 		},
 		"prune everything - no snapshot": {
 			strategy:         types.NewPruningOptions(types.PruningEverything),
 			strategyToAssert: types.PruningEverything,
 		},
 		"prune everything - snapshot": {
-			strategy:         types.NewPruningOptions(types.PruningEverything),
-			strategyToAssert: types.PruningEverything,
-			snapshotInterval: 100,
+			strategy:               types.NewPruningOptions(types.PruningEverything),
+			strategyToAssert:       types.PruningEverything,
+			firstSnapshotInterval:  100,
+			secondSnapshotInterval: 100,
+		},
+		"prune everything - snapshot - change interval": {
+			strategy:               types.NewPruningOptions(types.PruningEverything),
+			strategyToAssert:       types.PruningEverything,
+			firstSnapshotInterval:  100,
+			secondSnapshotInterval: 200,
 		},
 		"custom 100-10-15": {
-			strategy:         types.NewCustomPruningOptions(100, 15),
-			snapshotInterval: 10,
-			strategyToAssert: types.PruningCustom,
+			strategy:               types.NewCustomPruningOptions(100, 15),
+			firstSnapshotInterval:  10,
+			secondSnapshotInterval: 10,
+			strategyToAssert:       types.PruningCustom,
+		},
+		"custom 100-10-15 - change interval": {
+			strategy:               types.NewCustomPruningOptions(100, 15),
+			firstSnapshotInterval:  10,
+			secondSnapshotInterval: 20,
+			strategyToAssert:       types.PruningCustom,
 		},
 		"custom 10-10-15": {
-			strategy:         types.NewCustomPruningOptions(10, 15),
-			snapshotInterval: 10,
-			strategyToAssert: types.PruningCustom,
+			strategy:               types.NewCustomPruningOptions(10, 15),
+			firstSnapshotInterval:  10,
+			secondSnapshotInterval: 10,
+			strategyToAssert:       types.PruningCustom,
+		},
+		"custom 10-10-15 - change interval": {
+			strategy:               types.NewCustomPruningOptions(10, 15),
+			firstSnapshotInterval:  10,
+			secondSnapshotInterval: 30,
+			strategyToAssert:       types.PruningCustom,
 		},
 		"custom 100-0-15": {
-			strategy:         types.NewCustomPruningOptions(100, 15),
-			snapshotInterval: 0,
-			strategyToAssert: types.PruningCustom,
+			strategy:               types.NewCustomPruningOptions(100, 15),
+			firstSnapshotInterval:  0,
+			secondSnapshotInterval: 0,
+			strategyToAssert:       types.PruningCustom,
+		},
+		"custom 100-0-15 - change interval": {
+			strategy:               types.NewCustomPruningOptions(100, 15),
+			firstSnapshotInterval:  0,
+			secondSnapshotInterval: 100,
+			strategyToAssert:       types.PruningCustom,
 		},
 	}
 
@@ -82,7 +125,8 @@ func TestStrategies(t *testing.T) {
 			require.NotNil(t, manager)
 
 			curStrategy := tc.strategy
-			manager.SetSnapshotInterval(tc.snapshotInterval)
+			curSnapshotInterval := tc.firstSnapshotInterval
+			manager.SetSnapshotInterval(curSnapshotInterval)
 
 			pruneStrategy := curStrategy.GetPruningStrategy()
 			require.Equal(t, tc.strategyToAssert, pruneStrategy)
@@ -106,11 +150,11 @@ func TestStrategies(t *testing.T) {
 			require.Equal(t, tc.strategy, manager.GetOptions())
 
 			curKeepRecent := curStrategy.KeepRecent
-			snHeight := int64(tc.snapshotInterval - 1)
+			snHeight := int64(curSnapshotInterval - 1)
 			for curHeight := int64(0); curHeight < 110000; curHeight++ {
-				if tc.snapshotInterval != 0 {
-					if curHeight > int64(tc.snapshotInterval) && curHeight%int64(tc.snapshotInterval) == int64(tc.snapshotInterval)-1 {
-						manager.HandleSnapshotHeight(curHeight - int64(tc.snapshotInterval) + 1)
+				if curSnapshotInterval != 0 {
+					if curHeight > int64(curSnapshotInterval) && curHeight%int64(curSnapshotInterval) == int64(curSnapshotInterval)-1 {
+						manager.HandleSnapshotHeight(curHeight - int64(curSnapshotInterval) + 1)
 						snHeight = curHeight
 					}
 				}
@@ -124,13 +168,22 @@ func TestStrategies(t *testing.T) {
 				default:
 					if curHeight > int64(curKeepRecent) && curHeight%int64(curStrategy.Interval) == 0 {
 						pruningHeightExpected := curHeight - int64(curKeepRecent) - 1
-						if tc.snapshotInterval > 0 && snHeight < pruningHeightExpected {
+						if curSnapshotInterval > 0 && snHeight < pruningHeightExpected {
 							pruningHeightExpected = snHeight
 						}
 						require.Equal(t, pruningHeightExpected, pruningHeightActual, curHeightStr)
 					} else {
 						require.Equal(t, int64(0), pruningHeightActual, curHeightStr)
 					}
+				}
+
+				// Change snapshot interval after some height
+				if curHeight == 55000 {
+					curSnapshotInterval = tc.secondSnapshotInterval
+					if int64(curSnapshotInterval-1) > snHeight {
+						snHeight = int64(curSnapshotInterval - 1)
+					}
+					manager.SetSnapshotInterval(tc.secondSnapshotInterval)
 				}
 			}
 		})
@@ -247,6 +300,12 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 		loadedSnapshotHeights, err = pruning.LoadPruningSnapshotHeights(db)
 		require.NoError(t, err)
 		require.Equal(t, expected, len(loadedSnapshotHeights), snapshotHeightStr)
+
+		// Change snapshot interval after some height
+		if snapshotHeight == 40 {
+			snapshotInterval = 20
+			manager.SetSnapshotInterval(20)
+		}
 	}
 }
 

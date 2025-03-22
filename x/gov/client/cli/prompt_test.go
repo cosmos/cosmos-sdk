@@ -47,7 +47,7 @@ func TestPromptIntegerOverflow(t *testing.T) {
 
 			fin, fw := readline.NewFillableStdin(os.Stdin)
 			readline.Stdin = fin
-			fw.Write([]byte(overflowStr + "\n"))
+			_, _ = fw.Write([]byte(overflowStr + "\n"))
 
 			v, err := cli.Prompt(st{}, "")
 			assert.Equal(t, st{}, v, "expected a value of zero")
@@ -69,7 +69,6 @@ func TestPromptParseInteger(t *testing.T) {
 	}
 
 	for _, tc := range values {
-		tc := tc
 		t.Run(tc.in, func(t *testing.T) {
 			origStdin := readline.Stdin
 			defer func() {
@@ -78,7 +77,7 @@ func TestPromptParseInteger(t *testing.T) {
 
 			fin, fw := readline.NewFillableStdin(os.Stdin)
 			readline.Stdin = fin
-			fw.Write([]byte(tc.in + "\n"))
+			_, _ = fw.Write([]byte(tc.in + "\n"))
 
 			v, err := cli.Prompt(st{}, "")
 			assert.Nil(t, err, "expected a nil error")

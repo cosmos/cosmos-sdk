@@ -50,7 +50,6 @@ func TestContentAccessors(t *testing.T) {
 	types.RegisterLegacyAminoCodec(cdc)
 
 	for name, tc := range cases {
-		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.title, tc.p.GetTitle())
 			assert.Equal(t, tc.desc, tc.p.GetDescription())
@@ -73,7 +72,6 @@ func TestContentAccessors(t *testing.T) {
 			assert.Equal(t, "upgrade", unwrap.Prop.ProposalRoute())
 			assert.Equal(t, tc.str, unwrap.Prop.String())
 		})
-
 	}
 }
 

@@ -57,13 +57,14 @@ type fixture struct {
 	valAddr sdk.ValAddress
 }
 
-func initFixture(t testing.TB) *fixture {
+func initFixture(tb testing.TB) *fixture {
+	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, stakingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
-	logger := log.NewTestLogger(t)
+	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
 	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
@@ -280,7 +281,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	assert.Equal(t, proposerAddr.Empty(), true)
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -428,7 +428,6 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			tc.preRun()
 			res, err := f.app.RunMsg(
@@ -525,7 +524,6 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -558,7 +556,6 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 				}, remainder.Commission)
 			}
 		})
-
 	}
 }
 
@@ -627,7 +624,6 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -661,7 +657,6 @@ func TestMsgUpdateParams(t *testing.T) {
 
 	// default params
 	communityTax := math.LegacyNewDecWithPrec(2, 2) // 2%
-	withdrawAddrEnabled := true
 
 	testCases := []struct {
 		name      string
@@ -675,7 +670,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: "invalid",
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(2, 0),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
+					WithdrawAddrEnabled: true,
 					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: math.LegacyZeroDec(),
 				},
@@ -689,7 +684,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyDec{},
-					WithdrawAddrEnabled: withdrawAddrEnabled,
+					WithdrawAddrEnabled: true,
 					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: math.LegacyZeroDec(),
 				},
@@ -703,7 +698,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(2, 0),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
+					WithdrawAddrEnabled: true,
 					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: math.LegacyZeroDec(),
 				},
@@ -717,7 +712,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(-2, 1),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
+					WithdrawAddrEnabled: true,
 					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: math.LegacyZeroDec(),
 				},
@@ -733,7 +728,7 @@ func TestMsgUpdateParams(t *testing.T) {
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyNewDecWithPrec(1, 2),
 					BonusProposerReward: math.LegacyZeroDec(),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
+					WithdrawAddrEnabled: true,
 				},
 			},
 			expErr:    true,
@@ -747,7 +742,7 @@ func TestMsgUpdateParams(t *testing.T) {
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: math.LegacyNewDecWithPrec(1, 2),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
+					WithdrawAddrEnabled: true,
 				},
 			},
 			expErr:    true,
@@ -761,7 +756,7 @@ func TestMsgUpdateParams(t *testing.T) {
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyZeroDec(),
 					BonusProposerReward: math.LegacyZeroDec(),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
+					WithdrawAddrEnabled: true,
 				},
 			},
 			expErr: false,
@@ -769,7 +764,6 @@ func TestMsgUpdateParams(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -848,7 +842,6 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -950,7 +943,6 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,

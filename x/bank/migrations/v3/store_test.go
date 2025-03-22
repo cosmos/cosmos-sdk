@@ -35,7 +35,7 @@ func TestMigrateStore(t *testing.T) {
 	)
 
 	for _, b := range balances {
-		bz, err := encCfg.Codec.Marshal(&b) //nolint:gosec // G601: Implicit memory aliasing in for loop.
+		bz, err := encCfg.Codec.Marshal(&b)
 		require.NoError(t, err)
 
 		prefixAccStore.Set([]byte(b.Denom), bz)
@@ -126,6 +126,8 @@ func TestMigrateDenomMetaData(t *testing.T) {
 }
 
 func assertMetaDataEqual(t *testing.T, expected, actual types.Metadata) {
+	t.Helper()
+
 	require.Equal(t, expected.GetBase(), actual.GetBase())
 	require.Equal(t, expected.GetDisplay(), actual.GetDisplay())
 	require.Equal(t, expected.GetDescription(), actual.GetDescription())

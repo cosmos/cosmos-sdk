@@ -1087,7 +1087,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{accs[1].acc.GetSequence()}
 				msgs := []sdk.Msg{testdata.NewTestMsg(accs[1].acc.GetAddress())}
-				suite.txBuilder.SetMsgs(msgs...)
+				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 				suite.txBuilder.SetFeeAmount(feeAmount)
 				suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -1133,7 +1133,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{accs[1].acc.GetSequence()}
 				msgs := []sdk.Msg{testdata.NewTestMsg(accs[1].acc.GetAddress())}
-				suite.txBuilder.SetMsgs(msgs...)
+				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 				suite.txBuilder.SetFeeAmount(feeAmount)
 				suite.txBuilder.SetGasLimit(gasLimit)
 

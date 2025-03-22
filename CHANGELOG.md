@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (types) [#24093](https://github.com/cosmos/cosmos-sdk/pull/24093) Added a new method, `IsGT`, for `types.Coin`. This method is used to check if a `types.Coin` is greater than another `types.Coin`.
+* (perf)[#24045](https://github.com/cosmos/cosmos-sdk/pull/24045) Sims: Replace runsim command with Go stdlib testing. CLI: `Commit` default true, `Lean`, `SimulateEveryOperation`, `PrintAllInvariants`, `DBBackend` params removed
 * (crypto/keyring) [#24040](https://github.com/cosmos/cosmos-sdk/pull/24040) Expose the db keyring used in the keystore.
 * (types) [#23919](https://github.com/cosmos/cosmos-sdk/pull/23919) Add MustValAddressFromBech32 function.
 * (all) [#23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support.

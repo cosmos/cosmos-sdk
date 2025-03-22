@@ -46,38 +46,38 @@ func TestFeegrantPruning(t *testing.T) {
 
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper)
+	feeGrantKeeper := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper)
 
-	feegrantKeeper.GrantAllowance(
+	require.NoError(t, feeGrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter1,
 		grantee,
 		&feegrant.BasicAllowance{
 			Expiration: &now,
 		},
-	)
-	feegrantKeeper.GrantAllowance(
+	))
+	require.NoError(t, feeGrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter2,
 		grantee,
 		&feegrant.BasicAllowance{
 			SpendLimit: spendLimit,
 		},
-	)
-	feegrantKeeper.GrantAllowance(
+	))
+	require.NoError(t, feeGrantKeeper.GrantAllowance(
 		testCtx.Ctx,
 		granter3,
 		grantee,
 		&feegrant.BasicAllowance{
 			Expiration: &oneDay,
 		},
-	)
+	))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, encCfg.InterfaceRegistry)
-	feegrant.RegisterQueryServer(queryHelper, feegrantKeeper)
+	feegrant.RegisterQueryServer(queryHelper, feeGrantKeeper)
 	queryClient := feegrant.NewQueryClient(queryHelper)
 
-	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
+	require.NoError(t, module.EndBlocker(testCtx.Ctx, feeGrantKeeper))
 
 	res, err := queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
 		Grantee: grantee.String(),
@@ -87,7 +87,7 @@ func TestFeegrantPruning(t *testing.T) {
 	require.Len(t, res.Allowances, 3)
 
 	testCtx.Ctx = testCtx.Ctx.WithBlockTime(now.AddDate(0, 0, 2))
-	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
+	require.NoError(t, module.EndBlocker(testCtx.Ctx, feeGrantKeeper))
 
 	res, err = queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
 		Grantee: grantee.String(),

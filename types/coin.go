@@ -430,7 +430,6 @@ func (coins Coins) SafeMulInt(x math.Int) (Coins, bool) {
 
 	res := make(Coins, len(coins))
 	for i, coin := range coins {
-		coin := coin
 		res[i] = NewCoin(coin.Denom, coin.Amount.Mul(x))
 	}
 
@@ -464,7 +463,6 @@ func (coins Coins) SafeQuoInt(x math.Int) (Coins, bool) {
 
 	var res Coins
 	for _, coin := range coins {
-		coin := coin
 		res = append(res, NewCoin(coin.Denom, coin.Amount.Quo(x)))
 	}
 

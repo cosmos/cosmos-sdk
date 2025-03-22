@@ -132,6 +132,7 @@ func (m *Manager) GetPruningHeight(height int64) int64 {
 	if snHeight < pruneHeight {
 		return snHeight
 	}
+
 	return pruneHeight
 }
 

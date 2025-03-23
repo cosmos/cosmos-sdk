@@ -3,9 +3,10 @@ package types
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
 )
 
 func TestIntValue(t *testing.T) {

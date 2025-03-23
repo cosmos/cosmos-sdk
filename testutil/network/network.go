@@ -176,7 +176,7 @@ func MinimumAppConfig() depinject.Config {
 
 // DefaultConfigWithAppConfig returns a network configuration constructed using
 // the provided app config. It sets an infinite gas limit on queries by passing zero
-// as the query gas limit (i.e. disabling gas metering for queries). This config is 
+// as the query gas limit (i.e. disabling gas metering for queries). This config is
 // suitable for testing scenarios where queries are allowed to consume unbounded gas.
 //
 // It is equivalent to calling DefaultConfigWithAppConfigWithQueryGasLimit(appConfig, 0).
@@ -184,7 +184,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	return DefaultConfigWithAppConfigWithQueryGasLimit(appConfig, 0)
 }
 
-// DefaultConfigWithAppConfigWithQueryGasLimit returns a network configuration constructed 
+// DefaultConfigWithAppConfigWithQueryGasLimit returns a network configuration constructed
 // using the provided app config and the specified query gas limit.
 func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, queryGasLimit uint64) (Config, error) {
 	var (

@@ -45,6 +45,10 @@ func WithExternalCommunityPool(poolKeeper types.ExternalCommunityPoolKeeper) Ini
 	}
 }
 
+func (k Keeper) HasExternalCommunityPool() bool {
+	return k.externalCommunityPool != nil
+}
+
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec,
@@ -84,7 +88,7 @@ func NewKeeper(
 		opt(&k)
 	}
 
-	if k.externalCommunityPool != nil {
+	if k.HasExternalCommunityPool() {
 		// ensure external module account is set if we are enabling it
 		// this will ensure that funds can be transferred to it.
 		if addr := ak.GetModuleAddress(k.externalCommunityPool.GetCommunityPoolModule()); addr == nil {

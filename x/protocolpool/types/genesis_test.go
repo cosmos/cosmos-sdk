@@ -75,7 +75,7 @@ func TestValidateGenesis(t *testing.T) {
 			expectedErr: "percentage cannot be greater than one",
 		},
 		{
-			name: "invalid genesis state with continuous fund (percentage sum > 1)",
+			name: "invalid genesis state with continuous funds (percentage sum > 1)",
 			genesisState: &types.GenesisState{
 				ContinuousFunds: []types.ContinuousFund{
 					{
@@ -96,7 +96,6 @@ func TestValidateGenesis(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		// capture range variable
 		t.Run(tc.name, func(t *testing.T) {
 			err := types.ValidateGenesis(tc.genesisState)
 			if tc.expectedErr != "" {

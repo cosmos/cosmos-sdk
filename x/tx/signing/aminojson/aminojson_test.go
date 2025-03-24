@@ -81,6 +81,7 @@ func TestAminoJsonSignMode(t *testing.T) {
 		})
 	}
 }
+
 func TestUnorderedTimeoutCompat(t *testing.T) {
 	fee := &txv1beta1.Fee{
 		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},

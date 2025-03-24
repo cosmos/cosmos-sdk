@@ -134,7 +134,7 @@ func TestRequireFutureBlock(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height - 1})
 	require.Error(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
+	require.True(t, errors.Is(err, sdkerrors.ErrInvalidRequest), err)
 }
 
 func TestDoHeightUpgrade(t *testing.T) {
@@ -209,7 +209,7 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 	t.Log("Verify an executed upgrade \"test\" can't be rescheduled")
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height})
 	require.Error(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
+	require.True(t, errors.Is(err, sdkerrors.ErrInvalidRequest), err)
 }
 
 func TestNoSpuriousUpgrades(t *testing.T) {
@@ -358,11 +358,10 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	require := require.New(t)
 
 	// require no error when the upgrade info file does not exist
 	_, err := s.keeper.ReadUpgradeInfoFromDisk()
-	require.NoError(err)
+	require.NoError(t, err)
 
 	planHeight := s.ctx.HeaderInfo().Height + 1
 	plan := types.Plan{
@@ -371,20 +370,20 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	}
 	t.Log("verify if upgrade height is dumped to file")
 	err = s.keeper.DumpUpgradeInfoToDisk(planHeight, plan)
-	require.Nil(err)
+	require.Nil(t, err)
 
 	upgradeInfo, err := s.keeper.ReadUpgradeInfoFromDisk()
-	require.NoError(err)
+	require.NoError(t, err)
 
 	t.Log("Verify upgrade height from file matches ")
-	require.Equal(upgradeInfo.Height, planHeight)
-	require.Equal(upgradeInfo.Name, plan.Name)
+	require.Equal(t, upgradeInfo.Height, planHeight)
+	require.Equal(t, upgradeInfo.Name, plan.Name)
 
 	// clear the test file
 	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
-	require.Nil(err)
+	require.Nil(t, err)
 	err = os.Remove(upgradeInfoFilePath)
-	require.Nil(err)
+	require.Nil(t, err)
 }
 
 // TODO: add testcase to for `no upgrade handler is present for last applied upgrade`.
@@ -415,10 +414,10 @@ func TestBinaryVersion(t *testing.T) {
 				require.NoError(t, err)
 
 				newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 12})
-				s.keeper.ApplyUpgrade(newCtx, types.Plan{
+				require.NoError(t, s.keeper.ApplyUpgrade(newCtx, types.Plan{
 					Name:   "test0",
 					Height: 12,
-				})
+				}))
 
 				return newCtx
 			},

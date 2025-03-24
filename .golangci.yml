@@ -37,6 +37,8 @@ linters:
 issues:
   exclude-dirs:
     - testutil/testdata
+    - x/params
+    - x/crisis
   exclude-files:
     - server/grpc/gogoreflection/fix_registration.go
     - "fix_registration.go"

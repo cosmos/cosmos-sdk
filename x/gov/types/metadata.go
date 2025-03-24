@@ -7,6 +7,6 @@ type ProposalMetadata struct {
 	Authors           []string `json:"authors"`
 	Summary           string   `json:"summary"`
 	Details           string   `json:"details"`
-	ProposalForumUrl  string   `json:"proposal_forum_url"` //nolint:revive // named 'Url' instead of 'URL' for avoiding the camel case split
+	ProposalForumUrl  string   `json:"proposal_forum_url"`
 	VoteOptionContext string   `json:"vote_option_context"`
 }

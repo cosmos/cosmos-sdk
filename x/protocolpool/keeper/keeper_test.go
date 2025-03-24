@@ -117,84 +117,6 @@ func (suite *KeeperTestSuite) TestGetCommunityPool() {
 	suite.Require().Contains(err.Error(), "module account protocolpool does not exist")
 }
 
-/* TODO fix
-func (suite *KeeperTestSuite) TestSetToDistribute() {
-	suite.SetupTest()
-
-	params, err := suite.poolKeeper.Params.Get(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Equal([]string{sdk.DefaultBondDenom}, params.EnabledDistributionDenoms)
-
-	// add another denom
-	err = suite.poolKeeper.Params.Set(suite.ctx, types.Params{
-		EnabledDistributionDenoms: []string{sdk.DefaultBondDenom, "foo"},
-	})
-	suite.Require().NoError(err)
-
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
-	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000))
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).Times(2)
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "foo").Return(sdk.NewCoin("foo", math.NewInt(1234))).Times(2)
-
-	// because there are no continuous funds, all are going to the community pool
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(distrBal, sdk.NewCoin("foo", math.NewInt(1234))))
-
-	err = suite.poolKeeper.DistributeFunds(suite.ctx)
-	suite.Require().NoError(err)
-
-	// Verify that LastBalance was not set (zero balance)
-	_, err = suite.poolKeeper.LastBalance.Get(suite.ctx)
-	suite.Require().ErrorContains(err, "not found")
-
-	// create new continuous fund and distribute again
-	addrCdc := address.NewBech32Codec("cosmos")
-	addrStr := "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6"
-	addrBz, err := addrCdc.StringToBytes(addrStr)
-	suite.Require().NoError(err)
-
-	err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, addrBz, types.ContinuousFund{
-		Recipient:  addrStr,
-		Percentage: math.LegacyMustNewDecFromStr("0.3"),
-		Expiry:     nil,
-	})
-	suite.Require().NoError(err)
-
-	err = suite.poolKeeper.DistributeFunds(suite.ctx)
-	suite.Require().NoError(err)
-
-	// Verify that LastBalance was set correctly
-	lastBalance, err := suite.poolKeeper.LastBalance.Get(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)), sdk.NewCoin("foo", math.NewInt(1234))), lastBalance.Amount)
-
-	// Verify that a distribution was set
-	var distribution types.DistributionAmount
-	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value types.DistributionAmount) (bool, error) {
-		distribution = value
-		return true, nil
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)), sdk.NewCoin("foo", math.NewInt(1234))), distribution.Amount)
-
-	// Test case when balance is zero
-	zeroBal := sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(zeroBal)
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "foo").Return(sdk.NewCoin("foo", math.ZeroInt()))
-
-	err = suite.poolKeeper.DistributeFunds(suite.ctx)
-	suite.Require().NoError(err)
-
-	// Verify that no new distribution was set
-	count := 0
-	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value types.DistributionAmount) (bool, error) {
-		count++
-		return false, nil
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(1, count) // Only the previous distribution should exist
-}
-*/
-
 func (suite *KeeperTestSuite) TestGetAllContinuousFunds() {
 	suite.Run("empty store", func() {
 		// Reset the context to start with a clean store.
@@ -277,12 +199,12 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
 					Return(poolDistrAcc).AnyTimes()
 
-				// Enable only the "stake" denom.
-				params := types.Params{EnabledDistributionDenoms: []string{"stake"}}
-				suite.poolKeeper.Params.Set(suite.ctx, params)
+				// Enable only the stake denom.
+				params := types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}}
+				suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, params))
 
-				zeroCoin := sdk.NewCoin("stake", math.ZeroInt())
-				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "stake").
+				zeroCoin := sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
 					Return(zeroCoin).Times(1)
 			},
 			expectedErr: "",
@@ -294,12 +216,12 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
 					Return(poolDistrAcc).AnyTimes()
 
-				params := types.Params{EnabledDistributionDenoms: []string{"stake"}}
-				suite.poolKeeper.Params.Set(suite.ctx, params)
+				params := types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}}
+				suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, params))
 
-				totalCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
-				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "stake").
-					Return(sdk.NewCoin("stake", math.NewInt(1000))).Times(1)
+				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
+					Return(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))).Times(1)
 
 				recipient := sdk.AccAddress("recipient1______________")
 				fund := types.ContinuousFund{
@@ -327,12 +249,12 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
 					Return(poolDistrAcc).AnyTimes()
 
-				params := types.Params{EnabledDistributionDenoms: []string{"stake"}}
-				suite.poolKeeper.Params.Set(suite.ctx, params)
+				params := types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}}
+				suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, params))
 
-				totalCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
-				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "stake").
-					Return(sdk.NewCoin("stake", math.NewInt(1000))).Times(1)
+				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
+					Return(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))).Times(1)
 
 				recipient := sdk.AccAddress("expiredrecipient_______")
 				expiredTime := suite.ctx.BlockTime().Add(-time.Hour)
@@ -363,12 +285,12 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
 					Return(poolDistrAcc).AnyTimes()
 
-				params := types.Params{EnabledDistributionDenoms: []string{"stake"}}
-				suite.poolKeeper.Params.Set(suite.ctx, params)
+				params := types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}}
+				suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, params))
 
-				totalCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
-				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "stake").
-					Return(sdk.NewCoin("stake", math.NewInt(1000))).Times(1)
+				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
+					Return(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))).Times(1)
 
 				recipient1 := sdk.AccAddress("recipient1______________")
 				fund1 := types.ContinuousFund{
@@ -408,12 +330,12 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
 					Return(poolDistrAcc).AnyTimes()
 
-				params := types.Params{EnabledDistributionDenoms: []string{"stake"}}
-				suite.poolKeeper.Params.Set(suite.ctx, params)
+				params := types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}}
+				suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, params))
 
-				totalCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
-				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "stake").
-					Return(sdk.NewCoin("stake", math.NewInt(1000))).Times(1)
+				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
+					Return(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))).Times(1)
 
 				// Two funds whose percentages sum to 1.3 (80% and 50%).
 				recipient1 := sdk.AccAddress("recipient1______________")
@@ -448,12 +370,12 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
 					Return(poolDistrAcc).AnyTimes()
 
-				params := types.Params{EnabledDistributionDenoms: []string{"stake"}}
-				suite.poolKeeper.Params.Set(suite.ctx, params)
+				params := types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}}
+				suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, params))
 
-				totalCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
-				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "stake").
-					Return(sdk.NewCoin("stake", math.NewInt(1000))).Times(1)
+				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
+					Return(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))).Times(1)
 
 				recipient := sdk.AccAddress("recipient1______________")
 				fund := types.ContinuousFund{
@@ -477,12 +399,12 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
 					Return(poolDistrAcc).AnyTimes()
 
-				params := types.Params{EnabledDistributionDenoms: []string{"stake"}}
-				suite.poolKeeper.Params.Set(suite.ctx, params)
+				params := types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}}
+				suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, params))
 
-				totalCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
-				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "stake").
-					Return(sdk.NewCoin("stake", math.NewInt(1000))).Times(1)
+				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
+					Return(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))).Times(1)
 
 				recipient := sdk.AccAddress("recipient1______________")
 				fund := types.ContinuousFund{
@@ -510,12 +432,12 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
 					Return(poolDistrAcc).AnyTimes()
 
-				params := types.Params{EnabledDistributionDenoms: []string{"stake"}}
-				suite.poolKeeper.Params.Set(suite.ctx, params)
+				params := types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}}
+				suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, params))
 
-				totalCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
-				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "stake").
-					Return(sdk.NewCoin("stake", math.NewInt(1000))).Times(1)
+				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
+					Return(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))).Times(1)
 
 				recipient := sdk.AccAddress("recipient1______________")
 				expiryTime := suite.ctx.BlockTime() // exactly equal to block time.

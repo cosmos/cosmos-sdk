@@ -143,6 +143,7 @@ func initFixture(tb testing.TB) *fixture {
 	legacyQueryClient := v1beta1.NewQueryClient(integrationApp.QueryHelper())
 
 	assert.NilError(tb, stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams()))
+	assert.NilError(tb, govKeeper.ProposalID.Set(sdkCtx, 1))
 	assert.NilError(tb, govKeeper.Params.Set(sdkCtx, v1.DefaultParams()))
 
 	return &fixture{

@@ -33,7 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* [#22893](https://github.com/cosmos/cosmos-sdk/pull/22893) Support mount object store in baseapp, add `ObjectStore` api in context.
+* [#24108](https://github.com/cosmos/cosmos-sdk/pull/24108) Support mount object store in baseapp, add `ObjectStore` api in context.
 
 ## v1.10.0 (December 13, 2024)
 

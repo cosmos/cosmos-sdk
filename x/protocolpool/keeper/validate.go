@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,15 +13,13 @@ import (
 
 // validateContinuousFund validates the fields of the CreateContinuousFund message.
 func validateContinuousFund(ctx sdk.Context, msg types.MsgCreateContinuousFund) error {
-	// Validate percentage
-	if msg.Percentage.IsZero() || msg.Percentage.IsNil() {
-		return errors.New("percentage cannot be zero or empty")
+	fund := types.ContinuousFund{
+		Recipient:  msg.Recipient,
+		Percentage: msg.Percentage,
+		Expiry:     msg.Expiry,
 	}
-	if msg.Percentage.IsNegative() {
-		return errors.New("percentage cannot be negative")
-	}
-	if msg.Percentage.GTE(math.LegacyOneDec()) {
-		return errors.New("percentage cannot be greater than or equal to one")
+	if err := fund.Validate(); err != nil {
+		return fmt.Errorf("invalid continuous fund: %w", err)
 	}
 
 	// Validate expiry

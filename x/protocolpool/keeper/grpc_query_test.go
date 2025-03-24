@@ -1,219 +1,14 @@
 package keeper_test
 
 import (
-	"time"
-
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
-
-func (suite *KeeperTestSuite) TestContinuousFunds() {
-	t := time.Now()
-	recipientStrAddr := recipientAddr.String()
-	recipientStrAddr2 := recipientAddr2.String()
-	testCases := []struct {
-		name           string
-		preRun         func()
-		req            *types.QueryContinuousFundsRequest
-		expErr         bool
-		expErrMsg      string
-		unclaimedFunds *sdk.Coin
-		resp           *types.QueryContinuousFundsResponse
-	}{
-		{
-			name:      "nil request",
-			req:       nil,
-			expErr:    true,
-			expErrMsg: "empty request",
-		},
-		{
-			name:      "empty recipient address",
-			req:       &types.QueryContinuousFundsRequest{},
-			expErr:    true,
-			expErrMsg: "empty address string is not allowed",
-		},
-		{
-			name:      "no budget proposal found",
-			req:       &types.QueryContinuousFundsRequest{},
-			expErr:    true,
-			expErrMsg: "no budget proposal found for address",
-		},
-		{
-			name: "valid case - single",
-			preRun: func() {
-				fund := types.ContinuousFund{
-					Recipient:  recipientStrAddr,
-					Percentage: math.LegacyMustNewDecFromStr("0.1"),
-				}
-				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
-				suite.Require().NoError(err)
-			},
-			req:            &types.QueryContinuousFundsRequest{},
-			expErr:         false,
-			unclaimedFunds: &fooCoin,
-			resp: &types.QueryContinuousFundsResponse{
-				ContinuousFunds: []types.ContinuousFund{
-					{
-						Recipient:  recipientStrAddr,
-						Percentage: math.LegacyMustNewDecFromStr("0.1"),
-					},
-				},
-			},
-		},
-		{
-			name: "valid case - multiple",
-			preRun: func() {
-				// Prepare a valid budget proposal
-				fund1 := types.ContinuousFund{
-					Recipient:  recipientStrAddr,
-					Percentage: math.LegacyMustNewDecFromStr("0.1"),
-					Expiry:     &t,
-				}
-				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund1)
-				suite.Require().NoError(err)
-
-				// Prepare a valid budget proposal
-				fund2 := types.ContinuousFund{
-					Recipient:  recipientStrAddr2,
-					Percentage: math.LegacyMustNewDecFromStr("0.2"),
-					Expiry:     &t,
-				}
-				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr2, fund2)
-				suite.Require().NoError(err)
-			},
-			req:            &types.QueryContinuousFundsRequest{},
-			expErr:         false,
-			unclaimedFunds: &fooCoin,
-			resp: &types.QueryContinuousFundsResponse{
-				ContinuousFunds: []types.ContinuousFund{
-					{
-						Recipient:  recipientStrAddr,
-						Percentage: math.LegacyMustNewDecFromStr("0.1"),
-						Expiry:     &t,
-					},
-					{
-						Recipient:  recipientStrAddr2,
-						Percentage: math.LegacyMustNewDecFromStr("0.2"),
-						Expiry:     &t,
-					},
-				},
-			},
-		},
-	}
-	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			if tc.preRun != nil {
-				tc.preRun()
-			}
-			resp, err := suite.queryServer.ContinuousFunds(suite.ctx, tc.req)
-			if tc.expErr {
-				suite.Require().Error(err)
-				suite.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.resp, resp)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestContinuousFund() {
-	t := time.Now()
-	recipientStrAddr := recipientAddr.String()
-	testCases := []struct {
-		name           string
-		preRun         func()
-		req            *types.QueryContinuousFundRequest
-		expErr         bool
-		expErrMsg      string
-		unclaimedFunds *sdk.Coin
-		resp           *types.QueryContinuousFundResponse
-	}{
-		{
-			name: "empty recipient address",
-			req: &types.QueryContinuousFundRequest{
-				Recipient: "",
-			},
-			expErr:    true,
-			expErrMsg: "empty address string is not allowed",
-		},
-		{
-			name: "no continuous fund found",
-			req: &types.QueryContinuousFundRequest{
-				Recipient: recipientStrAddr,
-			},
-			expErr:    true,
-			expErrMsg: "rpc error: code = NotFound desc = not found",
-		},
-		{
-			name: "valid case - no expiry",
-			preRun: func() {
-				// Prepare a valid budget proposal
-				fund := types.ContinuousFund{
-					Recipient:  recipientStrAddr,
-					Percentage: math.LegacyMustNewDecFromStr("0.1"),
-				}
-				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
-				suite.Require().NoError(err)
-			},
-			req: &types.QueryContinuousFundRequest{
-				Recipient: recipientStrAddr,
-			},
-			expErr:         false,
-			unclaimedFunds: &fooCoin,
-			resp: &types.QueryContinuousFundResponse{
-				ContinuousFund: types.ContinuousFund{
-					Recipient:  recipientStrAddr,
-					Percentage: math.LegacyMustNewDecFromStr("0.1"),
-				},
-			},
-		},
-		{
-			name: "valid case",
-			preRun: func() {
-				// Prepare a valid budget proposal
-				fund := types.ContinuousFund{
-					Recipient:  recipientStrAddr,
-					Percentage: math.LegacyMustNewDecFromStr("0.1"),
-					Expiry:     &t,
-				}
-				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
-				suite.Require().NoError(err)
-			},
-			req: &types.QueryContinuousFundRequest{
-				Recipient: recipientStrAddr,
-			},
-			expErr:         false,
-			unclaimedFunds: &fooCoin,
-			resp: &types.QueryContinuousFundResponse{
-				ContinuousFund: types.ContinuousFund{
-					Recipient:  recipientStrAddr,
-					Percentage: math.LegacyMustNewDecFromStr("0.1"),
-					Expiry:     &t,
-				},
-			},
-		},
-	}
-	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			if tc.preRun != nil {
-				tc.preRun()
-			}
-			resp, err := suite.queryServer.ContinuousFund(suite.ctx, tc.req)
-			if tc.expErr {
-				suite.Require().Error(err)
-				suite.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.resp, resp)
-			}
-		})
-	}
-}
 
 func (suite *KeeperTestSuite) TestParams() {
 	expectedParams := types.DefaultGenesisState().Params
@@ -302,6 +97,174 @@ func (suite *KeeperTestSuite) TestCommunityPool() {
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.resp, resp)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestContinuousFund() {
+	testCases := []struct {
+		name      string
+		preRun    func()
+		req       *types.QueryContinuousFundRequest
+		expErr    bool
+		expErrMsg string
+		resp      *types.QueryContinuousFundResponse
+	}{
+		{
+			name:      "nil request - error",
+			req:       nil,
+			expErr:    true,
+			expErrMsg: "empty request",
+		},
+		{
+			name: "invalid address",
+			req: &types.QueryContinuousFundRequest{
+				Recipient: "invalid", // not a valid Bech32 address
+			},
+			preRun: func() {
+				// Return a real codec; its StringToBytes will fail for an invalid address.
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "invalid address:",
+		},
+		{
+			name: "fund not found",
+			req: &types.QueryContinuousFundRequest{
+				Recipient: recipientAddr.String(), // valid format but not set in store
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "not found",
+		},
+		{
+			name: "valid continuous fund",
+			req: &types.QueryContinuousFundRequest{
+				Recipient: recipientAddr.String(),
+			},
+			preRun: func() {
+				// Use the real codec to convert the address.
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				// Insert a continuous fund directly into the pool keeper.
+				fund := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.5"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+			},
+			expErr: false,
+			resp: &types.QueryContinuousFundResponse{
+				ContinuousFund: types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.5"),
+					Expiry:     nil,
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			resp, err := suite.queryServer.ContinuousFund(suite.ctx, tc.req)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.resp.ContinuousFund.Recipient, resp.ContinuousFund.Recipient)
+				suite.Require().Equal(tc.resp.ContinuousFund.Percentage, resp.ContinuousFund.Percentage)
+				suite.Require().Equal(tc.resp.ContinuousFund.Expiry, resp.ContinuousFund.Expiry)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestContinuousFunds() {
+	testCases := []struct {
+		name      string
+		preRun    func()
+		req       *types.QueryContinuousFundsRequest
+		expErr    bool
+		expErrMsg string
+		resp      *types.QueryContinuousFundsResponse
+	}{
+		{
+			name:      "nil request - error",
+			req:       nil,
+			expErr:    true,
+			expErrMsg: "empty request",
+		},
+		{
+			name:   "no continuous funds",
+			req:    &types.QueryContinuousFundsRequest{},
+			preRun: nil,
+			expErr: false,
+			resp: &types.QueryContinuousFundsResponse{
+				ContinuousFunds: []types.ContinuousFund{},
+			},
+		},
+		{
+			name: "valid continuous funds",
+			req:  &types.QueryContinuousFundsRequest{},
+			preRun: func() {
+				// Insert two continuous funds directly into the keeper.
+				fund1 := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund1)
+				suite.Require().NoError(err)
+
+				fund2 := types.ContinuousFund{
+					Recipient:  recipientAddr2.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.7"),
+					Expiry:     nil,
+				}
+				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr2, fund2)
+				suite.Require().NoError(err)
+			},
+			expErr: false,
+			resp: &types.QueryContinuousFundsResponse{
+				ContinuousFunds: []types.ContinuousFund{
+					{
+						Recipient:  recipientAddr.String(),
+						Percentage: math.LegacyMustNewDecFromStr("0.3"),
+						Expiry:     nil,
+					},
+					{
+						Recipient:  recipientAddr2.String(),
+						Percentage: math.LegacyMustNewDecFromStr("0.7"),
+						Expiry:     nil,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			resp, err := suite.queryServer.ContinuousFunds(suite.ctx, tc.req)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().ElementsMatch(tc.resp.ContinuousFunds, resp.ContinuousFunds)
 			}
 		})
 	}

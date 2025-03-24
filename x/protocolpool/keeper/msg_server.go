@@ -69,8 +69,6 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
 
-// TODO: just add to state
-// check all continuous funds and see if we are under the exceeding limit
 func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -128,7 +126,6 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	return &types.MsgCreateContinuousFundResponse{}, nil
 }
 
-// TODO: just remove from state
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -162,8 +159,12 @@ func (k MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, err
 	}
 
+	if err := msg.Params.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid params: %w", err)
+	}
+
 	if err := k.Params.Set(sdkCtx, msg.Params); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to set params: %w", err)
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil

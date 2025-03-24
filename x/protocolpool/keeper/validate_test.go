@@ -102,15 +102,15 @@ func TestValidateContinuousFund(t *testing.T) {
 			errMsg: "percentage cannot be negative",
 		},
 		{
-			name: "percentage equal to one",
+			name: "percentage greater than one",
 			msg: types.MsgCreateContinuousFund{
 				Authority:  "authority",
 				Recipient:  "recipient",
-				Percentage: math.LegacyOneDec(),
+				Percentage: math.LegacyMustNewDecFromStr("1.1"),
 				Expiry:     &future,
 			},
 			expErr: true,
-			errMsg: "percentage cannot be greater than or equal to one",
+			errMsg: "percentage cannot be greater than one",
 		},
 		{
 			name: "valid percentage with nil expiry",

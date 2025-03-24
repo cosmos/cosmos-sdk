@@ -91,10 +91,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.queryServer = poolkeeper.NewQuerier(poolKeeper)
 }
 
-func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(accAddr sdk.AccAddress) {
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, accAddr, gomock.Any()).AnyTimes()
-}
-
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
@@ -187,7 +183,6 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			name: "module account missing",
 			setup: func() {
 				suite.SetupTest()
-				// Simulate missing module account.
 				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(nil)
 			},
 			expectedErr: "module account",

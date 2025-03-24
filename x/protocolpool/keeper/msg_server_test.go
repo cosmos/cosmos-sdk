@@ -3,694 +3,453 @@ package keeper_test
 import (
 	"time"
 
+	"go.uber.org/mock/gomock"
+
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
-// TODO convert to ContinuousFunds
-/*
-func (suite *KeeperTestSuite) TestMsgCreateBudget() {
-	invalidCoin := sdk.NewInt64Coin("foo", 0)
-	startTime := suite.ctx.BlockTime().Add(10 * time.Second)
-	invalidStartTime := suite.ctx.BlockTime().Add(-15 * time.Second)
-	period := time.Duration(60) * time.Second
-	zeroPeriod := time.Duration(0) * time.Second
-	recipientStrAddr := recipientAddr.String()
-	testCases := map[string]struct {
-		input     *types.MsgCreateBudget
-		expErr    bool
-		expErrMsg string
-	}{
-		"empty recipient address": {
-			input: &types.MsgCreateBudget{
-				Authority:        suite.poolKeeper.GetAuthority(),
-				RecipientAddress: "",
-				BudgetPerTranche: fooCoin,
-				StartTime:        &startTime,
-				Tranches:         2,
-				Period:           period,
-			},
-			expErr:    true,
-			expErrMsg: "empty address string is not allowed",
-		},
-		"empty authority": {
-			input: &types.MsgCreateBudget{
-				Authority:        "",
-				RecipientAddress: recipientStrAddr,
-				BudgetPerTranche: fooCoin,
-				StartTime:        &startTime,
-				Tranches:         2,
-				Period:           period,
-			},
-			expErr:    true,
-			expErrMsg: "empty address string is not allowed",
-		},
-		"invalid authority": {
-			input: &types.MsgCreateBudget{
-				Authority:        "invalid_authority",
-				RecipientAddress: recipientStrAddr,
-				BudgetPerTranche: fooCoin,
-				StartTime:        &startTime,
-				Tranches:         2,
-				Period:           period,
-			},
-			expErr:    true,
-			expErrMsg: "invalid authority",
-		},
-		"invalid budget": {
-			input: &types.MsgCreateBudget{
-				Authority:        suite.poolKeeper.GetAuthority(),
-				RecipientAddress: recipientStrAddr,
-				BudgetPerTranche: invalidCoin,
-				StartTime:        &startTime,
-				Tranches:         2,
-				Period:           period,
-			},
-			expErr:    true,
-			expErrMsg: "budget per tranche cannot be zero",
-		},
-		"invalid start time": {
-			input: &types.MsgCreateBudget{
-				Authority:        suite.poolKeeper.GetAuthority(),
-				RecipientAddress: recipientStrAddr,
-				BudgetPerTranche: fooCoin,
-				StartTime:        &invalidStartTime,
-				Tranches:         2,
-				Period:           period,
-			},
-			expErr:    true,
-			expErrMsg: "start time cannot be less than the current block time",
-		},
-		"invalid tranches": {
-			input: &types.MsgCreateBudget{
-				Authority:        suite.poolKeeper.GetAuthority(),
-				RecipientAddress: recipientStrAddr,
-				BudgetPerTranche: fooCoin,
-				StartTime:        &startTime,
-				Tranches:         0,
-				Period:           period,
-			},
-			expErr:    true,
-			expErrMsg: "tranches must be greater than zero",
-		},
-		"invalid period": {
-			input: &types.MsgCreateBudget{
-				Authority:        suite.poolKeeper.GetAuthority(),
-				RecipientAddress: recipientStrAddr,
-				BudgetPerTranche: fooCoin,
-				StartTime:        &startTime,
-				Tranches:         2,
-				Period:           zeroPeriod,
-			},
-			expErr:    true,
-			expErrMsg: "period length should be greater than zero",
-		},
-		"all good": {
-			input: &types.MsgCreateBudget{
-				Authority:        suite.poolKeeper.GetAuthority(),
-				RecipientAddress: recipientStrAddr,
-				BudgetPerTranche: fooCoin2,
-				StartTime:        &startTime,
-				Tranches:         2,
-				Period:           period,
-			},
-			expErr: false,
-		},
-	}
-
-	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-
-			_, err := suite.msgServer.CreateBudget(suite.ctx, tc.input)
-			if tc.expErr {
-				suite.Require().Error(err)
-				suite.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				suite.Require().NoError(err)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestMsgClaimBudget() {
-	startTime := suite.ctx.BlockTime().Add(-70 * time.Second)
-	period := time.Duration(60) * time.Second
-	recipientStrAddr := recipientAddr.String()
-
-	testCases := map[string]struct {
-		preRun           func()
-		postRun          func()
-		recipientAddress sdk.AccAddress
-		expErr           bool
-		expErrMsg        string
-		claimableFunds   sdk.Coin
-	}{
-		"empty recipient addr": {
-			recipientAddress: sdk.AccAddress(""),
-			expErr:           true,
-			expErrMsg:        "invalid recipient address: empty address string is not allowed",
-		},
-		"no budget found": {
-			recipientAddress: sdk.AccAddress("acc1__________"),
-			expErr:           true,
-			expErrMsg:        "no budget found for recipient",
-		},
-		"claiming before last claimed at": {
-			preRun: func() {
-				startTime := startTime.Add(3600 * time.Second)
-				// Prepare the budget proposal with a future last claimed at time
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					TranchesLeft:     2,
-					Period:           period,
-					LastClaimedAt:    startTime,
-					BudgetPerTranche: fooCoin2,
-				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
-				suite.Require().NoError(err)
-			},
-			recipientAddress: recipientAddr,
-			expErr:           true,
-			expErrMsg:        "distribution has not started yet",
-		},
-		"budget period has not passed": {
-			preRun: func() {
-				startTime := suite.ctx.BlockTime().Add(-50 * time.Second)
-				// Prepare the budget proposal with start time and a short period
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					LastClaimedAt:    startTime,
-					TranchesLeft:     1,
-					Period:           period,
-					BudgetPerTranche: fooCoin2,
-				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
-				suite.Require().NoError(err)
-			},
-			recipientAddress: recipientAddr,
-			expErr:           true,
-			expErrMsg:        "budget period has not passed yet",
-		},
-		"valid claim": {
-			preRun: func() {
-				// Prepare the budget proposal with valid start time and period
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					LastClaimedAt:    startTime,
-					TranchesLeft:     2,
-					Period:           period,
-					BudgetPerTranche: fooCoin2,
-				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
-				suite.Require().NoError(err)
-			},
-			recipientAddress: recipientAddr,
-			expErr:           false,
-			claimableFunds:   sdk.NewInt64Coin("foo", 50),
-		},
-		"claiming budget after a long time": {
-			preRun: func() {
-				// Prepare the budget proposal with valid start time and period
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					LastClaimedAt:    startTime,
-					TranchesLeft:     2,
-					Period:           period,
-					BudgetPerTranche: fooCoin2,
-				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
-				suite.Require().NoError(err)
-
-				// fast forward the block time by 240 hours
-				newTime := suite.ctx.BlockTime().Add(240 * time.Hour)
-				suite.ctx = suite.ctx.WithBlockTime(newTime)
-			},
-			recipientAddress: recipientAddr,
-			claimableFunds:   sdk.NewInt64Coin("foo", 100), // claiming the whole budget, 2 * 50foo = 100foo
-			postRun: func() {
-				prop, err := suite.poolKeeper.Budgets.Get(suite.ctx, recipientAddr)
-				suite.Require().NoError(err)
-				suite.Require().Equal(uint64(0), prop.TranchesLeft)
-				// check if the lastClaimedAt is correct (in this case 2 periods after the start time)
-				suite.Require().Equal(startTime.Add(period*time.Duration(2)), prop.LastClaimedAt)
-			},
-		},
-		"double claim attempt with budget period not passed": {
-			preRun: func() {
-				// Prepare the budget proposal with valid start time and period
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					LastClaimedAt:    startTime,
-					TranchesLeft:     2,
-					Period:           period,
-					BudgetPerTranche: fooCoin2,
-				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
-				suite.Require().NoError(err)
-
-				// Claim the funds once
-				msg := &types.MsgClaimBudget{
-					RecipientAddress: recipientStrAddr,
-				}
-				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
-				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
-				suite.Require().NoError(err)
-			},
-			recipientAddress: recipientAddr,
-			expErr:           true,
-			expErrMsg:        "budget period has not passed yet",
-		},
-		"valid double claim attempt": {
-			preRun: func() {
-				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				startTimeBeforeMonth := suite.ctx.BlockTime().Add(time.Duration(-oneMonthInSeconds) * time.Second)
-				oneMonthPeriod := time.Duration(oneMonthInSeconds) * time.Second
-				// Prepare the budget proposal with valid start time and period of 1 month (in seconds)
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					LastClaimedAt:    startTimeBeforeMonth,
-					TranchesLeft:     2,
-					Period:           oneMonthPeriod,
-					BudgetPerTranche: fooCoin2,
-				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
-				suite.Require().NoError(err)
-
-				// Claim the funds once
-				msg := &types.MsgClaimBudget{
-					RecipientAddress: recipientStrAddr,
-				}
-				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
-				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
-				suite.Require().NoError(err)
-
-				// Create a new context with an updated block time to simulate a delay
-				newBlockTime := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
-				suite.ctx = suite.ctx.WithBlockTime(newBlockTime)
-			},
-			recipientAddress: recipientAddr,
-			expErr:           false,
-			claimableFunds:   sdk.NewInt64Coin("foo", 50),
-		},
-		"budget ended for recipient": {
-			preRun: func() {
-				// Prepare the budget proposal with valid start time and period
-				budget := types.Budget{
-					RecipientAddress: recipientStrAddr,
-					LastClaimedAt:    startTime,
-					TranchesLeft:     2,
-					Period:           period,
-					BudgetPerTranche: fooCoin2,
-				}
-				err := suite.poolKeeper.Budgets.Set(suite.ctx, recipientAddr, budget)
-				suite.Require().NoError(err)
-
-				// Claim the funds once
-				msg := &types.MsgClaimBudget{
-					RecipientAddress: recipientStrAddr,
-				}
-				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
-				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
-				suite.Require().NoError(err)
-
-				// Create a new context with an updated block time to simulate a delay
-				newBlockTime := suite.ctx.BlockTime().Add(60 * time.Second)
-				suite.ctx = suite.ctx.WithBlockTime(newBlockTime)
-
-				// Claim the funds twice
-				msg = &types.MsgClaimBudget{
-					RecipientAddress: recipientStrAddr,
-				}
-				suite.mockSendCoinsFromModuleToAccount(recipientAddr)
-				_, err = suite.msgServer.ClaimBudget(suite.ctx, msg)
-				suite.Require().NoError(err)
-			},
-			recipientAddress: recipientAddr,
-			expErr:           true,
-			expErrMsg:        "budget ended for recipient",
-		},
-	}
-
-	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			if tc.preRun != nil {
-				tc.preRun()
-			}
-			addr := tc.recipientAddress.String()
-			msg := &types.MsgClaimBudget{
-				RecipientAddress: addr,
-			}
-			suite.mockSendCoinsFromModuleToAccount(tc.recipientAddress)
-			resp, err := suite.msgServer.ClaimBudget(suite.ctx, msg)
-			if tc.expErr {
-				suite.Require().Error(err)
-				suite.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.claimableFunds, resp.Amount)
-			}
-
-			if tc.postRun != nil {
-				tc.postRun()
-			}
-		})
-	}
-}
-*/
-
-// TODO CancelContinuousFund
-
-func (suite *KeeperTestSuite) TestCreateContinuousFund() {
-	percentage, err := math.LegacyNewDecFromStr("0.2")
-	suite.Require().NoError(err)
-	negativePercentage, err := math.LegacyNewDecFromStr("-0.2")
-	suite.Require().NoError(err)
-	invalidExpirty := suite.ctx.BlockTime().Add(-15 * time.Second)
-	oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-	expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
-	recipientStrAddr := recipientAddr.String()
-	suite.Require().NoError(err)
-	testCases := map[string]struct {
-		preRun    func()
-		input     *types.MsgCreateContinuousFund
-		expErr    bool
-		expErrMsg string
-	}{
-		"empty recipient address": {
-			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  "",
-				Percentage: percentage,
-				Expiry:     &expiry,
-			},
-			expErr:    true,
-			expErrMsg: "empty address string is not allowed",
-		},
-		"empty authority": {
-			input: &types.MsgCreateContinuousFund{
-				Authority:  "",
-				Recipient:  recipientStrAddr,
-				Percentage: percentage,
-				Expiry:     &expiry,
-			},
-			expErr:    true,
-			expErrMsg: "empty address string is not allowed",
-		},
-		"invalid authority": {
-			input: &types.MsgCreateContinuousFund{
-				Authority:  "invalid_authority",
-				Recipient:  recipientStrAddr,
-				Percentage: percentage,
-				Expiry:     &expiry,
-			},
-			expErr:    true,
-			expErrMsg: "invalid authority",
-		},
-		"zero percentage": {
-			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientStrAddr,
-				Percentage: math.LegacyNewDec(0),
-				Expiry:     &expiry,
-			},
-			expErr:    true,
-			expErrMsg: "percentage cannot be zero or empty",
-		},
-		"negative percentage": {
-			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientStrAddr,
-				Percentage: negativePercentage,
-				Expiry:     &expiry,
-			},
-			expErr:    true,
-			expErrMsg: "percentage cannot be negative",
-		},
-		"invalid percentage": {
-			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientStrAddr,
-				Percentage: math.LegacyNewDec(1),
-				Expiry:     &expiry,
-			},
-			expErr:    true,
-			expErrMsg: "percentage cannot be greater than or equal to one",
-		},
-		"invalid expiry": {
-			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientStrAddr,
-				Percentage: percentage,
-				Expiry:     &invalidExpirty,
-			},
-			expErr:    true,
-			expErrMsg: "expiry time cannot be less than the current block time",
-		},
-		"all good": {
-			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientStrAddr,
-				Percentage: percentage,
-				Expiry:     &expiry,
-			},
-			expErr: false,
-		},
-		"total funds percentage > 100": {
-			preRun: func() {
-				percentage, err := math.LegacyNewDecFromStr("0.9")
-				suite.Require().NoError(err)
-				recipient2 := sdk.AccAddress("recipientAddr2___________________")
-				recipient2StrAddr := recipient2.String()
-				suite.Require().NoError(err)
-				cf := types.ContinuousFund{
-					Recipient:  recipient2StrAddr,
-					Percentage: percentage,
-					Expiry:     &time.Time{},
-				}
-				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipient2, cf)
-				suite.Require().NoError(err)
-			},
-			input: &types.MsgCreateContinuousFund{
-				Authority:  suite.poolKeeper.GetAuthority(),
-				Recipient:  recipientStrAddr,
-				Percentage: percentage,
-				Expiry:     &expiry,
-			},
-			expErr:    true,
-			expErrMsg: "cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: 90",
-		},
-	}
-
-	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			if tc.preRun != nil {
-				tc.preRun()
-			}
-
-			_, err := suite.msgServer.CreateContinuousFund(suite.ctx, tc.input)
-			if tc.expErr {
-				suite.Require().Error(err)
-				suite.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				suite.Require().NoError(err)
-			}
-		})
-	}
-}
-
-/*
-// TestCancelContinuousFund tests the cancellation of a continuous fund.
-// It verifies various scenarios such as canceling a fund with an empty recipient,
-// canceling a fund with no recipient found, canceling a fund with unclaimed funds for the recipient,
-// and canceling a fund with no errors.
-func (suite *KeeperTestSuite) TestCancelContinuousFund() {
-	recipientStrAddr := recipientAddr.String()
-	recipient2 := sdk.AccAddress("recipientAddr2___________________")
-	recipient2StrAddr := recipient2.String()
-	recipient3 := sdk.AccAddress("recipientAddr3___________________")
-	recipient3StrAddr := recipient3.String()
-
-	testCases := map[string]struct {
-		preRun         func()
-		recipientAddr  sdk.AccAddress
-		expErr         bool
-		expErrMsg      string
-		postRun        func()
-		withdrawnFunds sdk.Coins
-	}{
-		"empty recipient": {
-			preRun: func() {
-				percentage, err := math.LegacyNewDecFromStr("0.2")
-				suite.Require().NoError(err)
-				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
-				cf := types.ContinuousFund{
-					Recipient:  "",
-					Percentage: percentage,
-					Expiry:     &expiry,
-				}
-				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, cf)
-				suite.Require().NoError(err)
-			},
-			expErr:    true,
-			expErrMsg: "empty address string is not allowed",
-		},
-		"all good with unclaimed funds for recipient": {
-			preRun: func() {
-				// Set fund 1
-				percentage, err := math.LegacyNewDecFromStr("0.2")
-				suite.Require().NoError(err)
-				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
-				cf := types.ContinuousFund{
-					Recipient:  recipientStrAddr,
-					Percentage: percentage,
-					Expiry:     &expiry,
-				}
-				// Set continuous fund
-				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, cf)
-				suite.Require().NoError(err)
-				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistributions.Set(suite.ctx, recipientAddr, types.DistributionAmount{Amount: sdk.NewCoins()})
-				suite.Require().NoError(err)
-
-				// Set fund 2
-				percentage, err = math.LegacyNewDecFromStr("0.3")
-				suite.Require().NoError(err)
-				cf = types.ContinuousFund{
-					Recipient:  recipient2StrAddr,
-					Percentage: percentage,
-					Expiry:     &expiry,
-				}
-				// Set continuous fund
-				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipient2, cf)
-				suite.Require().NoError(err)
-				// Set recipient fund percentage and recipient fund distribution
-				err = suite.poolKeeper.RecipientFundDistributions.Set(suite.ctx, recipient2, types.DistributionAmount{Amount: sdk.NewCoins()})
-				suite.Require().NoError(err)
-
-				// Set ToDistribute
-				suite.mockStreamFunds(math.NewInt(100000))
-				err = suite.poolKeeper.DistributeFunds(suite.ctx)
-				suite.Require().NoError(err)
-
-				// withdraw funds for fund request 2
-				suite.mockWithdrawContinuousFund()
-				msg := &types.MsgWithdrawContinuousFund{RecipientAddress: recipient2StrAddr}
-				_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, msg)
-				suite.Require().NoError(err)
-			},
-			recipientAddr: recipientAddr,
-			expErr:        false,
-			postRun: func() {
-				_, err := suite.poolKeeper.ContinuousFunds.Get(suite.ctx, recipientAddr)
-				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, collections.ErrNotFound)
-			},
-			withdrawnFunds: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(20000))),
-		},
-		"all good": {
-			preRun: func() {
-				percentage, err := math.LegacyNewDecFromStr("0.2")
-				suite.Require().NoError(err)
-				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
-				expiry := suite.ctx.BlockTime().Add(time.Duration(oneMonthInSeconds) * time.Second)
-				cf := types.ContinuousFund{
-					Recipient:  recipient3StrAddr,
-					Percentage: percentage,
-					Expiry:     &expiry,
-				}
-				suite.mockWithdrawContinuousFund()
-				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipient3, cf)
-				suite.Require().NoError(err)
-				err = suite.poolKeeper.RecipientFundDistributions.Set(suite.ctx, recipient3, types.DistributionAmount{Amount: sdk.NewCoins()})
-				suite.Require().NoError(err)
-			},
-			recipientAddr: recipient3,
-			expErr:        false,
-			postRun: func() {
-				_, err := suite.poolKeeper.ContinuousFunds.Get(suite.ctx, recipient3)
-				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, collections.ErrNotFound)
-			},
-			withdrawnFunds: nil,
-		},
-	}
-
-	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			if tc.preRun != nil {
-				tc.preRun()
-			}
-			addr := tc.recipientAddr.String()
-			msg := &types.MsgCancelContinuousFund{
-				Authority:        suite.poolKeeper.GetAuthority(),
-				RecipientAddress: addr,
-			}
-			resp, err := suite.msgServer.CancelContinuousFund(suite.ctx, msg)
-			if tc.expErr {
-				suite.Require().Error(err)
-				suite.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.withdrawnFunds, resp.WithdrawnAllocatedFund)
-				// All items below should return error as they are removed from the store
-				_, err = suite.poolKeeper.ContinuousFunds.Get(suite.ctx, tc.recipientAddr)
-				suite.Require().Contains(err.Error(), "collections: not found")
-				_, err = suite.poolKeeper.RecipientFundDistributions.Get(suite.ctx, tc.recipientAddr)
-				suite.Require().Contains(err.Error(), "collections: not found")
-			}
-			if tc.postRun != nil {
-				tc.postRun()
-			}
-		})
-	}
-}
-
 func (suite *KeeperTestSuite) TestFundCommunityPool() {
-	sender := sdk.AccAddress("fundingAddr1____________________")
-	senderAddr := sender.String()
+	validDepositor := recipientAddr
+	validAmount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
 
-	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sender, types.ModuleName, amount).Return(nil).Times(1)
+	testCases := []struct {
+		name      string
+		preRun    func()
+		msg       *types.MsgFundCommunityPool
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid depositor address",
+			msg: &types.MsgFundCommunityPool{
+				Depositor: "invalid",
+				Amount:    validAmount,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "invalid depositor address:",
+		},
+		{
+			name: "invalid amount",
+			msg: &types.MsgFundCommunityPool{
+				Depositor: validDepositor.String(),
+				Amount:    sdk.Coins{sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(-1)}},
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "-1stake: invalid coins",
+		},
+		{
+			name: "valid fund community pool",
+			msg: &types.MsgFundCommunityPool{
+				Depositor: validDepositor.String(),
+				Amount:    validAmount,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), validDepositor, types.ModuleName, validAmount).Return(nil).Times(1)
+			},
+			expErr: false,
+		},
+	}
 
-	_, err := suite.msgServer.FundCommunityPool(suite.ctx, &types.MsgFundCommunityPool{
-		Amount:    amount,
-		Depositor: senderAddr,
-	})
-	suite.Require().NoError(err)
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			resp, err := suite.msgServer.FundCommunityPool(suite.ctx, tc.msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(resp)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
-	recipient := sdk.AccAddress("fundingAddr1____________________")
-	recipientAddr := recipient.String()
+	validAuthority := suite.poolKeeper.GetAuthority()
+	validRecipient := recipientAddr
+	validAmount := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500)))
 
-	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, recipient, amount).Return(nil).Times(1)
+	testCases := []struct {
+		name      string
+		preRun    func()
+		msg       *types.MsgCommunityPoolSpend
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid authority",
+			msg: &types.MsgCommunityPoolSpend{
+				Authority: "invalid_auth",
+				Recipient: validRecipient.String(),
+				Amount:    validAmount,
+			},
+			preRun:    nil,
+			expErr:    true,
+			expErrMsg: "invalid authority address",
+		},
+		{
+			name: "invalid amount",
+			msg: &types.MsgCommunityPoolSpend{
+				Authority: validAuthority,
+				Recipient: validRecipient.String(),
+				Amount:    sdk.Coins{sdk.Coin{Denom: "stake", Amount: math.NewInt(-1)}},
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "-1stake: invalid coins",
+		},
+		{
+			name: "invalid recipient address",
+			msg: &types.MsgCommunityPoolSpend{
+				Authority: validAuthority,
+				Recipient: "invalid",
+				Amount:    validAmount,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "decoding bech32 failed",
+		},
+		{
+			name: "valid community pool spend",
+			msg: &types.MsgCommunityPoolSpend{
+				Authority: validAuthority,
+				Recipient: validRecipient.String(),
+				Amount:    validAmount,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, validRecipient, validAmount).Return(nil).Times(1)
+			},
+			expErr: false,
+		},
+	}
 
-	_, err := suite.msgServer.CommunityPoolSpend(suite.ctx, &types.MsgCommunityPoolSpend{
-		Authority: suite.poolKeeper.GetAuthority(),
-		Recipient: recipientAddr,
-		Amount:    amount,
-	})
-	suite.Require().NoError(err)
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			resp, err := suite.msgServer.CommunityPoolSpend(suite.ctx, tc.msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(resp)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCreateContinuousFund() {
+	validAuthority := suite.poolKeeper.GetAuthority()
+	validRecipient := recipientAddr
+	validPercentage := math.LegacyMustNewDecFromStr("0.2")
+	validExpiry := suite.ctx.BlockTime().Add(24 * time.Hour)
+
+	testCases := []struct {
+		name      string
+		preRun    func()
+		msg       *types.MsgCreateContinuousFund
+		expErr    bool
+		expErrMsg string
+		verify    func(msg *types.MsgCreateContinuousFund)
+	}{
+		{
+			name: "invalid authority",
+			msg: &types.MsgCreateContinuousFund{
+				Authority:  "invalid_auth",
+				Recipient:  validRecipient.String(),
+				Percentage: validPercentage,
+				Expiry:     &validExpiry,
+			},
+			preRun:    func() {},
+			expErr:    true,
+			expErrMsg: "invalid authority address",
+		},
+		{
+			name: "invalid recipient address",
+			msg: &types.MsgCreateContinuousFund{
+				Authority:  validAuthority,
+				Recipient:  "invalid",
+				Percentage: validPercentage,
+				Expiry:     &validExpiry,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "decoding bech32 failed",
+		},
+		{
+			name: "continuous fund already exists",
+			msg: &types.MsgCreateContinuousFund{
+				Authority:  validAuthority,
+				Recipient:  validRecipient.String(),
+				Percentage: validPercentage,
+				Expiry:     &validExpiry,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				// Pre-create a continuous fund.
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, validRecipient, types.ContinuousFund{
+					Recipient:  validRecipient.String(),
+					Percentage: validPercentage,
+					Expiry:     &validExpiry,
+				})
+				suite.Require().NoError(err)
+			},
+			expErr:    true,
+			expErrMsg: "continuous fund already exists",
+		},
+		{
+			name: "invalid continuous fund fields",
+			msg: &types.MsgCreateContinuousFund{
+				Authority:  validAuthority,
+				Recipient:  validRecipient.String(),
+				Percentage: math.LegacyZeroDec(), // zero percent is invalid
+				Expiry:     &validExpiry,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "invalid continuous fund",
+		},
+		{
+			name: "total percentage exceeds 100%",
+			msg: &types.MsgCreateContinuousFund{
+				Authority: validAuthority,
+				Recipient: validRecipient.String(),
+				// Set a high percentage so that total exceeds 1 when added to an existing fund.
+				Percentage: math.LegacyMustNewDecFromStr("0.9"),
+				Expiry:     &validExpiry,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				existingRecipient := recipientAddr2
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, existingRecipient, types.ContinuousFund{
+					Recipient:  existingRecipient.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.2"), // total will become 1.1
+					Expiry:     nil,
+				})
+				suite.Require().NoError(err)
+			},
+			expErr:    true,
+			expErrMsg: "total funds percentage exceeds 100",
+		},
+		{
+			name: "valid create continuous fund",
+			msg: &types.MsgCreateContinuousFund{
+				Authority:  validAuthority,
+				Recipient:  validRecipient.String(),
+				Percentage: validPercentage,
+				Expiry:     &validExpiry,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				// Ensure any existing fund for validRecipient is removed.
+				_ = suite.poolKeeper.ContinuousFunds.Remove(suite.ctx, validRecipient)
+			},
+			expErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.SetupTest()
+		suite.Run(tc.name, func() {
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			resp, err := suite.msgServer.CreateContinuousFund(suite.ctx, tc.msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(resp)
+				// Verify that the fund was stored.
+				fund, err := suite.poolKeeper.ContinuousFunds.Get(suite.ctx, sdk.MustAccAddressFromBech32(tc.msg.Recipient))
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.msg.Recipient, fund.Recipient)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCancelContinuousFund() {
+	validAuthority := suite.poolKeeper.GetAuthority()
+	validRecipient := recipientAddr
+
+	testCases := []struct {
+		name      string
+		preRun    func()
+		msg       *types.MsgCancelContinuousFund
+		expErr    bool
+		expErrMsg string
+		verify    func(msg *types.MsgCancelContinuousFund)
+	}{
+		{
+			name: "invalid authority",
+			msg: &types.MsgCancelContinuousFund{
+				Authority:        "invalid_auth",
+				RecipientAddress: validRecipient.String(),
+			},
+			preRun:    func() {},
+			expErr:    true,
+			expErrMsg: "invalid authority address",
+		},
+		{
+			name: "invalid recipient address",
+			msg: &types.MsgCancelContinuousFund{
+				Authority:        validAuthority,
+				RecipientAddress: "invalid",
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+			},
+			expErr:    true,
+			expErrMsg: "decoding bech32 failed:",
+		},
+		{
+			name: "remove a continuous fund that already was removed - no error",
+			msg: &types.MsgCancelContinuousFund{
+				Authority:        validAuthority,
+				RecipientAddress: validRecipient.String(),
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				// Ensure the continuous fund is not set so that Remove fails.
+				_ = suite.poolKeeper.ContinuousFunds.Remove(suite.ctx, validRecipient)
+			},
+			expErr: false,
+		},
+		{
+			name: "valid cancel continuous fund",
+			msg: &types.MsgCancelContinuousFund{
+				Authority:        validAuthority,
+				RecipientAddress: validRecipient.String(),
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				fund := types.ContinuousFund{
+					Recipient:  validRecipient.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, validRecipient, fund)
+				suite.Require().NoError(err)
+			},
+			expErr: false,
+			verify: func(msg *types.MsgCancelContinuousFund) {
+				// Verify that the fund has been removed.
+				_, err := suite.poolKeeper.ContinuousFunds.Get(suite.ctx, validRecipient)
+				suite.Require().Error(err, "expected error when retrieving removed fund")
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.preRun != nil {
+				tc.preRun()
+			}
+			resp, err := suite.msgServer.CancelContinuousFund(suite.ctx, tc.msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(resp)
+				suite.Require().Equal(uint64(suite.ctx.BlockHeight()), resp.CanceledHeight)
+				suite.Require().Equal(tc.msg.RecipientAddress, resp.RecipientAddress)
+				if tc.verify != nil {
+					tc.verify(tc.msg)
+				}
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestUpdateParams() {
-	_, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
-		Authority: suite.poolKeeper.GetAuthority(),
-		Params:    types.Params{EnabledDistributionDenoms: []string{"stake"}},
-	})
-	suite.Require().NoError(err)
+	validAuthority := suite.poolKeeper.GetAuthority()
 
-	params, err := suite.poolKeeper.Params.Get(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(params.EnabledDistributionDenoms, 1)
+	testCases := []struct {
+		name      string
+		msg       *types.MsgUpdateParams
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid authority",
+			msg: &types.MsgUpdateParams{
+				Authority: "invalid_auth",
+				Params:    types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			},
+			expErr:    true,
+			expErrMsg: "invalid authority address",
+		},
+		{
+			name: "error setting params (invalid params)",
+			msg: &types.MsgUpdateParams{
+				Authority: validAuthority,
+				Params:    types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}, DistributionFrequency: 0},
+			},
+			expErr:    true,
+			expErrMsg: "invalid params",
+		},
+		{
+			name: "valid update params",
+			msg: &types.MsgUpdateParams{
+				Authority: validAuthority,
+				Params:    types.DefaultParams(),
+			},
+			expErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			resp, err := suite.msgServer.UpdateParams(suite.ctx, tc.msg)
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(resp)
+			}
+		})
+	}
 }
-*/

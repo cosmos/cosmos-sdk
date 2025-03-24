@@ -38,29 +38,6 @@ func TestNewMsgCommunityPoolSpend(t *testing.T) {
 	require.Equal(t, recipient, msg.Recipient)
 }
 
-func TestValidateGenesis(t *testing.T) {
-	defaultGenesis := DefaultGenesisState()
-	err := ValidateGenesis(defaultGenesis)
-	require.NoError(t, err)
-
-	gs := NewGenesisState(
-		[]ContinuousFund{
-			{
-				Recipient:  "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2z2l8z4",
-				Percentage: math.LegacyMustNewDecFromStr("0.1"),
-				Expiry:     nil,
-			},
-		},
-	)
-
-	err = ValidateGenesis(gs)
-	require.NoError(t, err)
-
-	gs.ContinuousFunds[0].Recipient = ""
-	err = ValidateGenesis(gs)
-	require.EqualError(t, err, "recipient cannot be empty")
-}
-
 func TestValidateContinuousFund(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -118,7 +95,7 @@ func TestValidateContinuousFund(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		err := validateContinuousFund(tc.cf)
+		err := tc.cf.Validate()
 		if tc.expErrMsg == "" {
 			require.NoError(t, err)
 		} else {

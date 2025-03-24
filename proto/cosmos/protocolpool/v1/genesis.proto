@@ -13,5 +13,5 @@ message GenesisState {
 
   // Params defines the parameters of this module, currently only contains the
   // denoms that will be used for continuous fund distributions.
-  Params params = 2;
+  Params params = 2 [(gogoproto.nullable) = false];
 }

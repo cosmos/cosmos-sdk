@@ -138,7 +138,6 @@ func (k *Keeper) DistributeFunds(ctx sdk.Context) error {
 	}
 
 	remainingCoins := sdk.NewCoins(amountToDistribute...)
-
 	iter, err := k.ContinuousFunds.Iterate(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create iterator for continuous funds: %w", err)
@@ -150,6 +149,7 @@ func (k *Keeper) DistributeFunds(ctx sdk.Context) error {
 	}
 
 	blockTime := ctx.BlockTime()
+	anyNegative := false
 	for _, kv := range kvalues {
 		recipient := kv.Key
 		fund := kv.Value
@@ -164,7 +164,10 @@ func (k *Keeper) DistributeFunds(ctx sdk.Context) error {
 		}
 
 		amountToStream := types.PercentageCoinMul(fund.Percentage, amountToDistribute)
-		remainingCoins = remainingCoins.Sub(amountToStream...)
+		remainingCoins, anyNegative = remainingCoins.SafeSub(amountToStream...)
+		if anyNegative {
+			return fmt.Errorf("negative funds for distribution from ContinuousFunds: %v", remainingCoins)
+		}
 
 		// distribute if not expires
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolDistrAccount, recipient, amountToStream)

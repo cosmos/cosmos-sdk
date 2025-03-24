@@ -10,7 +10,7 @@ import (
 func (k *Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 	currentTime := ctx.BlockTime()
 
-	err := k.Params.Set(ctx, *data.Params)
+	err := k.Params.Set(ctx, data.Params)
 	if err != nil {
 		return fmt.Errorf("failed to set params: %w", err)
 	}
@@ -50,7 +50,7 @@ func (k *Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 		return nil, err
 	}
 
-	genState.Params = &params
+	genState.Params = params
 
 	return genState, nil
 }

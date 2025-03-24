@@ -45,7 +45,6 @@ func (suite *KeeperTestSuite) TestContinuousFunds() {
 		{
 			name: "valid case - single",
 			preRun: func() {
-				// Prepare a valid budget proposal
 				fund := types.ContinuousFund{
 					Recipient:  recipientStrAddr,
 					Percentage: math.LegacyMustNewDecFromStr("0.1"),
@@ -217,7 +216,7 @@ func (suite *KeeperTestSuite) TestContinuousFund() {
 }
 
 func (suite *KeeperTestSuite) TestParams() {
-	expectedParams := *types.DefaultGenesisState().Params
+	expectedParams := types.DefaultGenesisState().Params
 	err := suite.poolKeeper.Params.Set(suite.ctx, expectedParams)
 	suite.Require().NoError(err)
 

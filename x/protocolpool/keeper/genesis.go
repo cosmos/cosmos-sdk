@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
-func (k *Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
+func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 	currentTime := ctx.BlockTime()
 
 	err := k.Params.Set(ctx, data.Params)
@@ -33,7 +33,7 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 	return nil
 }
 
-func (k *Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
+func (k Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 	cf, err := k.GetAllContinuousFunds(ctx)
 	if err != nil {
 		return nil, err

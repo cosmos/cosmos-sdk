@@ -97,17 +97,17 @@ func DeliverGenTxs(
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode GenTx '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to decode GenTx '%s': %w", genTx, err)
 		}
 
 		bz, err := txEncodingConfig.TxEncoder()(tx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to encode GenTx '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to encode GenTx '%s': %w", genTx, err)
 		}
 
 		err = deliverTx.ExecuteGenesisTx(bz)
 		if err != nil {
-			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, err)
+			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %w", genTx, err)
 		}
 	}
 

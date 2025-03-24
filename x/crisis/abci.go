@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
-// check all registered invariants
+// EndBlocker checks all registered invariants
 func EndBlocker(ctx context.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 

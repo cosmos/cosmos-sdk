@@ -10,6 +10,6 @@ import (
 
 func FuzzTypesVerifyAddressFormat(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
-		types.VerifyAddressFormat(data)
+		_ = types.VerifyAddressFormat(data)
 	})
 }

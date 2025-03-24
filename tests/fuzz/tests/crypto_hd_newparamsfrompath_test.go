@@ -10,6 +10,6 @@ import (
 
 func FuzzCryptoHDNewParamsFromPath(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
-		hd.NewParamsFromPath(string(data))
+		_, _ = hd.NewParamsFromPath(string(data))
 	})
 }

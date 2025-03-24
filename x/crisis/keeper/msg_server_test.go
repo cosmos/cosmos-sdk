@@ -108,7 +108,6 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err = s.keeper.VerifyInvariant(s.ctx, tc.input)
 			if tc.expErr {
@@ -167,7 +166,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.keeper.UpdateParams(s.ctx, tc.input)
 

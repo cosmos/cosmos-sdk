@@ -396,12 +396,14 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 }
 
 func (s *SimTestSuite) setupValidatorRewards(ctx sdk.Context, valAddress sdk.ValAddress) {
+	s.T().Helper()
+
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
-	s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards)
+	s.Require().NoError(s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards))
 	// setup current revards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
-	s.distrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards)
+	s.Require().NoError(s.distrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards))
 }
 
 func TestSimTestSuite(t *testing.T) {

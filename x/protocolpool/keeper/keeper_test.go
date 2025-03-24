@@ -26,7 +26,6 @@ import (
 
 var (
 	poolAcc      = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	streamAcc    = authtypes.NewEmptyModuleAccount(types.StreamAccount)
 	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolDistrAccount)
 
 	recipientAddr  = sdk.AccAddress("to1__________________")
@@ -60,7 +59,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress()).AnyTimes()
 	accountKeeper.EXPECT().GetModuleAddress(types.ProtocolPoolDistrAccount).Return(poolDistrAcc.GetAddress()).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
-	accountKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
 	suite.authKeeper = accountKeeper
 
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)

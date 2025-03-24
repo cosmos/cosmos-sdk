@@ -6,9 +6,6 @@ const (
 	// ModuleName is the module name constant used in many places
 	ModuleName = "protocolpool"
 
-	// StreamAccount is the name constant used for stream account
-	StreamAccount = "stream_acc"
-
 	// ProtocolPoolDistrAccount is an intermediary account that holds the funds to be distributed to the protocolpool accounts.
 	ProtocolPoolDistrAccount = "protocolpool_distr"
 

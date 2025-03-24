@@ -128,7 +128,6 @@ var (
 		govtypes.ModuleName:                        {authtypes.Burner},
 		nft.ModuleName:                             nil,
 		protocolpooltypes.ModuleName:               nil,
-		protocolpooltypes.StreamAccount:            nil,
 		protocolpooltypes.ProtocolPoolDistrAccount: nil}
 )
 

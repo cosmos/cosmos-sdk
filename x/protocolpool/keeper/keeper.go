@@ -42,10 +42,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf(errModuleAccountNotSet, types.ModuleName))
 	}
-	// ensure stream account is set
-	if addr := ak.GetModuleAddress(types.StreamAccount); addr == nil {
-		panic(fmt.Sprintf(errModuleAccountNotSet, types.StreamAccount))
-	}
 	// ensure protocol pool distribution account is set
 	if addr := ak.GetModuleAddress(types.ProtocolPoolDistrAccount); addr == nil {
 		panic(fmt.Sprintf(errModuleAccountNotSet, types.ProtocolPoolDistrAccount))
@@ -92,12 +88,6 @@ func (k *Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk
 // a receiver address.
 func (k *Keeper) DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
-}
-
-// DistributeFromStreamFunds distributes funds from the protocolpool's stream module account to
-// a receiver address.
-func (k *Keeper) DistributeFromStreamFunds(ctx sdk.Context, amount sdk.Coins, receiveAddr []byte) error {
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.StreamAccount, receiveAddr, amount)
 }
 
 // GetCommunityPool gets the community pool balance.

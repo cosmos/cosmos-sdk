@@ -60,7 +60,7 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false)
+	suite.ctx = app.NewContext(false)
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {

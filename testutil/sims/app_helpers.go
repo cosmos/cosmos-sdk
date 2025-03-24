@@ -130,10 +130,6 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 		Time:   header.Time,
 	})
 
-	if err != nil {
-		return sdk.Context{}, err
-	}
-
 	return newCtx, err
 }
 

@@ -139,7 +139,6 @@ func (k *Keeper) DistributeFunds(ctx sdk.Context) error {
 
 	remainingCoins := sdk.NewCoins(amountToDistribute...)
 
-	blockTime := ctx.BlockTime()
 	iter, err := k.ContinuousFunds.Iterate(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create iterator for continuous funds: %w", err)
@@ -150,6 +149,7 @@ func (k *Keeper) DistributeFunds(ctx sdk.Context) error {
 		return fmt.Errorf("failed to iterate continuous funds: %w", err)
 	}
 
+	blockTime := ctx.BlockTime()
 	for _, kv := range kvalues {
 		recipient := kv.Key
 		fund := kv.Value
@@ -181,7 +181,7 @@ func (k *Keeper) DistributeFunds(ctx sdk.Context) error {
 	return nil
 }
 
-// TODO: test
+// GetAllContinuousFunds gets all continuous funds in the store.
 func (k *Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, error) {
 	var cf []types.ContinuousFund
 	err := k.ContinuousFunds.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {

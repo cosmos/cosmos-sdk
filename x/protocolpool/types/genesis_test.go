@@ -74,6 +74,25 @@ func TestValidateGenesis(t *testing.T) {
 			},
 			expectedErr: "percentage cannot be greater than one",
 		},
+		{
+			name: "invalid genesis state with continuous fund (percentage sum > 1)",
+			genesisState: &types.GenesisState{
+				ContinuousFunds: []types.ContinuousFund{
+					{
+						Recipient:  "cosmos1validaddress",
+						Percentage: math.LegacyMustNewDecFromStr("0.5"),
+						Expiry:     nil,
+					},
+					{
+						Recipient:  "cosmos2validaddress",
+						Percentage: math.LegacyMustNewDecFromStr("0.6"),
+						Expiry:     nil,
+					},
+				},
+				Params: types.DefaultParams(),
+			},
+			expectedErr: "total percentage cannot be greater than 100",
+		},
 	}
 
 	for _, tc := range tests {

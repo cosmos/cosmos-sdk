@@ -30,10 +30,6 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 		}
 	}
 
-	// todo:  validate all continuous funds
-
-	// sanity check to avoid trying to distribute more than what is available
-
 	return nil
 }
 

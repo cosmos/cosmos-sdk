@@ -7,6 +7,9 @@ import (
 var (
 	_ sdk.Msg = (*MsgFundCommunityPool)(nil)
 	_ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
+	_ sdk.Msg = (*MsgUpdateParams)(nil)
+	_ sdk.Msg = (*MsgCreateContinuousFund)(nil)
+	_ sdk.Msg = (*MsgCancelContinuousFund)(nil)
 )
 
 // NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and

@@ -59,7 +59,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 		bankKeeper:      bk,
 		cdc:             cdc,
 		authority:       authority,
-		ContinuousFunds: collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
+		ContinuousFunds: collections.NewMap(sb, types.ContinuousFundsKey, "continuous_funds", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
@@ -73,35 +73,35 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 }
 
 // GetAuthority returns the x/protocolpool module's authority.
-func (k Keeper) GetAuthority() string {
+func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
 
 // GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
 // This is the address that x/distribution will send funds to for external management.
-func (k Keeper) GetCommunityPoolModule() string {
+func (k *Keeper) GetCommunityPoolModule() string {
 	return types.ProtocolPoolDistrAccount
 }
 
 // FundCommunityPool allows an account to directly fund the community fund pool.
-func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error {
+func (k *Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
 
 // DistributeFromCommunityPool distributes funds from the protocolpool module account to
 // a receiver address.
-func (k Keeper) DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+func (k *Keeper) DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 
 // DistributeFromStreamFunds distributes funds from the protocolpool's stream module account to
 // a receiver address.
-func (k Keeper) DistributeFromStreamFunds(ctx sdk.Context, amount sdk.Coins, receiveAddr []byte) error {
+func (k *Keeper) DistributeFromStreamFunds(ctx sdk.Context, amount sdk.Coins, receiveAddr []byte) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.StreamAccount, receiveAddr, amount)
 }
 
 // GetCommunityPool gets the community pool balance.
-func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error) {
+func (k *Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error) {
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	if moduleAccount == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ModuleName)
@@ -109,8 +109,12 @@ func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error) {
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
 
-// SetToDistribute sets the amount to be distributed among recipients.
-func (k Keeper) SetToDistribute(ctx sdk.Context) error {
+// DistributeFunds sets the amount to be distributed among recipients.
+// Get all valid continuous funds:
+// - for each continuous fund, check if expired and remove if so
+// - for each continuous fund, distribute funds according to percentage
+// - distribute remaining funds to the community pool
+func (k *Keeper) DistributeFunds(ctx sdk.Context) error {
 	// Get current balance of the intermediary module account
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount)
 	if moduleAccount == nil {
@@ -133,19 +137,52 @@ func (k Keeper) SetToDistribute(ctx sdk.Context) error {
 		return nil
 	}
 
-	// TODO
-	// still need to iter thru continuous funds
-	// ....
+	remainingCoins := sdk.NewCoins(amountToDistribute...)
 
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, amountToDistribute); err != nil {
-		return err
+	blockTime := ctx.BlockTime()
+	iter, err := k.ContinuousFunds.Iterate(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create iterator for continuous funds: %w", err)
+	}
+
+	kvalues, err := iter.KeyValues()
+	if err != nil {
+		return fmt.Errorf("failed to iterate continuous funds: %w", err)
+	}
+
+	for _, kv := range kvalues {
+		recipient := kv.Key
+		fund := kv.Value
+
+		// remove newly expired funds
+		if fund.Expiry != nil && fund.Expiry.Before(blockTime) {
+			err := k.ContinuousFunds.Remove(ctx, recipient)
+			if err != nil {
+				return fmt.Errorf("failed to remove fund for %s from ContinuousFunds: %w", recipient, err)
+			}
+			continue
+		}
+
+		amountToStream := types.PercentageCoinMul(fund.Percentage, amountToDistribute)
+		remainingCoins = remainingCoins.Sub(amountToStream...)
+
+		// distribute if not expires
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolDistrAccount, recipient, amountToStream)
+		if err != nil {
+			return fmt.Errorf("failed to distribute fund for %s from ContinuousFunds: %w", recipient, err)
+		}
+	}
+
+	// send all remaining funds to the community pool
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins); err != nil {
+		return fmt.Errorf("failed to send coins to community pool: %w", err)
 	}
 
 	return nil
 }
 
 // TODO: test
-func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, error) {
+func (k *Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, error) {
 	var cf []types.ContinuousFund
 	err := k.ContinuousFunds.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)

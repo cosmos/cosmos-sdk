@@ -33,7 +33,7 @@ const (
 type QueryClient interface {
 	// CommunityPool queries the community pool coins.
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
-	// ContinuousFund queries a continuous fund by the address is is associated with.
+	// ContinuousFund queries a continuous fund by the recipient is is associated with.
 	ContinuousFund(ctx context.Context, in *QueryContinuousFundRequest, opts ...grpc.CallOption) (*QueryContinuousFundResponse, error)
 	// ContinuousFunds queries all continuous funds in the store.
 	ContinuousFunds(ctx context.Context, in *QueryContinuousFundsRequest, opts ...grpc.CallOption) (*QueryContinuousFundsResponse, error)
@@ -97,7 +97,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 type QueryServer interface {
 	// CommunityPool queries the community pool coins.
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
-	// ContinuousFund queries a continuous fund by the address is is associated with.
+	// ContinuousFund queries a continuous fund by the recipient is is associated with.
 	ContinuousFund(context.Context, *QueryContinuousFundRequest) (*QueryContinuousFundResponse, error)
 	// ContinuousFunds queries all continuous funds in the store.
 	ContinuousFunds(context.Context, *QueryContinuousFundsRequest) (*QueryContinuousFundsResponse, error)

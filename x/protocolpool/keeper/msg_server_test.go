@@ -576,7 +576,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 
 				// Set ToDistribute
 				suite.mockStreamFunds(math.NewInt(100000))
-				err = suite.poolKeeper.SetToDistribute(suite.ctx)
+				err = suite.poolKeeper.DistributeFunds(suite.ctx)
 				suite.Require().NoError(err)
 
 				// withdraw funds for fund request 2

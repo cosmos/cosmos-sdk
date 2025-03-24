@@ -15,6 +15,7 @@ func RegisterInterfaces(ir codectypes.InterfaceRegistry) {
 		&MsgCommunityPoolSpend{},
 		&MsgCreateContinuousFund{},
 		&MsgCancelContinuousFund{},
+		&MsgUpdateParams{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(ir, &_Msg_serviceDesc)
@@ -29,6 +30,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/pp/MsgCommunityPoolSpend")
 	legacy.RegisterAminoMsg(cdc, &MsgCreateContinuousFund{}, "cosmos-sdk/pp/MsgCreateContinuousFund")
 	legacy.RegisterAminoMsg(cdc, &MsgCancelContinuousFund{}, "cosmos-sdk/pp/MsgCancelContinuousFund")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/pp/MsgUpdateParams")
 
 	cdc.RegisterConcrete(&ContinuousFund{}, "cosmos-sdk/pp/ContinuousFund", nil)
 	cdc.RegisterConcrete(&Params{}, "cosmos-sdk/pp/Params", nil)

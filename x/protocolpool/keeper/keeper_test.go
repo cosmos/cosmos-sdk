@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -138,7 +139,7 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	// because there are no continuous funds, all are going to the community pool
 	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(distrBal, sdk.NewCoin("foo", math.NewInt(1234))))
 
-	err = suite.poolKeeper.SetToDistribute(suite.ctx)
+	err = suite.poolKeeper.DistributeFunds(suite.ctx)
 	suite.Require().NoError(err)
 
 	// Verify that LastBalance was not set (zero balance)
@@ -158,7 +159,7 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	})
 	suite.Require().NoError(err)
 
-	err = suite.poolKeeper.SetToDistribute(suite.ctx)
+	err = suite.poolKeeper.DistributeFunds(suite.ctx)
 	suite.Require().NoError(err)
 
 	// Verify that LastBalance was set correctly
@@ -180,7 +181,7 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(zeroBal)
 	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "foo").Return(sdk.NewCoin("foo", math.ZeroInt()))
 
-	err = suite.poolKeeper.SetToDistribute(suite.ctx)
+	err = suite.poolKeeper.DistributeFunds(suite.ctx)
 	suite.Require().NoError(err)
 
 	// Verify that no new distribution was set
@@ -193,3 +194,62 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	suite.Require().Equal(1, count) // Only the previous distribution should exist
 }
 */
+
+func (suite *KeeperTestSuite) TestGetAllContinuousFundsCases() {
+	suite.Run("empty store", func() {
+		// Reset the context to start with a clean store.
+		suite.SetupTest()
+
+		funds, err := suite.poolKeeper.GetAllContinuousFunds(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Empty(funds, "expected no continuous funds in store")
+	})
+
+	suite.Run("one fund in store", func() {
+		suite.SetupTest()
+
+		fund := types.ContinuousFund{
+			Recipient:  recipientAddr.String(),
+			Percentage: math.LegacyMustNewDecFromStr("0.5"),
+			Expiry:     nil,
+		}
+
+		err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+		suite.Require().NoError(err)
+
+		funds, err := suite.poolKeeper.GetAllContinuousFunds(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(funds, 1, "expected one continuous fund in store")
+		suite.Require().Equal(fund.Recipient, funds[0].Recipient)
+		suite.Require().Equal(fund.Percentage, funds[0].Percentage)
+		suite.Require().Equal(fund.Expiry, funds[0].Expiry)
+	})
+
+	suite.Run("many funds in store", func() {
+		suite.SetupTest()
+
+		totalFunds := 10
+
+		// Insert a number of funds.
+		for i := 0; i < totalFunds; i++ {
+			accAddr := sdk.AccAddress(fmt.Sprintf("ao%d__________________", i))
+
+			fund := types.ContinuousFund{
+				Recipient:  accAddr.String(),
+				Percentage: math.LegacyMustNewDecFromStr("0.1"),
+				Expiry:     nil,
+			}
+			err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, accAddr, fund)
+			suite.Require().NoError(err)
+		}
+
+		funds, err := suite.poolKeeper.GetAllContinuousFunds(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(funds, totalFunds, "expected many continuous funds in store")
+
+		// verify each inserted fund's percentage.
+		for _, f := range funds {
+			suite.Require().Equal(math.LegacyMustNewDecFromStr("0.1"), f.Percentage)
+		}
+	})
+}

@@ -39,7 +39,7 @@ func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoo
 	return &types.QueryCommunityPoolResponse{Pool: amount}, nil
 }
 
-// ContinuousFund queries a continuous fund by its address.
+// ContinuousFund queries a continuous fund by its recipient address.
 func (k Querier) ContinuousFund(ctx context.Context, req *types.QueryContinuousFundRequest) (*types.QueryContinuousFundResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -47,14 +47,14 @@ func (k Querier) ContinuousFund(ctx context.Context, req *types.QueryContinuousF
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	acc, err := k.authKeeper.AddressCodec().StringToBytes(req.Address)
+	acc, err := k.authKeeper.AddressCodec().StringToBytes(req.Recipient)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Errorf("invalid address: %w", err).Error())
 	}
 
 	fund, err := k.Keeper.ContinuousFunds.Get(sdkCtx, acc)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("not found %s", req.Address))
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("not found %s", req.Recipient))
 	}
 
 	return &types.QueryContinuousFundResponse{ContinuousFund: fund}, nil

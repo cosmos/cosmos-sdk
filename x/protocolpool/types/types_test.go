@@ -126,3 +126,63 @@ func TestValidateContinuousFund(t *testing.T) {
 		}
 	}
 }
+
+// TestPercentageCoinMul tests the PercentageCoinMul function.
+func TestPercentageCoinMul(t *testing.T) {
+	tests := []struct {
+		name       string
+		percentage math.LegacyDec
+		coins      sdk.Coins
+		expected   sdk.Coins
+	}{
+		{
+			name:       "zero percentage",
+			percentage: math.LegacyMustNewDecFromStr("0.0"),
+			coins:      sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+			expected:   sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(0))),
+		},
+		{
+			name:       "100 percent",
+			percentage: math.LegacyMustNewDecFromStr("1.0"),
+			coins:      sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+			expected:   sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+		},
+		{
+			name:       "50 percent",
+			percentage: math.LegacyMustNewDecFromStr("0.5"),
+			coins:      sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+			expected:   sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(50))),
+		},
+		{
+			name:       "fraction with truncation",
+			percentage: math.LegacyMustNewDecFromStr("0.333333333333333333"), // Approx. 1/3.
+			coins:      sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+			// 100 * 1/3 = 33.333... which truncates to 33.
+			expected: sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(33))),
+		},
+		{
+			name:       "multiple denominations",
+			percentage: math.LegacyMustNewDecFromStr("0.5"),
+			coins: sdk.NewCoins(
+				sdk.NewCoin("atom", math.NewInt(100)),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(200)),
+			),
+			expected: sdk.NewCoins(
+				sdk.NewCoin("atom", math.NewInt(50)),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Call the function under test.
+			result := PercentageCoinMul(tc.percentage, tc.coins)
+
+			// Compare the resulting coins with the expected coins.
+			if !result.Equal(tc.expected) {
+				t.Errorf("unexpected result for %s:\nexpected: %s\ngot:      %s", tc.name, tc.expected.String(), result.String())
+			}
+		})
+	}
+}

@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
-// TODO convert to ContinuousFunds
 func (suite *KeeperTestSuite) TestContinuousFunds() {
 	t := time.Now()
 	recipientStrAddr := recipientAddr.String()
@@ -25,6 +24,12 @@ func (suite *KeeperTestSuite) TestContinuousFunds() {
 		unclaimedFunds *sdk.Coin
 		resp           *types.QueryContinuousFundsResponse
 	}{
+		{
+			name:      "nil request",
+			req:       nil,
+			expErr:    true,
+			expErrMsg: "empty request",
+		},
 		{
 			name:      "empty recipient address",
 			req:       &types.QueryContinuousFundsRequest{},
@@ -132,7 +137,7 @@ func (suite *KeeperTestSuite) TestContinuousFund() {
 		{
 			name: "empty recipient address",
 			req: &types.QueryContinuousFundRequest{
-				Address: "",
+				Recipient: "",
 			},
 			expErr:    true,
 			expErrMsg: "empty address string is not allowed",
@@ -140,7 +145,7 @@ func (suite *KeeperTestSuite) TestContinuousFund() {
 		{
 			name: "no continuous fund found",
 			req: &types.QueryContinuousFundRequest{
-				Address: recipientStrAddr,
+				Recipient: recipientStrAddr,
 			},
 			expErr:    true,
 			expErrMsg: "rpc error: code = NotFound desc = not found",
@@ -157,7 +162,7 @@ func (suite *KeeperTestSuite) TestContinuousFund() {
 				suite.Require().NoError(err)
 			},
 			req: &types.QueryContinuousFundRequest{
-				Address: recipientStrAddr,
+				Recipient: recipientStrAddr,
 			},
 			expErr:         false,
 			unclaimedFunds: &fooCoin,
@@ -181,7 +186,7 @@ func (suite *KeeperTestSuite) TestContinuousFund() {
 				suite.Require().NoError(err)
 			},
 			req: &types.QueryContinuousFundRequest{
-				Address: recipientStrAddr,
+				Recipient: recipientStrAddr,
 			},
 			expErr:         false,
 			unclaimedFunds: &fooCoin,

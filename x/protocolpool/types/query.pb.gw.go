@@ -62,15 +62,15 @@ func request_Query_ContinuousFund_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
-	val, ok = pathParams["address"]
+	val, ok = pathParams["recipient"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "address")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "recipient")
 	}
 
-	protoReq.Address, err = runtime.String(val)
+	protoReq.Recipient, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "recipient", err)
 	}
 
 	msg, err := client.ContinuousFund(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -89,15 +89,15 @@ func local_request_Query_ContinuousFund_0(ctx context.Context, marshaler runtime
 		_   = err
 	)
 
-	val, ok = pathParams["address"]
+	val, ok = pathParams["recipient"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "address")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "recipient")
 	}
 
-	protoReq.Address, err = runtime.String(val)
+	protoReq.Recipient, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "recipient", err)
 	}
 
 	msg, err := server.ContinuousFund(ctx, &protoReq)
@@ -366,7 +366,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_CommunityPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "protocolpool", "v1", "community_pool"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ContinuousFund_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "protocolpool", "v1", "continuous_fund", "address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ContinuousFund_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "protocolpool", "v1", "continuous_fund", "recipient"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_ContinuousFunds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "protocolpool", "v1", "continuous_funds"}, "", runtime.AssumeColonVerbOpt(false)))
 

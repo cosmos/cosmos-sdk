@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/simulation"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -141,18 +142,12 @@ func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 }
 
-func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	// TODO implement me
-	panic("implement me")
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams,
+		simState.TxConfig,
+		am.accountKeeper,
+		am.bankKeeper,
+		am.keeper,
+	)
 }
-
-/*
-// ProposalMsgsX returns all the protocolpool msgs used to simulate governance proposals.
-func (am AppModule) ProposalMsgsX(weight simsx.WeightSource, reg simsx.Registry) {
-	reg.Add(weight.Get("msg_community_pool_spend", 50), simulation.MsgCommunityPoolSpendFactory())
-}
-
-func (am AppModule) WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry) {
-	reg.Add(weight.Get("msg_fund_community_pool", 50), simulation.MsgFundCommunityPoolFactory())
-}
-*/

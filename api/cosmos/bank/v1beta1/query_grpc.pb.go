@@ -52,16 +52,12 @@ type QueryClient interface {
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.46
 	SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error)
 	// SpendableBalanceByDenom queries the spendable balance of a single denom for
 	// a single account.
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.47
 	SpendableBalanceByDenom(ctx context.Context, in *QuerySpendableBalanceByDenomRequest, opts ...grpc.CallOption) (*QuerySpendableBalanceByDenomResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	//
@@ -87,21 +83,15 @@ type QueryClient interface {
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.46
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
 	// DenomOwnersByQuery queries for all account addresses that own a particular token
 	// denomination.
-	//
-	// Since: cosmos-sdk 0.50.3
 	DenomOwnersByQuery(ctx context.Context, in *QueryDenomOwnersByQueryRequest, opts ...grpc.CallOption) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
 	//
 	// This query only returns denominations that have specific SendEnabled settings.
 	// Any denomination that does not have a specific setting will use the default
 	// params.default_send_enabled, and will not be returned by this query.
-	//
-	// Since: cosmos-sdk 0.47
 	SendEnabled(ctx context.Context, in *QuerySendEnabledRequest, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error)
 }
 
@@ -261,16 +251,12 @@ type QueryServer interface {
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.46
 	SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error)
 	// SpendableBalanceByDenom queries the spendable balance of a single denom for
 	// a single account.
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.47
 	SpendableBalanceByDenom(context.Context, *QuerySpendableBalanceByDenomRequest) (*QuerySpendableBalanceByDenomResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	//
@@ -296,21 +282,15 @@ type QueryServer interface {
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.46
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
 	// DenomOwnersByQuery queries for all account addresses that own a particular token
 	// denomination.
-	//
-	// Since: cosmos-sdk 0.50.3
 	DenomOwnersByQuery(context.Context, *QueryDenomOwnersByQueryRequest) (*QueryDenomOwnersByQueryResponse, error)
 	// SendEnabled queries for SendEnabled entries.
 	//
 	// This query only returns denominations that have specific SendEnabled settings.
 	// Any denomination that does not have a specific setting will use the default
 	// params.default_send_enabled, and will not be returned by this query.
-	//
-	// Since: cosmos-sdk 0.47
 	SendEnabled(context.Context, *QuerySendEnabledRequest) (*QuerySendEnabledResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

@@ -183,7 +183,6 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 		Hash:   app.LastCommitID().Hash,
 	})
 	require.NoError(t, err)
-
 	// execute operation
 	op := simulation.SimulateMsgSubmitLegacyProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.ContentSimulatorFn())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")

@@ -20,5 +20,4 @@ func TestCreateTestModule(t *testing.T) {
 		),
 	)
 	assert.NilError(t, err)
-
 }

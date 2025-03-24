@@ -2,7 +2,6 @@ package types
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -11,8 +10,6 @@ import (
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-var hour = time.Hour
 
 func TestRegisterInterfaces(t *testing.T) {
 	interfaceRegistry := codectestutil.CodecOptions{}.NewInterfaceRegistry()

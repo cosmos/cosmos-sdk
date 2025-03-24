@@ -135,8 +135,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		),
 	)
 
-	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
-	return nil
+	return k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 }
 
 // WithdrawDelegationRewards withdraws rewards from a delegation
@@ -173,7 +172,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 	return rewards, nil
 }
 
-// withdraw validator commission
+// WithdrawValidatorCommission withdraws validator commission.
 func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	// fetch validator accumulated commission
 	accumCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAddr)
@@ -186,7 +185,10 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 	}
 
 	commission, remainder := accumCommission.Commission.TruncateDecimal()
-	k.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
+	err = k.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
+	if err != nil {
+		return nil, err
+	}
 
 	// update outstanding
 	outstanding, err := k.GetValidatorOutstandingRewards(ctx, valAddr)

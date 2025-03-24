@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -454,9 +455,7 @@ type TraceContext map[string]interface{}
 // Clone clones tc into another instance of TraceContext.
 func (tc TraceContext) Clone() TraceContext {
 	ret := TraceContext{}
-	for k, v := range tc {
-		ret[k] = v
-	}
+	maps.Copy(ret, tc)
 
 	return ret
 }
@@ -467,9 +466,7 @@ func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
 		tc = TraceContext{}
 	}
 
-	for k, v := range newTc {
-		tc[k] = v
-	}
+	maps.Copy(tc, newTc)
 
 	return tc
 }

@@ -124,10 +124,11 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	ctx := suite.ctx.WithBlockTime(blockTime)
 
 	// begin new block
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+	suite.Require().NoError(err)
 
 	// execute operation
 	registry := suite.interfaceRegistry
@@ -136,7 +137,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	suite.Require().NoError(err)
 
 	var msg nft.MsgSend
-	suite.codec.UnmarshalJSON(operationMsg.Msg, &msg)
+	_ = suite.codec.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Len(futureOperations, 0)
 }

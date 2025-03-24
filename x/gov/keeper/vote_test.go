@@ -31,7 +31,7 @@ func TestVotes(t *testing.T) {
 	require.Error(t, govKeeper.AddVote(ctx, 10, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""), "invalid proposal ID")
 
 	proposal.Status = v1.StatusVotingPeriod
-	govKeeper.SetProposal(ctx, proposal)
+	require.NoError(t, govKeeper.SetProposal(ctx, proposal))
 
 	require.Error(t, govKeeper.AddVote(ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(invalidOption), ""), "invalid option")
 

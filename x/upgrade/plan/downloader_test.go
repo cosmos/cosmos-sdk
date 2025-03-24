@@ -109,6 +109,7 @@ func (s *DownloaderTestSuite) saveSrcTestFile(f *TestFile) string {
 
 // requireFileExistsAndIsExecutable requires that the given file exists and is executable.
 func requireFileExistsAndIsExecutable(t *testing.T, path string) {
+	t.Helper()
 	info, err := os.Stat(path)
 	require.NoError(t, err, "stat error")
 	perm := info.Mode().Perm()
@@ -120,6 +121,7 @@ func requireFileExistsAndIsExecutable(t *testing.T, path string) {
 // requireFileEquals requires that the contents of the file at the given path
 // is equal to the contents of the given TestFile.
 func requireFileEquals(t *testing.T, path string, tf *TestFile) {
+	t.Helper()
 	file, err := os.ReadFile(path)
 	require.NoError(t, err, "reading file")
 	require.Equal(t, string(tf.Contents), string(file), "file contents")
@@ -127,6 +129,7 @@ func requireFileEquals(t *testing.T, path string, tf *TestFile) {
 
 // makeFileUrl converts the given path to a URL with the correct checksum query parameter.
 func makeFileURL(t *testing.T, path string) string {
+	t.Helper()
 	f, err := os.Open(path)
 	require.NoError(t, err, "opening file")
 	defer f.Close()

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -221,18 +222,18 @@ func (s *GRPCWebTestSuite) makeGrpcRequest(
 	for {
 		grpcPreamble := []byte{0, 0, 0, 0, 0}
 		readCount, err := reader.Read(grpcPreamble)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if readCount != 5 || err != nil {
-			return nil, Trailer{}, nil, fmt.Errorf("Unexpected end of body in preamble: %v", err)
+			return nil, Trailer{}, nil, fmt.Errorf("unexpected end of body in preamble: %w", err)
 		}
 		payloadLength := binary.BigEndian.Uint32(grpcPreamble[1:])
 		payloadBytes := make([]byte, payloadLength)
 
 		readCount, err = reader.Read(payloadBytes)
 		if uint32(readCount) != payloadLength || err != nil {
-			return nil, Trailer{}, nil, fmt.Errorf("Unexpected end of msg: %v", err)
+			return nil, Trailer{}, nil, fmt.Errorf("unexpected end of msg: %w", err)
 		}
 		if grpcPreamble[0]&(1<<7) == (1 << 7) { // MSB signifies the trailer parser
 			trailers = readTrailersFromBytes(s.T(), payloadBytes)
@@ -244,6 +245,8 @@ func (s *GRPCWebTestSuite) makeGrpcRequest(
 }
 
 func readTrailersFromBytes(t *testing.T, dataBytes []byte) Trailer {
+	t.Helper()
+
 	bufferReader := bytes.NewBuffer(dataBytes)
 	tp := textproto.NewReader(bufio.NewReader(bufferReader))
 
@@ -262,7 +265,7 @@ func readTrailersFromBytes(t *testing.T, dataBytes []byte) Trailer {
 	// Second, replace header names because gRPC Web trailer names must be lower-case.
 	for {
 		line, err := tp.ReadLine()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		require.NoError(t, err, "failed to read header line")

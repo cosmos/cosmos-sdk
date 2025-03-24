@@ -31,8 +31,7 @@ var (
 	recipientAddr  = sdk.AccAddress("to1__________________")
 	recipientAddr2 = sdk.AccAddress("to2__________________")
 
-	fooCoin  = sdk.NewInt64Coin("foo", 100)
-	fooCoin2 = sdk.NewInt64Coin("foo", 50)
+	fooCoin = sdk.NewInt64Coin("foo", 100)
 )
 
 type KeeperTestSuite struct {
@@ -93,23 +92,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(accAddr sdk.AccAddress) {
 	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, accAddr, gomock.Any()).AnyTimes()
-}
-
-func (suite *KeeperTestSuite) mockWithdrawContinuousFund() {
-	suite.authKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(poolAcc).AnyTimes()
-	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))
-	suite.bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-}
-
-func (suite *KeeperTestSuite) mockStreamFunds(distributed math.Int) {
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
-	suite.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
-	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, distributed)
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), gomock.Any()).AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {

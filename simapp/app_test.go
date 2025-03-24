@@ -136,7 +136,6 @@ func TestRunMigrations(t *testing.T) {
 	// Initialize the chain
 	_, err := app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
-
 	_, err = app.Commit()
 	require.NoError(t, err)
 

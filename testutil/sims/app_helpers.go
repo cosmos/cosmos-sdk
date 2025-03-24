@@ -130,7 +130,7 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 		Time:   header.Time,
 	})
 
-	return newCtx, err
+	return newCtx, nil
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.

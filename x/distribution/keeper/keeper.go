@@ -45,10 +45,6 @@ func WithExternalCommunityPool(poolKeeper types.ExternalCommunityPoolKeeper) Ini
 	}
 }
 
-func (k Keeper) HasExternalCommunityPool() bool {
-	return k.externalCommunityPool != nil
-}
-
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec,
@@ -104,9 +100,9 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// externalCommunityPoolEnabled is a helper function to denote whether the x/distribution module
+// HasExternalCommunityPool is a helper function to denote whether the x/distribution module
 // is using its native community pool, or using an external pool.
-func (k Keeper) externalCommunityPoolEnabled() bool {
+func (k Keeper) HasExternalCommunityPool() bool {
 	return k.externalCommunityPool != nil
 }
 

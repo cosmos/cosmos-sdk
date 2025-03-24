@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool/simulation"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/simulation"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
@@ -135,7 +135,14 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the protocolpool module.
-func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	// GenerateGenesisState creates a randomized GenState of the protocolpool module.
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalMsgs returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs()
 }
 
 // RegisterStoreDecoder registers a decoder for protocolpool module's types

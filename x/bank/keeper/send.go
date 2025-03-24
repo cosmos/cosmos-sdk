@@ -152,14 +152,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	// ensure all coins can be sent
-	type toSend struct {
-		AddressStr string
-		Address    []byte
-		Coins      sdk.Coins
-	}
-<<<<<<< HEAD
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -168,10 +160,14 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		),
 	)
 
-	var outAddress sdk.AccAddress
-=======
+	// ensure all coins can be sent
+	type toSend struct {
+		AddressStr string
+		Address    []byte
+		Coins      sdk.Coins
+	}
 	sending := make([]toSend, 0)
->>>>>>> bb7d11d07 (refactor(x/bank): swap sendrestriction check in InputOutputCoins (#21976))
+
 	for _, out := range outputs {
 		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
@@ -188,6 +184,16 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			AddressStr: out.Address,
 			Coins:      out.Coins,
 		})
+
+		// Create account if recipient does not exist.
+		//
+		// NOTE: This should ultimately be removed in favor a more flexible approach
+		// such as delegated fee messages.
+		accExists := k.ak.HasAccount(ctx, outAddress)
+		if !accExists {
+			defer telemetry.IncrCounter(1, "new", "account")
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
+		}
 	}
 
 	if err := k.subUnlockedCoins(ctx, inAddress, input.Coins); err != nil {
@@ -198,35 +204,14 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		if err := k.addCoins(ctx, out.Address, out.Coins); err != nil {
 			return err
 		}
-
-<<<<<<< HEAD
 		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
+				sdk.NewAttribute(types.AttributeKeyRecipient, out.AddressStr),
 				sdk.NewAttribute(types.AttributeKeySender, input.Address),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
-
-		// Create account if recipient does not exist.
-		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
-		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, outAddress)
-		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
-=======
-		if err := k.EventService.EventManager(ctx).EmitKV(
-			types.EventTypeTransfer,
-			event.NewAttribute(types.AttributeKeyRecipient, out.AddressStr),
-			event.NewAttribute(types.AttributeKeySender, input.Address),
-			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-		); err != nil {
-			return err
->>>>>>> bb7d11d07 (refactor(x/bank): swap sendrestriction check in InputOutputCoins (#21976))
-		}
 	}
 
 	return nil

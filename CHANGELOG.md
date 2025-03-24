@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (client/keys) [#24071](https://github.com/cosmos/cosmos-sdk/pull/24071) Add support for importing hex key using standard input.
+* (types) [#23780](https://github.com/cosmos/cosmos-sdk/pull/23780) Add a ValueCodec for the math.Uint type that can be used in collections maps.
+* (perf)[#24045](https://github.com/cosmos/cosmos-sdk/pull/24045) Sims: Replace runsim command with Go stdlib testing. CLI: `Commit` default true, `Lean`, `SimulateEveryOperation`, `PrintAllInvariants`, `DBBackend` params removed
+* (crypto/keyring) [#24040](https://github.com/cosmos/cosmos-sdk/pull/24040) Expose the db keyring used in the keystore.
 * (types) [#23919](https://github.com/cosmos/cosmos-sdk/pull/23919) Add MustValAddressFromBech32 function.
 * (all) [#23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support.
     * Adds a `--timeout-timestamp` flag that allows users to specify a block time at which the unordered transactions should expire from the mempool.
@@ -56,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/gov) [#24044](https://github.com/cosmos/cosmos-sdk/pull/24044) Fix some places in which we call Remove inside a Walk (x/gov).
 * (baseapp) [#24042](https://github.com/cosmos/cosmos-sdk/pull/24042) Fixed a data race inside BaseApp.getContext, found by end-to-end (e2e) tests.
 * (client/server) [#24059](https://github.com/cosmos/cosmos-sdk/pull/24059) Consistently set viper prefix in client and server. It defaults for the binary name for both client and server.
 * (client/keys) [#24041](https://github.com/cosmos/cosmos-sdk/pull/24041) `keys delete` won't terminate when a key is not found, but will log the error.

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 
@@ -456,7 +457,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -486,7 +487,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 
@@ -883,12 +884,7 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 //
 // NOTE: This is solely to be used for testing purposes.
 func GetMaccPerms() map[string][]string {
-	dupMaccPerms := make(map[string][]string)
-	for k, v := range maccPerms {
-		dupMaccPerms[k] = v
-	}
-
-	return dupMaccPerms
+	return maps.Clone(maccPerms)
 }
 
 // BlockedAddresses returns all the app's blocked account addresses.

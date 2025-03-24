@@ -102,7 +102,6 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			err := suite.govHandler(suite.ctx, tc.proposal)
 			if tc.expErr {

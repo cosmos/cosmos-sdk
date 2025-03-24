@@ -74,10 +74,11 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgSetWithdrawAddress(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper)
@@ -115,7 +116,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	suite.Require().NoError(suite.stakingKeeper.SetDelegation(suite.ctx, delegation))
 	valBz, err := address.NewBech32Codec("cosmosvaloper").StringToBytes(validator0.GetOperator())
 	suite.Require().NoError(err)
-	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, valBz, delegator.Address, types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	suite.Require().NoError(suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, valBz, delegator.Address, types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	suite.setupValidatorRewards(valBz)
 
@@ -179,12 +180,12 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	genVal0, err := valCodec.StringToBytes(suite.genesisVals[0].GetOperator())
 	suite.Require().NoError(err)
 
-	suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, val0, types.ValidatorOutstandingRewards{Rewards: valCommission})
-	suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, genVal0, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	suite.Require().NoError(suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, val0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	suite.Require().NoError(suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, genVal0, types.ValidatorOutstandingRewards{Rewards: valCommission}))
 
 	// setup validator accumulated commission
-	suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, val0, types.ValidatorAccumulatedCommission{Commission: valCommission})
-	suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, genVal0, types.ValidatorAccumulatedCommission{Commission: valCommission})
+	suite.Require().NoError(suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, val0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
+	suite.Require().NoError(suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, genVal0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
@@ -218,10 +219,11 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgFundCommunityPool(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
@@ -316,7 +318,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
 
-	suite.stakingKeeper.SetValidator(suite.ctx, validator)
+	require.NoError(suite.stakingKeeper.SetValidator(suite.ctx, validator))
 
 	return validator
 }
@@ -324,10 +326,10 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
-	suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards)
+	suite.Require().NoError(suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards))
 	// setup current revards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
-	suite.distrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards)
+	suite.Require().NoError(suite.distrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards))
 }
 
 func TestSimTestSuite(t *testing.T) {

@@ -102,37 +102,34 @@ func (k BaseViewKeeper) HasBalance(ctx context.Context, addr sdk.AccAddress, amt
 func (k BaseViewKeeper) GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
 	balances := sdk.NewCoins()
 	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
-		balances = balances.Add(balance)
+		balances = append(balances, balance)
 		return false
 	})
 
-	return balances.Sort()
+	return balances
 }
 
 // GetAccountsBalances returns all the accounts balances from the store.
 func (k BaseViewKeeper) GetAccountsBalances(ctx context.Context) []types.Balance {
 	balances := make([]types.Balance, 0)
-	mapAddressToBalancesIdx := make(map[string]int)
 
 	k.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
 		addrStr, err := k.addrCdc.BytesToString(addr)
 		if err != nil {
 			panic(err)
 		}
-		idx, ok := mapAddressToBalancesIdx[addrStr]
-		if ok {
-			// address is already on the set of accounts balances
-			balances[idx].Coins = balances[idx].Coins.Add(balance)
-			balances[idx].Coins.Sort()
+		if len(balances) > 0 && balances[len(balances)-1].Address == addrStr {
+			// Same address as last entry = add the coin to it.
+			balances[len(balances)-1].Coins = append(balances[len(balances)-1].Coins, balance)
 			return false
 		}
 
+		// New address = new entry.
 		accountBalance := types.Balance{
 			Address: addrStr,
 			Coins:   sdk.NewCoins(balance),
 		}
 		balances = append(balances, accountBalance)
-		mapAddressToBalancesIdx[addrStr] = len(balances) - 1
 		return false
 	})
 

@@ -288,3 +288,16 @@ func EncodeKeyWithPrefix[K any](prefix []byte, kc codec.KeyCodec[K], key K) ([]b
 	}
 	return keyBytes, nil
 }
+
+// Copy creates a new Map with the same configuration but using a different StoreAccessor.
+// This is useful when you need to create a copy of the map that targets a different store.
+func (m Map[K, V]) Copy(sa func(context.Context) store.KVStore) Map[K, V] {
+	return Map[K, V]{
+		kc:               m.kc,
+		vc:               m.vc,
+		sa:               sa,
+		prefix:           m.prefix,
+		name:             m.name,
+		isSecondaryIndex: m.isSecondaryIndex,
+	}
+}

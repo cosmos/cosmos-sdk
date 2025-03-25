@@ -92,10 +92,11 @@ const (
 	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
 
 	// gRPC-related flags
-	flagGRPCOnly      = "grpc-only"
-	flagGRPCEnable    = "grpc.enable"
-	flagGRPCAddress   = "grpc.address"
-	flagGRPCWebEnable = "grpc-web.enable"
+	flagGRPCOnly            = "grpc-only"
+	flagGRPCEnable          = "grpc.enable"
+	flagGRPCAddress         = "grpc.address"
+	flagGRPCWebEnable       = "grpc-web.enable"
+	flagGRPCSkipCheckHeader = "grpc.skip-check-header"
 
 	// mempool flags
 	FlagMempoolMaxTxs = "mempool.max-txs"

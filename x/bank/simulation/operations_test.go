@@ -61,7 +61,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.NoError(err)
 
-	suite.ctx = suite.app.BaseApp.NewContext(false)
+	suite.ctx = suite.app.NewContext(false)
 }
 
 // TestWeightedOperations tests the weights of the operations.

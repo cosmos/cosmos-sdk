@@ -28,7 +28,7 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
-          args: "-exclude=G101,G107 -skip-files \".*(\\.pulsar\\.go|\\.pb\\.go)$\" -no-fail -fmt sarif -out results.sarif ./..."
+          args: "-exclude=G101,G107 -exclude-generated -no-fail -fmt sarif -out results.sarif ./..."
 
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v2

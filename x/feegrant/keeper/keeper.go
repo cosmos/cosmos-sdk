@@ -256,8 +256,8 @@ func (k *Keeper) emitUseGrantEvent(ctx context.Context, granter, grantee string)
 
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) error {
-	// Проверяем наличие дублирующихся разрешений по паре (granter, grantee)
-	// чтобы избежать false positive в инвариантах
+	// Check for duplicate grants by (granter, grantee) pair 
+	// to avoid false positives in invariants
 	seen := make(map[string]struct{})
 
 	for _, f := range data.Allowances {
@@ -270,7 +270,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) er
 			return err
 		}
 
-		// Создаем уникальный ключ для пары (granter, grantee)
+		// Create a unique key for (granter, grantee) pair
 		key := string(append(granter, grantee...))
 		if _, exists := seen[key]; exists {
 			return fmt.Errorf("duplicate feegrant found from granter %q to grantee %q", f.Granter, f.Grantee)

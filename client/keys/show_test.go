@@ -167,6 +167,35 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for addresses not pubkeys")
+
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=true", FlagAddress),
+		fmt.Sprintf("--%s=true", flagQRCode),
+		// we have to reset following flags as they were set to true above, and won't be auto reset to false if we skip to specify these flags.
+		// Note: this maybe a bug about spf13/cobra as cmd.flags's value won't be reset by changing cmd.args with cmd.SetArgs.
+		fmt.Sprintf("--%s=false", FlagDevice),
+		fmt.Sprintf("--%s=false", FlagPublicKey),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
+	// try fetch by name
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		fakeKeyName1, fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=true", FlagAddress),
+		fmt.Sprintf("--%s=true", flagQRCode),
+		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
+		fmt.Sprintf("--%s=false", FlagDevice),
+		fmt.Sprintf("--%s=false", FlagPublicKey),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
+	// try fetch by name
+	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 
 func Test_validateMultisigThreshold(t *testing.T) {
@@ -186,7 +215,6 @@ func Test_validateMultisigThreshold(t *testing.T) {
 		{"1-2", args{2, 1}, true},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := validateMultisigThreshold(tt.args.k, tt.args.nKeys); (err != nil) != tt.wantErr {
 				t.Errorf("validateMultisigThreshold() error = %v, wantErr %v", err, tt.wantErr)
@@ -212,7 +240,6 @@ func Test_getBechKeyOut(t *testing.T) {
 		{"cons", args{sdk.PrefixConsensus}, MkConsKeyOutput, false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := getBechKeyOut(tt.args.bechPrefix)
 			if tt.wantErr {

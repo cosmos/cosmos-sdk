@@ -213,7 +213,6 @@ func TestAuxTxBuilder(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			b = tx.NewAuxTxBuilder()
 			err := tc.malleate()
@@ -230,6 +229,8 @@ func TestAuxTxBuilder(t *testing.T) {
 
 // checkCorrectData that the auxSignerData's content matches the inputs we gave.
 func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData typestx.AuxSignerData, signMode signing.SignMode) {
+	t.Helper()
+
 	pkAny, err := codectypes.NewAnyWithValue(pub1)
 	require.NoError(t, err)
 	msgAny, err := codectypes.NewAnyWithValue(msg1)

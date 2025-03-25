@@ -7,9 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	appmodule "cosmossdk.io/collections/corecompat"
 	store "cosmossdk.io/collections/corecompat"
-
-	"cosmossdk.io/collections/corecompat"
 )
 
 // SchemaBuilder is used for building schemas. The Build method should always
@@ -169,7 +168,7 @@ func (s Schema) IsOnePerModuleType() {}
 func (s Schema) IsAppModule() {}
 
 // DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
-func (s Schema) DefaultGenesis(target corecompat.GenesisTarget) error {
+func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
 	for _, name := range s.collectionsOrdered {
 		err := s.defaultGenesis(target, name)
 		if err != nil {
@@ -180,7 +179,7 @@ func (s Schema) DefaultGenesis(target corecompat.GenesisTarget) error {
 	return nil
 }
 
-func (s Schema) defaultGenesis(target corecompat.GenesisTarget, name string) error {
+func (s Schema) defaultGenesis(target appmodule.GenesisTarget, name string) error {
 	wc, err := target(name)
 	if err != nil {
 		return err
@@ -196,7 +195,7 @@ func (s Schema) defaultGenesis(target corecompat.GenesisTarget, name string) err
 }
 
 // ValidateGenesis implements the appmodule.HasGenesis.ValidateGenesis method.
-func (s Schema) ValidateGenesis(source corecompat.GenesisSource) error {
+func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
 	for _, name := range s.collectionsOrdered {
 		err := s.validateGenesis(source, name)
 		if err != nil {
@@ -206,7 +205,7 @@ func (s Schema) ValidateGenesis(source corecompat.GenesisSource) error {
 	return nil
 }
 
-func (s Schema) validateGenesis(source corecompat.GenesisSource, name string) error {
+func (s Schema) validateGenesis(source appmodule.GenesisSource, name string) error {
 	rc, err := source(name)
 	if err != nil {
 		return err
@@ -227,7 +226,7 @@ func (s Schema) validateGenesis(source corecompat.GenesisSource, name string) er
 }
 
 // InitGenesis implements the appmodule.HasGenesis.InitGenesis method.
-func (s Schema) InitGenesis(ctx context.Context, source corecompat.GenesisSource) error {
+func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource) error {
 	for _, name := range s.collectionsOrdered {
 		err := s.initGenesis(ctx, source, name)
 		if err != nil {
@@ -238,7 +237,7 @@ func (s Schema) InitGenesis(ctx context.Context, source corecompat.GenesisSource
 	return nil
 }
 
-func (s Schema) initGenesis(ctx context.Context, source corecompat.GenesisSource, name string) error {
+func (s Schema) initGenesis(ctx context.Context, source appmodule.GenesisSource, name string) error {
 	rc, err := source(name)
 	if err != nil {
 		return err
@@ -259,7 +258,7 @@ func (s Schema) initGenesis(ctx context.Context, source corecompat.GenesisSource
 }
 
 // ExportGenesis implements the appmodule.HasGenesis.ExportGenesis method.
-func (s Schema) ExportGenesis(ctx context.Context, target corecompat.GenesisTarget) error {
+func (s Schema) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
 	for _, name := range s.collectionsOrdered {
 		err := s.exportGenesis(ctx, target, name)
 		if err != nil {
@@ -270,7 +269,7 @@ func (s Schema) ExportGenesis(ctx context.Context, target corecompat.GenesisTarg
 	return nil
 }
 
-func (s Schema) exportGenesis(ctx context.Context, target corecompat.GenesisTarget, name string) error {
+func (s Schema) exportGenesis(ctx context.Context, target appmodule.GenesisTarget, name string) error {
 	wc, err := target(name)
 	if err != nil {
 		return err

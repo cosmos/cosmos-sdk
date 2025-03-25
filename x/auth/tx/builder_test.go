@@ -1,9 +1,6 @@
 package tx
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	testutil2 "github.com/cosmos/cosmos-sdk/testutil"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"testing"
 	"time"
 
@@ -12,16 +9,18 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	testutil2 "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 func TestTxBuilder(t *testing.T) {
@@ -340,7 +339,7 @@ func TestBuilderFeeGranter(t *testing.T) {
 }
 
 func TestBuilderWithTimeoutTimestamp(t *testing.T) {
-	cdc := codectestutil.CodecOptions{}.NewCodec()
+	cdc := testutil.CodecOptions{}.NewCodec()
 	interfaceRegistry := cdc.InterfaceRegistry()
 	interfaceRegistry.SigningContext()
 	txConfig := NewTxConfig(cdc, DefaultSignModes)

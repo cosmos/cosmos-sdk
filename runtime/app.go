@@ -25,7 +25,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -41,8 +40,7 @@ import (
 type App struct {
 	*baseapp.BaseApp
 
-	ModuleManager      *module.Manager
-	UnorderedTxManager *unorderedtx.Manager
+	ModuleManager *module.Manager
 
 	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
@@ -82,8 +80,8 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 		if module, ok := appModule.(module.HasServices); ok {
 			module.RegisterServices(a.configurator)
-		} else if module, ok := appModule.(appmodule.HasServices); ok {
-			if err := module.RegisterServices(a.configurator); err != nil {
+		} else if innerMod, ok := appModule.(appmodule.HasServices); ok {
+			if err := innerMod.RegisterServices(a.configurator); err != nil {
 				return err
 			}
 		}
@@ -160,9 +158,6 @@ func (a *App) Load(loadLatest bool) error {
 
 // PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-	if a.UnorderedTxManager != nil {
-		a.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
-	}
 	return a.ModuleManager.PreBlock(ctx)
 }
 
@@ -178,12 +173,12 @@ func (a *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 
 // Precommiter application updates every commit
 func (a *App) Precommiter(ctx sdk.Context) {
-	a.ModuleManager.Precommit(ctx)
+	_ = a.ModuleManager.Precommit(ctx)
 }
 
 // PrepareCheckStater application updates every commit
 func (a *App) PrepareCheckStater(ctx sdk.Context) {
-	a.ModuleManager.PrepareCheckState(ctx)
+	_ = a.ModuleManager.PrepareCheckState(ctx)
 }
 
 // InitChainer initializes the chain.

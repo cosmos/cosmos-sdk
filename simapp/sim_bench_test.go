@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutils/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -45,7 +44,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	appOptions := viper.New()
 	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
-	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
 
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(sims.SimAppChainID))
 

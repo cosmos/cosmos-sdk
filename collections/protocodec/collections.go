@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/collections/corecompat"
+	corecodec "cosmossdk.io/collections/corecompat"
 )
 
 // BoolValue implements a ValueCodec that saves the bool value
@@ -57,11 +57,11 @@ func CollValue[T any, PT protoMessage[T]](cdc interface {
 	Unmarshal([]byte, proto.Message) error
 },
 ) collcodec.ValueCodec[T] {
-	return &collValue[T, PT]{cdc.(corecompat.Codec), proto.MessageName(PT(new(T)))}
+	return &collValue[T, PT]{cdc.(corecodec.Codec), proto.MessageName(PT(new(T)))}
 }
 
 type collValue[T any, PT protoMessage[T]] struct {
-	cdc         corecompat.Codec
+	cdc         corecodec.Codec
 	messageName string
 }
 

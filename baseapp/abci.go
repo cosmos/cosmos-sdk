@@ -342,11 +342,11 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*ab
 func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
 	var mode execMode
 
-	switch {
-	case req.Type == abci.CheckTxType_New:
+	switch req.Type {
+	case abci.CheckTxType_New:
 		mode = execModeCheck
 
-	case req.Type == abci.CheckTxType_Recheck:
+	case abci.CheckTxType_Recheck:
 		mode = execModeReCheck
 
 	default:

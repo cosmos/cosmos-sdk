@@ -83,22 +83,23 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.NoError(err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(&abci.RequestInitChain{
+	_, err = app.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: sims.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
-	},
-	)
+	})
+	s.NoError(err)
 
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
 	})
+	s.NoError(err)
 
 	// end of app init
 
-	s.ctx = app.BaseApp.NewContext(false)
+	s.ctx = app.NewContext(false)
 	s.cdc = cdc
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, bankKeeper)

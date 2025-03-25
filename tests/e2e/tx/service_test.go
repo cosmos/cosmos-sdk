@@ -174,7 +174,6 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
 			// through Tendermint).
@@ -505,7 +504,6 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
 			// through Tendermint).
@@ -765,7 +763,6 @@ func (s *E2ETestSuite) TestTxEncode_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxEncode(context.Background(), tc.req)
 			if tc.expErr {
@@ -844,7 +841,6 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxDecode(context.Background(), tc.req)
 			if tc.expErr {
@@ -934,7 +930,6 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
 			if tc.expErr {
@@ -1020,7 +1015,6 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxDecodeAmino(context.Background(), tc.req)
 			if tc.expErr {

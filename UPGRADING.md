@@ -65,7 +65,7 @@ If you are still using the legacy wiring, you must enable unordered transactions
   if manager := app.SnapshotManager(); manager != nil {
       err := manager.RegisterExtensions(unorderedtx.NewSnapshotter(app.UnorderedTxManager))
       if err != nil {
-          panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+          panic(fmt.Errorf("failed to register snapshot extension: %w", err))
       }
   }
   ```

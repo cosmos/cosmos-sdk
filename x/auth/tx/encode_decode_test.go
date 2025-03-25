@@ -103,7 +103,6 @@ func TestUnknownFields(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			bodyBz, err := tt.body.Marshal()
 			require.NoError(t, err)
@@ -246,7 +245,6 @@ func TestRejectNonADR027(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			_, err = decoder(tt.txBz)
 			if tt.shouldErr {
@@ -284,7 +282,6 @@ func TestVarintMinLength(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(fmt.Sprintf("test %d", tt.n), func(t *testing.T) {
 			l1 := varintMinLength(tt.n)
 			buf := make([]byte, binary.MaxVarintLen64)

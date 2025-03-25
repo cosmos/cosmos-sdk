@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/store"
 )
 
 // WithKeySetUncheckedValue changes the behavior of the KeySet when it encounters
@@ -104,6 +105,12 @@ func (k KeySet[K]) Clear(ctx context.Context, ranger Ranger[K]) error {
 
 func (k KeySet[K]) KeyCodec() codec.KeyCodec[K]           { return (Map[K, NoValue])(k).KeyCodec() }
 func (k KeySet[K]) ValueCodec() codec.ValueCodec[NoValue] { return (Map[K, NoValue])(k).ValueCodec() }
+
+// Copy creates a new KeySet with the same configuration but using a different store accessor.
+// This is useful when you need to create a copy of the keyset that targets a different store.
+func (k KeySet[K]) Copy(sa func(context.Context) store.KVStore) KeySet[K] {
+	return (KeySet[K])((Map[K, NoValue])(k).Copy(sa))
+}
 
 // KeySetIterator works like an Iterator, but it does not expose any API to deal with values.
 type KeySetIterator[K any] Iterator[K, NoValue]

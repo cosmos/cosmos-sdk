@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/store"
 )
 
 // Indexes represents a type which groups multiple Index
@@ -172,6 +173,16 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) KeyCodec() codec.KeyCodec[PrimaryKe
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ValueCodec() codec.ValueCodec[Value] {
 	return m.m.ValueCodec()
+}
+
+// Copy creates a new IndexedMap with the same configuration but using a different store accessor.
+// This is useful when you need to create a copy of the indexed map that targets a different store.
+func (m *IndexedMap[PrimaryKey, Value, Idx]) Copy(sa func(context.Context) store.KVStore) *IndexedMap[PrimaryKey, Value, Idx] {
+	return &IndexedMap[PrimaryKey, Value, Idx]{
+		Indexes:         m.Indexes,
+		computedIndexes: m.computedIndexes,
+		m:               m.m.Copy(sa),
+	}
 }
 
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value) error {

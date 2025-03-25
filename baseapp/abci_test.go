@@ -2509,11 +2509,12 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 }
 
 func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
-	suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(1))
-	suite.baseApp.SetStreamingManager(storetypes.StreamingManager{
-		ABCIListeners: []storetypes.ABCIListener{
-			&mockABCIListener{},
-		},
+	suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(1), func(ba *baseapp.BaseApp) {
+		ba.SetStreamingManager(storetypes.StreamingManager{
+			ABCIListeners: []storetypes.ABCIListener{
+				&mockABCIListener{},
+			},
+		})
 	})
 
 	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{

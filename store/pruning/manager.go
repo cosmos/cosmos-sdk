@@ -130,10 +130,7 @@ func (m *Manager) GetPruningHeight(height int64) int64 {
 	// the snapshot `m.pruneSnapshotHeights[0]` is already operated,
 	// so we can prune upto `m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1`
 	snHeight := m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1
-	if snHeight < pruneHeight {
-		return snHeight
-	}
-	return pruneHeight
+	return min(snHeight, pruneHeight)
 }
 
 // LoadSnapshotHeights loads the snapshot heights from the database as a crash recovery.

@@ -151,3 +151,39 @@ func TestInitGenesis(t *testing.T) {
 		})
 	}
 }
+
+func TestDuplicateGrantsInGenesis(t *testing.T) {
+	f := initFixture(t)
+
+	granter, err := f.addrCdc.BytesToString(granterAddr.Bytes())
+	assert.NilError(t, err)
+	grantee, err := f.addrCdc.BytesToString(granteeAddr.Bytes())
+	assert.NilError(t, err)
+
+	allowance := &feegrant.BasicAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(100))),
+	}
+
+	any, err := codectypes.NewAnyWithValue(allowance)
+	assert.NilError(t, err)
+
+	// Create Genesis state with duplicate allowances
+	genesisState := &feegrant.GenesisState{
+		Allowances: []feegrant.Grant{
+			{
+				Granter:   granter,
+				Grantee:   grantee,
+				Allowance: any,
+			},
+			{
+				Granter:   granter,
+				Grantee:   grantee,
+				Allowance: any,
+			},
+		},
+	}
+
+	// Initialization should fail with duplicate feegrant error
+	err = f.feegrantKeeper.InitGenesis(f.ctx, genesisState)
+	assert.ErrorContains(t, err, "duplicate feegrant found")
+}

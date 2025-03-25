@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/store"
 )
 
 type reversePairOptions struct {
@@ -123,6 +124,14 @@ func (i *ReversePair[K1, K2, Value]) IterateRaw(
 
 func (i *ReversePair[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K2, K1]] {
 	return i.refKeys.KeyCodec()
+}
+
+// Copy creates a new ReversePair index with the same configuration but using a different store accessor.
+// This is useful when you need to create a copy of the index that targets a different store.
+func (i *ReversePair[K1, K2, Value]) Copy(sa func(context.Context) store.KVStore) *ReversePair[K1, K2, Value] {
+	return &ReversePair[K1, K2, Value]{
+		refKeys: i.refKeys.Copy(sa),
+	}
 }
 
 // ReversePairIterator is a helper type around a collections.KeySetIterator when used to work

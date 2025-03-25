@@ -63,19 +63,22 @@ type Store struct {
 	pruningManager      *pruning.Manager
 	iavlCacheSize       int
 	iavlDisableFastNode bool
-	iavlSyncPruning     bool
-	storesParams        map[types.StoreKey]storeParams
-	stores              map[types.StoreKey]types.CommitKVStore
-	keysByName          map[string]types.StoreKey
-	initialVersion      int64
-	removalMap          map[types.StoreKey]bool
-	traceWriter         io.Writer
-	traceContext        types.TraceContext
-	traceContextMutex   sync.Mutex
-	interBlockCache     types.MultiStorePersistentCache
-	listeners           map[types.StoreKey]*types.MemoryListener
-	metrics             metrics.StoreMetrics
-	commitHeader        cmtproto.Header
+	// iavlSyncPruning should rarely be set to true.
+	// The Prune command will automatically set this to true.
+	// This allows the prune command to wait for the pruning to finish before returning.
+	iavlSyncPruning   bool
+	storesParams      map[types.StoreKey]storeParams
+	stores            map[types.StoreKey]types.CommitKVStore
+	keysByName        map[string]types.StoreKey
+	initialVersion    int64
+	removalMap        map[types.StoreKey]bool
+	traceWriter       io.Writer
+	traceContext      types.TraceContext
+	traceContextMutex sync.Mutex
+	interBlockCache   types.MultiStorePersistentCache
+	listeners         map[types.StoreKey]*types.MemoryListener
+	metrics           metrics.StoreMetrics
+	commitHeader      cmtproto.Header
 }
 
 var (

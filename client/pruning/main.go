@@ -44,7 +44,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
-			// must disable async pruning
+			// force sync pruning so that the command will wait for the pruning to finish before returning.
 			vp.Set(server.FlagIAVLSyncPruning, true)
 
 			// use the first argument if present to set the pruning method
@@ -58,9 +58,10 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
-			cmd.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
+			cmd.Printf("get pruning options from command flags, strategy: %v, keep-recent: %d, interval: %d\n",
 				pruningOptions.Strategy,
 				pruningOptions.KeepRecent,
+				pruningOptions.Interval,
 			)
 
 			home := vp.GetString(flags.FlagHome)

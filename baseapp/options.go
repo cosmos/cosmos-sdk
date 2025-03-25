@@ -84,7 +84,9 @@ func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
 }
 
-// SetIAVLSyncPruning set sync/async pruning in the IAVL store.
+// SetIAVLSyncPruning set sync/async pruning in the IAVL store. Developers should rarely use this.
+// This option was added to allow the `Prune` command to force synchronous pruning, which is needed to allow the
+// command to wait before returning.
 func SetIAVLSyncPruning(syncPruning bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLSyncPruning(syncPruning) }
 }

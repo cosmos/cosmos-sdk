@@ -48,20 +48,14 @@ type MsgClient interface {
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// CommunityPoolSpend defines a governance operation for sending tokens from
 	// the community pool in the x/distribution module to another account, which
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
-	//
-	// Since: cosmos-sdk 0.50
 	DepositValidatorRewardsPool(ctx context.Context, in *MsgDepositValidatorRewardsPool, opts ...grpc.CallOption) (*MsgDepositValidatorRewardsPoolResponse, error)
 }
 
@@ -163,20 +157,14 @@ type MsgServer interface {
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// CommunityPoolSpend defines a governance operation for sending tokens from
 	// the community pool in the x/distribution module to another account, which
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
-	//
-	// Since: cosmos-sdk 0.50
 	DepositValidatorRewardsPool(context.Context, *MsgDepositValidatorRewardsPool) (*MsgDepositValidatorRewardsPoolResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

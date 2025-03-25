@@ -649,6 +649,9 @@ func SimulateMsgBeginRedelegate(
 		if redAmt.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "amount is zero"), nil, nil
 		}
+		if totalBond.Sub(redAmt).IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "can not redelegate all"), nil, nil
+		}
 
 		// check if the shares truncate to zero
 		shares, err := srcVal.SharesFromTokens(redAmt)

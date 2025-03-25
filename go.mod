@@ -1,12 +1,10 @@
-go 1.23.2
-
-toolchain go1.23.6
+go 1.23.0
 
 module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/collections v1.1.1-0.20250320184848-d40a667874bb
+	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
@@ -67,7 +65,6 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
@@ -181,8 +178,6 @@ require (
 replace cosmossdk.io/api => ./api
 
 replace cosmossdk.io/log => ./log
-
-replace cosmossdk.io/core => ./core
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

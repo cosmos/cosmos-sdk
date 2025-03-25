@@ -322,9 +322,9 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 	case 's':
 		_, _ = s.Write([]byte(aa.String()))
 	case 'p':
-		_, _ = s.Write([]byte(fmt.Sprintf("%p", aa)))
+		_, _ = fmt.Fprintf(s, "%p", aa)
 	default:
-		_, _ = s.Write([]byte(fmt.Sprintf("%X", []byte(aa))))
+		_, _ = fmt.Fprintf(s, "%X", []byte(aa))
 	}
 }
 
@@ -486,9 +486,9 @@ func (va ValAddress) Format(s fmt.State, verb rune) {
 	case 's':
 		_, _ = s.Write([]byte(va.String()))
 	case 'p':
-		_, _ = s.Write([]byte(fmt.Sprintf("%p", va)))
+		_, _ = fmt.Fprintf(s, "%p", va)
 	default:
-		_, _ = s.Write([]byte(fmt.Sprintf("%X", []byte(va))))
+		_, _ = fmt.Fprintf(s, "%X", []byte(va))
 	}
 }
 
@@ -670,9 +670,9 @@ func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	case 's':
 		_, _ = s.Write([]byte(ca.String()))
 	case 'p':
-		_, _ = s.Write([]byte(fmt.Sprintf("%p", ca)))
+		_, _ = fmt.Fprintf(s, "%p", ca)
 	default:
-		_, _ = s.Write([]byte(fmt.Sprintf("%X", []byte(ca))))
+		_, _ = fmt.Fprintf(s, "%X", []byte(ca))
 	}
 }
 

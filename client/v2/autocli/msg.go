@@ -121,7 +121,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
 
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
-		addressCodec := b.Builder.AddressCodec
+		addressCodec := b.AddressCodec
 
 		// set signer to signer field if empty
 		if addr := input.Get(fd).String(); addr == "" {
@@ -130,9 +130,9 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 				// override address codec if validator or consensus address
 				switch scalarType {
 				case flag.ValidatorAddressStringScalarType:
-					addressCodec = b.Builder.ValidatorAddressCodec
+					addressCodec = b.ValidatorAddressCodec
 				case flag.ConsensusAddressStringScalarType:
-					addressCodec = b.Builder.ConsensusAddressCodec
+					addressCodec = b.ConsensusAddressCodec
 				}
 			}
 

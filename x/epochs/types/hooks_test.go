@@ -86,14 +86,15 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 
 			hooks := types.NewMultiEpochHooks(hookRefs...)
 
-			if epochActionSelector == 0 {
+			switch epochActionSelector {
+			case 0:
 				err := hooks.BeforeEpochStart(s.Ctx, "id", 0)
 				if tc.expErr {
 					s.Require().Error(err)
 				} else {
 					s.Require().NoError(err)
 				}
-			} else if epochActionSelector == 1 {
+			case 1:
 				err := hooks.AfterEpochEnd(s.Ctx, "id", 0)
 				if tc.expErr {
 					s.Require().Error(err)

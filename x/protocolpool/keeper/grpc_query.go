@@ -32,7 +32,7 @@ func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoo
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	amount, err := k.Keeper.GetCommunityPool(sdkCtx)
+	amount, err := k.GetCommunityPool(sdkCtx)
 	if err != nil {
 		return nil, err
 	}

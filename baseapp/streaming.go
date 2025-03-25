@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -80,12 +81,7 @@ func (app *BaseApp) registerABCIListenerPlugin(
 }
 
 func exposeAll(list []string) bool {
-	for _, ele := range list {
-		if ele == "*" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, "*")
 }
 
 func exposeStoreKeysSorted(keysStr []string, keys map[string]*storetypes.KVStoreKey) []storetypes.StoreKey {

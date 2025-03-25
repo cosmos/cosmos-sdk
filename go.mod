@@ -1,4 +1,4 @@
-go 1.21
+go 1.23
 
 module github.com/cosmos/cosmos-sdk
 

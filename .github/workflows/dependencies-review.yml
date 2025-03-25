@@ -12,10 +12,9 @@ jobs:
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
-          check-latest: true
+          go-version-file: 'go.mod'
       - name: "Dependency Review"
         uses: actions/dependency-review-action@v3
         with:

@@ -370,9 +370,6 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 
 // SetStreamingManager sets the streaming manager for the BaseApp.
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
-	if app.sealed {
-		panic("SetStreamingManager() on sealed BaseApp")
-	}
 	app.streamingManager = manager
 }
 

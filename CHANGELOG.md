@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (server) [#24068](https://github.com/cosmos/cosmos-sdk/pull/24068) Allow align block header with skip check header in grpc server.
 * (x/gov) [#24044](https://github.com/cosmos/cosmos-sdk/pull/24044) Fix some places in which we call Remove inside a Walk (x/gov).
 * (baseapp) [#24042](https://github.com/cosmos/cosmos-sdk/pull/24042) Fixed a data race inside BaseApp.getContext, found by end-to-end (e2e) tests.
 * (client/server) [#24059](https://github.com/cosmos/cosmos-sdk/pull/24059) Consistently set viper prefix in client and server. It defaults for the binary name for both client and server.

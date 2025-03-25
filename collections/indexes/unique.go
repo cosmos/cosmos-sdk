@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/store"
 )
 
 // Unique identifies an index that imposes uniqueness constraints on the reference key.
@@ -101,6 +102,15 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) IterateRaw(ctx context.Context
 		return
 	}
 	return (UniqueIterator[ReferenceKey, PrimaryKey])(iter), nil
+}
+
+// Copy creates a new Unique index with the same configuration but using a different store accessor.
+// This is useful when you need to create a copy of the index that targets a different store.
+func (i *Unique[ReferenceKey, PrimaryKey, Value]) Copy(sa func(context.Context) store.KVStore) *Unique[ReferenceKey, PrimaryKey, Value] {
+	return &Unique[ReferenceKey, PrimaryKey, Value]{
+		getRefKey: i.getRefKey,
+		refKeys:   i.refKeys.Copy(sa),
+	}
 }
 
 // UniqueIterator is an Iterator wrapper, that exposes only the functionality needed to work with Unique keys.

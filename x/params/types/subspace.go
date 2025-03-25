@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 
 	"cosmossdk.io/store/prefix"
@@ -56,10 +57,7 @@ func (s Subspace) WithKeyTable(table KeyTable) Subspace {
 	if len(s.table.m) != 0 {
 		panic("WithKeyTable() called on already initialized Subspace")
 	}
-
-	for k, v := range table.m {
-		s.table.m[k] = v
-	}
+	maps.Copy(s.table.m, table.m)
 
 	// Allocate additional capacity for Subspace.name
 	// So we don't have to allocate extra space each time appending to the key

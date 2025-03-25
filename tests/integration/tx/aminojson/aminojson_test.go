@@ -185,6 +185,8 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 }
 
 func newAny(t *testing.T, msg proto.Message) *anypb.Any {
+	t.Helper()
+
 	bz, err := proto.Marshal(msg)
 	require.NoError(t, err)
 	typeName := fmt.Sprintf("/%s", msg.ProtoReflect().Descriptor().FullName())
@@ -271,7 +273,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		},
 		"distribution/community_pool_spend_proposal_with_deposit": {
 			gogo:   &disttypes.CommunityPoolSpendProposalWithDeposit{},
-			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{}, //nolint:staticcheck // keep test as is testing legacy parity
+			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{},
 		},
 		"distribution/msg_withdraw_delegator_reward": {
 			gogo:   &disttypes.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},

@@ -98,7 +98,6 @@ func TestBuilderWithAux(t *testing.T) {
 		{"happy case", func() {}, false},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			txBuilder, txSig = makeTxBuilder(t)
 
@@ -126,10 +125,10 @@ func TestBuilderWithAux(t *testing.T) {
 	txSigV2 := sigs[0]
 	aux2SigV2 := sigs[1]
 	// Set all signer infos.
-	w.SetSignatures(txSigV2, aux2SigV2, signing.SignatureV2{
+	require.NoError(t, w.SetSignatures(txSigV2, aux2SigV2, signing.SignatureV2{
 		PubKey:   feepayerPk,
 		Sequence: 15,
-	})
+	}))
 	signerData := authsigning.SignerData{
 		Address:       feepayerAddr.String(),
 		ChainID:       chainID,
@@ -146,14 +145,14 @@ func TestBuilderWithAux(t *testing.T) {
 	feepayerSig, err := feepayerPriv.Sign(signBz)
 	require.NoError(t, err)
 	// Set all signatures.
-	w.SetSignatures(txSigV2, aux2SigV2, signing.SignatureV2{
+	require.NoError(t, w.SetSignatures(txSigV2, aux2SigV2, signing.SignatureV2{
 		PubKey: feepayerPk,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: feepayerSig,
 		},
 		Sequence: 22,
-	})
+	}))
 
 	// Make sure tx is correct.
 	txBz, err := txConfig.TxEncoder()(w.GetTx())

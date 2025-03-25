@@ -276,7 +276,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.NoError(err)
 
-	suite.ctx = suite.app.BaseApp.NewContext(false)
+	suite.ctx = suite.app.NewContext(false)
 
 	genesisVals, err := suite.stakingKeeper.GetAllValidators(suite.ctx)
 	suite.Require().NoError(err)

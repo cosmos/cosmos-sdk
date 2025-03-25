@@ -19,7 +19,6 @@ import (
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -43,7 +42,6 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
-	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
 	if withGenesis {

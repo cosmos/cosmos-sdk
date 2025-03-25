@@ -43,8 +43,9 @@ require (
 	github.com/magiconair/properties v1.8.9
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-isatty v0.0.20
+	github.com/mdp/qrterminal/v3 v3.2.1
 	github.com/prometheus/client_golang v1.21.1
-	github.com/prometheus/common v0.62.0
+	github.com/prometheus/common v0.63.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.9.1
@@ -72,7 +73,7 @@ require (
 	github.com/bufbuild/protocompile v0.14.1 // indirect
 	github.com/bytedance/sonic v1.13.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
@@ -166,6 +167,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
+	rsc.io/qr v0.2.0 // indirect
 )
 
 // Here are the short-lived replace from the Cosmos SDK

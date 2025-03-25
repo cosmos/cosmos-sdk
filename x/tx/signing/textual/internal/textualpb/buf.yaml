@@ -6,7 +6,7 @@ deps:
   - buf.build/protocolbuffers/wellknowntypes:v23.4
 lint:
   use:
-    - DEFAULT
+    - STANDARD
   except:
     - PACKAGE_VERSION_SUFFIX
 breaking:

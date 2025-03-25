@@ -39,6 +39,8 @@ func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool
 }
 
 func initFixture(t *testing.T) *fixture {
+	t.Helper()
+
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 	mockclientCtx := client.Context{}.
@@ -77,7 +79,7 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		// CircuitBreakerDecorator AnteHandler should always return success
 		decorator := ante.NewCircuitBreakerDecorator(circuitBreaker)
 
-		f.txBuilder.SetMsgs(tc.msg)
+		require.NoError(t, f.txBuilder.SetMsgs(tc.msg))
 		tx := f.txBuilder.GetTx()
 
 		sdkCtx := sdk.UnwrapSDKContext(f.ctx)
@@ -88,6 +90,7 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		if tc.allowed {
 			require.NoError(t, err)
 		} else {
+			require.Error(t, err)
 			require.Equal(t, "tx type not allowed", err.Error())
 		}
 	}

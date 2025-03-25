@@ -634,7 +634,7 @@ func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAdd
 func (k Keeper) HasMaxRedelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) (bool, error) {
 	red, err := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	if err != nil {
-		if err == types.ErrNoRedelegation {
+		if errors.Is(err, types.ErrNoRedelegation) {
 			return false, nil
 		}
 
@@ -1072,12 +1072,12 @@ func (k Keeper) getBeginInfo(
 ) (completionTime time.Time, height int64, completeNow bool, err error) {
 	validator, err := k.GetValidator(ctx, valSrcAddr)
 	if err != nil && errors.Is(err, types.ErrNoValidatorFound) {
-		return
+		return time.Time{}, 0, false, err
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)
 	if err != nil {
-		return
+		return time.Time{}, 0, false, err
 	}
 
 	// TODO: When would the validator not be found?

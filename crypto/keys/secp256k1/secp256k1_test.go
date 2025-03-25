@@ -255,7 +255,6 @@ func TestGenPrivKeyFromSecret(t *testing.T) {
 		{"another seed used in cosmos tests #3", []byte("")},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			gotPrivKey := secp256k1.GenPrivKeyFromSecret(tt.secret)
 			require.NotNil(t, gotPrivKey)

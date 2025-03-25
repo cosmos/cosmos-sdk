@@ -89,7 +89,6 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
@@ -210,7 +209,6 @@ func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
@@ -274,7 +272,6 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)

@@ -58,13 +58,14 @@ func SimulateMsgFundCommunityPool(
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-		if spendable.IsZero() {
+		// choose 50% of spendable
+		spendableSubAmount := types.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.5"), spendable)
+		if spendableSubAmount.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, TypeFundCommunityPool, "no balance"), nil, nil
 		}
 
-		// choose 50% of spendable
 		msg := &types.MsgFundCommunityPool{
-			Amount:    types.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.5"), spendable),
+			Amount:    spendableSubAmount,
 			Depositor: account.GetAddress().String(),
 		}
 
@@ -79,7 +80,7 @@ func SimulateMsgFundCommunityPool(
 			AccountKeeper:   ak,
 			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
-			CoinsSpentInMsg: spendable,
+			CoinsSpentInMsg: spendableSubAmount,
 		}
 
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)

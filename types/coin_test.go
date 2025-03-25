@@ -300,30 +300,35 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 
 func (s *coinTestSuite) TestIsGTCoin() {
 	cases := []struct {
+		name     string
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
 		expected bool
 		panics   bool
 	}{
 		{
+			name:     "inputOne > inputTwo => true",
 			inputOne: sdk.NewInt64Coin(testDenom1, 2),
 			inputTwo: sdk.NewInt64Coin(testDenom1, 1),
 			expected: true,
 			panics:   false,
 		},
 		{
+			name:     "inputOne == inputTwo => false",
 			inputOne: sdk.NewInt64Coin(testDenom1, 1),
 			inputTwo: sdk.NewInt64Coin(testDenom1, 1),
 			expected: false,
 			panics:   false,
 		},
 		{
+			name:     "inputOne < inputTwo => false",
 			inputOne: sdk.NewInt64Coin(testDenom1, 1),
 			inputTwo: sdk.NewInt64Coin(testDenom1, 2),
 			expected: false,
 			panics:   false,
 		},
 		{
+			name:     "different denoms => panics",
 			inputOne: sdk.NewInt64Coin(testDenom1, 1),
 			inputTwo: sdk.NewInt64Coin(testDenom2, 1),
 			expected: false,
@@ -332,12 +337,14 @@ func (s *coinTestSuite) TestIsGTCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-		if tc.panics {
-			s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
-		} else {
-			res := tc.inputOne.IsGT(tc.inputTwo)
+		s.Run(tc.name, func() {
+			if tc.panics {
+				s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
+			} else {
+				res := tc.inputOne.IsGT(tc.inputTwo)
 			s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)
-		}
+			}
+		})
 	}
 }
 

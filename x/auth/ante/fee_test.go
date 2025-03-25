@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
@@ -162,12 +161,17 @@ func (s *AnteTestSuite) TestDeductFees_WithName() {
 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
 
-	// Set transacting account with sufficient funds
-	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
-	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+	// Set up initial account with coins
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200)))
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
-	s.Require().NoError(err)
+
+	// Using mock bank keeper
+	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.FeeCollectorName, coins).Return(nil)
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, addr1, coins).Return(nil)
+
+	err = s.bankKeeper.MintCoins(s.ctx, types.FeeCollectorName, coins)
+	require.NoError(t, err)
+	err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, addr1, coins)
+	require.NoError(t, err)
 
 	feeCollectorAcc := s.app.AccountKeeper.GetModuleAccount(s.ctx, types.FeeCollectorName)
 	// pick a simapp module account

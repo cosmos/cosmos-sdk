@@ -40,7 +40,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 		&evidenceKeeper)
 	require.NoError(suite.T(), err)
 
-	suite.ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1})
+	suite.ctx = app.NewContextLegacy(false, cmtproto.Header{Height: 1})
 	suite.keeper = evidenceKeeper
 }
 

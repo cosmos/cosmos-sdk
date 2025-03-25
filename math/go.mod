@@ -27,6 +27,9 @@ require (
 	pgregory.net/rapid v1.1.0
 )
 
+// TODO remove after all modules have their own go.mods
+replace cosmossdk.io/errors => github.com/mmsqe/cosmos-sdk/errors v0.0.0-20250215043036-b091ac7b6902
+
 // Issue with math.Int{}.Size() implementation.
 retract [v1.1.0, v1.1.1]
 

@@ -90,20 +90,20 @@ func SimulateMsgUnjail(
 
 		consAddr, err := validator.GetConsAddr()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validator consensus key"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validator consensus key"), nil, nil
 		}
 		info, err := k.GetValidatorSigningInfo(ctx, consAddr)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, err // skip
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, nil
 		}
 
 		selfDel, err := sk.Delegation(ctx, simAccount.Address, bz)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get self delegation"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get self delegation"), nil, nil
 		}
 
 		if selfDel == nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "self delegation is nil"), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "self delegation is nil"), nil, nil
 		}
 
 		account := ak.GetAccount(ctx, sdk.AccAddress(bz))

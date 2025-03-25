@@ -2328,10 +2328,7 @@ func (suite *KeeperTestSuite) TestIterateSendEnabledEntries() {
 		suite.T().Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
 			bankKeeper.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) (stop bool) {
 				seen = append(seen, denom)
-				exp := true
-				if strings.HasSuffix(denom, "false") {
-					exp = false
-				}
+				exp := !strings.HasSuffix(denom, "false")
 
 				require.Equal(exp, sendEnabled, denom)
 				return false

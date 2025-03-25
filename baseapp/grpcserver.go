@@ -26,7 +26,14 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 }
 
 // RegisterGRPCServerWithSkipCheckHeader registers gRPC services with the specified gRPC server
-// and bypass check header flag.
+// and bypass check header flag. During the commit phase, gRPC queries may be processed before the block header
+// is fully updated, causing header checks to fail erroneously. Skipping the header check in these cases prevents
+// false negatives and ensures more robust query handling.  While bypassing the header check is generally preferred to avoid false
+// negatives during the commit phase, there are niche scenarios where someone might want to enable it.
+// For instance, if an application requires strict validation to ensure that the query context exactly
+// reflects the expected block header (for consistency or security reasons), then enabling header checks
+// could be beneficial. However, this strictness comes at the cost of potentially more frequent errors
+// when queries occur during the commit phase.
 func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server, skipCheckHeader bool) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.

@@ -304,45 +304,46 @@ func (s *coinTestSuite) TestIsGTCoin() {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
 		expected bool
-		panics   bool
+		expErr   bool
 	}{
 		{
 			name:     "inputOne > inputTwo => true",
 			inputOne: sdk.NewInt64Coin(testDenom1, 2),
 			inputTwo: sdk.NewInt64Coin(testDenom1, 1),
 			expected: true,
-			panics:   false,
+			expErr:   false,
 		},
 		{
 			name:     "inputOne == inputTwo => false",
 			inputOne: sdk.NewInt64Coin(testDenom1, 1),
 			inputTwo: sdk.NewInt64Coin(testDenom1, 1),
 			expected: false,
-			panics:   false,
+			expErr:   false,
 		},
 		{
 			name:     "inputOne < inputTwo => false",
 			inputOne: sdk.NewInt64Coin(testDenom1, 1),
 			inputTwo: sdk.NewInt64Coin(testDenom1, 2),
 			expected: false,
-			panics:   false,
+			expErr:   false,
 		},
 		{
-			name:     "different denoms => panics",
+			name:     "different denoms => error (invalid coin denominations)",
 			inputOne: sdk.NewInt64Coin(testDenom1, 1),
 			inputTwo: sdk.NewInt64Coin(testDenom2, 1),
 			expected: false,
-			panics:   true,
+			expErr:   true,
 		},
 	}
 
 	for tcIndex, tc := range cases {
 		s.Run(tc.name, func() {
-			if tc.panics {
-				s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
+			res, err := tc.inputOne.IsGT(tc.inputTwo)
+			if tc.expErr {
+				s.Require().Error(err)
 			} else {
-				res := tc.inputOne.IsGT(tc.inputTwo)
-			s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)
 			}
 		})
 	}

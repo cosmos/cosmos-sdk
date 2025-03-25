@@ -433,7 +433,7 @@ func (l *Launcher) doPreUpgrade() error {
 
 			var exitErr *exec.ExitError
 			if errors.As(err, &exitErr) {
-				switch exitErr.ProcessState.ExitCode() {
+				switch exitErr.ExitCode() {
 				case 1:
 					l.logger.Info("pre-upgrade command does not exist. continuing the upgrade.")
 					return nil

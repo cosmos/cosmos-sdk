@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -98,10 +99,11 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	Schema        collections.Schema
-	Params        collections.Item[types.Params]
-	AccountNumber collections.Sequence
-	Accounts      *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
+	Schema          collections.Schema
+	Params          collections.Item[types.Params]
+	AccountNumber   collections.Sequence
+	Accounts        *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
+	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -124,16 +126,17 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
-		addressCodec:  ac,
-		bech32Prefix:  bech32Prefix,
-		storeService:  storeService,
-		proto:         proto,
-		cdc:           cdc,
-		permAddrs:     permAddrs,
-		authority:     authority,
-		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber: collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
-		Accounts:      collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		addressCodec:    ac,
+		bech32Prefix:    bech32Prefix,
+		storeService:    storeService,
+		proto:           proto,
+		cdc:             cdc,
+		permAddrs:       permAddrs,
+		authority:       authority,
+		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -165,7 +168,6 @@ func (ak AccountKeeper) GetPubKey(ctx context.Context, addr sdk.AccAddress) (cry
 	if acc == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
-
 	return acc.GetPubKey(), nil
 }
 
@@ -276,4 +278,51 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 		panic(err)
 	}
 	return params
+}
+
+// -------------------------------------
+// Unordered Nonce management methods
+// -------------------------------------
+
+// ContainsUnorderedNonce reports whether the sender has used this timeout already.
+func (ak AccountKeeper) ContainsUnorderedNonce(ctx sdk.Context, sender []byte, timeout time.Time) (bool, error) {
+	return ak.UnorderedNonces.Has(ctx, collections.Join(timeout.UnixNano(), sender))
+}
+
+// TryAddUnorderedNonce tries to add a new unordered nonce for the sender.
+// If the sender already has an entry with the provided timeout, an error is returned.
+func (ak AccountKeeper) TryAddUnorderedNonce(ctx sdk.Context, sender []byte, timeout time.Time) error {
+	alreadyHas, err := ak.ContainsUnorderedNonce(ctx, sender, timeout)
+	if err != nil {
+		return fmt.Errorf("failed to check unordered nonce in storage: %w", err)
+	}
+	if alreadyHas {
+		return fmt.Errorf("sender %s has already used timeout %d", sdk.AccAddress(sender).String(), timeout.UnixNano())
+	}
+
+	return ak.UnorderedNonces.Set(ctx, collections.Join(timeout.UnixNano(), sender))
+}
+
+// RemoveExpiredUnorderedNonces removes all unordered nonces that have a timeout value before
+// the current block time.
+func (ak AccountKeeper) RemoveExpiredUnorderedNonces(ctx sdk.Context) error {
+	blkTime := ctx.BlockTime().UnixNano()
+	it, err := ak.UnorderedNonces.Iterate(ctx, collections.NewPrefixUntilPairRange[int64, []byte](blkTime))
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	keys, err := it.Keys()
+	if err != nil {
+		return err
+	}
+
+	for _, key := range keys {
+		if err := ak.UnorderedNonces.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -8,7 +8,6 @@ import (
 	"io"
 	"maps"
 	"os"
-	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -62,7 +61,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
@@ -174,8 +172,6 @@ type SimApp struct {
 	// the module manager
 	ModuleManager      *module.Manager
 	BasicModuleManager module.BasicManager
-
-	UnorderedTxManager *unorderedtx.Manager
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -554,6 +550,7 @@ func NewSimApp(
 	// NOTE: upgrade module is required to be prioritized
 	app.ModuleManager.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
+		authtypes.ModuleName,
 	)
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -662,25 +659,6 @@ func NewSimApp(
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
-	// create, start, and load the unordered tx manager
-	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-	app.UnorderedTxManager.Start()
-
-	if err := app.UnorderedTxManager.OnInit(); err != nil {
-		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-	}
-
-	// register custom snapshot extensions (if any)
-	if manager := app.SnapshotManager(); manager != nil {
-		err := manager.RegisterExtensions(
-			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-		)
-		if err != nil {
-			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
-		}
-	}
-
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
@@ -734,12 +712,12 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:      app.AccountKeeper,
-				BankKeeper:         app.BankKeeper,
-				SignModeHandler:    txConfig.SignModeHandler(),
-				FeegrantKeeper:     app.FeeGrantKeeper,
-				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
-				UnorderedTxManager: app.UnorderedTxManager,
+				UnorderedNonceManager: app.AccountKeeper,
+				AccountKeeper:         app.AccountKeeper,
+				BankKeeper:            app.BankKeeper,
+				SignModeHandler:       txConfig.SignModeHandler(),
+				FeegrantKeeper:        app.FeeGrantKeeper,
+				SigGasConsumer:        ante.DefaultSigVerificationGasConsumer,
 			},
 			&app.CircuitKeeper,
 		},
@@ -763,18 +741,11 @@ func (app *SimApp) setPostHandler() {
 	app.SetPostHandler(postHandler)
 }
 
-// Close implements the Application interface and closes all necessary application
-// resources.
-func (app *SimApp) Close() error {
-	return app.UnorderedTxManager.Close()
-}
-
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
 // PreBlocker application updates every pre block
 func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-	app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
 	return app.ModuleManager.PreBlock(ctx)
 }
 

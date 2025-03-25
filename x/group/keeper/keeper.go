@@ -409,7 +409,8 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 		}
 
 		proposalID := proposal.Id
-		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
+		switch proposal.Status {
+		case group.PROPOSAL_STATUS_ABORTED, group.PROPOSAL_STATUS_WITHDRAWN:
 			if err := k.pruneProposal(ctx, proposalID); err != nil {
 				return err
 			}
@@ -424,7 +425,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				}); err != nil {
 				return err
 			}
-		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
+		case group.PROPOSAL_STATUS_SUBMITTED:
 			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 				return errorsmod.Wrap(err, "doTallyAndUpdate")
 			}

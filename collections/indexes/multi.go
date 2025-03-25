@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/store"
 )
 
 type multiOptions struct {
@@ -134,8 +135,17 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context,
 	return m.Iterate(ctx, collections.NewPrefixedPairRange[ReferenceKey, PrimaryKey](refKey))
 }
 
-func (m *Multi[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K1, K2]] {
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) KeyCodec() codec.KeyCodec[collections.Pair[ReferenceKey, PrimaryKey]] {
 	return m.refKeys.KeyCodec()
+}
+
+// Copy creates a new Multi index with the same configuration but using a different store accessor.
+// This is useful when you need to create a copy of the index that targets a different store.
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) Copy(sa func(context.Context) store.KVStore) *Multi[ReferenceKey, PrimaryKey, Value] {
+	return &Multi[ReferenceKey, PrimaryKey, Value]{
+		getRefKey: m.getRefKey,
+		refKeys:   m.refKeys.Copy(sa),
+	}
 }
 
 // MultiIterator is just a KeySetIterator with key as Pair[ReferenceKey, PrimaryKey].

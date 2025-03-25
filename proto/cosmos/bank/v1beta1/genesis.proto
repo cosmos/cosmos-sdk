@@ -30,9 +30,8 @@ message GenesisState {
   repeated Metadata denom_metadata = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // send_enabled defines the denoms where send is enabled or disabled.
-  //
-  // Since: cosmos-sdk 0.47
-  repeated SendEnabled send_enabled = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated SendEnabled send_enabled = 5
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 }
 
 // Balance defines an account address and balance pair used in the bank module's

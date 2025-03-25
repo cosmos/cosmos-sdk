@@ -12,6 +12,6 @@ type Edge struct {
 }
 
 func (e Edge) render(w io.Writer, indent string) error {
-	_, err := fmt.Fprintf(w, "%s%q -> %q%s;\n", indent, e.from.name, e.to.name, e.Attributes.String())
+	_, err := fmt.Fprintf(w, "%s%q -> %q%s;\n", indent, e.from.name, e.to.name, e.String())
 	return err
 }

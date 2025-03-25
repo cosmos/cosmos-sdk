@@ -3,6 +3,7 @@ package sims
 import (
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -49,6 +50,7 @@ type SimulationApp interface {
 	SetNotSigverifyTx()
 	GetBaseApp() *baseapp.BaseApp
 	TxConfig() client.TxConfig
+	Close() error
 }
 
 // Run is a helper function that runs a simulation test with the given parameters.
@@ -141,6 +143,7 @@ func RunWithSeeds[T SimulationApp](
 			for _, step := range postRunActions {
 				step(t, testInstance)
 			}
+			require.NoError(t, app.Close())
 		})
 	}
 }
@@ -174,6 +177,8 @@ func NewSimulationAppInstance[T SimulationApp](
 ) TestInstance[T] {
 	t.Helper()
 	workDir := t.TempDir()
+	require.NoError(t, os.Mkdir(filepath.Join(workDir, "data"), 0o755))
+
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {
@@ -186,7 +191,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	db, err := dbm.NewDB("Simulation", dbm.BackendType(tCfg.DBBackend), dbDir)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		require.NoError(t, db.Close())
+		_ = db.Close() // ensure db is closed
 	})
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
@@ -219,17 +224,4 @@ func WriteToDebugLog(logger log.Logger) io.Writer {
 		logger.Debug(string(p))
 		return len(p), nil
 	})
-}
-
-// AppOptionsFn is an adapter to the single method AppOptions interface
-type AppOptionsFn func(string) any
-
-func (f AppOptionsFn) Get(k string) any {
-	return f(k)
-}
-
-// FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
-// an IAVLStore for faster simulation speed.
-func FauxMerkleModeOpt(bapp *baseapp.BaseApp) {
-	bapp.SetFauxMerkleMode()
 }

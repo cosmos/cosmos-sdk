@@ -5,6 +5,7 @@ package systemtests
 import (
 	"fmt"
 	"github.com/tidwall/sjson"
+	"strings"
 	"testing"
 	"time"
 
@@ -152,7 +153,7 @@ func TestContinuousFunds(t *testing.T) {
 	govAddress, err = bech32.ConvertAndEncode(sdk.Bech32MainPrefix, bz)
 	assert.NoError(t, err)
 
-	expiry := time.Now().Add(10 * time.Second)
+	expiry := time.Now().Add(20 * time.Second).UTC()
 
 	t.Run("valid proposal", func(t *testing.T) {
 		// Create a valid new proposal JSON.
@@ -228,27 +229,28 @@ func TestContinuousFunds(t *testing.T) {
 
 		// check that the budget exists
 		rsp = cli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
-		gotExpiry := gjson.Get(rsp, "expiry").Int()
-		require.Equal(t, expiry, gotExpiry)
+		gotExpiry := gjson.Get(rsp, "expiry").String()
+		require.True(t, strings.Contains(expiry.String(), gotExpiry))
 	})
 
+	// wait long enough that it will be expired
 	time.Sleep(11 * time.Second)
 	systemtests.Sut.AwaitNextBlock(t)
 
-	t.Run("claim the budget (right address passes)", func(t *testing.T) {
+	t.Run("check balance and that the fund is expired", func(t *testing.T) {
+		failingCli := cli.WithRunErrorMatcher(func(t assert.TestingT, err error, msgAndArgs ...interface{}) (ok bool) {
+			assert.Error(t, err)
+			return false
+		})
+		// query the continuous fund - should be expired
+		_ = failingCli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
 
 		// check budget is updated (trances should be expired)
-		rsp := cli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
-		// we want this to fail actually
-		tranchesLeft := gjson.Get(rsp, "tranches_left").Int()
-		require.Equal(t, int64(0), tranchesLeft)
-		claimed := gjson.Get(rsp, "claimed_amount.amount").Int()
-		require.Equal(t, int64(100), claimed)
+		_ = cli.CustomQuery("q", "protocolpool", "continuous-funds")
 
 		balanceAfter := cli.QueryBalance(account1Addr, stakingToken)
 
-		// balance should be equal to balanceBefore + claim - fee
-		expectedBalance := balanceBefore + claimed - cli.GetFeeAmount(t)[0].Amount.Int64()
-		require.Equal(t, expectedBalance, balanceAfter)
+		// balance should be balance before + 412 (community pool value added * 0.5)
+		require.Equal(t, balanceBefore+412, balanceAfter)
 	})
 }

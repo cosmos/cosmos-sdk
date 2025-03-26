@@ -120,6 +120,95 @@ func TestQueryProtocolPool(t *testing.T) {
 	})
 
 	// fund the community pool and query
+	// get gov module address
+	resp := cli.CustomQuery("q", "auth", "module-account", "gov")
+	govAddress := gjson.Get(resp, "account.value.address").String()
+	_, bz, err := bech32.DecodeAndConvert(govAddress)
+	assert.NoError(t, err)
+	govAddress, err = bech32.ConvertAndEncode(sdk.Bech32MainPrefix, bz)
+	assert.NoError(t, err)
+
+	spendAmount := sdk.NewCoin(stakingToken, math.NewInt(100)),
+
+		t.Run("valid proposal", func(t *testing.T) {
+			// Create a valid new proposal JSON.
+			validProp := fmt.Sprintf(`
+{
+	"messages": [
+		{
+			"@type": "/cosmos.protocolpool.v1.MsgCommunityPoolSpend",
+			"authority": "%s",
+			"recipient": "%s",
+			"amount": "%s"
+			"expiry": "%s"
+		}
+	],
+	"title": "My awesome title",
+	"summary": "My awesome description",
+	"deposit": "%s"
+}`,
+				govAddress,
+				account1Addr,
+				spendAmount,
+				sdk.NewCoin(stakingToken, math.NewInt(50000000)),
+			)
+			validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
+			defer validPropFile.Close()
+
+			args := []string{
+				"tx", "gov", "submit-proposal",
+				validPropFile.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(stakingToken, math.NewInt(10))).String()),
+			}
+
+			rsp := cli.Run(args...)
+			txResult, found := cli.AwaitTxCommitted(rsp)
+			require.True(t, found)
+			systemtests.RequireTxSuccess(t, txResult)
+		})
+
+	t.Run("vote on proposal", func(t *testing.T) {
+		// check the proposal
+		proposalsResp := cli.CustomQuery("q", "gov", "proposals")
+		proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
+		require.NotEmpty(t, proposals)
+
+		rsp := cli.CustomQuery("q", "gov", "proposal", "1")
+		status := gjson.Get(rsp, "proposal.status")
+		require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
+
+		// vote on the proposal
+		args := []string{
+			"tx", "gov", "vote", "1", "yes",
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+		}
+		rsp = cli.Run(args...)
+		txResult, found := cli.AwaitTxCommitted(rsp)
+		require.True(t, found)
+		systemtests.RequireTxSuccess(t, txResult)
+	})
+
+	// get balance before any distribution
+	balanceBefore := cli.QueryBalance(account1Addr, stakingToken)
+	time.Sleep(11 * time.Second)
+	systemtests.Sut.AwaitNextBlock(t)
+
+	// ensure that vote has passed
+	t.Run("ensure that the vote has passed", func(t *testing.T) {
+		rsp := cli.CustomQuery("q", "gov", "proposal", "1")
+		status := gjson.Get(rsp, "proposal.status")
+		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
+
+		// check that the fund exists
+		rsp = cli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
+		gotExpiry := gjson.Get(rsp, "continuous_fund.expiry").Time()
+		require.Equal(t, expiry.Truncate(time.Second), gotExpiry.Truncate(time.Second))
+		recipient := gjson.Get(rsp, "continuous_fund.recipient").String()
+		require.Equal(t, account1Addr, recipient)
+	})
 }
 
 // Create a continuous fund

@@ -70,11 +70,12 @@ func (coin Coin) IsZero() bool {
 
 // IsGT returns true if they are the same type and the receiver is
 // a greater value
-func (coin Coin) IsGT(other Coin) (bool, error) {
+func (coin Coin) IsGT(other Coin) bool {
 	if coin.Denom != other.Denom {
-		return false, fmt.Errorf("invalid coin denominations: %s != %s", coin.Denom, other.Denom)
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, other.Denom))
 	}
-	return coin.Amount.GT(other.Amount), nil
+
+	return coin.Amount.GT(other.Amount)
 }
 
 // IsGTE returns true if they are the same type and the receiver is

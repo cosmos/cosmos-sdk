@@ -15,8 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -503,10 +506,510 @@ func (s *KeeperTestSuite) TestSpendableCoinsPeriodicVestingAcc() {
 	s.Require().Equal(sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
+func (s *KeeperTestSuite) TestClawback() {
+	s.SetupTest()
+	c := sdk.NewCoins
+	fee := func(x int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, x) }
+	stake := func(x int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, x) }
+	now := cmtime.Now()
+
+	// set up simapp and validators
+	ctx := s.ctx.WithBlockTime(now)
+	valAddr, val, err := createValidator(ctx, s.bankKeeper, s.stakingKeeper, 100)
+	s.Require().NoError(err)
+	s.Require().Equal(s.T(), "stake", s.stakingKeeper.BondDenom(ctx))
+
+	lockupPeriods := types.Periods{
+		{Length: int64(12 * 3600), Amount: c(fee(1000), stake(100))}, // noon
+	}
+	vestingPeriods := types.Periods{
+		{Length: int64(8 * 3600), Amount: c(fee(200))},            // 8am
+		{Length: int64(1 * 3600), Amount: c(fee(200), stake(50))}, // 9am
+		{Length: int64(6 * 3600), Amount: c(fee(200), stake(50))}, // 3pm
+		{Length: int64(2 * 3600), Amount: c(fee(200))},            // 5pm
+		{Length: int64(1 * 3600), Amount: c(fee(200))},            // 6pm
+	}
+
+	bacc, origCoins := initBaseAccount()
+	_, _, funder := testdata.KeyTestPubAddr()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	// simulate 17stake lost to slashing
+	va.DelegatedVesting = c(stake(17))
+	addr := va.GetAddress()
+	s.accountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with 17 take lost to slashing
+	err = testutil.FundAccount(s.bankKeeper, ctx, addr, c(fee(1000), stake(83)))
+
+	s.Require().NoError(err)
+	s.Require().Equal(int64(1000), s.bankKeeper.GetBalance(ctx, addr, feeDenom).Amount.Int64())
+	s.Require().Equal(int64(83), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+	ctx = ctx.WithBlockTime(now.Add(11 * time.Hour))
+
+	// delegate 65
+	shares, err := s.stakingKeeper.Delegate(ctx, addr, sdk.NewInt(65), stakingtypes.Unbonded, val, true)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewInt(65), shares.TruncateInt())
+	s.Require().Equal(int64(18), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// undelegate 5
+	_, err = s.stakingKeeper.Undelegate(ctx, addr, valAddr, sdk.NewDec(5))
+	s.Require().NoError(err)
+
+	// clawback the unvested funds (600fee, 50stake)
+	_, _, dest := testdata.KeyTestPubAddr()
+	va2 := s.accountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	err = va2.Clawback(ctx, funder, dest, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	s.Require().NoError(err)
+
+	// check vesting account
+	// want 400fee, 33stake (delegated), all vested
+	feeAmt := s.bankKeeper.GetBalance(ctx, addr, feeDenom).Amount
+	s.Require().Equal(int64(400), feeAmt.Int64())
+	stakeAmt := s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount
+	s.Require().Equal(int64(0), stakeAmt.Int64())
+	del, found := s.stakingKeeper.GetDelegation(ctx, addr, valAddr)
+	s.Require().True(found)
+	shares = del.GetShares()
+	val, found = s.stakingKeeper.GetValidator(ctx, valAddr)
+	s.Require().True(found)
+	stakeAmt = val.TokensFromSharesTruncated(shares).RoundInt()
+	s.Require().Equal(sdk.NewInt(33), stakeAmt)
+
+	// check destination account
+	// want 600fee, 50stake (18 unbonded, 5 unboinding, 27 bonded)
+	feeAmt = s.bankKeeper.GetBalance(ctx, dest, feeDenom).Amount
+	s.Require().Equal(int64(600), feeAmt.Int64())
+	stakeAmt = s.bankKeeper.GetBalance(ctx, dest, stakeDenom).Amount
+	s.Require().Equal(int64(18), stakeAmt.Int64())
+	del, found = s.stakingKeeper.GetDelegation(ctx, dest, valAddr)
+	s.Require().True(found)
+	shares = del.GetShares()
+	stakeAmt = val.TokensFromSharesTruncated(shares).RoundInt()
+	s.Require().Equal(sdk.NewInt(27), stakeAmt)
+	ubd, found := s.stakingKeeper.GetUnbondingDelegation(ctx, dest, valAddr)
+	s.Require().True(found)
+	s.Require().Equal(sdk.NewInt(5), ubd.Entries[0].Balance)
+
+}
+
+func (s *KeeperTestSuite) TestClawback_finalUnlock() {
+	s.SetupTest()
+	c := sdk.NewCoins
+	fee := func(x int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, x) }
+	stake := func(x int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, x) }
+	now := cmtime.Now()
+
+	ctx := s.ctx.WithBlockTime(now)
+	s.Require().Equal(s.T(), "stake", s.stakingKeeper.BondDenom(ctx))
+
+	lockupPeriods := types.Periods{
+		{Length: int64(20 * 3600), Amount: c(fee(1000), stake(100))}, // 8pm
+	}
+	vestingPeriods := types.Periods{
+		{Length: int64(8 * 3600), Amount: c(fee(200))},            // 8am
+		{Length: int64(1 * 3600), Amount: c(fee(200), stake(50))}, // 9am
+		{Length: int64(6 * 3600), Amount: c(fee(200), stake(50))}, // 3pm
+		{Length: int64(2 * 3600), Amount: c(fee(200))},            // 5pm
+		{Length: int64(1 * 3600), Amount: c(fee(200))},            // 6pm
+	}
+
+	bacc, origCoins := initBaseAccount()
+	_, _, funder := testdata.KeyTestPubAddr()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	addr := va.GetAddress()
+	s.accountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with new grant (old has vested and transferred out)
+	err := banktestutil.FundAccount(s.bankKeeper, ctx, addr, c(fee(1000), stake(100)))
+	s.Require().NoError(err)
+	s.Require().Equal(int64(1000), s.bankKeeper.GetBalance(ctx, addr, feeDenom).Amount.Int64())
+	s.Require().Equal(int64(100), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+	ctx = ctx.WithBlockTime(now.Add(11 * time.Hour))
+
+	// clawback the unvested funds (600fee, 50stake)
+	_, _, dest := testdata.KeyTestPubAddr()
+	va2 := s.accountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	err = va2.Clawback(ctx, funder, dest, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	s.Require().NoError(err)
+
+	// check vesting account
+	// want 400fee, 33stake (delegated), all vested
+	feeAmt := s.bankKeeper.GetBalance(ctx, addr, feeDenom).Amount
+	s.Require().Equal(int64(400), feeAmt.Int64())
+	stakeAmt := s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount
+	s.Require().Equal(int64(0), stakeAmt.Int64())
+
+	// check destination account
+	// want 600fee, 50stake (18 unbonded, 5 unboinding, 27 bonded)
+	feeAmt = s.bankKeeper.GetBalance(ctx, dest, feeDenom).Amount
+	s.Require().Equal(int64(600), feeAmt.Int64())
+	stakeAmt = s.bankKeeper.GetBalance(ctx, dest, stakeDenom).Amount
+	s.Require().Equal(int64(18), stakeAmt.Int64())
+
+	// Remaining funds in vesting account should still be locked at 7pm
+	ctx = ctx.WithBlockTime(now.Add(19 * time.Hour))
+	spendable := s.bankKeeper.SpendableCoins(ctx, addr)
+	s.Require().True(spendable.IsZero())
+	err = s.bankKeeper.SendCoins(ctx, addr, dest, c(fee(10)))
+	s.Require().Error(err)
+}
+
+func (s *KeeperTestSuite) TestRewards() {
+	s.SetupTest()
+	c := sdk.NewCoins
+	stake := func(x int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, x) }
+	now := cmtime.Now()
+
+	// set up simapp and validators
+	ctx := s.ctx.WithBlockTime(now)
+	_, val, err := createValidator(ctx, s.bankKeeper, s.stakingKeeper, 100)
+	s.Require().NoError(err)
+	s.Require().Equal(s.T(), "stake", s.stakingKeeper.BondDenom(ctx))
+
+	lockupPeriods := types.Periods{
+		{Length: 1, Amount: c(stake(4000))},
+	}
+
+	vestingPeriods := types.Periods{
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+	}
+
+	bacc, origCoins := initBaseAccount()
+	_, _, funder := testdata.KeyTestPubAddr()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	addr := va.GetAddress()
+	s.accountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with 300stake lost to transfer
+	err = testutil.FundAccount(s.bankKeeper, ctx, addr, c(stake(3700)))
+	s.Require().NoError(err)
+	s.Require().Equal(int64(3700), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+	ctx = ctx.WithBlockTime(now.Add(650 * time.Second))
+
+	// delegate 1600
+	shares, err := s.stakingKeeper.Delegate(ctx, addr, sdk.NewInt(1600), stakingtypes.Unbonded, val, true)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewInt(1600), shares.TruncateInt())
+	s.Require().Equal(int64(2100), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+	va = s.accountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	s.Require().Equal(int64(1000), va.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
+
+	// distribute a reward of 120stake
+	err = testutil.FundAccount(s.bankKeeper, ctx, addr, c(stake(120)))
+	s.Require().NoError(err)
+	va.PostReward(ctx, c(stake(120)), s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+
+	// With 1600 delegated, 1000 unvested, reward should be 75 unvested
+	va = s.accountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	s.Require().Equal(int64(4075), va.OriginalVesting.AmountOf(stakeDenom).Int64())
+	s.Require().Equal(8, len(va.VestingPeriods))
+	for i := 0; i < 6; i++ {
+		s.Require().Equal(int64(500), va.VestingPeriods[i].Amount.AmountOf(stakeDenom).Int64())
+	}
+	s.Require().Equal(int64(537), va.VestingPeriods[6].Amount.AmountOf(stakeDenom).Int64())
+	s.Require().Equal(int64(538), va.VestingPeriods[7].Amount.AmountOf(stakeDenom).Int64())
+}
+
+func (s *KeeperTestSuite) TestRewards_PostSlash() {
+	c := sdk.NewCoins
+	stake := func(x int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, x) }
+	now := cmtime.Now()
+
+	ctx := s.ctx.WithBlockTime(now)
+	_, val, err := createValidator(ctx, s.bankKeeper, s.stakingKeeper, 100)
+	s.Require().NoError(err)
+	s.Require().Equal(s.T(), "stake", s.stakingKeeper.BondDenom(ctx))
+
+	lockupPeriods := types.Periods{
+		{Length: 1, Amount: c(stake(4000))},
+	}
+	vestingPeriods := types.Periods{
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+	}
+
+	bacc, origCoins := initBaseAccount()
+	_, _, funder := testdata.KeyTestPubAddr()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	addr := va.GetAddress()
+	s.accountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with 350stake lost to slashing
+	err = testutil.FundAccount(s.bankKeeper, ctx, addr, c(stake(3650)))
+	s.Require().NoError(err)
+	s.Require().Equal(int64(3650), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// delegate all 3650stake
+	shares, err := s.stakingKeeper.Delegate(ctx, addr, sdk.NewInt(3650), stakingtypes.Unbonded, val, true)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewInt(3650), shares.TruncateInt())
+	s.Require().Equal(int64(0), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+	va = s.accountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+
+	// distribute a reward of 160stake - should all be unvested
+	err = testutil.FundAccount(s.bankKeeper, ctx, addr, c(stake(160)))
+	s.Require().NoError(err)
+	va.PostReward(ctx, c(stake(160)), s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	va = s.accountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	s.Require().Equal(int64(4160), va.OriginalVesting.AmountOf(stakeDenom).Int64())
+	s.Require().Equal(8, len(va.VestingPeriods))
+	for i := 0; i < 8; i++ {
+		s.Require().Equal(int64(520), va.VestingPeriods[i].Amount.AmountOf(stakeDenom).Int64())
+	}
+
+	// must not be able to transfer reward until it vests
+	_, _, dest := testdata.KeyTestPubAddr()
+	err = s.bankKeeper.SendCoins(ctx, addr, dest, c(stake(1)))
+	s.Require().Error(err)
+	ctx = ctx.WithBlockTime(now.Add(600 * time.Second))
+	err = s.bankKeeper.SendCoins(ctx, addr, dest, c(stake(160)))
+	s.Require().NoError(err)
+
+	// distribute another reward once everything has vested
+	ctx = ctx.WithBlockTime(now.Add(1200 * time.Second))
+	err = testutil.FundAccount(s.bankKeeper, ctx, addr, c(stake(160)))
+	s.Require().NoError(err)
+	va.PostReward(ctx, c(stake(160)), s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	va = s.accountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	// shouldn't be added to vesting schedule
+	s.Require().Equal(int64(4160), va.OriginalVesting.AmountOf(stakeDenom).Int64())
+}
+
+func (s *KeeperTestSuite) TestAddGrantClawbackVestingAcc() {
+	c := sdk.NewCoins
+	fee := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, amt) }
+	stake := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, amt) }
+	now := cmtime.Now()
+
+	ctx := s.ctx.WithBlockTime(now)
+	s.Require().Equal(s.T(), "stake", s.stakingKeeper.BondDenom(ctx))
+
+	// create an account with an initial grant
+	_, _, funder := testdata.KeyTestPubAddr()
+	lockupPeriods := types.Periods{{Length: 1, Amount: c(fee(1000), stake(100))}}
+	vestingPeriods := types.Periods{
+		{Length: 100, Amount: c(fee(250), stake(25))},
+		{Length: 100, Amount: c(fee(250), stake(25))},
+		{Length: 100, Amount: c(fee(250), stake(25))},
+		{Length: 100, Amount: c(fee(250), stake(25))},
+	}
+	bacc, origCoins := initBaseAccount()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	addr := va.GetAddress()
+
+	// simulate 60stake (unvested) lost to slashing
+	va.DelegatedVesting = c(stake(60))
+
+	// At now+150, 75stake unvested but only 15stake are locked, due to slashing
+	ctx = ctx.WithBlockTime(now.Add(150 * time.Second))
+	s.Require().Equal(int64(75), va.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
+	s.Require().Equal(int64(15), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
+
+	// Add a new grant while all slashing is covered by unvested tokens
+	err := va.AddGrant(ctx, funder.String(), s.stakingKeeper, ctx.BlockTime().Unix(),
+		lockupPeriods, vestingPeriods, origCoins)
+	s.Require().NoError(err)
+
+	// After new grant, 115stake locked at now+150, due to slashing,
+	// delegation bookkeeping unchanged
+	s.Require().Equal(int64(115), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
+	s.Require().Equal(int64(60), va.DelegatedVesting.AmountOf(stakeDenom).Int64())
+	s.Require().Equal(int64(0), va.DelegatedFree.AmountOf(stakeDenom).Int64())
+
+	// At now+1000, nothing unvested, nothing locked
+	ctx = ctx.WithBlockTime(now.Add(1000 * time.Second))
+	s.Require().Equal(int64(0), va.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
+	s.Require().Equal(int64(0), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
+
+	// Add a new grant with residual slashed amount, but no unvested
+	err = va.AddGrant(ctx, funder.String(), s.stakingKeeper, ctx.BlockTime().Unix(),
+		lockupPeriods, vestingPeriods, origCoins)
+	s.Require().NoError(err)
+
+	// After new grant, all 100 locked, no residual delegation bookkeeping
+	s.Require().Equal(int64(100), va.LockedCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
+	s.Require().Equal(int64(0), va.DelegatedVesting.AmountOf(stakeDenom).Int64())
+	s.Require().Equal(int64(0), va.DelegatedFree.AmountOf(stakeDenom).Int64())
+
+	s.accountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with new grant (old has vested and transferred out)
+	err = testutil.FundAccount(s.bankKeeper, ctx, addr, origCoins)
+	s.Require().NoError(err)
+	s.Require().Equal(int64(100), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// we should not be able to transfer the latest grant out until it has vested
+	_, _, dest := testdata.KeyTestPubAddr()
+	err = s.bankKeeper.SendCoins(ctx, addr, dest, c(stake(1)))
+	s.Require().Error(err)
+	ctx = ctx.WithBlockTime(now.Add(1500 * time.Second))
+	err = s.bankKeeper.SendCoins(ctx, addr, dest, origCoins)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestReturnGrants() {
+	c := sdk.NewCoins
+	fee := func(x int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, x) }
+	stake := func(x int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, x) }
+	now := cmtime.Now()
+
+	// set up simapp and validators
+	ctx := s.ctx.WithBlockTime(now)
+	valAddr, val, err := createValidator(ctx, s.bankKeeper, s.stakingKeeper, 100)
+	s.Require().NoError(err)
+	s.Require().Equal(s.T(), "stake", s.stakingKeeper.BondDenom(ctx))
+
+	lockupPeriods := types.Periods{
+		{Length: int64(12 * 3600), Amount: c(fee(1000), stake(100))}, // noon
+	}
+	vestingPeriods := types.Periods{
+		{Length: int64(8 * 3600), Amount: c(fee(200))},            // 8am
+		{Length: int64(1 * 3600), Amount: c(fee(200), stake(50))}, // 9am
+		{Length: int64(6 * 3600), Amount: c(fee(200), stake(50))}, // 3pm
+		{Length: int64(2 * 3600), Amount: c(fee(200))},            // 5pm
+		{Length: int64(1 * 3600), Amount: c(fee(200))},            // 6pm
+	}
+
+	bacc, origCoins := initBaseAccount()
+	_, _, funder := testdata.KeyTestPubAddr()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	// simulate 17stake lost to slashing
+	va.DelegatedVesting = c(stake(17))
+	addr := va.GetAddress()
+	s.accountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with an extra 200fee but 17stake lost to slashing
+	err = testutil.FundAccount(s.bankKeeper, ctx, addr, c(fee(1200), stake(83)))
+	s.Require().NoError(err)
+	s.Require().Equal(int64(1200), s.bankKeeper.GetBalance(ctx, addr, feeDenom).Amount.Int64())
+	s.Require().Equal(int64(83), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+	ctx = ctx.WithBlockTime(now.Add(11 * time.Hour))
+
+	// delegate 65
+	shares, err := s.stakingKeeper.Delegate(ctx, addr, sdk.NewInt(65), stakingtypes.Unbonded, val, true)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewInt(65), shares.TruncateInt())
+	s.Require().Equal(int64(18), s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// undelegate 5
+	_, err = s.stakingKeeper.Undelegate(ctx, addr, valAddr, sdk.NewDec(5))
+	s.Require().NoError(err)
+
+	// Return the grant (1000fee, 100stake) with (1200fee, 83stake) available
+	va2 := s.accountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	va2.ReturnGrants(ctx, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+
+	// check vesting account
+	// want 200fee all vested
+	dest := funder
+	feeAmt := s.bankKeeper.GetBalance(ctx, addr, feeDenom).Amount
+	s.Require().Equal(int64(200), feeAmt.Int64())
+	stakeAmt := s.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount
+	s.Require().Equal(int64(0), stakeAmt.Int64())
+	spendable := s.bankKeeper.SpendableCoins(ctx, addr)
+	s.Require().Equal(int64(200), spendable.AmountOf(feeDenom).Int64())
+	_, found := s.stakingKeeper.GetDelegation(ctx, addr, valAddr)
+	s.Require().False(found)
+	_, found = s.stakingKeeper.GetUnbondingDelegation(ctx, addr, valAddr)
+	s.Require().False(found)
+
+	// check destination account
+	// want 1000fee, 83stake (18 unbonded, 5 unbonding, 60 bonded)
+	feeAmt = s.bankKeeper.GetBalance(ctx, dest, feeDenom).Amount
+	s.Require().Equal(int64(1000), feeAmt.Int64())
+	stakeAmt = s.bankKeeper.GetBalance(ctx, dest, stakeDenom).Amount
+	s.Require().Equal(int64(18), stakeAmt.Int64())
+	del, found := s.stakingKeeper.GetDelegation(ctx, dest, valAddr)
+	s.Require().True(found)
+	s.Require().Equal(sdk.NewInt(60), del.Shares.TruncateInt())
+	val, found = s.stakingKeeper.GetValidator(ctx, valAddr)
+	s.Require().True(found)
+	stakeAmt = val.TokensFromSharesTruncated(shares).RoundInt()
+	s.Require().Equal(sdk.NewInt(60), stakeAmt)
+	ubd, found := s.stakingKeeper.GetUnbondingDelegation(ctx, dest, valAddr)
+	s.Require().True(found)
+	s.Require().Equal(1, len(ubd.Entries))
+	s.Require().Equal(sdk.NewInt(5), ubd.Entries[0].Balance)
+}
+
+func (s *KeeperTestSuite) TestClawbackVestingAccountStore() {
+	baseAcc, coins := initBaseAccount()
+	addr := sdk.AccAddress([]byte("the funder"))
+	acc := types.NewClawbackVestingAccount(baseAcc, addr, coins, time.Now().Unix(),
+		types.Periods{types.Period{3600, coins}}, types.Periods{types.Period{3600, coins}})
+
+	ctx := s.ctx
+	_, _, err := createValidator(ctx, s.bankKeeper, s.stakingKeeper, 100)
+	s.Require().NoError(err)
+
+	s.accountKeeper.SetAccount(ctx, acc)
+	acc2 := s.accountKeeper.GetAccount(ctx, acc.GetAddress())
+	s.Require().IsType(&types.ClawbackVestingAccount{}, acc2)
+	s.Require().Equal(acc.String(), acc2.String())
+}
+
+func (s *KeeperTestSuite) TestClawbackVestingAccountMarshal() {
+	baseAcc, coins := initBaseAccount()
+	addr := sdk.AccAddress([]byte("the funder"))
+	acc := types.NewClawbackVestingAccount(baseAcc, addr, coins, time.Now().Unix(),
+		types.Periods{types.Period{3600, coins}}, types.Periods{types.Period{3600, coins}})
+
+	bz, err := s.accountKeeper.MarshalAccount(acc)
+	s.Require().Nil(err)
+
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
+	s.Require().Nil(err)
+	s.Require().IsType(&types.ClawbackVestingAccount{}, acc2)
+	s.Require().Equal(acc.String(), acc2.String())
+
+	// error on bad bytes
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	s.Require().NotNil(err)
+}
+
 func initBaseAccount() (*authtypes.BaseAccount, sdk.Coins) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
 	return bacc, origCoins
+}
+
+func createValidator(ctx sdk.Context, bankKeeper bankkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, powers int64) (sdk.ValAddress, stakingtypes.Validator, error) {
+	valTokens := sdk.TokensFromConsensusPower(powers, sdk.DefaultPowerReduction)
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 1, valTokens)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+	pks := simtestutil.CreateTestPubKeys(1)
+
+	val, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
+	if err != nil {
+		return nil, stakingtypes.Validator{}, err
+	}
+
+	stakingKeeper.SetValidator(ctx, val)
+	if err := stakingKeeper.SetValidatorByConsAddr(ctx, val); err != nil {
+		return nil, stakingtypes.Validator{}, err
+	}
+	stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+	_, err = stakingKeeper.Delegate(ctx, addrs[0], valTokens, stakingtypes.Unbonded, val, true)
+	if err != nil {
+		return nil, stakingtypes.Validator{}, err
+	}
+	_ = staking.EndBlocker(ctx, &stakingKeeper)
+
+	return valAddrs[0], val, nil
 }

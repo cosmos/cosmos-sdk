@@ -161,7 +161,6 @@ func AuthModule() ModuleOption {
 					{Account: "nft"},
 					{Account: protocolpooltypes.ModuleName},
 					{Account: protocolpooltypes.ProtocolPoolDistrAccount},
-					{Account: protocolpooltypes.StreamAccount},
 				},
 			}),
 		}

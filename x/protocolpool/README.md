@@ -6,11 +6,9 @@ sidebar_position: 1
 
 ## Concepts
 
-TODO: update docs to reflect that this module is supplemental
+`x/protocolpool` is a module that handle functionality around community pool funds. This provides a separate module account for community pool making it easier to track the pool assets. We no longer track community pool assets in `x/distribution` module, but instead in the `x/protocolpool` module. Funds are migrated from the `x/distribution` module's community pool to `x/protocolpool`'s module account.
 
-`x/protocolpool` is a module that handle functionality around community pool funds. This provides a separate module account for community pool making it easier to track the pool assets. We no longer track community pool assets in distribution module, but instead in this protocolpool module. Funds are migrated from the distribution module's community pool to protocolpool's module account.
-
-The module is also designed with a lazy "claim-based" system, which means that users are required to actively claim allocated funds from allocated budget if any budget proposal has been submitted and passed. The module does not automatically distribute funds to recipients. This design choice allows for more flexibility and control over fund distribution.
+This module is `supplemental`, meaning it is not required when running a Cosmos SDK chain - it only extends the community pool functionality as `x/distribution` and provides a way to create custom modules to extend the community pool.
 
 ## State Transitions
 
@@ -34,26 +32,6 @@ CommunityPoolSpend can be called by the module authority (default governance mod
   // could be the governance module itself. The authority is defined in the
   // keeper.
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
-```
-
-### SubmitBudgetProposal
-
-CreateBudget is a message used to create a budget allocation for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
-
-It's the responsibility of users to actively claim their allocated funds based on the terms of the approved budget proposals.
-
-```protobuf
-  // CreateBudget defines a method to create a budget.
-  rpc CreateBudget(MsgCreateBudget) returns (MsgCreateBudgetResponse);
-```
-
-### ClaimBudget
-
-ClaimBudget is a message used to claim funds from a previously submitted budget proposal. When a budget proposal is approved and funds are allocated, recipients can use this message to claim their share of the budget. Funds are distributed in tranches over specific periods, and users can claim their share of budget at the appropriate time.
-
-```protobuf
-  // ClaimBudget defines a method to claim the distributed budget.
-  rpc ClaimBudget(MsgClaimBudget) returns (MsgClaimBudgetResponse);
 ```
 
 ### CreateContinuousFund
@@ -116,49 +94,6 @@ func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coin
 }
 ```
 
-### MsgCreateBudget
-
-This message is used to submit a budget proposal to allocate funds for a specific recipient. The proposed funds will be distributed periodically over a specified time frame.
-
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/cosmos/protocolpool/v1/tx.proto#L75-L94
-```
-
-The message will fail under the following conditions:
-
-* The budget per tranche is zero.
-* The recipient address is empty or restricted.
-* The start time is less than current block time.
-* The number of tranches is not a positive integer.
-* The period length is not a positive integer.
-
-:::warning
-If two budgets to the same address are created, the budget would be updated with the new budget.
-:::
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/msg_server.go#L37-L59
-```
-
-### MsgClaimBudget
-
-This message is used to claim funds from a previously submitted budget proposal. When a budget proposal is passed and funds are allocated, recipients can use this message to claim their share of the budget.
-
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolpool/v1/tx.proto#L100-L104
-```
-
-The message will fail under the following conditions:
-
-- The recipient address is empty or restricted.
-- The budget proposal for the recipient does not exist.
-- The budget proposal has not reached its distribution start time.
-- The budget proposal's distribution period has not passed yet.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/msg_server.go#L28-L35
-```
-
 ### MsgCreateContinuousFund
 
 This message is used to create a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. This fund distribution continues until expiry time is reached or continuous fund request is canceled.
@@ -183,7 +118,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 
 ### MsgCancelContinuousFund
 
-This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each end block, and the state object will be removed. Users should be cautious when canceling continuous funds, as it may affect the planned distribution for the recipient.
+This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each begin block, and the state object will be removed. 
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/proto/cosmos/protocolpool/v1/tx.proto#L136-L161

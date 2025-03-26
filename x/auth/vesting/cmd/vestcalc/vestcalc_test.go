@@ -133,11 +133,11 @@ func TestDivideCoins(t *testing.T) {
 			coins:     coins("3xxx,2yyy"),
 			divisions: 6,
 			want: []sdk.Coins{
-				coins(""),
+				sdk.Coins{},
 				coins("1xxx"),
 				coins("1yyy"),
 				coins("1xxx"),
-				coins(""),
+				sdk.Coins{},
 				coins("1xxx,1yyy"),
 			},
 		},
@@ -147,6 +147,7 @@ func TestDivideCoins(t *testing.T) {
 			if err != nil {
 				t.Fatalf("division error: %v", err)
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("division got %v, want %v", got, tt.want)
 			}

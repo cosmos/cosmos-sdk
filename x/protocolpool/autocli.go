@@ -31,7 +31,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "ContinuousFund",
 					Use:            "continuous-fund <recipient>",
 					Short:          "Query a continuous fund by its recipient address",
-					Example:        fmt.Sprintf(`$ %s query protocolpool continuous-funds cosmos1...`, version.AppName),
+					Example:        fmt.Sprintf(`$ %s query protocolpool continuous-fund cosmos1...`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "recipient"}},
 				},
 			},

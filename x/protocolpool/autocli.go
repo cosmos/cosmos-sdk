@@ -25,7 +25,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "ContinuousFunds",
 					Use:       "continuous-funds",
 					Short:     "Query all continuous funds",
-					Example:   fmt.Sprintf(`$ %s query protocolpool continuous-unds`, version.AppName),
+					Example:   fmt.Sprintf(`$ %s query protocolpool continuous-funds`, version.AppName),
 				},
 				{
 					RpcMethod:      "ContinuousFund",

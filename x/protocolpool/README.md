@@ -6,11 +6,9 @@ sidebar_position: 1
 
 ## Concepts
 
-TODO: update docs to reflect that this module is supplemental
+`x/protocolpool` is a module that handle functionality around community pool funds. This provides a separate module account for community pool making it easier to track the pool assets. We no longer track community pool assets in `x/distribution` module, but instead in the `x/protocolpool` module. Funds are migrated from the `x/distribution` module's community pool to `x/protocolpool`'s module account.
 
-`x/protocolpool` is a module that handle functionality around community pool funds. This provides a separate module account for community pool making it easier to track the pool assets. We no longer track community pool assets in distribution module, but instead in this protocolpool module. Funds are migrated from the distribution module's community pool to protocolpool's module account.
-
-The module is also designed with a lazy "claim-based" system, which means that users are required to actively claim allocated funds from allocated budget if any budget proposal has been submitted and passed. The module does not automatically distribute funds to recipients. This design choice allows for more flexibility and control over fund distribution.
+This module is `supplemental`, meaning it is not required when running a Cosmos SDK chain - it only extends the community pool functionality as `x/distribution` and provides a way to create custom modules to extend the community pool.
 
 ## State Transitions
 
@@ -120,7 +118,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 
 ### MsgCancelContinuousFund
 
-This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each end block, and the state object will be removed. Users should be cautious when canceling continuous funds, as it may affect the planned distribution for the recipient.
+This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each begin block, and the state object will be removed. 
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/proto/cosmos/protocolpool/v1/tx.proto#L136-L161

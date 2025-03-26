@@ -345,7 +345,8 @@ func TestBuilderWithTimeoutTimestamp(t *testing.T) {
 
 	txConfig := NewTxConfig(cdc, DefaultSignModes)
 	txBuilder := txConfig.NewTxBuilder()
-	txBuilder.SetTimeoutTimestamp(time.Unix(1, 0))
+	timeoutTimestamp := time.Unix(500, 200)
+	txBuilder.SetTimeoutTimestamp(timeoutTimestamp)
 	encodedTx, err := txConfig.TxJSONEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
 
@@ -358,5 +359,5 @@ func TestBuilderWithTimeoutTimestamp(t *testing.T) {
 	require.NoError(t, err)
 
 	b := txBldr.(*wrapper)
-	require.False(t, b.tx.Body.TimeoutTimestamp.IsZero())
+	require.True(t, b.tx.Body.TimeoutTimestamp.Equal(timeoutTimestamp))
 }

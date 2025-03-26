@@ -4,16 +4,15 @@ package systemtests
 
 import (
 	"fmt"
+	"github.com/tidwall/sjson"
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+	"cosmossdk.io/systemtests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
-
-	"cosmossdk.io/math"
-	"cosmossdk.io/systemtests"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,6 +26,38 @@ const (
 
 	stakingToken = "stake"
 )
+
+func modifyGovParams(t *testing.T) {
+	t.Helper()
+	// set up params so that we should just auto pass
+	systemtests.Sut.ModifyGenesisJSON(t,
+		func(genesis []byte) []byte {
+			state, err := sjson.Set(string(genesis), "app_state.gov.params.max_deposit_period", (1 * time.Second).String())
+			require.NoError(t, err)
+			return []byte(state)
+		},
+		func(genesis []byte) []byte {
+			state, err := sjson.Set(string(genesis), "app_state.gov.params.voting_period", (11 * time.Second).String())
+			require.NoError(t, err)
+			return []byte(state)
+		},
+		func(genesis []byte) []byte {
+			state, err := sjson.Set(string(genesis), "app_state.gov.params.veto_threshold", "0.000001")
+			require.NoError(t, err)
+			return []byte(state)
+		},
+		func(genesis []byte) []byte {
+			state, err := sjson.Set(string(genesis), "app_state.gov.params.threshold", "0.0000001")
+			require.NoError(t, err)
+			return []byte(state)
+		},
+		func(genesis []byte) []byte {
+			state, err := sjson.Set(string(genesis), "app_state.gov.params.quorum", "0.0000001")
+			require.NoError(t, err)
+			return []byte(state)
+		},
+	)
+}
 
 func TestQueryProtocolPool(t *testing.T) {
 	// Scenario:
@@ -91,41 +122,10 @@ func TestQueryProtocolPool(t *testing.T) {
 	// fund the community pool and query
 }
 
-func modifyGovParams(t *testing.T) {
-	t.Helper()
-	// set up params so that we should just auto pass
-	systemtests.Sut.ModifyGenesisJSON(t,
-		func(genesis []byte) []byte {
-			state, err := sjson.Set(string(genesis), "app_state.gov.params.max_deposit_period", (1 * time.Second).String())
-			require.NoError(t, err)
-			return []byte(state)
-		},
-		func(genesis []byte) []byte {
-			state, err := sjson.Set(string(genesis), "app_state.gov.params.voting_period", (11 * time.Second).String())
-			require.NoError(t, err)
-			return []byte(state)
-		},
-		func(genesis []byte) []byte {
-			state, err := sjson.Set(string(genesis), "app_state.gov.params.veto_threshold", "0.000001")
-			require.NoError(t, err)
-			return []byte(state)
-		},
-		func(genesis []byte) []byte {
-			state, err := sjson.Set(string(genesis), "app_state.gov.params.threshold", "0.0000001")
-			require.NoError(t, err)
-			return []byte(state)
-		},
-		func(genesis []byte) []byte {
-			state, err := sjson.Set(string(genesis), "app_state.gov.params.quorum", "0.0000001")
-			require.NoError(t, err)
-			return []byte(state)
-		},
-	)
-}
-
-func TestBudget(t *testing.T) {
-	// given a running chain
-
+// Create a continuous fund
+// - submit prop and vote until passed
+// Check that funds are distributed and continuous fund is cleaned up once expired
+func TestContinuousFunds(t *testing.T) {
 	systemtests.Sut.ResetChain(t)
 	cli := systemtests.NewCLIWrapper(t, systemtests.Sut, systemtests.Verbose)
 
@@ -152,21 +152,19 @@ func TestBudget(t *testing.T) {
 	govAddress, err = bech32.ConvertAndEncode(sdk.Bech32MainPrefix, bz)
 	assert.NoError(t, err)
 
+	expiry := time.Now().Add(10 * time.Second)
+
 	t.Run("valid proposal", func(t *testing.T) {
 		// Create a valid new proposal JSON.
 		validProp := fmt.Sprintf(`
 {
 	"messages": [
 		{
-			"@type": "/cosmos.protocolpool.v1.MsgCreateBudget",
+			"@type": "/cosmos.protocolpool.v1.MsgCreateContinuousFund",
 			"authority": "%s",
-			"recipient_address": "%s",
-			"budget_per_tranche": {
-  				"denom": "stake",
-  				"amount": "10"
-			},
-			"tranches": 10,
-			"period": "%s"
+			"recipient": "%s",
+			"percentage": "0.5",
+			"expiry": "%s"
 		}
 	],
 	"title": "My awesome title",
@@ -175,7 +173,7 @@ func TestBudget(t *testing.T) {
 }`,
 			govAddress,
 			account1Addr,
-			1*time.Second,
+			expiry.Format(time.RFC3339),
 			sdk.NewCoin(stakingToken, math.NewInt(50000000)),
 		)
 		validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
@@ -217,6 +215,8 @@ func TestBudget(t *testing.T) {
 		systemtests.RequireTxSuccess(t, txResult)
 	})
 
+	// get balance before any distribution
+	balanceBefore := cli.QueryBalance(account1Addr, stakingToken)
 	time.Sleep(11 * time.Second)
 	systemtests.Sut.AwaitNextBlock(t)
 
@@ -227,39 +227,19 @@ func TestBudget(t *testing.T) {
 		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
 
 		// check that the budget exists
-		rsp = cli.CustomQuery("q", "protocolpool", "unclaimed-budget", account1Addr)
-		tranchesLeft := gjson.Get(rsp, "tranches_left").Int()
-		require.Equal(t, int64(10), tranchesLeft)
+		rsp = cli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
+		gotExpiry := gjson.Get(rsp, "expiry").Int()
+		require.Equal(t, expiry, gotExpiry)
 	})
 
 	time.Sleep(11 * time.Second)
 	systemtests.Sut.AwaitNextBlock(t)
 
-	t.Run("claim the budget (wrong address will fail)", func(t *testing.T) {
-		// claim the budget (right address fails)
-		args := []string{
-			"tx", "protocolpool", "claim-budget", valAddr,
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
-		}
-		rsp := cli.Run(args...)
-		require.Contains(t, rsp, "no budget found for recipient")
-	})
-
 	t.Run("claim the budget (right address passes)", func(t *testing.T) {
-		balanceBefore := cli.QueryBalance(account1Addr, stakingToken)
-
-		// claim the budget (right address passes)
-		args := []string{
-			"tx", "protocolpool", "claim-budget", account1Addr,
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, account1Addr),
-		}
-		rsp := cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
 
 		// check budget is updated (trances should be expired)
-		rsp = cli.CustomQuery("q", "protocolpool", "unclaimed-budget", account1Addr)
+		rsp := cli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
+		// we want this to fail actually
 		tranchesLeft := gjson.Get(rsp, "tranches_left").Int()
 		require.Equal(t, int64(0), tranchesLeft)
 		claimed := gjson.Get(rsp, "claimed_amount.amount").Int()

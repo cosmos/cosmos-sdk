@@ -4,9 +4,14 @@ import "cosmossdk.io/collections"
 
 const (
 	// ModuleName is the module name constant used in many places
+	//
+	// The module account for this name is the x/protocolpool community pool.
+	// It can recieve funds from distribution from users who use FundCommunityPool or from the ProtocolPoolDistrAccount.
 	ModuleName = "protocolpool"
 
 	// ProtocolPoolDistrAccount is an intermediary account that holds the funds to be distributed to the protocolpool accounts.
+	//
+	// It can recieve funds from `x/distribution` and distribute them to continuous funds and the community pool.
 	ProtocolPoolDistrAccount = "protocolpool_distr"
 
 	// StoreKey is the store key string for protocolpool

@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#24106](https://github.com/cosmos/cosmos-sdk/pull/24106) `SendCoins` now checks for `SendRestrictions` before instead of after deducting coins using `subUnlockedCoins`.
 * (crypto/ledger) [#24036](https://github.com/cosmos/cosmos-sdk/pull/24036) Improve error message when deriving paths using index > 100
 * (gRPC) [#23844](https://github.com/cosmos/cosmos-sdk/pull/23844) Add debug log prints for each gRPC request.
+* (gRPC) [#24073](https://github.com/cosmos/cosmos-sdk/pull/24073) Adds error handling for out-of-gas panics in grpc query handlers.
 * (server) [#24072](https://github.com/cosmos/cosmos-sdk/pull/24072) Return BlockHeader by shallow copy in server Context.
 * (x/bank) [#24053](https://github.com/cosmos/cosmos-sdk/pull/24053) Resolve a foot-gun by swapping send restrictions check in `InputOutputCoins` before coin deduction.
 

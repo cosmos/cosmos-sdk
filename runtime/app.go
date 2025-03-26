@@ -25,7 +25,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -41,8 +40,7 @@ import (
 type App struct {
 	*baseapp.BaseApp
 
-	ModuleManager      *module.Manager
-	UnorderedTxManager *unorderedtx.Manager
+	ModuleManager *module.Manager
 
 	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
@@ -160,9 +158,6 @@ func (a *App) Load(loadLatest bool) error {
 
 // PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-	if a.UnorderedTxManager != nil {
-		a.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
-	}
 	return a.ModuleManager.PreBlock(ctx)
 }
 

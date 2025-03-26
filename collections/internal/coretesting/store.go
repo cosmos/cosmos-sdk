@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	db "github.com/cosmos/cosmos-db"
+
 	store "cosmossdk.io/collections/corecompat"
 )
 
 var _ store.KVStoreService = (*kvStoreService)(nil)
 
 func KVStoreService(ctx context.Context, moduleName string) store.KVStoreService {
-	unwrap(ctx).stores[moduleName] = NewMemKV()
+	unwrap(ctx).stores[moduleName] = db.NewMemDB()
 	return kvStoreService{
 		moduleName: moduleName,
 	}

@@ -50,6 +50,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* (x/bank) [#24148](https://github.com/cosmos/cosmos-sdk/pull/24148) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
+
 ### Bug Fixes
 
 * (x/auth) [#23741](https://github.com/cosmos/cosmos-sdk/pull/23741) Support legacy global AccountNumber.

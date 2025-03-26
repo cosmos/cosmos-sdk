@@ -60,7 +60,7 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	}
 
 	// distribute funds from community pool module account
-	if err := k.Keeper.DistributeFromCommunityPool(sdkCtx, msg.Amount, recipient); err != nil {
+	if err := k.DistributeFromCommunityPool(sdkCtx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 
@@ -98,7 +98,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	// Check if total funds percentage exceeds 100%
 	// If exceeds, we should not setup continuous fund proposal.
 	totalStreamFundsPercentage := math.LegacyZeroDec()
-	err = k.Keeper.ContinuousFunds.Walk(sdkCtx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+	err = k.ContinuousFunds.Walk(sdkCtx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value.Percentage)
 		return false, nil
 	})
@@ -133,7 +133,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, err
 	}
 
-	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -142,13 +142,13 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	canceledTime := sdkCtx.BlockTime()
 
 	if err := k.ContinuousFunds.Remove(sdkCtx, recipient); err != nil {
-		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
+		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.Recipient, err)
 	}
 
 	return &types.MsgCancelContinuousFundResponse{
-		CanceledTime:     canceledTime,
-		CanceledHeight:   uint64(canceledHeight),
-		RecipientAddress: msg.RecipientAddress,
+		CanceledTime:   canceledTime,
+		CanceledHeight: uint64(canceledHeight),
+		Recipient:      msg.Recipient,
 	}, nil
 }
 

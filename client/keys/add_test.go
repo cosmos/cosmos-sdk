@@ -133,10 +133,7 @@ func Test_runAddCmdMultisigDupKeys(t *testing.T) {
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
 		WithInput(mockIn).
-		WithCodec(cdc).
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+		WithCodec(cdc)
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 

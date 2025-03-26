@@ -115,28 +115,28 @@ func TestAppImportExport(t *testing.T) {
 //	set up a new node instance, Init chain from exported genesis
 //	run new instance for n blocks
 func TestAppSimulationAfterImport(t *testing.T) {
-	sims.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti sims.TestInstance[*SimApp], accs []simtypes.Account) {
-		t.Helper()
+	sims.Run(t, NewSimApp, setupStateFactory, func(tb testing.TB, ti sims.TestInstance[*SimApp], accs []simtypes.Account) {
+		tb.Helper()
 		app := ti.App
-		t.Log("exporting genesis...\n")
+		tb.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
-		require.NoError(t, err)
+		require.NoError(tb, err)
 
-		t.Log("importing genesis...\n")
-		newTestInstance := sims.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
+		tb.Log("importing genesis...\n")
+		newTestInstance := sims.NewSimulationAppInstance(tb, ti.Cfg, NewSimApp)
 		newApp := newTestInstance.App
 		_, err = newApp.InitChain(&abci.RequestInitChain{
 			AppStateBytes: exported.AppState,
 			ChainId:       sims.SimAppChainID,
 		})
 		if IsEmptyValidatorSetErr(err) {
-			t.Skip("Skipping simulation as all validators have been unbonded")
+			tb.Skip("Skipping simulation as all validators have been unbonded")
 			return
 		}
-		require.NoError(t, err)
+		require.NoError(tb, err)
 		newStateFactory := setupStateFactory(newApp)
 		_, _, err = simulation.SimulateFromSeedX(
-			t,
+			tb,
 			newTestInstance.AppLogger,
 			sims.WriteToDebugLog(newTestInstance.AppLogger),
 			newApp.BaseApp,
@@ -148,7 +148,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			newStateFactory.Codec,
 			ti.ExecLogWriter,
 		)
-		require.NoError(t, err)
+		require.NoError(tb, err)
 	})
 }
 

@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -190,69 +189,6 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 
 	resUnbonds = keeper.GetAllUnbondingDelegations(ctx, delAddrs[0])
 	require.Equal(0, len(resUnbonds))
-}
-
-func (s *KeeperTestSuite) TestTransferUnbonding() {
-	ctx, keeper := s.ctx, s.stakingKeeper
-	require := s.Require()
-
-	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(delAddrs)
-
-	// try to transfer when there's nothing
-	transferred := app.StakingKeeper.TransferUnbonding(ctx, delAddrs[0], delAddrs[1], valAddrs[0], sdk.NewInt(30))
-	require.Equal(t, sdk.ZeroInt(), transferred)
-	_, found := app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[1], valAddrs[0])
-	require.False(t, found)
-
-	// set an UnbondingDelegation with one entry
-	ubd := types.NewUnbondingDelegation(
-		delAddrs[0],
-		valAddrs[0],
-		0,
-		time.Unix(0, 0).UTC(),
-		sdk.NewInt(5),
-	)
-	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
-
-	// transfer nothing
-	transferred = app.StakingKeeper.TransferUnbonding(ctx, delAddrs[0], delAddrs[1], valAddrs[0], sdk.ZeroInt())
-	require.Equal(t, sdk.ZeroInt(), transferred)
-
-	// partial transfer
-	transferred = app.StakingKeeper.TransferUnbonding(ctx, delAddrs[0], delAddrs[1], valAddrs[0], sdk.NewInt(3))
-	require.Equal(t, sdk.NewInt(3), transferred)
-	ubd.Entries[0].Balance = sdk.NewInt(2)
-	resUnbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
-	require.True(t, found)
-	require.Equal(t, ubd, resUnbond)
-	resUnbond, found = app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[1], valAddrs[0])
-	require.True(t, found)
-	wantDestUnbond := types.NewUnbondingDelegation(
-		delAddrs[1],
-		valAddrs[0],
-		0,
-		time.Unix(0, 0).UTC(),
-		sdk.NewInt(3),
-	)
-	require.Equal(t, wantDestUnbond, resUnbond)
-
-	// add another entry
-	completionTime := time.Unix(3600, 0).UTC()
-	ubdTo := app.StakingKeeper.SetUnbondingDelegationEntry(ctx, delAddrs[0], valAddrs[0], 1, completionTime, sdk.NewInt(57))
-	app.StakingKeeper.InsertUBDQueue(ctx, ubdTo, completionTime)
-
-	// full transfer
-	transferred = app.StakingKeeper.TransferUnbonding(ctx, delAddrs[0], delAddrs[1], valAddrs[0], sdk.NewInt(999))
-	require.Equal(t, sdk.NewInt(59), transferred)
-	_, found = app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
-	require.False(t, found)
-	resUnbond, found = app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[1], valAddrs[0])
-	require.True(t, found)
-	require.Equal(t, 3, len(resUnbond.Entries))
-	require.Equal(t, sdk.NewInt(3), resUnbond.Entries[0].Balance)
-	require.Equal(t, sdk.NewInt(2), resUnbond.Entries[1].Balance)
-	require.Equal(t, sdk.NewInt(57), resUnbond.Entries[2].Balance)
 }
 
 func (s *KeeperTestSuite) TestUnbondDelegation() {

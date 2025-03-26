@@ -772,7 +772,8 @@ func TestGetVestingCoinsClawbackVestingAcc(t *testing.T) {
 
 	// require no coins vesting at the end of the vesting schedule
 	vestingCoins = va.GetVestingCoins(endTime)
-	require.Nil(t, vestingCoins)
+	//sdk.Coins{}
+	require.Equal(t, sdk.Coins{}, vestingCoins)
 
 	// require all coins vesting at first vesting event
 	vestingCoins = va.GetVestingCoins(now.Add(12 * time.Hour))
@@ -796,7 +797,7 @@ func TestGetVestingCoinsClawbackVestingAcc(t *testing.T) {
 
 	// require 0% of coins vesting after vesting complete
 	vestingCoins = va.GetVestingCoins(now.Add(48 * time.Hour))
-	require.Nil(t, vestingCoins)
+	require.Equal(t, sdk.Coins{}, vestingCoins)
 }
 
 func TestSpendableCoinsClawbackVestingAcc(t *testing.T) {
@@ -906,23 +907,24 @@ func TestTrackUndelegationClawbackVestingAcc(t *testing.T) {
 	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
 	va.TrackDelegation(now, origCoins, origCoins)
 	va.TrackUndelegation(origCoins)
-	require.Nil(t, va.DelegatedFree)
-	require.Nil(t, va.DelegatedVesting)
+	var expectedEmptyCoins sdk.Coins
+	require.Equal(t, expectedEmptyCoins, va.DelegatedFree)
+	require.Equal(t, sdk.Coins{}, va.DelegatedVesting)
 
 	// require the ability to undelegate all vested coins at the end of vesting
 	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
 
 	va.TrackDelegation(endTime, origCoins, origCoins)
 	va.TrackUndelegation(origCoins)
-	require.Nil(t, va.DelegatedFree)
-	require.Nil(t, va.DelegatedVesting)
+	require.Equal(t, sdk.Coins{}, va.DelegatedFree)
+	require.Equal(t, expectedEmptyCoins, va.DelegatedVesting)
 
 	// require the ability to undelegate half of coins
 	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
 	va.TrackDelegation(endTime, origCoins, vestingPeriods[0].Amount)
 	va.TrackUndelegation(vestingPeriods[0].Amount)
-	require.Nil(t, va.DelegatedFree)
-	require.Nil(t, va.DelegatedVesting)
+	require.Equal(t, sdk.Coins{}, va.DelegatedFree)
+	require.Equal(t, expectedEmptyCoins, va.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
 	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
@@ -930,8 +932,8 @@ func TestTrackUndelegationClawbackVestingAcc(t *testing.T) {
 	require.Panics(t, func() {
 		va.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
 	})
-	require.Nil(t, va.DelegatedFree)
-	require.Nil(t, va.DelegatedVesting)
+	require.Equal(t, expectedEmptyCoins, va.DelegatedFree)
+	require.Equal(t, expectedEmptyCoins, va.DelegatedVesting)
 
 	// vest 50% and delegate to two validators
 	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
@@ -945,7 +947,7 @@ func TestTrackUndelegationClawbackVestingAcc(t *testing.T) {
 
 	// undelegate from the other validator that did not get slashed
 	va.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
-	require.Nil(t, va.DelegatedFree)
+	require.Equal(t, sdk.Coins{}, va.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, va.DelegatedVesting)
 }
 

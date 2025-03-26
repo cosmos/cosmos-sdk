@@ -11,6 +11,7 @@ import (
 // queries and transaction handling.
 type CometRPC interface {
 	rpcclient.ABCIClient
+	rpcclient.MempoolClient
 
 	Validators(ctx context.Context, height *int64, page, perPage *int) (*coretypes.ResultValidators, error)
 	Status(context.Context) (*coretypes.ResultStatus, error)

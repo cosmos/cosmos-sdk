@@ -116,6 +116,14 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 	return runAddCmd(clientCtx, cmd, args, buf)
 }
 
+func checkName(name string) error {
+	if strings.TrimSpace(name) == "" {
+		return errors.New("the provided name is invalid or empty after trimming whitespace")
+	}
+
+	return nil
+}
+
 /*
 input
   - bip39 mnemonic
@@ -130,8 +138,8 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	var err error
 
 	name := args[0]
-	if strings.TrimSpace(name) == "" {
-		return errors.New("the provided name is invalid or empty after trimming whitespace")
+	if err = checkName(name); err != nil {
+		return err
 	}
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)

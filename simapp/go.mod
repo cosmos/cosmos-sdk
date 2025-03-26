@@ -181,10 +181,18 @@ require (
 )
 
 replace (
+	cosmossdk.io/api => ../api
+	cosmossdk.io/core => ../core
+	cosmossdk.io/depinject => ../depinject
+	cosmossdk.io/errors => ../errors
+	cosmossdk.io/math => ../math
+	cosmossdk.io/tools/rosetta => ../tools/rosetta
+
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// use cometbft
 	github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.15-alpha.agoric.1
+	github.com/confio/ics23/go => github.com/cosmos/ics23/go v0.11.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.

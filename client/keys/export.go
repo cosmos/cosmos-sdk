@@ -65,24 +65,12 @@ and export your keys in ASCII-armored encrypted format.`,
 
 	cmd.Flags().Bool(flagUnarmoredHex, false, "Export unarmored hex privkey. Requires --unsafe.")
 	cmd.Flags().Bool(flagUnsafe, false, "Enable unsafe operations. This flag must be switched on along with all unsafe operation-specific options.")
-<<<<<<< HEAD
-=======
-	cmd.Flags().Bool(flagIndiscreet, false, "Print unarmored hex privkey directly on current terminal (only valid when --unarmored-hex is true)")
 	cmd.Flags().BoolP(flagYes, "y", false, "Skip confirmation prompt when export unarmored hex privkey")
->>>>>>> 0268ff937 (feat(client/keys): add --yes option to `keys export` and `keys mnemonic` (#18745))
 
 	return cmd
 }
 
-<<<<<<< HEAD
 func exportUnsafeUnarmored(cmd *cobra.Command, uid string, buf *bufio.Reader, kr keyring.Keyring) error {
-	// confirm deletion, unless -y is passed
-	if yes, err := input.GetConfirmation("WARNING: The private key will be exported as an unarmored hexadecimal string. USE AT YOUR OWN RISK. Continue?", buf, cmd.ErrOrStderr()); err != nil {
-		return err
-	} else if !yes {
-		return nil
-=======
-func exportUnsafeUnarmored(ctx client.Context, cmd *cobra.Command, uid string, buf *bufio.Reader) error {
 	// confirm export unarmored hex privkey, unless -y is passed
 	if skip, _ := cmd.Flags().GetBool(flagYes); !skip {
 		if yes, err := input.GetConfirmation("WARNING: The private key will be exported as an unarmored hexadecimal string. USE AT YOUR OWN RISK. Continue?", buf, cmd.ErrOrStderr()); err != nil {
@@ -90,7 +78,6 @@ func exportUnsafeUnarmored(ctx client.Context, cmd *cobra.Command, uid string, b
 		} else if !yes {
 			return nil
 		}
->>>>>>> 0268ff937 (feat(client/keys): add --yes option to `keys export` and `keys mnemonic` (#18745))
 	}
 
 	hexPrivKey, err := unsafeExportPrivKeyHex(kr.(unsafeExporter), uid)

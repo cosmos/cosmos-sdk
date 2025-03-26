@@ -73,10 +73,6 @@ func MnemonicKeyCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool(flagUserEntropy, false, "Prompt the user to supply their own entropy, instead of relying on the system")
-<<<<<<< HEAD
-=======
-	cmd.Flags().Bool(flagIndiscreet, false, "Print mnemonic directly on current terminal")
 	cmd.Flags().BoolP(flagYes, "y", false, "Skip confirmation prompt when check input entropy length")
->>>>>>> 0268ff937 (feat(client/keys): add --yes option to `keys export` and `keys mnemonic` (#18745))
 	return cmd
 }

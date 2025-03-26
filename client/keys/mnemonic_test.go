@@ -27,7 +27,7 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 	require.Equal(t, "EOF", err.Error())
 
 	// Try again
-	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	mockIn, mockOut := testutil.ApplyMockIO(cmd)
 	mockIn.Reset("Hi!\n")
 	err = cmd.Execute()
 	require.Error(t, err)
@@ -51,7 +51,7 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 	require.NoError(t, cmd.Execute())
 
 	// test for skip confirmation
-	cmd.SetArgs([]string{fmt.Sprintf("--%s", flagUserEntropy), fmt.Sprintf("--%s", flagIndiscreet), fmt.Sprintf("--%s", flagYes)})
+	cmd.SetArgs([]string{fmt.Sprintf("--%s", flagUserEntropy), fmt.Sprintf("--%s", flagYes)})
 	fakeEntropy = strings.Repeat(":)", 40) + "\n" // entropy + accept count
 	mockIn.Reset(fakeEntropy)
 	require.NoError(t, cmd.Execute())

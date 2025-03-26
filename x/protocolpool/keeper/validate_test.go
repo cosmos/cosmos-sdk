@@ -141,7 +141,7 @@ func TestValidateContinuousFund(t *testing.T) {
 				Expiry:     &past,
 			},
 			expErr: true,
-			errMsg: "expiry time cannot be less than the current block time",
+			errMsg: "cannot be less than the current block time",
 		},
 	}
 

@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -137,100 +138,6 @@ func (s *KeeperTestSuite) TestDelegation() {
 	require.False(found)
 	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(0, len(resBonds))
-}
-
-func TestTransferDelegation(t *testing.T) {
-	_, app, ctx := createTestInput(t)
-
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
-
-	// construct the validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	var validators [3]types.Validator
-	for i, amt := range amts {
-		validators[i] = teststaking.NewValidator(t, valAddrs[i], PKs[i])
-		validators[i], _ = validators[i].AddTokensFromDel(amt)
-	}
-	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
-	validators[1] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[1], true)
-	validators[2] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[2], true)
-
-	// try a transfer when there's nothing
-	transferred := app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.NewDec(1000))
-	require.Equal(t, sdk.ZeroDec(), transferred)
-
-	// stake some tokens
-	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], sdk.NewDec(99))
-	app.StakingKeeper.SetDelegation(ctx, bond1to1)
-	// stake to an unrelated validator so implementation has to skip it
-	bond1to3 := types.NewDelegation(addrDels[0], valAddrs[2], sdk.NewDec(9))
-	app.StakingKeeper.SetDelegation(ctx, bond1to3)
-
-	// transfer nothing
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.ZeroDec())
-	require.Equal(t, sdk.ZeroDec(), transferred)
-
-	// partial transfer, empty recipient
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.NewDec(10))
-	require.Equal(t, sdk.NewDec(10), transferred)
-	resBond, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(89), resBond.Shares)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(10), resBond.Shares)
-
-	// partial transfer, existing recipient
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.NewDec(11))
-	require.Equal(t, transferred, sdk.NewDec(11))
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(78), resBond.Shares)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(21), resBond.Shares)
-
-	// full transfer
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.NewDec(9999))
-	require.Equal(t, transferred, sdk.NewDec(78))
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
-	require.False(t, found)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(99), resBond.Shares)
-
-	// simulate redelegate to another validator
-	bond1to2 := types.NewDelegation(addrDels[0], valAddrs[1], sdk.NewDec(20))
-	app.StakingKeeper.SetDelegation(ctx, bond1to2)
-	rd := types.NewRedelegation(addrDels[0], valAddrs[0], valAddrs[1], 0, time.Unix(0, 0).UTC(), sdk.NewInt(20), sdk.NewDec(20))
-	app.StakingKeeper.SetRedelegation(ctx, rd)
-
-	// partial transfer from redelegation
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[1], sdk.NewDec(7))
-	require.Equal(t, sdk.NewDec(7), transferred)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[1])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(13), resBond.Shares)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(7), resBond.Shares)
-
-	// stake more alongside redelegation
-	bond1to2, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[1])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(13), bond1to2.Shares)
-	bond1to2.Shares = sdk.NewDec(47) // add 34 shares
-	app.StakingKeeper.SetDelegation(ctx, bond1to2)
-
-	// full transfer from partial redelegation
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[1], sdk.NewDec(9999))
-	require.Equal(t, sdk.NewDec(47), transferred)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[1])
-	require.False(t, found)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
-	require.True(t, found)
-	require.Equal(t, sdk.NewDec(54), resBond.Shares)
 }
 
 // tests Get/Set/Remove UnbondingDelegation

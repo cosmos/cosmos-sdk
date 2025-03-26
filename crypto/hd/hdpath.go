@@ -87,7 +87,7 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %s and %s", spl[3], spl[4])
 	}
 
-	if !(change == 0 || change == 1) {
+	if change != 0 && change != 1 {
 		return nil, fmt.Errorf("change field can only be 0 or 1")
 	}
 

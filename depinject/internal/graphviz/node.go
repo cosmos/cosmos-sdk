@@ -12,6 +12,6 @@ type Node struct {
 }
 
 func (n Node) render(w io.Writer, indent string) error {
-	_, err := fmt.Fprintf(w, "%s%q%s;\n", indent, n.name, n.Attributes.String())
+	_, err := fmt.Fprintf(w, "%s%q%s;\n", indent, n.name, n.String())
 	return err
 }

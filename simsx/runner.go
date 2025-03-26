@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -310,7 +311,7 @@ func prepareWeightedOps(
 			xm.ProposalMsgsX(weights, pReg)
 		case HasLegacyProposalMsgs:
 			for _, p := range xm.ProposalMsgs(simState) {
-				weight := weights.Get(p.AppParamsKey(), uint32(p.DefaultWeight()))
+				weight := weights.Get(p.AppParamsKey(), safeUint(p.DefaultWeight()))
 				legacyPReg.Add(weight, legacyToMsgFactoryAdapter(p.MsgSimulatorFn()))
 			}
 		case HasLegacyProposalContents:
@@ -337,7 +338,14 @@ func prepareWeightedOps(
 			wOps = append(wOps, xm.WeightedOperations(simState)...)
 		}
 	}
-	return append(wOps, oReg.ToLegacyObjects()...), reporter
+	return append(wOps, Collect(oReg.items, func(a weightedOperation) simtypes.WeightedOperation { return a })...), reporter
+}
+
+func safeUint(p int) uint32 {
+	if p < 0 || p > math.MaxUint32 {
+		panic(fmt.Sprintf("can not cast to uint32: %d", p))
+	}
+	return uint32(p)
 }
 
 // NewSimulationAppInstance initializes and returns a TestInstance of a SimulationApp.
@@ -352,7 +360,7 @@ func NewSimulationAppInstance[T SimulationApp](
 ) TestInstance[T] {
 	tb.Helper()
 	workDir := tb.TempDir()
-	require.NoError(tb, os.Mkdir(filepath.Join(workDir, "data"), 0o755))
+	require.NoError(tb, os.Mkdir(filepath.Join(workDir, "data"), 0o750))
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {

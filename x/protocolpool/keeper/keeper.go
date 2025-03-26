@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -104,6 +105,8 @@ func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error) {
 // - for each continuous fund, check if expired and remove if so
 // - for each continuous fund, distribute funds according to percentage
 // - distribute remaining funds to the community pool
+//
+// This function is run at the BeginBlocker method and therefore must be very safe.
 func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 	// Get current balance of the intermediary module account
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount)
@@ -153,7 +156,7 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 			continue
 		}
 
-		amountToStream := types.PercentageCoinMul(fund.Percentage, amountToDistribute)
+		amountToStream := PercentageCoinMul(fund.Percentage, amountToDistribute)
 		remainingCoins, anyNegative = remainingCoins.SafeSub(amountToStream...)
 		if anyNegative {
 			return fmt.Errorf("negative funds for distribution from ContinuousFunds: %v", remainingCoins)
@@ -206,4 +209,19 @@ func (k Keeper) validateAuthority(authority string) error {
 	}
 
 	return nil
+}
+
+// percentageCoinMul multiplies each coin in an sdk.Coins struct by the given percentage and returns the new
+// value.
+//
+// When performing multiplication, the resulting values are truncated to an sdk.Int.
+func PercentageCoinMul(percentage math.LegacyDec, coins sdk.Coins) sdk.Coins {
+	ret := sdk.NewCoins()
+
+	for _, denom := range coins.Denoms() {
+		am := sdk.NewCoin(denom, percentage.MulInt(coins.AmountOf(denom)).TruncateInt())
+		ret = ret.Add(am)
+	}
+
+	return ret
 }

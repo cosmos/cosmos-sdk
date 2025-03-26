@@ -122,7 +122,7 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 	amountToDistribute := sdk.NewCoins()
 	for _, denom := range params.EnabledDistributionDenoms {
 		bal := k.bankKeeper.GetBalance(ctx, moduleAccount.GetAddress(), denom)
-		amountToDistribute = amountToDistribute.Add(bal)
+		amountToDistribute = append(amountToDistribute, bal)
 	}
 
 	// if the balance is zero, return early

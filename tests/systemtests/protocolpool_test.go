@@ -4,15 +4,16 @@ package systemtests
 
 import (
 	"fmt"
-	"github.com/tidwall/sjson"
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/systemtests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+
+	"cosmossdk.io/math"
+	"cosmossdk.io/systemtests"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,6 +68,9 @@ func TestQueryProtocolPool(t *testing.T) {
 	sut := systemtests.Sut
 	sut.ResetChain(t)
 
+	// set up gov params so we can pass props quickly
+	modifyGovParams(t)
+
 	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
 
 	// add genesis account with some tokens
@@ -81,12 +85,16 @@ func TestQueryProtocolPool(t *testing.T) {
 	rsp := cli.CustomQuery("q", stakingModule, "validators")
 	valAddr := gjson.Get(rsp, "validators.#.operator_address").Array()[0].String()
 
+	// get validator address
+	valSigner := gjson.Get(cli.Keys("keys", "list"), "0.address").String()
+	require.NotEmpty(t, valSigner)
+
 	// stake tokens
 	rsp = cli.Run("tx", stakingModule, "delegate", valAddr, "10000000000stake", "--from="+account1Addr, "--fees=1stake")
 	systemtests.RequireTxSuccess(t, rsp)
 
-	t.Log(cli.QueryBalance(account1Addr, stakingToken))
-	assert.Equal(t, int64(989999999999), cli.QueryBalance(account1Addr, stakingToken))
+	beforeBalance := cli.QueryBalance(account1Addr, stakingToken)
+	assert.Equal(t, int64(989999999999), beforeBalance)
 
 	rsp = cli.CustomQuery("q", stakingModule, "delegation", account1Addr, valAddr)
 	assert.Equal(t, "10000000000", gjson.Get(rsp, "delegation_response.balance.amount").String(), rsp)
@@ -119,6 +127,11 @@ func TestQueryProtocolPool(t *testing.T) {
 		assert.True(t, newPoolAmount > poolAmount, rsp)
 	})
 
+	rsp = cli.CustomQuery("q", protocolPoolModule, "community-pool")
+	poolAmount := gjson.Get(rsp, "pool.0.amount").Int()
+	assert.True(t, poolAmount > 0, rsp)
+	assert.Equal(t, stakingToken, gjson.Get(rsp, "pool.0.denom").String(), rsp)
+
 	// fund the community pool and query
 	// get gov module address
 	resp := cli.CustomQuery("q", "auth", "module-account", "gov")
@@ -128,47 +141,46 @@ func TestQueryProtocolPool(t *testing.T) {
 	govAddress, err = bech32.ConvertAndEncode(sdk.Bech32MainPrefix, bz)
 	assert.NoError(t, err)
 
-	spendAmount := sdk.NewCoin(stakingToken, math.NewInt(100)),
-
-		t.Run("valid proposal", func(t *testing.T) {
-			// Create a valid new proposal JSON.
-			validProp := fmt.Sprintf(`
+	t.Run("valid proposal", func(t *testing.T) {
+		// Create a valid new proposal JSON.
+		validProp := fmt.Sprintf(`
 {
 	"messages": [
 		{
 			"@type": "/cosmos.protocolpool.v1.MsgCommunityPoolSpend",
 			"authority": "%s",
 			"recipient": "%s",
-			"amount": "%s"
-			"expiry": "%s"
+			"amount": [{
+				"denom": "stake",
+  				"amount": "100"
+			}]
 		}
 	],
 	"title": "My awesome title",
 	"summary": "My awesome description",
 	"deposit": "%s"
 }`,
-				govAddress,
-				account1Addr,
-				spendAmount,
-				sdk.NewCoin(stakingToken, math.NewInt(50000000)),
-			)
-			validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
-			defer validPropFile.Close()
+			govAddress,
+			account1Addr,
+			sdk.NewCoin(stakingToken, math.NewInt(50000000)),
+		)
+		validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
+		defer validPropFile.Close()
 
-			args := []string{
-				"tx", "gov", "submit-proposal",
-				validPropFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(stakingToken, math.NewInt(10))).String()),
-			}
+		args := []string{
+			"tx", "gov", "submit-proposal",
+			validPropFile.Name(),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, valSigner),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(stakingToken, math.NewInt(10))).String()),
+		}
 
-			rsp := cli.Run(args...)
-			txResult, found := cli.AwaitTxCommitted(rsp)
-			require.True(t, found)
-			systemtests.RequireTxSuccess(t, txResult)
-		})
+		rsp := cli.Run(args...)
+		txResult, found := cli.AwaitTxCommitted(rsp)
+		require.True(t, found)
+		systemtests.RequireTxSuccess(t, txResult)
+	})
 
 	t.Run("vote on proposal", func(t *testing.T) {
 		// check the proposal
@@ -183,7 +195,7 @@ func TestQueryProtocolPool(t *testing.T) {
 		// vote on the proposal
 		args := []string{
 			"tx", "gov", "vote", "1", "yes",
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, valSigner),
 		}
 		rsp = cli.Run(args...)
 		txResult, found := cli.AwaitTxCommitted(rsp)
@@ -191,8 +203,8 @@ func TestQueryProtocolPool(t *testing.T) {
 		systemtests.RequireTxSuccess(t, txResult)
 	})
 
-	// get balance before any distribution
 	balanceBefore := cli.QueryBalance(account1Addr, stakingToken)
+
 	time.Sleep(11 * time.Second)
 	systemtests.Sut.AwaitNextBlock(t)
 
@@ -202,12 +214,10 @@ func TestQueryProtocolPool(t *testing.T) {
 		status := gjson.Get(rsp, "proposal.status")
 		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
 
-		// check that the fund exists
-		rsp = cli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
-		gotExpiry := gjson.Get(rsp, "continuous_fund.expiry").Time()
-		require.Equal(t, expiry.Truncate(time.Second), gotExpiry.Truncate(time.Second))
-		recipient := gjson.Get(rsp, "continuous_fund.recipient").String()
-		require.Equal(t, account1Addr, recipient)
+		// check that the funds were distributed
+		// should be previous balance plus amount from the pool (100) plus the deposit amount (50000000)
+		balanceAfter := cli.QueryBalance(account1Addr, stakingToken)
+		require.Equal(t, balanceBefore+100+50000000, balanceAfter)
 	})
 }
 
@@ -351,7 +361,7 @@ func TestContinuousFunds(t *testing.T) {
 // Create a cancellation prop
 //   - submit prop and vote until passed
 //
-// Check that some funds have been distributed and that the fund is cancelled.
+// Check that some funds have been distributed and that the fund is canceled.
 func TestCancelContinuousFunds(t *testing.T) {
 	systemtests.Sut.ResetChain(t)
 	cli := systemtests.NewCLIWrapper(t, systemtests.Sut, systemtests.Verbose)
@@ -539,5 +549,4 @@ func TestCancelContinuousFunds(t *testing.T) {
 		// balance should be balance before + 1442 (community pool value added * 0.5)
 		require.Equal(t, balanceBefore+1442, balanceAfter)
 	})
-
 }

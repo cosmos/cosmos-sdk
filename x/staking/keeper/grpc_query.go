@@ -34,7 +34,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 	}
 
 	// validate the provided status, return all the validators if the status is empty
-	if req.Status != "" && !(req.Status == types.Bonded.String() || req.Status == types.Unbonded.String() || req.Status == types.Unbonding.String()) {
+	if req.Status != "" && (req.Status != types.Bonded.String() && req.Status != types.Unbonded.String() && req.Status != types.Unbonding.String()) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator status %s", req.Status)
 	}
 

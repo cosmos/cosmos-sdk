@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	"testing"
 	"time"
 
@@ -34,6 +33,7 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 type E2ETestSuite struct {
@@ -187,8 +187,6 @@ func (s *E2ETestSuite) TestNewWithdrawRewardsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -282,8 +280,6 @@ func (s *E2ETestSuite) TestNewWithdrawAllRewardsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewWithdrawAllRewardsCmd(address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
@@ -367,8 +363,6 @@ func (s *E2ETestSuite) TestNewSetWithdrawAddrCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewSetWithdrawAddrCmd(address.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx

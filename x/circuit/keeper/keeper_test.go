@@ -39,6 +39,8 @@ type fixture struct {
 }
 
 func initFixture(t *testing.T) *fixture {
+	t.Helper()
+
 	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
 	ac := addresscodec.NewBech32Codec("cosmos")
 	mockStoreKey := storetypes.NewKVStoreKey("test")
@@ -101,7 +103,7 @@ func TestIteratePermissions(t *testing.T) {
 		[]byte("mock_address_3"),
 	}
 	for i, addr := range mockAddrs {
-		f.keeper.Permissions.Set(f.ctx, addr, mockPerms[i])
+		require.NoError(t, f.keeper.Permissions.Set(f.ctx, addr, mockPerms[i]))
 	}
 
 	// Define a variable to store the returned permissions

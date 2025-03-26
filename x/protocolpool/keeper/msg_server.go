@@ -98,7 +98,7 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 	}
 
 	// distribute funds from community pool module account
-	if err := k.Keeper.DistributeFromCommunityPool(sdkCtx, msg.Amount, recipient); err != nil {
+	if err := k.DistributeFromCommunityPool(sdkCtx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 
@@ -136,7 +136,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	// Check if total funds percentage exceeds 100%
 	// If exceeds, we should not setup continuous fund proposal.
 	totalStreamFundsPercentage := math.LegacyZeroDec()
-	err = k.Keeper.ContinuousFunds.Walk(sdkCtx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+	err = k.ContinuousFunds.Walk(sdkCtx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
 		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value.Percentage)
 		return false, nil
 	})

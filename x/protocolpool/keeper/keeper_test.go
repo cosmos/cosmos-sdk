@@ -148,9 +148,10 @@ func (suite *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 		strAddr, err := suite.authKeeper.AddressCodec().BytesToString(key)
 		suite.Require().NoError(err)
 
-		if strAddr == "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6" {
+		switch strAddr {
+		case "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6":
 			suite.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
-		} else if strAddr == "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r" {
+		case "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r":
 			suite.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
 		}
 		return false, nil

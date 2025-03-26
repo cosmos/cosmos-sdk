@@ -3,7 +3,7 @@ deps:
   - buf.build/cosmos/cosmos-sdk
 lint:
   use:
-    - DEFAULT
+    - STANDARD
   except:
     - PACKAGE_VERSION_SUFFIX
 breaking:

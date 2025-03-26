@@ -27,9 +27,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var (
-	testProposerAddress = sdk.ConsAddress("test")
-)
+var testProposerAddress = sdk.ConsAddress("test")
 
 var _ disttypes.ExternalCommunityPoolKeeper = &mockProtocolPoolKeeper{}
 

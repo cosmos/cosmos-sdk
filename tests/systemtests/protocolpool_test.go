@@ -4,15 +4,16 @@ package systemtests
 
 import (
 	"fmt"
-	"github.com/tidwall/sjson"
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/systemtests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+
+	"cosmossdk.io/math"
+	"cosmossdk.io/systemtests"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,7 +71,6 @@ func TestQueryProtocolPool(t *testing.T) {
 	})
 
 	t.Run("check x/protocolpool community pool query", func(t *testing.T) {
-
 		// query will work for x/protocolpool
 		rsp = cli.CustomQuery("q", protocolPoolModule, "community-pool")
 		poolAmount := gjson.Get(rsp, "pool.0.amount").Int()
@@ -153,7 +153,6 @@ func TestBudget(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("valid proposal", func(t *testing.T) {
-
 		// Create a valid new proposal JSON.
 		validProp := fmt.Sprintf(`
 {
@@ -271,6 +270,5 @@ func TestBudget(t *testing.T) {
 		// balance should be equal to balanceBefore + claim - fee
 		expectedBalance := balanceBefore + claimed - cli.GetFeeAmount(t)[0].Amount.Int64()
 		require.Equal(t, expectedBalance, balanceAfter)
-
 	})
 }

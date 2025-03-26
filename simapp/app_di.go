@@ -3,12 +3,9 @@
 package simapp
 
 import (
-	"fmt"
 	"io"
-	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/depinject"
@@ -22,7 +19,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -34,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -68,8 +63,6 @@ type SimApp struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
-
-	UnorderedTxManager *unorderedtx.Manager
 
 	// essential keepers
 	AccountKeeper         authkeeper.AccountKeeper
@@ -266,25 +259,6 @@ func NewSimApp(
 	// 	return app.App.InitChainer(ctx, req)
 	// })
 
-	// create, start, and load the unordered tx manager
-	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-	app.UnorderedTxManager.Start()
-
-	if err := app.UnorderedTxManager.OnInit(); err != nil {
-		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-	}
-
-	// register custom snapshot extensions (if any)
-	if manager := app.SnapshotManager(); manager != nil {
-		err := manager.RegisterExtensions(
-			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-		)
-		if err != nil {
-			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
-		}
-	}
-
 	// set custom ante handler
 	app.setAnteHandler(app.txConfig)
 
@@ -301,12 +275,12 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:      app.AccountKeeper,
-				BankKeeper:         app.BankKeeper,
-				SignModeHandler:    txConfig.SignModeHandler(),
-				FeegrantKeeper:     app.FeeGrantKeeper,
-				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
-				UnorderedTxManager: app.UnorderedTxManager,
+				UnorderedNonceManager: app.AccountKeeper,
+				AccountKeeper:         app.AccountKeeper,
+				BankKeeper:            app.BankKeeper,
+				SignModeHandler:       txConfig.SignModeHandler(),
+				FeegrantKeeper:        app.FeeGrantKeeper,
+				SigGasConsumer:        ante.DefaultSigVerificationGasConsumer,
 			},
 			&app.CircuitKeeper,
 		},

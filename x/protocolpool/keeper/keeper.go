@@ -393,7 +393,7 @@ func (k Keeper) getClaimableFunds(ctx sdk.Context, recipientAddr string) (amount
 	// Check if the distribution time has not reached
 	if !budget.LastClaimedAt.IsZero() {
 		if currentTime.Before(budget.LastClaimedAt) {
-			return sdk.Coin{}, fmt.Errorf("distribution has not started yet: start time: %s", budget.LastClaimedAt.String())
+			return sdk.Coin{}, errors.New("distribution has not started yet")
 		}
 	}
 
@@ -402,15 +402,16 @@ func (k Keeper) getClaimableFunds(ctx sdk.Context, recipientAddr string) (amount
 		budget.ClaimedAmount = &zeroCoin
 	}
 
-	return k.calculateClaimableFunds(ctx, recipient, budget)
+	return k.calculateClaimableFunds(ctx, recipient, budget, currentTime)
 }
 
-func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddress, budget types.Budget) (amount sdk.Coin, err error) {
+func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddress, budget types.Budget, currentTime time.Time) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
-	timeElapsed := ctx.BlockTime().Sub(budget.LastClaimedAt)
+	timeElapsed := currentTime.Sub(budget.LastClaimedAt)
+
 	// Check the time elapsed has passed period length
 	if timeElapsed < budget.Period {
-		return sdk.Coin{}, fmt.Errorf("budget period of %f hours has not passed yet", budget.Period.Hours())
+		return sdk.Coin{}, errors.New("budget period has not passed yet")
 	}
 
 	// Calculate how many periods have passed
@@ -448,6 +449,7 @@ func (k Keeper) calculateClaimableFunds(ctx sdk.Context, recipient sdk.AccAddres
 
 	return amount, nil
 }
+
 func (k *Keeper) validateAuthority(authority string) error {
 	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)

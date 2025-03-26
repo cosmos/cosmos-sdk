@@ -36,13 +36,11 @@ func TestPaginationProperty(t *testing.T) {
 				CountTotal: false,
 				Reverse:    false,
 			}
-			end := offset + limit
-			if end > uint64(len(tableModels)) {
-				end = uint64(len(tableModels))
-			}
+			end := min(offset+limit, uint64(len(tableModels)))
 			dest := reconstructedTableModels[offset:end]
 			tableModelsIt := testTableModelIterator(tableModels, nil)
-			Paginate(tableModelsIt, pageRequest, &dest)
+			_, err := Paginate(tableModelsIt, pageRequest, &dest)
+			require.NoError(t, err)
 			reconstructedTableModels = append(reconstructedTableModels, dest...)
 		}
 
@@ -64,12 +62,7 @@ func TestPaginationProperty(t *testing.T) {
 				CountTotal: false,
 				Reverse:    false,
 			}
-
-			end := start + limit
-			if end > uint64(len(tableModels)) {
-				end = uint64(len(tableModels))
-			}
-
+			end := min(start+limit, uint64(len(tableModels)))
 			dest := reconstructedTableModels[start:end]
 			tableModelsIt := testTableModelIterator(tableModels, key)
 

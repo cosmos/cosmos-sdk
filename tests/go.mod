@@ -184,7 +184,13 @@ require (
 
 replace (
 	// We always want to test against the latest version of the simapp.
+	cosmossdk.io/api => ../api
+	cosmossdk.io/core => ../core
+	cosmossdk.io/depinject => ../depinject
+	cosmossdk.io/errors => ../errors
+	cosmossdk.io/math => ../math
 	cosmossdk.io/simapp => ../simapp
+	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// use cometbft
 	github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.15-alpha.agoric.1

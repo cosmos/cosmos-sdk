@@ -56,15 +56,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-<<<<<<< HEAD
-* (x/bank) [#24106](https://github.com/cosmos/cosmos-sdk/pull/24106) `SendCoins` now checks for `SendRestrictions` before instead of after deducting coins using `subUnlockedCoins`.
-* (crypto/ledger) [#24036](https://github.com/cosmos/cosmos-sdk/pull/24036) Improve error message when deriving paths using index > 100
-* (gRPC) [#23844](https://github.com/cosmos/cosmos-sdk/pull/23844) Add debug log prints for each gRPC request.
-* (gRPC) [#24073](https://github.com/cosmos/cosmos-sdk/pull/24073) Adds error handling for out-of-gas panics in grpc query handlers.
-* (server) [#24072](https://github.com/cosmos/cosmos-sdk/pull/24072) Return BlockHeader by shallow copy in server Context.
-* (x/bank) [#24053](https://github.com/cosmos/cosmos-sdk/pull/24053) Resolve a foot-gun by swapping send restrictions check in `InputOutputCoins` before coin deduction.
-
-=======
 * (client/keys) [#18950](https://github.com/cosmos/cosmos-sdk/pull/18950) Improve `<appd> keys add`, `<appd> keys import` and `<appd> keys rename` by checking name validation.
 * (baseapp) [#18915](https://github.com/cosmos/cosmos-sdk/pull/18915) Add a new `ExecModeVerifyVoteExtension` exec mode and ensure it's populated in the `Context` during `VerifyVoteExtension` execution.
 * (types) [#18888](https://github.com/cosmos/cosmos-sdk/pull/18888) Speedup DecCoin.Sort() if len(coins) <= 1
@@ -95,7 +86,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (tx) [#18852](https://github.com/cosmos/cosmos-sdk/pull/18852) Add `WithFromName` to tx factory.
 * (testutil) [#18930](https://github.com/cosmos/cosmos-sdk/pull/18930) Add NodeURI for clientCtx.
 * (types) [#18963](https://github.com/cosmos/cosmos-sdk/pull/18963) Swap out amino json encoding of `ABCIMessageLogs` for std lib json encoding
->>>>>>> c30700134 (refactor(client): check name validation for `keys add|import|rename` (#18950))
 
 ### Bug Fixes
 

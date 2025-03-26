@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -25,7 +24,7 @@ func validateContinuousFund(ctx sdk.Context, msg types.MsgCreateContinuousFund) 
 	// Validate expiry
 	currentTime := ctx.BlockTime()
 	if msg.Expiry != nil && msg.Expiry.Compare(currentTime) == -1 {
-		return errors.New("expiry time cannot be less than the current block time")
+		return fmt.Errorf("expiry time %s cannot be less than the current block time %s", msg.Expiry, currentTime)
 	}
 
 	return nil

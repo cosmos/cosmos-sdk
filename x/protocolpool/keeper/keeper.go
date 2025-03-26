@@ -211,7 +211,7 @@ func (k Keeper) validateAuthority(authority string) error {
 	return nil
 }
 
-// percentageCoinMul multiplies each coin in an sdk.Coins struct by the given percentage and returns the new
+// PercentageCoinMul multiplies each coin in an sdk.Coins struct by the given percentage and returns the new
 // value.
 //
 // When performing multiplication, the resulting values are truncated to an sdk.Int.

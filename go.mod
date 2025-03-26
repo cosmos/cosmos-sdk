@@ -9,7 +9,6 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
@@ -200,7 +199,6 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// use cometbft
 	github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.15-alpha.agoric.1
-	github.com/confio/ics23/go => github.com/cosmos/ics23/go v0.11.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

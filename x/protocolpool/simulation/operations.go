@@ -62,7 +62,7 @@ func SimulateMsgFundCommunityPool(
 		// choose 10% - 70% of spendable
 		// we do not want to use the full balance so that fees can be covered
 		decimalVal := r.Intn(6) + 1 // [1:7]
-		spendableSubAmount := types.PercentageCoinMul(math.LegacyMustNewDecFromStr(fmt.Sprintf("0.%d", decimalVal)), spendable)
+		spendableSubAmount := keeper.PercentageCoinMul(math.LegacyMustNewDecFromStr(fmt.Sprintf("0.%d", decimalVal)), spendable)
 		if spendableSubAmount.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, TypeFundCommunityPool, "no balance"), nil, nil
 		}

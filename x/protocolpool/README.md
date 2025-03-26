@@ -6,9 +6,9 @@ sidebar_position: 1
 
 ## Concepts
 
-`x/protocolpool` is a module that handle functionality around community pool funds. This provides a separate module account for community pool making it easier to track the pool assets. We no longer track community pool assets in `x/distribution` module, but instead in the `x/protocolpool` module. Funds are migrated from the `x/distribution` module's community pool to `x/protocolpool`'s module account.
+`x/protocolpool` is a supplemental Cosmos SDK module that handles functionality for community pool funds. The module provides a separate module account for the community pool making it easier to track the pool assets. We no longer track community pool assets in `x/distribution` module, but instead in the `x/protocolpool` module. Funds are migrated from the `x/distribution` module's community pool to `x/protocolpool`'s module account.
 
-This module is `supplemental`, meaning it is not required when running a Cosmos SDK chain - it only extends the community pool functionality as `x/distribution` and provides a way to create custom modules to extend the community pool.
+This module is `supplemental`; it is not required to run a Cosmos SDK chain. `x/protocolpool` enhances the community pool functionality provided by `x/distribution` and enables custom modules to further extend the community pool.
 
 ## State Transitions
 

@@ -39,7 +39,16 @@ func TestParamsValidation(t *testing.T) {
 				DistributionFrequency:     1,
 			},
 			expectErr:   true,
-			errContains: "invalid denom", // adjust based on sdk.ValidateDenom error text
+			errContains: "invalid denom",
+		},
+		{
+			name: "duplicate denom",
+			params: types.Params{
+				EnabledDistributionDenoms: []string{sdk.DefaultBondDenom, sdk.DefaultBondDenom},
+				DistributionFrequency:     1,
+			},
+			expectErr:   true,
+			errContains: "duplicate enabled distribution denom",
 		},
 		{
 			name: "zero distribution frequency",

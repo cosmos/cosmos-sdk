@@ -122,7 +122,7 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 	amountToDistribute := sdk.NewCoins()
 	for _, denom := range params.EnabledDistributionDenoms {
 		bal := k.bankKeeper.GetBalance(ctx, moduleAccount.GetAddress(), denom)
-		amountToDistribute = amountToDistribute.Add(bal)
+		amountToDistribute = append(amountToDistribute, bal)
 	}
 
 	// if the balance is zero, return early
@@ -211,7 +211,7 @@ func (k Keeper) validateAuthority(authority string) error {
 	return nil
 }
 
-// percentageCoinMul multiplies each coin in an sdk.Coins struct by the given percentage and returns the new
+// PercentageCoinMul multiplies each coin in an sdk.Coins struct by the given percentage and returns the new
 // value.
 //
 // When performing multiplication, the resulting values are truncated to an sdk.Int.

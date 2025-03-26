@@ -14,6 +14,7 @@ const (
 func GenParams(r *rand.Rand) types.Params {
 	params := types.DefaultParams()
 
+	// window length of [1:20] so that we can trigger the BeginBlocker regularly
 	windowLen := r.Intn(20) + 1
 	params.DistributionFrequency = uint64(windowLen)
 

@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"cosmossdk.io/math"
@@ -58,8 +59,10 @@ func SimulateMsgFundCommunityPool(
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-		// choose 50% of spendable
-		spendableSubAmount := types.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.5"), spendable)
+		// choose 10% - 70% of spendable
+		// we do not want to use the full balance so that fees can be covered
+		decimalVal := rand.Intn(6) + 1 // [1:7]
+		spendableSubAmount := types.PercentageCoinMul(math.LegacyMustNewDecFromStr(fmt.Sprintf("0.%d", decimalVal)), spendable)
 		if spendableSubAmount.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, TypeFundCommunityPool, "no balance"), nil, nil
 		}

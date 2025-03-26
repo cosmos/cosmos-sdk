@@ -65,10 +65,6 @@ func initFixture(tb testing.TB) *fixture {
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
 	logger := log.NewTestLogger(tb)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
-
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
@@ -114,8 +110,15 @@ func initFixture(tb testing.TB) *fixture {
 	valAddr := sdk.ValAddress(addr)
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc, map[string]appmodule.AppModule{
+		authtypes.ModuleName:    authModule,
+		banktypes.ModuleName:    bankModule,
+		stakingtypes.ModuleName: stakingModule,
+		distrtypes.ModuleName:   distrModule,
+	})
+
 	// set proposer and vote infos
-	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context()).WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
 		{
 			Validator: cmtabcitypes.Validator{
 				Address: valAddr,
@@ -124,15 +127,6 @@ func initFixture(tb testing.TB) *fixture {
 			BlockIdFlag: types.BlockIDFlagCommit,
 		},
 	})
-
-	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, map[string]appmodule.AppModule{
-		authtypes.ModuleName:    authModule,
-		banktypes.ModuleName:    bankModule,
-		stakingtypes.ModuleName: stakingModule,
-		distrtypes.ModuleName:   distrModule,
-	})
-
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/google/go-cmp/cmp"
 
 	"cosmossdk.io/core/appmodule"
@@ -36,10 +35,6 @@ func Example() {
 
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	logger := log.NewNopLogger()
-
-	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
-
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
@@ -60,7 +55,6 @@ func Example() {
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(
-		newCtx,
 		logger,
 		keys,
 		encodingCfg.Codec,
@@ -126,9 +120,6 @@ func Example_oneModule() {
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	logger := log.NewLogger(io.Discard)
 
-	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
-
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
@@ -144,7 +135,6 @@ func Example_oneModule() {
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(
-		newCtx,
 		logger,
 		keys,
 		encodingCfg.Codec,

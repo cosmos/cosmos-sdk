@@ -156,11 +156,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, inAddress, input.Coins)
-	if err != nil {
-		return err
-	}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -169,9 +164,16 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		),
 	)
 
-	var outAddress sdk.AccAddress
+	// ensure all coins can be sent
+	type toSend struct {
+		AddressStr string
+		Address    []byte
+		Coins      sdk.Coins
+	}
+	sending := make([]toSend, 0)
+
 	for _, out := range outputs {
-		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
+		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
@@ -181,18 +183,11 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
-			return err
-		}
-
-		sdkCtx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
-				sdk.NewAttribute(types.AttributeKeySender, input.Address),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-			),
-		)
+		sending = append(sending, toSend{
+			Address:    outAddress,
+			AddressStr: out.Address,
+			Coins:      out.Coins,
+		})
 
 		// Create account if recipient does not exist.
 		//
@@ -205,6 +200,24 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		}
 	}
 
+	if err := k.subUnlockedCoins(ctx, inAddress, input.Coins); err != nil {
+		return err
+	}
+
+	for _, out := range sending {
+		if err := k.addCoins(ctx, out.Address, out.Coins); err != nil {
+			return err
+		}
+		sdkCtx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeTransfer,
+				sdk.NewAttribute(types.AttributeKeyRecipient, out.AddressStr),
+				sdk.NewAttribute(types.AttributeKeySender, input.Address),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
+			),
+		)
+	}
+
 	return nil
 }
 
@@ -212,12 +225,12 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	var err error
-	err = k.subUnlockedCoins(ctx, fromAddr, amt)
+	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
+	err = k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}

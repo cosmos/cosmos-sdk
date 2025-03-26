@@ -289,7 +289,7 @@ func NewChainDataSource(
 // AnyAccount returns a random SimAccount matching the filter criteria. Module accounts are excluded.
 // In case of an error or no matching account found, the reporter is set to skip and an empty value is returned.
 func (c *ChainDataSource) AnyAccount(r SimulationReporter, filters ...SimAccountFilter) SimAccount {
-	acc := c.randomAccount(r, 5, filters...)
+	acc := c.randomAccount(r, 1, filters...)
 	return acc
 }
 

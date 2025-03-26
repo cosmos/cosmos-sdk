@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// Deprecated: will be removed in the future
 const (
 	// OpWeightMsgSend Simulation operation weights constants
 	OpWeightMsgSend = "op_weight_msg_send"
@@ -24,9 +25,11 @@ const (
 	WeightSend = 100
 )
 
+// Deprecated: will be removed in the future
 var TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
 
 // WeightedOperations returns all the operations from the module with their respective weights
+// Deprecated: migrate to the msg factories instead, this method will be removed in the future
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
@@ -53,6 +56,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgSend generates a MsgSend with random values.
+// Deprecated: migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgSend(
 	_ *codec.ProtoCodec,
 	txCfg client.TxConfig,

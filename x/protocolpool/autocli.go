@@ -60,11 +60,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "CancelContinuousFund",
-					Use:       "cancel-continuous-fund <recipient_address>",
+					Use:       "cancel-continuous-fund <recipient>",
 					Short:     "Cancel continuous fund for a specific recipient",
 					Example:   fmt.Sprintf(`$ %s tx protocolpool cancel-continuous-fund cosmos1... --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "recipient_address"},
+						{ProtoField: "recipient"},
 					},
 					GovProposal: true,
 				},

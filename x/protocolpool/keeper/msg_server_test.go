@@ -321,8 +321,8 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 		{
 			name: "invalid authority",
 			msg: &types.MsgCancelContinuousFund{
-				Authority:        "invalid_auth",
-				RecipientAddress: validRecipient.String(),
+				Authority: "invalid_auth",
+				Recipient: validRecipient.String(),
 			},
 			preRun:    func() {},
 			expErr:    true,
@@ -331,8 +331,8 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 		{
 			name: "invalid recipient address",
 			msg: &types.MsgCancelContinuousFund{
-				Authority:        validAuthority,
-				RecipientAddress: "invalid",
+				Authority: validAuthority,
+				Recipient: "invalid",
 			},
 			preRun: func() {
 				suite.authKeeper.EXPECT().AddressCodec().
@@ -344,8 +344,8 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 		{
 			name: "remove a continuous fund that already was removed - no error",
 			msg: &types.MsgCancelContinuousFund{
-				Authority:        validAuthority,
-				RecipientAddress: validRecipient.String(),
+				Authority: validAuthority,
+				Recipient: validRecipient.String(),
 			},
 			preRun: func() {
 				suite.authKeeper.EXPECT().AddressCodec().
@@ -358,8 +358,8 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 		{
 			name: "valid cancel continuous fund",
 			msg: &types.MsgCancelContinuousFund{
-				Authority:        validAuthority,
-				RecipientAddress: validRecipient.String(),
+				Authority: validAuthority,
+				Recipient: validRecipient.String(),
 			},
 			preRun: func() {
 				suite.authKeeper.EXPECT().AddressCodec().
@@ -394,7 +394,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(resp)
 				suite.Require().Equal(uint64(suite.ctx.BlockHeight()), resp.CanceledHeight)
-				suite.Require().Equal(tc.msg.RecipientAddress, resp.RecipientAddress)
+				suite.Require().Equal(tc.msg.Recipient, resp.Recipient)
 				if tc.verify != nil {
 					tc.verify(tc.msg)
 				}

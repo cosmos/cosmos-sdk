@@ -24,7 +24,8 @@ service Msg {
   // keeper.
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 
-  // CreateContinuousFund defines a method to add funds continuously.
+  // CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
+  // This ContinuousFund can be indefinite or run until a given expiry time.
   rpc CreateContinuousFund(MsgCreateContinuousFund) returns (MsgCreateContinuousFundResponse);
 
   // CancelContinuousFund defines a method for cancelling continuous fund.
@@ -42,9 +43,10 @@ message MsgFundCommunityPool {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  repeated cosmos.base.v1beta1.Coin amount = 1
+  string depositor = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  repeated cosmos.base.v1beta1.Coin amount = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
@@ -95,8 +97,8 @@ message MsgCancelContinuousFund {
 
   // Authority is the account address of authority.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // RecipientAddress is the account address of recipient whose funds are to be cancelled.
-  string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Recipient is the account address string of the recipient whose funds are to be cancelled.
+  string recipient = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCancelContinuousFundResponse defines the response to executing a
@@ -106,8 +108,8 @@ message MsgCancelContinuousFundResponse {
   google.protobuf.Timestamp canceled_time = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   // CanceledHeight defines the canceled block height.
   uint64 canceled_height = 2;
-  // RecipientAddress is the account address of recipient whose funds are cancelled.
-  string recipient_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Recipient is the account address string of the recipient whose funds are cancelled.
+  string recipient = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.

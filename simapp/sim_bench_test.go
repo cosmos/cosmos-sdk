@@ -48,7 +48,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(simsx.SimAppChainID))
 
 	// run randomized simulation
-	simParams,_, simErr := simulation.SimulateFromSeedX(
+	simParams, _, simErr := simulation.SimulateFromSeedX(
 		b,
 		log.NewNopLogger(),
 		os.Stdout,

@@ -4,10 +4,9 @@ import (
 	"context"
 	"slices"
 
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func MsgSendFactory() simsx.SimMsgFactoryFn[*types.MsgSend] {

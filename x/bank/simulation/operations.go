@@ -19,13 +19,13 @@ import (
 // Simulation operation weights constants
 const (
 	// Deprecated: will be removed in the future
-	OpWeightMsgSend           = "op_weight_msg_send"
+	OpWeightMsgSend = "op_weight_msg_send"
 	// Deprecated: will be removed in the future
-	OpWeightMsgMultiSend      = "op_weight_msg_multisend"
+	OpWeightMsgMultiSend = "op_weight_msg_multisend"
 	// Deprecated: will be removed in the future
-	DefaultWeightMsgSend      = 100 // from simappparams.DefaultWeightMsgSend
+	DefaultWeightMsgSend = 100 // from simappparams.DefaultWeightMsgSend
 	// Deprecated: will be removed in the future
-	DefaultWeightMsgMultiSend = 10  // from simappparams.DefaultWeightMsgMultiSend
+	DefaultWeightMsgMultiSend = 10 // from simappparams.DefaultWeightMsgMultiSend
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/simsx"
 	"maps"
 	"slices"
 	"sort"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -201,7 +201,6 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 	reg.Add(weights.Get("msg_send", 100), simulation.MsgSendFactory())
 	reg.Add(weights.Get("msg_multisend", 10), simulation.MsgMultiSendFactory())
 }
-
 
 // App Wiring Setup
 

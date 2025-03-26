@@ -31,7 +31,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // ContinuousFund defines the fields of continuous fund proposal.
 type ContinuousFund struct {
-	// Recipient address of the account receiving funds.
+	// Recipient is the address string of the account receiving funds.
 	Recipient string `protobuf:"bytes,1,opt,name=recipient,proto3" json:"recipient,omitempty"`
 	// Percentage is the percentage of funds to be allocated from Community pool.
 	Percentage cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=percentage,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"percentage"`

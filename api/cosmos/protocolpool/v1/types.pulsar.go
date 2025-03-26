@@ -1125,7 +1125,7 @@ type ContinuousFund struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Recipient address of the account receiving funds.
+	// Recipient is the address string of the account receiving funds.
 	Recipient string `protobuf:"bytes,1,opt,name=recipient,proto3" json:"recipient,omitempty"`
 	// Percentage is the percentage of funds to be allocated from Community pool.
 	Percentage string `protobuf:"bytes,2,opt,name=percentage,proto3" json:"percentage,omitempty"`

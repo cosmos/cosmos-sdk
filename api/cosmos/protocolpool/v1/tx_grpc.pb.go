@@ -40,7 +40,8 @@ type MsgClient interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
-	// CreateContinuousFund defines a method to add funds continuously.
+	// CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
+	// This ContinuousFund can be indefinite or run until a given expiry time.
 	CreateContinuousFund(ctx context.Context, in *MsgCreateContinuousFund, opts ...grpc.CallOption) (*MsgCreateContinuousFundResponse, error)
 	// CancelContinuousFund defines a method for cancelling continuous fund.
 	CancelContinuousFund(ctx context.Context, in *MsgCancelContinuousFund, opts ...grpc.CallOption) (*MsgCancelContinuousFundResponse, error)
@@ -121,7 +122,8 @@ type MsgServer interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
-	// CreateContinuousFund defines a method to add funds continuously.
+	// CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
+	// This ContinuousFund can be indefinite or run until a given expiry time.
 	CreateContinuousFund(context.Context, *MsgCreateContinuousFund) (*MsgCreateContinuousFundResponse, error)
 	// CancelContinuousFund defines a method for cancelling continuous fund.
 	CancelContinuousFund(context.Context, *MsgCancelContinuousFund) (*MsgCancelContinuousFundResponse, error)

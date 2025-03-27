@@ -56,6 +56,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+
+* (baseapp) [#24096](https://github.com/cosmos/cosmos-sdk/pull/24096) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
 * (x/bank) [#24106](https://github.com/cosmos/cosmos-sdk/pull/24106) `SendCoins` now checks for `SendRestrictions` before instead of after deducting coins using `subUnlockedCoins`.
 * (crypto/ledger) [#24036](https://github.com/cosmos/cosmos-sdk/pull/24036) Improve error message when deriving paths using index > 100
 * (gRPC) [#23844](https://github.com/cosmos/cosmos-sdk/pull/23844) Add debug log prints for each gRPC request.

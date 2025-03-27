@@ -60,11 +60,11 @@ func TestCompositeMapValue_Set(t *testing.T) {
 		expectVals map[int]string
 	}{
 		{
-			name:       "valid input",
-			input:      "1=foo,2=bar",
-			resolver:   strconv.Atoi,
-			valueType:  &mockType{},
-			expectErr:  false,
+			name:      "valid input",
+			input:     "1=foo,2=bar",
+			resolver:  strconv.Atoi,
+			valueType: &mockType{},
+			expectErr: false,
 			expectVals: map[int]string{
 				1: "foo",
 				2: "bar",

@@ -68,7 +68,6 @@ func scrapeAndPushMetrics(ctx context.Context, promEndpoint string, meter otmetr
 
 	for name, mf := range metricsFamilies {
 		for _, m := range mf.GetMetric() {
-
 			switch {
 			case m.Gauge != nil:
 				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Gauge.GetValue())

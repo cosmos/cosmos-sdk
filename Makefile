@@ -407,7 +407,7 @@ lint-fix:
 
 protoVer=0.16.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace -v $(CURDIR)/../cometbft:/cometbft --workdir /workspace $(protoImageName) # FIXME: remove -v $(CURDIR)/../cometbft:/cometbft when done with local development
 
 proto-all: proto-format proto-lint proto-gen
 

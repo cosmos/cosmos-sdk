@@ -9,7 +9,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: review; test
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

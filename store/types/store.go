@@ -6,7 +6,9 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	//crypto "cosmossdk.io/api/cometbft/crypto/v1" // NOTE: Example: importing the SDK owned bft types (FIXME)
+	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1" // NOTE: review
+
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
@@ -59,7 +61,7 @@ type ResponseQuery struct {
 	Index     int64
 	Key       []byte
 	Value     []byte
-	ProofOps  *crypto.ProofOps
+	ProofOps  *crypto.ProofOps // NOTE: Example: using CometBFT type directly (this will probably change to use the equivalent SDK type)
 	Height    int64
 	Codespace string
 }

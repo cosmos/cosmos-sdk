@@ -84,7 +84,7 @@ func NewKeeper(
 		opt(&k)
 	}
 
-	if k.externalCommunityPool != nil {
+	if k.HasExternalCommunityPool() {
 		// ensure external module account is set if we are enabling it
 		// this will ensure that funds can be transferred to it.
 		if addr := ak.GetModuleAddress(k.externalCommunityPool.GetCommunityPoolModule()); addr == nil {
@@ -100,9 +100,9 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// externalCommunityPoolEnabled is a helper function to denote whether the x/distribution module
+// HasExternalCommunityPool is a helper function to denote whether the x/distribution module
 // is using its native community pool, or using an external pool.
-func (k Keeper) externalCommunityPoolEnabled() bool {
+func (k Keeper) HasExternalCommunityPool() bool {
 	return k.externalCommunityPool != nil
 }
 

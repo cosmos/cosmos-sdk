@@ -251,7 +251,6 @@ func TestQueryProtocolPool(t *testing.T) {
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed", func(t *testing.T) {
-
 		// check that the funds were distributed
 		// should be previous balance plus amount from the pool (100) plus the deposit amount (50000000)
 		balanceAfter := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)

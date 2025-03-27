@@ -247,6 +247,7 @@ func TestQueryProtocolPool(t *testing.T) {
 		submitGovProposal(t, valSigner, validPropFile)
 	})
 
+	balanceBefore := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
 	voteAndEnsureProposalPassed(t, valSigner, 1)
 
 	// ensure that vote has passed
@@ -318,9 +319,8 @@ func TestContinuousFunds(t *testing.T) {
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed", func(t *testing.T) {
-
 		// check that the fund exists
-		rsp = cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
+		rsp := cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
 		gotExpiry := gjson.Get(rsp, "continuous_fund.expiry").Time()
 		require.Equal(t, expiry.Truncate(time.Second), gotExpiry.Truncate(time.Second))
 		recipient := gjson.Get(rsp, "continuous_fund.recipient").String()
@@ -410,7 +410,7 @@ func TestCancelContinuousFunds(t *testing.T) {
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed - create", func(t *testing.T) {
 		// check that the fund exists
-		rsp = cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
+		rsp := cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
 		recipient := gjson.Get(rsp, "continuous_fund.recipient").String()
 		require.Equal(t, account1Addr, recipient)
 	})

@@ -162,7 +162,6 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 			return fmt.Errorf("negative funds for distribution from ContinuousFunds: %v", remainingCoins)
 		}
 
-		// distribute if not expires
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolDistrAccount, recipient, amountToStream)
 		if err != nil {
 			return fmt.Errorf("failed to distribute fund for %s from ContinuousFunds: %w", recipient, err)

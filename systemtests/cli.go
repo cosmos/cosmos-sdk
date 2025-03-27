@@ -462,14 +462,6 @@ func (c CLIWrapper) Version() string {
 	return v
 }
 
-func (c CLIWrapper) GetFeeAmount(t *testing.T) sdk.Coins {
-	t.Helper()
-	fees, err := sdk.ParseCoinsNormalized(c.fees)
-	require.NoError(t, err)
-
-	return fees
-}
-
 // RequireTxSuccess require the received response to contain the success code
 func RequireTxSuccess(t *testing.T, got string) {
 	t.Helper()

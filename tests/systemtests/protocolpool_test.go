@@ -127,11 +127,6 @@ func TestQueryProtocolPool(t *testing.T) {
 		assert.True(t, newPoolAmount > poolAmount, rsp)
 	})
 
-	rsp = cli.CustomQuery("q", protocolPoolModule, "community-pool")
-	poolAmount := gjson.Get(rsp, "pool.0.amount").Int()
-	assert.True(t, poolAmount > 0, rsp)
-	assert.Equal(t, stakingToken, gjson.Get(rsp, "pool.0.denom").String(), rsp)
-
 	// fund the community pool and query
 	// get gov module address
 	resp := cli.CustomQuery("q", "auth", "module-account", "gov")

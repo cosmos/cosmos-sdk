@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (genutil) [#24018](https://github.com/cosmos/cosmos-sdk/pull/24018) Allow manually setting the consensus key type in genesis
 * (client) [#18557](https://github.com/cosmos/cosmos-sdk/pull/18557) Add `--qrcode` flag to `keys show` command to support displaying keys address QR code.
 * (x/auth) [#24030](https://github.com/cosmos/cosmos-sdk/pull/24030) Allow usage of ed25519 keys for transaction signing.
+* (baseapp) [#24159](https://github.com/cosmos/cosmos-sdk/pull/24159) Support mount object store in baseapp, add `ObjectStore` api in context.
 
 ### Improvements
 

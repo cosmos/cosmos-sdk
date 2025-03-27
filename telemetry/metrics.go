@@ -90,6 +90,12 @@ type Config struct {
 	// DatadogHostname defines the hostname to use when emitting metrics to
 	// Datadog. Only utilized if MetricsSink is set to "dogstatsd".
 	DatadogHostname string `mapstructure:"datadog-hostname"`
+
+	// Otlp Exporter fields
+	OtlpExporterEnabled   bool   `mapstructure:"otlp-exporter-enabled"`
+	OtlpCollectorGrpcAddr string `mapstructure:"otlp-collector-grpc-addr"`
+	PrometheusEndpoint    string `mapstructure:"prometheus-endpoint"`
+	OtlpServiceName       string `mapstructure:"otlp-service-name"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows

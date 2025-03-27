@@ -32,7 +32,6 @@ const (
 	stakeAmount   = 10000000000
 	feeAmount     = 1
 	depositAmount = 50000000
-	govFeeAmount  = 10
 	poolAmount    = 100
 )
 
@@ -80,7 +79,7 @@ func submitGovProposal(t *testing.T, validatorAddress string, propFile *os.File)
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, validatorAddress),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(govFeeAmount))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(feeAmount))).String()),
 	}
 
 	rsp := cli.Run(args...)
@@ -256,7 +255,7 @@ func TestQueryProtocolPool(t *testing.T) {
 		// check that the funds were distributed
 		// should be previous balance plus amount from the pool (100) plus the deposit amount (50000000)
 		balanceAfter := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
-		require.Equal(t, balanceBefore+poolAmount+depositAmount, balanceAfter)
+		require.Equal(t, balanceBefore+poolAmount+depositAmount-feeAmount, balanceAfter)
 	})
 }
 

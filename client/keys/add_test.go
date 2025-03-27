@@ -130,6 +130,74 @@ func Test_runAddCmdBasic(t *testing.T) {
 	require.Error(t, cmd.ExecuteContext(ctx))
 }
 
+func Test_runAddCmdMultisigDupKeys(t *testing.T) {
+	cmd := AddKeyCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	kbHome := t.TempDir()
+
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
+	require.NoError(t, err)
+
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithInput(mockIn).
+		WithCodec(cdc)
+
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	t.Cleanup(func() {
+		_ = kb.Delete("keyname1")
+		_ = kb.Delete("keyname2")
+		_ = kb.Delete("multisigname")
+	})
+
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		"keyname2",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		"multisigname",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", flagMultisig, "keyname1,keyname2"),
+		fmt.Sprintf("--%s=%s", flagMultiSigThreshold, "2"),
+	})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		"multisigname",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", flagMultisig, "keyname1,keyname1"),
+		fmt.Sprintf("--%s=%s", flagMultiSigThreshold, "2"),
+	})
+	mockIn.Reset("y\n")
+	require.Error(t, cmd.ExecuteContext(ctx))
+	mockIn.Reset("y\n")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "duplicate multisig keys: keyname1")
+}
+
 func Test_runAddCmdDryRun(t *testing.T) {
 	pubkey1 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtObiFVE4s+9+RX5SP8TN9r2mxpoaT4eGj9CJfK7VRzN"}`
 	pubkey2 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/se1vkqgdQ7VJQCM4mxN+L+ciGhnnJ4XYsQCRBMrdRi"}`

@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -1232,6 +1233,7 @@ func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 	require.NoError(t, err)
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxConfig(txCfg)
+	clientCtx = clientCtx.WithCodec(moduletestutil.MakeTestEncodingConfig().Codec)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)

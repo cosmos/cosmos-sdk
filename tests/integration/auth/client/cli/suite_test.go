@@ -845,12 +845,14 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 	txCfg := s.clientCtx.TxConfig
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxConfig(txCfg)
+	clientCtx = clientCtx.WithCodec(s.clientCtx.Codec)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	cmd := authcli.GetBroadcastCommand()
 	_, out := testutil.ApplyMockIO(cmd)
+	clientCtx = clientCtx.WithOutput(out)
 
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()
@@ -868,9 +870,8 @@ func (s *CLITestSuite) TestGetBroadcastCommandWithoutOfflineFlag() {
 
 	cmd.SetArgs([]string{txFile.Name()})
 	err = cmd.ExecuteContext(ctx)
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "connect: connection refused")
-	s.Require().Contains(out.String(), "connect: connection refused")
+	s.Require().NoError(err)
+	s.Require().Contains(out.String(), "no signatures supplied")
 }
 
 // TestTxWithoutPublicKey makes sure sending a proto tx message without the

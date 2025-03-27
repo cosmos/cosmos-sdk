@@ -3,7 +3,6 @@ module cosmossdk.io/collections
 go 1.23.2
 
 require (
-	cosmossdk.io/core v1.0.0
 	cosmossdk.io/schema v1.0.0
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/gogoproto v1.7.0

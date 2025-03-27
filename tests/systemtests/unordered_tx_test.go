@@ -72,27 +72,7 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	// generate a deterministic account. we'll use this seed again later in the v50 chain.
 	senderAddr := v53CLI.AddKeyFromSeed("account1", testSeed)
 
-	//// Now we're going to switch to a v.50 chain.
-	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
-
-	// setup the v50 chain. v53 made some changes to testnet command, so we'll have to adjust here.
-	// this only uses 1 node.
-	legacySut := systest.NewSystemUnderTest("simd", systest.Verbose, 1, 1*time.Second)
-	// we need to explicitly set this here as the constructor infers the exec binary is in the "binaries" directory.
-	legacySut.SetExecBinary(legacyBinary)
-	legacySut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, legacySut))
-	legacySut.SetupChain()
-	v50CLI := systest.NewCLIWrapper(t, legacySut, systest.Verbose)
-	v50CLI.AddKeyFromSeed("account1", testSeed)
-	legacySut.ModifyGenesisCLI(t,
-		// add some bogus accounts because the v53 chain had 4 nodes which takes account numbers 1-4.
-		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("foo"), "10000000000stake"},
-		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("bar"), "10000000000stake"},
-		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("baz"), "10000000000stake"},
-		// we need our sender to be account 5 because that's how it was signed in the v53 scenario.
-		[]string{"genesis", "add-genesis-account", senderAddr, "10000000000stake"},
-	)
-
+	cli, legacySut := createLegacyBinary(t)
 	legacySut.StartChain(t)
 
 	bankSendCmdArgs := []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}

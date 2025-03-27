@@ -106,7 +106,7 @@ func TestQueryProtocolPool(t *testing.T) {
 			return false
 		})
 		// query the community pool - should fail for x/distribution
-		rsp = failingCli.CustomQuery("q", distributionModule, "community-pool")
+		_ = failingCli.CustomQuery("q", distributionModule, "community-pool")
 	})
 
 	t.Run("check x/protocolpool community pool query", func(t *testing.T) {

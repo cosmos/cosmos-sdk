@@ -428,7 +428,7 @@ func (r *XRand) Uint64InRange(min, max uint64) uint64 {
 	if min >= max {
 		panic("min must be less than max")
 	}
-	return uint64(r.Int63n(int64(max-min)) + int64(min)) // nolint:gosec // test code
+	return uint64(r.Int63n(int64(max-min)) + int64(min))
 }
 
 // Uint32InRange returns a pseudo-random uint32 number in the range [min, max].
@@ -437,7 +437,7 @@ func (r *XRand) Uint32InRange(min, max uint32) uint32 {
 	if min >= max {
 		panic("min must be less than max")
 	}
-	return uint32(r.Intn(int(max-min))) + min // nolint:gosec // test code
+	return uint32(r.Intn(int(max-min))) + min
 }
 
 func (r *XRand) PositiveSDKIntn(max math.Int) (math.Int, error) {

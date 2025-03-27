@@ -1,7 +1,10 @@
 package ante_test
 
 import (
+	"fmt"
 	"testing"
+
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -35,6 +38,10 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	require.NoError(t, err)
+
+	// Get the signer's address from the transaction
+	signerAddr := tx.GetSigners()[0]
+	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
@@ -70,6 +77,10 @@ func TestEnsureMempoolFees(t *testing.T) {
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	require.NoError(t, err)
+
+	// Get the signer's address from the transaction
+	signerAddr := tx.GetSigners()[0]
+	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	// Set high gas price so standard test fee fails
 	atomPrice := sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(20))
@@ -128,6 +139,10 @@ func TestDeductFees(t *testing.T) {
 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	require.NoError(t, err)
 
+	// Get the signer's address from the transaction
+	signerAddr := tx.GetSigners()[0]
+	fmt.Printf("Signer address: %s\n", signerAddr.String())
+
 	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(sdkerrors.ErrInsufficientFunds)
@@ -158,8 +173,15 @@ func TestDeductFees_WithName(t *testing.T) {
 	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+
 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	require.NoError(t, err)
+
+	// Get the signer's address from the transaction
+	signerAddr := tx.GetSigners()[0]
+	fmt.Printf("Signer address: %s\n", signerAddr.String())
+
+	s.accountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccountWithAddress(signerAddr))
 
 	// Set up initial account with coins
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200)))
@@ -173,21 +195,12 @@ func TestDeductFees_WithName(t *testing.T) {
 	err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, addr1, coins)
 	require.NoError(t, err)
 
-	feeCollectorAcc := s.accountKeeper.GetModuleAccount(s.ctx, types.FeeCollectorName)
-	// pick a simapp module account
-	altCollectorName := "distribution"
-	altCollectorAcc := s.accountKeeper.GetModuleAccount(s.ctx, altCollectorName)
-	require.True(t, s.bankKeeper.GetAllBalances(s.ctx, feeCollectorAcc.GetAddress()).Empty())
-	altBalance := s.bankKeeper.GetAllBalances(s.ctx, altCollectorAcc.GetAddress())
+	altCollectorName := distrtypes.ModuleName
 
-	// Run the transaction through a handler chain that deducts fees into altCollectorAcc.
+	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, altCollectorName, gomock.Any()).Return(nil)
 	dfd := ante.NewDeductFeeDecoratorWithName(s.accountKeeper, s.bankKeeper, nil, nil, altCollectorName)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 	_, err = antehandler(s.ctx, tx, false)
 	require.NoError(t, err)
 
-	require.True(t, s.bankKeeper.GetAllBalances(s.ctx, feeCollectorAcc.GetAddress()).Empty())
-	newAltBalance := s.bankKeeper.GetAllBalances(s.ctx, altCollectorAcc.GetAddress())
-	require.True(t, newAltBalance.IsAllGTE(altBalance))
-	require.False(t, newAltBalance.IsEqual(altBalance))
 }

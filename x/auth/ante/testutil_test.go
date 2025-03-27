@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -62,6 +63,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 		"not_bonded_tokens_pool": {"burner", "staking"},
 		"multiPerm":              {"burner", "minter", "staking"},
 		"random":                 {"random"},
+		distrtypes.ModuleName:    nil,
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(

@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
-	"github.com/prometheus/common/expfmt"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -18,6 +17,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
+
+const meterName = "cosmos-sdk-otlp-exporter"
 
 func StartOtlpExporter(cfg Config) {
 	ctx := context.Background()
@@ -36,51 +37,46 @@ func StartOtlpExporter(cfg Config) {
 
 	meterProvider := metric.NewMeterProvider(
 		metric.WithReader(metric.NewPeriodicReader(exporter,
-			metric.WithInterval(15*time.Second))),
+			metric.WithInterval(cfg.OtlpPushInterval))),
 		metric.WithResource(res),
 	)
 	otel.SetMeterProvider(meterProvider)
-	meter := otel.Meter("cosmos-sdk-otlp-exporter")
+	meter := otel.Meter(meterName)
 
 	gauges := make(map[string]otmetric.Float64Gauge)
 	histograms := make(map[string]otmetric.Float64Histogram)
 
 	go func() {
 		for {
-			if err := scrapeAndPushMetrics(ctx, cfg.PrometheusEndpoint, meter, gauges, histograms); err != nil {
+			if err := scrapePrometheusMetrics(ctx, cfg.PrometheusEndpoint, meter, gauges, histograms); err != nil {
 				log.Printf("error scraping metrics: %v", err)
 			}
-			time.Sleep(15 * time.Second)
+			time.Sleep(cfg.OtlpPushInterval)
 		}
 	}()
 }
 
-func scrapeAndPushMetrics(ctx context.Context, promEndpoint string, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, histograms map[string]otmetric.Float64Histogram) error {
-	resp, err := http.Get(promEndpoint)
+func scrapePrometheusMetrics(ctx context.Context, promEndpoint string, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, histograms map[string]otmetric.Float64Histogram) error {
+	metricFamilies, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	parser := expfmt.TextParser{}
-	metricsFamilies, err := parser.TextToMetricFamilies(resp.Body)
-	if err != nil {
+		log.Printf("failed to gather prometheus metrics: %v", err)
 		return err
 	}
 
-	for name, mf := range metricsFamilies {
-		for _, m := range mf.GetMetric() {
-			switch {
-			case m.Gauge != nil:
+	for _, mf := range metricFamilies {
+		name := mf.GetName()
+		for _, m := range mf.Metric {
+			switch mf.GetType() {
+			case dto.MetricType_GAUGE:
 				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Gauge.GetValue(), nil)
 
-			case m.Counter != nil:
+			case dto.MetricType_COUNTER:
 				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Counter.GetValue(), nil)
 
-			case m.Histogram != nil:
+			case dto.MetricType_HISTOGRAM:
 				recordHistogram(ctx, meter, histograms, name, mf.GetHelp(), m.Histogram)
 
-			case m.Summary != nil:
+			case dto.MetricType_SUMMARY:
 				recordSummary(ctx, meter, gauges, name, mf.GetHelp(), m.Summary)
 
 			default:

@@ -92,10 +92,11 @@ type Config struct {
 	DatadogHostname string `mapstructure:"datadog-hostname"`
 
 	// Otlp Exporter fields
-	OtlpExporterEnabled   bool   `mapstructure:"otlp-exporter-enabled"`
-	OtlpCollectorGrpcAddr string `mapstructure:"otlp-collector-grpc-addr"`
-	PrometheusEndpoint    string `mapstructure:"prometheus-endpoint"`
-	OtlpServiceName       string `mapstructure:"otlp-service-name"`
+	OtlpExporterEnabled   bool          `mapstructure:"otlp-exporter-enabled"`
+	OtlpCollectorGrpcAddr string        `mapstructure:"otlp-collector-grpc-addr"`
+	PrometheusEndpoint    string        `mapstructure:"prometheus-endpoint"`
+	OtlpServiceName       string        `mapstructure:"otlp-service-name"`
+	OtlpPushInterval      time.Duration `mapstructure:"otlp-push-interval"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows

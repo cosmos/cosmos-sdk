@@ -185,7 +185,7 @@ func TestQueryProtocolPool(t *testing.T) {
 	assert.Equal(t, int64(genesisAmount-stakeAmount-feeAmount), beforeBalance)
 
 	rsp = cli.CustomQuery("q", stakingModule, "delegation", account1Addr, valAddr)
-	assert.Equal(t, stakeAmount, gjson.Get(rsp, "delegation_response.balance.amount").Int(), rsp)
+	assert.Equal(t, int64(stakeAmount), gjson.Get(rsp, "delegation_response.balance.amount").Int(), rsp)
 	assert.Equal(t, sdk.DefaultBondDenom, gjson.Get(rsp, "delegation_response.balance.denom").String(), rsp)
 
 	t.Run("check x/distribution query does not work when using x/protocolpool", func(t *testing.T) {
@@ -249,17 +249,17 @@ func TestQueryProtocolPool(t *testing.T) {
 
 	t.Run("vote on proposal", func(t *testing.T) {
 		// check the proposal
-		proposalsResp := cli.CustomQuery("q", "gov", "proposals")
+		proposalsResp := cli.CustomQuery("q", govModule, "proposals")
 		proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
 		require.NotEmpty(t, proposals)
 
-		rsp := cli.CustomQuery("q", "gov", "proposal", "1")
+		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
 		status := gjson.Get(rsp, "proposal.status")
 		require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
 
 		// vote on the proposal
 		args := []string{
-			"tx", "gov", "vote", "1", "yes",
+			"tx", govModule, "vote", "1", "yes",
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, valSigner),
 		}
 		rsp = cli.Run(args...)
@@ -275,7 +275,7 @@ func TestQueryProtocolPool(t *testing.T) {
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed", func(t *testing.T) {
-		rsp := cli.CustomQuery("q", "gov", "proposal", "1")
+		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
 		status := gjson.Get(rsp, "proposal.status")
 		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
 
@@ -345,13 +345,13 @@ func TestContinuousFunds(t *testing.T) {
 		proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
 		require.NotEmpty(t, proposals)
 
-		rsp := cli.CustomQuery("q", "gov", "proposal", "1")
+		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
 		status := gjson.Get(rsp, "proposal.status")
 		require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
 
 		// vote on the proposal
 		args := []string{
-			"tx", "gov", "vote", "1", "yes",
+			"tx", govModule, "vote", "1", "yes",
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 		}
 		rsp = cli.Run(args...)
@@ -367,12 +367,12 @@ func TestContinuousFunds(t *testing.T) {
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed", func(t *testing.T) {
-		rsp := cli.CustomQuery("q", "gov", "proposal", "1")
+		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
 		status := gjson.Get(rsp, "proposal.status")
 		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
 
 		// check that the fund exists
-		rsp = cli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
+		rsp = cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
 		gotExpiry := gjson.Get(rsp, "continuous_fund.expiry").Time()
 		require.Equal(t, expiry.Truncate(time.Second), gotExpiry.Truncate(time.Second))
 		recipient := gjson.Get(rsp, "continuous_fund.recipient").String()
@@ -389,10 +389,10 @@ func TestContinuousFunds(t *testing.T) {
 			return false
 		})
 		// query the continuous fund - should be expired
-		_ = failingCli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
+		_ = failingCli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
 
 		// check that there is nothing in the store
-		rsp := cli.CustomQuery("q", "protocolpool", "continuous-funds")
+		rsp := cli.CustomQuery("q", protocolPoolModule, "continuous-funds")
 		require.Equal(t, "{}", rsp)
 
 		balanceAfter := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
@@ -457,17 +457,17 @@ func TestCancelContinuousFunds(t *testing.T) {
 
 	t.Run("vote on proposal - create", func(t *testing.T) {
 		// check the proposal
-		proposalsResp := cli.CustomQuery("q", "gov", "proposals")
+		proposalsResp := cli.CustomQuery("q", govModule, "proposals")
 		proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
 		require.NotEmpty(t, proposals)
 
-		rsp := cli.CustomQuery("q", "gov", "proposal", "1")
+		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
 		status := gjson.Get(rsp, "proposal.status")
 		require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
 
 		// vote on the proposal
 		args := []string{
-			"tx", "gov", "vote", "1", "yes",
+			"tx", govModule, "vote", "1", "yes",
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 		}
 		rsp = cli.Run(args...)
@@ -483,12 +483,12 @@ func TestCancelContinuousFunds(t *testing.T) {
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed - create", func(t *testing.T) {
-		rsp := cli.CustomQuery("q", "gov", "proposal", "1")
+		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
 		status := gjson.Get(rsp, "proposal.status")
 		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
 
 		// check that the fund exists
-		rsp = cli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
+		rsp = cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
 		recipient := gjson.Get(rsp, "continuous_fund.recipient").String()
 		require.Equal(t, account1Addr, recipient)
 	})
@@ -528,10 +528,10 @@ func TestCancelContinuousFunds(t *testing.T) {
 			return false
 		})
 		// query the continuous fund - should be expired
-		_ = failingCli.CustomQuery("q", "protocolpool", "continuous-funds", account1Addr)
+		_ = failingCli.CustomQuery("q", protocolPoolModule, "continuous-funds", account1Addr)
 
 		// check that there is nothing in the store
-		rsp := cli.CustomQuery("q", "protocolpool", "continuous-funds")
+		rsp := cli.CustomQuery("q", protocolPoolModule, "continuous-funds")
 		require.Equal(t, "{}", rsp)
 
 		balanceAfter := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)

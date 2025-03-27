@@ -5,7 +5,7 @@ import "cosmossdk.io/collections"
 const (
 	// ModuleName is the module name constant used in many places
 	//
-	// The module account for this name is the x/protocolpool community pool.
+	// The module account associated with this name is the x/protocolpool community pool module account.
 	// It can receive funds from distribution from users who use FundCommunityPool or from the ProtocolPoolDistrAccount.
 	ModuleName = "protocolpool"
 

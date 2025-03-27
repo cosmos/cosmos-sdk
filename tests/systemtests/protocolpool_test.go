@@ -25,6 +25,8 @@ const (
 	stakingModule      = "staking"
 	distributionModule = "distribution"
 	protocolPoolModule = "protocolpool"
+	govModule          = "gov"
+	authModule         = "auth"
 
 	genesisAmount = 1000000000000
 	stakeAmount   = 10000000000
@@ -73,7 +75,7 @@ func submitGovProposal(t *testing.T, validatorAddress string, propFile *os.File)
 	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
 
 	args := []string{
-		"tx", "gov", "submit-proposal",
+		"tx", govModule, "submit-proposal",
 		propFile.Name(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, validatorAddress),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -94,17 +96,17 @@ func voteAndEnsureProposalPassed(t *testing.T, validatorAddress string, propID i
 	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
 
 	// check the proposal
-	proposalsResp := cli.CustomQuery("q", "gov", "proposals")
+	proposalsResp := cli.CustomQuery("q", govModule, "proposals")
 	proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
 	require.NotEmpty(t, proposals)
 
-	rsp := cli.CustomQuery("q", "gov", "proposal", fmt.Sprintf("%d", propID))
+	rsp := cli.CustomQuery("q", govModule, "proposal", fmt.Sprintf("%d", propID))
 	status := gjson.Get(rsp, "proposal.status")
 	require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
 
 	// vote on the proposal
 	args := []string{
-		"tx", "gov", "vote", fmt.Sprintf("%d", propID), "yes",
+		"tx", govModule, "vote", fmt.Sprintf("%d", propID), "yes",
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, validatorAddress),
 	}
 	rsp = cli.Run(args...)
@@ -119,6 +121,23 @@ func voteAndEnsureProposalPassed(t *testing.T, validatorAddress string, propID i
 	rsp = cli.CustomQuery("q", "gov", "proposal", fmt.Sprintf("%d", propID))
 	status = gjson.Get(rsp, "proposal.status")
 	require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
+}
+
+func getGovAddress(t *testing.T) string {
+	t.Helper()
+
+	sut := systemtests.Sut
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
+
+	// get gov module address
+	resp := cli.CustomQuery("q", authModule, "module-account", "gov")
+	govAddress := gjson.Get(resp, "account.value.address").String()
+	_, bz, err := bech32.DecodeAndConvert(govAddress)
+	assert.NoError(t, err)
+	govAddress, err = bech32.ConvertAndEncode(sdk.Bech32MainPrefix, bz)
+	assert.NoError(t, err)
+
+	return govAddress
 }
 
 func TestQueryProtocolPool(t *testing.T) {
@@ -196,14 +215,7 @@ func TestQueryProtocolPool(t *testing.T) {
 		assert.True(t, newPoolAmount > poolAmount, rsp)
 	})
 
-	// fund the community pool and query
-	// get gov module address
-	resp := cli.CustomQuery("q", "auth", "module-account", "gov")
-	govAddress := gjson.Get(resp, "account.value.address").String()
-	_, bz, err := bech32.DecodeAndConvert(govAddress)
-	assert.NoError(t, err)
-	govAddress, err = bech32.ConvertAndEncode(sdk.Bech32MainPrefix, bz)
-	assert.NoError(t, err)
+	govAddress := getGovAddress(t)
 
 	t.Run("valid proposal", func(t *testing.T) {
 		// Create a valid new proposal JSON.
@@ -296,14 +308,7 @@ func TestContinuousFunds(t *testing.T) {
 
 	systemtests.Sut.StartChain(t)
 
-	// get gov module address
-	resp := cli.CustomQuery("q", "auth", "module-account", "gov")
-	govAddress := gjson.Get(resp, "account.value.address").String()
-	_, bz, err := bech32.DecodeAndConvert(govAddress)
-	assert.NoError(t, err)
-	govAddress, err = bech32.ConvertAndEncode(sdk.Bech32MainPrefix, bz)
-	assert.NoError(t, err)
-
+	govAddress := getGovAddress(t)
 	expiry := time.Now().Add(20 * time.Second).UTC()
 
 	t.Run("valid proposal", func(t *testing.T) {
@@ -422,13 +427,7 @@ func TestCancelContinuousFunds(t *testing.T) {
 
 	systemtests.Sut.StartChain(t)
 
-	// get gov module address
-	resp := cli.CustomQuery("q", "auth", "module-account", "gov")
-	govAddress := gjson.Get(resp, "account.value.address").String()
-	_, bz, err := bech32.DecodeAndConvert(govAddress)
-	assert.NoError(t, err)
-	govAddress, err = bech32.ConvertAndEncode(sdk.Bech32MainPrefix, bz)
-	assert.NoError(t, err)
+	govAddress := getGovAddress(t)
 
 	t.Run("valid proposal - create", func(t *testing.T) {
 		// Create a valid new proposal JSON.

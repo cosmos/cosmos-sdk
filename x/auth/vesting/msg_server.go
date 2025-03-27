@@ -348,6 +348,10 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
 
+	if err := bk.IsSendEnabledCoins(ctx, totalCoins...); err != nil {
+		return nil, err
+	}
+
 	madeNewAcc := false
 	acc := ak.GetAccount(ctx, to)
 

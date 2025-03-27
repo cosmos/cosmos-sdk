@@ -3,6 +3,7 @@ package flag
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -59,18 +60,9 @@ func TestCompositeMapValue_Set(t *testing.T) {
 		expectVals map[int]string
 	}{
 		{
-			name:  "valid input",
-			input: "1=foo,2=bar",
-			resolver: func(s string) (int, error) {
-				switch s {
-				case "1":
-					return 1, nil
-				case "2":
-					return 2, nil
-				default:
-					return 0, errors.New("invalid key")
-				}
-			},
+			name:     "valid input",
+			input:    "1=foo,2=bar",
+			resolver: strconv.Atoi,
 			valueType: &mockType{},
 			expectErr: false,
 			expectVals: map[int]string{
@@ -79,32 +71,23 @@ func TestCompositeMapValue_Set(t *testing.T) {
 			},
 		},
 		{
-			name:  "invalid format",
-			input: "1foo,2=bar",
-			resolver: func(s string) (int, error) {
-				return 0, nil
-			},
+			name:     "invalid format",
+			input:    "1foo,2=bar",
+			resolver: strconv.Atoi,
 			valueType: &mockType{},
 			expectErr: true,
 		},
 		{
-			name:  "key resolver fails",
-			input: "1=foo,invalid=bar",
-			resolver: func(s string) (int, error) {
-				if s == "1" {
-					return 1, nil
-				}
-				return 0, errors.New("invalid key")
-			},
+			name:     "key resolver fails",
+			input:    "1=foo,invalid=bar",
+			resolver: strconv.Atoi,
 			valueType: &mockType{},
 			expectErr: true,
 		},
 		{
-			name:  "value parsing fails",
-			input: "1=foo,2=bar",
-			resolver: func(s string) (int, error) {
-				return 1, nil
-			},
+			name:     "value parsing fails",
+			input:    "1=foo,2=bar",
+			resolver: strconv.Atoi,
 			valueType: &mockType{err: errors.New("value error")},
 			expectErr: true,
 		},

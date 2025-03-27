@@ -247,37 +247,10 @@ func TestQueryProtocolPool(t *testing.T) {
 		submitGovProposal(t, valSigner, validPropFile)
 	})
 
-	t.Run("vote on proposal", func(t *testing.T) {
-		// check the proposal
-		proposalsResp := cli.CustomQuery("q", govModule, "proposals")
-		proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
-		require.NotEmpty(t, proposals)
-
-		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
-		status := gjson.Get(rsp, "proposal.status")
-		require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
-
-		// vote on the proposal
-		args := []string{
-			"tx", govModule, "vote", "1", "yes",
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valSigner),
-		}
-		rsp = cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
-	})
-
-	balanceBefore := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
-
-	time.Sleep(11 * time.Second)
-	systemtests.Sut.AwaitNextBlock(t)
+	voteAndEnsureProposalPassed(t, valSigner, 1)
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed", func(t *testing.T) {
-		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
-		status := gjson.Get(rsp, "proposal.status")
-		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
 
 		// check that the funds were distributed
 		// should be previous balance plus amount from the pool (100) plus the deposit amount (50000000)
@@ -339,37 +312,12 @@ func TestContinuousFunds(t *testing.T) {
 		submitGovProposal(t, valAddr, validPropFile)
 	})
 
-	t.Run("vote on proposal", func(t *testing.T) {
-		// check the proposal
-		proposalsResp := cli.CustomQuery("q", "gov", "proposals")
-		proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
-		require.NotEmpty(t, proposals)
-
-		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
-		status := gjson.Get(rsp, "proposal.status")
-		require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
-
-		// vote on the proposal
-		args := []string{
-			"tx", govModule, "vote", "1", "yes",
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
-		}
-		rsp = cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
-	})
-
 	// get balance before any distribution
 	balanceBefore := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
-	time.Sleep(11 * time.Second)
-	systemtests.Sut.AwaitNextBlock(t)
+	voteAndEnsureProposalPassed(t, valAddr, 1)
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed", func(t *testing.T) {
-		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
-		status := gjson.Get(rsp, "proposal.status")
-		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
 
 		// check that the fund exists
 		rsp = cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
@@ -455,38 +403,12 @@ func TestCancelContinuousFunds(t *testing.T) {
 		submitGovProposal(t, valAddr, validPropFile)
 	})
 
-	t.Run("vote on proposal - create", func(t *testing.T) {
-		// check the proposal
-		proposalsResp := cli.CustomQuery("q", govModule, "proposals")
-		proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
-		require.NotEmpty(t, proposals)
-
-		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
-		status := gjson.Get(rsp, "proposal.status")
-		require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
-
-		// vote on the proposal
-		args := []string{
-			"tx", govModule, "vote", "1", "yes",
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
-		}
-		rsp = cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
-	})
-
 	// get balance before any distribution
 	balanceBefore := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
-	time.Sleep(11 * time.Second)
-	systemtests.Sut.AwaitNextBlock(t)
+	voteAndEnsureProposalPassed(t, valAddr, 1)
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed - create", func(t *testing.T) {
-		rsp := cli.CustomQuery("q", govModule, "proposal", "1")
-		status := gjson.Get(rsp, "proposal.status")
-		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
-
 		// check that the fund exists
 		rsp = cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
 		recipient := gjson.Get(rsp, "continuous_fund.recipient").String()

@@ -1,15 +1,15 @@
-/*
 //go:build system_test
-*/
+
 package systemtests
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	systest "cosmossdk.io/systemtests"
 )
+
+const testSeed = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
 
 type initAccount struct {
 	address string
@@ -30,17 +30,17 @@ func createLegacyBinary(t *testing.T, extraAccounts ...initAccount) (*systest.CL
 	v50CLI := systest.NewCLIWrapper(t, legacySut, systest.Verbose)
 	v50CLI.AddKeyFromSeed("account1", testSeed)
 
-	var extraArgs [][]string
-	for _, extraAccount := range extraAccounts {
-		extraArgs = append(extraArgs, []string{"genesis", "add-genesis-account", extraAccount.address, extraAccount.balance})
-	}
-
-	legacySut.ModifyGenesisCLI(t,
-		// add some bogus accounts because the v53 chain had 4 nodes which takes account numbers 1-4.
+	var modifications [][]string = [][]string{
 		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("foo"), "10000000000stake"},
 		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("bar"), "10000000000stake"},
 		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("baz"), "10000000000stake"},
-		extraArgs...,
+	}
+	for _, extraAccount := range extraAccounts {
+		modifications = append(modifications, []string{"genesis", "add-genesis-account", extraAccount.address, extraAccount.balance})
+	}
+
+	legacySut.ModifyGenesisCLI(t,
+		modifications...,
 	)
 
 	return v50CLI, legacySut

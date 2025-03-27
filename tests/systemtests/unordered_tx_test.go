@@ -1,6 +1,5 @@
-/*
 //go:build system_test
-*/
+
 package systemtests
 
 import (
@@ -61,7 +60,6 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	var (
 		denom                = "stake"
 		transferAmount int64 = 1000
-		testSeed             = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
 	)
 	systest.Sut.ResetChain(t)
 

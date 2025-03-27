@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -15,8 +14,6 @@ import (
 )
 
 type (
-	// Deprecated: use AppEntrypoint instead
-	legacyAppEntrypoint = *baseapp.BaseApp
 	// AppEntrypoint is the entrypoint to deliver sims TX to the system.
 	AppEntrypoint interface {
 		SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)

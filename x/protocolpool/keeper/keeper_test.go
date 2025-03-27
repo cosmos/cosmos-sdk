@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	poolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	pooltestutil "github.com/cosmos/cosmos-sdk/x/protocolpool/testutil"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
@@ -64,7 +65,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
 	suite.bankKeeper = bankKeeper
 
-	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
+	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
 	suite.Require().NoError(err)
 
 	poolKeeper := poolkeeper.NewKeeper(

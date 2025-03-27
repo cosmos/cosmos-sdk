@@ -1155,6 +1155,10 @@ func (app *BaseApp) TxEncode(tx sdk.Tx) ([]byte, error) {
 	return app.txEncoder(tx)
 }
 
+func (app *BaseApp) StreamingManager() storetypes.StreamingManager {
+	return app.streamingManager
+}
+
 // Close is called in start cmd to gracefully cleanup resources.
 func (app *BaseApp) Close() error {
 	var errs []error

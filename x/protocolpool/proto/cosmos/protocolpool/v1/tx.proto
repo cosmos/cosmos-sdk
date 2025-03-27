@@ -113,9 +113,7 @@ message MsgClaimBudget {
 // MsgClaimBudgetResponse defines the response to executing a
 // MsgClaimBudget message.
 message MsgClaimBudgetResponse {
-  cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  ;
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
 }
 
 // MsgCreateContinuousFund defines a message for adding continuous funds.

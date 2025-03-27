@@ -1,15 +1,22 @@
+/*
 //go:build system_test
-
+*/
 package systemtests
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	systest "cosmossdk.io/systemtests"
 )
 
-func createLegacyBinary(t *testing.T) (*systest.CLIWrapper, *systest.SystemUnderTest) {
+type initAccount struct {
+	address string
+	balance string
+}
+
+func createLegacyBinary(t *testing.T, extraAccounts ...initAccount) (*systest.CLIWrapper, *systest.SystemUnderTest) {
 	//// Now we're going to switch to a v.50 chain.
 	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
 
@@ -22,13 +29,18 @@ func createLegacyBinary(t *testing.T) (*systest.CLIWrapper, *systest.SystemUnder
 	legacySut.SetupChain()
 	v50CLI := systest.NewCLIWrapper(t, legacySut, systest.Verbose)
 	v50CLI.AddKeyFromSeed("account1", testSeed)
+
+	var extraArgs [][]string
+	for _, extraAccount := range extraAccounts {
+		extraArgs = append(extraArgs, []string{"genesis", "add-genesis-account", extraAccount.address, extraAccount.balance})
+	}
+
 	legacySut.ModifyGenesisCLI(t,
 		// add some bogus accounts because the v53 chain had 4 nodes which takes account numbers 1-4.
 		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("foo"), "10000000000stake"},
 		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("bar"), "10000000000stake"},
 		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("baz"), "10000000000stake"},
-		// we need our sender to be account 5 because that's how it was signed in the v53 scenario.
-		[]string{"genesis", "add-genesis-account", senderAddr, "10000000000stake"},
+		extraArgs...,
 	)
 
 	return v50CLI, legacySut

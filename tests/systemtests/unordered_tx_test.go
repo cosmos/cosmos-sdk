@@ -1,5 +1,6 @@
+/*
 //go:build system_test
-
+*/
 package systemtests
 
 import (
@@ -72,7 +73,10 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	// generate a deterministic account. we'll use this seed again later in the v50 chain.
 	senderAddr := v53CLI.AddKeyFromSeed("account1", testSeed)
 
-	v50CLI, legacySut := createLegacyBinary(t)
+	v50CLI, legacySut := createLegacyBinary(t, initAccount{
+		address: senderAddr,
+		balance: "10000000000stake",
+	})
 	legacySut.StartChain(t)
 
 	bankSendCmdArgs := []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}

@@ -2,21 +2,25 @@ package tx
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/codec/testutil"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 func TestTxBuilder(t *testing.T) {
@@ -154,7 +158,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
 	badFeeAmount[0].Amount = sdkmath.NewInt(-5)
-	txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
+	txBuilder := newBuilder(codectestutil.CodecOptions{}.NewCodec())
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{
@@ -295,7 +299,7 @@ func TestBuilderFeePayer(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// setup basic tx
-			txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
+			txBuilder := newBuilder(codectestutil.CodecOptions{}.NewCodec())
 			err := txBuilder.SetMsgs(msgs...)
 			require.NoError(t, err)
 			txBuilder.SetGasLimit(200000)
@@ -321,7 +325,7 @@ func TestBuilderFeeGranter(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	msgs := []sdk.Msg{msg1}
 
-	txBuilder := newBuilder(testutil.CodecOptions{}.NewCodec())
+	txBuilder := newBuilder(codectestutil.CodecOptions{}.NewCodec())
 	err := txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetGasLimit(200000)
@@ -332,4 +336,28 @@ func TestBuilderFeeGranter(t *testing.T) {
 	// set fee granter
 	txBuilder.SetFeeGranter(addr1)
 	require.Equal(t, addr1.String(), sdk.AccAddress(txBuilder.GetTx().FeeGranter()).String())
+}
+
+func TestBuilderWithTimeoutTimestamp(t *testing.T) {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	interfaceRegistry := cdc.InterfaceRegistry()
+	interfaceRegistry.SigningContext()
+
+	txConfig := NewTxConfig(cdc, DefaultSignModes)
+	txBuilder := txConfig.NewTxBuilder()
+	timeoutTimestamp := time.Unix(500, 200)
+	txBuilder.SetTimeoutTimestamp(timeoutTimestamp)
+	encodedTx, err := txConfig.TxJSONEncoder()(txBuilder.GetTx())
+	require.NoError(t, err)
+
+	file := testutil.WriteToNewTempFile(t, string(encodedTx))
+	clientCtx := client.Context{InterfaceRegistry: interfaceRegistry, TxConfig: txConfig}
+	decodedTx, err := authclient.ReadTxFromFile(clientCtx, file.Name())
+	require.NoError(t, err)
+
+	txBldr, err := txConfig.WrapTxBuilder(decodedTx)
+	require.NoError(t, err)
+
+	b := txBldr.(*wrapper)
+	require.True(t, b.tx.Body.TimeoutTimestamp.Equal(timeoutTimestamp))
 }

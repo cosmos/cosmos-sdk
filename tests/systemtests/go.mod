@@ -5,6 +5,7 @@ go 1.23.0
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/log => ../../log
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
 )
@@ -100,7 +101,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-metrics v0.5.4 // indirect
-	github.com/hashicorp/go-plugin v1.6.2 // indirect
+	github.com/hashicorp/go-plugin v1.6.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
@@ -152,7 +153,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 // indirect
+	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect

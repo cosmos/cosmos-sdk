@@ -18,7 +18,7 @@ service Query {
 
   // ContinuousFund queries a continuous fund by the recipient is is associated with.
   rpc ContinuousFund(QueryContinuousFundRequest) returns (QueryContinuousFundResponse) {
-    option (google.api.http).get = "/cosmos/protocolpool/v1/continuous_fund/{recipient}";
+    option (google.api.http).get = "/cosmos/protocolpool/v1/continuous_funds/{recipient}";
   }
 
   // ContinuousFunds queries all continuous funds in the store.

@@ -103,7 +103,7 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 }
 
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	if k.externalCommunityPoolEnabled() {
+	if k.HasExternalCommunityPool() {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the FundCommunityPool method exposed by the external community pool")
 	}
 
@@ -145,7 +145,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
-	if k.externalCommunityPoolEnabled() {
+	if k.HasExternalCommunityPool() {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled -  use the DistributFromCommunityPool method exposed by the external community pool")
 	}
 

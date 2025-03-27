@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	poolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	pooltestutil "github.com/cosmos/cosmos-sdk/x/protocolpool/testutil"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
@@ -25,13 +27,12 @@ import (
 
 var (
 	poolAcc      = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	streamAcc    = authtypes.NewEmptyModuleAccount(types.StreamAccount)
 	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolDistrAccount)
 
-	recipientAddr = sdk.AccAddress("to1__________________")
+	recipientAddr  = sdk.AccAddress("to1__________________")
+	recipientAddr2 = sdk.AccAddress("to2__________________")
 
-	fooCoin  = sdk.NewInt64Coin("foo", 100)
-	fooCoin2 = sdk.NewInt64Coin("foo", 50)
+	fooCoin = sdk.NewInt64Coin("foo", 100)
 )
 
 type KeeperTestSuite struct {
@@ -59,13 +60,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress()).AnyTimes()
 	accountKeeper.EXPECT().GetModuleAddress(types.ProtocolPoolDistrAccount).Return(poolDistrAcc.GetAddress()).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
-	accountKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
 	suite.authKeeper = accountKeeper
 
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
 	suite.bankKeeper = bankKeeper
 
-	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
+	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
 	suite.Require().NoError(err)
 
 	poolKeeper := poolkeeper.NewKeeper(
@@ -90,77 +90,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.queryServer = poolkeeper.NewQuerier(poolKeeper)
 }
 
-func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(accAddr sdk.AccAddress) {
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, accAddr, gomock.Any()).AnyTimes()
-}
-
-func (suite *KeeperTestSuite) mockWithdrawContinuousFund() {
-	suite.authKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(poolAcc).AnyTimes()
-	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))
-	suite.bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-}
-
-func (suite *KeeperTestSuite) mockStreamFunds(distributed math.Int) {
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
-	suite.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
-	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, distributed)
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), gomock.Any()).AnyTimes()
-}
-
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
-	// We'll create 2 continuous funds of 30% each, and the total pool is 1000000, meaning each fund should get 300000
-
-	suite.SetupTest()
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolAcc).AnyTimes()
-	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000))
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).AnyTimes()
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000))))
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(400000))))
-
-	_, err := suite.msgServer.CreateContinuousFund(suite.ctx, &types.MsgCreateContinuousFund{
-		Authority:  suite.poolKeeper.GetAuthority(),
-		Recipient:  "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6",
-		Percentage: math.LegacyMustNewDecFromStr("0.3"),
-	})
-	suite.Require().NoError(err)
-
-	_, err = suite.msgServer.CreateContinuousFund(suite.ctx, &types.MsgCreateContinuousFund{
-		Authority:  suite.poolKeeper.GetAuthority(),
-		Recipient:  "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r",
-		Percentage: math.LegacyMustNewDecFromStr("0.3"),
-	})
-	suite.Require().NoError(err)
-
-	_ = suite.poolKeeper.SetToDistribute(suite.ctx)
-
-	err = suite.poolKeeper.IterateAndUpdateFundsDistribution(suite.ctx)
-	suite.Require().NoError(err)
-
-	err = suite.poolKeeper.RecipientFundDistributions.Walk(suite.ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
-		strAddr, err := suite.authKeeper.AddressCodec().BytesToString(key)
-		suite.Require().NoError(err)
-
-		if strAddr == "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6" {
-			suite.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
-		} else if strAddr == "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r" {
-			suite.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
-		}
-		return false, nil
-	})
-	suite.Require().NoError(err)
-}
-
 func (suite *KeeperTestSuite) TestGetCommunityPool() {
-	suite.SetupTest()
-
 	expectedBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(poolAcc).Times(1)
 	suite.bankKeeper.EXPECT().GetAllBalances(suite.ctx, poolAcc.GetAddress()).Return(expectedBalance).Times(1)
@@ -176,78 +110,381 @@ func (suite *KeeperTestSuite) TestGetCommunityPool() {
 	suite.Require().Contains(err.Error(), "module account protocolpool does not exist")
 }
 
-func (suite *KeeperTestSuite) TestSetToDistribute() {
-	suite.SetupTest()
+func (suite *KeeperTestSuite) TestGetAllContinuousFunds() {
+	suite.Run("empty store", func() {
+		// Reset the context to start with a clean store.
+		suite.SetupTest()
 
-	params, err := suite.poolKeeper.Params.Get(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Equal([]string{sdk.DefaultBondDenom}, params.EnabledDistributionDenoms)
-
-	// add another denom
-	err = suite.poolKeeper.Params.Set(suite.ctx, types.Params{
-		EnabledDistributionDenoms: []string{sdk.DefaultBondDenom, "foo"},
+		funds, err := suite.poolKeeper.GetAllContinuousFunds(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Empty(funds, "expected no continuous funds in store")
 	})
-	suite.Require().NoError(err)
 
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
-	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000))
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).Times(2)
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "foo").Return(sdk.NewCoin("foo", math.NewInt(1234))).Times(2)
+	suite.Run("one fund in store", func() {
+		suite.SetupTest()
 
-	// because there are no continuous funds, all are going to the community pool
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(distrBal, sdk.NewCoin("foo", math.NewInt(1234))))
+		fund := types.ContinuousFund{
+			Recipient:  recipientAddr.String(),
+			Percentage: math.LegacyMustNewDecFromStr("0.5"),
+			Expiry:     nil,
+		}
 
-	err = suite.poolKeeper.SetToDistribute(suite.ctx)
-	suite.Require().NoError(err)
+		err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+		suite.Require().NoError(err)
 
-	// Verify that LastBalance was not set (zero balance)
-	_, err = suite.poolKeeper.LastBalance.Get(suite.ctx)
-	suite.Require().ErrorContains(err, "not found")
-
-	// create new continuous fund and distribute again
-	addrCdc := address.NewBech32Codec("cosmos")
-	addrStr := "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6"
-	addrBz, err := addrCdc.StringToBytes(addrStr)
-	suite.Require().NoError(err)
-
-	err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, addrBz, types.ContinuousFund{
-		Recipient:  addrStr,
-		Percentage: math.LegacyMustNewDecFromStr("0.3"),
-		Expiry:     nil,
+		funds, err := suite.poolKeeper.GetAllContinuousFunds(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(funds, 1, "expected one continuous fund in store")
+		suite.Require().Equal(fund.Recipient, funds[0].Recipient)
+		suite.Require().Equal(fund.Percentage, funds[0].Percentage)
+		suite.Require().Equal(fund.Expiry, funds[0].Expiry)
 	})
-	suite.Require().NoError(err)
 
-	err = suite.poolKeeper.SetToDistribute(suite.ctx)
-	suite.Require().NoError(err)
+	suite.Run("many funds in store", func() {
+		suite.SetupTest()
 
-	// Verify that LastBalance was set correctly
-	lastBalance, err := suite.poolKeeper.LastBalance.Get(suite.ctx)
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)), sdk.NewCoin("foo", math.NewInt(1234))), lastBalance.Amount)
+		totalFunds := 10
 
-	// Verify that a distribution was set
-	var distribution types.DistributionAmount
-	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value types.DistributionAmount) (bool, error) {
-		distribution = value
-		return true, nil
+		// Insert a number of funds.
+		for i := 0; i < totalFunds; i++ {
+			accAddr := sdk.AccAddress(fmt.Sprintf("ao%d__________________", i))
+
+			fund := types.ContinuousFund{
+				Recipient:  accAddr.String(),
+				Percentage: math.LegacyMustNewDecFromStr("0.1"),
+				Expiry:     nil,
+			}
+			err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, accAddr, fund)
+			suite.Require().NoError(err)
+		}
+
+		funds, err := suite.poolKeeper.GetAllContinuousFunds(suite.ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(funds, totalFunds, "expected many continuous funds in store")
+
+		// verify each inserted fund's percentage.
+		for _, f := range funds {
+			suite.Require().Equal(math.LegacyMustNewDecFromStr("0.1"), f.Percentage)
+		}
 	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)), sdk.NewCoin("foo", math.NewInt(1234))), distribution.Amount)
+}
 
-	// Test case when balance is zero
-	zeroBal := sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(zeroBal)
-	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "foo").Return(sdk.NewCoin("foo", math.ZeroInt()))
+func (suite *KeeperTestSuite) TestDistributeFunds() {
+	initialBalance := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))
+	initalBalanceCoins := sdk.NewCoins(initialBalance)
 
-	err = suite.poolKeeper.SetToDistribute(suite.ctx)
-	suite.Require().NoError(err)
+	tests := []struct {
+		name               string
+		params             types.Params
+		initialPoolBalance sdk.Coin
+		setup              func()
+		expectedErr        string
+		verify             func()
+	}{
+		{
+			name:   "module account missing",
+			params: types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(nil)
+			},
+			expectedErr: "module account",
+		},
+		{
+			name:               "zero funds in module account",
+			initialPoolBalance: sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
+			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+					Return(poolDistrAcc).AnyTimes()
+			},
+			expectedErr: "",
+		},
+		{
+			name:               "one valid continuous fund",
+			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			initialPoolBalance: initialBalance,
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+					Return(poolDistrAcc).AnyTimes()
 
-	// Verify that no new distribution was set
-	count := 0
-	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value types.DistributionAmount) (bool, error) {
-		count++
-		return false, nil
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(1, count) // Only the previous distribution should exist
+				fund := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream).
+					Return(nil).Times(1)
+
+				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins).
+					Return(nil).Times(1)
+			},
+			expectedErr: "",
+		},
+		{
+			name:               "one expired continuous fund",
+			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			initialPoolBalance: initialBalance,
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+					Return(poolDistrAcc).AnyTimes()
+
+				expiredTime := suite.ctx.BlockTime().Add(-time.Hour)
+				fund := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     &expiredTime,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+
+				// And full amount to be sent to the community pool.
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, initalBalanceCoins).
+					Return(nil).Times(1)
+			},
+			expectedErr: "",
+			verify: func() {
+				// Verify that the expired fund was removed.
+				funds, err := suite.poolKeeper.GetAllContinuousFunds(suite.ctx)
+				suite.Require().NoError(err)
+				suite.Require().Empty(funds, "expected expired continuous fund to be removed")
+			},
+		},
+		{
+			name:               "multiple valid continuous funds",
+			initialPoolBalance: initialBalance,
+			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+					Return(poolDistrAcc).AnyTimes()
+
+				fund1 := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund1)
+				suite.Require().NoError(err)
+
+				fund2 := types.ContinuousFund{
+					Recipient:  recipientAddr2.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.2"),
+					Expiry:     nil,
+				}
+				accAddr, err := sdk.AccAddressFromBech32(fund2.Recipient)
+				suite.Require().NoError(err)
+
+				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, accAddr, fund2)
+				suite.Require().NoError(err)
+
+				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				amountToStream2 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.2"), initalBalanceCoins)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream1).
+					Return(nil).Times(1)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr2, amountToStream2).
+					Return(nil).Times(1)
+
+				remainingCoins := initalBalanceCoins.Sub(amountToStream1...).Sub(amountToStream2...)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins).
+					Return(nil).Times(1)
+			},
+			expectedErr: "",
+		},
+		{
+			name:               "fund percentages sum over 1 (resulting in negative remainder)",
+			initialPoolBalance: initialBalance,
+			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+					Return(poolDistrAcc).AnyTimes()
+
+				// Two funds whose percentages sum to 1.3 (80% and 50%).
+				fund1 := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.8"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund1)
+				suite.Require().NoError(err)
+
+				fund2 := types.ContinuousFund{
+					Recipient:  recipientAddr2.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.5"),
+					Expiry:     nil,
+				}
+				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr2, fund2)
+				suite.Require().NoError(err)
+
+				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.8"), initalBalanceCoins) // 800 stake
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream1).
+					Return(nil).Times(1)
+			},
+			// we will fail on the second iteration of the loop
+			expectedErr: "negative funds for distribution from ContinuousFunds: -300stake",
+		},
+		{
+			name:   "bank send to account error",
+			params: types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+					Return(poolDistrAcc).AnyTimes()
+
+				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).
+					Return(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))).Times(1)
+
+				fund := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), totalCoins)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream).
+					Return(fmt.Errorf("send account error")).Times(1)
+			},
+			expectedErr: "failed to distribute fund",
+		},
+		{
+			name:               "bank send to module error",
+			initialPoolBalance: initialBalance,
+			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+					Return(poolDistrAcc).AnyTimes()
+
+				fund := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream).
+					Return(nil).Times(1)
+
+				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins).
+					Return(fmt.Errorf("send module error")).Times(1)
+			},
+			expectedErr: "failed to send coins to community pool",
+		},
+		{
+			name:               "fund expiry equals block time (not expired)",
+			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			initialPoolBalance: initialBalance,
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+					Return(poolDistrAcc).AnyTimes()
+
+				expiryTime := suite.ctx.BlockTime() // exactly equal to block time.
+				fund := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     &expiryTime,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream).
+					Return(nil).Times(1)
+
+				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins).
+					Return(nil).Times(1)
+			},
+			expectedErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.Require().NoError(suite.poolKeeper.Params.Set(suite.ctx, tc.params))
+			if !tc.initialPoolBalance.IsNil() {
+				suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), initialBalance.Denom).
+					Return(tc.initialPoolBalance).Times(1)
+			}
+
+			tc.setup()
+
+			err := suite.poolKeeper.DistributeFunds(suite.ctx)
+			switch {
+			case tc.expectedErr != "":
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expectedErr)
+			default:
+				suite.Require().NoError(err)
+			}
+		})
+	}
+}
+
+// TestPercentageCoinMul tests the PercentageCoinMul function.
+func TestPercentageCoinMul(t *testing.T) {
+	tests := []struct {
+		name       string
+		percentage math.LegacyDec
+		coins      sdk.Coins
+		expected   sdk.Coins
+	}{
+		{
+			name:       "zero percentage",
+			percentage: math.LegacyMustNewDecFromStr("0.0"),
+			coins:      sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+			expected:   sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(0))),
+		},
+		{
+			name:       "100 percent",
+			percentage: math.LegacyMustNewDecFromStr("1.0"),
+			coins:      sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+			expected:   sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+		},
+		{
+			name:       "50 percent",
+			percentage: math.LegacyMustNewDecFromStr("0.5"),
+			coins:      sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+			expected:   sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(50))),
+		},
+		{
+			name:       "fraction with truncation",
+			percentage: math.LegacyMustNewDecFromStr("0.333333333333333333"), // Approx. 1/3.
+			coins:      sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(100))),
+			// 100 * 1/3 = 33.333... which truncates to 33.
+			expected: sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(33))),
+		},
+		{
+			name:       "multiple denominations",
+			percentage: math.LegacyMustNewDecFromStr("0.5"),
+			coins: sdk.NewCoins(
+				sdk.NewCoin("atom", math.NewInt(100)),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(200)),
+			),
+			expected: sdk.NewCoins(
+				sdk.NewCoin("atom", math.NewInt(50)),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Call the function under test.
+			result := poolkeeper.PercentageCoinMul(tc.percentage, tc.coins)
+
+			// Compare the resulting coins with the expected coins.
+			if !result.Equal(tc.expected) {
+				t.Errorf("unexpected result for %s:\nexpected: %s\ngot:      %s", tc.name, tc.expected.String(), result.String())
+			}
+		})
+	}
 }

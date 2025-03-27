@@ -12,24 +12,19 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	_ "google.golang.org/protobuf/types/known/durationpb"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -122,25 +117,25 @@ func (m *QueryCommunityPoolResponse) GetPool() github_com_cosmos_cosmos_sdk_type
 	return nil
 }
 
-// QueryUnclaimedBudgetRequest is the request type for the Query/UnclaimedBudgetRequest
+// QueryContinuousFundRequest is the request type for the Query/ContinuousFund
 // RPC method.
-type QueryUnclaimedBudgetRequest struct {
-	// address is the recipient address to query unclaimed budget amount for.
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+type QueryContinuousFundRequest struct {
+	// recipient is the recipient address to query unclaimed budget amount for.
+	Recipient string `protobuf:"bytes,1,opt,name=recipient,proto3" json:"recipient,omitempty"`
 }
 
-func (m *QueryUnclaimedBudgetRequest) Reset()         { *m = QueryUnclaimedBudgetRequest{} }
-func (m *QueryUnclaimedBudgetRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryUnclaimedBudgetRequest) ProtoMessage()    {}
-func (*QueryUnclaimedBudgetRequest) Descriptor() ([]byte, []int) {
+func (m *QueryContinuousFundRequest) Reset()         { *m = QueryContinuousFundRequest{} }
+func (m *QueryContinuousFundRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryContinuousFundRequest) ProtoMessage()    {}
+func (*QueryContinuousFundRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_51500a0a77d57843, []int{2}
 }
-func (m *QueryUnclaimedBudgetRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryContinuousFundRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryUnclaimedBudgetRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryContinuousFundRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryUnclaimedBudgetRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryContinuousFundRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -150,53 +145,44 @@ func (m *QueryUnclaimedBudgetRequest) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *QueryUnclaimedBudgetRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryUnclaimedBudgetRequest.Merge(m, src)
+func (m *QueryContinuousFundRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryContinuousFundRequest.Merge(m, src)
 }
-func (m *QueryUnclaimedBudgetRequest) XXX_Size() int {
+func (m *QueryContinuousFundRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryUnclaimedBudgetRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryUnclaimedBudgetRequest.DiscardUnknown(m)
+func (m *QueryContinuousFundRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryContinuousFundRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryUnclaimedBudgetRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryContinuousFundRequest proto.InternalMessageInfo
 
-func (m *QueryUnclaimedBudgetRequest) GetAddress() string {
+func (m *QueryContinuousFundRequest) GetRecipient() string {
 	if m != nil {
-		return m.Address
+		return m.Recipient
 	}
 	return ""
 }
 
-// QueryUnclaimedBudgetResponse is the response type for the Query/UnclaimedBudget
+// QueryUnclaimedBudgetResponse is the response type for the Query/ContinuousFund
 // RPC method.
-type QueryUnclaimedBudgetResponse struct {
-	// claimed_amount is the budget amount already claimed by the recipient
-	ClaimedAmount types.Coin `protobuf:"bytes,1,opt,name=claimed_amount,json=claimedAmount,proto3" json:"claimed_amount"`
-	// unclaimed_amount is the remaining budget amount that is unclaimed by the recipient
-	UnclaimedAmount types.Coin `protobuf:"bytes,2,opt,name=unclaimed_amount,json=unclaimedAmount,proto3" json:"unclaimed_amount"`
-	// next_claim_from is the next starting claim time for fund distribution.
-	// It represents the time when we can claim funds after the period time interval has passed.
-	NextClaimFrom time.Time `protobuf:"bytes,3,opt,name=next_claim_from,json=nextClaimFrom,proto3,stdtime" json:"next_claim_from"`
-	// period is the time interval for fund distribution
-	Period time.Duration `protobuf:"bytes,4,opt,name=period,proto3,stdduration" json:"period"`
-	// tranches_left is the number of tranches left for the amount to be distributed
-	TranchesLeft uint64 `protobuf:"varint,5,opt,name=tranches_left,json=tranchesLeft,proto3" json:"tranches_left,omitempty"`
+type QueryContinuousFundResponse struct {
+	// ContinuousFunds is the given continuous fund returned in the query.
+	ContinuousFund ContinuousFund `protobuf:"bytes,1,opt,name=continuous_fund,json=continuousFund,proto3" json:"continuous_fund"`
 }
 
-func (m *QueryUnclaimedBudgetResponse) Reset()         { *m = QueryUnclaimedBudgetResponse{} }
-func (m *QueryUnclaimedBudgetResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryUnclaimedBudgetResponse) ProtoMessage()    {}
-func (*QueryUnclaimedBudgetResponse) Descriptor() ([]byte, []int) {
+func (m *QueryContinuousFundResponse) Reset()         { *m = QueryContinuousFundResponse{} }
+func (m *QueryContinuousFundResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryContinuousFundResponse) ProtoMessage()    {}
+func (*QueryContinuousFundResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_51500a0a77d57843, []int{3}
 }
-func (m *QueryUnclaimedBudgetResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryContinuousFundResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryUnclaimedBudgetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryContinuousFundResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryUnclaimedBudgetResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryContinuousFundResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -206,51 +192,108 @@ func (m *QueryUnclaimedBudgetResponse) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (m *QueryUnclaimedBudgetResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryUnclaimedBudgetResponse.Merge(m, src)
+func (m *QueryContinuousFundResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryContinuousFundResponse.Merge(m, src)
 }
-func (m *QueryUnclaimedBudgetResponse) XXX_Size() int {
+func (m *QueryContinuousFundResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryUnclaimedBudgetResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryUnclaimedBudgetResponse.DiscardUnknown(m)
+func (m *QueryContinuousFundResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryContinuousFundResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryUnclaimedBudgetResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryContinuousFundResponse proto.InternalMessageInfo
 
-func (m *QueryUnclaimedBudgetResponse) GetClaimedAmount() types.Coin {
+func (m *QueryContinuousFundResponse) GetContinuousFund() ContinuousFund {
 	if m != nil {
-		return m.ClaimedAmount
+		return m.ContinuousFund
 	}
-	return types.Coin{}
+	return ContinuousFund{}
 }
 
-func (m *QueryUnclaimedBudgetResponse) GetUnclaimedAmount() types.Coin {
-	if m != nil {
-		return m.UnclaimedAmount
-	}
-	return types.Coin{}
+// QueryContinuousFundRequest is the request type for the Query/ContinuousFunds
+// RPC method.
+type QueryContinuousFundsRequest struct {
 }
 
-func (m *QueryUnclaimedBudgetResponse) GetNextClaimFrom() time.Time {
-	if m != nil {
-		return m.NextClaimFrom
+func (m *QueryContinuousFundsRequest) Reset()         { *m = QueryContinuousFundsRequest{} }
+func (m *QueryContinuousFundsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryContinuousFundsRequest) ProtoMessage()    {}
+func (*QueryContinuousFundsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_51500a0a77d57843, []int{4}
+}
+func (m *QueryContinuousFundsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryContinuousFundsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryContinuousFundsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
 	}
-	return time.Time{}
+}
+func (m *QueryContinuousFundsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryContinuousFundsRequest.Merge(m, src)
+}
+func (m *QueryContinuousFundsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryContinuousFundsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryContinuousFundsRequest.DiscardUnknown(m)
 }
 
-func (m *QueryUnclaimedBudgetResponse) GetPeriod() time.Duration {
-	if m != nil {
-		return m.Period
-	}
-	return 0
+var xxx_messageInfo_QueryContinuousFundsRequest proto.InternalMessageInfo
+
+// QueryUnclaimedBudgetResponse is the response type for the Query/ContinuousFunds
+// RPC method.
+type QueryContinuousFundsResponse struct {
+	// ContinuousFunds defines all continuous funds in state.
+	ContinuousFunds []ContinuousFund `protobuf:"bytes,1,rep,name=continuous_funds,json=continuousFunds,proto3" json:"continuous_funds"`
 }
 
-func (m *QueryUnclaimedBudgetResponse) GetTranchesLeft() uint64 {
-	if m != nil {
-		return m.TranchesLeft
+func (m *QueryContinuousFundsResponse) Reset()         { *m = QueryContinuousFundsResponse{} }
+func (m *QueryContinuousFundsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryContinuousFundsResponse) ProtoMessage()    {}
+func (*QueryContinuousFundsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_51500a0a77d57843, []int{5}
+}
+func (m *QueryContinuousFundsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryContinuousFundsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryContinuousFundsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
 	}
-	return 0
+}
+func (m *QueryContinuousFundsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryContinuousFundsResponse.Merge(m, src)
+}
+func (m *QueryContinuousFundsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryContinuousFundsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryContinuousFundsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryContinuousFundsResponse proto.InternalMessageInfo
+
+func (m *QueryContinuousFundsResponse) GetContinuousFunds() []ContinuousFund {
+	if m != nil {
+		return m.ContinuousFunds
+	}
+	return nil
 }
 
 // QueryParamsRequest is the response type for the Query/Params RPC method.
@@ -261,7 +304,7 @@ func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
 func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsRequest) ProtoMessage()    {}
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_51500a0a77d57843, []int{4}
+	return fileDescriptor_51500a0a77d57843, []int{6}
 }
 func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -299,7 +342,7 @@ func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
 func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_51500a0a77d57843, []int{5}
+	return fileDescriptor_51500a0a77d57843, []int{7}
 }
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -338,8 +381,10 @@ func (m *QueryParamsResponse) GetParams() Params {
 func init() {
 	proto.RegisterType((*QueryCommunityPoolRequest)(nil), "cosmos.protocolpool.v1.QueryCommunityPoolRequest")
 	proto.RegisterType((*QueryCommunityPoolResponse)(nil), "cosmos.protocolpool.v1.QueryCommunityPoolResponse")
-	proto.RegisterType((*QueryUnclaimedBudgetRequest)(nil), "cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest")
-	proto.RegisterType((*QueryUnclaimedBudgetResponse)(nil), "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse")
+	proto.RegisterType((*QueryContinuousFundRequest)(nil), "cosmos.protocolpool.v1.QueryContinuousFundRequest")
+	proto.RegisterType((*QueryContinuousFundResponse)(nil), "cosmos.protocolpool.v1.QueryContinuousFundResponse")
+	proto.RegisterType((*QueryContinuousFundsRequest)(nil), "cosmos.protocolpool.v1.QueryContinuousFundsRequest")
+	proto.RegisterType((*QueryContinuousFundsResponse)(nil), "cosmos.protocolpool.v1.QueryContinuousFundsResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.protocolpool.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.protocolpool.v1.QueryParamsResponse")
 }
@@ -349,49 +394,44 @@ func init() {
 }
 
 var fileDescriptor_51500a0a77d57843 = []byte{
-	// 670 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0x31, 0x6f, 0xd3, 0x40,
-	0x14, 0x8e, 0xdb, 0x34, 0xc0, 0x41, 0x28, 0x3a, 0x2a, 0x94, 0xba, 0x95, 0x13, 0x19, 0xa9, 0x8a,
-	0x40, 0x3d, 0x93, 0xb4, 0x13, 0xb0, 0x34, 0x45, 0x1d, 0xa0, 0x43, 0x9b, 0xc2, 0xc2, 0x62, 0x39,
-	0xf6, 0xc5, 0xb5, 0x88, 0xef, 0x5c, 0xdf, 0xb9, 0x6a, 0x85, 0xba, 0xb0, 0xb1, 0x55, 0x62, 0xe1,
-	0x17, 0x30, 0x30, 0x33, 0xf0, 0x13, 0x3a, 0x56, 0xb0, 0x30, 0x51, 0x94, 0xf2, 0x1f, 0x58, 0x91,
-	0xcf, 0xcf, 0xd0, 0x44, 0x49, 0xd4, 0x4e, 0x6d, 0xde, 0x7b, 0xdf, 0xf7, 0xbe, 0xef, 0xee, 0x3b,
-	0x23, 0xd3, 0xe5, 0x22, 0xe4, 0xc2, 0x8a, 0x62, 0x2e, 0xb9, 0xcb, 0x7b, 0x11, 0xe7, 0x3d, 0x6b,
-	0xbf, 0x61, 0xed, 0x25, 0x34, 0x3e, 0x24, 0xaa, 0x8a, 0xef, 0x65, 0x33, 0xe4, 0xe2, 0x0c, 0xd9,
-	0x6f, 0xe8, 0x73, 0x3e, 0xf7, 0xb9, 0x2a, 0x5a, 0xe9, 0x7f, 0x59, 0x5f, 0x5f, 0xf4, 0x39, 0xf7,
-	0x7b, 0xd4, 0x72, 0xa2, 0xc0, 0x72, 0x18, 0xe3, 0xd2, 0x91, 0x01, 0x67, 0x80, 0xd6, 0x0d, 0xd8,
-	0xd7, 0x71, 0x04, 0xb5, 0xf6, 0x1b, 0x1d, 0x2a, 0x9d, 0x86, 0xe5, 0xf2, 0x80, 0x41, 0x7f, 0x3e,
-	0xeb, 0xdb, 0x19, 0xed, 0xc5, 0xc5, 0x7a, 0x15, 0x88, 0xd5, 0xaf, 0x4e, 0xd2, 0xb5, 0x64, 0x10,
-	0x52, 0x21, 0x9d, 0x30, 0xca, 0xb9, 0x87, 0x07, 0xbc, 0x24, 0x56, 0xcb, 0xa1, 0x3f, 0xce, 0xab,
-	0x3c, 0x8c, 0x28, 0x2c, 0x31, 0x17, 0xd0, 0xfc, 0x76, 0x6a, 0x7d, 0x9d, 0x87, 0x61, 0xc2, 0x02,
-	0x79, 0xb8, 0xc5, 0x79, 0xaf, 0x4d, 0xf7, 0x12, 0x2a, 0xa4, 0x79, 0x84, 0xf4, 0x51, 0x4d, 0x11,
-	0x71, 0x26, 0x28, 0xb6, 0x51, 0x31, 0x65, 0xac, 0x68, 0xb5, 0xe9, 0xfa, 0xcd, 0xe6, 0x3c, 0x01,
-	0xf1, 0xa9, 0x53, 0x02, 0x4e, 0xc9, 0x3a, 0x0f, 0x58, 0xeb, 0xd1, 0xc9, 0xcf, 0x6a, 0xe1, 0xf3,
-	0x59, 0xb5, 0xee, 0x07, 0x72, 0x37, 0xe9, 0x10, 0x97, 0x87, 0xe0, 0x14, 0xfe, 0x2c, 0x0b, 0xef,
-	0x0d, 0xa8, 0x4a, 0x01, 0xa2, 0xad, 0x88, 0xcd, 0x6d, 0xb4, 0xa0, 0xd6, 0xbf, 0x62, 0x6e, 0xcf,
-	0x09, 0x42, 0xea, 0xb5, 0x12, 0xcf, 0xa7, 0x12, 0xd4, 0xe1, 0x26, 0xba, 0xe6, 0x78, 0x5e, 0x4c,
-	0x85, 0xa8, 0x68, 0x35, 0xad, 0x7e, 0xa3, 0x55, 0xf9, 0xf6, 0x65, 0x79, 0x0e, 0x54, 0xac, 0x65,
-	0x9d, 0x1d, 0x19, 0x07, 0xcc, 0x6f, 0xe7, 0x83, 0x66, 0x7f, 0x0a, 0x2d, 0x8e, 0xe6, 0x04, 0x53,
-	0x1b, 0xe8, 0x36, 0x34, 0x6c, 0x27, 0xe4, 0x09, 0x93, 0x8a, 0x7b, 0xa2, 0xbd, 0x62, 0x6a, 0xaf,
-	0x5d, 0x06, 0xd8, 0x9a, 0x42, 0xe1, 0xe7, 0xe8, 0x4e, 0xc2, 0x86, 0x98, 0xa6, 0x2e, 0xc7, 0x34,
-	0xfb, 0x0f, 0x08, 0x5c, 0x9b, 0x68, 0x96, 0xd1, 0x03, 0x69, 0xab, 0xaa, 0xdd, 0x8d, 0x79, 0x58,
-	0x99, 0x56, 0x54, 0x3a, 0xc9, 0x12, 0x40, 0xf2, 0x04, 0x90, 0x97, 0x79, 0x44, 0x5a, 0xd7, 0x53,
-	0xae, 0xe3, 0xb3, 0xaa, 0xd6, 0x2e, 0xa7, 0xe0, 0xf5, 0x14, 0xbb, 0x11, 0xf3, 0x10, 0x3f, 0x41,
-	0xa5, 0x88, 0xc6, 0x01, 0xf7, 0x2a, 0x45, 0xd0, 0x33, 0x4c, 0xf2, 0x0c, 0x62, 0x94, 0x71, 0x7c,
-	0x4c, 0x39, 0x00, 0x82, 0xef, 0xa3, 0xb2, 0x8c, 0x1d, 0xe6, 0xee, 0x52, 0x61, 0xf7, 0x68, 0x57,
-	0x56, 0x66, 0x6a, 0x5a, 0xbd, 0xd8, 0xbe, 0x95, 0x17, 0x37, 0x69, 0x57, 0x9a, 0x73, 0x08, 0xab,
-	0x33, 0xde, 0x72, 0x62, 0x27, 0x14, 0x79, 0x98, 0x76, 0xd0, 0xdd, 0x81, 0x2a, 0x1c, 0xf8, 0x53,
-	0x54, 0x8a, 0x54, 0x05, 0x0e, 0xda, 0x20, 0xa3, 0x5f, 0x1f, 0xc9, 0x70, 0x70, 0x46, 0x80, 0x69,
-	0xfe, 0x99, 0x46, 0x33, 0x8a, 0x15, 0x7f, 0xd2, 0x50, 0x79, 0x20, 0xa7, 0xb8, 0x31, 0x8e, 0x69,
-	0x6c, 0xe0, 0xf5, 0xe6, 0x55, 0x20, 0x99, 0x01, 0x93, 0xbc, 0xfb, 0xfe, 0xfb, 0xc3, 0x54, 0x1d,
-	0x2f, 0x59, 0x63, 0x9e, 0x9b, 0x9b, 0xc3, 0xec, 0xb4, 0x82, 0xbf, 0x6a, 0x68, 0x76, 0x28, 0x7d,
-	0x78, 0x65, 0xe2, 0xde, 0xd1, 0xf9, 0xd7, 0x57, 0xaf, 0x06, 0x02, 0xb9, 0x8f, 0x95, 0xdc, 0x55,
-	0xdc, 0x1c, 0x27, 0xf7, 0x7f, 0x6c, 0x3b, 0x0a, 0x69, 0xbd, 0x85, 0xc7, 0x73, 0x84, 0xdf, 0x6b,
-	0xa8, 0x94, 0x5d, 0x03, 0x7e, 0x30, 0x71, 0xf9, 0xc0, 0xcd, 0xeb, 0x0f, 0x2f, 0x35, 0x0b, 0xfa,
-	0x96, 0x94, 0xbe, 0x1a, 0x36, 0xc6, 0xe9, 0xcb, 0x6e, 0xbe, 0xf5, 0xe2, 0xa4, 0x6f, 0x68, 0xa7,
-	0x7d, 0x43, 0xfb, 0xd5, 0x37, 0xb4, 0xe3, 0x73, 0xa3, 0x70, 0x7a, 0x6e, 0x14, 0x7e, 0x9c, 0x1b,
-	0x85, 0xd7, 0x8d, 0x89, 0x9f, 0x99, 0x83, 0x41, 0x42, 0xf5, 0xd5, 0xe9, 0x94, 0x54, 0x6d, 0xe5,
-	0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xca, 0xd7, 0x57, 0x94, 0x1e, 0x06, 0x00, 0x00,
+	// 588 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0x3f, 0x6f, 0xd3, 0x40,
+	0x18, 0xc6, 0x63, 0x68, 0x2b, 0xf5, 0x2a, 0x5a, 0x74, 0x54, 0x28, 0x71, 0x8b, 0x1b, 0x79, 0x88,
+	0xa2, 0xa2, 0xda, 0x75, 0x5a, 0x75, 0xea, 0x42, 0x2a, 0xb1, 0xb0, 0x94, 0x14, 0x84, 0xc4, 0x12,
+	0x39, 0xce, 0x61, 0x2c, 0x92, 0x7b, 0x5d, 0xdf, 0x39, 0x10, 0xa1, 0x2e, 0x6c, 0x6c, 0x48, 0x7c,
+	0x07, 0x90, 0x18, 0x98, 0x90, 0xf8, 0x0a, 0x1d, 0x2b, 0x58, 0x98, 0x00, 0x25, 0x7c, 0x10, 0xe4,
+	0xf3, 0x9b, 0x50, 0x57, 0x76, 0x69, 0xa6, 0x44, 0xef, 0x9f, 0xe7, 0xf9, 0xdd, 0xe5, 0xc9, 0x11,
+	0xd3, 0x03, 0xd1, 0x07, 0x61, 0x87, 0x11, 0x48, 0xf0, 0xa0, 0x17, 0x02, 0xf4, 0xec, 0x81, 0x63,
+	0x1f, 0xc7, 0x2c, 0x1a, 0x5a, 0xaa, 0x4a, 0x6f, 0xa7, 0x33, 0xd6, 0xf9, 0x19, 0x6b, 0xe0, 0xe8,
+	0xab, 0x3e, 0xf8, 0xa0, 0x8a, 0x76, 0xf2, 0x2d, 0xed, 0xeb, 0xeb, 0x3e, 0x80, 0xdf, 0x63, 0xb6,
+	0x1b, 0x06, 0xb6, 0xcb, 0x39, 0x48, 0x57, 0x06, 0xc0, 0x71, 0x5b, 0x37, 0xd0, 0xaf, 0xe3, 0x0a,
+	0x66, 0x0f, 0x9c, 0x0e, 0x93, 0xae, 0x63, 0x7b, 0x10, 0x70, 0xec, 0x57, 0xd2, 0x7e, 0x3b, 0x95,
+	0x3d, 0x6f, 0xac, 0x17, 0xa1, 0xca, 0x61, 0xc8, 0x70, 0xc6, 0x5c, 0x23, 0x95, 0x87, 0x09, 0xf9,
+	0x01, 0xf4, 0xfb, 0x31, 0x0f, 0xe4, 0xf0, 0x10, 0xa0, 0xd7, 0x62, 0xc7, 0x31, 0x13, 0xd2, 0x3c,
+	0x21, 0x7a, 0x5e, 0x53, 0x84, 0xc0, 0x05, 0xa3, 0x6d, 0x32, 0x97, 0x28, 0x96, 0xb5, 0xea, 0xf5,
+	0xfa, 0x52, 0xa3, 0x62, 0xa1, 0x77, 0x02, 0x6a, 0x21, 0xa8, 0x75, 0x00, 0x01, 0x6f, 0x6e, 0x9f,
+	0xfe, 0xdc, 0x28, 0x7d, 0xfa, 0xb5, 0x51, 0xf7, 0x03, 0xf9, 0x3c, 0xee, 0x58, 0x1e, 0xf4, 0x11,
+	0x14, 0x3f, 0xb6, 0x44, 0xf7, 0x05, 0x52, 0x25, 0x0b, 0xa2, 0xa5, 0x84, 0xcd, 0x47, 0x53, 0x7b,
+	0x2e, 0x03, 0x1e, 0x43, 0x2c, 0xee, 0xc7, 0xbc, 0x8b, 0x70, 0x74, 0x8f, 0x2c, 0x46, 0xcc, 0x0b,
+	0xc2, 0x80, 0x71, 0x59, 0xd6, 0xaa, 0x5a, 0x7d, 0xb1, 0x59, 0xfe, 0xf6, 0x65, 0x6b, 0x15, 0x31,
+	0xee, 0x75, 0xbb, 0x11, 0x13, 0xe2, 0x48, 0x46, 0x01, 0xf7, 0x5b, 0xff, 0x46, 0x4d, 0x49, 0xd6,
+	0x72, 0x55, 0xf1, 0x54, 0x8f, 0xc9, 0x8a, 0x37, 0xed, 0xb4, 0x9f, 0xc5, 0xbc, 0xab, 0xc4, 0x97,
+	0x1a, 0x35, 0x2b, 0xff, 0x57, 0xb5, 0xb2, 0x42, 0xcd, 0xb9, 0xe4, 0xb4, 0xad, 0x65, 0x2f, 0x53,
+	0x35, 0xef, 0xe4, 0xba, 0x8a, 0xc9, 0x4d, 0xbf, 0x24, 0xeb, 0xf9, 0x6d, 0xa4, 0x7a, 0x42, 0x6e,
+	0x5e, 0xa0, 0x12, 0x78, 0xef, 0xb3, 0x61, 0xad, 0x64, 0xb1, 0x84, 0xb9, 0x4a, 0xa8, 0x32, 0x3e,
+	0x74, 0x23, 0xb7, 0x3f, 0xc5, 0x39, 0x22, 0xb7, 0x32, 0x55, 0xa4, 0xd8, 0x27, 0x0b, 0xa1, 0xaa,
+	0xe0, 0x95, 0x18, 0x45, 0xde, 0xe9, 0x1e, 0x7a, 0xe2, 0x4e, 0xe3, 0xe3, 0x3c, 0x99, 0x57, 0xaa,
+	0xf4, 0x83, 0x46, 0x6e, 0x64, 0x32, 0x45, 0x9d, 0x22, 0xa5, 0xc2, 0x70, 0xea, 0x8d, 0x59, 0x56,
+	0xd2, 0x03, 0x98, 0xd6, 0x9b, 0xef, 0x7f, 0xde, 0x5f, 0xab, 0xd3, 0x9a, 0x5d, 0xf0, 0xd7, 0xf0,
+	0x26, 0x6b, 0xed, 0xa4, 0x42, 0xbf, 0x6a, 0x64, 0x39, 0x7b, 0x8f, 0xf4, 0x7f, 0xb6, 0x39, 0x51,
+	0xd5, 0x77, 0x66, 0xda, 0x41, 0xd6, 0x7d, 0xc5, 0xba, 0x47, 0x77, 0x8b, 0x59, 0xb3, 0x81, 0xb0,
+	0x5f, 0x4f, 0x43, 0x7e, 0x42, 0x3f, 0x6b, 0x64, 0xe5, 0x42, 0x98, 0xe8, 0x2c, 0x18, 0x93, 0x28,
+	0xe8, 0xbb, 0xb3, 0x2d, 0x21, 0xfc, 0xb6, 0x82, 0xdf, 0xa4, 0xf5, 0xab, 0xc2, 0xd3, 0xb7, 0x1a,
+	0x59, 0x48, 0x63, 0x43, 0x37, 0x2f, 0xb5, 0xcc, 0x24, 0x55, 0xbf, 0x7b, 0xa5, 0x59, 0xa4, 0xaa,
+	0x29, 0xaa, 0x2a, 0x35, 0x8a, 0xa8, 0xd2, 0xa4, 0x36, 0x1f, 0x9c, 0x8e, 0x0c, 0xed, 0x6c, 0x64,
+	0x68, 0xbf, 0x47, 0x86, 0xf6, 0x6e, 0x6c, 0x94, 0xce, 0xc6, 0x46, 0xe9, 0xc7, 0xd8, 0x28, 0x3d,
+	0x75, 0x2e, 0x7d, 0xc2, 0x5e, 0x65, 0x05, 0xd5, 0x8b, 0xd6, 0x59, 0x50, 0xb5, 0x9d, 0xbf, 0x01,
+	0x00, 0x00, 0xff, 0xff, 0xdb, 0x06, 0x4d, 0xb9, 0x39, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -408,8 +448,10 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// CommunityPool queries the community pool coins.
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
-	// UnclaimedBudget queries the remaining budget left to be claimed and it gives overall budget allocation view.
-	UnclaimedBudget(ctx context.Context, in *QueryUnclaimedBudgetRequest, opts ...grpc.CallOption) (*QueryUnclaimedBudgetResponse, error)
+	// ContinuousFund queries a continuous fund by the recipient is is associated with.
+	ContinuousFund(ctx context.Context, in *QueryContinuousFundRequest, opts ...grpc.CallOption) (*QueryContinuousFundResponse, error)
+	// ContinuousFunds queries all continuous funds in the store.
+	ContinuousFunds(ctx context.Context, in *QueryContinuousFundsRequest, opts ...grpc.CallOption) (*QueryContinuousFundsResponse, error)
 	// Params returns the total set of x/protocolpool parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
@@ -431,9 +473,18 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 	return out, nil
 }
 
-func (c *queryClient) UnclaimedBudget(ctx context.Context, in *QueryUnclaimedBudgetRequest, opts ...grpc.CallOption) (*QueryUnclaimedBudgetResponse, error) {
-	out := new(QueryUnclaimedBudgetResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.protocolpool.v1.Query/UnclaimedBudget", in, out, opts...)
+func (c *queryClient) ContinuousFund(ctx context.Context, in *QueryContinuousFundRequest, opts ...grpc.CallOption) (*QueryContinuousFundResponse, error) {
+	out := new(QueryContinuousFundResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.protocolpool.v1.Query/ContinuousFund", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ContinuousFunds(ctx context.Context, in *QueryContinuousFundsRequest, opts ...grpc.CallOption) (*QueryContinuousFundsResponse, error) {
+	out := new(QueryContinuousFundsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.protocolpool.v1.Query/ContinuousFunds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -453,8 +504,10 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 type QueryServer interface {
 	// CommunityPool queries the community pool coins.
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
-	// UnclaimedBudget queries the remaining budget left to be claimed and it gives overall budget allocation view.
-	UnclaimedBudget(context.Context, *QueryUnclaimedBudgetRequest) (*QueryUnclaimedBudgetResponse, error)
+	// ContinuousFund queries a continuous fund by the recipient is is associated with.
+	ContinuousFund(context.Context, *QueryContinuousFundRequest) (*QueryContinuousFundResponse, error)
+	// ContinuousFunds queries all continuous funds in the store.
+	ContinuousFunds(context.Context, *QueryContinuousFundsRequest) (*QueryContinuousFundsResponse, error)
 	// Params returns the total set of x/protocolpool parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
@@ -466,8 +519,11 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) CommunityPool(ctx context.Context, req *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPool not implemented")
 }
-func (*UnimplementedQueryServer) UnclaimedBudget(ctx context.Context, req *QueryUnclaimedBudgetRequest) (*QueryUnclaimedBudgetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnclaimedBudget not implemented")
+func (*UnimplementedQueryServer) ContinuousFund(ctx context.Context, req *QueryContinuousFundRequest) (*QueryContinuousFundResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ContinuousFund not implemented")
+}
+func (*UnimplementedQueryServer) ContinuousFunds(ctx context.Context, req *QueryContinuousFundsRequest) (*QueryContinuousFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ContinuousFunds not implemented")
 }
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
@@ -495,20 +551,38 @@ func _Query_CommunityPool_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UnclaimedBudget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryUnclaimedBudgetRequest)
+func _Query_ContinuousFund_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryContinuousFundRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).UnclaimedBudget(ctx, in)
+		return srv.(QueryServer).ContinuousFund(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.protocolpool.v1.Query/UnclaimedBudget",
+		FullMethod: "/cosmos.protocolpool.v1.Query/ContinuousFund",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).UnclaimedBudget(ctx, req.(*QueryUnclaimedBudgetRequest))
+		return srv.(QueryServer).ContinuousFund(ctx, req.(*QueryContinuousFundRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ContinuousFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryContinuousFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ContinuousFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.protocolpool.v1.Query/ContinuousFunds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ContinuousFunds(ctx, req.(*QueryContinuousFundsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -541,8 +615,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_CommunityPool_Handler,
 		},
 		{
-			MethodName: "UnclaimedBudget",
-			Handler:    _Query_UnclaimedBudget_Handler,
+			MethodName: "ContinuousFund",
+			Handler:    _Query_ContinuousFund_Handler,
+		},
+		{
+			MethodName: "ContinuousFunds",
+			Handler:    _Query_ContinuousFunds_Handler,
 		},
 		{
 			MethodName: "Params",
@@ -613,7 +691,7 @@ func (m *QueryCommunityPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryUnclaimedBudgetRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryContinuousFundRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -623,27 +701,27 @@ func (m *QueryUnclaimedBudgetRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryUnclaimedBudgetRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryContinuousFundRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryUnclaimedBudgetRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryContinuousFundRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+	if len(m.Recipient) > 0 {
+		i -= len(m.Recipient)
+		copy(dAtA[i:], m.Recipient)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Recipient)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryUnclaimedBudgetResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryContinuousFundResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -653,49 +731,18 @@ func (m *QueryUnclaimedBudgetResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryUnclaimedBudgetResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryContinuousFundResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryUnclaimedBudgetResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryContinuousFundResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.TranchesLeft != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.TranchesLeft))
-		i--
-		dAtA[i] = 0x28
-	}
-	n1, err1 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.Period, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Period):])
-	if err1 != nil {
-		return 0, err1
-	}
-	i -= n1
-	i = encodeVarintQuery(dAtA, i, uint64(n1))
-	i--
-	dAtA[i] = 0x22
-	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.NextClaimFrom, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.NextClaimFrom):])
-	if err2 != nil {
-		return 0, err2
-	}
-	i -= n2
-	i = encodeVarintQuery(dAtA, i, uint64(n2))
-	i--
-	dAtA[i] = 0x1a
 	{
-		size, err := m.UnclaimedAmount.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintQuery(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size, err := m.ClaimedAmount.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.ContinuousFund.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -704,6 +751,66 @@ func (m *QueryUnclaimedBudgetResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	}
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryContinuousFundsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryContinuousFundsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryContinuousFundsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryContinuousFundsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryContinuousFundsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryContinuousFundsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ContinuousFunds) > 0 {
+		for iNdEx := len(m.ContinuousFunds) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ContinuousFunds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -798,35 +905,50 @@ func (m *QueryCommunityPoolResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryUnclaimedBudgetRequest) Size() (n int) {
+func (m *QueryContinuousFundRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Address)
+	l = len(m.Recipient)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *QueryUnclaimedBudgetResponse) Size() (n int) {
+func (m *QueryContinuousFundResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.ClaimedAmount.Size()
+	l = m.ContinuousFund.Size()
 	n += 1 + l + sovQuery(uint64(l))
-	l = m.UnclaimedAmount.Size()
-	n += 1 + l + sovQuery(uint64(l))
-	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.NextClaimFrom)
-	n += 1 + l + sovQuery(uint64(l))
-	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Period)
-	n += 1 + l + sovQuery(uint64(l))
-	if m.TranchesLeft != 0 {
-		n += 1 + sovQuery(uint64(m.TranchesLeft))
+	return n
+}
+
+func (m *QueryContinuousFundsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryContinuousFundsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ContinuousFunds) > 0 {
+		for _, e := range m.ContinuousFunds {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
 	}
 	return n
 }
@@ -991,7 +1113,7 @@ func (m *QueryCommunityPoolResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryUnclaimedBudgetRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryContinuousFundRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1014,15 +1136,15 @@ func (m *QueryUnclaimedBudgetRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryUnclaimedBudgetRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryContinuousFundRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryUnclaimedBudgetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryContinuousFundRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1050,7 +1172,7 @@ func (m *QueryUnclaimedBudgetRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Address = string(dAtA[iNdEx:postIndex])
+			m.Recipient = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1073,7 +1195,7 @@ func (m *QueryUnclaimedBudgetRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryUnclaimedBudgetResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryContinuousFundResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1096,15 +1218,15 @@ func (m *QueryUnclaimedBudgetResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryUnclaimedBudgetResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryContinuousFundResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryUnclaimedBudgetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryContinuousFundResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClaimedAmount", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ContinuousFund", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1131,13 +1253,113 @@ func (m *QueryUnclaimedBudgetResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ClaimedAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ContinuousFund.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryContinuousFundsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryContinuousFundsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryContinuousFundsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryContinuousFundsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryContinuousFundsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryContinuousFundsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UnclaimedAmount", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ContinuousFunds", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1164,95 +1386,11 @@ func (m *QueryUnclaimedBudgetResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.UnclaimedAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.ContinuousFunds = append(m.ContinuousFunds, ContinuousFund{})
+			if err := m.ContinuousFunds[len(m.ContinuousFunds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NextClaimFrom", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.NextClaimFrom, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.Period, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TranchesLeft", wireType)
-			}
-			m.TranchesLeft = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.TranchesLeft |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

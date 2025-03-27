@@ -24,6 +24,7 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
@@ -160,7 +161,6 @@ func AuthModule() ModuleOption {
 					{Account: "nft"},
 					{Account: protocolpooltypes.ModuleName},
 					{Account: protocolpooltypes.ProtocolPoolDistrAccount},
-					{Account: protocolpooltypes.StreamAccount},
 				},
 			}),
 		}

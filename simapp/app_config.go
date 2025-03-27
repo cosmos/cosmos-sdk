@@ -84,7 +84,6 @@ var (
 		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: nft.ModuleName},
 		{Account: protocolpooltypes.ModuleName},
-		{Account: protocolpooltypes.StreamAccount},
 		{Account: protocolpooltypes.ProtocolPoolDistrAccount},
 	}
 

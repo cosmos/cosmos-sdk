@@ -13,11 +13,9 @@ func RegisterInterfaces(ir codectypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgFundCommunityPool{},
 		&MsgCommunityPoolSpend{},
-		&MsgCreateBudget{},
-		&MsgClaimBudget{},
 		&MsgCreateContinuousFund{},
 		&MsgCancelContinuousFund{},
-		&MsgWithdrawContinuousFund{},
+		&MsgUpdateParams{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(ir, &_Msg_serviceDesc)
@@ -30,14 +28,10 @@ func RegisterInterfaces(ir codectypes.InterfaceRegistry) {
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgFundCommunityPool{}, "cosmos-sdk/pp/MsgFundCommunityPool")
 	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/pp/MsgCommunityPoolSpend")
-	legacy.RegisterAminoMsg(cdc, &MsgCreateBudget{}, "cosmos-sdk/pp/MsgCreateBudget")
-	legacy.RegisterAminoMsg(cdc, &MsgClaimBudget{}, "cosmos-sdk/pp/MsgClaimBudget")
 	legacy.RegisterAminoMsg(cdc, &MsgCreateContinuousFund{}, "cosmos-sdk/pp/MsgCreateContinuousFund")
 	legacy.RegisterAminoMsg(cdc, &MsgCancelContinuousFund{}, "cosmos-sdk/pp/MsgCancelContinuousFund")
-	legacy.RegisterAminoMsg(cdc, &MsgWithdrawContinuousFund{}, "cosmos-sdk/pp/MsgWithdrawContinuousFund")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/pp/MsgUpdateParams")
 
-	cdc.RegisterConcrete(&Budget{}, "cosmos-sdk/pp/Budget", nil)
 	cdc.RegisterConcrete(&ContinuousFund{}, "cosmos-sdk/pp/ContinuousFund", nil)
-	cdc.RegisterConcrete(&DistributionAmount{}, "cosmos-sdk/pp/DistributionAmount", nil)
 	cdc.RegisterConcrete(&Params{}, "cosmos-sdk/pp/Params", nil)
 }

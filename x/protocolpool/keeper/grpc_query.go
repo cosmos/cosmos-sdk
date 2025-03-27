@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
@@ -32,53 +32,48 @@ func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoo
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	amount, err := k.Keeper.GetCommunityPool(sdkCtx)
+	amount, err := k.GetCommunityPool(sdkCtx)
 	if err != nil {
 		return nil, err
 	}
 	return &types.QueryCommunityPoolResponse{Pool: amount}, nil
 }
 
-// UnclaimedBudget queries the unclaimed budget for given recipient
-func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedBudgetRequest) (*types.QueryUnclaimedBudgetResponse, error) {
+// ContinuousFund queries a continuous fund by its recipient address.
+func (k Querier) ContinuousFund(ctx context.Context, req *types.QueryContinuousFundRequest) (*types.QueryContinuousFundResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	address, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(req.Address)
+
+	acc, err := k.authKeeper.AddressCodec().StringToBytes(req.Recipient)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid recipient address: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Errorf("invalid address: %w", err).Error())
 	}
-	budget, err := k.Keeper.Budgets.Get(sdkCtx, address)
+
+	fund, err := k.Keeper.ContinuousFunds.Get(sdkCtx, acc)
 	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return nil, status.Errorf(codes.NotFound, "no budget proposal found for address: %s", req.Address)
-		}
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("not found %s", req.Recipient))
 	}
 
-	totalBudgetAmountLeftToDistribute := budget.BudgetPerTranche.Amount.Mul(math.NewIntFromUint64(budget.TranchesLeft))
-	totalBudgetAmountLeft := sdk.NewCoin(budget.BudgetPerTranche.Denom, totalBudgetAmountLeftToDistribute)
+	return &types.QueryContinuousFundResponse{ContinuousFund: fund}, nil
+}
 
-	var unclaimedBudget sdk.Coin
-	if budget.ClaimedAmount == nil {
-		unclaimedBudget = totalBudgetAmountLeft
-		zeroCoin := sdk.NewCoin(budget.BudgetPerTranche.Denom, math.ZeroInt())
-		budget.ClaimedAmount = &zeroCoin
-	} else {
-		unclaimedBudget = totalBudgetAmountLeft
+// ContinuousFunds queries all continuous funds in the store.
+func (k Querier) ContinuousFunds(ctx context.Context, req *types.QueryContinuousFundsRequest) (*types.QueryContinuousFundsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	nextClaimFrom := budget.LastClaimedAt.Add(budget.Period)
+	funds, err := k.GetAllContinuousFunds(sdkCtx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Errorf("failed to fetch continuous funds: %w", err).Error())
+	}
 
-	return &types.QueryUnclaimedBudgetResponse{
-		ClaimedAmount:   *budget.ClaimedAmount,
-		UnclaimedAmount: unclaimedBudget,
-		NextClaimFrom:   nextClaimFrom,
-		Period:          budget.Period,
-		TranchesLeft:    budget.TranchesLeft,
-	}, nil
+	return &types.QueryContinuousFundsResponse{ContinuousFunds: funds}, nil
 }
 
 // Params queries params of x/protocolpool module.

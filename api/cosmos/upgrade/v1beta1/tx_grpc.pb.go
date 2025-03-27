@@ -32,13 +32,9 @@ const (
 // Msg defines the upgrade Msg service.
 type MsgClient interface {
 	// SoftwareUpgrade is a governance operation for initiating a software upgrade.
-	//
-	// Since: cosmos-sdk 0.46
 	SoftwareUpgrade(ctx context.Context, in *MsgSoftwareUpgrade, opts ...grpc.CallOption) (*MsgSoftwareUpgradeResponse, error)
 	// CancelUpgrade is a governance operation for cancelling a previously
 	// approved software upgrade.
-	//
-	// Since: cosmos-sdk 0.46
 	CancelUpgrade(ctx context.Context, in *MsgCancelUpgrade, opts ...grpc.CallOption) (*MsgCancelUpgradeResponse, error)
 }
 
@@ -77,13 +73,9 @@ func (c *msgClient) CancelUpgrade(ctx context.Context, in *MsgCancelUpgrade, opt
 // Msg defines the upgrade Msg service.
 type MsgServer interface {
 	// SoftwareUpgrade is a governance operation for initiating a software upgrade.
-	//
-	// Since: cosmos-sdk 0.46
 	SoftwareUpgrade(context.Context, *MsgSoftwareUpgrade) (*MsgSoftwareUpgradeResponse, error)
 	// CancelUpgrade is a governance operation for cancelling a previously
 	// approved software upgrade.
-	//
-	// Since: cosmos-sdk 0.46
 	CancelUpgrade(context.Context, *MsgCancelUpgrade) (*MsgCancelUpgradeResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

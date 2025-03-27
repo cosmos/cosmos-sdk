@@ -247,14 +247,10 @@ message Proposal {
   repeated google.protobuf.Any messages = 12;
 
   // title is the title of the proposal
-  //
-  // Since: cosmos-sdk 0.47
-  string title = 13;
+  string title = 13 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 
   // summary is a short summary of the proposal
-  //
-  // Since: cosmos-sdk 0.47
-  string summary = 14;
+  string summary = 14 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 }
 
 // ProposalStatus defines proposal statuses.

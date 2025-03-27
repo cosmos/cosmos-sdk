@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	otmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -70,16 +72,16 @@ func scrapeAndPushMetrics(ctx context.Context, promEndpoint string, meter otmetr
 		for _, m := range mf.GetMetric() {
 			switch {
 			case m.Gauge != nil:
-				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Gauge.GetValue())
+				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Gauge.GetValue(), nil)
 
 			case m.Counter != nil:
-				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Counter.GetValue())
+				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Counter.GetValue(), nil)
 
 			case m.Histogram != nil:
 				recordHistogram(ctx, meter, histograms, name, mf.GetHelp(), m.Histogram)
 
 			case m.Summary != nil:
-				continue // TODO: decide whether to support
+				recordSummary(ctx, meter, gauges, name, mf.GetHelp(), m.Summary)
 
 			default:
 				continue
@@ -90,7 +92,7 @@ func scrapeAndPushMetrics(ctx context.Context, promEndpoint string, meter otmetr
 	return nil
 }
 
-func recordGauge(ctx context.Context, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, name, help string, val float64) {
+func recordGauge(ctx context.Context, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, name, help string, val float64, attrs []attribute.KeyValue) {
 	g, ok := gauges[name]
 	if !ok {
 		var err error
@@ -101,7 +103,7 @@ func recordGauge(ctx context.Context, meter otmetric.Meter, gauges map[string]ot
 		}
 		gauges[name] = g
 	}
-	g.Record(ctx, val)
+	g.Record(ctx, val, otmetric.WithAttributes(attrs...))
 }
 
 func recordHistogram(ctx context.Context, meter otmetric.Meter, histograms map[string]otmetric.Float64Histogram, name, help string, h *dto.Histogram) {
@@ -148,5 +150,17 @@ func recordHistogram(ctx context.Context, meter otmetric.Meter, histograms map[s
 		for j := uint64(0); j < countInBucket; j++ {
 			hist.Record(ctx, value)
 		}
+	}
+}
+
+func recordSummary(ctx context.Context, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, name, help string, s *dto.Summary) {
+	recordGauge(ctx, meter, gauges, name+"_sum", help+" (summary sum)", s.GetSampleSum(), nil)
+	recordGauge(ctx, meter, gauges, name+"_count", help+" (summary count)", float64(s.GetSampleCount()), nil)
+
+	for _, q := range s.Quantile {
+		attrs := []attribute.KeyValue{
+			attribute.String("quantile", fmt.Sprintf("%v", q.GetQuantile())),
+		}
+		recordGauge(ctx, meter, gauges, name, help+" (summary quantile)", q.GetValue(), attrs)
 	}
 }

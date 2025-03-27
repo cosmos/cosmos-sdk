@@ -1,4 +1,4 @@
-package coretesting
+package testutil
 
 import (
 	"context"

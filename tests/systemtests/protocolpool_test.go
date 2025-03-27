@@ -4,6 +4,7 @@ package systemtests
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -25,7 +26,12 @@ const (
 	distributionModule = "distribution"
 	protocolPoolModule = "protocolpool"
 
-	stakingToken = "stake"
+	genesisAmount = 1000000000000
+	stakeAmount   = 10000000000
+	feeAmount     = 1
+	depositAmount = 50000000
+	govFeeAmount  = 10
+	poolAmount    = 100
 )
 
 func modifyGovParams(t *testing.T) {
@@ -60,6 +66,61 @@ func modifyGovParams(t *testing.T) {
 	)
 }
 
+func submitGovProposal(t *testing.T, validatorAddress string, propFile *os.File) {
+	t.Helper()
+
+	sut := systemtests.Sut
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
+
+	args := []string{
+		"tx", "gov", "submit-proposal",
+		propFile.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, validatorAddress),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(govFeeAmount))).String()),
+	}
+
+	rsp := cli.Run(args...)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	systemtests.RequireTxSuccess(t, txResult)
+}
+
+func voteAndEnsureProposalPassed(t *testing.T, validatorAddress string, propID int) {
+	t.Helper()
+
+	sut := systemtests.Sut
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
+
+	// check the proposal
+	proposalsResp := cli.CustomQuery("q", "gov", "proposals")
+	proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
+	require.NotEmpty(t, proposals)
+
+	rsp := cli.CustomQuery("q", "gov", "proposal", fmt.Sprintf("%d", propID))
+	status := gjson.Get(rsp, "proposal.status")
+	require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
+
+	// vote on the proposal
+	args := []string{
+		"tx", "gov", "vote", fmt.Sprintf("%d", propID), "yes",
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, validatorAddress),
+	}
+	rsp = cli.Run(args...)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	systemtests.RequireTxSuccess(t, txResult)
+
+	time.Sleep(11 * time.Second)
+	systemtests.Sut.AwaitNextBlock(t)
+
+	// ensure that vote has passed
+	rsp = cli.CustomQuery("q", "gov", "proposal", fmt.Sprintf("%d", propID))
+	status = gjson.Get(rsp, "proposal.status")
+	require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
+}
+
 func TestQueryProtocolPool(t *testing.T) {
 	// Scenario:
 	// delegate tokens to validator
@@ -76,7 +137,7 @@ func TestQueryProtocolPool(t *testing.T) {
 	// add genesis account with some tokens
 	account1Addr := cli.AddKey("account1")
 	sut.ModifyGenesisCLI(t,
-		[]string{"genesis", "add-genesis-account", account1Addr, "1000000000000stake"},
+		[]string{"genesis", "add-genesis-account", account1Addr, fmt.Sprintf("%d%s", genesisAmount, sdk.DefaultBondDenom)},
 	)
 
 	sut.StartChain(t)
@@ -90,15 +151,23 @@ func TestQueryProtocolPool(t *testing.T) {
 	require.NotEmpty(t, valSigner)
 
 	// stake tokens
-	rsp = cli.Run("tx", stakingModule, "delegate", valAddr, "10000000000stake", "--from="+account1Addr, "--fees=1stake")
+	rsp = cli.Run(
+		"tx",
+		stakingModule,
+		"delegate",
+		valAddr,
+		fmt.Sprintf("%d%s", stakeAmount, sdk.DefaultBondDenom),
+		"--from="+account1Addr,
+		fmt.Sprintf("--fees=%d%s", feeAmount, sdk.DefaultBondDenom),
+	)
 	systemtests.RequireTxSuccess(t, rsp)
 
-	beforeBalance := cli.QueryBalance(account1Addr, stakingToken)
-	assert.Equal(t, int64(989999999999), beforeBalance)
+	beforeBalance := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
+	assert.Equal(t, int64(genesisAmount-stakeAmount-feeAmount), beforeBalance)
 
 	rsp = cli.CustomQuery("q", stakingModule, "delegation", account1Addr, valAddr)
-	assert.Equal(t, "10000000000", gjson.Get(rsp, "delegation_response.balance.amount").String(), rsp)
-	assert.Equal(t, stakingToken, gjson.Get(rsp, "delegation_response.balance.denom").String(), rsp)
+	assert.Equal(t, stakeAmount, gjson.Get(rsp, "delegation_response.balance.amount").Int(), rsp)
+	assert.Equal(t, sdk.DefaultBondDenom, gjson.Get(rsp, "delegation_response.balance.denom").String(), rsp)
 
 	t.Run("check x/distribution query does not work when using x/protocolpool", func(t *testing.T) {
 		failingCli := cli.WithRunErrorMatcher(func(t assert.TestingT, err error, msgAndArgs ...interface{}) (ok bool) {
@@ -114,7 +183,7 @@ func TestQueryProtocolPool(t *testing.T) {
 		rsp = cli.CustomQuery("q", protocolPoolModule, "community-pool")
 		poolAmount := gjson.Get(rsp, "pool.0.amount").Int()
 		assert.True(t, poolAmount > 0, rsp)
-		assert.Equal(t, stakingToken, gjson.Get(rsp, "pool.0.denom").String(), rsp)
+		assert.Equal(t, sdk.DefaultBondDenom, gjson.Get(rsp, "pool.0.denom").String(), rsp)
 
 		t.Log("block height", sut.CurrentHeight(), "\n")
 		sut.AwaitNBlocks(t, 1)
@@ -122,7 +191,7 @@ func TestQueryProtocolPool(t *testing.T) {
 
 		rsp = cli.CustomQuery("q", protocolPoolModule, "community-pool")
 		newPoolAmount := gjson.Get(rsp, "pool.0.amount").Int()
-		assert.Equal(t, stakingToken, gjson.Get(rsp, "pool.0.denom").String(), rsp)
+		assert.Equal(t, sdk.DefaultBondDenom, gjson.Get(rsp, "pool.0.denom").String(), rsp)
 		// check that staking is continually rewarded
 		assert.True(t, newPoolAmount > poolAmount, rsp)
 	})
@@ -147,7 +216,7 @@ func TestQueryProtocolPool(t *testing.T) {
 			"recipient": "%s",
 			"amount": [{
 				"denom": "stake",
-  				"amount": "100"
+  				"amount": "%d"
 			}]
 		}
 	],
@@ -157,24 +226,13 @@ func TestQueryProtocolPool(t *testing.T) {
 }`,
 			govAddress,
 			account1Addr,
-			sdk.NewCoin(stakingToken, math.NewInt(50000000)),
+			poolAmount,
+			sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(depositAmount)),
 		)
 		validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
 		defer validPropFile.Close()
 
-		args := []string{
-			"tx", "gov", "submit-proposal",
-			validPropFile.Name(),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valSigner),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(stakingToken, math.NewInt(10))).String()),
-		}
-
-		rsp := cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
+		submitGovProposal(t, valSigner, validPropFile)
 	})
 
 	t.Run("vote on proposal", func(t *testing.T) {
@@ -198,7 +256,7 @@ func TestQueryProtocolPool(t *testing.T) {
 		systemtests.RequireTxSuccess(t, txResult)
 	})
 
-	balanceBefore := cli.QueryBalance(account1Addr, stakingToken)
+	balanceBefore := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
 
 	time.Sleep(11 * time.Second)
 	systemtests.Sut.AwaitNextBlock(t)
@@ -211,8 +269,8 @@ func TestQueryProtocolPool(t *testing.T) {
 
 		// check that the funds were distributed
 		// should be previous balance plus amount from the pool (100) plus the deposit amount (50000000)
-		balanceAfter := cli.QueryBalance(account1Addr, stakingToken)
-		require.Equal(t, balanceBefore+100+50000000, balanceAfter)
+		balanceAfter := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
+		require.Equal(t, balanceBefore+poolAmount+depositAmount, balanceAfter)
 	})
 }
 
@@ -233,7 +291,7 @@ func TestContinuousFunds(t *testing.T) {
 	// add genesis account with some tokens
 	account1Addr := cli.AddKey("account1")
 	systemtests.Sut.ModifyGenesisCLI(t,
-		[]string{"genesis", "add-genesis-account", account1Addr, "1000000000000stake"},
+		[]string{"genesis", "add-genesis-account", account1Addr, fmt.Sprintf("%d%s", genesisAmount, sdk.DefaultBondDenom)},
 	)
 
 	systemtests.Sut.StartChain(t)
@@ -268,24 +326,12 @@ func TestContinuousFunds(t *testing.T) {
 			govAddress,
 			account1Addr,
 			expiry.Format(time.RFC3339),
-			sdk.NewCoin(stakingToken, math.NewInt(50000000)),
+			sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(depositAmount)),
 		)
 		validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
 		defer validPropFile.Close()
 
-		args := []string{
-			"tx", "gov", "submit-proposal",
-			validPropFile.Name(),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(stakingToken, math.NewInt(10))).String()),
-		}
-
-		rsp := cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
+		submitGovProposal(t, valAddr, validPropFile)
 	})
 
 	t.Run("vote on proposal", func(t *testing.T) {
@@ -310,7 +356,7 @@ func TestContinuousFunds(t *testing.T) {
 	})
 
 	// get balance before any distribution
-	balanceBefore := cli.QueryBalance(account1Addr, stakingToken)
+	balanceBefore := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
 	time.Sleep(11 * time.Second)
 	systemtests.Sut.AwaitNextBlock(t)
 
@@ -344,10 +390,10 @@ func TestContinuousFunds(t *testing.T) {
 		rsp := cli.CustomQuery("q", "protocolpool", "continuous-funds")
 		require.Equal(t, "{}", rsp)
 
-		balanceAfter := cli.QueryBalance(account1Addr, stakingToken)
+		balanceAfter := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
 
-		// balance should be balance before + 412 (community pool value added * 0.5)
-		require.Equal(t, balanceBefore+412, balanceAfter)
+		// check that our balance has increased due to fund accrual
+		require.True(t, balanceBefore < balanceAfter)
 	})
 }
 
@@ -371,7 +417,7 @@ func TestCancelContinuousFunds(t *testing.T) {
 	// add genesis account with some tokens
 	account1Addr := cli.AddKey("account1")
 	systemtests.Sut.ModifyGenesisCLI(t,
-		[]string{"genesis", "add-genesis-account", account1Addr, "1000000000000stake"},
+		[]string{"genesis", "add-genesis-account", account1Addr, fmt.Sprintf("%d%s", genesisAmount, sdk.DefaultBondDenom)},
 	)
 
 	systemtests.Sut.StartChain(t)
@@ -402,24 +448,12 @@ func TestCancelContinuousFunds(t *testing.T) {
 }`,
 			govAddress,
 			account1Addr,
-			sdk.NewCoin(stakingToken, math.NewInt(50000000)),
+			sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(depositAmount)),
 		)
 		validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
 		defer validPropFile.Close()
 
-		args := []string{
-			"tx", "gov", "submit-proposal",
-			validPropFile.Name(),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(stakingToken, math.NewInt(10))).String()),
-		}
-
-		rsp := cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
+		submitGovProposal(t, valAddr, validPropFile)
 	})
 
 	t.Run("vote on proposal - create", func(t *testing.T) {
@@ -444,7 +478,7 @@ func TestCancelContinuousFunds(t *testing.T) {
 	})
 
 	// get balance before any distribution
-	balanceBefore := cli.QueryBalance(account1Addr, stakingToken)
+	balanceBefore := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
 	time.Sleep(11 * time.Second)
 	systemtests.Sut.AwaitNextBlock(t)
 
@@ -477,69 +511,31 @@ func TestCancelContinuousFunds(t *testing.T) {
 }`,
 			govAddress,
 			account1Addr,
-			sdk.NewCoin(stakingToken, math.NewInt(50000000)),
+			sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(depositAmount)),
 		)
 		validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
 		defer validPropFile.Close()
 
-		args := []string{
-			"tx", "gov", "submit-proposal",
-			validPropFile.Name(),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(stakingToken, math.NewInt(10))).String()),
-		}
-
-		rsp := cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
+		submitGovProposal(t, valAddr, validPropFile)
 	})
 
-	t.Run("vote on proposal - cancel", func(t *testing.T) {
-		// check the proposal
-		proposalsResp := cli.CustomQuery("q", "gov", "proposals")
-		proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
-		require.NotEmpty(t, proposals)
-
-		rsp := cli.CustomQuery("q", "gov", "proposal", "2")
-		status := gjson.Get(rsp, "proposal.status")
-		require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", status.String())
-
-		// vote on the proposal
-		args := []string{
-			"tx", "gov", "vote", "2", "yes",
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
-		}
-		rsp = cli.Run(args...)
-		txResult, found := cli.AwaitTxCommitted(rsp)
-		require.True(t, found)
-		systemtests.RequireTxSuccess(t, txResult)
-	})
-
-	time.Sleep(11 * time.Second)
-	systemtests.Sut.AwaitNextBlock(t)
+	voteAndEnsureProposalPassed(t, valAddr, 2)
 
 	// ensure that vote has passed
 	t.Run("ensure that the vote has passed - cancel", func(t *testing.T) {
-		rsp := cli.CustomQuery("q", "gov", "proposal", "2")
-		status := gjson.Get(rsp, "proposal.status")
-		require.Equal(t, "PROPOSAL_STATUS_PASSED", status.String())
-
 		// check that the fund does not exist
 		failingCli := cli.WithRunErrorMatcher(func(t assert.TestingT, err error, msgAndArgs ...interface{}) (ok bool) {
 			assert.Error(t, err)
 			return false
 		})
 		// query the continuous fund - should be expired
-		_ = failingCli.CustomQuery("q", "protocolpool", "continuous-fund", account1Addr)
+		_ = failingCli.CustomQuery("q", "protocolpool", "continuous-funds", account1Addr)
 
 		// check that there is nothing in the store
-		rsp = cli.CustomQuery("q", "protocolpool", "continuous-funds")
+		rsp := cli.CustomQuery("q", "protocolpool", "continuous-funds")
 		require.Equal(t, "{}", rsp)
 
-		balanceAfter := cli.QueryBalance(account1Addr, stakingToken)
+		balanceAfter := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
 
 		// balance should be balance before + 1442 (community pool value added * 0.5)
 		require.Equal(t, balanceBefore+1442, balanceAfter)

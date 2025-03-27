@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: review; test
 	"gotest.tools/v3/assert"
 
 	sdkmath "cosmossdk.io/math"

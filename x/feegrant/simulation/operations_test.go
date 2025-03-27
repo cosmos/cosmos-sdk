@@ -6,7 +6,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: review; test
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 

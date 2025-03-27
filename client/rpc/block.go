@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	cmt "github.com/cometbft/cometbft/proto/tendermint/types"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cmt "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: Changing to a current CometBFT dependency here
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"  // NOTE: Example: no change (always referencing current CometBFT impl, no import name change)
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"

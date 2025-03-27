@@ -3,7 +3,7 @@ package mock
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: import by tests
 	"github.com/stretchr/testify/require"
 )
 

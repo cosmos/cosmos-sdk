@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: review; test
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 

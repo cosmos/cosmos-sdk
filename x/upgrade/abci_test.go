@@ -448,6 +448,7 @@ func TestBinaryVersion(t *testing.T) {
 }
 
 func TestDowngradeVerification(t *testing.T) {
+<<<<<<< HEAD:x/upgrade/abci_test.go
 	// could not use setupTest() here, because we have to use the same key
 	// for the two keepers.
 	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
@@ -483,13 +484,29 @@ func TestDowngradeVerification(t *testing.T) {
 		"valid binary": {
 			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
 				k.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+=======
+	planName := "downgrade"
+	testCases := map[string]struct {
+		preRun      func(*TestSuite, *keeper.Keeper, context.Context, string)
+		expectError bool
+	}{
+		"valid binary": {
+			preRun: func(_ *TestSuite, k *keeper.Keeper, ctx context.Context, name string) {
+				k.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+>>>>>>> a3e626441 (fix(test): to avoid reusing previous store across upgrade test (#24170)):x/upgrade/keeper/abci_test.go
 					return vm, nil
 				})
 			},
 		},
 		"downgrade with an active plan": {
+<<<<<<< HEAD:x/upgrade/abci_test.go
 			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
 				err := k.ScheduleUpgrade(ctx, types.Plan{Name: "another" + planName, Height: ctx.HeaderInfo().Height + 1})
+=======
+			preRun: func(s *TestSuite, k *keeper.Keeper, ctx context.Context, name string) {
+				height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+				err := k.ScheduleUpgrade(ctx, types.Plan{Name: "another" + planName, Height: height + 1})
+>>>>>>> a3e626441 (fix(test): to avoid reusing previous store across upgrade test (#24170)):x/upgrade/keeper/abci_test.go
 				require.NoError(t, err, name)
 			},
 			expectError: true,
@@ -500,7 +517,30 @@ func TestDowngradeVerification(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+<<<<<<< HEAD:x/upgrade/abci_test.go
 		ctx, _ := ctx.CacheContext()
+=======
+		s := setupTest(t, 10, map[int64]bool{})
+		// submit a plan.
+		height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+		err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: planName, Height: height + 1})
+		require.NoError(t, err)
+		s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: height + 1})
+
+		// set the handler.
+		s.keeper.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+			return vm, nil
+		})
+
+		// successful upgrade.
+		err = s.preModule.PreBlock(s.ctx)
+		require.NoError(t, err)
+
+		height = s.env.HeaderService().HeaderInfo(s.ctx).Height
+		s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: height + 1})
+
+		ctx := s.ctx
+>>>>>>> a3e626441 (fix(test): to avoid reusing previous store across upgrade test (#24170)):x/upgrade/keeper/abci_test.go
 
 		// downgrade. now keeper does not have the handler.
 		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
@@ -516,7 +556,7 @@ func TestDowngradeVerification(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
 
 		if tc.preRun != nil {
-			tc.preRun(k, ctx, name)
+			tc.preRun(s, k, ctx, name)
 		}
 
 		_, err = m.PreBlock(ctx)

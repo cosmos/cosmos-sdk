@@ -107,7 +107,7 @@ type visitable interface {
 // RandSubsetCoins return random amounts from the current balance. When the coins are empty, skip is called on the reporter.
 // The amounts are removed from the liquid balance.
 func (b *SimsAccountBalance) RandSubsetCoins(reporter SimulationReporter, filters ...CoinsFilter) sdk.Coins {
-	amount := b.randomAmount(5, reporter, b.Coins, filters...)
+	amount := b.randomAmount(1, reporter, b.Coins, filters...)
 	b.Coins = b.Sub(amount...)
 	if amount.Empty() {
 		reporter.Skip("got empty amounts")
@@ -123,7 +123,7 @@ func (b *SimsAccountBalance) RandSubsetCoin(reporter SimulationReporter, denom s
 		reporter.Skipf("no such coin: %s", denom)
 		return sdk.NewCoin(denom, math.ZeroInt())
 	}
-	amounts := b.randomAmount(5, reporter, sdk.Coins{coin}, filters...)
+	amounts := b.randomAmount(1, reporter, sdk.Coins{coin}, filters...)
 	if amounts.Empty() {
 		reporter.Skip("empty coin")
 		return sdk.NewCoin(denom, math.ZeroInt())

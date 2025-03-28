@@ -19,7 +19,7 @@ import (
 )
 
 // Governance message types and routes
-// Deprecated: will be removed in the future
+// will be removed in the future
 var (
 	TypeMsgDeposit        = sdk.MsgTypeURL(&v1.MsgDeposit{})
 	TypeMsgVote           = sdk.MsgTypeURL(&v1.MsgVote{})
@@ -29,7 +29,7 @@ var (
 )
 
 // Simulation operation weights constants
-// Deprecated: will be removed in the future
+// will be removed in the future
 const (
 	OpWeightMsgDeposit        = "op_weight_msg_deposit"
 	OpWeightMsgVote           = "op_weight_msg_vote"
@@ -44,7 +44,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-// Deprecated: will be removed in the future in favor of msg factory
+// will be removed in the future in favor of msg factory
 func WeightedOperations(
 	appParams simtypes.AppParams,
 	txGen client.TxConfig,
@@ -144,7 +144,7 @@ func WeightedOperations(
 // SimulateMsgSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-// Deprecated: will be removed in the future in favor of msg factory
+// will be removed in the future in favor of msg factory
 func SimulateMsgSubmitProposal(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -167,7 +167,7 @@ func SimulateMsgSubmitProposal(
 // SimulateMsgSubmitLegacyProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-// Deprecated: will be removed in the future in favor of msg factory
+// will be removed in the future in favor of msg factory
 func SimulateMsgSubmitLegacyProposal(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -307,7 +307,7 @@ func simulateMsgSubmitProposal(
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
-// Deprecated: this is an internal method and will be removed
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgDeposit(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -453,7 +453,7 @@ func operationSimulateMsgVote(
 }
 
 // SimulateMsgVoteWeighted generates a MsgVoteWeighted with random values.
-// Deprecated: will be removed in the future in favor of msg factory
+// will be removed in the future in favor of msg factory
 func SimulateMsgVoteWeighted(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -528,7 +528,7 @@ func operationSimulateMsgVoteWeighted(
 }
 
 // SimulateMsgCancelProposal generates a MsgCancelProposal.
-// Deprecated: will be removed in the future in favor of msg factory
+// will be removed in the future in favor of msg factory
 func SimulateMsgCancelProposal(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,

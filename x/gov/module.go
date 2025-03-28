@@ -326,13 +326,13 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the gov content functions used to
 // simulate governance proposals.
-// Deprecated: migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
+// migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
 	return simulation.ProposalContents() //nolint:staticcheck // backwards compatibility
 }
 
 // ProposalMsgs returns all the gov msgs used to simulate governance proposals.
-// Deprecated: migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
+// migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
 func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
 	return simulation.ProposalMsgs()
 }
@@ -343,7 +343,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
-// Deprecated: migrate to WeightedOperationsX. This method is ignored when WeightedOperationsX exists and will be removed in the future
+// migrate to WeightedOperationsX. This method is ignored when WeightedOperationsX exists and will be removed in the future
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.TxConfig,

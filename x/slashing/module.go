@@ -175,7 +175,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalMsgs returns msgs used for governance proposals for simulations.
-// Deprecated: migrate to WeightedOperationsX. This method is ignored when WeightedOperationsX exists and will be removed in the future
+// migrate to WeightedOperationsX. This method is ignored when WeightedOperationsX exists and will be removed in the future
 func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
 	return simulation.ProposalMsgs()
 }

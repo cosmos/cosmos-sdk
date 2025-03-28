@@ -22,7 +22,7 @@ import (
 const unsetGroupID = 100000000000000
 
 // group message types
-// Deprecated: will be removed in the future
+// will be removed in the future
 var (
 	TypeMsgCreateGroup                     = sdk.MsgTypeURL(&group.MsgCreateGroup{})
 	TypeMsgUpdateGroupMembers              = sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{})
@@ -41,7 +41,7 @@ var (
 )
 
 // Simulation operation weights constants
-// Deprecated: will be removed in the future
+// will be removed in the future
 const (
 	OpMsgCreateGroup                     = "op_weight_msg_create_group"
 	OpMsgUpdateGroupAdmin                = "op_weight_msg_update_group_admin"
@@ -61,7 +61,7 @@ const (
 
 // If update group or group policy txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
 // That's why we have less weight for update group & group-policy txn's.
-// Deprecated: will be removed in the future
+// will be removed in the future
 const (
 	WeightMsgCreateGroup                     = 100
 	WeightMsgCreateGroupPolicy               = 50
@@ -80,7 +80,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams, _ codec.JSONCodec, txGen client.TxConfig,
@@ -222,7 +222,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateGroup generates a MsgCreateGroup with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgCreateGroup(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -270,7 +270,7 @@ func SimulateMsgCreateGroup(
 }
 
 // SimulateMsgCreateGroupWithPolicy generates a MsgCreateGroupWithPolicy with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgCreateGroupWithPolicy(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -335,7 +335,7 @@ func SimulateMsgCreateGroupWithPolicy(
 }
 
 // SimulateMsgCreateGroupPolicy generates a NewMsgCreateGroupPolicy with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgCreateGroupPolicy(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -413,7 +413,7 @@ func simulateMsgCreateGroupPolicy(
 }
 
 // SimulateMsgSubmitProposal generates a NewMsgSubmitProposal with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgSubmitProposal(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -506,7 +506,7 @@ func simulateMsgSubmitProposal(
 }
 
 // SimulateMsgUpdateGroupAdmin generates a MsgUpdateGroupAdmin with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgUpdateGroupAdmin(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -582,7 +582,7 @@ func simulateMsgUpdateGroupAdmin(
 }
 
 // SimulateMsgUpdateGroupMetadata generates a MsgUpdateGroupMetadata with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgUpdateGroupMetadata(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -649,7 +649,7 @@ func simulateMsgUpdateGroupMetadata(
 }
 
 // SimulateMsgUpdateGroupMembers generates a MsgUpdateGroupMembers with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgUpdateGroupMembers(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -743,7 +743,7 @@ func simulateMsgUpdateGroupMembers(
 }
 
 // SimulateMsgUpdateGroupPolicyAdmin generates a MsgUpdateGroupPolicyAdmin with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgUpdateGroupPolicyAdmin(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -819,7 +819,7 @@ func simulateMsgUpdateGroupPolicyAdmin(
 }
 
 // SimulateMsgUpdateGroupPolicyDecisionPolicy generates a NewMsgUpdateGroupPolicyDecisionPolicy with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -894,7 +894,7 @@ func simulateMsgUpdateGroupPolicyDecisionPolicy(
 }
 
 // SimulateMsgUpdateGroupPolicyMetadata generates a MsgUpdateGroupPolicyMetadata with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgUpdateGroupPolicyMetadata(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -961,7 +961,7 @@ func simulateMsgUpdateGroupPolicyMetadata(
 }
 
 // SimulateMsgWithdrawProposal generates a MsgWithdrawProposal with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgWithdrawProposal(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -1080,7 +1080,7 @@ func simulateMsgWithdrawProposal(
 }
 
 // SimulateMsgVote generates a MsgVote with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgVote(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -1198,7 +1198,7 @@ func simulateMsgVote(
 }
 
 // SimulateMsgExec generates a MsgExec with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgExec(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
@@ -1289,7 +1289,7 @@ func simulateMsgExec(
 }
 
 // SimulateMsgLeaveGroup generates a MsgLeaveGroup with random values
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgLeaveGroup(
 	_ *codec.ProtoCodec,
 	txGen client.TxConfig,

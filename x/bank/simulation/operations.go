@@ -18,18 +18,14 @@ import (
 
 // Simulation operation weights constants
 const (
-	// Deprecated: will be removed in the future
 	OpWeightMsgSend = "op_weight_msg_send"
-	// Deprecated: will be removed in the future
 	OpWeightMsgMultiSend = "op_weight_msg_multisend"
-	// Deprecated: will be removed in the future
 	DefaultWeightMsgSend = 100 // from simappparams.DefaultWeightMsgSend
-	// Deprecated: will be removed in the future
 	DefaultWeightMsgMultiSend = 10 // from simappparams.DefaultWeightMsgMultiSend
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func WeightedOperations(
 	appParams simtypes.AppParams,
 	cdc codec.JSONCodec,
@@ -60,7 +56,7 @@ func WeightedOperations(
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgSend(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -100,7 +96,7 @@ func SimulateMsgSend(
 
 // SimulateMsgSendToModuleAccount tests and runs a single msg send where both
 // accounts already exist.
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgSendToModuleAccount(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -190,7 +186,7 @@ func sendMsgSend(
 
 // SimulateMsgMultiSend tests and runs a single msg multisend, with randomized, capped number of inputs/outputs.
 // all accounts in msg fields exist in state
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -281,7 +277,7 @@ func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keep
 }
 
 // SimulateMsgMultiSendToModuleAccount sends coins to Module Accounts
-// Deprecated: migrate to the msg factories instead, this method will be removed in the future
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgMultiSendToModuleAccount(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,

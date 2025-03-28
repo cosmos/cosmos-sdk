@@ -328,7 +328,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // simulate governance proposals.
 // migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
-	return simulation.ProposalContents() //nolint:staticcheck // backwards compatibility
+	return simulation.ProposalContents()
 }
 
 // ProposalMsgs returns all the gov msgs used to simulate governance proposals.
@@ -375,5 +375,5 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 	reg.Add(weights.Get("msg_vote", 67), simulation.MsgVoteFactory(am.keeper, state))
 	reg.Add(weights.Get("msg_weighted_vote", 33), simulation.MsgWeightedVoteFactory(am.keeper, state))
 	reg.Add(weights.Get("cancel_proposal", 5), simulation.MsgCancelProposalFactory(am.keeper, state))
-	reg.Add(weights.Get("legacy_text_proposal", 5), simulation.MsgSubmitLegacyProposalFactory(am.keeper, simulation.SimulateLegacyTextProposalContent)) //nolint:staticcheck // used for legacy proposal types
+	reg.Add(weights.Get("legacy_text_proposal", 5), simulation.MsgSubmitLegacyProposalFactory(am.keeper, simulation.SimulateLegacyTextProposalContent))
 }

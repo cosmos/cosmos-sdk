@@ -51,7 +51,7 @@ transaction simulation. -->
 The `x/params` module has been removed from the Cosmos SDK.  The following [migration](https://github.com/cosmos/cosmos-sdk/blob/828fcf2f05db0c4759ed370852b6dacc589ea472/x/mint/migrations/v2/migrate.go) 
 and [PR](https://github.com/cosmos/cosmos-sdk/pull/12363) can be used as a reference for migrating a legacy params module to the supported module-managed params paradigm.
 
-More information can be found in the [deprecation notice](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams).
+More information can be found in the [deprecation notice](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#xparams-1).
 
 ## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-beta.1)
 

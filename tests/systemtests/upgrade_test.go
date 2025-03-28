@@ -68,15 +68,18 @@ func TestChainUpgrade(t *testing.T) {
 
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
-	legacyCli, legacySut := createLegacyBinary(t)
+
+	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
+	systest.Sut.SetExecBinary(legacyBinary)
+	systest.Sut.SetTestnetInitializer(systest.NewModifyConfigYamlInitializer(legacyBinary, systest.Sut))
+	systest.Sut.SetupChain()
 
 	votingPeriod := 5 * time.Second // enough time to vote
-	legacySut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
+	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
 
-	const ()
+	systest.Sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
 
-	legacySut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
-
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
 	// submit upgrade proposal
 	proposal := fmt.Sprintf(`
@@ -96,28 +99,29 @@ func TestChainUpgrade(t *testing.T) {
  "title": "my upgrade",
  "summary": "testing"
 }`, govAddr, upgradeName, upgradeHeight)
-	proposalID := legacyCli.SubmitAndVoteGovProposal(proposal)
-	t.Logf("current_height: %d\n", legacySut.CurrentHeight())
-	raw := legacyCli.CustomQuery("q", "gov", "proposal", proposalID)
+	proposalID := cli.SubmitAndVoteGovProposal(proposal)
+	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
+	raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
 	t.Log(raw)
 
-	legacySut.AwaitBlockHeight(t, upgradeHeight-1, 60*time.Second)
-	t.Logf("current_height: %d\n", legacySut.CurrentHeight())
-	raw = legacyCli.CustomQuery("q", "gov", "proposal", proposalID)
+	systest.Sut.AwaitBlockHeight(t, upgradeHeight-1, 60*time.Second)
+	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
+	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
-	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw) // PROPOSAL_STATUS_PASSED
+	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
 	t.Log("waiting for upgrade info")
-	legacySut.AwaitUpgradeInfo(t)
-	legacySut.StopChain()
+	systest.Sut.AwaitUpgradeInfo(t)
+	systest.Sut.StopChain()
 
 	t.Log("Upgrade height was reached. Upgrading chain")
 	systest.Sut.SetExecBinary(currentBranchBinary)
 	systest.Sut.SetTestnetInitializer(currentInitializer)
 	systest.Sut.StartChain(t)
-	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// smoke test that new version runs
-	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
-	systest.RequireTxSuccess(t, got)
+	// TODO: add once protocol pool is enabled
+	//	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+	//systest.RequireTxSuccess(t, got)
 }

@@ -28,6 +28,8 @@ type initAccount struct {
 }
 
 func createLegacyBinary(t *testing.T, extraAccounts ...initAccount) (*systest.CLIWrapper, *systest.SystemUnderTest) {
+	t.Helper()
+
 	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
 
 	//// Now we're going to switch to a v.50 chain.
@@ -43,7 +45,7 @@ func createLegacyBinary(t *testing.T, extraAccounts ...initAccount) (*systest.CL
 	v50CLI := systest.NewCLIWrapper(t, legacySut, systest.Verbose)
 	v50CLI.AddKeyFromSeed("account1", testSeed)
 
-	var modifications = [][]string{
+	modifications := [][]string{
 		{"genesis", "add-genesis-account", v50CLI.AddKey("foo"), "10000000000stake"},
 		{"genesis", "add-genesis-account", v50CLI.AddKey("bar"), "10000000000stake"},
 		{"genesis", "add-genesis-account", v50CLI.AddKey("baz"), "10000000000stake"},
@@ -118,10 +120,10 @@ func TestChainUpgrade(t *testing.T) {
 	systest.Sut.SetExecBinary(currentBranchBinary)
 	systest.Sut.SetTestnetInitializer(currentInitializer)
 	systest.Sut.StartChain(t)
-	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	// cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// smoke test that new version runs
 	// TODO: add once protocol pool is enabled
 	//	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
-	//systest.RequireTxSuccess(t, got)
+	// systest.RequireTxSuccess(t, got)
 }

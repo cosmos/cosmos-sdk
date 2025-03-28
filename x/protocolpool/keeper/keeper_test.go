@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			},
 		},
 		{
-			name:               "multiple valid continuous funds",
+			name:               "multiple valid continuous funds - one recipient is blocked",
 			initialPoolBalance: initialBalance,
 			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			setup: func() {
@@ -315,15 +315,23 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
 				amountToStream2 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.2"), initalBalanceCoins)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream1).
-					Return(nil).Times(1)
+					Return(sdkerrors.ErrUnauthorized).Times(1)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr2, amountToStream2).
 					Return(nil).Times(1)
 
-				remainingCoins := initalBalanceCoins.Sub(amountToStream1...).Sub(amountToStream2...)
+				remainingCoins := initalBalanceCoins.Sub(amountToStream2...)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(nil).Times(1)
 			},
 			expectedErr: "",
+			verify: func() {
+				// check that the broken continuous fund is removed
+				_, err := suite.poolKeeper.ContinuousFunds.Get(suite.ctx, recipientAddr)
+				suite.Require().Error(err)
+				// check that the valid continuous fund is in the store
+				_, err = suite.poolKeeper.ContinuousFunds.Get(suite.ctx, recipientAddr2)
+				suite.Require().NoError(err)
+			},
 		},
 		{
 			name:               "fund percentages sum over 1 (resulting in negative remainder)",

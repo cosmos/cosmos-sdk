@@ -1,6 +1,7 @@
 module cosmossdk.io/collections
 
 go 1.23.2
+
 require (
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.1

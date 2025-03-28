@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -136,14 +137,14 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 		return fmt.Errorf("failed to create iterator for continuous funds: %w", err)
 	}
 
-	kvalues, err := iter.KeyValues()
+	kValues, err := iter.KeyValues()
 	if err != nil {
 		return fmt.Errorf("failed to iterate continuous funds: %w", err)
 	}
 
 	blockTime := ctx.BlockTime()
 	anyNegative := false
-	for _, kv := range kvalues {
+	for _, kv := range kValues {
 		recipient := kv.Key
 		fund := kv.Value
 
@@ -164,6 +165,15 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolEscrowAccount, recipient, amountToStream)
 		if err != nil {
+			if errors.Is(err, sdkerrors.ErrUnauthorized) {
+				ctx.Logger().Error("recipient is unauthorized - removing the continuous fund", "error", err)
+				err := k.ContinuousFunds.Remove(ctx, recipient)
+				if err != nil {
+					return fmt.Errorf("failed to remove fund for %s from ContinuousFunds: %w", recipient, err)
+				}
+				continue
+			}
+
 			return fmt.Errorf("failed to distribute fund for %s from ContinuousFunds: %w", recipient, err)
 		}
 	}

@@ -81,6 +81,11 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
+	// deny creation if we know this address is blocked from receiving funds
+	if k.bankKeeper.BlockedAddr(recipient) {
+		return nil, fmt.Errorf("recipient is blocked in the bank keeper: %s", msg.Recipient)
+	}
+
 	has, err := k.ContinuousFunds.Has(sdkCtx, recipient)
 	if err != nil {
 		return nil, err

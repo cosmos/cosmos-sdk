@@ -217,6 +217,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 			preRun: func() {
 				suite.authKeeper.EXPECT().AddressCodec().
 					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				suite.bankKeeper.EXPECT().BlockedAddr(validRecipient).Return(false).Times(1)
 				// Pre-create a continuous fund.
 				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, validRecipient, types.ContinuousFund{
 					Recipient:  validRecipient.String(),
@@ -239,6 +240,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 			preRun: func() {
 				suite.authKeeper.EXPECT().AddressCodec().
 					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				suite.bankKeeper.EXPECT().BlockedAddr(validRecipient).Return(false).Times(1)
 			},
 			expErr:    true,
 			expErrMsg: "invalid continuous fund",
@@ -255,6 +257,8 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 			preRun: func() {
 				suite.authKeeper.EXPECT().AddressCodec().
 					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				suite.bankKeeper.EXPECT().BlockedAddr(validRecipient).Return(false).Times(1)
+
 				existingRecipient := recipientAddr2
 				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, existingRecipient, types.ContinuousFund{
 					Recipient:  existingRecipient.String(),
@@ -267,6 +271,25 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 			expErrMsg: "total funds percentage exceeds 100",
 		},
 		{
+			name: "address is bocked",
+			msg: &types.MsgCreateContinuousFund{
+				Authority:  validAuthority,
+				Recipient:  validRecipient.String(),
+				Percentage: validPercentage,
+				Expiry:     &validExpiry,
+			},
+			preRun: func() {
+				suite.authKeeper.EXPECT().AddressCodec().
+					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				suite.bankKeeper.EXPECT().BlockedAddr(validRecipient).Return(true).Times(1)
+
+				// Ensure any existing fund for validRecipient is removed.
+				_ = suite.poolKeeper.ContinuousFunds.Remove(suite.ctx, validRecipient)
+			},
+			expErr:    true,
+			expErrMsg: "recipient is blocked in the bank keeper",
+		},
+		{
 			name: "valid create continuous fund",
 			msg: &types.MsgCreateContinuousFund{
 				Authority:  validAuthority,
@@ -277,6 +300,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 			preRun: func() {
 				suite.authKeeper.EXPECT().AddressCodec().
 					Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				suite.bankKeeper.EXPECT().BlockedAddr(validRecipient).Return(false).Times(1)
 				// Ensure any existing fund for validRecipient is removed.
 				_ = suite.poolKeeper.ContinuousFunds.Remove(suite.ctx, validRecipient)
 			},

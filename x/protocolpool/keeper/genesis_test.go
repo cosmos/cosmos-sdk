@@ -3,15 +3,13 @@ package keeper_test
 import (
 	"time"
 
-	"go.uber.org/mock/gomock"
-
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 func (suite *KeeperTestSuite) TestInitExportGenesis() {
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ProtocolPoolEscrowAccount, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	suite.bankKeeper.EXPECT().BlockedAddr(recipientAddr).Return(false).Times(1)
 
 	gs := types.NewGenesisState(
 		[]types.ContinuousFund{
@@ -32,6 +30,23 @@ func (suite *KeeperTestSuite) TestInitExportGenesis() {
 	suite.Require().Equal(gs.ContinuousFunds, exportedGenState.ContinuousFunds)
 }
 
+func (suite *KeeperTestSuite) TestInitExportGenesis_BlockedAddress() {
+	suite.bankKeeper.EXPECT().BlockedAddr(recipientAddr).Return(true).Times(1)
+
+	gs := types.NewGenesisState(
+		[]types.ContinuousFund{
+			{
+				Recipient:  recipientAddr.String(),
+				Percentage: math.LegacyMustNewDecFromStr("0.1"),
+				Expiry:     nil,
+			},
+		},
+	)
+
+	err := suite.poolKeeper.InitGenesis(suite.ctx, gs)
+	suite.Require().Error(err)
+}
+
 func (suite *KeeperTestSuite) TestInitGenesis_InvalidRecipient() {
 	gs := types.NewGenesisState([]types.ContinuousFund{
 		{
@@ -46,6 +61,9 @@ func (suite *KeeperTestSuite) TestInitGenesis_InvalidRecipient() {
 }
 
 func (suite *KeeperTestSuite) TestInitGenesis_SkipsExpiredFunds() {
+	suite.bankKeeper.EXPECT().BlockedAddr(recipientAddr).Return(false).Times(1)
+	suite.bankKeeper.EXPECT().BlockedAddr(recipientAddr2).Return(false).Times(1)
+
 	// Set up block time for the test
 	currentTime := suite.ctx.BlockTime()
 	expiredTime := currentTime.Add(-time.Hour)

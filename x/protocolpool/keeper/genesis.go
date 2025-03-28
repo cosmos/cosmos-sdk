@@ -16,15 +16,20 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 	}
 
 	for _, cf := range data.ContinuousFunds {
+		recipientAddress, err := k.authKeeper.AddressCodec().StringToBytes(cf.Recipient)
+		if err != nil {
+			return fmt.Errorf("failed to decode recipient address: %w", err)
+		}
+
+		if k.bankKeeper.BlockedAddr(recipientAddress) {
+			return fmt.Errorf("recipient is blocked in the bank keeper: %s", recipientAddress)
+		}
+
 		// ignore expired ContinuousFunds
 		if cf.Expiry != nil && cf.Expiry.Before(currentTime) {
 			continue
 		}
 
-		recipientAddress, err := k.authKeeper.AddressCodec().StringToBytes(cf.Recipient)
-		if err != nil {
-			return fmt.Errorf("failed to decode recipient address: %w", err)
-		}
 		if err := k.ContinuousFunds.Set(ctx, recipientAddress, cf); err != nil {
 			return fmt.Errorf("failed to set continuous fund for recipient %s: %w", recipientAddress, err)
 		}

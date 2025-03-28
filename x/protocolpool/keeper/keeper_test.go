@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -221,6 +222,31 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 
 				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
+					Return(nil).Times(1)
+			},
+			expectedErr: "",
+		},
+		{
+			name:               "one valid continuous fund with a blocked account",
+			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
+			initialPoolBalance: initialBalance,
+			setup: func() {
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
+					Return(poolDistrAcc).AnyTimes()
+
+				fund := types.ContinuousFund{
+					Recipient:  recipientAddr.String(),
+					Percentage: math.LegacyMustNewDecFromStr("0.3"),
+					Expiry:     nil,
+				}
+				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
+				suite.Require().NoError(err)
+
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
+					Return(sdkerrors.ErrUnauthorized).Times(1)
+
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, initalBalanceCoins).
 					Return(nil).Times(1)
 			},
 			expectedErr: "",

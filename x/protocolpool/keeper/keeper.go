@@ -44,8 +44,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 		panic(fmt.Sprintf(errModuleAccountNotSet, types.ModuleName))
 	}
 	// ensure protocol pool distribution account is set
-	if addr := ak.GetModuleAddress(types.ProtocolPoolDistrAccount); addr == nil {
-		panic(fmt.Sprintf(errModuleAccountNotSet, types.ProtocolPoolDistrAccount))
+	if addr := ak.GetModuleAddress(types.ProtocolPoolEscrowAccount); addr == nil {
+		panic(fmt.Sprintf(errModuleAccountNotSet, types.ProtocolPoolEscrowAccount))
 	}
 
 	sb := collections.NewSchemaBuilder(storeService)
@@ -77,7 +77,7 @@ func (k Keeper) GetAuthority() string {
 // GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
 // This is the address that x/distribution will send funds to for external management.
 func (k Keeper) GetCommunityPoolModule() string {
-	return types.ProtocolPoolDistrAccount
+	return types.ProtocolPoolEscrowAccount
 }
 
 // FundCommunityPool allows an account to directly fund the community fund pool.
@@ -109,9 +109,9 @@ func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error) {
 // This function is run at the BeginBlocker method and therefore must be very safe.
 func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 	// Get current balance of the intermediary module account
-	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount)
+	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolEscrowAccount)
 	if moduleAccount == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ProtocolPoolDistrAccount)
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ProtocolPoolEscrowAccount)
 	}
 	params, err := k.Params.Get(ctx)
 	if err != nil {
@@ -162,14 +162,14 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 			return fmt.Errorf("negative funds for distribution from ContinuousFunds: %v", remainingCoins)
 		}
 
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolDistrAccount, recipient, amountToStream)
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolEscrowAccount, recipient, amountToStream)
 		if err != nil {
 			return fmt.Errorf("failed to distribute fund for %s from ContinuousFunds: %w", recipient, err)
 		}
 	}
 
 	// send all remaining funds to the community pool
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins); err != nil {
 		return fmt.Errorf("failed to send coins to community pool: %w", err)
 	}
 

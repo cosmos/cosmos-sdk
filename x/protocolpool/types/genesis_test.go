@@ -97,7 +97,7 @@ func TestValidateGenesis(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := types.ValidateGenesis(tc.genesisState)
+			err := tc.genesisState.Validate()
 			if tc.expectedErr != "" {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)

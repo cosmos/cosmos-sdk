@@ -160,7 +160,7 @@ func AuthModule() ModuleOption {
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
 					{Account: protocolpooltypes.ModuleName},
-					{Account: protocolpooltypes.ProtocolPoolDistrAccount},
+					{Account: protocolpooltypes.ProtocolPoolEscrowAccount},
 				},
 			}),
 		}

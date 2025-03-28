@@ -34,7 +34,7 @@ var _ disttypes.ExternalCommunityPoolKeeper = &mockProtocolPoolKeeper{}
 type mockProtocolPoolKeeper struct{}
 
 func (m mockProtocolPoolKeeper) GetCommunityPoolModule() string {
-	return protocolpooltypes.ProtocolPoolDistrAccount
+	return protocolpooltypes.ProtocolPoolEscrowAccount
 }
 
 func (m mockProtocolPoolKeeper) FundCommunityPool(_ sdk.Context, _ sdk.Coins, _ sdk.AccAddress) error {
@@ -74,7 +74,7 @@ func setupTest(t *testing.T, protocolPoolEnabled bool) testSetup {
 	if protocolPoolEnabled {
 		opts = append(opts, keeper.WithExternalCommunityPool(mockProtocolPoolKeeper{}))
 		// expect that we will verify that this module account is set
-		accountKeeper.EXPECT().GetModuleAddress(protocolpooltypes.ProtocolPoolDistrAccount).Return(protocolPoolAcc.GetAddress()).AnyTimes()
+		accountKeeper.EXPECT().GetModuleAddress(protocolpooltypes.ProtocolPoolEscrowAccount).Return(protocolPoolAcc.GetAddress()).AnyTimes()
 	}
 
 	distrKeeper := keeper.NewKeeper(
@@ -509,7 +509,7 @@ func TestBeginBlockToMultipleValidatorsProtocolPool(t *testing.T) {
 	ctx = ctx.WithVoteInfos(votes).WithBlockHeight(1000)
 
 	// we should fully remove everything that was in the community pool (2stake)
-	ts.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, protocolpooltypes.ProtocolPoolDistrAccount, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))).Return(nil).Times(1)
+	ts.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, protocolpooltypes.ProtocolPoolEscrowAccount, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))).Return(nil).Times(1)
 
 	feePoolBefore, err := ts.distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
@@ -660,7 +660,7 @@ func TestBeginBlockCommunityPoolCollectsDustProtocolPool(t *testing.T) {
 	// integer portion will be sent to the protocol pool as sdk.Coins
 	// decimal version will remain as "dust"
 	expectedCommunityPool := sdk.NewDecCoins(sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyMustNewDecFromStr("0.800000001243023848")))
-	ts.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, protocolpooltypes.ProtocolPoolDistrAccount, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 12683916))).Return(nil).Times(1)
+	ts.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, protocolpooltypes.ProtocolPoolEscrowAccount, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 12683916))).Return(nil).Times(1)
 
 	feePoolBefore, err := ts.distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)

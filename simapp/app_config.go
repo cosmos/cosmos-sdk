@@ -84,7 +84,7 @@ var (
 		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: nft.ModuleName},
 		{Account: protocolpooltypes.ModuleName},
-		{Account: protocolpooltypes.ProtocolPoolDistrAccount},
+		{Account: protocolpooltypes.ProtocolPoolEscrowAccount},
 	}
 
 	// blocked account addresses

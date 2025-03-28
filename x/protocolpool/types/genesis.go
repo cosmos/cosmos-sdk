@@ -20,8 +20,8 @@ func DefaultGenesisState() *GenesisState {
 	}
 }
 
-// ValidateGenesis validates the genesis state of protocolpool genesis input
-func ValidateGenesis(gs *GenesisState) error {
+// Validate validates the genesis state of protocolpool genesis input
+func (gs *GenesisState) Validate() error {
 	totalPercentage := math.LegacyZeroDec()
 	for _, cf := range gs.ContinuousFunds {
 		totalPercentage = totalPercentage.Add(cf.Percentage)

@@ -11,7 +11,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestInitExportGenesis() {
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ProtocolPoolDistrAccount, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ProtocolPoolEscrowAccount, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	gs := types.NewGenesisState(
 		[]types.ContinuousFund{

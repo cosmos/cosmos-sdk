@@ -27,7 +27,7 @@ import (
 
 var (
 	poolAcc      = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolDistrAccount)
+	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolEscrowAccount)
 
 	recipientAddr  = sdk.AccAddress("to1__________________")
 	recipientAddr2 = sdk.AccAddress("to2__________________")
@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctrl := gomock.NewController(suite.T())
 	accountKeeper := pooltestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress()).AnyTimes()
-	accountKeeper.EXPECT().GetModuleAddress(types.ProtocolPoolDistrAccount).Return(poolDistrAcc.GetAddress()).AnyTimes()
+	accountKeeper.EXPECT().GetModuleAddress(types.ProtocolPoolEscrowAccount).Return(poolDistrAcc.GetAddress()).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	suite.authKeeper = accountKeeper
 
@@ -185,7 +185,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			name:   "module account missing",
 			params: types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(nil)
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).Return(nil)
 			},
 			expectedErr: "module account",
 		},
@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			initialPoolBalance: sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
 			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
 					Return(poolDistrAcc).AnyTimes()
 			},
 			expectedErr: "",
@@ -204,7 +204,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			initialPoolBalance: initialBalance,
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
 					Return(poolDistrAcc).AnyTimes()
 
 				fund := types.ContinuousFund{
@@ -216,11 +216,11 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.Require().NoError(err)
 
 				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
 					Return(nil).Times(1)
 
 				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(nil).Times(1)
 			},
 			expectedErr: "",
@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			initialPoolBalance: initialBalance,
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
 					Return(poolDistrAcc).AnyTimes()
 
 				expiredTime := suite.ctx.BlockTime().Add(-time.Hour)
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.Require().NoError(err)
 
 				// And full amount to be sent to the community pool.
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, initalBalanceCoins).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, initalBalanceCoins).
 					Return(nil).Times(1)
 			},
 			expectedErr: "",
@@ -259,7 +259,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			initialPoolBalance: initialBalance,
 			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
 					Return(poolDistrAcc).AnyTimes()
 
 				fund1 := types.ContinuousFund{
@@ -283,13 +283,13 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 
 				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
 				amountToStream2 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.2"), initalBalanceCoins)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream1).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream1).
 					Return(nil).Times(1)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr2, amountToStream2).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr2, amountToStream2).
 					Return(nil).Times(1)
 
 				remainingCoins := initalBalanceCoins.Sub(amountToStream1...).Sub(amountToStream2...)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(nil).Times(1)
 			},
 			expectedErr: "",
@@ -299,7 +299,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			initialPoolBalance: initialBalance,
 			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
 					Return(poolDistrAcc).AnyTimes()
 
 				// Two funds whose percentages sum to 1.3 (80% and 50%).
@@ -320,7 +320,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.Require().NoError(err)
 
 				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.8"), initalBalanceCoins) // 800 stake
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream1).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream1).
 					Return(nil).Times(1)
 			},
 			// we will fail on the second iteration of the loop
@@ -330,7 +330,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			name:   "bank send to account error",
 			params: types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
 					Return(poolDistrAcc).AnyTimes()
 
 				totalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000)))
@@ -346,7 +346,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.Require().NoError(err)
 
 				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), totalCoins)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
 					Return(fmt.Errorf("send account error")).Times(1)
 			},
 			expectedErr: "failed to distribute fund",
@@ -356,7 +356,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			initialPoolBalance: initialBalance,
 			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
 					Return(poolDistrAcc).AnyTimes()
 
 				fund := types.ContinuousFund{
@@ -368,11 +368,11 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.Require().NoError(err)
 
 				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
 					Return(nil).Times(1)
 
 				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(fmt.Errorf("send module error")).Times(1)
 			},
 			expectedErr: "failed to send coins to community pool",
@@ -382,7 +382,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 			params:             types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			initialPoolBalance: initialBalance,
 			setup: func() {
-				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).
+				suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolEscrowAccount).
 					Return(poolDistrAcc).AnyTimes()
 
 				expiryTime := suite.ctx.BlockTime() // exactly equal to block time.
@@ -395,11 +395,11 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.Require().NoError(err)
 
 				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolDistrAccount, recipientAddr, amountToStream).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
 					Return(nil).Times(1)
 
 				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingCoins).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(nil).Times(1)
 			},
 			expectedErr: "",

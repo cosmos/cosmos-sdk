@@ -3,6 +3,7 @@ module cosmossdk.io/x/upgrade
 go 1.23.0
 
 replace cosmossdk.io/store => ../../store
+replace github.com/cosmos/cosmos-sdk =>../..
 
 require (
 	cosmossdk.io/api v0.7.6

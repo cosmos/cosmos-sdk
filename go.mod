@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.5.0
+	cosmossdk.io/log v1.5.1
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/store v1.1.1
 	cosmossdk.io/x/tx v0.13.7
@@ -175,8 +175,6 @@ require (
 // 	<temporary replace>
 // )
 replace cosmossdk.io/api => ./api
-
-replace cosmossdk.io/log => ./log
 
 replace cosmossdk.io/store => ./store
 

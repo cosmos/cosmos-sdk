@@ -18,9 +18,23 @@ import (
 // v0.47.x to v0.50.x.
 const UpgradeName = "v047-to-v050"
 
+// UpgradeName53 defines the on-chain upgrade name for the sample SimApp upgrade
+// from v050 to v053.
+//
+// NOTE: This upgrade defines a reference implementation of what an upgrade
+// could look like when an application is migrating from Cosmos SDK version
+// v0.50.x to v0.53.x.
+const UpgradeName53 = "v050-to-v053"
+
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
+		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		},
+	)
+	app.UpgradeKeeper.SetUpgradeHandler(
+		UpgradeName53,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
@@ -31,10 +45,23 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		panic(err)
 	}
 
-	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	switch {
+	case upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height):
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{
 				circuittypes.ModuleName,
+			},
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	case upgradeInfo.Name == UpgradeName53 && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height):
+	}
+	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{
+				"epochs",
+				// protocolpooltypes.ModuleName,
 			},
 		}
 

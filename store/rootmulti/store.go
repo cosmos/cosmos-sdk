@@ -66,8 +66,8 @@ type Store struct {
 	// iavlSyncPruning should rarely be set to true.
 	// The Prune command will automatically set this to true.
 	// This allows the prune command to wait for the pruning to finish before returning.
-	iavlSyncPruning   bool
-	storesParams        map[types.StoreKey]storeParams
+	iavlSyncPruning bool
+	storesParams    map[types.StoreKey]storeParams
 	// CommitStore is a common interface to unify generic CommitKVStore of different value types
 	stores            map[types.StoreKey]types.CommitStore
 	keysByName        map[string]types.StoreKey

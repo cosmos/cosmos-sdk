@@ -45,6 +45,8 @@ func createLegacyBinary(t *testing.T, extraAccounts ...initAccount) (*systest.CL
 	v50CLI := systest.NewCLIWrapper(t, legacySut, systest.Verbose)
 	v50CLI.AddKeyFromSeed("account1", testSeed)
 
+	// Typically, SystemUnderTest will create a node with 4 validators. In the legacy setup, we create run a single validator network.
+	// This means we need to add 3 more accounts in order to make further account additions map to the same account number in state
 	modifications := [][]string{
 		{"genesis", "add-genesis-account", v50CLI.AddKey("foo"), "10000000000stake"},
 		{"genesis", "add-genesis-account", v50CLI.AddKey("bar"), "10000000000stake"},
@@ -120,6 +122,8 @@ func TestChainUpgrade(t *testing.T) {
 	systest.Sut.SetExecBinary(currentBranchBinary)
 	systest.Sut.SetTestnetInitializer(currentInitializer)
 	systest.Sut.StartChain(t)
+
+	require.Equal(t, upgradeHeight+1, systest.Sut.CurrentHeight())
 	// cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// smoke test that new version runs

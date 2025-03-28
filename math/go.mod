@@ -2,8 +2,6 @@ module cosmossdk.io/math
 
 go 1.23.0
 
-toolchain go1.23.7
-
 require (
 	cosmossdk.io/errors v1.0.2
 	github.com/cockroachdb/apd/v3 v3.2.1

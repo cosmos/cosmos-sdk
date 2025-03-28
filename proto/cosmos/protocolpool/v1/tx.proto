@@ -26,6 +26,8 @@ service Msg {
 
   // CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
   // This ContinuousFund can be indefinite or run until a given expiry time.
+  // Funds come from validator block rewards from x/distribution, but may also come from
+  // any user who funds the ProtocolPoolEscrow module account directly through x/bank.
   rpc CreateContinuousFund(MsgCreateContinuousFund) returns (MsgCreateContinuousFundResponse);
 
   // CancelContinuousFund defines a method for cancelling continuous fund.

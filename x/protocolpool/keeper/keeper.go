@@ -192,19 +192,11 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 
 // GetAllContinuousFunds gets all continuous funds in the store.
 func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, error) {
-	var cf []types.ContinuousFund
-	err := k.ContinuousFunds.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
-		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
-		if err != nil {
-			return true, err
-		}
-		cf = append(cf, types.ContinuousFund{
-			Recipient:  recipient,
-			Percentage: value.Percentage,
-			Expiry:     value.Expiry,
-		})
-		return false, nil
-	})
+	it, err := k.ContinuousFunds.Iterate(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	cf, err := it.Values()
 	if err != nil {
 		return nil, err
 	}

@@ -40,7 +40,10 @@ CreateContinuousFund is a message used to initiate a continuous fund for a speci
 NOTE:  This feature is designed to work with the SDK's default bond denom. 
 
 ```protobuf
-  // CreateContinuousFund defines a method to add funds continuously.
+  // CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
+  // This ContinuousFund can be indefinite or run until a given expiry time.
+  // Funds come from validator block rewards from x/distribution, but may also come from
+  // any user who funds the ProtocolPoolEscrow module account directly through x/bank.
   rpc CreateContinuousFund(MsgCreateContinuousFund) returns (MsgCreateContinuousFundResponse);
 ```
 

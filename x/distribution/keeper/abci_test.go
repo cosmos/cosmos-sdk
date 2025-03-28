@@ -673,7 +673,6 @@ func TestBeginBlockCommunityPoolCollectsDustProtocolPool(t *testing.T) {
 	require.True(t, feePoolAfter.CommunityPool.Equal(expectedCommunityPool))
 
 	t.Run("assert rewards distributed", func(t *testing.T) {
-
 		val0OutstandingRewards, err := ts.distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr0)
 		require.NoError(t, err)
 		require.True(t, val0OutstandingRewards.Rewards.IsValid())

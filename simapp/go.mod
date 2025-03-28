@@ -227,7 +227,6 @@ require (
 replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/log => ../log
-	cosmossdk.io/store => ../store
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
@@ -238,3 +237,5 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
+
+replace cosmossdk.io/store => ../store

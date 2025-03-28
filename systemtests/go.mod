@@ -90,7 +90,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-metrics v0.5.4 // indirect
-	github.com/hashicorp/go-plugin v1.6.2 // indirect
+	github.com/hashicorp/go-plugin v1.6.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
@@ -148,7 +148,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.13.0 // indirect
 	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 // indirect
+	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
@@ -157,10 +157,12 @@ require (
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250106144421-5f5ef82da422 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250122153221-138b5a5a4fd4 // indirect
-	google.golang.org/protobuf v1.36.4 // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gotest.tools/v3 v3.5.1 // indirect
+	gotest.tools/v3 v3.5.2 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+replace cosmossdk.io/store => ../store

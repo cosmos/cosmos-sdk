@@ -2,7 +2,11 @@ module cosmossdk.io/x/circuit
 
 go 1.23.0
 
-replace cosmossdk.io/store => ../../store
+replace (
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/store => ../../store
+	github.com/cosmos/cosmos-sdk => ../../.
+)
 
 replace cosmossdk.io/api => ../../api
 

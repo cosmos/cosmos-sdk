@@ -29,6 +29,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 > With Cosmos SDK v2 (with store/v2), CometBFT has been pushed to the boundaries, so issues like this
 > are not expected to happen again.
 
+### Features
+
+* [#24159](https://github.com/cosmos/cosmos-sdk/pull/24159) Support mount object store in baseapp, add `ObjectStore` api in context.
+
 ## v1.1.1 (September 06, 2024)
 
 ### Improvements

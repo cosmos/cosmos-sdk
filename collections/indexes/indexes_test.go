@@ -3,13 +3,13 @@ package indexes
 import (
 	"context"
 
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/core/testing"
+	store "cosmossdk.io/collections/corecompat"
+	"cosmossdk.io/collections/internal/testutil"
 )
 
 func deps() (store.KVStoreService, context.Context) {
-	ctx := coretesting.Context()
-	kv := coretesting.KVStoreService(ctx, "test")
+	ctx := testutil.Context()
+	kv := testutil.KVStoreService(ctx, "test")
 	return kv, ctx
 }
 

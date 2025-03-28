@@ -7,8 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
+	core "cosmossdk.io/collections/corecompat"
 )
 
 // SchemaBuilder is used for building schemas. The Build method should always
@@ -20,7 +19,7 @@ type SchemaBuilder struct {
 }
 
 // NewSchemaBuilderFromAccessor creates a new schema builder from the provided store accessor function.
-func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) store.KVStore) *SchemaBuilder {
+func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) core.KVStore) *SchemaBuilder {
 	return &SchemaBuilder{
 		schema: &Schema{
 			storeAccessor:       accessorFunc,
@@ -33,7 +32,7 @@ func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) store.K
 // NewSchemaBuilder creates a new schema builder from the provided store key.
 // Callers should always call the SchemaBuilder.Build method when they are
 // done adding collections to the schema.
-func NewSchemaBuilder(service store.KVStoreService) *SchemaBuilder {
+func NewSchemaBuilder(service core.KVStoreService) *SchemaBuilder {
 	return NewSchemaBuilderFromAccessor(service.OpenKVStore)
 }
 
@@ -125,22 +124,22 @@ var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
 // methods for importing/exporting genesis data and for schema reflection for
 // clients.
 type Schema struct {
-	storeAccessor       func(context.Context) store.KVStore
+	storeAccessor       func(context.Context) core.KVStore
 	collectionsOrdered  []string
 	collectionsByPrefix map[string]Collection
 	collectionsByName   map[string]Collection
 }
 
 // NewSchema creates a new schema for the provided KVStoreService.
-func NewSchema(service store.KVStoreService) Schema {
-	return NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
+func NewSchema(service core.KVStoreService) Schema {
+	return NewSchemaFromAccessor(func(ctx context.Context) core.KVStore {
 		return service.OpenKVStore(ctx)
 	})
 }
 
 // NewMemoryStoreSchema creates a new schema for the provided MemoryStoreService.
-func NewMemoryStoreSchema(service store.MemoryStoreService) Schema {
-	return NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
+func NewMemoryStoreSchema(service core.MemoryStoreService) Schema {
+	return NewSchemaFromAccessor(func(ctx context.Context) core.KVStore {
 		return service.OpenMemoryStore(ctx)
 	})
 }
@@ -153,7 +152,7 @@ func NewMemoryStoreSchema(service store.MemoryStoreService) Schema {
 //	NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
 //			return sdk.UnwrapSDKContext(ctx).KVStore(kvStoreKey)
 //	}
-func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema {
+func NewSchemaFromAccessor(accessor func(context.Context) core.KVStore) Schema {
 	return Schema{
 		storeAccessor:       accessor,
 		collectionsByName:   map[string]Collection{},
@@ -168,7 +167,7 @@ func (s Schema) IsOnePerModuleType() {}
 func (s Schema) IsAppModule() {}
 
 // DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
-func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
+func (s Schema) DefaultGenesis(target core.GenesisTarget) error {
 	for _, name := range s.collectionsOrdered {
 		err := s.defaultGenesis(target, name)
 		if err != nil {
@@ -179,7 +178,7 @@ func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
 	return nil
 }
 
-func (s Schema) defaultGenesis(target appmodule.GenesisTarget, name string) error {
+func (s Schema) defaultGenesis(target core.GenesisTarget, name string) error {
 	wc, err := target(name)
 	if err != nil {
 		return err
@@ -195,7 +194,7 @@ func (s Schema) defaultGenesis(target appmodule.GenesisTarget, name string) erro
 }
 
 // ValidateGenesis implements the appmodule.HasGenesis.ValidateGenesis method.
-func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
+func (s Schema) ValidateGenesis(source core.GenesisSource) error {
 	for _, name := range s.collectionsOrdered {
 		err := s.validateGenesis(source, name)
 		if err != nil {
@@ -205,7 +204,7 @@ func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
 	return nil
 }
 
-func (s Schema) validateGenesis(source appmodule.GenesisSource, name string) error {
+func (s Schema) validateGenesis(source core.GenesisSource, name string) error {
 	rc, err := source(name)
 	if err != nil {
 		return err
@@ -226,7 +225,7 @@ func (s Schema) validateGenesis(source appmodule.GenesisSource, name string) err
 }
 
 // InitGenesis implements the appmodule.HasGenesis.InitGenesis method.
-func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource) error {
+func (s Schema) InitGenesis(ctx context.Context, source core.GenesisSource) error {
 	for _, name := range s.collectionsOrdered {
 		err := s.initGenesis(ctx, source, name)
 		if err != nil {
@@ -237,7 +236,7 @@ func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource)
 	return nil
 }
 
-func (s Schema) initGenesis(ctx context.Context, source appmodule.GenesisSource, name string) error {
+func (s Schema) initGenesis(ctx context.Context, source core.GenesisSource, name string) error {
 	rc, err := source(name)
 	if err != nil {
 		return err
@@ -258,7 +257,7 @@ func (s Schema) initGenesis(ctx context.Context, source appmodule.GenesisSource,
 }
 
 // ExportGenesis implements the appmodule.HasGenesis.ExportGenesis method.
-func (s Schema) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
+func (s Schema) ExportGenesis(ctx context.Context, target core.GenesisTarget) error {
 	for _, name := range s.collectionsOrdered {
 		err := s.exportGenesis(ctx, target, name)
 		if err != nil {
@@ -269,7 +268,7 @@ func (s Schema) ExportGenesis(ctx context.Context, target appmodule.GenesisTarge
 	return nil
 }
 
-func (s Schema) exportGenesis(ctx context.Context, target appmodule.GenesisTarget, name string) error {
+func (s Schema) exportGenesis(ctx context.Context, target core.GenesisTarget, name string) error {
 	wc, err := target(name)
 	if err != nil {
 		return err

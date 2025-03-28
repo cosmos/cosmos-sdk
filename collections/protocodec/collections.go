@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	corecodec "cosmossdk.io/core/codec"
+	corecodec "cosmossdk.io/collections/corecompat"
 )
 
 // BoolValue implements a ValueCodec that saves the bool value

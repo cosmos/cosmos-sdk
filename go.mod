@@ -177,8 +177,9 @@ require (
 replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/log => ./log
-	cosmossdk.io/store => ./store
 )
+
+replace cosmossdk.io/store => ./store
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

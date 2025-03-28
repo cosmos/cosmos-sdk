@@ -3,12 +3,10 @@ module cosmossdk.io/collections
 go 1.23.2
 
 require (
-	cosmossdk.io/core v1.0.0
-	cosmossdk.io/core/testing v0.0.2
 	cosmossdk.io/schema v1.0.0
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/google/go-cmp v0.7.0
+	github.com/google/go-cmp v0.6.0
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
 	google.golang.org/protobuf v1.36.6
@@ -46,7 +44,7 @@ require (
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

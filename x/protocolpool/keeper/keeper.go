@@ -165,8 +165,12 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolEscrowAccount, recipient, amountToStream)
 		if err != nil {
+			// in the case where the address is unauthorized (blocked)
+			// - remove the continuous fund
+			// - add back the coins
 			if errors.Is(err, sdkerrors.ErrUnauthorized) {
 				ctx.Logger().Error("recipient is unauthorized - removing the continuous fund", "error", err)
+				remainingCoins = remainingCoins.Add(amountToStream...)
 				err := k.ContinuousFunds.Remove(ctx, recipient)
 				if err != nil {
 					return fmt.Errorf("failed to remove fund for %s from ContinuousFunds: %w", recipient, err)

@@ -250,6 +250,11 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 					Return(nil).Times(1)
 			},
 			expectedErr: "",
+			verify: func() {
+				// check that the broken continuous fund is removed
+				_, err := suite.poolKeeper.ContinuousFunds.Get(suite.ctx, recipientAddr)
+				suite.Require().Error(err)
+			},
 		},
 		{
 			name:               "one expired continuous fund",

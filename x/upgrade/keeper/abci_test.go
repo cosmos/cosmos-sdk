@@ -481,40 +481,20 @@ func TestBinaryVersion(t *testing.T) {
 }
 
 func TestDowngradeVerification(t *testing.T) {
-	s := setupTest(t, 10, map[int64]bool{})
-
-	// submit a plan.
 	planName := "downgrade"
-	height := s.env.HeaderService().HeaderInfo(s.ctx).Height
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: planName, Height: height + 1})
-	require.NoError(t, err)
-	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: height + 1})
-
-	// set the handler.
-	s.keeper.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
-		return vm, nil
-	})
-
-	// successful upgrade.
-	err = s.preModule.PreBlock(s.ctx)
-	require.NoError(t, err)
-
-	height = s.env.HeaderService().HeaderInfo(s.ctx).Height
-	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: height + 1})
-
 	testCases := map[string]struct {
-		preRun      func(*keeper.Keeper, context.Context, string)
+		preRun      func(*TestSuite, *keeper.Keeper, context.Context, string)
 		expectError bool
 	}{
 		"valid binary": {
-			preRun: func(k *keeper.Keeper, ctx context.Context, name string) {
+			preRun: func(_ *TestSuite, k *keeper.Keeper, ctx context.Context, name string) {
 				k.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 					return vm, nil
 				})
 			},
 		},
 		"downgrade with an active plan": {
-			preRun: func(k *keeper.Keeper, ctx context.Context, name string) {
+			preRun: func(s *TestSuite, k *keeper.Keeper, ctx context.Context, name string) {
 				height := s.env.HeaderService().HeaderInfo(s.ctx).Height
 				err := k.ScheduleUpgrade(ctx, types.Plan{Name: "another" + planName, Height: height + 1})
 				require.NoError(t, err, name)
@@ -527,6 +507,25 @@ func TestDowngradeVerification(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		s := setupTest(t, 10, map[int64]bool{})
+		// submit a plan.
+		height := s.env.HeaderService().HeaderInfo(s.ctx).Height
+		err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: planName, Height: height + 1})
+		require.NoError(t, err)
+		s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: height + 1})
+
+		// set the handler.
+		s.keeper.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+			return vm, nil
+		})
+
+		// successful upgrade.
+		err = s.preModule.PreBlock(s.ctx)
+		require.NoError(t, err)
+
+		height = s.env.HeaderService().HeaderInfo(s.ctx).Height
+		s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: height + 1})
+
 		ctx := s.ctx
 
 		authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
@@ -549,7 +548,7 @@ func TestDowngradeVerification(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrNoUpgradePlanFound)
 
 		if tc.preRun != nil {
-			tc.preRun(k, ctx, name)
+			tc.preRun(s, k, ctx, name)
 		}
 
 		err = m.PreBlock(ctx)

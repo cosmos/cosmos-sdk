@@ -4,6 +4,8 @@ go 1.23.0
 
 replace cosmossdk.io/store => ../../store
 
+replace cosmossdk.io/api => ../../api
+
 replace github.com/cosmos/cosmos-sdk => ../..
 
 require (

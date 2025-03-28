@@ -63,7 +63,6 @@ func initNetworkConfig(t *testing.T, externalPoolEnabled bool) network.Config {
 	t.Helper()
 
 	moduleConfig := simapp.ModuleConfig
-	var err error
 
 	// overwrite the module config so that protocolpool is removed "disabling" it
 	if !externalPoolEnabled {

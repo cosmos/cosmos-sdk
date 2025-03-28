@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.1
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/log v1.5.0
+	cosmossdk.io/log v1.5.1
 	cosmossdk.io/math v1.5.0
 	cosmossdk.io/store v1.1.1
 	cosmossdk.io/tools/confix v0.1.2
@@ -226,7 +226,6 @@ require (
 // Below are the long-lived replace of the SimApp
 replace (
 	cosmossdk.io/api => ../api
-	cosmossdk.io/log => ../log
 	cosmossdk.io/store => ../store
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

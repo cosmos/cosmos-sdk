@@ -937,12 +937,13 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		anteEvents = events.ToABCIEvents()
 	}
 
-	if mode == execModeCheck {
+	switch mode {
+	case execModeCheck:
 		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, err
 		}
-	} else if mode == execModeFinalize {
+	case execModeFinalize:
 		err = app.mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents,
@@ -1147,6 +1148,10 @@ func (app *BaseApp) TxDecode(txBytes []byte) (sdk.Tx, error) {
 
 func (app *BaseApp) TxEncode(tx sdk.Tx) ([]byte, error) {
 	return app.txEncoder(tx)
+}
+
+func (app *BaseApp) StreamingManager() storetypes.StreamingManager {
+	return app.streamingManager
 }
 
 // Close is called in start cmd to gracefully cleanup resources.

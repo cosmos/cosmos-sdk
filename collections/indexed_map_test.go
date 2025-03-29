@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/testing"
+	"cosmossdk.io/collections/internal/testutil"
 )
 
 type company struct {
@@ -45,8 +45,8 @@ func newTestIndexedMap(schema *collections.SchemaBuilder) *collections.IndexedMa
 }
 
 func TestIndexedMap(t *testing.T) {
-	ctx := coretesting.Context()
-	sk := coretesting.KVStoreService(ctx, "test")
+	ctx := testutil.Context()
+	sk := testutil.KVStoreService(ctx, "test")
 
 	schema := collections.NewSchemaBuilder(sk)
 
@@ -125,7 +125,7 @@ func newInferIndex(schema *collections.SchemaBuilder) *inferIndex {
 }
 
 func TestIndexedMapInfer(t *testing.T) {
-	sk := coretesting.KVStoreService(coretesting.Context(), "test")
+	sk := testutil.KVStoreService(testutil.Context(), "test")
 	schema := collections.NewSchemaBuilder(sk)
 
 	_, err := collections.NewIndexedMapSafe(schema, collections.NewPrefix(0), "im", collections.StringKey, colltest.MockValueCodec[company](), newInferIndex(schema))

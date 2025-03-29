@@ -103,7 +103,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
-	ctxCheck = app.BaseApp.NewContext(true)
+	ctxCheck = app.NewContext(true)
 	_, err = slashingKeeper.GetValidatorSigningInfo(ctxCheck, sdk.ConsAddress(valAddr))
 	require.NoError(t, err)
 

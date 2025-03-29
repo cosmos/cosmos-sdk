@@ -74,6 +74,7 @@ const (
 	FlagMinRetainBlocks     = "min-retain-blocks"
 	FlagIAVLCacheSize       = "iavl-cache-size"
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
+	FlagIAVLSyncPruning     = "iavl-sync-pruning"
 	FlagShutdownGrace       = "shutdown-grace"
 
 	// state sync-related flags
@@ -91,10 +92,11 @@ const (
 	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
 
 	// gRPC-related flags
-	flagGRPCOnly      = "grpc-only"
-	flagGRPCEnable    = "grpc.enable"
-	flagGRPCAddress   = "grpc.address"
-	flagGRPCWebEnable = "grpc-web.enable"
+	flagGRPCOnly            = "grpc-only"
+	flagGRPCEnable          = "grpc.enable"
+	flagGRPCAddress         = "grpc.address"
+	flagGRPCWebEnable       = "grpc-web.enable"
+	flagGRPCSkipCheckHeader = "grpc.skip-check-header"
 
 	// mempool flags
 	FlagMempoolMaxTxs = "mempool.max-txs"

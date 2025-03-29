@@ -73,7 +73,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
 	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
-	ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
+	ctx = app.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
 	require.NoError(t, stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams()))
 	lastAccNum := uint64(1000)
 	createBaseAccount := func(addr sdk.AccAddress) *authtypes.BaseAccount {

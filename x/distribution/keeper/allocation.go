@@ -158,7 +158,7 @@ func (k Keeper) sendCommunityPoolToExternalPool(ctx sdk.Context) error {
 	}
 
 	amt, remaining := feePool.CommunityPool.TruncateDecimal()
-	ctx.Logger().Info(
+	ctx.Logger().Debug(
 		"sending distribution community pool amount to external pool pool",
 		"pool", k.externalCommunityPool.GetCommunityPoolModule(),
 		"amount", amt.String(),

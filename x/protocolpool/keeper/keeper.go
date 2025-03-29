@@ -169,7 +169,7 @@ func (k Keeper) DistributeFunds(ctx sdk.Context) error {
 			// - remove the continuous fund
 			// - add back the coins
 			if errors.Is(err, sdkerrors.ErrUnauthorized) {
-				ctx.Logger().Error("recipient is unauthorized - removing the continuous fund", "error", err)
+				ctx.Logger().Debug("recipient is unauthorized - removing the continuous fund", "error", err)
 				remainingCoins = remainingCoins.Add(amountToStream...)
 				err := k.ContinuousFunds.Remove(ctx, recipient)
 				if err != nil {

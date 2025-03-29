@@ -3,6 +3,8 @@ package simapp
 import (
 	"context"
 
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
+
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -35,7 +37,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{
 				epochstypes.ModuleName,
-				// protocolpooltypes.ModuleName,
+				protocolpooltypes.ModuleName,
 			},
 		}
 

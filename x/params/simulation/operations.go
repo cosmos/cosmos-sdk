@@ -19,6 +19,7 @@ func min(a, b int) int {
 // SimulateParamChangeProposalContent returns random parameter change content.
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // the total amount of defined parameters changes, all of which have random valid values.
+// Deprecated: This method will be removed in the future
 func SimulateParamChangeProposalContent(paramChangePool []simulation.LegacyParamChange) simulation.ContentSimulatorFn { //nolint:staticcheck // used for legacy testing
 	numProposals := 0
 	// Bound the maximum number of simultaneous parameter changes

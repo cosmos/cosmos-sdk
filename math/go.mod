@@ -2,6 +2,8 @@ module cosmossdk.io/math
 
 go 1.23.0
 
+toolchain go1.23.7
+
 require (
 	cosmossdk.io/errors v1.0.2
 	github.com/cockroachdb/apd/v3 v3.2.1
@@ -15,7 +17,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
 	google.golang.org/grpc v1.71.0 // indirect

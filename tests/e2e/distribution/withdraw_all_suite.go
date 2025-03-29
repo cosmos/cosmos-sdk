@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -24,16 +23,22 @@ import (
 type WithdrawAllTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	externalPoolEnabled bool
+	cfg                 network.Config
+	network             *network.Network
+}
+
+func NewWithdrawAllTestSuite(externalPoolEnabled bool) *WithdrawAllTestSuite {
+	return &WithdrawAllTestSuite{externalPoolEnabled: externalPoolEnabled}
 }
 
 func (s *WithdrawAllTestSuite) SetupSuite() {
-	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	s.T().Log("setting up withdraw all e2e test suite")
+
+	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
 	cfg.NumValidators = 2
 	s.cfg = cfg
 
-	s.T().Log("setting up e2e test suite")
 	network, err := network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 	s.network = network
@@ -43,7 +48,7 @@ func (s *WithdrawAllTestSuite) SetupSuite() {
 
 // TearDownSuite cleans up the curret test network after _each_ test.
 func (s *WithdrawAllTestSuite) TearDownSuite() {
-	s.T().Log("tearing down e2e test suite")
+	s.T().Log("tearing down withdraw all e2e test suite")
 	s.network.Cleanup()
 }
 

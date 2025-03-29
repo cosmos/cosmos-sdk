@@ -29,6 +29,8 @@ service Msg {
 
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
+  //
+  // WARNING: This method will fail if an external community pool is used.
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
 
   // UpdateParams defines a governance operation for updating the x/distribution
@@ -41,6 +43,8 @@ service Msg {
   // the community pool in the x/distribution module to another account, which
   // could be the governance module itself. The authority is defined in the
   // keeper.
+  //
+  // WARNING: This method will fail if an external community pool is used.
   rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   };

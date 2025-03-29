@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
+	"slices"
 	"sync"
 
 	"github.com/huandu/skiplist"
@@ -307,5 +308,5 @@ func (i *senderNonceMempoolIterator) Tx() sdk.Tx {
 }
 
 func removeAtIndex[T any](slice []T, index int) []T {
-	return append(slice[:index], slice[index+1:]...)
+	return slices.Delete(slice, index, index+1)
 }

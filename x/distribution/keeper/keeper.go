@@ -39,6 +39,11 @@ type InitOption func(*Keeper)
 
 // WithExternalCommunityPool will enable the external pool functionality in x/distribution, directing
 // community pool funds to the provided keeper.
+//
+// WARNING: using an external community pool will cause the following handlers to error when called:
+// - FundCommunityPool tx
+// - CommunityPoolSpend tx
+// - CommunityPool query
 func WithExternalCommunityPool(poolKeeper types.ExternalCommunityPoolKeeper) InitOption {
 	return func(k *Keeper) {
 		k.externalCommunityPool = poolKeeper

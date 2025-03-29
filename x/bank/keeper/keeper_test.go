@@ -1512,12 +1512,27 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.Contains(events, abci.Event(event3))
 }
 
+// TestSpendableCoins verifies the behavior of SpendableCoins under various scenarios:
+// 1. Normal non-vesting account:
+//   - The account has no locked coins so that the full balance is spendable.
+//
+// 2. Vesting account with partial unlock:
+//   - After advancing time to mid-vesting, part of the total coins are locked.
+//     The spendable coins are calculated as total minus locked coins.
+//
+// 3. Vesting account with mixed locked and unlocked coins:
+//   - Some denominations are over-locked (resulting in a negative subtraction) so that those
+//     denominations yield a zero spendable amount, while others return the positive unlocked value.
+//
+// 4. Vesting account with all coins locked:
+//   - When vesting has not started (all coins locked), the spendable coins are zero.
 func (suite *KeeperTestSuite) TestSpendableCoins() {
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	require := suite.Require()
 	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
+	// Case 1: Normal non-vesting account with full spendable balance.
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	lockedCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
@@ -1538,12 +1553,50 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 	suite.mockSpendableCoins(ctx, acc1)
 	require.Equal(origCoins[0], suite.bankKeeper.SpendableCoin(ctx, accAddrs[1], "stake"))
 
+	// Case 2: Vesting account with partial unlock.
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	suite.mockSpendableCoins(ctx, vacc)
 	require.Equal(origCoins.Sub(lockedCoins...), suite.bankKeeper.SpendableCoins(ctx, accAddrs[0]))
 
 	suite.mockSpendableCoins(ctx, vacc)
 	require.Equal(origCoins.Sub(lockedCoins...)[0], suite.bankKeeper.SpendableCoin(ctx, accAddrs[0], "stake"))
+
+	// Case 3: Vesting account with mixed locked and unlocked coins.
+	acc2 := authtypes.NewBaseAccountWithAddress(accAddrs[2])
+	lockedCoins2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 50), sdk.NewInt64Coin("tarp", 40), sdk.NewInt64Coin("rope", 30))
+	balanceCoins2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 49), sdk.NewInt64Coin("tarp", 40), sdk.NewInt64Coin("rope", 31), sdk.NewInt64Coin("pole", 20))
+	expCoins2 := sdk.NewCoins(sdk.NewInt64Coin("rope", 1), sdk.NewInt64Coin("pole", 20))
+	vacc2, err := vesting.NewPermanentLockedAccount(acc2, lockedCoins2)
+	suite.Require().NoError(err)
+
+	// Go back to the suite's context since mockFundAccount uses that; FundAccount would fail for bad mocking otherwise.
+	ctx = sdk.UnwrapSDKContext(suite.ctx)
+	suite.mockFundAccount(accAddrs[2])
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[2], balanceCoins2))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(expCoins2, suite.bankKeeper.SpendableCoins(ctx, accAddrs[2]))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("stake", 0), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "stake"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("tarp", 0), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "tarp"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("rope", 1), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "rope"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("pole", 20), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "pole"))
+
+	// Case 4: All coins locked.
+	// Create a vesting account that has not started vesting yet (all coins locked).
+	acc3 := authtypes.NewBaseAccountWithAddress(accAddrs[3])
+	// Set vesting start to one hour in the future so that all coins are locked.
+	futureStart := now.Add(1 * time.Hour)
+	futureEnd := futureStart.Add(24 * time.Hour)
+	vaccAllLocked, err := vesting.NewContinuousVestingAccount(acc3, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), futureStart.Unix(), futureEnd.Unix())
+	suite.Require().NoError(err)
+	suite.mockFundAccount(accAddrs[3])
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[3], sdk.NewCoins(sdk.NewInt64Coin("stake", 50))))
+	// Since vesting has not started, all coins remain locked and spendable coins should be zero.
+	suite.mockSpendableCoins(ctx, vaccAllLocked)
+	require.Equal(sdk.NewCoins(), suite.bankKeeper.SpendableCoins(ctx, accAddrs[3]))
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountSend() {

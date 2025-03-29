@@ -190,11 +190,34 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 	return sdk.NewCoins()
 }
 
-// SpendableCoins returns the total balances of spendable coins for an account
-// by address. If the account has no spendable coins, an empty Coins slice is
-// returned.
+// SpendableCoins returns the total balances of spendable coins (i.e. unlocked) for an account by address.
+// It works as follows:
+//  1. It retrieves the total balance (all coins) for the account.
+//  2. It gets the set of locked coins (coins that are not spendable, e.g. due to vesting).
+//  3. If there are no locked coins, it returns the total balance as all coins are spendable.
+//  4. Otherwise, it attempts to subtract the locked coins from the total balance using SafeSub.
+//     - If SafeSub does not produce any negative values, the result (unlocked coins) is returned.
+//     - If subtraction results in any negative values for a denomination (i.e. there are more locked coins than available in that denom),
+//     then for that denomination the spendable amount is considered to be zero. In this case, the function iterates over each coin in the
+//     unlocked result and includes only those coins with a positive amount in the final spendable coins set.
 func (k BaseViewKeeper) SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
-	spendable, _ := k.spendableCoins(ctx, addr)
+	total := k.GetAllBalances(ctx, addr)
+	allLocked := k.LockedCoins(ctx, addr)
+	if allLocked.IsZero() {
+		return total
+	}
+
+	unlocked, hasNeg := total.SafeSub(allLocked...)
+	if !hasNeg {
+		return unlocked
+	}
+
+	spendable := sdk.Coins{}
+	for _, coin := range unlocked {
+		if coin.IsPositive() {
+			spendable = append(spendable, coin)
+		}
+	}
 	return spendable
 }
 
@@ -203,23 +226,14 @@ func (k BaseViewKeeper) SpendableCoins(ctx context.Context, addr sdk.AccAddress)
 // is returned.
 func (k BaseViewKeeper) SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	balance := k.GetBalance(ctx, addr, denom)
-	locked := k.LockedCoins(ctx, addr)
-	return balance.SubAmount(locked.AmountOf(denom))
-}
-
-// spendableCoins returns the coins the given address can spend alongside the total amount of coins it holds.
-// It exists for gas efficiency, in order to avoid to have to get balance multiple times.
-func (k BaseViewKeeper) spendableCoins(ctx context.Context, addr sdk.AccAddress) (spendable, total sdk.Coins) {
-	total = k.GetAllBalances(ctx, addr)
-	locked := k.LockedCoins(ctx, addr)
-
-	spendable, hasNeg := total.SafeSub(locked...)
-	if hasNeg {
-		spendable = sdk.NewCoins()
-		return
+	lockedAmt := k.LockedCoins(ctx, addr).AmountOf(denom)
+	if !lockedAmt.IsPositive() {
+		return balance
 	}
-
-	return
+	if lockedAmt.LT(balance.Amount) {
+		return balance.SubAmount(lockedAmt)
+	}
+	return sdk.NewCoin(denom, math.ZeroInt())
 }
 
 // ValidateBalance validates all balances for a given account address returning

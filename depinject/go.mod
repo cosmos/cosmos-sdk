@@ -23,7 +23,7 @@ require (
 require (
 	cosmossdk.io/api v0.7.6 // indirect
 	cosmossdk.io/core v0.11.0 // indirect
-	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/x/tx v0.13.7 // indirect
 	github.com/cometbft/cometbft v0.38.17 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -41,7 +41,7 @@ require (
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250218202821-56aae31c358a // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

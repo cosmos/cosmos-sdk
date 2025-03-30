@@ -93,7 +93,7 @@ type Config struct {
 
 	// Otlp Exporter fields
 	OtlpExporterEnabled   bool          `mapstructure:"otlp-exporter-enabled"`
-	OtlpCollectorGrpcAddr string        `mapstructure:"otlp-collector-grpc-addr"`
+	OtlpCollectorHttpAddr string        `mapstructure:"otlp-collector-http-addr"`
 	PrometheusEndpoint    string        `mapstructure:"prometheus-endpoint"`
 	OtlpServiceName       string        `mapstructure:"otlp-service-name"`
 	OtlpPushInterval      time.Duration `mapstructure:"otlp-push-interval"`

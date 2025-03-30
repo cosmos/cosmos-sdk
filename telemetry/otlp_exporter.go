@@ -11,7 +11,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	otmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -23,9 +23,9 @@ const meterName = "cosmos-sdk-otlp-exporter"
 func StartOtlpExporter(cfg Config) {
 	ctx := context.Background()
 
-	exporter, err := otlpmetricgrpc.New(ctx,
-		otlpmetricgrpc.WithEndpoint(cfg.OtlpCollectorGrpcAddr),
-		otlpmetricgrpc.WithInsecure(),
+	exporter, err := otlpmetrichttp.New(ctx,
+		otlpmetrichttp.WithEndpoint(cfg.OtlpCollectorHttpAddr),
+		otlpmetrichttp.WithInsecure(),
 	)
 	if err != nil {
 		log.Fatalf("OTLP exporter setup failed: %v", err)

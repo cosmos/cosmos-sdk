@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"math"
@@ -24,8 +25,11 @@ func StartOtlpExporter(cfg Config) {
 	ctx := context.Background()
 
 	exporter, err := otlpmetrichttp.New(ctx,
-		otlpmetrichttp.WithEndpoint(cfg.OtlpCollectorHttpAddr),
-		otlpmetrichttp.WithInsecure(),
+		otlpmetrichttp.WithEndpoint(cfg.OtlpCollectorEndpoint),
+		otlpmetrichttp.WithURLPath(cfg.OtlpCollectorMetricsURLPath),
+		otlpmetrichttp.WithHeaders(map[string]string{
+			"Authorization": "Basic " + formatBasicAuth(cfg.OtlpUser, cfg.OtlpToken),
+		}),
 	)
 	if err != nil {
 		log.Fatalf("OTLP exporter setup failed: %v", err)
@@ -159,4 +163,9 @@ func recordSummary(ctx context.Context, meter otmetric.Meter, gauges map[string]
 		}
 		recordGauge(ctx, meter, gauges, name, help+" (summary quantile)", q.GetValue(), attrs)
 	}
+}
+
+func formatBasicAuth(username, token string) string {
+	auth := username + ":" + token
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }

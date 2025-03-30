@@ -92,10 +92,13 @@ type Config struct {
 	DatadogHostname string `mapstructure:"datadog-hostname"`
 
 	// Otlp Exporter fields
-	OtlpExporterEnabled   bool          `mapstructure:"otlp-exporter-enabled"`
-	OtlpCollectorHttpAddr string        `mapstructure:"otlp-collector-http-addr"`
-	OtlpServiceName       string        `mapstructure:"otlp-service-name"`
-	OtlpPushInterval      time.Duration `mapstructure:"otlp-push-interval"`
+	OtlpExporterEnabled         bool          `mapstructure:"otlp-exporter-enabled"`
+	OtlpCollectorEndpoint       string        `mapstructure:"otlp-collector-endpoint"`
+	OtlpCollectorMetricsURLPath string        `mapstructure:"otlp-collector-metrics-url-path"`
+	OtlpUser                    string        `mapstructure:"otlp-user"`
+	OtlpToken                   string        `mapstructure:"otlp-token"`
+	OtlpServiceName             string        `mapstructure:"otlp-service-name"`
+	OtlpPushInterval            time.Duration `mapstructure:"otlp-push-interval"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows

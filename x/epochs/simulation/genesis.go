@@ -5,12 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	"cosmossdk.io/x/epochs/types"
-
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
-// GenCommunityTax randomized CommunityTax
+// GenDuration randomized GenDuration
 func GenDuration(r *rand.Rand) time.Duration {
 	return time.Hour * time.Duration(r.Intn(168)+1) // between 1 hour to 1 week
 }

@@ -1,19 +1,20 @@
 package genutil
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
-	bankexported "cosmossdk.io/x/bank/exported"
-	stakingtypes "cosmossdk.io/x/staking/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+
+	"cosmossdk.io/core/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SetGenTxsInAppGenesisState - sets the genesis transactions in the app genesis state
@@ -40,7 +41,7 @@ func SetGenTxsInAppGenesisState(
 // balance in the set of genesis accounts.
 func ValidateAccountInGenesis(
 	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
-	addr string, coins sdk.Coins, cdc codec.JSONCodec,
+	addr sdk.Address, coins sdk.Coins, cdc codec.JSONCodec,
 ) error {
 	var stakingData stakingtypes.GenesisState
 	cdc.MustUnmarshalJSON(appGenesisState[stakingtypes.ModuleName], &stakingData)
@@ -55,7 +56,7 @@ func ValidateAccountInGenesis(
 			accAddress := bal.GetAddress()
 			accCoins := bal.GetCoins()
 			// ensure that account is in genesis
-			if strings.EqualFold(accAddress, addr) {
+			if strings.EqualFold(accAddress, addr.String()) {
 				// ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(
@@ -88,12 +89,11 @@ func ValidateAccountInGenesis(
 // DeliverGenTxs iterates over all genesis txs, decodes each into a Tx and
 // invokes the provided deliverTxfn with the decoded Tx. It returns the result
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
-// NOTE: This isn't used in server/v2 applications.
 func DeliverGenTxs(
-	ctx context.Context, genTxs []json.RawMessage,
-	stakingKeeper types.StakingKeeper, deliverTx TxHandler,
+	ctx sdk.Context, genTxs []json.RawMessage,
+	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
-) ([]module.ValidatorUpdate, error) {
+) ([]abci.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {

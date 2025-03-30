@@ -1,9 +1,8 @@
 syntax = "proto3";
 package cosmos.base.query.v1beta1;
 
-import "cosmos_proto/cosmos.proto";
-
 option go_package = "github.com/cosmos/cosmos-sdk/types/query";
+import "cosmos_proto/cosmos.proto";
 
 // PageRequest is to be embedded in gRPC request messages for efficient
 // pagination. Ex:

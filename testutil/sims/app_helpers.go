@@ -2,31 +2,31 @@ package sims
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/core/server"
-	corestore "cosmossdk.io/core/store"
-	coretesting "cosmossdk.io/core/testing"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
-	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const DefaultGenTxGas = 10000000
@@ -34,9 +34,6 @@ const DefaultGenTxGas = 10000000
 // DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
-	Version: &cmtproto.VersionParams{
-		App: 1,
-	},
 	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   100_000_000,
@@ -49,7 +46,6 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
 			cmttypes.ABCIPubKeyTypeEd25519,
-			cmttypes.ABCIPubKeyTypeSecp256k1,
 		},
 	},
 }
@@ -83,7 +79,7 @@ type StartupConfig struct {
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
-	DB              corestore.KVStoreWithBatch
+	DB              dbm.DB
 }
 
 func DefaultStartUpConfig() StartupConfig {
@@ -94,7 +90,7 @@ func DefaultStartUpConfig() StartupConfig {
 		ValidatorSet:    CreateRandomValidatorSet,
 		AtGenesis:       false,
 		GenesisAccounts: []GenesisAccount{ga},
-		DB:              coretesting.NewMemDB(),
+		DB:              dbm.NewMemDB(),
 	}
 }
 
@@ -114,7 +110,7 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 
 // NextBlock starts a new block.
 func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.Context, error) {
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
 	if err != nil {
 		return sdk.Context{}, err
 	}
@@ -129,7 +125,10 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 	header.Time = newBlockTime
 	header.Height++
 
-	newCtx := app.BaseApp.NewUncachedContext(false, header)
+	newCtx := app.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
 
 	return newCtx, nil
 }
@@ -161,7 +160,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// create validator set
 	valSet, err := startupConfig.ValidatorSet()
 	if err != nil {
-		return nil, errors.New("failed to create validator set")
+		return nil, fmt.Errorf("failed to create validator set")
 	}
 
 	var (
@@ -185,7 +184,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain will set the validator set and initialize the genesis accounts
-	_, err = app.InitChain(&abci.InitChainRequest{
+	_, err = app.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
@@ -196,7 +195,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
-		_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
 			NextValidatorsHash: valSet.Hash(),
 		})
@@ -272,7 +271,7 @@ func GenesisStateWithValSet(
 	// add bonded amount to bonded pool module account
 	balances = append(balances, banktypes.Balance{
 		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt.MulRaw(int64(len(delegations))))},
+		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
 	})
 
 	// update total supply
@@ -282,19 +281,12 @@ func GenesisStateWithValSet(
 	return genesisState, nil
 }
 
-var _ server.DynamicConfig = EmptyAppOptions{}
-
 // EmptyAppOptions is a stub implementing AppOptions
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
-}
-
-// GetString implements AppOptions
-func (ao EmptyAppOptions) GetString(o string) string {
-	return ""
 }
 
 // AppOptionsMap is a stub implementing AppOptions which can get data from a map
@@ -309,11 +301,8 @@ func (m AppOptionsMap) Get(key string) interface{} {
 	return v
 }
 
-func (m AppOptionsMap) GetString(key string) string {
-	v, ok := m[key]
-	if !ok {
-		return ""
+func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
+	return AppOptionsMap{
+		flags.FlagHome: homePath,
 	}
-
-	return v.(string)
 }

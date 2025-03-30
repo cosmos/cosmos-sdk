@@ -38,6 +38,7 @@ const (
 // Query defines the gRPC querier service.
 type QueryClient interface {
 	// Accounts returns all the existing accounts.
+	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
@@ -176,6 +177,7 @@ func (c *queryClient) AccountInfo(ctx context.Context, in *QueryAccountInfoReque
 // Query defines the gRPC querier service.
 type QueryServer interface {
 	// Accounts returns all the existing accounts.
+	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
 	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)

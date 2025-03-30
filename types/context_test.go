@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/core/comet"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -18,8 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
 )
-
-type dummyCtxKey struct{}
 
 type contextTestSuite struct {
 	suite.Suite
@@ -86,6 +84,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	ctrl := gomock.NewController(s.T())
 	s.T().Cleanup(ctrl.Finish)
 
+	header := cmtproto.Header{}
 	height := int64(1)
 	chainid := "chainid"
 	ischeck := true
@@ -98,8 +97,8 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	headerHash := []byte("headerHash")
 	zeroGasCfg := storetypes.GasConfig{}
 
-	ctx = types.NewContext(nil, ischeck, logger)
-	s.Require().Equal(cmtproto.Header{}, ctx.BlockHeader())
+	ctx = types.NewContext(nil, header, ischeck, logger)
+	s.Require().Equal(header, ctx.BlockHeader())
 
 	ctx = ctx.
 		WithBlockHeight(height).
@@ -140,7 +139,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), dummyCtxKey{}, "value")
+	newContext := context.WithValue(ctx.Context(), struct{}{}, "value") //nolint:staticcheck // this is fine for testing
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
@@ -149,17 +148,28 @@ func (s *contextTestSuite) TestContextHeader() {
 	var ctx types.Context
 
 	height := int64(5)
+	time := time.Now()
 	addr := secp256k1.GenPrivKey().PubKey().Address()
 	proposer := types.ConsAddress(addr)
 
-	ctx = types.NewContext(nil, false, nil)
+	ctx = types.NewContext(nil, cmtproto.Header{}, false, nil)
 
 	ctx = ctx.
 		WithBlockHeight(height).
+		WithBlockTime(time).
 		WithProposer(proposer)
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(height, ctx.BlockHeader().Height)
+	s.Require().Equal(time.UTC(), ctx.BlockHeader().Time)
 	s.Require().Equal(proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
+}
+
+func (s *contextTestSuite) TestWithBlockTime() {
+	now := time.Now()
+	ctx := types.NewContext(nil, cmtproto.Header{}, false, nil)
+	ctx = ctx.WithBlockTime(now)
+	cmttime2 := cmttime.Canonical(now)
+	s.Require().Equal(ctx.BlockTime(), cmttime2)
 }
 
 func (s *contextTestSuite) TestContextHeaderClone() {
@@ -204,21 +214,21 @@ func (s *contextTestSuite) TestContextHeaderClone() {
 
 	for name, tc := range cases {
 		s.T().Run(name, func(t *testing.T) {
-			ctx := types.NewContext(nil, false, nil).WithBlockHeader(tc.h)
+			ctx := types.NewContext(nil, tc.h, false, nil)
 			s.Require().Equal(tc.h.Height, ctx.BlockHeight())
-			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockHeader().Time)
+			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
 
 			// update only changes one field
 			var newHeight int64 = 17
 			ctx = ctx.WithBlockHeight(newHeight)
 			s.Require().Equal(newHeight, ctx.BlockHeight())
-			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockHeader().Time)
+			s.Require().Equal(tc.h.Time.UTC(), ctx.BlockTime())
 		})
 	}
 }
 
 func (s *contextTestSuite) TestUnwrapSDKContext() {
-	sdkCtx := types.NewContext(nil, false, nil)
+	sdkCtx := types.NewContext(nil, cmtproto.Header{}, false, nil)
 	ctx := types.WrapSDKContext(sdkCtx)
 	sdkCtx2 := types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
@@ -227,124 +237,7 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
 
 	// test unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, dummyCtxKey{}, "bar")
+	ctx = context.WithValue(sdkCtx, struct{}{}, "bar") //nolint:staticcheck // this is fine for testing
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
-}
-
-func (s *contextTestSuite) TestTryUnwrapSDKContext() {
-	sdkCtx := types.NewContext(nil, false, nil)
-	ctx := types.WrapSDKContext(sdkCtx)
-	unwrappedCtx, ok := types.TryUnwrapSDKContext(ctx)
-	s.Require().True(ok)
-	s.Require().Equal(sdkCtx, unwrappedCtx)
-
-	// test case where context doesn't have sdk.Context
-	ctxWithoutSDK := context.Background()
-	unwrappedCtx, ok = types.TryUnwrapSDKContext(ctxWithoutSDK)
-	s.Require().False(ok)
-	s.Require().Equal(types.Context{}, unwrappedCtx)
-
-	// test try unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, dummyCtxKey{}, "bar")
-	unwrappedCtx, ok = types.TryUnwrapSDKContext(ctx)
-	s.Require().True(ok)
-	s.Require().Equal(sdkCtx, unwrappedCtx)
-}
-
-func (s *contextTestSuite) TestToSDKEvidence() {
-	misbehaviors := []abci.Misbehavior{
-		{
-			Type:             abci.MisbehaviorType(1),
-			Height:           100,
-			Time:             time.Now(),
-			TotalVotingPower: 10,
-			Validator: abci.Validator{
-				Address: []byte("address1"),
-				Power:   5,
-			},
-		},
-	}
-
-	expEvidences := []comet.Evidence{
-		{
-			Type:             comet.MisbehaviorType(1),
-			Height:           100,
-			Time:             misbehaviors[0].Time,
-			TotalVotingPower: 10,
-			Validator: comet.Validator{
-				Address: []byte("address1"),
-				Power:   5,
-			},
-		},
-	}
-
-	// test ToSDKEvidence method
-	evidence := types.ToSDKEvidence(misbehaviors)
-	s.Require().Len(evidence, len(misbehaviors))
-	s.Require().Equal(expEvidences, evidence)
-}
-
-func (s *contextTestSuite) TestToSDKCommitInfo() {
-	commitInfo := abci.CommitInfo{
-		Round: 1,
-		Votes: []abci.VoteInfo{
-			{
-				Validator: abci.Validator{
-					Address: []byte("address1"),
-					Power:   5,
-				},
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
-			},
-		},
-	}
-
-	expCommit := comet.CommitInfo{
-		Round: 1,
-		Votes: []comet.VoteInfo{
-			{
-				Validator: comet.Validator{
-					Address: []byte("address1"),
-					Power:   5,
-				},
-				BlockIDFlag: comet.BlockIDFlagCommit,
-			},
-		},
-	}
-
-	// test ToSDKCommitInfo method
-	commit := types.ToSDKCommitInfo(commitInfo)
-	s.Require().Equal(expCommit, commit)
-}
-
-func (s *contextTestSuite) TestToSDKExtendedCommitInfo() {
-	extendedCommitInfo := abci.ExtendedCommitInfo{
-		Round: 1,
-		Votes: []abci.ExtendedVoteInfo{
-			{
-				Validator: abci.Validator{
-					Address: []byte("address1"),
-					Power:   5,
-				},
-				BlockIdFlag: cmtproto.BlockIDFlagCommit,
-			},
-		},
-	}
-
-	expCommitInfo := comet.CommitInfo{
-		Round: 1,
-		Votes: []comet.VoteInfo{
-			{
-				Validator: comet.Validator{
-					Address: []byte("address1"),
-					Power:   5,
-				},
-				BlockIDFlag: comet.BlockIDFlagCommit,
-			},
-		},
-	}
-
-	// test ToSDKExtendedCommitInfo
-	commitInfo := types.ToSDKExtendedCommitInfo(extendedCommitInfo)
-	s.Require().Equal(expCommitInfo, commitInfo)
 }

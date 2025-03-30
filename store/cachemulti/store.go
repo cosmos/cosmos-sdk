@@ -3,8 +3,10 @@ package cachemulti
 import (
 	"fmt"
 	"io"
+	"maps"
 
-	corestore "cosmossdk.io/core/store"
+	dbm "github.com/cosmos/cosmos-db"
+
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/tracekv"
@@ -65,7 +67,7 @@ func NewFromKVStore(
 // NewStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects. Each CacheWrapper store is a branched store.
 func NewStore(
-	db corestore.KVStoreWithBatch, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
+	db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
 	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext)
@@ -93,9 +95,7 @@ func (cms Store) SetTracer(w io.Writer) types.MultiStore {
 // necessary between tracing operations. It returns a modified MultiStore.
 func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 	if cms.traceContext != nil {
-		for k, v := range tc {
-			cms.traceContext[k] = v
-		}
+		maps.Copy(cms.traceContext, tc)
 	} else {
 		cms.traceContext = tc
 	}

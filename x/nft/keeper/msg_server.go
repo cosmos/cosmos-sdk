@@ -7,13 +7,14 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ nft.MsgServer = Keeper{}
 
 // Send implements Send method of the types.MsgServer.
-func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
+func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
 	if len(msg.ClassId) == 0 {
 		return nil, nft.ErrEmptyClassID
 	}
@@ -32,6 +33,7 @@ func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespons
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid receiver address (%s)", msg.Receiver)
 	}
 
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner := k.GetOwner(ctx, msg.ClassId, msg.Id)
 	if !bytes.Equal(owner, sender) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of nft %s", msg.Sender, msg.Id)
@@ -41,14 +43,11 @@ func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespons
 		return nil, err
 	}
 
-	if err = k.EventService.EventManager(ctx).Emit(&nft.EventSend{
+	err = ctx.EventManager().EmitTypedEvent(&nft.EventSend{
 		ClassId:  msg.ClassId,
 		Id:       msg.Id,
 		Sender:   msg.Sender,
 		Receiver: msg.Receiver,
-	}); err != nil {
-		return nil, err
-	}
-
-	return &nft.MsgSendResponse{}, nil
+	})
+	return &nft.MsgSendResponse{}, err
 }

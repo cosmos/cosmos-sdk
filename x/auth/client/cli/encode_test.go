@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -17,7 +16,7 @@ import (
 )
 
 func TestGetCommandEncode(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	txConfig := encodingConfig.TxConfig
 	cdc := encodingConfig.Codec
 
@@ -47,7 +46,7 @@ func TestGetCommandEncode(t *testing.T) {
 }
 
 func TestGetCommandDecode(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	txConfig := encodingConfig.TxConfig
 	cdc := encodingConfig.Codec
 

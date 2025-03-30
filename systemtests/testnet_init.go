@@ -13,10 +13,48 @@ import (
 	"github.com/creachadair/tomledit/parser"
 )
 
-// IsV2 checks if the tests run with simapp v2
-func IsV2() bool {
-	buildOptions := os.Getenv("COSMOS_BUILD_OPTIONS")
-	return strings.Contains(buildOptions, "v2")
+type LegacySingleNode struct {
+	execBinary  string
+	workDir     string
+	chainID     string
+	outputDir   string
+	minGasPrice string
+	log         func(string)
+}
+
+// NewLegacySingleNodeInitializer constructor
+func NewLegacySingleNodeInitializer(
+	execBinary, workDir, chainID, outputDir string,
+	minGasPrice string,
+	log func(string),
+) *LegacySingleNode {
+	return &LegacySingleNode{
+		execBinary:  execBinary,
+		workDir:     workDir,
+		chainID:     chainID,
+		outputDir:   outputDir,
+		minGasPrice: minGasPrice,
+		log:         log,
+	}
+}
+
+func (s LegacySingleNode) Initialize() {
+	args := []string{
+		"testnet",
+		"init-files",
+		"--chain-id=" + s.chainID,
+		"--output-dir=" + s.outputDir,
+		"--v=1",
+		"--keyring-backend=test",
+		"--minimum-gas-prices=" + s.minGasPrice,
+	}
+
+	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
+	out, err := RunShellCmd(s.execBinary, args...)
+	if err != nil {
+		panic(err)
+	}
+	s.log(out)
 }
 
 // SingleHostTestnetCmdInitializer default testnet cmd that supports the --single-host param
@@ -51,6 +89,10 @@ func NewSingleHostTestnetCmdInitializer(
 	}
 }
 
+func LegacyInitializerWithBinary(binary string, sut *SystemUnderTest) TestnetInitializer {
+	return NewLegacySingleNodeInitializer(binary, WorkDir, sut.chainID, sut.outputDir, sut.minGasPrice, sut.Log)
+}
+
 // InitializerWithBinary creates new SingleHostTestnetCmdInitializer from sut with given binary
 func InitializerWithBinary(binary string, sut *SystemUnderTest) TestnetInitializer {
 	return NewSingleHostTestnetCmdInitializer(
@@ -75,12 +117,7 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 		"--keyring-backend=test",
 		"--commit-timeout=" + s.commitTimeout.String(),
 		"--single-host",
-	}
-
-	if IsV2() {
-		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
-	} else {
-		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
+		"--minimum-gas-prices=" + s.minGasPrice,
 	}
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
@@ -127,12 +164,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		"--output-dir=" + s.outputDir,
 		"--v=" + strconv.Itoa(s.initialNodesCount),
 		"--keyring-backend=test",
-	}
-
-	if IsV2() {
-		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
-	} else {
-		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
+		"--minimum-gas-prices=" + s.minGasPrice,
 	}
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))

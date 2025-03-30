@@ -46,7 +46,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 			}),
 			reporter:              func() SimulationReporter { return NewBasicSimulationReporter() },
 			deliveryResultHandler: noopResultHandler,
-			expOps:                simtypes.NewOperationMsgBasic("", "", "", true),
+			expOps:                simtypes.NewOperationMsgBasic("", "", "", true, []byte{}),
 		},
 		"error delivery": {
 			app: SimDeliverFn(func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -54,7 +54,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 			}),
 			reporter:              func() SimulationReporter { return NewBasicSimulationReporter() },
 			deliveryResultHandler: noopResultHandler,
-			expOps:                simtypes.NewOperationMsgBasic("", "", "delivering tx with msgs: &testdata.TestMsg{Signers:[]string{\"cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3\"}, DecField:0.000000000000000000}", false),
+			expOps:                simtypes.NewOperationMsgBasic("", "", "delivering tx with msgs: &testdata.TestMsg{Signers:[]string{\"cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3\"}}", false, []byte{}),
 		},
 		"error delivery handled": {
 			app: SimDeliverFn(func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -62,7 +62,7 @@ func TestDeliverSimsMsg(t *testing.T) {
 			}),
 			reporter:              func() SimulationReporter { return NewBasicSimulationReporter() },
 			deliveryResultHandler: func(err error) error { return nil },
-			expOps:                simtypes.NewOperationMsgBasic("", "", "", true),
+			expOps:                simtypes.NewOperationMsgBasic("", "", "", true, []byte{}),
 		},
 	}
 	for name, spec := range specs {

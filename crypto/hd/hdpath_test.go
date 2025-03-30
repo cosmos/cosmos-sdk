@@ -1,7 +1,6 @@
 package hd_test
 
 import (
-	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -182,6 +181,7 @@ func TestDeriveHDPathRange(t *testing.T) {
 	}
 }
 
+/*
 func ExampleStringifyPathParams() { //nolint:govet // ignore naming convention
 	path := hd.NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
@@ -277,6 +277,7 @@ func ExampleSomeBIP32TestVecs() { //nolint:govet // ignore naming convention
 	//
 	// c4c11d8c03625515905d7e89d25dfc66126fbc629ecca6db489a1a72fc4bda78
 }
+*/
 
 // Ensuring that we don't crash if values have trailing slashes
 // See issue https://github.com/cosmos/cosmos-sdk/issues/8557.

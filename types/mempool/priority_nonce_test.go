@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
@@ -85,7 +86,7 @@ func (a signerExtractionAdapter) GetSigners(tx sdk.Tx) ([]mempool.SignerData, er
 
 func (s *MempoolTestSuite) TestPriorityNonceTxOrderWithAdapter() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -144,7 +145,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrderWithAdapter() {
 
 func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -343,7 +344,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 
 func (s *MempoolTestSuite) TestIterator() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -399,7 +400,7 @@ func (s *MempoolTestSuite) TestIterator() {
 
 func (s *MempoolTestSuite) TestIteratorConcurrency() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -481,7 +482,7 @@ func (s *MempoolTestSuite) TestIteratorConcurrency() {
 }
 
 func (s *MempoolTestSuite) TestPriorityTies() {
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -584,6 +585,7 @@ func validateOrder(mtxs []sdk.Tx) error {
 			}
 		}
 	}
+	// fmt.Printf("validation in iterations: %d\n", iterations)
 	return nil
 }
 
@@ -600,7 +602,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	)
 
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
 
 	t.Logf("running with seed: %d", seed)
@@ -636,7 +638,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	s.mempool = mempool.DefaultPriorityMempool()
 
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 
 	seed := time.Now().UnixNano()
 	// interesting failing seeds:
@@ -809,7 +811,7 @@ func TestTxOrderN(t *testing.T) {
 
 func TestPriorityNonceMempool_NextSenderTx(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accA := accounts[0].Address
 	accB := accounts[1].Address
 
@@ -839,7 +841,7 @@ func TestPriorityNonceMempool_NextSenderTx(t *testing.T) {
 
 func TestNextSenderTx_TxLimit(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	sa := accounts[0].Address
 	sb := accounts[1].Address
 
@@ -915,7 +917,7 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 
 func TestNextSenderTx_TxReplacement(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	sa := accounts[0].Address
 
 	txs := []testTx{
@@ -972,7 +974,7 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 }
 
 func TestPriorityNonceMempool_UnorderedTx(t *testing.T) {
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
 	sa := accounts[0].Address
 	sb := accounts[1].Address

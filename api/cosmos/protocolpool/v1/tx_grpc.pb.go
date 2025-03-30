@@ -19,14 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_FundCommunityPool_FullMethodName      = "/cosmos.protocolpool.v1.Msg/FundCommunityPool"
-	Msg_CommunityPoolSpend_FullMethodName     = "/cosmos.protocolpool.v1.Msg/CommunityPoolSpend"
-	Msg_SubmitBudgetProposal_FullMethodName   = "/cosmos.protocolpool.v1.Msg/SubmitBudgetProposal"
-	Msg_ClaimBudget_FullMethodName            = "/cosmos.protocolpool.v1.Msg/ClaimBudget"
-	Msg_CreateContinuousFund_FullMethodName   = "/cosmos.protocolpool.v1.Msg/CreateContinuousFund"
-	Msg_WithdrawContinuousFund_FullMethodName = "/cosmos.protocolpool.v1.Msg/WithdrawContinuousFund"
-	Msg_CancelContinuousFund_FullMethodName   = "/cosmos.protocolpool.v1.Msg/CancelContinuousFund"
-	Msg_UpdateParams_FullMethodName           = "/cosmos.protocolpool.v1.Msg/UpdateParams"
+	Msg_FundCommunityPool_FullMethodName    = "/cosmos.protocolpool.v1.Msg/FundCommunityPool"
+	Msg_CommunityPoolSpend_FullMethodName   = "/cosmos.protocolpool.v1.Msg/CommunityPoolSpend"
+	Msg_CreateContinuousFund_FullMethodName = "/cosmos.protocolpool.v1.Msg/CreateContinuousFund"
+	Msg_CancelContinuousFund_FullMethodName = "/cosmos.protocolpool.v1.Msg/CancelContinuousFund"
+	Msg_UpdateParams_FullMethodName         = "/cosmos.protocolpool.v1.Msg/UpdateParams"
 )
 
 // MsgClient is the client API for Msg service.
@@ -43,14 +40,11 @@ type MsgClient interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
-	// SubmitBudgetProposal defines a method to set a budget proposal.
-	SubmitBudgetProposal(ctx context.Context, in *MsgSubmitBudgetProposal, opts ...grpc.CallOption) (*MsgSubmitBudgetProposalResponse, error)
-	// ClaimBudget defines a method to claim the distributed budget.
-	ClaimBudget(ctx context.Context, in *MsgClaimBudget, opts ...grpc.CallOption) (*MsgClaimBudgetResponse, error)
-	// CreateContinuousFund defines a method to add funds continuously.
+	// CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
+	// This ContinuousFund can be indefinite or run until a given expiry time.
+	// Funds come from validator block rewards from x/distribution, but may also come from
+	// any user who funds the ProtocolPoolEscrow module account directly through x/bank.
 	CreateContinuousFund(ctx context.Context, in *MsgCreateContinuousFund, opts ...grpc.CallOption) (*MsgCreateContinuousFundResponse, error)
-	// WithdrawContinuousFund defines a method to withdraw continuous fund allocated.
-	WithdrawContinuousFund(ctx context.Context, in *MsgWithdrawContinuousFund, opts ...grpc.CallOption) (*MsgWithdrawContinuousFundResponse, error)
 	// CancelContinuousFund defines a method for cancelling continuous fund.
 	CancelContinuousFund(ctx context.Context, in *MsgCancelContinuousFund, opts ...grpc.CallOption) (*MsgCancelContinuousFundResponse, error)
 	// UpdateParams defines a governance operation for updating the x/protocolpool module parameters.
@@ -86,40 +80,10 @@ func (c *msgClient) CommunityPoolSpend(ctx context.Context, in *MsgCommunityPool
 	return out, nil
 }
 
-func (c *msgClient) SubmitBudgetProposal(ctx context.Context, in *MsgSubmitBudgetProposal, opts ...grpc.CallOption) (*MsgSubmitBudgetProposalResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgSubmitBudgetProposalResponse)
-	err := c.cc.Invoke(ctx, Msg_SubmitBudgetProposal_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) ClaimBudget(ctx context.Context, in *MsgClaimBudget, opts ...grpc.CallOption) (*MsgClaimBudgetResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgClaimBudgetResponse)
-	err := c.cc.Invoke(ctx, Msg_ClaimBudget_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) CreateContinuousFund(ctx context.Context, in *MsgCreateContinuousFund, opts ...grpc.CallOption) (*MsgCreateContinuousFundResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgCreateContinuousFundResponse)
 	err := c.cc.Invoke(ctx, Msg_CreateContinuousFund_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) WithdrawContinuousFund(ctx context.Context, in *MsgWithdrawContinuousFund, opts ...grpc.CallOption) (*MsgWithdrawContinuousFundResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgWithdrawContinuousFundResponse)
-	err := c.cc.Invoke(ctx, Msg_WithdrawContinuousFund_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -160,14 +124,11 @@ type MsgServer interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
-	// SubmitBudgetProposal defines a method to set a budget proposal.
-	SubmitBudgetProposal(context.Context, *MsgSubmitBudgetProposal) (*MsgSubmitBudgetProposalResponse, error)
-	// ClaimBudget defines a method to claim the distributed budget.
-	ClaimBudget(context.Context, *MsgClaimBudget) (*MsgClaimBudgetResponse, error)
-	// CreateContinuousFund defines a method to add funds continuously.
+	// CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
+	// This ContinuousFund can be indefinite or run until a given expiry time.
+	// Funds come from validator block rewards from x/distribution, but may also come from
+	// any user who funds the ProtocolPoolEscrow module account directly through x/bank.
 	CreateContinuousFund(context.Context, *MsgCreateContinuousFund) (*MsgCreateContinuousFundResponse, error)
-	// WithdrawContinuousFund defines a method to withdraw continuous fund allocated.
-	WithdrawContinuousFund(context.Context, *MsgWithdrawContinuousFund) (*MsgWithdrawContinuousFundResponse, error)
 	// CancelContinuousFund defines a method for cancelling continuous fund.
 	CancelContinuousFund(context.Context, *MsgCancelContinuousFund) (*MsgCancelContinuousFundResponse, error)
 	// UpdateParams defines a governance operation for updating the x/protocolpool module parameters.
@@ -189,17 +150,8 @@ func (UnimplementedMsgServer) FundCommunityPool(context.Context, *MsgFundCommuni
 func (UnimplementedMsgServer) CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPoolSpend not implemented")
 }
-func (UnimplementedMsgServer) SubmitBudgetProposal(context.Context, *MsgSubmitBudgetProposal) (*MsgSubmitBudgetProposalResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SubmitBudgetProposal not implemented")
-}
-func (UnimplementedMsgServer) ClaimBudget(context.Context, *MsgClaimBudget) (*MsgClaimBudgetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ClaimBudget not implemented")
-}
 func (UnimplementedMsgServer) CreateContinuousFund(context.Context, *MsgCreateContinuousFund) (*MsgCreateContinuousFundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContinuousFund not implemented")
-}
-func (UnimplementedMsgServer) WithdrawContinuousFund(context.Context, *MsgWithdrawContinuousFund) (*MsgWithdrawContinuousFundResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WithdrawContinuousFund not implemented")
 }
 func (UnimplementedMsgServer) CancelContinuousFund(context.Context, *MsgCancelContinuousFund) (*MsgCancelContinuousFundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelContinuousFund not implemented")
@@ -264,42 +216,6 @@ func _Msg_CommunityPoolSpend_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SubmitBudgetProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSubmitBudgetProposal)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).SubmitBudgetProposal(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_SubmitBudgetProposal_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SubmitBudgetProposal(ctx, req.(*MsgSubmitBudgetProposal))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_ClaimBudget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgClaimBudget)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).ClaimBudget(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_ClaimBudget_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ClaimBudget(ctx, req.(*MsgClaimBudget))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_CreateContinuousFund_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgCreateContinuousFund)
 	if err := dec(in); err != nil {
@@ -314,24 +230,6 @@ func _Msg_CreateContinuousFund_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateContinuousFund(ctx, req.(*MsgCreateContinuousFund))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_WithdrawContinuousFund_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawContinuousFund)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).WithdrawContinuousFund(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_WithdrawContinuousFund_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WithdrawContinuousFund(ctx, req.(*MsgWithdrawContinuousFund))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -388,20 +286,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CommunityPoolSpend_Handler,
 		},
 		{
-			MethodName: "SubmitBudgetProposal",
-			Handler:    _Msg_SubmitBudgetProposal_Handler,
-		},
-		{
-			MethodName: "ClaimBudget",
-			Handler:    _Msg_ClaimBudget_Handler,
-		},
-		{
 			MethodName: "CreateContinuousFund",
 			Handler:    _Msg_CreateContinuousFund_Handler,
-		},
-		{
-			MethodName: "WithdrawContinuousFund",
-			Handler:    _Msg_WithdrawContinuousFund_Handler,
 		},
 		{
 			MethodName: "CancelContinuousFund",

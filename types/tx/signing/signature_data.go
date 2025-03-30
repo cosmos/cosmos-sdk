@@ -1,8 +1,6 @@
 package signing
 
 import (
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -16,7 +14,7 @@ type SignatureData interface {
 // SingleSignatureData represents the signature and SignMode of a single (non-multisig) signer
 type SingleSignatureData struct {
 	// SignMode represents the SignMode of the signature
-	SignMode apisigning.SignMode
+	SignMode SignMode
 
 	// Signature is the raw signature.
 	Signature []byte

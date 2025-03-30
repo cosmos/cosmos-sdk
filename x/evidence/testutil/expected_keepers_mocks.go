@@ -14,10 +14,12 @@ import (
 	reflect "reflect"
 	time "time"
 
-	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
+	address "cosmossdk.io/core/address"
+	comet "cosmossdk.io/core/comet"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -45,11 +47,40 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 	return m.recorder
 }
 
+// ConsensusAddressCodec mocks base method.
+func (m *MockStakingKeeper) ConsensusAddressCodec() address.Codec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConsensusAddressCodec")
+	ret0, _ := ret[0].(address.Codec)
+	return ret0
+}
+
+// ConsensusAddressCodec indicates an expected call of ConsensusAddressCodec.
+func (mr *MockStakingKeeperMockRecorder) ConsensusAddressCodec() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusAddressCodec", reflect.TypeOf((*MockStakingKeeper)(nil).ConsensusAddressCodec))
+}
+
+// GetParams mocks base method.
+func (m *MockStakingKeeper) GetParams(ctx context.Context) (types1.Params, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetParams", ctx)
+	ret0, _ := ret[0].(types1.Params)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetParams indicates an expected call of GetParams.
+func (mr *MockStakingKeeperMockRecorder) GetParams(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockStakingKeeper)(nil).GetParams), ctx)
+}
+
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types0.ValidatorI, error) {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types1.ValidatorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types0.ValidatorI)
+	ret0, _ := ret[0].(types1.ValidatorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -185,7 +216,7 @@ func (mr *MockSlashingKeeperMockRecorder) SlashFractionDoubleSign(arg0 any) *gom
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 context.Context, arg1 types0.ConsAddress, arg2 math.LegacyDec, arg3, arg4 int64, arg5 stakingv1beta1.Infraction) error {
+func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 context.Context, arg1 types0.ConsAddress, arg2 math.LegacyDec, arg3, arg4 int64, arg5 types1.Infraction) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(error)
@@ -248,43 +279,106 @@ func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), ctx, acc)
 }
 
-// MockConsensusKeeper is a mock of ConsensusKeeper interface.
-type MockConsensusKeeper struct {
+// MockBankKeeper is a mock of BankKeeper interface.
+type MockBankKeeper struct {
 	ctrl     *gomock.Controller
-	recorder *MockConsensusKeeperMockRecorder
+	recorder *MockBankKeeperMockRecorder
 	isgomock struct{}
 }
 
-// MockConsensusKeeperMockRecorder is the mock recorder for MockConsensusKeeper.
-type MockConsensusKeeperMockRecorder struct {
-	mock *MockConsensusKeeper
+// MockBankKeeperMockRecorder is the mock recorder for MockBankKeeper.
+type MockBankKeeperMockRecorder struct {
+	mock *MockBankKeeper
 }
 
-// NewMockConsensusKeeper creates a new mock instance.
-func NewMockConsensusKeeper(ctrl *gomock.Controller) *MockConsensusKeeper {
-	mock := &MockConsensusKeeper{ctrl: ctrl}
-	mock.recorder = &MockConsensusKeeperMockRecorder{mock}
+// NewMockBankKeeper creates a new mock instance.
+func NewMockBankKeeper(ctrl *gomock.Controller) *MockBankKeeper {
+	mock := &MockBankKeeper{ctrl: ctrl}
+	mock.recorder = &MockBankKeeperMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
+func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
-// EvidenceParams mocks base method.
-func (m *MockConsensusKeeper) EvidenceParams(arg0 context.Context) (int64, time.Duration, uint64, error) {
+// GetAllBalances mocks base method.
+func (m *MockBankKeeper) GetAllBalances(ctx types0.Context, addr types0.AccAddress) types0.Coins {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EvidenceParams", arg0)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(time.Duration)
-	ret2, _ := ret[2].(uint64)
-	ret3, _ := ret[3].(error)
-	return ret0, ret1, ret2, ret3
+	ret := m.ctrl.Call(m, "GetAllBalances", ctx, addr)
+	ret0, _ := ret[0].(types0.Coins)
+	return ret0
 }
 
-// EvidenceParams indicates an expected call of EvidenceParams.
-func (mr *MockConsensusKeeperMockRecorder) EvidenceParams(arg0 any) *gomock.Call {
+// GetAllBalances indicates an expected call of GetAllBalances.
+func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EvidenceParams", reflect.TypeOf((*MockConsensusKeeper)(nil).EvidenceParams), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
+}
+
+// MintCoins mocks base method.
+func (m *MockBankKeeper) MintCoins(ctx types0.Context, moduleName string, amt types0.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MintCoins", ctx, moduleName, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MintCoins indicates an expected call of MintCoins.
+func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, moduleName, amt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MintCoins", reflect.TypeOf((*MockBankKeeper)(nil).MintCoins), ctx, moduleName, amt)
+}
+
+// SendCoinsFromModuleToAccount mocks base method.
+func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types0.Context, senderModule string, recipientAddr types0.AccAddress, amt types0.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoinsFromModuleToAccount", ctx, senderModule, recipientAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoinsFromModuleToAccount indicates an expected call of SendCoinsFromModuleToAccount.
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
+}
+
+// MockCometinfo is a mock of Cometinfo interface.
+type MockCometinfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockCometinfoMockRecorder
+	isgomock struct{}
+}
+
+// MockCometinfoMockRecorder is the mock recorder for MockCometinfo.
+type MockCometinfoMockRecorder struct {
+	mock *MockCometinfo
+}
+
+// NewMockCometinfo creates a new mock instance.
+func NewMockCometinfo(ctrl *gomock.Controller) *MockCometinfo {
+	mock := &MockCometinfo{ctrl: ctrl}
+	mock.recorder = &MockCometinfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCometinfo) EXPECT() *MockCometinfoMockRecorder {
+	return m.recorder
+}
+
+// GetCometBlockInfo mocks base method.
+func (m *MockCometinfo) GetCometBlockInfo(arg0 context.Context) comet.BlockInfo {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCometBlockInfo", arg0)
+	ret0, _ := ret[0].(comet.BlockInfo)
+	return ret0
+}
+
+// GetCometBlockInfo indicates an expected call of GetCometBlockInfo.
+func (mr *MockCometinfoMockRecorder) GetCometBlockInfo(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometBlockInfo", reflect.TypeOf((*MockCometinfo)(nil).GetCometBlockInfo), arg0)
 }

@@ -9,14 +9,14 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/codec"
-	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/group/errors"
-	"cosmossdk.io/x/group/internal/orm/prefixstore"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // Unique identifier of a persistent table.
@@ -116,12 +116,8 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 			return err
 		}
 
-		pStore := prefixstore.New(store, prefixKey[:])
-		bz, err := pStore.Get(rowID)
-		if err != nil {
-			return err
-		}
-
+		pStore := prefix.NewStore(store, prefixKey[:])
+		bz := pStore.Get(rowID)
 		if len(bz) == 0 {
 			return sdkerrors.ErrNotFound
 		}

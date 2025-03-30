@@ -11,8 +11,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	durationpb "google.golang.org/protobuf/types/known/durationpb"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
@@ -377,7 +375,7 @@ func (x *fastReflection_QueryCommunityPoolRequest) ProtoMethods() *protoiface.Me
 var _ protoreflect.List = (*_QueryCommunityPoolResponse_1_list)(nil)
 
 type _QueryCommunityPoolResponse_1_list struct {
-	list *[]*v1beta1.DecCoin
+	list *[]*v1beta1.Coin
 }
 
 func (x *_QueryCommunityPoolResponse_1_list) Len() int {
@@ -393,18 +391,18 @@ func (x *_QueryCommunityPoolResponse_1_list) Get(i int) protoreflect.Value {
 
 func (x *_QueryCommunityPoolResponse_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.DecCoin)
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_QueryCommunityPoolResponse_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.DecCoin)
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_QueryCommunityPoolResponse_1_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.DecCoin)
+	v := new(v1beta1.Coin)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -417,7 +415,7 @@ func (x *_QueryCommunityPoolResponse_1_list) Truncate(n int) {
 }
 
 func (x *_QueryCommunityPoolResponse_1_list) NewElement() protoreflect.Value {
-	v := new(v1beta1.DecCoin)
+	v := new(v1beta1.Coin)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -610,7 +608,7 @@ func (x *fastReflection_QueryCommunityPoolResponse) Mutable(fd protoreflect.Fiel
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.QueryCommunityPoolResponse.pool":
 		if x.Pool == nil {
-			x.Pool = []*v1beta1.DecCoin{}
+			x.Pool = []*v1beta1.Coin{}
 		}
 		value := &_QueryCommunityPoolResponse_1_list{list: &x.Pool}
 		return protoreflect.ValueOfList(value)
@@ -628,7 +626,7 @@ func (x *fastReflection_QueryCommunityPoolResponse) Mutable(fd protoreflect.Fiel
 func (x *fastReflection_QueryCommunityPoolResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.QueryCommunityPoolResponse.pool":
-		list := []*v1beta1.DecCoin{}
+		list := []*v1beta1.Coin{}
 		return protoreflect.ValueOfList(&_QueryCommunityPoolResponse_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -828,7 +826,7 @@ func (x *fastReflection_QueryCommunityPoolResponse) ProtoMethods() *protoiface.M
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Pool = append(x.Pool, &v1beta1.DecCoin{})
+				x.Pool = append(x.Pool, &v1beta1.Coin{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pool[len(x.Pool)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -869,25 +867,25 @@ func (x *fastReflection_QueryCommunityPoolResponse) ProtoMethods() *protoiface.M
 }
 
 var (
-	md_QueryUnclaimedBudgetRequest         protoreflect.MessageDescriptor
-	fd_QueryUnclaimedBudgetRequest_address protoreflect.FieldDescriptor
+	md_QueryContinuousFundRequest           protoreflect.MessageDescriptor
+	fd_QueryContinuousFundRequest_recipient protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_protocolpool_v1_query_proto_init()
-	md_QueryUnclaimedBudgetRequest = File_cosmos_protocolpool_v1_query_proto.Messages().ByName("QueryUnclaimedBudgetRequest")
-	fd_QueryUnclaimedBudgetRequest_address = md_QueryUnclaimedBudgetRequest.Fields().ByName("address")
+	md_QueryContinuousFundRequest = File_cosmos_protocolpool_v1_query_proto.Messages().ByName("QueryContinuousFundRequest")
+	fd_QueryContinuousFundRequest_recipient = md_QueryContinuousFundRequest.Fields().ByName("recipient")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryUnclaimedBudgetRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryContinuousFundRequest)(nil)
 
-type fastReflection_QueryUnclaimedBudgetRequest QueryUnclaimedBudgetRequest
+type fastReflection_QueryContinuousFundRequest QueryContinuousFundRequest
 
-func (x *QueryUnclaimedBudgetRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryUnclaimedBudgetRequest)(x)
+func (x *QueryContinuousFundRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryContinuousFundRequest)(x)
 }
 
-func (x *QueryUnclaimedBudgetRequest) slowProtoReflect() protoreflect.Message {
+func (x *QueryContinuousFundRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -899,43 +897,43 @@ func (x *QueryUnclaimedBudgetRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryUnclaimedBudgetRequest_messageType fastReflection_QueryUnclaimedBudgetRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryUnclaimedBudgetRequest_messageType{}
+var _fastReflection_QueryContinuousFundRequest_messageType fastReflection_QueryContinuousFundRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryContinuousFundRequest_messageType{}
 
-type fastReflection_QueryUnclaimedBudgetRequest_messageType struct{}
+type fastReflection_QueryContinuousFundRequest_messageType struct{}
 
-func (x fastReflection_QueryUnclaimedBudgetRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryUnclaimedBudgetRequest)(nil)
+func (x fastReflection_QueryContinuousFundRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryContinuousFundRequest)(nil)
 }
-func (x fastReflection_QueryUnclaimedBudgetRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryUnclaimedBudgetRequest)
+func (x fastReflection_QueryContinuousFundRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryContinuousFundRequest)
 }
-func (x fastReflection_QueryUnclaimedBudgetRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryUnclaimedBudgetRequest
+func (x fastReflection_QueryContinuousFundRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryContinuousFundRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryUnclaimedBudgetRequest
+func (x *fastReflection_QueryContinuousFundRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryContinuousFundRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryUnclaimedBudgetRequest_messageType
+func (x *fastReflection_QueryContinuousFundRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryContinuousFundRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryUnclaimedBudgetRequest)
+func (x *fastReflection_QueryContinuousFundRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryContinuousFundRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryUnclaimedBudgetRequest)(x)
+func (x *fastReflection_QueryContinuousFundRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryContinuousFundRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -943,10 +941,10 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) Interface() protoreflect.Pr
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Address != "" {
-		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_QueryUnclaimedBudgetRequest_address, value) {
+func (x *fastReflection_QueryContinuousFundRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Recipient != "" {
+		value := protoreflect.ValueOfString(x.Recipient)
+		if !f(fd_QueryContinuousFundRequest_recipient, value) {
 			return
 		}
 	}
@@ -963,15 +961,15 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) Range(f func(protoreflect.F
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryContinuousFundRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest.address":
-		return x.Address != ""
+	case "cosmos.protocolpool.v1.QueryContinuousFundRequest.recipient":
+		return x.Recipient != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -981,15 +979,15 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) Has(fd protoreflect.FieldDe
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryContinuousFundRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest.address":
-		x.Address = ""
+	case "cosmos.protocolpool.v1.QueryContinuousFundRequest.recipient":
+		x.Recipient = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -999,16 +997,16 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) Clear(fd protoreflect.Field
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryContinuousFundRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest.address":
-		value := x.Address
+	case "cosmos.protocolpool.v1.QueryContinuousFundRequest.recipient":
+		value := x.Recipient
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1022,15 +1020,15 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) Get(descriptor protoreflect
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryContinuousFundRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest.address":
-		x.Address = value.Interface().(string)
+	case "cosmos.protocolpool.v1.QueryContinuousFundRequest.recipient":
+		x.Recipient = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1044,40 +1042,40 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) Set(fd protoreflect.FieldDe
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryContinuousFundRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest.address":
-		panic(fmt.Errorf("field address of message cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest is not mutable"))
+	case "cosmos.protocolpool.v1.QueryContinuousFundRequest.recipient":
+		panic(fmt.Errorf("field recipient of message cosmos.protocolpool.v1.QueryContinuousFundRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryContinuousFundRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest.address":
+	case "cosmos.protocolpool.v1.QueryContinuousFundRequest.recipient":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryContinuousFundRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.QueryContinuousFundRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1085,7 +1083,7 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) WhichOneof(d protoreflect.O
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryContinuousFundRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1096,7 +1094,7 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) GetUnknown() protoreflect.R
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryContinuousFundRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1108,7 +1106,7 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) SetUnknown(fields protorefl
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) IsValid() bool {
+func (x *fastReflection_QueryContinuousFundRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -1118,9 +1116,9 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryUnclaimedBudgetRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryContinuousFundRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryUnclaimedBudgetRequest)
+		x := input.Message.Interface().(*QueryContinuousFundRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1132,7 +1130,7 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) ProtoMethods() *protoiface.
 		var n int
 		var l int
 		_ = l
-		l = len(x.Address)
+		l = len(x.Recipient)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -1146,7 +1144,7 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) ProtoMethods() *protoiface.
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryUnclaimedBudgetRequest)
+		x := input.Message.Interface().(*QueryContinuousFundRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1165,10 +1163,10 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) ProtoMethods() *protoiface.
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Address) > 0 {
-			i -= len(x.Address)
-			copy(dAtA[i:], x.Address)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Address)))
+		if len(x.Recipient) > 0 {
+			i -= len(x.Recipient)
+			copy(dAtA[i:], x.Recipient)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Recipient)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1183,7 +1181,7 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) ProtoMethods() *protoiface.
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryUnclaimedBudgetRequest)
+		x := input.Message.Interface().(*QueryContinuousFundRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1215,15 +1213,15 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) ProtoMethods() *protoiface.
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryUnclaimedBudgetRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryContinuousFundRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryUnclaimedBudgetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryContinuousFundRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -1251,7 +1249,7 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) ProtoMethods() *protoiface.
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Address = string(dAtA[iNdEx:postIndex])
+				x.Recipient = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -1289,33 +1287,25 @@ func (x *fastReflection_QueryUnclaimedBudgetRequest) ProtoMethods() *protoiface.
 }
 
 var (
-	md_QueryUnclaimedBudgetResponse                  protoreflect.MessageDescriptor
-	fd_QueryUnclaimedBudgetResponse_claimed_amount   protoreflect.FieldDescriptor
-	fd_QueryUnclaimedBudgetResponse_unclaimed_amount protoreflect.FieldDescriptor
-	fd_QueryUnclaimedBudgetResponse_next_claim_from  protoreflect.FieldDescriptor
-	fd_QueryUnclaimedBudgetResponse_period           protoreflect.FieldDescriptor
-	fd_QueryUnclaimedBudgetResponse_tranches_left    protoreflect.FieldDescriptor
+	md_QueryContinuousFundResponse                 protoreflect.MessageDescriptor
+	fd_QueryContinuousFundResponse_continuous_fund protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_protocolpool_v1_query_proto_init()
-	md_QueryUnclaimedBudgetResponse = File_cosmos_protocolpool_v1_query_proto.Messages().ByName("QueryUnclaimedBudgetResponse")
-	fd_QueryUnclaimedBudgetResponse_claimed_amount = md_QueryUnclaimedBudgetResponse.Fields().ByName("claimed_amount")
-	fd_QueryUnclaimedBudgetResponse_unclaimed_amount = md_QueryUnclaimedBudgetResponse.Fields().ByName("unclaimed_amount")
-	fd_QueryUnclaimedBudgetResponse_next_claim_from = md_QueryUnclaimedBudgetResponse.Fields().ByName("next_claim_from")
-	fd_QueryUnclaimedBudgetResponse_period = md_QueryUnclaimedBudgetResponse.Fields().ByName("period")
-	fd_QueryUnclaimedBudgetResponse_tranches_left = md_QueryUnclaimedBudgetResponse.Fields().ByName("tranches_left")
+	md_QueryContinuousFundResponse = File_cosmos_protocolpool_v1_query_proto.Messages().ByName("QueryContinuousFundResponse")
+	fd_QueryContinuousFundResponse_continuous_fund = md_QueryContinuousFundResponse.Fields().ByName("continuous_fund")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryUnclaimedBudgetResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryContinuousFundResponse)(nil)
 
-type fastReflection_QueryUnclaimedBudgetResponse QueryUnclaimedBudgetResponse
+type fastReflection_QueryContinuousFundResponse QueryContinuousFundResponse
 
-func (x *QueryUnclaimedBudgetResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryUnclaimedBudgetResponse)(x)
+func (x *QueryContinuousFundResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryContinuousFundResponse)(x)
 }
 
-func (x *QueryUnclaimedBudgetResponse) slowProtoReflect() protoreflect.Message {
+func (x *QueryContinuousFundResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1327,43 +1317,43 @@ func (x *QueryUnclaimedBudgetResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryUnclaimedBudgetResponse_messageType fastReflection_QueryUnclaimedBudgetResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryUnclaimedBudgetResponse_messageType{}
+var _fastReflection_QueryContinuousFundResponse_messageType fastReflection_QueryContinuousFundResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryContinuousFundResponse_messageType{}
 
-type fastReflection_QueryUnclaimedBudgetResponse_messageType struct{}
+type fastReflection_QueryContinuousFundResponse_messageType struct{}
 
-func (x fastReflection_QueryUnclaimedBudgetResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryUnclaimedBudgetResponse)(nil)
+func (x fastReflection_QueryContinuousFundResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryContinuousFundResponse)(nil)
 }
-func (x fastReflection_QueryUnclaimedBudgetResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryUnclaimedBudgetResponse)
+func (x fastReflection_QueryContinuousFundResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryContinuousFundResponse)
 }
-func (x fastReflection_QueryUnclaimedBudgetResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryUnclaimedBudgetResponse
+func (x fastReflection_QueryContinuousFundResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryContinuousFundResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryUnclaimedBudgetResponse
+func (x *fastReflection_QueryContinuousFundResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryContinuousFundResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryUnclaimedBudgetResponse_messageType
+func (x *fastReflection_QueryContinuousFundResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryContinuousFundResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryUnclaimedBudgetResponse)
+func (x *fastReflection_QueryContinuousFundResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryContinuousFundResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryUnclaimedBudgetResponse)(x)
+func (x *fastReflection_QueryContinuousFundResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryContinuousFundResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1371,34 +1361,10 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) Interface() protoreflect.P
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.ClaimedAmount != nil {
-		value := protoreflect.ValueOfMessage(x.ClaimedAmount.ProtoReflect())
-		if !f(fd_QueryUnclaimedBudgetResponse_claimed_amount, value) {
-			return
-		}
-	}
-	if x.UnclaimedAmount != nil {
-		value := protoreflect.ValueOfMessage(x.UnclaimedAmount.ProtoReflect())
-		if !f(fd_QueryUnclaimedBudgetResponse_unclaimed_amount, value) {
-			return
-		}
-	}
-	if x.NextClaimFrom != nil {
-		value := protoreflect.ValueOfMessage(x.NextClaimFrom.ProtoReflect())
-		if !f(fd_QueryUnclaimedBudgetResponse_next_claim_from, value) {
-			return
-		}
-	}
-	if x.Period != nil {
-		value := protoreflect.ValueOfMessage(x.Period.ProtoReflect())
-		if !f(fd_QueryUnclaimedBudgetResponse_period, value) {
-			return
-		}
-	}
-	if x.TranchesLeft != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.TranchesLeft)
-		if !f(fd_QueryUnclaimedBudgetResponse_tranches_left, value) {
+func (x *fastReflection_QueryContinuousFundResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ContinuousFund != nil {
+		value := protoreflect.ValueOfMessage(x.ContinuousFund.ProtoReflect())
+		if !f(fd_QueryContinuousFundResponse_continuous_fund, value) {
 			return
 		}
 	}
@@ -1415,23 +1381,15 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) Range(f func(protoreflect.
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryContinuousFundResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.claimed_amount":
-		return x.ClaimedAmount != nil
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.unclaimed_amount":
-		return x.UnclaimedAmount != nil
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.next_claim_from":
-		return x.NextClaimFrom != nil
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.period":
-		return x.Period != nil
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.tranches_left":
-		return x.TranchesLeft != uint64(0)
+	case "cosmos.protocolpool.v1.QueryContinuousFundResponse.continuous_fund":
+		return x.ContinuousFund != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1441,23 +1399,15 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) Has(fd protoreflect.FieldD
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryContinuousFundResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.claimed_amount":
-		x.ClaimedAmount = nil
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.unclaimed_amount":
-		x.UnclaimedAmount = nil
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.next_claim_from":
-		x.NextClaimFrom = nil
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.period":
-		x.Period = nil
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.tranches_left":
-		x.TranchesLeft = uint64(0)
+	case "cosmos.protocolpool.v1.QueryContinuousFundResponse.continuous_fund":
+		x.ContinuousFund = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1467,28 +1417,16 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) Clear(fd protoreflect.Fiel
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryContinuousFundResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.claimed_amount":
-		value := x.ClaimedAmount
+	case "cosmos.protocolpool.v1.QueryContinuousFundResponse.continuous_fund":
+		value := x.ContinuousFund
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.unclaimed_amount":
-		value := x.UnclaimedAmount
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.next_claim_from":
-		value := x.NextClaimFrom
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.period":
-		value := x.Period
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.tranches_left":
-		value := x.TranchesLeft
-		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1502,23 +1440,15 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) Get(descriptor protoreflec
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryContinuousFundResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.claimed_amount":
-		x.ClaimedAmount = value.Message().Interface().(*v1beta1.Coin)
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.unclaimed_amount":
-		x.UnclaimedAmount = value.Message().Interface().(*v1beta1.Coin)
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.next_claim_from":
-		x.NextClaimFrom = value.Message().Interface().(*timestamppb.Timestamp)
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.period":
-		x.Period = value.Message().Interface().(*durationpb.Duration)
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.tranches_left":
-		x.TranchesLeft = value.Uint()
+	case "cosmos.protocolpool.v1.QueryContinuousFundResponse.continuous_fund":
+		x.ContinuousFund = value.Message().Interface().(*ContinuousFund)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1532,72 +1462,44 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) Set(fd protoreflect.FieldD
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryContinuousFundResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.claimed_amount":
-		if x.ClaimedAmount == nil {
-			x.ClaimedAmount = new(v1beta1.Coin)
+	case "cosmos.protocolpool.v1.QueryContinuousFundResponse.continuous_fund":
+		if x.ContinuousFund == nil {
+			x.ContinuousFund = new(ContinuousFund)
 		}
-		return protoreflect.ValueOfMessage(x.ClaimedAmount.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.unclaimed_amount":
-		if x.UnclaimedAmount == nil {
-			x.UnclaimedAmount = new(v1beta1.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.UnclaimedAmount.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.next_claim_from":
-		if x.NextClaimFrom == nil {
-			x.NextClaimFrom = new(timestamppb.Timestamp)
-		}
-		return protoreflect.ValueOfMessage(x.NextClaimFrom.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.period":
-		if x.Period == nil {
-			x.Period = new(durationpb.Duration)
-		}
-		return protoreflect.ValueOfMessage(x.Period.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.tranches_left":
-		panic(fmt.Errorf("field tranches_left of message cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse is not mutable"))
+		return protoreflect.ValueOfMessage(x.ContinuousFund.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryContinuousFundResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.claimed_amount":
-		m := new(v1beta1.Coin)
+	case "cosmos.protocolpool.v1.QueryContinuousFundResponse.continuous_fund":
+		m := new(ContinuousFund)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.unclaimed_amount":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.next_claim_from":
-		m := new(timestamppb.Timestamp)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.period":
-		m := new(durationpb.Duration)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.tranches_left":
-		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryContinuousFundResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.QueryContinuousFundResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1605,7 +1507,7 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) WhichOneof(d protoreflect.
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryContinuousFundResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1616,7 +1518,7 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) GetUnknown() protoreflect.
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryContinuousFundResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1628,7 +1530,7 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) SetUnknown(fields protoref
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) IsValid() bool {
+func (x *fastReflection_QueryContinuousFundResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -1638,9 +1540,9 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryContinuousFundResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryUnclaimedBudgetResponse)
+		x := input.Message.Interface().(*QueryContinuousFundResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1652,24 +1554,9 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface
 		var n int
 		var l int
 		_ = l
-		if x.ClaimedAmount != nil {
-			l = options.Size(x.ClaimedAmount)
+		if x.ContinuousFund != nil {
+			l = options.Size(x.ContinuousFund)
 			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.UnclaimedAmount != nil {
-			l = options.Size(x.UnclaimedAmount)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.NextClaimFrom != nil {
-			l = options.Size(x.NextClaimFrom)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Period != nil {
-			l = options.Size(x.Period)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.TranchesLeft != 0 {
-			n += 1 + runtime.Sov(uint64(x.TranchesLeft))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -1681,7 +1568,7 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryUnclaimedBudgetResponse)
+		x := input.Message.Interface().(*QueryContinuousFundResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1700,55 +1587,8 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.TranchesLeft != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.TranchesLeft))
-			i--
-			dAtA[i] = 0x28
-		}
-		if x.Period != nil {
-			encoded, err := options.Marshal(x.Period)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x22
-		}
-		if x.NextClaimFrom != nil {
-			encoded, err := options.Marshal(x.NextClaimFrom)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if x.UnclaimedAmount != nil {
-			encoded, err := options.Marshal(x.UnclaimedAmount)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if x.ClaimedAmount != nil {
-			encoded, err := options.Marshal(x.ClaimedAmount)
+		if x.ContinuousFund != nil {
+			encoded, err := options.Marshal(x.ContinuousFund)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1772,7 +1612,7 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryUnclaimedBudgetResponse)
+		x := input.Message.Interface().(*QueryContinuousFundResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1804,15 +1644,15 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryUnclaimedBudgetResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryContinuousFundResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryUnclaimedBudgetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryContinuousFundResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ClaimedAmount", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ContinuousFund", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -1839,16 +1679,832 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.ClaimedAmount == nil {
-					x.ClaimedAmount = &v1beta1.Coin{}
+				if x.ContinuousFund == nil {
+					x.ContinuousFund = &ContinuousFund{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ClaimedAmount); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ContinuousFund); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 2:
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryContinuousFundsRequest protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_protocolpool_v1_query_proto_init()
+	md_QueryContinuousFundsRequest = File_cosmos_protocolpool_v1_query_proto.Messages().ByName("QueryContinuousFundsRequest")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryContinuousFundsRequest)(nil)
+
+type fastReflection_QueryContinuousFundsRequest QueryContinuousFundsRequest
+
+func (x *QueryContinuousFundsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryContinuousFundsRequest)(x)
+}
+
+func (x *QueryContinuousFundsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryContinuousFundsRequest_messageType fastReflection_QueryContinuousFundsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryContinuousFundsRequest_messageType{}
+
+type fastReflection_QueryContinuousFundsRequest_messageType struct{}
+
+func (x fastReflection_QueryContinuousFundsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryContinuousFundsRequest)(nil)
+}
+func (x fastReflection_QueryContinuousFundsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryContinuousFundsRequest)
+}
+func (x fastReflection_QueryContinuousFundsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryContinuousFundsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryContinuousFundsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryContinuousFundsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryContinuousFundsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryContinuousFundsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryContinuousFundsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryContinuousFundsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryContinuousFundsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryContinuousFundsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryContinuousFundsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryContinuousFundsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryContinuousFundsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryContinuousFundsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryContinuousFundsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryContinuousFundsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryContinuousFundsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryContinuousFundsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.QueryContinuousFundsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryContinuousFundsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryContinuousFundsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryContinuousFundsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryContinuousFundsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryContinuousFundsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryContinuousFundsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryContinuousFundsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryContinuousFundsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryContinuousFundsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryContinuousFundsResponse_1_list)(nil)
+
+type _QueryContinuousFundsResponse_1_list struct {
+	list *[]*ContinuousFund
+}
+
+func (x *_QueryContinuousFundsResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryContinuousFundsResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryContinuousFundsResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ContinuousFund)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryContinuousFundsResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ContinuousFund)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryContinuousFundsResponse_1_list) AppendMutable() protoreflect.Value {
+	v := new(ContinuousFund)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryContinuousFundsResponse_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryContinuousFundsResponse_1_list) NewElement() protoreflect.Value {
+	v := new(ContinuousFund)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryContinuousFundsResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryContinuousFundsResponse                  protoreflect.MessageDescriptor
+	fd_QueryContinuousFundsResponse_continuous_funds protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_protocolpool_v1_query_proto_init()
+	md_QueryContinuousFundsResponse = File_cosmos_protocolpool_v1_query_proto.Messages().ByName("QueryContinuousFundsResponse")
+	fd_QueryContinuousFundsResponse_continuous_funds = md_QueryContinuousFundsResponse.Fields().ByName("continuous_funds")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryContinuousFundsResponse)(nil)
+
+type fastReflection_QueryContinuousFundsResponse QueryContinuousFundsResponse
+
+func (x *QueryContinuousFundsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryContinuousFundsResponse)(x)
+}
+
+func (x *QueryContinuousFundsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryContinuousFundsResponse_messageType fastReflection_QueryContinuousFundsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryContinuousFundsResponse_messageType{}
+
+type fastReflection_QueryContinuousFundsResponse_messageType struct{}
+
+func (x fastReflection_QueryContinuousFundsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryContinuousFundsResponse)(nil)
+}
+func (x fastReflection_QueryContinuousFundsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryContinuousFundsResponse)
+}
+func (x fastReflection_QueryContinuousFundsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryContinuousFundsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryContinuousFundsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryContinuousFundsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryContinuousFundsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryContinuousFundsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryContinuousFundsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryContinuousFundsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryContinuousFundsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryContinuousFundsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryContinuousFundsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.ContinuousFunds) != 0 {
+		value := protoreflect.ValueOfList(&_QueryContinuousFundsResponse_1_list{list: &x.ContinuousFunds})
+		if !f(fd_QueryContinuousFundsResponse_continuous_funds, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryContinuousFundsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryContinuousFundsResponse.continuous_funds":
+		return len(x.ContinuousFunds) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryContinuousFundsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryContinuousFundsResponse.continuous_funds":
+		x.ContinuousFunds = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryContinuousFundsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.protocolpool.v1.QueryContinuousFundsResponse.continuous_funds":
+		if len(x.ContinuousFunds) == 0 {
+			return protoreflect.ValueOfList(&_QueryContinuousFundsResponse_1_list{})
+		}
+		listValue := &_QueryContinuousFundsResponse_1_list{list: &x.ContinuousFunds}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryContinuousFundsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryContinuousFundsResponse.continuous_funds":
+		lv := value.List()
+		clv := lv.(*_QueryContinuousFundsResponse_1_list)
+		x.ContinuousFunds = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryContinuousFundsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryContinuousFundsResponse.continuous_funds":
+		if x.ContinuousFunds == nil {
+			x.ContinuousFunds = []*ContinuousFund{}
+		}
+		value := &_QueryContinuousFundsResponse_1_list{list: &x.ContinuousFunds}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryContinuousFundsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryContinuousFundsResponse.continuous_funds":
+		list := []*ContinuousFund{}
+		return protoreflect.ValueOfList(&_QueryContinuousFundsResponse_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryContinuousFundsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryContinuousFundsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryContinuousFundsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.QueryContinuousFundsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryContinuousFundsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryContinuousFundsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryContinuousFundsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryContinuousFundsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryContinuousFundsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.ContinuousFunds) > 0 {
+			for _, e := range x.ContinuousFunds {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryContinuousFundsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ContinuousFunds) > 0 {
+			for iNdEx := len(x.ContinuousFunds) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ContinuousFunds[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryContinuousFundsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryContinuousFundsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryContinuousFundsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnclaimedAmount", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ContinuousFunds", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -1875,16 +2531,769 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.UnclaimedAmount == nil {
-					x.UnclaimedAmount = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.UnclaimedAmount); err != nil {
+				x.ContinuousFunds = append(x.ContinuousFunds, &ContinuousFund{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ContinuousFunds[len(x.ContinuousFunds)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 3:
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryParamsRequest protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_protocolpool_v1_query_proto_init()
+	md_QueryParamsRequest = File_cosmos_protocolpool_v1_query_proto.Messages().ByName("QueryParamsRequest")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryParamsRequest)(nil)
+
+type fastReflection_QueryParamsRequest QueryParamsRequest
+
+func (x *QueryParamsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryParamsRequest)(x)
+}
+
+func (x *QueryParamsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryParamsRequest_messageType fastReflection_QueryParamsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryParamsRequest_messageType{}
+
+type fastReflection_QueryParamsRequest_messageType struct{}
+
+func (x fastReflection_QueryParamsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryParamsRequest)(nil)
+}
+func (x fastReflection_QueryParamsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryParamsRequest)
+}
+func (x fastReflection_QueryParamsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryParamsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryParamsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryParamsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryParamsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryParamsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryParamsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryParamsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryParamsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryParamsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryParamsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryParamsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryParamsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryParamsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryParamsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryParamsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryParamsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryParamsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.QueryParamsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryParamsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryParamsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryParamsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryParamsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryParamsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryParamsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryParamsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryParamsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryParamsResponse        protoreflect.MessageDescriptor
+	fd_QueryParamsResponse_params protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_protocolpool_v1_query_proto_init()
+	md_QueryParamsResponse = File_cosmos_protocolpool_v1_query_proto.Messages().ByName("QueryParamsResponse")
+	fd_QueryParamsResponse_params = md_QueryParamsResponse.Fields().ByName("params")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryParamsResponse)(nil)
+
+type fastReflection_QueryParamsResponse QueryParamsResponse
+
+func (x *QueryParamsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryParamsResponse)(x)
+}
+
+func (x *QueryParamsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryParamsResponse_messageType fastReflection_QueryParamsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryParamsResponse_messageType{}
+
+type fastReflection_QueryParamsResponse_messageType struct{}
+
+func (x fastReflection_QueryParamsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryParamsResponse)(nil)
+}
+func (x fastReflection_QueryParamsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryParamsResponse)
+}
+func (x fastReflection_QueryParamsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryParamsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryParamsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryParamsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryParamsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryParamsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryParamsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryParamsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryParamsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryParamsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryParamsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Params != nil {
+		value := protoreflect.ValueOfMessage(x.Params.ProtoReflect())
+		if !f(fd_QueryParamsResponse_params, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryParamsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryParamsResponse.params":
+		return x.Params != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryParamsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryParamsResponse.params":
+		x.Params = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryParamsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.protocolpool.v1.QueryParamsResponse.params":
+		value := x.Params
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryParamsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryParamsResponse.params":
+		x.Params = value.Message().Interface().(*Params)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryParamsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryParamsResponse.params":
+		if x.Params == nil {
+			x.Params = new(Params)
+		}
+		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryParamsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.protocolpool.v1.QueryParamsResponse.params":
+		m := new(Params)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.QueryParamsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.protocolpool.v1.QueryParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryParamsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.QueryParamsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryParamsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryParamsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryParamsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryParamsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryParamsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Params != nil {
+			l = options.Size(x.Params)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryParamsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Params != nil {
+			encoded, err := options.Marshal(x.Params)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryParamsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryParamsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NextClaimFrom", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -1911,68 +3320,13 @@ func (x *fastReflection_QueryUnclaimedBudgetResponse) ProtoMethods() *protoiface
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.NextClaimFrom == nil {
-					x.NextClaimFrom = &timestamppb.Timestamp{}
+				if x.Params == nil {
+					x.Params = &Params{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.NextClaimFrom); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Params); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Period == nil {
-					x.Period = &durationpb.Duration{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Period); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 5:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TranchesLeft", wireType)
-				}
-				x.TranchesLeft = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.TranchesLeft |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2057,7 +3411,7 @@ type QueryCommunityPoolResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// pool defines community pool's coins.
-	Pool []*v1beta1.DecCoin `protobuf:"bytes,1,rep,name=pool,proto3" json:"pool,omitempty"`
+	Pool []*v1beta1.Coin `protobuf:"bytes,1,rep,name=pool,proto3" json:"pool,omitempty"`
 }
 
 func (x *QueryCommunityPoolResponse) Reset() {
@@ -2080,26 +3434,26 @@ func (*QueryCommunityPoolResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_query_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *QueryCommunityPoolResponse) GetPool() []*v1beta1.DecCoin {
+func (x *QueryCommunityPoolResponse) GetPool() []*v1beta1.Coin {
 	if x != nil {
 		return x.Pool
 	}
 	return nil
 }
 
-// QueryUnclaimedBudgetRequest is the request type for the Query/UnclaimedBudgetRequest
+// QueryContinuousFundRequest is the request type for the Query/ContinuousFund
 // RPC method.
-type QueryUnclaimedBudgetRequest struct {
+type QueryContinuousFundRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// address is the recipient address to query unclaimed budget amount for.
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// recipient is the recipient address to query unclaimed budget amount for.
+	Recipient string `protobuf:"bytes,1,opt,name=recipient,proto3" json:"recipient,omitempty"`
 }
 
-func (x *QueryUnclaimedBudgetRequest) Reset() {
-	*x = QueryUnclaimedBudgetRequest{}
+func (x *QueryContinuousFundRequest) Reset() {
+	*x = QueryContinuousFundRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2107,46 +3461,37 @@ func (x *QueryUnclaimedBudgetRequest) Reset() {
 	}
 }
 
-func (x *QueryUnclaimedBudgetRequest) String() string {
+func (x *QueryContinuousFundRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryUnclaimedBudgetRequest) ProtoMessage() {}
+func (*QueryContinuousFundRequest) ProtoMessage() {}
 
-// Deprecated: Use QueryUnclaimedBudgetRequest.ProtoReflect.Descriptor instead.
-func (*QueryUnclaimedBudgetRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryContinuousFundRequest.ProtoReflect.Descriptor instead.
+func (*QueryContinuousFundRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_query_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *QueryUnclaimedBudgetRequest) GetAddress() string {
+func (x *QueryContinuousFundRequest) GetRecipient() string {
 	if x != nil {
-		return x.Address
+		return x.Recipient
 	}
 	return ""
 }
 
-// QueryUnclaimedBudgetResponse is the response type for the Query/UnclaimedBudget
+// QueryUnclaimedBudgetResponse is the response type for the Query/ContinuousFund
 // RPC method.
-type QueryUnclaimedBudgetResponse struct {
+type QueryContinuousFundResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// claimed_amount is the budget amount already claimed by the recipient
-	ClaimedAmount *v1beta1.Coin `protobuf:"bytes,1,opt,name=claimed_amount,json=claimedAmount,proto3" json:"claimed_amount,omitempty"`
-	// unclaimed_amount is the remaining budget amount that is unclaimed by the recipient
-	UnclaimedAmount *v1beta1.Coin `protobuf:"bytes,2,opt,name=unclaimed_amount,json=unclaimedAmount,proto3" json:"unclaimed_amount,omitempty"`
-	// next_claim_from is the next starting claim time for fund distribution.
-	// It represents the time when we can claim funds after the period time interval has passed.
-	NextClaimFrom *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=next_claim_from,json=nextClaimFrom,proto3" json:"next_claim_from,omitempty"`
-	// period is the time interval for fund distribution
-	Period *durationpb.Duration `protobuf:"bytes,4,opt,name=period,proto3" json:"period,omitempty"`
-	// tranches_left is the number of tranches left for the amount to be distributed
-	TranchesLeft uint64 `protobuf:"varint,5,opt,name=tranches_left,json=tranchesLeft,proto3" json:"tranches_left,omitempty"`
+	// ContinuousFunds is the given continuous fund returned in the query.
+	ContinuousFund *ContinuousFund `protobuf:"bytes,1,opt,name=continuous_fund,json=continuousFund,proto3" json:"continuous_fund,omitempty"`
 }
 
-func (x *QueryUnclaimedBudgetResponse) Reset() {
-	*x = QueryUnclaimedBudgetResponse{}
+func (x *QueryContinuousFundResponse) Reset() {
+	*x = QueryContinuousFundResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2154,50 +3499,151 @@ func (x *QueryUnclaimedBudgetResponse) Reset() {
 	}
 }
 
-func (x *QueryUnclaimedBudgetResponse) String() string {
+func (x *QueryContinuousFundResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryUnclaimedBudgetResponse) ProtoMessage() {}
+func (*QueryContinuousFundResponse) ProtoMessage() {}
 
-// Deprecated: Use QueryUnclaimedBudgetResponse.ProtoReflect.Descriptor instead.
-func (*QueryUnclaimedBudgetResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryContinuousFundResponse.ProtoReflect.Descriptor instead.
+func (*QueryContinuousFundResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_query_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *QueryUnclaimedBudgetResponse) GetClaimedAmount() *v1beta1.Coin {
+func (x *QueryContinuousFundResponse) GetContinuousFund() *ContinuousFund {
 	if x != nil {
-		return x.ClaimedAmount
+		return x.ContinuousFund
 	}
 	return nil
 }
 
-func (x *QueryUnclaimedBudgetResponse) GetUnclaimedAmount() *v1beta1.Coin {
+// QueryContinuousFundRequest is the request type for the Query/ContinuousFunds
+// RPC method.
+type QueryContinuousFundsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *QueryContinuousFundsRequest) Reset() {
+	*x = QueryContinuousFundsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryContinuousFundsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryContinuousFundsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryContinuousFundsRequest.ProtoReflect.Descriptor instead.
+func (*QueryContinuousFundsRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_protocolpool_v1_query_proto_rawDescGZIP(), []int{4}
+}
+
+// QueryUnclaimedBudgetResponse is the response type for the Query/ContinuousFunds
+// RPC method.
+type QueryContinuousFundsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// ContinuousFunds defines all continuous funds in state.
+	ContinuousFunds []*ContinuousFund `protobuf:"bytes,1,rep,name=continuous_funds,json=continuousFunds,proto3" json:"continuous_funds,omitempty"`
+}
+
+func (x *QueryContinuousFundsResponse) Reset() {
+	*x = QueryContinuousFundsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryContinuousFundsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryContinuousFundsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryContinuousFundsResponse.ProtoReflect.Descriptor instead.
+func (*QueryContinuousFundsResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_protocolpool_v1_query_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *QueryContinuousFundsResponse) GetContinuousFunds() []*ContinuousFund {
 	if x != nil {
-		return x.UnclaimedAmount
+		return x.ContinuousFunds
 	}
 	return nil
 }
 
-func (x *QueryUnclaimedBudgetResponse) GetNextClaimFrom() *timestamppb.Timestamp {
-	if x != nil {
-		return x.NextClaimFrom
-	}
-	return nil
+// QueryParamsRequest is the response type for the Query/Params RPC method.
+type QueryParamsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
 }
 
-func (x *QueryUnclaimedBudgetResponse) GetPeriod() *durationpb.Duration {
-	if x != nil {
-		return x.Period
+func (x *QueryParamsRequest) Reset() {
+	*x = QueryParamsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
 	}
-	return nil
 }
 
-func (x *QueryUnclaimedBudgetResponse) GetTranchesLeft() uint64 {
-	if x != nil {
-		return x.TranchesLeft
+func (x *QueryParamsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryParamsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryParamsRequest.ProtoReflect.Descriptor instead.
+func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_protocolpool_v1_query_proto_rawDescGZIP(), []int{6}
+}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+type QueryParamsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+}
+
+func (x *QueryParamsResponse) Reset() {
+	*x = QueryParamsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_protocolpool_v1_query_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
 	}
-	return 0
+}
+
+func (x *QueryParamsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryParamsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryParamsResponse.ProtoReflect.Descriptor instead.
+func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_protocolpool_v1_query_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *QueryParamsResponse) GetParams() *Params {
+	if x != nil {
+		return x.Params
+	}
+	return nil
 }
 
 var File_cosmos_protocolpool_v1_query_proto protoreflect.FileDescriptor
@@ -2213,85 +3659,105 @@ var file_cosmos_protocolpool_v1_query_proto_rawDesc = []byte{
 	0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31,
 	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x67, 0x6f,
-	0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x75,
-	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x1b, 0x0a, 0x19,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x22, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
+	0x2f, 0x76, 0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
+	0x1b, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74,
+	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x7d, 0x0a, 0x1a,
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f,
-	0x6f, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x83, 0x01, 0x0a, 0x1a, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x04, 0x70, 0x6f, 0x6f, 0x6c,
-	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x63,
-	0x43, 0x6f, 0x69, 0x6e, 0x42, 0x33, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x2b, 0x67, 0x69,
-	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73,
-	0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x04, 0x70, 0x6f, 0x6f, 0x6c, 0x22,
-	0x51, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x55, 0x6e, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65,
-	0x64, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x32,
-	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x22, 0xce, 0x02, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x55, 0x6e, 0x63, 0x6c,
-	0x61, 0x69, 0x6d, 0x65, 0x64, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x40, 0x0a, 0x0e, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x5f, 0x61,
-	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x0d, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x41,
-	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x44, 0x0a, 0x10, 0x75, 0x6e, 0x63, 0x6c, 0x61, 0x69, 0x6d,
-	0x65, 0x64, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x0f, 0x75, 0x6e, 0x63, 0x6c,
-	0x61, 0x69, 0x6d, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x48, 0x0a, 0x0f, 0x6e,
-	0x65, 0x78, 0x74, 0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x5f, 0x66, 0x72, 0x6f, 0x6d, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0d, 0x6e, 0x65, 0x78, 0x74, 0x43, 0x6c, 0x61, 0x69,
-	0x6d, 0x46, 0x72, 0x6f, 0x6d, 0x12, 0x37, 0x0a, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x42, 0x04, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x12, 0x23,
-	0x0a, 0x0d, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x5f, 0x6c, 0x65, 0x66, 0x74, 0x18,
-	0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x4c,
-	0x65, 0x66, 0x74, 0x32, 0xeb, 0x02, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0xa6, 0x01,
-	0x0a, 0x0d, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x12,
-	0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
-	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f,
-	0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x28, 0x12, 0x26,
+	0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5f, 0x0a, 0x04, 0x70, 0x6f,
+	0x6f, 0x6c, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
+	0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74,
+	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
+	0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x04, 0x70, 0x6f, 0x6f, 0x6c, 0x22, 0x54, 0x0a, 0x1a, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75,
+	0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x36, 0x0a, 0x09, 0x72, 0x65, 0x63,
+	0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e,
+	0x74, 0x22, 0x74, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
+	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x55, 0x0a, 0x0f, 0x63, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x5f, 0x66,
+	0x75, 0x6e, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
+	0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e,
+	0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x63, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75,
+	0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x22, 0x1d, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x77, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43,
+	0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x57, 0x0a, 0x10, 0x63, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
+	0x75, 0x6f, 0x75, 0x73, 0x5f, 0x66, 0x75, 0x6e, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
+	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f,
+	0x63, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x22,
+	0x14, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x53, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3c, 0x0a, 0x06,
+	0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
+	0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8, 0xde,
+	0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x32, 0xa7, 0x05, 0x0a, 0x05, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x12, 0xa6, 0x01, 0x0a, 0x0d, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69,
+	0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x50, 0x6f,
+	0x6f, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e,
+	0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74,
+	0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x28, 0x12, 0x26, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x2f, 0x63,
+	0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x12, 0xb7, 0x01,
+	0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64,
+	0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43,
+	0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e,
+	0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3c, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x36, 0x12, 0x34, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x74, 0x69,
+	0x6e, 0x75, 0x6f, 0x75, 0x73, 0x5f, 0x66, 0x75, 0x6e, 0x64, 0x73, 0x2f, 0x7b, 0x72, 0x65, 0x63,
+	0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x7d, 0x12, 0xae, 0x01, 0x0a, 0x0f, 0x43, 0x6f, 0x6e, 0x74,
+	0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x33, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f,
+	0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
+	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43,
+	0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x30, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2a, 0x12, 0x28,
 	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74,
-	0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x12, 0xb8, 0x01, 0x0a, 0x0f, 0x55, 0x6e, 0x63, 0x6c, 0x61,
-	0x69, 0x6d, 0x65, 0x64, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x33, 0x2e, 0x63, 0x6f, 0x73,
+	0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f,
+	0x75, 0x73, 0x5f, 0x66, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x89, 0x01, 0x0a, 0x06, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x26, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x20, 0x12, 0x1e, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
-	0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x55, 0x6e, 0x63, 0x6c, 0x61, 0x69, 0x6d,
-	0x65, 0x64, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
-	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x55, 0x6e,
-	0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x34, 0x12, 0x32, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70,
-	0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x2f, 0x75, 0x6e, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64,
-	0x5f, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x7d, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31,
-	0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x16, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
-	0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02,
-	0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x2e, 0x76, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa,
+	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56,
+	0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a,
+	0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56,
+	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2306,32 +3772,38 @@ func file_cosmos_protocolpool_v1_query_proto_rawDescGZIP() []byte {
 	return file_cosmos_protocolpool_v1_query_proto_rawDescData
 }
 
-var file_cosmos_protocolpool_v1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_cosmos_protocolpool_v1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_cosmos_protocolpool_v1_query_proto_goTypes = []interface{}{
 	(*QueryCommunityPoolRequest)(nil),    // 0: cosmos.protocolpool.v1.QueryCommunityPoolRequest
 	(*QueryCommunityPoolResponse)(nil),   // 1: cosmos.protocolpool.v1.QueryCommunityPoolResponse
-	(*QueryUnclaimedBudgetRequest)(nil),  // 2: cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest
-	(*QueryUnclaimedBudgetResponse)(nil), // 3: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse
-	(*v1beta1.DecCoin)(nil),              // 4: cosmos.base.v1beta1.DecCoin
-	(*v1beta1.Coin)(nil),                 // 5: cosmos.base.v1beta1.Coin
-	(*timestamppb.Timestamp)(nil),        // 6: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),          // 7: google.protobuf.Duration
+	(*QueryContinuousFundRequest)(nil),   // 2: cosmos.protocolpool.v1.QueryContinuousFundRequest
+	(*QueryContinuousFundResponse)(nil),  // 3: cosmos.protocolpool.v1.QueryContinuousFundResponse
+	(*QueryContinuousFundsRequest)(nil),  // 4: cosmos.protocolpool.v1.QueryContinuousFundsRequest
+	(*QueryContinuousFundsResponse)(nil), // 5: cosmos.protocolpool.v1.QueryContinuousFundsResponse
+	(*QueryParamsRequest)(nil),           // 6: cosmos.protocolpool.v1.QueryParamsRequest
+	(*QueryParamsResponse)(nil),          // 7: cosmos.protocolpool.v1.QueryParamsResponse
+	(*v1beta1.Coin)(nil),                 // 8: cosmos.base.v1beta1.Coin
+	(*ContinuousFund)(nil),               // 9: cosmos.protocolpool.v1.ContinuousFund
+	(*Params)(nil),                       // 10: cosmos.protocolpool.v1.Params
 }
 var file_cosmos_protocolpool_v1_query_proto_depIdxs = []int32{
-	4, // 0: cosmos.protocolpool.v1.QueryCommunityPoolResponse.pool:type_name -> cosmos.base.v1beta1.DecCoin
-	5, // 1: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.claimed_amount:type_name -> cosmos.base.v1beta1.Coin
-	5, // 2: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.unclaimed_amount:type_name -> cosmos.base.v1beta1.Coin
-	6, // 3: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.next_claim_from:type_name -> google.protobuf.Timestamp
-	7, // 4: cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse.period:type_name -> google.protobuf.Duration
-	0, // 5: cosmos.protocolpool.v1.Query.CommunityPool:input_type -> cosmos.protocolpool.v1.QueryCommunityPoolRequest
-	2, // 6: cosmos.protocolpool.v1.Query.UnclaimedBudget:input_type -> cosmos.protocolpool.v1.QueryUnclaimedBudgetRequest
-	1, // 7: cosmos.protocolpool.v1.Query.CommunityPool:output_type -> cosmos.protocolpool.v1.QueryCommunityPoolResponse
-	3, // 8: cosmos.protocolpool.v1.Query.UnclaimedBudget:output_type -> cosmos.protocolpool.v1.QueryUnclaimedBudgetResponse
-	7, // [7:9] is the sub-list for method output_type
-	5, // [5:7] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	8,  // 0: cosmos.protocolpool.v1.QueryCommunityPoolResponse.pool:type_name -> cosmos.base.v1beta1.Coin
+	9,  // 1: cosmos.protocolpool.v1.QueryContinuousFundResponse.continuous_fund:type_name -> cosmos.protocolpool.v1.ContinuousFund
+	9,  // 2: cosmos.protocolpool.v1.QueryContinuousFundsResponse.continuous_funds:type_name -> cosmos.protocolpool.v1.ContinuousFund
+	10, // 3: cosmos.protocolpool.v1.QueryParamsResponse.params:type_name -> cosmos.protocolpool.v1.Params
+	0,  // 4: cosmos.protocolpool.v1.Query.CommunityPool:input_type -> cosmos.protocolpool.v1.QueryCommunityPoolRequest
+	2,  // 5: cosmos.protocolpool.v1.Query.ContinuousFund:input_type -> cosmos.protocolpool.v1.QueryContinuousFundRequest
+	4,  // 6: cosmos.protocolpool.v1.Query.ContinuousFunds:input_type -> cosmos.protocolpool.v1.QueryContinuousFundsRequest
+	6,  // 7: cosmos.protocolpool.v1.Query.Params:input_type -> cosmos.protocolpool.v1.QueryParamsRequest
+	1,  // 8: cosmos.protocolpool.v1.Query.CommunityPool:output_type -> cosmos.protocolpool.v1.QueryCommunityPoolResponse
+	3,  // 9: cosmos.protocolpool.v1.Query.ContinuousFund:output_type -> cosmos.protocolpool.v1.QueryContinuousFundResponse
+	5,  // 10: cosmos.protocolpool.v1.Query.ContinuousFunds:output_type -> cosmos.protocolpool.v1.QueryContinuousFundsResponse
+	7,  // 11: cosmos.protocolpool.v1.Query.Params:output_type -> cosmos.protocolpool.v1.QueryParamsResponse
+	8,  // [8:12] is the sub-list for method output_type
+	4,  // [4:8] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_protocolpool_v1_query_proto_init() }
@@ -2339,6 +3811,7 @@ func file_cosmos_protocolpool_v1_query_proto_init() {
 	if File_cosmos_protocolpool_v1_query_proto != nil {
 		return
 	}
+	file_cosmos_protocolpool_v1_types_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_protocolpool_v1_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryCommunityPoolRequest); i {
@@ -2365,7 +3838,7 @@ func file_cosmos_protocolpool_v1_query_proto_init() {
 			}
 		}
 		file_cosmos_protocolpool_v1_query_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryUnclaimedBudgetRequest); i {
+			switch v := v.(*QueryContinuousFundRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2377,7 +3850,55 @@ func file_cosmos_protocolpool_v1_query_proto_init() {
 			}
 		}
 		file_cosmos_protocolpool_v1_query_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryUnclaimedBudgetResponse); i {
+			switch v := v.(*QueryContinuousFundResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_protocolpool_v1_query_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryContinuousFundsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_protocolpool_v1_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryContinuousFundsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_protocolpool_v1_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryParamsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_protocolpool_v1_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryParamsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2395,7 +3916,7 @@ func file_cosmos_protocolpool_v1_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_protocolpool_v1_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

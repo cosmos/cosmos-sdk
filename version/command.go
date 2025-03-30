@@ -2,6 +2,7 @@ package version
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -28,7 +29,7 @@ func NewVersionCommand() *cobra.Command {
 			verInfo := NewInfo()
 
 			if long, _ := cmd.Flags().GetBool(flagLong); !long {
-				cmd.Println(verInfo.Version)
+				fmt.Fprintln(cmd.OutOrStdout(), verInfo.Version)
 				return nil
 			}
 
@@ -53,7 +54,7 @@ func NewVersionCommand() *cobra.Command {
 				return err
 			}
 
-			cmd.Println(string(bz))
+			fmt.Fprintln(cmd.OutOrStdout(), string(bz))
 			return nil
 		},
 	}

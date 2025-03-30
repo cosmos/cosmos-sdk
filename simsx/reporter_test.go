@@ -22,7 +22,7 @@ func TestSimulationReporterToLegacy(t *testing.T) {
 	}{
 		"init only": {
 			setup:  func() SimulationReporter { return NewBasicSimulationReporter() },
-			expOp:  simtypes.NewOperationMsgBasic("", "", "", false),
+			expOp:  simtypes.NewOperationMsgBasic("", "", "", false, []byte{}),
 			expErr: errors.New("operation aborted before msg was executed"),
 		},
 		"success result": {
@@ -31,7 +31,7 @@ func TestSimulationReporterToLegacy(t *testing.T) {
 				r.Success(myMsg, "testing")
 				return r
 			},
-			expOp: simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing", true),
+			expOp: simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing", true, []byte{}),
 		},
 		"error result": {
 			setup: func() SimulationReporter {
@@ -39,7 +39,7 @@ func TestSimulationReporterToLegacy(t *testing.T) {
 				r.Fail(myErr, "testing")
 				return r
 			},
-			expOp:  simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing", false),
+			expOp:  simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing", false, []byte{}),
 			expErr: myErr,
 		},
 		"last error wins": {
@@ -49,7 +49,7 @@ func TestSimulationReporterToLegacy(t *testing.T) {
 				r.Fail(myErr, "testing2")
 				return r
 			},
-			expOp:  simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing1, testing2", false),
+			expOp:  simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing1, testing2", false, []byte{}),
 			expErr: myErr,
 		},
 		"skipped ": {

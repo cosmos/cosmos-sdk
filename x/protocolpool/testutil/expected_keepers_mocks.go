@@ -98,6 +98,18 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddress), name)
 }
 
+// SetModuleAccount mocks base method.
+func (m *MockAccountKeeper) SetModuleAccount(ctx context.Context, macc types.ModuleAccountI) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetModuleAccount", ctx, macc)
+}
+
+// SetModuleAccount indicates an expected call of SetModuleAccount.
+func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(ctx, macc any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetModuleAccount), ctx, macc)
+}
+
 // MockBankKeeper is a mock of BankKeeper interface.
 type MockBankKeeper struct {
 	ctrl     *gomock.Controller
@@ -120,6 +132,20 @@ func NewMockBankKeeper(ctrl *gomock.Controller) *MockBankKeeper {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
+}
+
+// BlockedAddr mocks base method.
+func (m *MockBankKeeper) BlockedAddr(addr types.AccAddress) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BlockedAddr", addr)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// BlockedAddr indicates an expected call of BlockedAddr.
+func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockedAddr", reflect.TypeOf((*MockBankKeeper)(nil).BlockedAddr), addr)
 }
 
 // GetAllBalances mocks base method.

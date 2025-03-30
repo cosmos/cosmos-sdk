@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 type (
@@ -57,18 +57,40 @@ func (c regCommon) newChainDataSource(ctx context.Context, r *rand.Rand, accs ..
 
 type AbstractRegistry[T any] struct {
 	regCommon
-	legacyObjs []T
+	items []T
 }
 
-// ToLegacyObjects returns the legacy properties of the SimsRegistryAdapter as a slice of type T.
-func (l *AbstractRegistry[T]) ToLegacyObjects() []T {
-	return l.legacyObjs
+type operation func(
+	r *rand.Rand, app AppEntrypoint, ctx sdk.Context,
+	accs []simtypes.Account, chainID string,
+) (simtypes.OperationMsg, []simtypes.FutureOperation, error)
+
+// make api compatible to simtypes.Operation
+func (o operation) toLegacyOp() simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
+		return o(r, app, ctx, accounts, chainID)
+	}
+}
+
+var _ simtypes.WeightedOperation = weightedOperation{}
+
+type weightedOperation struct {
+	weight uint32
+	op     operation
+}
+
+func (w weightedOperation) Weight() int {
+	return int(w.weight)
+}
+
+func (w weightedOperation) Op() simtypes.Operation {
+	return w.op.toLegacyOp()
 }
 
 // WeightedOperationRegistryAdapter is an implementation of the Registry interface that provides adapters to use the new message factories
 // with the legacy simulation system
 type WeightedOperationRegistryAdapter struct {
-	AbstractRegistry[simtypes.WeightedOperation]
+	AbstractRegistry[weightedOperation]
 }
 
 // NewSimsMsgRegistryAdapter creates a new instance of SimsRegistryAdapter for WeightedOperation types.
@@ -80,7 +102,7 @@ func NewSimsMsgRegistryAdapter(
 	logger log.Logger,
 ) *WeightedOperationRegistryAdapter {
 	return &WeightedOperationRegistryAdapter{
-		AbstractRegistry: AbstractRegistry[simtypes.WeightedOperation]{
+		AbstractRegistry: AbstractRegistry[weightedOperation]{
 			regCommon: regCommon{
 				reporter:     reporter,
 				ak:           ak,
@@ -101,8 +123,8 @@ func (l *WeightedOperationRegistryAdapter) Add(weight uint32, fx SimMsgFactoryX)
 	if weight == 0 {
 		return
 	}
-	obj := simulation.NewWeightedOperation(int(weight), legacyOperationAdapter(l.regCommon, fx))
-	l.legacyObjs = append(l.legacyObjs, obj)
+	obj := weightedOperation{weight: weight, op: legacyOperationAdapter(l.regCommon, fx)}
+	l.items = append(l.items, obj)
 }
 
 type HasFutureOpsRegistry interface {
@@ -110,7 +132,7 @@ type HasFutureOpsRegistry interface {
 }
 
 // msg factory to legacy Operation type
-func legacyOperationAdapter(l regCommon, fx SimMsgFactoryX) simtypes.Operation {
+func legacyOperationAdapter(l regCommon, fx SimMsgFactoryX) operation {
 	return func(
 		r *rand.Rand, app AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -124,7 +146,7 @@ func legacyOperationAdapter(l regCommon, fx SimMsgFactoryX) simtypes.Operation {
 			fx.SetFutureOpsRegistry(fOpsReg)
 		}
 		from, msg := SafeRunFactoryMethod(ctx, testData, reporter, fx.Create())
-		futOps := fOpsReg.legacyObjs
+		futOps := fOpsReg.items
 		weightedOpsResult := DeliverSimsMsg(ctx, reporter, app, r, l.txConfig, l.ak, chainID, msg, fx.DeliveryResultHandler(), from...)
 		err := reporter.Close()
 		return weightedOpsResult, futOps, err
@@ -146,9 +168,9 @@ func (l *FutureOperationRegistryAdapter) Add(blockTime time.Time, fx SimMsgFacto
 	}
 	obj := simtypes.FutureOperation{
 		BlockTime: blockTime,
-		Op:        legacyOperationAdapter(l.regCommon, fx),
+		Op:        legacyOperationAdapter(l.regCommon, fx).toLegacyOp(),
 	}
-	l.legacyObjs = append(l.legacyObjs, obj)
+	l.items = append(l.items, obj)
 }
 
 var _ Registry = &UniqueTypeRegistry{}
@@ -279,14 +301,9 @@ func (s WeightedFactoryMethods) Iterator() WeightedProposalMsgIter {
 }
 
 // legacy operation to Msg factory type
-func legacyToMsgFactoryAdapter(fn simtypes.MsgSimulatorFnX) FactoryMethod {
+func legacyToMsgFactoryAdapter(fn simtypes.MsgSimulatorFn) FactoryMethod {
 	return func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
-		msg, err := fn(ctx, testData.r, testData.AllAccounts(), testData.AddressCodec())
-		if err != nil {
-			reporter.Skip(err.Error())
-			return nil, nil
-		}
-		return []SimAccount{}, msg
+		return []SimAccount{}, fn(testData.r, sdk.UnwrapSDKContext(ctx), testData.AllAccounts())
 	}
 }
 

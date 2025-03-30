@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
-// ValidateProtoAnnotations validates that the proto annotations are correct.
+// ValidateAnnotations validates that the proto annotations are correct.
 // More specifically, it verifies:
 // - all services named "Msg" have `(cosmos.msg.v1.service) = true`,
 //

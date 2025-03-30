@@ -14,8 +14,10 @@ import (
 )
 
 type (
-	// AppEntrypoint is an alias to the simtype interface
-	AppEntrypoint = simtypes.AppEntrypoint
+	// AppEntrypoint is the entrypoint to deliver sims TX to the system.
+	AppEntrypoint interface {
+		SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+	}
 
 	AccountSource interface {
 		GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI

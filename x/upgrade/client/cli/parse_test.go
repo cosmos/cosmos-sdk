@@ -7,10 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/upgrade/types"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 func TestParsePlan(t *testing.T) {
-	fs := NewCmdSubmitUpgradeProposal().Flags()
+	fs := NewCmdSubmitUpgradeProposal(addresscodec.NewBech32Codec("cosmos")).Flags()
 
 	proposal := types.MsgSoftwareUpgrade{
 		Plan: types.Plan{
@@ -20,11 +22,8 @@ func TestParsePlan(t *testing.T) {
 		},
 	}
 
-	err := fs.Set(FlagUpgradeHeight, strconv.FormatInt(proposal.Plan.Height, 10))
-	require.NoError(t, err)
-
-	err = fs.Set(FlagUpgradeInfo, proposal.Plan.Info)
-	require.NoError(t, err)
+	require.NoError(t, fs.Set(FlagUpgradeHeight, strconv.FormatInt(proposal.Plan.Height, 10)))
+	require.NoError(t, fs.Set(FlagUpgradeInfo, proposal.Plan.Info))
 
 	p, err := parsePlan(fs, proposal.Plan.Name)
 	require.NoError(t, err)

@@ -28,7 +28,7 @@ proof-of-stake capabilities and governance.
 ## Supplementary Modules
 
 Supplementary modules are modules that are maintained in the Cosmos SDK but are not necessary for
-the core functionality of your blockchain.  They can be thought of as ways to extend the
+the core functionality of your blockchain.  They can be thought of as ways to extend the 
 capabilities of your blockchain or further specialize it.
 
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.

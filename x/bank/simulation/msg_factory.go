@@ -4,10 +4,9 @@ import (
 	"context"
 	"slices"
 
-	"cosmossdk.io/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func MsgSendFactory() simsx.SimMsgFactoryFn[*types.MsgSend] {
@@ -15,7 +14,7 @@ func MsgSendFactory() simsx.SimMsgFactoryFn[*types.MsgSend] {
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
 		to := testData.AnyAccount(reporter, simsx.ExcludeAccounts(from))
 		coins := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
-		return []simsx.SimAccount{from}, types.NewMsgSend(from.AddressBech32, to.AddressBech32, coins)
+		return []simsx.SimAccount{from}, types.NewMsgSend(from.Address, to.Address, coins)
 	}
 }
 
@@ -41,7 +40,7 @@ func MsgMultiSendFactory() simsx.SimMsgFactoryFn[*types.MsgMultiSend] {
 			senderAcc[i] = from
 
 			// set next input and accumulate total sent coins
-			sending[i] = types.NewInput(from.AddressBech32, coins)
+			sending[i] = types.NewInput(from.Address, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 
@@ -63,7 +62,7 @@ func MsgMultiSendFactory() simsx.SimMsgFactoryFn[*types.MsgMultiSend] {
 				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
 
-			receiving[i] = types.NewOutput(receiver.AddressBech32, outCoins)
+			receiving[i] = types.NewOutput(receiver.Address, outCoins)
 		}
 
 		// remove any entries that have no coins

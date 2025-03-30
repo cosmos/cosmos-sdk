@@ -21,17 +21,26 @@ the vulnerability can be reproduced on either one of those.
 
 ## Reporting a Vulnerability
 
-| Reporting methods                                             | Bounty eligible |
-|---------------------------------------------------------------|-----------------|
-| [HackerOne program][h1]                                       |       yes       |
-| [security@interchain.io](mailto:security@interchain.io)       |       no        |
+| Reporting methods                                             |
+|---------------------------------------------------------------|
+| [GitHub Private Vulnerability Reporting][gh-private-advisory] |
+| [HackerOne bug bounty program][h1]                            |
 
-Issues identified in this repository may be eligible for a [bug bounty][h1]. For your report to be bounty
-eligible it must be reported exclusively through the [HackerOne Bug Bounty][h1].
+All security vulnerabilities can be reported under GitHub's [Private
+vulnerability reporting][gh-private-advisory] system. This will open a private
+issue for the developers. Try to fill in as much of the questions as possible.
+If you are not familiar with the CVSS system for assessing vulnerabilities, just
+use the Low/High/Critical severity ratings. A partially filled in report for a
+critical vulnerability is still better than no report at all.
 
-If you do not wish to be eligible for a bounty or do not want to use the HackerOne platform to report an
-issue, please send your report via email to [security@interchain.io](mailto:security@interchain.io) with
-reproduction steps and details of the issue.
+Vulnerabilities associated with the **Go, Rust or Protobuf code** of the
+repository may be eligible for a [bug bounty][h1]. Please see the bug bounty
+page for more details on submissions and rewards. If you think the vulnerability
+is eligible for a payout, **report on HackerOne first**.
+
+Vulnerabilities in services and their source codes (JavaScript, web page, Google
+Workspace) are not in scope for the bug bounty program, but they are welcome to
+be reported in GitHub.
 
 ### Guidelines
 
@@ -57,8 +66,14 @@ If you follow these guidelines when reporting an issue to us, we commit to:
 
 ### More information
 
+* See [TIMELINE.md] for an example timeline of a disclosure.
+* See [DISCLOSURE.md] to see more into the inner workings of the disclosure
+  process.
 * See [EXAMPLES.md] for some of the examples that we are interested in for the
   bug bounty program.
 
+[gh-private-advisory]: /../../security/advisories/new
 [h1]: https://hackerone.com/cosmos
-[EXAMPLES.md]: https://github.com/interchainio/security/blob/main/resources/CLASSIFICATION_MATRIX.md#real-world-examples
+[TIMELINE.md]: https://github.com/cosmos/security/blob/main/TIMELINE.md
+[DISCLOSURE.md]: https://github.com/cosmos/security/blob/main/DISCLOSURE.md
+[EXAMPLES.md]: https://github.com/cosmos/security/blob/main/EXAMPLES.md

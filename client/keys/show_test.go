@@ -7,12 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/address"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -57,17 +53,13 @@ func Test_runShowCmd(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	kbHome := t.TempDir()
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithCodec(cdc).
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
-
+		WithCodec(cdc)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{"invalid"})
@@ -116,10 +108,8 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, err)
 	addr, err := k.GetAddress()
 	require.NoError(t, err)
-	addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
-	require.NoError(t, err)
 	cmd.SetArgs([]string{
-		addrStr,
+		addr.String(),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
@@ -246,22 +236,13 @@ func Test_validateMultisigThreshold(t *testing.T) {
 }
 
 func Test_getBechKeyOut(t *testing.T) {
-	ctx := client.Context{}.
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
-
-	tmpKey1 := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
-	k, err := keyring.NewLocalRecord("foo", tmpKey1, tmpKey1.PubKey())
-	require.NoError(t, err)
-
 	type args struct {
 		bechPrefix string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    func(k *keyring.Record, addressCodec address.Codec) (KeyOutput, error)
+		want    bechKeyOutFn
 		wantErr bool
 	}{
 		{"empty", args{""}, nil, true},
@@ -272,12 +253,12 @@ func Test_getBechKeyOut(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := getKeyOutput(ctx, tt.args.bechPrefix, k)
+			got, err := getBechKeyOut(tt.args.bechPrefix)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, output)
+				require.NotNil(t, got)
 			}
 		})
 	}

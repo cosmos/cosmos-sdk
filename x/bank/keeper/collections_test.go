@@ -2,53 +2,48 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/bank/keeper"
-	banktestutil "cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestBankStateCompatibility(t *testing.T) {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	storeService := runtime.NewKVStoreService(key)
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
-	authKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
-
-	addr, err := ac.BytesToString(accAddrs[4])
-	require.NoError(t, err)
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress(banktypes.GovModuleName))
-	require.NoError(t, err)
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	k := keeper.NewBaseKeeper(
-		env,
 		encCfg.Codec,
+		storeService,
 		authKeeper,
-		map[string]bool{addr: true},
-		authority,
+		map[string]bool{accAddrs[4].String(): true},
+		authtypes.NewModuleAddress("gov").String(),
+		log.NewNopLogger(),
 	)
 
 	// test we can decode balances without problems
@@ -61,7 +56,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	)
 	require.NoError(t, err)
 	// we set the index key to the old value.
-	require.NoError(t, env.KVStoreService.OpenKVStore(ctx).Set(rawKey, bankDenomAddressLegacyIndexValue))
+	require.NoError(t, storeService.OpenKVStore(ctx).Set(rawKey, bankDenomAddressLegacyIndexValue))
 
 	// test walking is ok
 	err = k.Balances.Indexes.Denom.Walk(ctx, nil, func(indexingKey string, indexedKey sdk.AccAddress) (stop bool, err error) {
@@ -84,7 +79,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	err = k.Balances.Indexes.Denom.Reference(ctx, collections.Join(sdk.AccAddress("test"), "atom"), math.ZeroInt(), nil)
 	require.NoError(t, err)
 
-	newRawValue, err := env.KVStoreService.OpenKVStore(ctx).Get(rawKey)
+	newRawValue, err := storeService.OpenKVStore(ctx).Get(rawKey)
 	require.NoError(t, err)
 	require.Equal(t, []byte{}, newRawValue)
 }

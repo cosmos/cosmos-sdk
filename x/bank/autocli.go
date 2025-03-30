@@ -1,13 +1,10 @@
 package bank
 
 import (
-	"fmt"
 	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
@@ -18,26 +15,26 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "Balance",
-					Use:            "balance <address> <denom>",
+					Use:            "balance [address] [denom]",
 					Short:          "Query an account balance by address and denom",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}, {ProtoField: "denom"}},
 				},
 				{
 					RpcMethod:      "AllBalances",
-					Use:            "balances <address>",
+					Use:            "balances [address]",
 					Short:          "Query for account balances by address",
 					Long:           "Query the total balance of an account or of a specific denomination.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
 				},
 				{
 					RpcMethod:      "SpendableBalances",
-					Use:            "spendable-balances <address>",
+					Use:            "spendable-balances [address]",
 					Short:          "Query for account spendable balances by address",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
 				},
 				{
 					RpcMethod:      "SpendableBalanceByDenom",
-					Use:            "spendable-balance <address> <denom>",
+					Use:            "spendable-balance [address] [denom]",
 					Short:          "Query the spendable balance of a single denom for a single account.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}, {ProtoField: "denom"}},
 				},
@@ -50,7 +47,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "SupplyOf",
-					Use:            "total-supply-of <denom>",
+					Use:            "total-supply-of [denom]",
 					Short:          "Query the supply of a single coin denom",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
@@ -61,7 +58,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "DenomMetadata",
-					Use:            "denom-metadata <denom>",
+					Use:            "denom-metadata [denom]",
 					Short:          "Query the client metadata of a given coin denomination",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
@@ -72,13 +69,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "DenomOwners",
-					Use:            "denom-owners <denom>",
+					Use:            "denom-owners [denom]",
 					Short:          "Query for all account addresses that own a particular token denomination.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
 				{
 					RpcMethod: "SendEnabled",
-					Use:       "send-enabled <denom1>...",
+					Use:       "send-enabled [denom1 ...]",
 					Short:     "Query for send enabled entries",
 					Long: strings.TrimSpace(`Query for send enabled entries that have been specifically set.
 			
@@ -91,11 +88,11 @@ To look up all denoms, do not provide any arguments.`,
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service:              bankv1beta1.Msg_ServiceDesc.ServiceName,
-			EnhanceCustomCommand: true,
+			EnhanceCustomCommand: false, // use custom commands only until v0.51
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Send",
-					Use:       "send <from_key_or_address> <to_address> <amount>...",
+					Use:       "send [from_key_or_address] [to_address] [amount]",
 					Short:     "Send funds from one account to another.",
 					Long: `Send funds from one account to another.
 Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
@@ -104,29 +101,16 @@ Note: multiple coins can be send by space separated.`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount", Varargs: true}},
 				},
 				{
-					RpcMethod:      "Burn",
-					Use:            "burn <from_key_or_address> <amount>",
-					Short:          "Burns the amount specified from the given account.",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "amount", Varargs: true}},
+					RpcMethod: "UpdateParams",
+					Skip:      true, // skipped because authority gated
 				},
 				{
-					RpcMethod:      "UpdateParams",
-					Use:            "update-params-proposal <params>",
-					Short:          "Submit a proposal to update bank module params. Note: the entire params must be provided.",
-					Example:        fmt.Sprintf(`%s tx bank update-params-proposal '{ "default_send_enabled": true }'`, version.AppName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
-					GovProposal:    true,
+					RpcMethod: "SetSendEnabled",
+					Skip:      true, // skipped because authority gated
 				},
 				{
-					RpcMethod:      "SetSendEnabled",
-					Use:            "set-send-enabled-proposal <send_enabled>",
-					Short:          "Submit a proposal to set/update/delete send enabled entries",
-					Example:        fmt.Sprintf(`%s tx bank set-send-enabled-proposal '{"denom":"stake","enabled":true}'`, version.AppName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "send_enabled", Varargs: true}},
-					FlagOptions: map[string]*autocliv1.FlagOptions{
-						"use_default_for": {Name: "use-default-for", Usage: "Use default for the given denom (delete a send enabled entry)"},
-					},
-					GovProposal: true,
+					RpcMethod: "Burn",
+					Skip:      true, // skipped because available from v0.51
 				},
 			},
 		},

@@ -14,12 +14,9 @@ linters:
     - errcheck
     - errorlint
     - copyloopvar
-    - gci
     - goconst
     - gocritic
-    - gofumpt
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - misspell
@@ -29,7 +26,6 @@ linters:
     - staticcheck
     - stylecheck
     - thelper
-    - typecheck
     - unconvert
     - unused
 

@@ -3,7 +3,7 @@ module cosmossdk.io/systemtests
 go 1.23.0
 
 require (
-	cosmossdk.io/math v1.5.0
+	cosmossdk.io/math v1.5.1
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/creachadair/tomledit v0.0.27

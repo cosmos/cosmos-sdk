@@ -48,7 +48,7 @@ func StartOtlpExporter(cfg Config) {
 
 	go func() {
 		for {
-			if err := scrapePrometheusMetrics(ctx, cfg.PrometheusEndpoint, meter, gauges, histograms); err != nil {
+			if err := scrapePrometheusMetrics(ctx, meter, gauges, histograms); err != nil {
 				log.Printf("error scraping metrics: %v", err)
 			}
 			time.Sleep(cfg.OtlpPushInterval)
@@ -56,7 +56,7 @@ func StartOtlpExporter(cfg Config) {
 	}()
 }
 
-func scrapePrometheusMetrics(ctx context.Context, promEndpoint string, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, histograms map[string]otmetric.Float64Histogram) error {
+func scrapePrometheusMetrics(ctx context.Context, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, histograms map[string]otmetric.Float64Histogram) error {
 	metricFamilies, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
 		log.Printf("failed to gather prometheus metrics: %v", err)

@@ -228,14 +228,14 @@ func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration
 	return "", false
 }
 
-// Keys wasmd keys CLI command
+// Keys runs the keys CLI command
 func (c CLIWrapper) Keys(args ...string) string {
 	args = c.WithKeyringFlags(args...)
 	out, _ := c.run(args)
 	return out
 }
 
-// CustomQuery main entrypoint for wasmd CLI queries
+// CustomQuery main entrypoint for CLI queries
 func (c CLIWrapper) CustomQuery(args ...string) string {
 	args = c.WithQueryFlags(args...)
 	out, _ := c.run(args)

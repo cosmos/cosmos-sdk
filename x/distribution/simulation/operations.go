@@ -34,7 +34,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
 	txConfig client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -61,7 +61,7 @@ func WeightedOperations(
 		weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
 	})
 
-	return simulation.WeightedOperations{
+	ops := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSetWithdrawAddress,
 			SimulateMsgSetWithdrawAddress(txConfig, ak, bk, k),
@@ -74,11 +74,16 @@ func WeightedOperations(
 			weightMsgWithdrawValidatorCommission,
 			SimulateMsgWithdrawValidatorCommission(txConfig, ak, bk, k, sk),
 		),
-		simulation.NewWeightedOperation(
+	}
+
+	if !k.HasExternalCommunityPool() {
+		ops = append(ops, simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
 			SimulateMsgFundCommunityPool(txConfig, ak, bk, k, sk),
-		),
+		))
 	}
+
+	return ops
 }
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.

@@ -396,7 +396,7 @@ func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, tim
 	if len(timeout) != 0 {
 		maxWaitTime = timeout[0]
 	} else {
-		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+3) * s.blockTime
+		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+4) * s.blockTime
 	}
 	abort := time.NewTimer(maxWaitTime).C
 	for {

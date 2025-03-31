@@ -33,7 +33,7 @@ require (
 require cosmossdk.io/math v1.5.0
 
 require (
-	cosmossdk.io/api v0.8.2 // indirect
+	cosmossdk.io/api v0.9.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect

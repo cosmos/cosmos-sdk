@@ -3,7 +3,7 @@ module cosmossdk.io/tools/benchmark
 go 1.23.5
 
 require (
-	cosmossdk.io/api v0.8.2
+	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.1

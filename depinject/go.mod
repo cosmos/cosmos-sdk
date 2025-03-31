@@ -2,12 +2,7 @@ module cosmossdk.io/depinject
 
 go 1.23.0
 
-toolchain go1.23.7
-
-replace (
-	cosmossdk.io/api => ../api
-	github.com/cosmos/cosmos-sdk => ../.
-)
+replace github.com/cosmos/cosmos-sdk => ../.
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -21,7 +16,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.7.6 // indirect
+	cosmossdk.io/api v0.9.0 // indirect
 	cosmossdk.io/core v0.11.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/x/tx v0.13.7 // indirect

@@ -3,13 +3,13 @@ module cosmossdk.io/tests/systemtests
 go 1.23.0
 
 replace (
-	cosmossdk.io/api => ../../api
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
 )
 
 require (
+	cosmossdk.io/math v1.5.1
 	cosmossdk.io/systemtests v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/cosmos-sdk v0.50.13
@@ -30,10 +30,8 @@ require (
 	github.com/tidwall/sjson v1.2.5
 )
 
-require cosmossdk.io/math v1.5.1
-
 require (
-	cosmossdk.io/api v0.8.2 // indirect
+	cosmossdk.io/api v0.9.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect

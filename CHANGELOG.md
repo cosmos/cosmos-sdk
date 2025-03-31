@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (baseapp) [#24069](https://github.com/cosmos/cosmos-sdk/pull/24069) Create CheckTxHandler to allow extending the logic of CheckTx.
 * (types) [#24093](https://github.com/cosmos/cosmos-sdk/pull/24093) Added a new method, `IsGT`, for `types.Coin`. This method is used to check if a `types.Coin` is greater than another `types.Coin`.
 * (client/keys) [#24071](https://github.com/cosmos/cosmos-sdk/pull/24071) Add support for importing hex key using standard input.
 * (types) [#23780](https://github.com/cosmos/cosmos-sdk/pull/23780) Add a ValueCodec for the math.Uint type that can be used in collections maps.
@@ -53,9 +54,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (genutil) [#24018](https://github.com/cosmos/cosmos-sdk/pull/24018) Allow manually setting the consensus key type in genesis
 * (client) [#18557](https://github.com/cosmos/cosmos-sdk/pull/18557) Add `--qrcode` flag to `keys show` command to support displaying keys address QR code.
 * (x/auth) [#24030](https://github.com/cosmos/cosmos-sdk/pull/24030) Allow usage of ed25519 keys for transaction signing.
+* (baseapp) [#24163](https://github.com/cosmos/cosmos-sdk/pull/24163) Add `StreamingManager` to baseapp to extend the abci listeners.
+* (x/protocolpool) [#23933](https://github.com/cosmos/cosmos-sdk/pull/23933) Add x/protocolpool module.
+  * x/distribution can now utilize an externally managed community pool. NOTE: this will make the message handlers for FundCommunityPool and CommunityPoolSpend error, as well as the query handler for CommunityPool.
 
 ### Improvements
 
+* (client/keys) [#18950](https://github.com/cosmos/cosmos-sdk/pull/18950) Improve `<appd> keys add`, `<appd> keys import` and `<appd> keys rename` by checking name validation.
 * (client/keys) [#18703](https://github.com/cosmos/cosmos-sdk/pull/18703) Improve `<appd> keys add` and `<appd> keys show` by checking whether there are duplicate keys in the multisig case.
 * (client/keys) [#18745](https://github.com/cosmos/cosmos-sdk/pull/18745) Improve `<appd> keys export` and `<appd> keys mnemonic` by adding --yes option to skip interactive confirmation.
 * (x/bank) [#24106](https://github.com/cosmos/cosmos-sdk/pull/24106) `SendCoins` now checks for `SendRestrictions` before instead of after deducting coins using `subUnlockedCoins`.
@@ -83,6 +88,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (sims) [#23952](https://github.com/cosmos/cosmos-sdk/pull/23952) Use liveness matrix for validator sign status in sims
 * (baseapp) [#24055](https://github.com/cosmos/cosmos-sdk/pull/24055) Align block header when query with latest height.
 * (baseapp) [#24074](https://github.com/cosmos/cosmos-sdk/pull/24074) Use CometBFT's ComputeProtoSizeForTxs in defaultTxSelector.SelectTxForProposal for consistency.
+* (cli) [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Prune cmd should disable async pruning.
+
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20
 

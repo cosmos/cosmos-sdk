@@ -45,6 +45,8 @@ type MsgClient interface {
 	WithdrawValidatorCommission(ctx context.Context, in *MsgWithdrawValidatorCommission, opts ...grpc.CallOption) (*MsgWithdrawValidatorCommissionResponse, error)
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
+	//
+	// WARNING: This method will fail if an external community pool is used.
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
@@ -53,6 +55,8 @@ type MsgClient interface {
 	// the community pool in the x/distribution module to another account, which
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
+	//
+	// WARNING: This method will fail if an external community pool is used.
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
@@ -154,6 +158,8 @@ type MsgServer interface {
 	WithdrawValidatorCommission(context.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error)
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
+	//
+	// WARNING: This method will fail if an external community pool is used.
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
@@ -162,6 +168,8 @@ type MsgServer interface {
 	// the community pool in the x/distribution module to another account, which
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
+	//
+	// WARNING: This method will fail if an external community pool is used.
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.

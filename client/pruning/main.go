@@ -44,6 +44,9 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
+			// force sync pruning so that the command will wait for the pruning to finish before returning.
+			vp.Set(server.FlagIAVLSyncPruning, true)
+
 			// use the first argument if present to set the pruning method
 			if len(args) > 0 {
 				vp.Set(server.FlagPruning, args[0])
@@ -55,9 +58,10 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
-			cmd.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
+			cmd.Printf("get pruning options from command flags, strategy: %v, keep-recent: %d, interval: %d\n",
 				pruningOptions.Strategy,
 				pruningOptions.KeepRecent,
+				pruningOptions.Interval,
 			)
 
 			home := vp.GetString(flags.FlagHome)
@@ -69,6 +73,9 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			if err != nil {
 				return err
 			}
+
+			// in our test, it's important to close db explicitly for pebbledb to write to disk.
+			defer db.Close()
 
 			logger := log.NewLogger(cmd.OutOrStdout())
 			app := appCreator(logger, db, nil, vp)

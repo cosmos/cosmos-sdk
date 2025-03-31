@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule"
+	appmodule "cosmossdk.io/collections/corecompat"
 )
 
 func TestDefaultGenesis(t *testing.T) {

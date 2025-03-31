@@ -39,6 +39,17 @@ func Test_runAddCmdBasic(t *testing.T) {
 		_ = kb.Delete("keyname2")
 	})
 
+	// test empty name
+	cmd.SetArgs([]string{
+		"",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	mockIn.Reset("y\n")
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
+
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),

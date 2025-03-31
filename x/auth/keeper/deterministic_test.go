@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"sort"
 	"sync/atomic"
 	"testing"
@@ -96,12 +97,14 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 	if count >= 1000 {
 		panic("count must be less than 1000")
 	}
-	accNums := rapid.SliceOfNDistinct(rapid.Uint64Range(0, 1000), count, count, func(i uint64) uint64 {
+	accNums := rapid.SliceOfNDistinct(rapid.Uint64Range(0, 999), count, count, func(i uint64) uint64 {
 		return i
 	}).Draw(t, "acc-nums")
 
 	// then we change account numbers in such a way that there cannot be accounts with the same account number
 	lane := atomic.AddUint64(&suite.accountNumberLanes, 1)
+	fmt.Println(lane)
+	fmt.Println(accNums)
 	for i := range accNums {
 		accNums[i] += lane * 1000
 	}
@@ -113,6 +116,7 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 		seq := rapid.Uint64().Draw(t, "sequence")
 
 		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
+		fmt.Println(acc1)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 		accs = append(accs, acc1)
 	}

@@ -93,10 +93,10 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 	accs := make([]sdk.AccountI, 0, count)
 
 	// We need all generated account-numbers unique
-	if count >= 100 {
+	if count >= 1000 {
 		panic("count must be less than 100")
 	}
-	accNums := rapid.SliceOfNDistinct(rapid.Uint64Range(0, 100), count, count, func(i uint64) uint64 {
+	accNums := rapid.SliceOfNDistinct(rapid.Uint64Range(0, 1000), count, count, func(i uint64) uint64 {
 		return i
 	}).Draw(t, "acc-nums")
 

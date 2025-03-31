@@ -2,8 +2,6 @@ module cosmossdk.io/x/nft
 
 go 1.23.0
 
-replace cosmossdk.io/store => ../../store
-
 replace github.com/cosmos/cosmos-sdk => ../..
 
 require (
@@ -13,7 +11,7 @@ require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
 	cosmossdk.io/math v1.5.1
-	cosmossdk.io/store v1.1.1
+	cosmossdk.io/store v1.1.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.13

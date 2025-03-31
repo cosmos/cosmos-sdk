@@ -48,6 +48,38 @@ func TestDecFromLegacyDec(t *testing.T) {
 	}
 }
 
+func TestDecFromLegacyDecDeterministic(t *testing.T) {
+	// List of test input strings in legacy format.
+	testInputs := []string{
+		"0",
+		"1",
+		"-1",
+		"123.456",
+		"-9876.543210",
+		"0.000000000000000001",
+		"100.000000000000000000",
+		"12345678901234567890.123456789012345678",
+	}
+
+	// For each input, convert the legacy string to LegacyDec and then run conversion multiple times.
+	for _, s := range testInputs {
+		legacyDec, err := math.LegacyNewDecFromStr(s)
+		require.NoError(t, err)
+
+		// Run the conversion multiple times.
+		dec1, err := math.DecFromLegacyDec(legacyDec)
+		require.NoError(t, err)
+
+		dec2, err := math.DecFromLegacyDec(legacyDec)
+		require.NoError(t, err)
+
+		dec3, err := math.DecFromLegacyDec(legacyDec)
+		require.NoError(t, err)
+
+		require.True(t, dec1.Equal(dec2) && dec2.Equal(dec3))
+	}
+}
+
 // FuzzDecFromLegacyDec fuzzes the conversion function from LegacyDec to Dec.
 func FuzzDecFromLegacyDec(f *testing.F) {
 	// Seed the fuzzer with some valid input strings.

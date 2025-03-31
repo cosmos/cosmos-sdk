@@ -2,8 +2,6 @@ module cosmossdk.io/x/nft
 
 go 1.23.0
 
-replace github.com/cosmos/cosmos-sdk => ../..
-
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.0

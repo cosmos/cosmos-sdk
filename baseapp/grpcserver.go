@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -22,6 +23,19 @@ import (
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
+	app.RegisterGRPCServerWithSkipCheckHeader(server, false)
+}
+
+// RegisterGRPCServerWithSkipCheckHeader registers gRPC services with the specified gRPC server
+// and bypass check header flag. During the commit phase, gRPC queries may be processed before the block header
+// is fully updated, causing header checks to fail erroneously. Skipping the header check in these cases prevents
+// false negatives and ensures more robust query handling.  While bypassing the header check is generally preferred to avoid false
+// negatives during the commit phase, there are niche scenarios where someone might want to enable it.
+// For instance, if an application requires strict validation to ensure that the query context exactly
+// reflects the expected block header (for consistency or security reasons), then enabling header checks
+// could be beneficial. However, this strictness comes at the cost of potentially more frequent errors
+// when queries occur during the commit phase.
+func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server, skipCheckHeader bool) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
 	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
@@ -47,7 +61,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Create the sdk.Context. Passing false as 2nd arg, as we can't
 		// actually support proofs with gRPC right now.
-		sdkCtx, err := app.CreateQueryContext(height, false)
+		sdkCtx, err := app.CreateQueryContextWithCheckHeader(height, false, !skipCheckHeader)
 		if err != nil {
 			return nil, err
 		}
@@ -66,6 +80,18 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		}
 
 		app.logger.Debug("gRPC query received", "type", fmt.Sprintf("%#v", req))
+
+		// Catch an OutOfGasPanic caused in the query handlers
+		defer func() {
+			if r := recover(); r != nil {
+				switch rType := r.(type) {
+				case storetypes.ErrorOutOfGas:
+					err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "Query gas limit exceeded: %v, out of gas in location: %v", sdkCtx.GasMeter().Limit(), rType.Descriptor)
+				default:
+					panic(r)
+				}
+			}
+		}()
 
 		return handler(grpcCtx, req)
 	}

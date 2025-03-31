@@ -242,7 +242,7 @@ func createUpdateStep(oldKey, newKey string, oldEntry *parser.KeyValue) transfor
 				return nil
 			}
 
-			newEntry.KeyValue.Value = oldEntry.Value
+			newEntry.Value = oldEntry.Value
 			return nil
 		}),
 	}

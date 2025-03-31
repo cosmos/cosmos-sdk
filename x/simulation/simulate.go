@@ -70,7 +70,7 @@ func SimulateFromSeed(
 ) (stopEarly bool, exportedParams Params, err error) {
 	tb.Helper()
 	mode, _, _ := getTestingMode(tb)
-	expParams, err := SimulateFromSeedX(tb, log.NewTestLogger(tb), w, app, appStateFn, randAccFn, ops, blockedAddrs, config, cdc, NewLogWriter(mode))
+	expParams, _, err := SimulateFromSeedX(tb, log.NewTestLogger(tb), w, app, appStateFn, randAccFn, ops, blockedAddrs, config, cdc, NewLogWriter(mode))
 	return false, expParams, err
 }
 
@@ -88,7 +88,7 @@ func SimulateFromSeedX(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 	logWriter LogWriter,
-) (exportedParams Params, err error) {
+) (exportedParams Params, accs []simulation.Account, err error) {
 	tb.Helper()
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
@@ -101,7 +101,7 @@ func SimulateFromSeedX(
 	logger.Debug("Randomized simulation setup", "params", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
-	accs := randAccFn(r, params.NumKeys())
+	accs = randAccFn(r, params.NumKeys())
 	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
@@ -110,7 +110,7 @@ func SimulateFromSeedX(
 	// At least 2 accounts must be added here, otherwise when executing SimulateMsgSend
 	// two accounts will be selected to meet the conditions from != to and it will fall into an infinite loop.
 	if len(accs) <= 1 {
-		return params, fmt.Errorf("at least two genesis accounts are required")
+		return params, accs, fmt.Errorf("at least two genesis accounts are required")
 	}
 
 	config.ChainID = chainID
@@ -128,7 +128,7 @@ func SimulateFromSeedX(
 	nextValidators := validators
 	if len(nextValidators) == 0 {
 		tb.Skip("skipping: empty validator set in genesis")
-		return params, nil
+		return params, accs, nil
 	}
 
 	var (
@@ -196,7 +196,7 @@ func SimulateFromSeedX(
 
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
-			return params, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
+			return params, accs, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
 		}
 
 		ctx := app.NewContextLegacy(false, cmtproto.Header{
@@ -243,8 +243,9 @@ func SimulateFromSeedX(
 		proposerAddress = validators.randomProposer(r)
 
 		if config.Commit {
+			app.SimWriteState()
 			if _, err := app.Commit(); err != nil {
-				return params, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
+				return params, accs, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
 			}
 		}
 
@@ -263,7 +264,7 @@ func SimulateFromSeedX(
 		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, eventStats.Tally)
 		if len(nextValidators) == 0 {
 			tb.Skip("skipping: empty validator set")
-			return params, nil
+			return params, accs, nil
 		}
 
 		// update the exported params
@@ -281,7 +282,7 @@ func SimulateFromSeedX(
 	} else {
 		eventStats.Print(w)
 	}
-	return exportedParams, err
+	return exportedParams, accs, err
 }
 
 type blockSimFn func(
@@ -342,10 +343,10 @@ func createBlockSimulator(tb testing.TB, printProgress bool, w io.Writer, params
 
 			if err != nil {
 				logWriter.PrintLogs()
-				tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+				tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s for msg %q:
 %v
 Comment: %s`,
-					header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, err, opMsg.Comment)
+					header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, opMsg.Name, err, opMsg.Comment)
 			}
 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)

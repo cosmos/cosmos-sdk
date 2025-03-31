@@ -20,7 +20,7 @@ const (
 )
 
 // ProposalMsgs defines the module weighted proposals' contents
-// Deprecated: migrate to MsgUpdateParamsFactory instead
+// migrate to MsgUpdateParamsFactory instead
 func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
 		simulation.NewWeightedProposalMsg(

@@ -110,15 +110,6 @@ func MsgWithdrawValidatorCommissionFactory(k keeper.Keeper, sk types.StakingKeep
 	}
 }
 
-func MsgFundCommunityPoolFactory() simsx.SimMsgFactoryFn[*types.MsgFundCommunityPool] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgFundCommunityPool) {
-		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
-		fundAmount := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
-		msg := types.NewMsgFundCommunityPool(fundAmount, from.AddressBech32)
-		return []simsx.SimAccount{from}, msg
-	}
-}
-
 func MsgUpdateParamsFactory() simsx.SimMsgFactoryFn[*types.MsgUpdateParams] {
 	return func(_ context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgUpdateParams) {
 		r := testData.Rand()

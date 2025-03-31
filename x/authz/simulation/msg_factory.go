@@ -52,7 +52,10 @@ func MsgExecFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*authz.MsgExec] {
 		}
 		amount := granter.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
 		amount = amount.Min(gAuthz.(*banktype.SendAuthorization).SpendLimit)
-
+		if !amount.IsAllPositive() {
+			reporter.Skip("amount is not positive")
+			return nil, nil
+		}
 		payloadMsg := []sdk.Msg{banktype.NewMsgSend(granter.Address, grantee.Address, amount)}
 		msgExec := authz.NewMsgExec(grantee.Address, payloadMsg)
 		return []simsx.SimAccount{grantee}, &msgExec

@@ -61,7 +61,12 @@ In case of any error in updating the file, no output is written.`,
 			targetVersion := args[0]
 			plan, ok := confix.Migrations[targetVersion]
 			if !ok {
-				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, slices.Collect(maps.Keys(confix.Migrations)))
+				var supportedVersions []string
+				for version := range confix.Migrations {
+					supportedVersions = append(supportedVersions, version)
+				}
+			return fmt.Errorf("unknown version %q, supported versions are: %v", targetVersion, supportedVersions)
+				}
 			}
 
 			rawFile, err := confix.LoadConfig(configPath)

@@ -2,8 +2,6 @@ module cosmossdk.io/client/v2
 
 go 1.23.0
 
-replace cosmossdk.io/api => ../../api
-
 replace cosmossdk.io/depinject => ../../depinject
 
 require (

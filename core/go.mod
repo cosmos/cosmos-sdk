@@ -4,10 +4,8 @@ go 1.23.0
 
 toolchain go1.23.7
 
-replace cosmossdk.io/api => ../api
-
 require (
-	cosmossdk.io/api v0.7.6
+	cosmossdk.io/api v0.9.0
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/math v1.5.0
 	github.com/cosmos/cosmos-db v1.1.1

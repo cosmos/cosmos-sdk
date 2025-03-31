@@ -9,7 +9,7 @@ replace cosmossdk.io/api => ../api
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/math v1.5.0
+	cosmossdk.io/math v1.5.1
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.71.0

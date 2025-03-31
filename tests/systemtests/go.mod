@@ -30,7 +30,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 )
 
-require cosmossdk.io/math v1.5.0
+require cosmossdk.io/math v1.5.1
 
 require (
 	cosmossdk.io/api v0.8.2 // indirect

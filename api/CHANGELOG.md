@@ -26,12 +26,12 @@ Each entry must include the Github issue reference in the following format:
 
 ### Features
 
-* `x/protocolpool` API files
-* `x/epochs` API files
-* `unordered` transaction support
+* [#23933](https://github.com/cosmos/cosmos-sdk/pull/23933) `x/protocolpool` API files
+* [#23815](https://github.com/cosmos/cosmos-sdk/pull/23815) `x/epochs` API files
+* [#23708](https://github.com/cosmos/cosmos-sdk/pull/23708) `unordered` transaction support
 
 ### Improvements
 
-* Minor dependency bumps
+* [#24227](https://github.com/cosmos/cosmos-sdk/pull/24227) Minor dependency bumps
 
 

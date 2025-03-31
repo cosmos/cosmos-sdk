@@ -292,26 +292,37 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 
 		defer h.txSelector.Clear()
 
-		// decode transactions
-		decodedTxs := make([]sdk.Tx, len(req.Txs))
-		for i, txBz := range req.Txs {
-			tx, err := h.txVerifier.TxDecode(txBz)
-			if err != nil {
-				return nil, err
-			}
-
-			decodedTxs[i] = tx
-		}
-
 		// If the mempool is nil or NoOp we simply return the transactions
 		// requested from CometBFT, which, by default, should be in FIFO order.
 		//
 		// Note, we still need to ensure the transactions returned respect req.MaxTxBytes.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
+		// decode transactions
+		var decodedTxs []sdk.Tx
+		getDecodedTxs := func() error {
+			if decodedTxs != nil {
+				return nil
+			}
+
+			decodedTxs = make([]sdk.Tx, len(req.Txs))
+			for i, txBz := range req.Txs {
+				tx, err := h.txVerifier.TxDecode(txBz)
+				if err != nil {
+					return err
+				}
+
+				decodedTxs[i] = tx
+			}
+			return nil
+		}
 		if h.mempool == nil || isNoOp {
 			if h.fastPrepareProposal {
 				txs := h.txSelector.SelectTxForProposalFast(ctx, req.Txs)
 				return &abci.PrepareProposalResponse{Txs: txs}, nil
+			}
+			err := getDecodedTxs()
+			if err != nil {
+				return nil, err
 			}
 			for i, tx := range decodedTxs {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, tx, req.Txs[i])
@@ -329,6 +340,10 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			selectedTxsNums int
 			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
+		err := getDecodedTxs()
+		if err != nil {
+			return nil, err
+		}
 		h.mempool.SelectBy(ctx, decodedTxs, func(memTx sdk.Tx) bool {
 			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
 			isUnordered := ok && unorderedTx.GetUnordered()

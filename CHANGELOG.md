@@ -50,7 +50,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 
 ### Improvements
-* [#24207](https://github.com/cosmos/cosmos-sdk/pull/24207) Avoid decoding tx for in PrepareProposal if it's NopMempool.
+* [#24207](https://github.com/cosmos/cosmos-sdk/pull/24207) Avoid decoding tx for in PrepareProposal if it's NoOpMempool.
 
 ### Bug Fixes
 

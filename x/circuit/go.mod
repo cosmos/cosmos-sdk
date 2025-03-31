@@ -2,15 +2,13 @@ module cosmossdk.io/x/circuit
 
 go 1.23.0
 
-replace cosmossdk.io/store => ../../store
-
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.2
-	cosmossdk.io/store v1.1.1
+	cosmossdk.io/store v1.1.2
 	github.com/cockroachdb/errors v1.11.3
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-sdk v0.50.13

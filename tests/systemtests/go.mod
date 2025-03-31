@@ -3,7 +3,6 @@ module cosmossdk.io/tests/systemtests
 go 1.23.0
 
 replace (
-	cosmossdk.io/store => ../../store
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
 )

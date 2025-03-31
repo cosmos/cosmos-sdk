@@ -153,7 +153,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace (
-	cosmossdk.io/store => ../../store
-	github.com/cosmos/cosmos-sdk => ../../
-)
+replace github.com/cosmos/cosmos-sdk => ../../

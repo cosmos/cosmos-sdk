@@ -34,6 +34,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
 ## [v0.11.3](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.3)
 
 * [#24088](https://github.com/cosmos/cosmos-sdk/pull/24088) Convert store interface type definitions to type aliases for compatibility with `cosmossdk.io/collections` `v1.2.x`.

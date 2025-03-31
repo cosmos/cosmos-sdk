@@ -2,8 +2,6 @@ module cosmossdk.io/depinject
 
 go 1.23.0
 
-toolchain go1.23.7
-
 replace github.com/cosmos/cosmos-sdk => ../.
 
 require (

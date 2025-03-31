@@ -2,8 +2,6 @@ module cosmossdk.io/core
 
 go 1.23.0
 
-toolchain go1.23.7
-
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/depinject v1.1.0

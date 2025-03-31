@@ -2,8 +2,6 @@ module cosmossdk.io/tools/confix
 
 go 1.23.0
 
-toolchain go1.23.7
-
 require (
 	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/creachadair/atomicfile v0.3.7

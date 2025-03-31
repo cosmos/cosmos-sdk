@@ -3,7 +3,6 @@ module cosmossdk.io/tests/systemtests
 go 1.23.0
 
 replace (
-	cosmossdk.io/store => ../../store
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
 )
@@ -37,7 +36,7 @@ require (
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.5.1 // indirect
-	cosmossdk.io/store v1.1.1 // indirect
+	cosmossdk.io/store v1.1.2 // indirect
 	cosmossdk.io/x/tx v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

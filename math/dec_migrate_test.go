@@ -1,9 +1,11 @@
 package math_test
 
 import (
-	"cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 )
 
 // TestDecFromLegacyDec verifies that converting a LegacyDec to a Dec via string round-trip works as expected.
@@ -26,7 +28,7 @@ func TestDecFromLegacyDec(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc // capture range variable
+		// capture range variable
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a LegacyDec from the test input string.
 			legacyDec, err := math.LegacyNewDecFromStr(tc.inputStr)

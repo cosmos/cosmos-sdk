@@ -27,7 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Running the `prune` command disabled async pruning.
+* [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Running the `prune` command now disables async pruning.
 
 ## v1.1.1 (September 06, 2024)
 

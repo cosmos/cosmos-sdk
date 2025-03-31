@@ -2,6 +2,8 @@ module cosmossdk.io/x/upgrade
 
 go 1.23.5
 
+toolchain go1.24.1
+
 require (
 	cosmossdk.io/api v0.8.2
 	cosmossdk.io/core v1.0.0
@@ -28,7 +30,7 @@ require (
 	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250106144421-5f5ef82da422
 	google.golang.org/grpc v1.70.0
-	google.golang.org/protobuf v1.36.4
+	google.golang.org/protobuf v1.36.6
 )
 
 require (

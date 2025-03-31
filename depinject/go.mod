@@ -4,10 +4,7 @@ go 1.23.0
 
 toolchain go1.23.7
 
-replace (
-	cosmossdk.io/api => ../api
-	github.com/cosmos/cosmos-sdk => ../.
-)
+replace github.com/cosmos/cosmos-sdk => ../.
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

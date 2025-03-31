@@ -221,7 +221,6 @@ require (
 
 // Below are the long-lived replace for tests.
 replace (
-	cosmossdk.io/api => ../api
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	cosmossdk.io/store => ../store

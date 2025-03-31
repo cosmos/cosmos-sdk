@@ -225,7 +225,6 @@ require (
 
 // Below are the long-lived replace of the SimApp
 replace (
-	cosmossdk.io/api => ../api
 	cosmossdk.io/store => ../store
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

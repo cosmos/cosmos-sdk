@@ -22,6 +22,7 @@ granting arbitrary privileges from one account (the granter) to another account 
     * [MsgGrant](#msggrant)
     * [MsgRevoke](#msgrevoke)
     * [MsgExec](#msgexec)
+    * [MsgPruneExpiredGrants](#msgpruneexpiredgrants)
 * [Events](#events)
 * [Client](#client)
     * [CLI](#cli)
@@ -180,6 +181,10 @@ The message handling should fail if:
 * provided `Authorization` is not implemented.
 * grantee doesn't have permission to run the transaction.
 * if granted authorization is expired.
+
+### MsgPruneExpiredGrants
+
+Message that clean up 75 expired grants. A user has no benefit sending this transaction, it is only used by the chain to clean up expired grants.
 
 ## Events
 

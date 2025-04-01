@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (testing) [#1](https://github.com/atomone-hub/cosmos-sdk/pull/1) Add `MakeTestEncodingConfigWithOpts` to pass `testutil.CodecOptions` when creating `TestEncodingConfig`.
 * (x/auth) [#1](https://github.com/atomone-hub/cosmos-sdk/pull/1) Support legacy global AccountNumber.
 * (crypto/keyring) [#1](https://github.com/atomone-hub/cosmos-sdk/pull/1) Fix error wrapping in pkg crypto/keyring. Removed `cockroachdb/errors` in favour of `errorsmod.Wrap`.
+* (x/authz) [#1](https://github.com/celestiaorg/cosmos-sdk/pull/1) Added a limit of 200 grants pruned per `BeginBlock` and the `PruneExpiredGrants` message that prunes 75 expired grants on every run.
 
 ### Improvements
 

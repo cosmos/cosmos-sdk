@@ -772,7 +772,7 @@ func TestGetVestingCoinsClawbackVestingAcc(t *testing.T) {
 
 	// require no coins vesting at the end of the vesting schedule
 	vestingCoins = va.GetVestingCoins(endTime)
-	//sdk.Coins{}
+	// sdk.Coins{}
 	require.Equal(t, sdk.Coins{}, vestingCoins)
 
 	// require all coins vesting at first vesting event

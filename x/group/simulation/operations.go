@@ -945,7 +945,6 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-
 		if err != nil {
 			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
 				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
@@ -1051,7 +1050,6 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-
 		if err != nil {
 			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
 				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil

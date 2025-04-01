@@ -2,9 +2,9 @@ package types
 
 import (
 	"errors"
+	"time"
 
 	stdmath "math"
-	"time"
 
 	"cosmossdk.io/math"
 	"sigs.k8s.io/yaml"

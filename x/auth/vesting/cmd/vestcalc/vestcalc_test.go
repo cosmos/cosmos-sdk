@@ -133,11 +133,11 @@ func TestDivideCoins(t *testing.T) {
 			coins:     coins("3xxx,2yyy"),
 			divisions: 6,
 			want: []sdk.Coins{
-				sdk.Coins{},
+				{},
 				coins("1xxx"),
 				coins("1yyy"),
 				coins("1xxx"),
-				sdk.Coins{},
+				{},
 				coins("1xxx,1yyy"),
 			},
 		},

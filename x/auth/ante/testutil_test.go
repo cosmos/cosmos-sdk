@@ -1,8 +1,9 @@
 package ante_test
 
 import (
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"testing"
+
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"

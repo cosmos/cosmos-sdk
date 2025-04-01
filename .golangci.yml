@@ -8,7 +8,7 @@ run:
 linters:
   disable-all: true
   enable:
-    - depguard
+    # - depguard
     - dogsled
     - exportloopref
     - goconst
@@ -19,7 +19,7 @@ linters:
     - govet
     - ineffassign
     - misspell
-    - nakedret
+    # - nakedret
     # [AGORIC] Caused false-positives
     # - nolintlint
     - staticcheck

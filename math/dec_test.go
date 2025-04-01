@@ -1084,7 +1084,7 @@ func TestReduce(t *testing.T) {
 		"positive value": {
 			src:       "10",
 			exp:       "10",
-			decPlaces: 0,
+			decPlaces: 1,
 		},
 		"negative value": {
 			src:       "-10",

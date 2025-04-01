@@ -25,27 +25,29 @@ import (
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
 	groupapi "cosmossdk.io/api/cosmos/group/v1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
+	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
-	authztypes "cosmossdk.io/x/authz"
-	banktypes "cosmossdk.io/x/bank/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
-	disttypes "cosmossdk.io/x/distribution/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
-	gov_v1_types "cosmossdk.io/x/gov/types/v1"
-	gov_v1beta1_types "cosmossdk.io/x/gov/types/v1beta1"
-	grouptypes "cosmossdk.io/x/group"
-	minttypes "cosmossdk.io/x/mint/types"
-	slashingtypes "cosmossdk.io/x/slashing/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type GeneratedType struct {
@@ -127,7 +129,9 @@ var (
 		GenType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, GenOpts),
 		GenType(&disttypes.MsgWithdrawValidatorCommission{}, &distapi.MsgWithdrawValidatorCommission{}, GenOpts),
 		GenType(&disttypes.MsgSetWithdrawAddress{}, &distapi.MsgSetWithdrawAddress{}, GenOpts),
+		GenType(&disttypes.MsgFundCommunityPool{}, &distapi.MsgFundCommunityPool{}, GenOpts),
 		GenType(&disttypes.MsgUpdateParams{}, &distapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
+		GenType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, GenOpts),
 		GenType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, GenOpts),
 
 		// evidence
@@ -218,6 +222,11 @@ var (
 		// upgrade
 		GenType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, GenOpts.WithDisallowNil()),
 		GenType(&upgradetypes.MsgCancelUpgrade{}, &upgradeapi.MsgCancelUpgrade{}, GenOpts),
+
+		// vesting
+		GenType(&vestingtypes.MsgCreateVestingAccount{}, &vestingapi.MsgCreateVestingAccount{}, GenOpts),
+		GenType(&vestingtypes.MsgCreatePermanentLockedAccount{}, &vestingapi.MsgCreatePermanentLockedAccount{}, GenOpts),
+		GenType(&vestingtypes.MsgCreatePeriodicVestingAccount{}, &vestingapi.MsgCreatePeriodicVestingAccount{}, GenOpts),
 	}
 	NonsignableTypes = []GeneratedType{
 		GenType(&authtypes.Params{}, &authapi.Params{}, GenOpts),
@@ -257,12 +266,15 @@ var (
 
 		GenType(&minttypes.Params{}, &mintapi.Params{}, GenOpts),
 
+		// params
+		GenType(&proposal.ParameterChangeProposal{}, &paramsapi.ParameterChangeProposal{}, GenOpts),
+
 		GenType(&slashingtypes.Params{}, &slashingapi.Params{}, GenOpts.WithDisallowNil()),
 
 		GenType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, GenOpts),
 
-		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       //nolint:staticcheck // testing legacy code path
-		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), //nolint:staticcheck // testing legacy code path
+		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       //nolint:staticcheck // testing registration of legacy deprecated type
+		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), //nolint:staticcheck // testing registration of legacy deprecated type
 		GenType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, GenOpts.WithDisallowNil()),
 
 		GenType(&vestingtypes.BaseVestingAccount{}, &vestingapi.BaseVestingAccount{}, GenOpts.WithDisallowNil()),

@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math/big"
 	"path/filepath"
@@ -88,8 +87,8 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %s and %s", spl[3], spl[4])
 	}
 
-	if !(change == 0 || change == 1) {
-		return nil, errors.New("change field can only be 0 or 1")
+	if change != 0 && change != 1 {
+		return nil, fmt.Errorf("change field can only be 0 or 1")
 	}
 
 	return &BIP44Params{
@@ -230,11 +229,11 @@ func derivePrivateKey(privKeyBytes, chainCode [32]byte, index uint32, harden boo
 		pubkeyBytes := ecPub.SerializeCompressed()
 		data = pubkeyBytes
 
-		// By using btcec, we can remove the dependency on tendermint/crypto/secp256k1
-		// pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
-		// public := pubkey.(secp256k1.PubKeySecp256k1)
-		// data = public[:]
-
+		/* By using btcec, we can remove the dependency on tendermint/crypto/secp256k1
+		pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
+		public := pubkey.(secp256k1.PubKeySecp256k1)
+		data = public[:]
+		*/
 	}
 
 	data = append(data, uint32ToBytes(index)...)
@@ -263,7 +262,7 @@ func uint32ToBytes(i uint32) []byte {
 	return b[:]
 }
 
-// i64 returns the two halves of the SHA512 HMAC of key and data.
+// i64 returns the two halfs of the SHA512 HMAC of key and data.
 func i64(key, data []byte) (il, ir [32]byte) {
 	mac := hmac.New(sha512.New, key)
 	// sha512 does not err

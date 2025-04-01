@@ -1,85 +1,73 @@
 package keeper
 
 import (
-	"context"
-
-	"cosmossdk.io/x/slashing/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis initializes default parameters and the keeper's address to
 // pubkey map.
-func (keeper Keeper) InitGenesis(ctx context.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) error {
-	var fnErr error
+func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	err := stakingKeeper.IterateValidators(ctx,
-		func(index int64, validator sdk.ValidatorI) bool {
+		func(index int64, validator stakingtypes.ValidatorI) bool {
 			consPk, err := validator.ConsPubKey()
 			if err != nil {
-				fnErr = err
-				return true
+				panic(err)
 			}
 
-			err = keeper.AddrPubkeyRelation.Set(ctx, consPk.Address(), consPk)
+			err = keeper.AddPubkey(ctx, consPk)
 			if err != nil {
-				fnErr = err
-				return true
+				panic(err)
 			}
 			return false
 		},
 	)
 	if err != nil {
-		return err
-	}
-	if fnErr != nil {
-		return fnErr
+		panic(err)
 	}
 
 	for _, info := range data.SigningInfos {
 		address, err := keeper.sk.ConsensusAddressCodec().StringToBytes(info.Address)
 		if err != nil {
-			return err
+			panic(err)
 		}
-		err = keeper.ValidatorSigningInfo.Set(ctx, address, info.ValidatorSigningInfo)
+		err = keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
 		if err != nil {
-			return err
+			panic(err)
 		}
 	}
 
 	for _, array := range data.MissedBlocks {
 		address, err := keeper.sk.ConsensusAddressCodec().StringToBytes(array.Address)
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		for _, missed := range array.MissedBlocks {
 			if err := keeper.SetMissedBlockBitmapValue(ctx, address, missed.Index, missed.Missed); err != nil {
-				return err
+				panic(err)
 			}
 		}
 	}
 
-	if err := keeper.Params.Set(ctx, data.Params); err != nil {
-		return err
+	if err := keeper.SetParams(ctx, data.Params); err != nil {
+		panic(err)
 	}
-	return nil
 }
 
 // ExportGenesis writes the current store values
 // to a genesis file, which can be imported again
 // with InitGenesis
-func (keeper Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
-	params, err := keeper.Params.Get(ctx)
+func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
+	params, err := keeper.GetParams(ctx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
-	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool, err error) {
-		bechAddr, err := keeper.sk.ConsensusAddressCodec().BytesToString(address)
-		if err != nil {
-			return true, err
-		}
+	err = keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+		bechAddr := address.String()
 		signingInfos = append(signingInfos, types.SigningInfo{
 			Address:              bechAddr,
 			ValidatorSigningInfo: info,
@@ -87,7 +75,7 @@ func (keeper Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, er
 
 		localMissedBlocks, err := keeper.GetValidatorMissedBlocks(ctx, address)
 		if err != nil {
-			return true, err
+			panic(err)
 		}
 
 		missedBlocks = append(missedBlocks, types.ValidatorMissedBlocks{
@@ -95,10 +83,11 @@ func (keeper Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, er
 			MissedBlocks: localMissedBlocks,
 		})
 
-		return false, nil
+		return false
 	})
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return types.NewGenesisState(params, signingInfos, missedBlocks), nil
+
+	return types.NewGenesisState(params, signingInfos, missedBlocks)
 }

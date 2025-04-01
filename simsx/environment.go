@@ -108,7 +108,7 @@ type visitable interface {
 // The amounts are removed from the liquid balance.
 func (b *SimsAccountBalance) RandSubsetCoins(reporter SimulationReporter, filters ...CoinsFilter) sdk.Coins {
 	amount := b.randomAmount(5, reporter, b.Coins, filters...)
-	b.Coins = b.Coins.Sub(amount...)
+	b.Coins = b.Sub(amount...)
 	if amount.Empty() {
 		reporter.Skip("got empty amounts")
 	}
@@ -134,16 +134,16 @@ func (b *SimsAccountBalance) RandSubsetCoin(reporter SimulationReporter, denom s
 
 // BlockAmount returns true when balance is > requested amount and subtracts the amount from the liquid balance
 func (b *SimsAccountBalance) BlockAmount(amount sdk.Coin) bool {
-	ok, coin := b.Coins.Find(amount.Denom)
+	ok, coin := b.Find(amount.Denom)
 	if !ok || !coin.IsPositive() || !coin.IsGTE(amount) {
 		return false
 	}
-	b.Coins = b.Coins.Sub(amount)
+	b.Coins = b.Sub(amount)
 	return true
 }
 
 func (b *SimsAccountBalance) randomAmount(retryCount int, reporter SimulationReporter, coins sdk.Coins, filters ...CoinsFilter) sdk.Coins {
-	if retryCount < 0 || b.Coins.Empty() {
+	if retryCount < 0 || b.Empty() {
 		reporter.Skip("failed to find matching amount")
 		return sdk.Coins{}
 	}
@@ -160,7 +160,7 @@ func (b *SimsAccountBalance) randomAmount(retryCount int, reporter SimulationRep
 }
 
 func (b *SimsAccountBalance) RandFees() sdk.Coins {
-	amount, err := simtypes.RandomFees(b.r, b.Coins)
+	amount, err := simtypes.RandomFees(b.r, sdk.Context{}, b.Coins)
 	if err != nil {
 		return sdk.Coins{}
 	}
@@ -419,19 +419,25 @@ func (r *XRand) DecN(max math.LegacyDec) math.LegacyDec {
 }
 
 func (r *XRand) IntInRange(min, max int) int {
-	return r.Rand.Intn(max-min) + min
+	return r.Intn(max-min) + min
 }
 
 // Uint64InRange returns a pseudo-random uint64 number in the range [min, max].
 // It panics when min >= max
 func (r *XRand) Uint64InRange(min, max uint64) uint64 {
-	return uint64(r.Rand.Int63n(int64(max-min)) + int64(min))
+	if min >= max {
+		panic("min must be less than max")
+	}
+	return uint64(r.Int63n(int64(max-min)) + int64(min))
 }
 
 // Uint32InRange returns a pseudo-random uint32 number in the range [min, max].
 // It panics when min >= max
 func (r *XRand) Uint32InRange(min, max uint32) uint32 {
-	return uint32(r.Rand.Intn(int(max-min))) + min
+	if min >= max {
+		panic("min must be less than max")
+	}
+	return uint32(r.Intn(int(max-min))) + min
 }
 
 func (r *XRand) PositiveSDKIntn(max math.Int) (math.Int, error) {

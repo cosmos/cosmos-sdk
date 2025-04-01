@@ -4,7 +4,7 @@ import (
 	"maps"
 	"slices"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/math/unsafe"
 	sdkmaps "cosmossdk.io/store/internal/maps"

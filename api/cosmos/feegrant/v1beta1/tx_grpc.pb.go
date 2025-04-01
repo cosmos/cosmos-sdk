@@ -39,6 +39,8 @@ type MsgClient interface {
 	// has been granted to the grantee.
 	RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance, opts ...grpc.CallOption) (*MsgRevokeAllowanceResponse, error)
 	// PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
+	//
+	// Since cosmos-sdk 0.50
 	PruneAllowances(ctx context.Context, in *MsgPruneAllowances, opts ...grpc.CallOption) (*MsgPruneAllowancesResponse, error)
 }
 
@@ -93,6 +95,8 @@ type MsgServer interface {
 	// has been granted to the grantee.
 	RevokeAllowance(context.Context, *MsgRevokeAllowance) (*MsgRevokeAllowanceResponse, error)
 	// PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
+	//
+	// Since cosmos-sdk 0.50
 	PruneAllowances(context.Context, *MsgPruneAllowances) (*MsgPruneAllowancesResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

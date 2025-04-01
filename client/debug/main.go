@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -13,11 +12,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we do old keys, they're keys after all.
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // retain for debug purposes
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -62,15 +61,12 @@ func CodecCmd() *cobra.Command {
 // getCodecInterfaces creates and returns a new cmd used for listing all registered interfaces on the application codec.
 func getCodecInterfaces() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list-interfaces",
-		Short:   "List all registered interface type URLs",
-		Long:    "List all registered interface type URLs using the application codec",
-		Example: fmt.Sprintf("%s debug codec list-interfaces", version.AppName),
+		Use:   "list-interfaces",
+		Short: "List all registered interface type URLs",
+		Long:  "List all registered interface type URLs using the application codec",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			iFaces := clientCtx.Codec.InterfaceRegistry().ListAllInterfaces()
-
-			slices.Sort(iFaces)
 			for _, iFace := range iFaces {
 				cmd.Println(iFace)
 			}
@@ -79,19 +75,16 @@ func getCodecInterfaces() *cobra.Command {
 	}
 }
 
-// getCodecInterfaceImpls creates and returns a new cmd used for listing all registered implementations of a given interface on the application codec.
+// getCodecInterfaceImpls creates and returns a new cmd used for listing all registered implemenations of a given interface on the application codec.
 func getCodecInterfaceImpls() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list-implementations <interface>",
-		Short:   "List the registered type URLs for the provided interface",
-		Long:    "List the registered type URLs that can be used for the provided interface name using the application codec",
-		Example: fmt.Sprintf("%s debug codec list-implementations cosmos.crypto.PubKey", version.AppName),
-		Args:    cobra.ExactArgs(1),
+		Use:   "list-implementations [interface]",
+		Short: "List the registered type URLs for the provided interface",
+		Long:  "List the registered type URLs that can be used for the provided interface name using the application codec",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			impls := clientCtx.Codec.InterfaceRegistry().ListImplementations(args[0])
-
-			slices.Sort(impls)
 			for _, imp := range impls {
 				cmd.Println(imp)
 			}
@@ -109,11 +102,14 @@ func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, 
 
 func PubkeyCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "pubkey <pubkey>",
-		Short:   "Decode a pubkey from proto JSON",
-		Long:    "Decode a pubkey from proto JSON and display it's address.",
-		Example: fmt.Sprintf(`%s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'`, version.AppName),
-		Args:    cobra.ExactArgs(1),
+		Use:   "pubkey [pubkey]",
+		Short: "Decode a pubkey from proto JSON",
+		Long: fmt.Sprintf(`Decode a pubkey from proto JSON and display it's address.
+
+Example:
+$ %s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'
+			`, version.AppName),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			pk, err := getPubKeyFromString(clientCtx, args[0])
@@ -181,7 +177,7 @@ func getPubKeyFromRawString(pkstr, keytype string) (cryptotypes.PubKey, error) {
 
 func PubkeyRawCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pubkey-raw <pubkey> [-t {ed25519, secp256k1}]",
+		Use:   "pubkey-raw [pubkey] -t [{ed25519, secp256k1}]",
 		Short: "Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32",
 		Long:  "Decode a pubkey from hex, base64, or bech32.",
 		Example: fmt.Sprintf(`
@@ -248,13 +244,15 @@ func PubkeyRawCmd() *cobra.Command {
 
 func AddrCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "addr <address>",
-		Short:   "Convert an address between hex and bech32",
-		Example: fmt.Sprintf("%s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg", version.AppName),
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
+		Use:   "addr [address]",
+		Short: "Convert an address between hex and bech32",
+		Long: fmt.Sprintf(`Convert an address between hex encoding and bech32.
 
+Example:
+$ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
+			`, version.AppName),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			addrString := args[0]
 			// try hex, then bech32
 			var (
@@ -263,9 +261,9 @@ func AddrCmd() *cobra.Command {
 			)
 			decodeFns := []func(text string) ([]byte, error){
 				hex.DecodeString,
-				clientCtx.AddressCodec.StringToBytes,
-				clientCtx.ValidatorAddressCodec.StringToBytes,
-				clientCtx.ConsensusAddressCodec.StringToBytes,
+				func(text string) ([]byte, error) { return sdk.AccAddressFromBech32(text) },
+				func(text string) ([]byte, error) { return sdk.ValAddressFromBech32(text) },
+				func(text string) ([]byte, error) { return sdk.ConsAddressFromBech32(text) },
 			}
 			errs := make([]any, 0, len(decodeFns))
 			for _, fn := range decodeFns {
@@ -288,15 +286,11 @@ func AddrCmd() *cobra.Command {
 				return fmt.Errorf("expected hex or bech32. Got errors: "+format, errs...)
 			}
 
-			acc, _ := clientCtx.AddressCodec.BytesToString(addr)
-			val, _ := clientCtx.ValidatorAddressCodec.BytesToString(addr)
-			con, _ := clientCtx.ConsensusAddressCodec.BytesToString(addr)
-
 			cmd.Println("Address:", addr)
 			cmd.Printf("Address (hex): %X\n", addr)
-			cmd.Printf("Bech32 Acc: %s\n", acc)
-			cmd.Printf("Bech32 Val: %s\n", val)
-			cmd.Printf("Bech32 Con: %s\n", con)
+			cmd.Printf("Bech32 Acc: %s\n", sdk.AccAddress(addr))
+			cmd.Printf("Bech32 Val: %s\n", sdk.ValAddress(addr))
+			cmd.Printf("Bech32 Con: %s\n", sdk.ConsAddress(addr))
 			return nil
 		},
 	}
@@ -333,24 +327,12 @@ func PrefixesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "prefixes",
 		Short:   "List prefixes used for Human-Readable Part (HRP) in Bech32",
+		Long:    "List prefixes used in Bech32 addresses.",
 		Example: fmt.Sprintf("$ %s debug prefixes", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			acc, _ := clientCtx.AddressCodec.BytesToString([]byte{})
-			val, _ := clientCtx.ValidatorAddressCodec.BytesToString([]byte{})
-			cons, _ := clientCtx.ConsensusAddressCodec.BytesToString([]byte{})
-
-			checksumLen := 7
-			if _, ok := clientCtx.AddressCodec.(addresscodec.Bech32Codec); !ok {
-				cmd.Printf("%s uses custom address codec, this command may not work as expected.\n", version.AppName)
-				checksumLen = 0
-			}
-
-			cmd.Printf("Bech32 Acc: %s\n", acc[:len(acc)-checksumLen])
-			cmd.Printf("Bech32 Val: %s\n", val[:len(val)-checksumLen])
-			cmd.Printf("Bech32 Con: %s\n", cons[:len(cons)-checksumLen])
-
+			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())
+			cmd.Printf("Bech32 Val: %s\n", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+			cmd.Printf("Bech32 Con: %s\n", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
 			return nil
 		},
 	}

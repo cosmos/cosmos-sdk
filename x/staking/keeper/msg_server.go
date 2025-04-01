@@ -1,27 +1,24 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
-	"errors"
-	"fmt"
 	"slices"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type msgServer struct {
@@ -36,8 +33,7 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// CreateValidator defines a method for creating a new validator.
-// The validator's params should not be nil for this function to execute successfully.
+// CreateValidator defines a method for creating a new validator
 func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
 	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
@@ -62,40 +58,13 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, types.ErrValidatorOwnerExists
 	}
 
-	cv := msg.Pubkey.GetCachedValue()
-	if cv == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "Pubkey cached value is nil")
-	}
-
-	pk, ok := cv.(cryptotypes.PubKey)
+	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", cv)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
 	}
 
-	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
-	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
-	}
-
-	pkType := pk.Type()
-	if !slices.Contains(pubkeyTypes, pkType) {
-		return nil, errorsmod.Wrapf(
-			types.ErrValidatorPubKeyTypeNotSupported,
-			"got: %s, expected: %s", pk.Type(), pubkeyTypes,
-		)
-	}
-
-	if pubkeyTypes == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
-	}
-
-	if err = validatePubKey(pk, pubkeyTypes); err != nil {
-		return nil, err
-	}
-
-	err = k.checkConsKeyAlreadyUsed(ctx, pk)
-	if err != nil {
-		return nil, err
+	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
+		return nil, types.ErrValidatorPubKeyExists
 	}
 
 	bondDenom, err := k.BondDenom(ctx)
@@ -109,8 +78,21 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		)
 	}
 
-	if _, err := msg.Description.Validate(); err != nil {
+	if _, err := msg.Description.EnsureLength(); err != nil {
 		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	cp := sdkCtx.ConsensusParams()
+	if cp.Validator != nil {
+		pkType := pk.Type()
+		hasKeyType := slices.Contains(cp.Validator.PubKeyTypes, pkType)
+		if !hasKeyType {
+			return nil, errorsmod.Wrapf(
+				types.ErrValidatorPubKeyTypeNotSupported,
+				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
+			)
+		}
 	}
 
 	validator, err := types.NewValidator(msg.ValidatorAddress, pk, msg.Description)
@@ -120,7 +102,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, k.HeaderService.HeaderInfo(ctx).Time,
+		msg.Commission.MaxChangeRate, sdkCtx.BlockHeader().Time,
 	)
 
 	validator, err = validator.SetInitialCommission(commission)
@@ -158,13 +140,13 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, err
 	}
 
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeCreateValidator,
-		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-		event.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
-	); err != nil {
-		return nil, err
-	}
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreateValidator,
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
+		),
+	})
 
 	return &types.MsgCreateValidatorResponse{}, nil
 }
@@ -176,7 +158,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	if msg.Description.IsEmpty() {
+	if msg.Description == (types.Description{}) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
@@ -247,13 +229,14 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, err
 	}
 
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeEditValidator,
-		event.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
-		event.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
-	); err != nil {
-		return nil, err
-	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeEditValidator,
+			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
+			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
+		),
+	})
 
 	return &types.MsgEditValidatorResponse{}, nil
 }
@@ -299,15 +282,27 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 		return nil, err
 	}
 
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeDelegate,
-		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
-		event.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
-	); err != nil {
-		return nil, err
+	if msg.Amount.Amount.IsInt64() {
+		defer func() {
+			telemetry.IncrCounter(1, types.ModuleName, "delegate")
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+			)
+		}()
 	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeDelegate,
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
+		),
+	})
 
 	return &types.MsgDelegateResponse{}, nil
 }
@@ -361,15 +356,27 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 		return nil, err
 	}
 
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeRedelegate,
-		event.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
-		event.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
-		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
-		event.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-	); err != nil {
-		return nil, err
+	if msg.Amount.Amount.IsInt64() {
+		defer func() {
+			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+			)
+		}()
 	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRedelegate,
+			sdk.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
+			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+		),
+	})
 
 	return &types.MsgBeginRedelegateResponse{
 		CompletionTime: completionTime,
@@ -420,15 +427,27 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 
 	undelegatedCoin := sdk.NewCoin(msg.Amount.Denom, undelegatedAmt)
 
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeUnbond,
-		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-		event.NewAttribute(sdk.AttributeKeyAmount, undelegatedCoin.String()),
-		event.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-	); err != nil {
-		return nil, err
+	if msg.Amount.Amount.IsInt64() {
+		defer func() {
+			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+			)
+		}()
 	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUnbond,
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, undelegatedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+		),
+	})
 
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
@@ -519,8 +538,8 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("amount is greater than the unbonding delegation entry balance")
 	}
 
-	headerInfo := k.HeaderService.HeaderInfo(ctx)
-	if unbondEntry.CompletionTime.Before(headerInfo.Time) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if unbondEntry.CompletionTime.Before(sdkCtx.BlockTime()) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
 	}
 
@@ -551,15 +570,15 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeCancelUnbondingDelegation,
-		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
-		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-		event.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
-	); err != nil {
-		return nil, err
-	}
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeCancelUnbondingDelegation,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
+		),
+	)
 
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
@@ -567,193 +586,17 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 // UpdateParams defines a method to perform updation of params exist in x/staking module.
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
-		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
 	if err := msg.Params.Validate(); err != nil {
 		return nil, err
 	}
 
-	// get previous staking params
-	previousParams, err := k.Params.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	// store params
-	if err := k.Params.Set(ctx, msg.Params); err != nil {
+	if err := k.SetParams(ctx, msg.Params); err != nil {
 		return nil, err
-	}
-
-	// when min commission rate is updated, we need to update the commission rate of all validators
-	if !previousParams.MinCommissionRate.Equal(msg.Params.MinCommissionRate) {
-		minRate := msg.Params.MinCommissionRate
-
-		vals, err := k.GetAllValidators(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, val := range vals {
-			// set the commission rate to min rate
-			if val.Commission.CommissionRates.Rate.LT(minRate) {
-				val.Commission.CommissionRates.Rate = minRate
-				// set the max rate to minRate if it is less than min rate
-				if val.Commission.CommissionRates.MaxRate.LT(minRate) {
-					val.Commission.CommissionRates.MaxRate = minRate
-				}
-
-				val.Commission.UpdateTime = k.HeaderService.HeaderInfo(ctx).Time
-				if err := k.SetValidator(ctx, val); err != nil {
-					return nil, fmt.Errorf("failed to set validator after MinCommissionRate param change: %w", err)
-				}
-			}
-		}
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
-}
-
-// RotateConsPubKey handles the rotation of a validator's consensus public key.
-// It validates the new key, checks for conflicts, and updates the necessary state.
-// The function requires that the validator params are not nil for successful execution.
-func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
-	cv := msg.NewPubkey.GetCachedValue()
-	if cv == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "new public key is nil")
-	}
-
-	pk, ok := cv.(cryptotypes.PubKey)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
-	}
-
-	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if pubkeyTypes == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
-	}
-
-	if err = validatePubKey(pk, pubkeyTypes); err != nil {
-		return nil, err
-	}
-
-	err = k.checkConsKeyAlreadyUsed(ctx, pk)
-	if err != nil {
-		return nil, err
-	}
-
-	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	validator, err := k.Keeper.GetValidator(ctx, valAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	if validator.GetOperator() == "" {
-		return nil, types.ErrNoValidatorFound
-	}
-
-	if status := validator.GetStatus(); status != sdk.Bonded {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "validator status is not bonded, got %x", status)
-	}
-
-	// Check if the validator is exceeding parameter MaxConsPubKeyRotations within the
-	// unbonding period by iterating ConsPubKeyRotationHistory.
-	err = k.ExceedsMaxRotations(ctx, valAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check if the signing account has enough balance to pay KeyRotationFee
-	// KeyRotationFees are sent to the community fund.
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.PoolModuleName, sdk.NewCoins(params.KeyRotationFee))
-	if err != nil {
-		return nil, err
-	}
-
-	// Add ConsPubKeyRotationHistory for tracking rotation
-	err = k.setConsPubKeyRotationHistory(
-		ctx,
-		valAddr,
-		validator.ConsensusPubkey,
-		msg.NewPubkey,
-		params.KeyRotationFee,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-// checkConsKeyAlreadyUsed returns an error if the consensus public key is already used,
-// in ConsAddrToValidatorIdentifierMap, OldToNewConsAddrMap, or in the current block (RotationHistory).
-func (k msgServer) checkConsKeyAlreadyUsed(ctx context.Context, newConsPubKey cryptotypes.PubKey) error {
-	newConsAddr := sdk.ConsAddress(newConsPubKey.Address())
-	rotatedTo, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newConsAddr)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return err
-	}
-
-	if rotatedTo != nil {
-		return sdkerrors.ErrInvalidAddress.Wrap(
-			"public key was already used")
-	}
-
-	// check in the current block
-	rotationHistory, err := k.GetBlockConsPubKeyRotationHistory(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, rotation := range rotationHistory {
-		cachedValue := rotation.NewConsPubkey.GetCachedValue()
-		if cachedValue == nil {
-			return sdkerrors.ErrInvalidAddress.Wrap("new public key is nil")
-		}
-		if bytes.Equal(cachedValue.(cryptotypes.PubKey).Address(), newConsAddr) {
-			return sdkerrors.ErrInvalidAddress.Wrap("public key was already used")
-		}
-	}
-
-	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
-	_, err = k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
-	if err == nil {
-		return types.ErrValidatorPubKeyExists
-	}
-
-	return nil
-}
-
-func validatePubKey(pk cryptotypes.PubKey, knownPubKeyTypes []string) error {
-	pkType := pk.Type()
-	if !slices.Contains(knownPubKeyTypes, pkType) {
-		return errorsmod.Wrapf(
-			types.ErrValidatorPubKeyTypeNotSupported,
-			"got: %s, expected: %s", pk.Type(), knownPubKeyTypes,
-		)
-	}
-
-	if pkType == sdk.PubKeyEd25519Type {
-		if len(pk.Bytes()) != ed25519.PubKeySize {
-			return errorsmod.Wrapf(
-				types.ErrConsensusPubKeyLenInvalid,
-				"invalid Ed25519 pubkey size: got %d, expected %d", len(pk.Bytes()), ed25519.PubKeySize,
-			)
-		}
-	}
-
-	return nil
 }

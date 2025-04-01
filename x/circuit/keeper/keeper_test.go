@@ -2,20 +2,19 @@ package keeper_test
 
 import (
 	"bytes"
-	"context"
+	context "context"
 	"testing"
 
+	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"
-	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -41,20 +40,18 @@ type fixture struct {
 
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, circuit.AppModule{})
+
+	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
 	ac := addresscodec.NewBech32Codec("cosmos")
 	mockStoreKey := storetypes.NewKVStoreKey("test")
+	storeService := runtime.NewKVStoreService(mockStoreKey)
+	k := keeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress("gov").String(), ac)
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(mockStoreKey), coretesting.NewNopLogger())
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
-	require.NoError(t, err)
-	k := keeper.NewKeeper(env, encCfg.Codec, authority, ac)
-
-	bz, err := ac.StringToBytes(authority)
+	bz, err := ac.StringToBytes(authtypes.NewModuleAddress("gov").String())
 	require.NoError(t, err)
 
 	return &fixture{
-		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx,
+		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),
 		keeper:   k,
 		mockAddr: bz,
 		mockPerms: types.Permissions{
@@ -106,8 +103,7 @@ func TestIteratePermissions(t *testing.T) {
 		[]byte("mock_address_3"),
 	}
 	for i, addr := range mockAddrs {
-		err := f.keeper.Permissions.Set(f.ctx, addr, mockPerms[i])
-		require.NoError(t, err)
+		require.NoError(t, f.keeper.Permissions.Set(f.ctx, addr, mockPerms[i]))
 	}
 
 	// Define a variable to store the returned permissions
@@ -165,42 +161,4 @@ func TestIterateDisabledList(t *testing.T) {
 	require.Len(t, returnedDisabled, 2)
 	require.Equal(t, mockMsgs[1], returnedDisabled[0])
 	require.Equal(t, mockMsgs[2], returnedDisabled[1])
-}
-
-func TestIsAllowed(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
-	testCases := []struct {
-		name        string
-		msgURL      string
-		setDisabled bool
-		expected    bool
-	}{
-		{
-			name:        "allowed message",
-			msgURL:      "test_allowed",
-			setDisabled: false,
-			expected:    true,
-		},
-		{
-			name:        "disabled message",
-			msgURL:      "test_disabled",
-			setDisabled: true,
-			expected:    false,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			if tc.setDisabled {
-				err := f.keeper.DisableList.Set(f.ctx, tc.msgURL)
-				require.NoError(t, err)
-			}
-
-			allowed, err := f.keeper.IsAllowed(f.ctx, tc.msgURL)
-			require.NoError(t, err)
-			require.Equal(t, tc.expected, allowed)
-		})
-	}
 }

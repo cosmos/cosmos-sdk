@@ -6,27 +6,24 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	govtypes "cosmossdk.io/api/cosmos/gov/v1beta1"
-	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/authz"
-	v2 "cosmossdk.io/x/authz/migrations/v2"
-	authzmodule "cosmossdk.io/x/authz/module"
-	"cosmossdk.io/x/bank"
-	banktypes "cosmossdk.io/x/bank/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	v2 "github.com/cosmos/cosmos-sdk/x/authz/migrations/v2"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func TestMigration(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{}, bank.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{}, bank.AppModuleBasic{})
 	cdc := encodingConfig.Codec
 
 	authzKey := storetypes.NewKVStoreKey("authz")
@@ -39,10 +36,10 @@ func TestMigration(t *testing.T) {
 	sendMsgType := banktypes.SendAuthorization{}.MsgTypeURL()
 	genericMsgType := sdk.MsgTypeURL(&govtypes.MsgVote{})
 	coins100 := sdk.NewCoins(sdk.NewInt64Coin("atom", 100))
-	blockTime := ctx.HeaderInfo().Time
+	blockTime := ctx.BlockTime()
 	oneDay := blockTime.AddDate(0, 0, 1)
 	oneYear := blockTime.AddDate(1, 0, 0)
-	sendAuthz := banktypes.NewSendAuthorization(coins100, nil, codectestutil.CodecOptions{}.GetAddressCodec())
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
 	grants := []struct {
 		granter       sdk.AccAddress
@@ -55,10 +52,10 @@ func TestMigration(t *testing.T) {
 			grantee1,
 			sendMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(sendAuthz)
+				cdcAny, err := codectypes.NewAnyWithValue(sendAuthz)
 				require.NoError(t, err)
 				return authz.Grant{
-					Authorization: any,
+					Authorization: cdcAny,
 					Expiration:    &oneDay,
 				}
 			},
@@ -68,10 +65,10 @@ func TestMigration(t *testing.T) {
 			grantee2,
 			sendMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(sendAuthz)
+				cdcAny, err := codectypes.NewAnyWithValue(sendAuthz)
 				require.NoError(t, err)
 				return authz.Grant{
-					Authorization: any,
+					Authorization: cdcAny,
 					Expiration:    &oneDay,
 				}
 			},
@@ -81,10 +78,10 @@ func TestMigration(t *testing.T) {
 			grantee1,
 			genericMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(genericMsgType))
+				cdcAny, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(genericMsgType))
 				require.NoError(t, err)
 				return authz.Grant{
-					Authorization: any,
+					Authorization: cdcAny,
 					Expiration:    &oneYear,
 				}
 			},
@@ -94,10 +91,10 @@ func TestMigration(t *testing.T) {
 			grantee2,
 			genericMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(genericMsgType))
+				cdcAny, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(genericMsgType))
 				require.NoError(t, err)
 				return authz.Grant{
-					Authorization: any,
+					Authorization: cdcAny,
 					Expiration:    &blockTime,
 				}
 			},
@@ -106,16 +103,14 @@ func TestMigration(t *testing.T) {
 
 	storeService := runtime.NewKVStoreService(authzKey)
 	store := storeService.OpenKVStore(ctx)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 
 	for _, g := range grants {
 		grant := g.authorization()
-		err := store.Set(v2.GrantStoreKey(g.grantee, g.granter, g.msgType), cdc.MustMarshal(&grant))
-		require.NoError(t, err)
+		require.NoError(t, store.Set(v2.GrantStoreKey(g.grantee, g.granter, g.msgType), cdc.MustMarshal(&grant)))
 	}
 
-	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(1 * time.Hour)})
-	require.NoError(t, v2.MigrateStore(ctx, env, cdc))
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Hour))
+	require.NoError(t, v2.MigrateStore(ctx, storeService, cdc))
 
 	bz, err := store.Get(v2.GrantStoreKey(grantee1, granter2, genericMsgType))
 	require.NoError(t, err)

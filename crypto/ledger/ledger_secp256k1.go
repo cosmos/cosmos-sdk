@@ -8,7 +8,6 @@ import (
 
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
-	"gitlab.com/yawning/secp256k1-voi/secec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -31,11 +30,11 @@ type (
 	// SECP256K1 reflects an interface a Ledger API must implement for SECP256K1
 	SECP256K1 interface {
 		Close() error
-		// GetPublicKeySECP256K1 returns an uncompressed pubkey
+		// Returns an uncompressed pubkey
 		GetPublicKeySECP256K1([]uint32) ([]byte, error)
-		// GetAddressPubKeySECP256K1 returns a compressed pubkey and bech32 address (requires user confirmation)
+		// Returns a compressed pubkey and bech32 address (requires user confirmation)
 		GetAddressPubKeySECP256K1([]uint32, string) ([]byte, string, error)
-		// SignSECP256K1 signs a message (requires user confirmation)
+		// Signs a message (requires user confirmation)
 		// The last byte denotes the SIGN_MODE to be used by Ledger: 0 for
 		// LEGACY_AMINO_JSON, 1 for TEXTUAL. It corresponds to the P2 value
 		// in https://github.com/cosmos/ledger-cosmos/blob/main/docs/APDUSPEC.md
@@ -71,22 +70,22 @@ func initOptionsDefault() {
 	options.skipDERConversion = false
 }
 
-// SetDiscoverLedger set the discoverLedger function to use a different Ledger derivation
+// Set the discoverLedger function to use a different Ledger derivation
 func SetDiscoverLedger(fn discoverLedgerFn) {
 	options.discoverLedger = fn
 }
 
-// SetCreatePubkey set the createPubkey function to use a different public key
+// Set the createPubkey function to use a different public key
 func SetCreatePubkey(fn createPubkeyFn) {
 	options.createPubkey = fn
 }
 
-// SetAppName set the Ledger app name to use a different app name
+// Set the Ledger app name to use a different app name
 func SetAppName(appName string) {
 	options.appName = appName
 }
 
-// SetSkipDERConversion set the DER Conversion requirement to true (false by default)
+// Set the DER Conversion requirement to true (false by default)
 func SetSkipDERConversion() {
 	options.skipDERConversion = true
 }
@@ -171,7 +170,7 @@ func ShowAddress(path hd.BIP44Params, expectedPubKey types.PubKey, accountAddres
 	}
 
 	if !pubKey.Equals(expectedPubKey) {
-		return errors.New("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
+		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
 	pubKey2, _, err := getPubKeyAddrSafe(device, path, accountAddressPrefix)
@@ -180,7 +179,7 @@ func ShowAddress(path hd.BIP44Params, expectedPubKey types.PubKey, accountAddres
 	}
 
 	if !pubKey2.Equals(expectedPubKey) {
-		return errors.New("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
+		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
 	return nil
@@ -275,7 +274,7 @@ func validateKey(device SECP256K1, pkl PrivKeyLedgerSecp256k1) error {
 
 	// verify this matches cached address
 	if !pub.Equals(pkl.CachedPubKey) {
-		return errors.New("cached key does not match retrieved key")
+		return fmt.Errorf("cached key does not match retrieved key")
 	}
 
 	return nil
@@ -321,13 +320,13 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secec.NewPublicKey(publicKey)
+	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-	copy(compressedPublicKey, cmp.CompressedBytes())
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return options.createPubkey(compressedPublicKey), nil
 }
@@ -351,13 +350,13 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secec.NewPublicKey(publicKey)
+	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-	copy(compressedPublicKey, cmp.CompressedBytes())
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return options.createPubkey(compressedPublicKey), addr, nil
 }

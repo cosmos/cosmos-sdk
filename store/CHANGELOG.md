@@ -23,32 +23,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-> **Disclaimer**: Numbers from v1.0.x to v1.9.x are reserved for the v0.50 line.
-> cosmossdk.io/store compatible with the v0.50 line is tagged from release/v0.50.x
-> Numbers from v1.10.x onwards are reserved for the 0.52+ line.
-> With Cosmos SDK v2 (with store/v2), CometBFT has been pushed to the boundaries, so issues like this
-> are not expected to happen again.
-
-## [Unreleased]
-
-
-## v1.10.0 (December 13, 2024)
-
-### Improvements
-
-* [#22305](https://github.com/cosmos/cosmos-sdk/pull/22305) Add `LatestVersion` to the `Committer` interface to get the latest version of the store.
-* Upgrade IAVL to IAVL v1.3.x.
+## v1.1.2 (March 31, 2025)
 
 ### Bug Fixes
 
-* [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when query historical state where a new store don't exist.
-* [#20644](https://github.com/cosmos/cosmos-sdk/pull/20644) Avoid nil error on not exhausted payload stream.
+* [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Running the `prune` command now disables async pruning.
 
 ## v1.1.1 (September 06, 2024)
 
 ### Improvements
 
-* [#21574](https://github.com/cosmos/cosmos-sdk/pull/21574) Upgrade IAVL to IAVL 1.2.0.
+* [#21574](https://github.com/cosmos/cosmos-sdk/pull/21574) Upgrade IVL to IAVL 1.2.0.
 
 ## v1.1.0 (March 20, 2024)
 

@@ -1,18 +1,16 @@
 package simulation
 
 import (
-	"context"
 	"math/rand"
 	"time"
 
-	coreaddress "cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/slashing/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // Simulation operation weights constants
@@ -25,7 +23,7 @@ const (
 // ProposalMsgs defines the module weighted proposals' contents
 func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
-		simulation.NewWeightedProposalMsgX(
+		simulation.NewWeightedProposalMsg(
 			OpWeightMsgUpdateParams,
 			DefaultWeightMsgUpdateParams,
 			SimulateMsgUpdateParams,
@@ -34,14 +32,9 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 }
 
 // SimulateMsgUpdateParams returns a random MsgUpdateParams
-func SimulateMsgUpdateParams(_ context.Context, r *rand.Rand, _ []simtypes.Account, ac coreaddress.Codec) (sdk.Msg, error) {
+func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 	// use the default gov module account address as authority
-	var authority sdk.AccAddress = address.Module(types.GovModuleName)
-
-	authorityAddr, err := ac.BytesToString(authority)
-	if err != nil {
-		return nil, err
-	}
+	var authority sdk.AccAddress = address.Module("gov")
 
 	params := types.DefaultParams()
 	params.DowntimeJailDuration = time.Duration(simtypes.RandTimestamp(r).UnixNano())
@@ -51,7 +44,7 @@ func SimulateMsgUpdateParams(_ context.Context, r *rand.Rand, _ []simtypes.Accou
 	params.SlashFractionDowntime = sdkmath.LegacyNewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 100)), 2)
 
 	return &types.MsgUpdateParams{
-		Authority: authorityAddr,
+		Authority: authority.String(),
 		Params:    params,
-	}, nil
+	}
 }

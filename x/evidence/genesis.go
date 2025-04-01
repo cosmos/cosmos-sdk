@@ -1,8 +1,6 @@
 package evidence
 
 import (
-	"context"
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/x/evidence/exported"
@@ -10,33 +8,33 @@ import (
 	"cosmossdk.io/x/evidence/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the evidence module's state from a provided genesis
 // state.
-func InitGenesis(ctx context.Context, k keeper.Keeper, gs *types.GenesisState) error {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
 	if err := gs.Validate(); err != nil {
-		return fmt.Errorf("failed to validate %s genesis state: %w", types.ModuleName, err)
+		panic(fmt.Sprintf("failed to validate %s genesis state: %s", types.ModuleName, err))
 	}
 
 	for _, e := range gs.Evidence {
 		evi, ok := e.GetCachedValue().(exported.Evidence)
 		if !ok {
-			return errors.New("expected evidence")
+			panic("expected evidence")
 		}
 		if _, err := k.Evidences.Get(ctx, evi.Hash()); err == nil {
-			return fmt.Errorf("evidence with hash %s already exists", evi.Hash())
+			panic(fmt.Sprintf("evidence with hash %s already exists", evi.Hash()))
 		}
 
 		if err := k.Evidences.Set(ctx, evi.Hash(), evi); err != nil {
-			return err
+			panic(err)
 		}
 	}
-	return nil
 }
 
 // ExportGenesis returns the evidence module's exported genesis.
-func ExportGenesis(ctx context.Context, k keeper.Keeper) (*types.GenesisState, error) {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	gs := new(types.GenesisState)
 	err := k.Evidences.Walk(ctx, nil, func(_ []byte, value exported.Evidence) (stop bool, err error) {
 		anyEvi, err := codectypes.NewAnyWithValue(value)
@@ -47,7 +45,7 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) (*types.GenesisState, e
 		return false, nil
 	})
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return gs, nil
+	return gs
 }

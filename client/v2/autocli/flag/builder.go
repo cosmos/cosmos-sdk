@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/cobra"
@@ -20,6 +19,8 @@ import (
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 const (
@@ -27,7 +28,6 @@ const (
 	ValidatorAddressStringScalarType = "cosmos.ValidatorAddressString"
 	ConsensusAddressStringScalarType = "cosmos.ConsensusAddressString"
 	PubkeyScalarType                 = "cosmos.Pubkey"
-	DecScalarType                    = "cosmos.Dec"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.
@@ -51,8 +51,8 @@ type Builder struct {
 
 	// Address Codecs are the address codecs to use for client/v2.
 	AddressCodec          address.Codec
-	ValidatorAddressCodec address.ValidatorAddressCodec
-	ConsensusAddressCodec address.ConsensusAddressCodec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
 }
 
 func (b *Builder) init() {
@@ -70,7 +70,6 @@ func (b *Builder) init() {
 		b.scalarFlagTypes[ValidatorAddressStringScalarType] = validatorAddressStringType{}
 		b.scalarFlagTypes[ConsensusAddressStringScalarType] = consensusAddressStringType{}
 		b.scalarFlagTypes[PubkeyScalarType] = pubkeyType{}
-		b.scalarFlagTypes[DecScalarType] = decType{}
 	}
 }
 
@@ -163,32 +162,38 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 			messageBinder.hasOptional = true
 		}
 
-		s := strings.Split(arg.ProtoField, ".")
-		if len(s) == 1 {
-			f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(arg.ProtoField), fields)
-			if err != nil {
-				return nil, err
-			}
-			messageBinder.positionalArgs = append(messageBinder.positionalArgs, f)
-		} else {
-			err := b.addFlattenFieldBindingToArgs(ctx, arg.ProtoField, s, messageType, messageBinder)
-			if err != nil {
-				return nil, err
-			}
+		field := fields.ByName(protoreflect.Name(arg.ProtoField))
+		if field == nil {
+			return nil, fmt.Errorf("can't find field %s on %s", arg.ProtoField, messageType.Descriptor().FullName())
 		}
+
+		_, hasValue, err := b.addFieldFlag(
+			ctx,
+			messageBinder.positionalFlagSet,
+			field,
+			&autocliv1.FlagOptions{Name: fmt.Sprintf("%d", i)},
+			namingOptions{},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		messageBinder.positionalArgs = append(messageBinder.positionalArgs, fieldBinding{
+			field:    field,
+			hasValue: hasValue,
+		})
 	}
 
-	totalArgs := len(messageBinder.positionalArgs)
 	switch {
 	case messageBinder.hasVarargs:
-		messageBinder.CobraArgs = cobra.MinimumNArgs(totalArgs - 1)
-		messageBinder.mandatoryArgUntil = totalArgs - 1
+		messageBinder.CobraArgs = cobra.MinimumNArgs(positionalArgsLen - 1)
+		messageBinder.mandatoryArgUntil = positionalArgsLen - 1
 	case messageBinder.hasOptional:
-		messageBinder.CobraArgs = cobra.RangeArgs(totalArgs-1, totalArgs)
-		messageBinder.mandatoryArgUntil = totalArgs - 1
+		messageBinder.CobraArgs = cobra.RangeArgs(positionalArgsLen-1, positionalArgsLen)
+		messageBinder.mandatoryArgUntil = positionalArgsLen - 1
 	default:
-		messageBinder.CobraArgs = cobra.ExactArgs(totalArgs)
-		messageBinder.mandatoryArgUntil = totalArgs
+		messageBinder.CobraArgs = cobra.ExactArgs(positionalArgsLen)
+		messageBinder.mandatoryArgUntil = positionalArgsLen
 	}
 
 	// validate flag options
@@ -241,10 +246,10 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 
 		flagOpts := commandOptions.FlagOptions[fieldName]
 		name, hasValue, err := b.addFieldFlag(ctx, flagSet, field, flagOpts, options)
+		flagOptsByFlagName[name] = flagOpts
 		if err != nil {
 			return nil, err
 		}
-		flagOptsByFlagName[name] = flagOpts
 
 		messageBinder.flagBindings = append(messageBinder.flagBindings, fieldBinding{
 			hasValue: hasValue,
@@ -266,56 +271,6 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	})
 
 	return messageBinder, nil
-}
-
-// addFlattenFieldBindingToArgs recursively adds field bindings for nested message fields to the message binder.
-// It takes a slice of field names representing the path to the target field, where each element is a field name
-// in the nested message structure. For example, ["foo", "bar", "baz"] would bind the "baz" field inside the "bar"
-// message which is inside the "foo" message.
-func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, path string, s []string, msg protoreflect.MessageType, messageBinder *MessageBinder) error {
-	fields := msg.Descriptor().Fields()
-	if len(s) == 1 {
-		f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(s[0]), fields)
-		if err != nil {
-			return err
-		}
-		f.path = path
-		messageBinder.positionalArgs = append(messageBinder.positionalArgs, f)
-		return nil
-	}
-	fd := fields.ByName(protoreflect.Name(s[0]))
-	var innerMsg protoreflect.MessageType
-	if fd.IsList() {
-		innerMsg = msg.New().Get(fd).List().NewElement().Message().Type()
-	} else {
-		innerMsg = msg.New().Get(fd).Message().Type()
-	}
-	return b.addFlattenFieldBindingToArgs(ctx, path, s[1:], innerMsg, messageBinder)
-}
-
-// addFieldBindingToArgs adds a fieldBinding for a positional argument to the message binder.
-// The fieldBinding is appended to the positional arguments list in the message binder.
-func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) (fieldBinding, error) {
-	field := fields.ByName(name)
-	if field == nil {
-		return fieldBinding{}, fmt.Errorf("can't find field %s", name) // TODO: it will improve error if msg.FullName() was included.`
-	}
-
-	_, hasValue, err := b.addFieldFlag(
-		ctx,
-		messageBinder.positionalFlagSet,
-		field,
-		&autocliv1.FlagOptions{Name: fmt.Sprintf("%d", len(messageBinder.positionalArgs))},
-		namingOptions{},
-	)
-	if err != nil {
-		return fieldBinding{}, err
-	}
-
-	return fieldBinding{
-		field:    field,
-		hasValue: hasValue,
-	}, nil
 }
 
 // bindPageRequest create a flag for pagination

@@ -2,11 +2,10 @@ package types
 
 import (
 	"context"
-	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
@@ -39,18 +38,21 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	baseCtx              context.Context
-	ms                   storetypes.MultiStore
-	header               cmtproto.Header // Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
-	headerHash           []byte          // Deprecated: Use HeaderService for hash
-	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
+	baseCtx context.Context
+	ms      storetypes.MultiStore
+	// Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
+	header cmtproto.Header
+	// Deprecated: Use HeaderService for hash
+	headerHash []byte
+	// Deprecated: Use HeaderService for chainID and CometService for the rest
+	chainID              string
 	txBytes              []byte
 	logger               log.Logger
-	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.52
+	voteInfo             []abci.VoteInfo
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
-	checkTx              bool // Deprecated: use execMode instead, will be removed after 0.52
-	recheckTx            bool // if recheckTx == true, then checkTx must also be true // Deprecated: use execMode instead, will be removed after 0.52
+	checkTx              bool
+	recheckTx            bool // if recheckTx == true, then checkTx must also be true
 	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
 	execMode             ExecMode
 	minGasPrice          DecCoins
@@ -60,7 +62,7 @@ type Context struct {
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
 	streamingManager     storetypes.StreamingManager
-	cometInfo            comet.Info
+	cometInfo            comet.BlockInfo
 	headerInfo           header.Info
 }
 
@@ -71,30 +73,27 @@ type Request = Context
 func (c Context) Context() context.Context                      { return c.baseCtx }
 func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
 func (c Context) BlockHeight() int64                            { return c.header.Height }
-func (c Context) BlockTime() time.Time                          { return c.headerInfo.Time } // Deprecated: use HeaderInfo().Time
+func (c Context) BlockTime() time.Time                          { return c.header.Time }
 func (c Context) ChainID() string                               { return c.chainID }
 func (c Context) TxBytes() []byte                               { return c.txBytes }
 func (c Context) Logger() log.Logger                            { return c.logger }
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
 func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool                               { return c.checkTx }   // Deprecated: use core/transaction service instead
-func (c Context) IsReCheckTx() bool                             { return c.recheckTx } // Deprecated: use core/transaction service instead
+func (c Context) IsCheckTx() bool                               { return c.checkTx }
+func (c Context) IsReCheckTx() bool                             { return c.recheckTx }
 func (c Context) IsSigverifyTx() bool                           { return c.sigverifyTx }
-func (c Context) ExecMode() ExecMode                            { return c.execMode } // Deprecated: use core/transaction service instead
+func (c Context) ExecMode() ExecMode                            { return c.execMode }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
 func (c Context) EventManager() EventManagerI                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
-func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
+func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
 
 // BlockHeader returns the header by value.
-// Note, only ChainID, Time and Height are always filled by baseapp.
-// In finalize block, the proposer address, validator hash and app hash are also filled.
-// Use CometInfo service and/or the Consensus Keeper for getting more information.
 func (c Context) BlockHeader() cmtproto.Header {
 	return c.header
 }
@@ -106,8 +105,6 @@ func (c Context) HeaderHash() []byte {
 	return hash
 }
 
-// Deprecated: getting consensus params from the context is deprecated and will be removed after 0.52
-// Querying the consensus module for the parameters is required in server/v2
 func (c Context) ConsensusParams() cmtproto.ConsensusParams {
 	return c.consParams
 }
@@ -125,14 +122,14 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Context {
-	h := cmtproto.Header{}
-	h.Time = h.Time.UTC()
+func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
+	// https://github.com/gogo/protobuf/issues/519
+	header.Time = header.Time.UTC()
 	return Context{
 		baseCtx:              context.Background(),
 		ms:                   ms,
-		header:               h,
-		chainID:              h.ChainID,
+		header:               header,
+		chainID:              header.ChainID,
 		checkTx:              isCheckTx,
 		sigverifyTx:          true,
 		logger:               logger,
@@ -141,9 +138,6 @@ func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Con
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
-		headerInfo: header.Info{
-			Time: h.Time,
-		},
 	}
 }
 
@@ -164,12 +158,6 @@ func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	c.header = header
-
-	// when calling withBlockheader on a new context, chainID in the struct will be empty
-	if strings.TrimSpace(c.chainID) == "" {
-		c.chainID = header.ChainID
-	}
-
 	return c
 }
 
@@ -180,6 +168,15 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 
 	c.headerHash = temp
 	return c
+}
+
+// WithBlockTime returns a Context with an updated CometBFT block header time in UTC with no monotonic component.
+// Stripping the monotonic component is for time equality.
+func (c Context) WithBlockTime(newTime time.Time) Context {
+	newHeader := c.BlockHeader()
+	// https://github.com/gogo/protobuf/issues/519
+	newHeader.Time = newTime.Round(0).UTC()
+	return c.WithBlockHeader(newHeader)
 }
 
 // WithProposer returns a Context with an updated proposer consensus address.
@@ -215,7 +212,6 @@ func (c Context) WithLogger(logger log.Logger) Context {
 }
 
 // WithVoteInfos returns a Context with an updated consensus VoteInfo.
-// Deprecated: use WithCometinfo() instead, will be removed after 0.52
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c
@@ -254,7 +250,7 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c
 }
 
-// WithIsReCheckTx called with true will also set true on checkTx in order to
+// WithIsRecheckTx called with true will also set true on checkTx in order to
 // enforce the invariant that if recheckTx = true then checkTx = true as well.
 func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 	if isRecheckTx {
@@ -308,14 +304,14 @@ func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
 }
 
 // WithCometInfo returns a Context with an updated comet info
-func (c Context) WithCometInfo(cometInfo comet.Info) Context {
+func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
 	c.cometInfo = cometInfo
 	return c
 }
 
 // WithHeaderInfo returns a Context with an updated header info
 func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
-	// Set time to UTC
+	// Settime to UTC
 	headerInfo.Time = headerInfo.Time.UTC()
 	c.headerInfo = headerInfo
 	return c
@@ -398,73 +394,4 @@ func UnwrapSDKContext(ctx context.Context) Context {
 		return sdkCtx
 	}
 	return ctx.Value(SdkContextKey).(Context)
-}
-
-// TryUnwrapSDKContext attempts to retrieve a Context from a context.Context
-func TryUnwrapSDKContext(ctx context.Context) (Context, bool) {
-	if sdkCtx, ok := ctx.(Context); ok {
-		return sdkCtx, true
-	}
-	v := ctx.Value(SdkContextKey)
-	if v == nil {
-		return Context{}, false
-	}
-	c, ok := v.(Context)
-	return c, ok
-}
-
-// ToSDKEvidence takes comet evidence and returns sdk evidence
-func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
-	evidence := make([]comet.Evidence, len(ev))
-	for i, e := range ev {
-		evidence[i] = comet.Evidence{
-			Type:             comet.MisbehaviorType(e.Type),
-			Height:           e.Height,
-			Time:             e.Time,
-			TotalVotingPower: e.TotalVotingPower,
-			Validator: comet.Validator{
-				Address: e.Validator.Address,
-				Power:   e.Validator.Power,
-			},
-		}
-	}
-	return evidence
-}
-
-// ToSDKCommitInfo takes comet commit info and returns sdk commit info
-func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
-	ci := comet.CommitInfo{
-		Round: commit.Round,
-	}
-
-	for _, v := range commit.Votes {
-		ci.Votes = append(ci.Votes, comet.VoteInfo{
-			Validator: comet.Validator{
-				Address: v.Validator.Address,
-				Power:   v.Validator.Power,
-			},
-			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
-		})
-	}
-	return ci
-}
-
-// ToSDKExtendedCommitInfo takes comet extended commit info and returns sdk commit info
-func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
-	ci := comet.CommitInfo{
-		Round: commit.Round,
-		Votes: make([]comet.VoteInfo, len(commit.Votes)),
-	}
-
-	for i, v := range commit.Votes {
-		ci.Votes[i] = comet.VoteInfo{
-			Validator: comet.Validator{
-				Address: v.Validator.Address,
-				Power:   v.Validator.Power,
-			},
-			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
-		}
-	}
-
-	return ci
 }

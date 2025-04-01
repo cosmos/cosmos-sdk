@@ -13,7 +13,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "go.uber.org/mock/gomock"
@@ -97,20 +96,6 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 	return m.recorder
 }
 
-// AddressCodec mocks base method.
-func (m *MockAccountKeeper) AddressCodec() address.Codec {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddressCodec")
-	ret0, _ := ret[0].(address.Codec)
-	return ret0
-}
-
-// AddressCodec indicates an expected call of AddressCodec.
-func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddressCodec", reflect.TypeOf((*MockAccountKeeper)(nil).AddressCodec))
-}
-
 // GetModuleAccount mocks base method.
 func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types.ModuleAccountI {
 	m.ctrl.T.Helper()
@@ -173,20 +158,6 @@ func NewMockBankKeeper(ctrl *gomock.Controller) *MockBankKeeper {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
-}
-
-// GetSupply mocks base method.
-func (m *MockBankKeeper) GetSupply(ctx context.Context, denom string) types.Coin {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSupply", ctx, denom)
-	ret0, _ := ret[0].(types.Coin)
-	return ret0
-}
-
-// GetSupply indicates an expected call of GetSupply.
-func (mr *MockBankKeeperMockRecorder) GetSupply(ctx, denom any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSupply", reflect.TypeOf((*MockBankKeeper)(nil).GetSupply), ctx, denom)
 }
 
 // MintCoins mocks base method.

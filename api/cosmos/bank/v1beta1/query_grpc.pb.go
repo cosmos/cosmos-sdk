@@ -49,6 +49,7 @@ type QueryClient interface {
 	AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
 	// SpendableBalances queries the spendable balance of all coins for a single
 	// account.
+	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
 	SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error)
@@ -247,6 +248,7 @@ type QueryServer interface {
 	AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
 	// SpendableBalances queries the spendable balance of all coins for a single
 	// account.
+	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
 	SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error)

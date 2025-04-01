@@ -8,6 +8,7 @@ import (
 
 func AssertError(t *testing.T, err, expectedErr error, expectedErrMsg string) {
 	t.Helper()
+
 	switch {
 	case expectedErr != nil:
 		require.ErrorIs(t, err, expectedErr)

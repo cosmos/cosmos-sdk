@@ -7,10 +7,9 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	corestore "cosmossdk.io/core/store"
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -20,9 +19,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-func initStore(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, v []byte) {
+func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*baseapp.BaseApp) {
+	return func(app *baseapp.BaseApp) {
+		app.SetStoreLoader(UpgradeStoreLoader(height, upgrades))
+	}
+}
+
+func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	t.Helper()
-	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+
+	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
@@ -38,9 +44,9 @@ func initStore(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, 
 	require.Equal(t, int64(1), commitID.Version)
 }
 
-func checkStore(t *testing.T, db corestore.KVStoreWithBatch, ver int64, storeKey string, k, v []byte) {
+func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	t.Helper()
-	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
+	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
@@ -87,6 +93,16 @@ func TestSetLoader(t *testing.T) {
 			origStoreKey: "foo",
 			loadStoreKey: "foo",
 		},
+		"rename with inline opts": {
+			setLoader: useUpgradeLoader(upgradeHeight, &storetypes.StoreUpgrades{
+				Renamed: []storetypes.StoreRename{{
+					OldKey: "foo",
+					NewKey: "bar",
+				}},
+			}),
+			origStoreKey: "foo",
+			loadStoreKey: "bar",
+		},
 	}
 
 	k := []byte("key")
@@ -95,16 +111,16 @@ func TestSetLoader(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// prepare a db with some data
-			db := coretesting.NewMemDB()
+			db := dbm.NewMemDB()
 
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
 			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
 
-			logger := log.NewNopLogger()
+			logger := log.NewTestLogger(t)
 
-			oldApp := baseapp.NewBaseApp(t.Name(), logger, db, nil, opts...)
+			oldApp := baseapp.NewBaseApp(t.Name(), logger.With("instance", "orig"), db, nil, opts...)
 			oldApp.MountStores(storetypes.NewKVStoreKey(tc.origStoreKey))
 
 			err := oldApp.LoadLatestVersion()
@@ -112,9 +128,9 @@ func TestSetLoader(t *testing.T) {
 			require.Equal(t, int64(1), oldApp.LastBlockHeight())
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
-				_, err := oldApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: i})
+				_, err = oldApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
 				require.NoError(t, err)
-				_, err = oldApp.Commit()
+				_, err := oldApp.Commit()
 				require.NoError(t, err)
 			}
 
@@ -134,7 +150,7 @@ func TestSetLoader(t *testing.T) {
 			require.Equal(t, upgradeHeight-1, newApp.LastBlockHeight())
 
 			// "execute" one block
-			_, err = newApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: upgradeHeight})
+			_, err = newApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: upgradeHeight})
 			require.NoError(t, err)
 			_, err = newApp.Commit()
 			require.NoError(t, err)

@@ -2,14 +2,14 @@ package keeper
 
 import (
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/x/epochs/types"
+	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 type Keeper struct {
-	appmodule.Environment
+	storeService store.KVStoreService
 
 	cdc   codec.BinaryCodec
 	hooks types.EpochHooks
@@ -19,12 +19,12 @@ type Keeper struct {
 }
 
 // NewKeeper returns a new keeper by codec and storeKey inputs.
-func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec) *Keeper {
-	sb := collections.NewSchemaBuilder(env.KVStoreService)
+func NewKeeper(storeService store.KVStoreService, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		Environment: env,
-		cdc:         cdc,
-		EpochInfo:   collections.NewMap(sb, types.KeyPrefixEpoch, "epoch_info", collections.StringKey, codec.CollValue[types.EpochInfo](cdc)),
+		storeService: storeService,
+		cdc:          cdc,
+		EpochInfo:    collections.NewMap(sb, types.KeyPrefixEpoch, "epoch_info", collections.StringKey, codec.CollValue[types.EpochInfo](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -32,16 +32,14 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec) *Keeper {
 		panic(err)
 	}
 	k.Schema = schema
-	return &k
+	return k
 }
 
-// Set the gamm hooks.
-func (k *Keeper) SetHooks(eh types.EpochHooks) *Keeper {
+// SetHooks sets the hooks on the x/epochs keeper.
+func (k *Keeper) SetHooks(eh types.EpochHooks) {
 	if k.hooks != nil {
 		panic("cannot set epochs hooks twice")
 	}
 
 	k.hooks = eh
-
-	return k
 }

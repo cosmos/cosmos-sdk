@@ -114,7 +114,7 @@ func (m *ListAllInterfacesResponse) GetInterfaceNames() []string {
 // ListImplementationsRequest is the request type of the ListImplementations
 // RPC.
 type ListImplementationsRequest struct {
-	// interface_name defines the interface to query the implementations.
+	// interface_name defines the interface to query the implementations for.
 	InterfaceName string `protobuf:"bytes,1,opt,name=interface_name,json=interfaceName,proto3" json:"interface_name,omitempty"`
 }
 

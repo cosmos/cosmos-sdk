@@ -6,10 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	v1 "cosmossdk.io/x/gov/types/v1"
 
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 func TestEmptyGenesis(t *testing.T) {
@@ -21,7 +20,6 @@ func TestEmptyGenesis(t *testing.T) {
 }
 
 func TestValidateGenesis(t *testing.T) {
-	codec := address.NewBech32Codec("cosmos")
 	params := v1.DefaultParams()
 
 	testCases := []struct {
@@ -73,7 +71,7 @@ func TestValidateGenesis(t *testing.T) {
 
 				return v1.NewGenesisState(v1.DefaultStartingProposalID, params1)
 			},
-			expErrMsg: "quorum too large",
+			expErrMsg: "quorom too large",
 		},
 		{
 			name: "invalid threshold",
@@ -176,7 +174,7 @@ func TestValidateGenesis(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := v1.ValidateGenesis(codec, tc.genesisState())
+			err := v1.ValidateGenesis(tc.genesisState())
 			if tc.expErrMsg != "" {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.expErrMsg)

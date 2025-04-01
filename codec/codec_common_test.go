@@ -93,7 +93,8 @@ func testMarshaling(t *testing.T, cdc interface {
 },
 ) {
 	t.Helper()
-	any, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
+
+	cdcAny, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
 	require.NoError(t, err)
 
 	testCases := []testCase{
@@ -114,15 +115,14 @@ func testMarshaling(t *testing.T, cdc interface {
 	if _, ok := cdc.(*codec.AminoCodec); ok {
 		testCases = append(testCases, testCase{
 			"any marshaling",
-			&testdata.HasAnimal{Animal: any},
-			&testdata.HasAnimal{Animal: any},
+			&testdata.HasAnimal{Animal: cdcAny},
+			&testdata.HasAnimal{Animal: cdcAny},
 			false,
 			false,
 		})
 	}
 
 	for _, tc := range testCases {
-
 		m1 := mustMarshaler{cdc.Marshal, cdc.MustMarshal, cdc.Unmarshal, cdc.MustUnmarshal}
 		m2 := mustMarshaler{cdc.MarshalLengthPrefixed, cdc.MustMarshalLengthPrefixed, cdc.UnmarshalLengthPrefixed, cdc.MustUnmarshalLengthPrefixed}
 		m3 := mustMarshaler{

@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +18,7 @@ import (
 )
 
 func Test_runImportCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -82,11 +81,11 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 
 			// Now add a temporary keybase
 			kbHome := filepath.Join(t.TempDir(), fmt.Sprintf("kbhome-%s", tc.name))
+			// Create dir, otherwise os.WriteFile will fail
 			require.NoError(t, os.MkdirAll(kbHome, 0o700))
 			t.Cleanup(func() {
 				require.NoError(t, os.RemoveAll(kbHome))
 			})
-
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil, cdc)
 			require.NoError(t, err)
 
@@ -97,8 +96,14 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 				WithCodec(cdc)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
+			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
+
 			keyfile := filepath.Join(kbHome, "key.asc")
 			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0o600))
+
+			defer func() {
+				_ = os.RemoveAll(kbHome)
+			}()
 
 			mockIn.Reset(tc.userInput)
 			cmd.SetArgs([]string{
@@ -117,7 +122,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 }
 
 func Test_runImportHexCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -191,7 +196,7 @@ func Test_runImportCmdWithEmptyName(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	// Now add a temporary keybase
 	kbHome := t.TempDir()
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 

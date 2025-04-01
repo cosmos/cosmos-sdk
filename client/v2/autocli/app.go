@@ -2,6 +2,7 @@ package autocli
 
 import (
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -10,12 +11,12 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
-// AppOptions are input options for an autocli enabled app. These options can be built via depinject based on an app config.
+// AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
 // Ex:
 //
 //	var autoCliOpts autocli.AppOptions
@@ -35,17 +36,13 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
-	AddressCodec          address.Codec                 // AddressCodec is used to encode/decode account addresses.
-	ValidatorAddressCodec address.ValidatorAddressCodec // ValidatorAddressCodec is used to encode/decode validator addresses.
-	ConsensusAddressCodec address.ConsensusAddressCodec // ConsensusAddressCodec is used to encode/decode consensus addresses.
+	// AddressCodec is the address codec to use for the app.
+	AddressCodec          address.Codec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
 
-	// Cdc is the codec used for binary encoding/decoding of messages.
-	Cdc codec.Codec
-
-	// TxConfigOpts contains options for configuring transaction handling.
-	TxConfigOpts authtx.ConfigOptions
-
-	skipValidation bool
+	// ClientCtx contains the necessary information needed to execute the commands.
+	ClientCtx client.Context
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -67,29 +64,27 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
-			FileResolver:          appOptions.Cdc.InterfaceRegistry(),
+			FileResolver:          appOptions.ClientCtx.InterfaceRegistry,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
-		GetClientConn: getQueryClientConn(appOptions.Cdc),
+		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
+			return client.GetClientQueryContext(cmd)
+		},
 		AddQueryConnFlags: func(c *cobra.Command) {
 			sdkflags.AddQueryFlagsToCmd(c)
 			sdkflags.AddKeyringFlags(c.Flags())
 		},
-		AddTxConnFlags:   sdkflags.AddTxFlagsToCmd,
-		Cdc:              appOptions.Cdc,
-		EnabledSignModes: appOptions.TxConfigOpts.EnabledSignModes,
+		AddTxConnFlags: sdkflags.AddTxFlagsToCmd,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if !appOptions.skipValidation {
-		if err := builder.ValidateAndComplete(); err != nil {
-			return err
-		}
+	if err := builder.ValidateAndComplete(); err != nil {
+		return err
 	}
 
 	// extract any custom commands from modules

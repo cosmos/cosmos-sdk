@@ -1,9 +1,10 @@
 package orm
 
 import (
-	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/group/errors"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // IndexerFunc creates one or multiple index keys for the source object.
@@ -81,9 +82,7 @@ func (i Indexer) OnDelete(store storetypes.KVStore, rowID RowID, value interface
 		if err != nil {
 			return err
 		}
-		if err := store.Delete(indexKey); err != nil {
-			return err
-		}
+		store.Delete(indexKey)
 	}
 	return nil
 }
@@ -107,9 +106,7 @@ func (i Indexer) OnUpdate(store storetypes.KVStore, rowID RowID, newValue, oldVa
 		if err != nil {
 			return err
 		}
-		if err := store.Delete(indexKey); err != nil {
-			return err
-		}
+		store.Delete(indexKey)
 	}
 	newKeys, err := difference(newSecIdxKeys, oldSecIdxKeys)
 	if err != nil {
@@ -142,15 +139,13 @@ func uniqueKeysAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, 
 		return err
 	}
 
-	return store.Set(indexKey, []byte{})
+	store.Set(indexKey, []byte{})
+	return nil
 }
 
 // checkUniqueIndexKey checks that the given secondary index key is unique
 func checkUniqueIndexKey(store storetypes.KVStore, secondaryIndexKeyBytes []byte) error {
-	it, err := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
-	if err != nil {
-		return err
-	}
+	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
 	defer it.Close()
 	if it.Valid() {
 		return errors.ErrORMUniqueConstraint
@@ -176,12 +171,13 @@ func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, ro
 		return errorsmod.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
-	return store.Set(encodedKey, []byte{})
+	store.Set(encodedKey, []byte{})
+	return nil
 }
 
 // difference returns the list of elements that are in a but not in b.
 func difference(a, b []interface{}) ([]interface{}, error) {
-	set := make(map[string]struct{}, len(b))
+	set := make(map[interface{}]struct{}, len(b))
 	for _, v := range b {
 		bt, err := keyPartBytes(v, true)
 		if err != nil {

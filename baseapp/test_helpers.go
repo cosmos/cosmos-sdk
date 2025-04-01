@@ -1,10 +1,8 @@
 package baseapp
 
 import (
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,8 +40,19 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 	return gasInfo, result, err
 }
 
+func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+	// See comment for Check().
+	bz, err := txEncoder(tx)
+	if err != nil {
+		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
+	}
+
+	gasInfo, result, _, err := app.runTx(execModeFinalize, bz, tx)
+	return gasInfo, result, err
+}
+
 // SimWriteState is an entrypoint for simulations only. They are not executed during the normal ABCI finalize
-// block step but later. Therefore, an extra call to the root multi-store (app.cms) is required to write the changes.
+// block step but later. Therefor an extra call to the root multi-store (app.cms) is required to write the changes.
 func (app *BaseApp) SimWriteState() {
 	app.finalizeBlockState.ms.Write()
 }
@@ -51,30 +60,20 @@ func (app *BaseApp) SimWriteState() {
 // NewContextLegacy returns a new sdk.Context with the provided header
 func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, true, app.logger).
-			WithMinGasPrices(app.minGasPrices).
-			WithBlockHeader(header)
+		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
+			WithMinGasPrices(app.minGasPrices)
 	}
 
-	return sdk.NewContext(app.finalizeBlockState.ms, false, app.logger).WithBlockHeader(header)
+	return sdk.NewContext(app.finalizeBlockState.ms, header, false, app.logger)
 }
 
-// NewContext returns a new sdk.Context with an empty header
+// NewContext returns a new sdk.Context with a empty header
 func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 	return app.NewContextLegacy(isCheckTx, cmtproto.Header{})
 }
 
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	cmtHeader, _ := cmttypes.HeaderFromProto(&header)
-	return sdk.NewContext(app.cms, isCheckTx, app.logger).
-		WithBlockHeader(header).
-		WithHeaderInfo(coreheader.Info{
-			AppHash: cmtHeader.AppHash,
-			Hash:    cmtHeader.Hash(),
-			ChainID: cmtHeader.ChainID,
-			Height:  cmtHeader.Height,
-			Time:    cmtHeader.Time,
-		})
+	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }
 
 func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {

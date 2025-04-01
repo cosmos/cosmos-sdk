@@ -37,14 +37,14 @@ func ParseChainIDFromGenesis(r io.Reader) (string, error) {
 		}
 
 		if key == ChainIDFieldName {
-			var chainId string
-			if err := dec.Decode(&chainId); err != nil {
+			var chainID string
+			if err := dec.Decode(&chainID); err != nil {
 				return "", err
 			}
-			if err := validateChainID(chainId); err != nil {
+			if err := validateChainID(chainID); err != nil {
 				return "", err
 			}
-			return chainId, nil
+			return chainID, nil
 		}
 
 		// skip the value

@@ -1,13 +1,12 @@
 package keeper
 
 import (
-	"context"
-
-	"cosmossdk.io/x/epochs/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 // InitGenesis sets epoch info from genesis
-func (k Keeper) InitGenesis(ctx context.Context, genState types.GenesisState) error {
+func (k *Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) error {
 	for _, epoch := range genState.Epochs {
 		err := k.AddEpochInfo(ctx, epoch)
 		if err != nil {
@@ -18,7 +17,7 @@ func (k Keeper) InitGenesis(ctx context.Context, genState types.GenesisState) er
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
+func (k *Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 	genesis := types.DefaultGenesis()
 	epochs, err := k.AllEpochInfos(ctx)
 	if err != nil {

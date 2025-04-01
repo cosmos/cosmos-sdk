@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/listenkv"
@@ -19,7 +19,7 @@ func bz(s string) []byte { return []byte(s) }
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
-var kvPairs = []kv.Pair{ //nolint:staticcheck // We are in store v1.
+var kvPairs = []kv.Pair{
 	{Key: keyFmt(1), Value: valFmt(1)},
 	{Key: keyFmt(2), Value: valFmt(2)},
 	{Key: keyFmt(3), Value: valFmt(3)},
@@ -38,7 +38,7 @@ func newListenKVStore(listener *types.MemoryListener) *listenkv.Store {
 }
 
 func newEmptyListenKVStore(listener *types.MemoryListener) *listenkv.Store {
-	memDB := dbadapter.Store{DB: coretesting.NewMemDB()}
+	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
 
 	return listenkv.NewStore(memDB, testStoreKey, listener)
 }
@@ -265,7 +265,7 @@ func TestListenKVStorePrefix(t *testing.T) {
 }
 
 func TestListenKVStoreGetStoreType(t *testing.T) {
-	memDB := dbadapter.Store{DB: coretesting.NewMemDB()}
+	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
 	store := newEmptyListenKVStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }

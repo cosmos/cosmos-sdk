@@ -35,11 +35,7 @@ func Paginate(numObjs, page, limit, defLimit int) (start, end int) {
 	}
 
 	start = (page - 1) * limit
-	end = limit + start
-
-	if end >= numObjs {
-		end = numObjs
-	}
+	end = min(limit+start, numObjs)
 
 	if start >= numObjs {
 		// page is out of bounds
@@ -78,7 +74,7 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 // NewClientFromNode sets up Client implementation that communicates with a CometBFT node over
 // JSON RPC and WebSockets
 func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
-	return rpchttp.New(nodeURI)
+	return rpchttp.New(nodeURI, "/websocket")
 }
 
 // FlagSetWithPageKeyDecoded returns the provided flagSet with the page-key value base64 decoded (if it exists).

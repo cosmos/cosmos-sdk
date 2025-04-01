@@ -8,6 +8,7 @@ import (
 	"io"
 	"maps"
 	"os"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -126,7 +127,8 @@ var (
 		govtypes.ModuleName:                         {authtypes.Burner},
 		nft.ModuleName:                              nil,
 		protocolpooltypes.ModuleName:                nil,
-		protocolpooltypes.ProtocolPoolEscrowAccount: nil}
+		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
+	}
 )
 
 var (
@@ -712,11 +714,15 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 		HandlerOptions{
 			ante.HandlerOptions{
 				UnorderedNonceManager: app.AccountKeeper,
-				AccountKeeper:         app.AccountKeeper,
-				BankKeeper:            app.BankKeeper,
-				SignModeHandler:       txConfig.SignModeHandler(),
-				FeegrantKeeper:        app.FeeGrantKeeper,
-				SigGasConsumer:        ante.DefaultSigVerificationGasConsumer,
+				UnorderedTxOptions: []ante.UnorderedTxDecoratorOptions{
+					ante.WithUnorderedTxGasCost(2240),
+					ante.WithTimeoutDuration(10 * time.Minute),
+				},
+				AccountKeeper:   app.AccountKeeper,
+				BankKeeper:      app.BankKeeper,
+				SignModeHandler: txConfig.SignModeHandler(),
+				FeegrantKeeper:  app.FeeGrantKeeper,
+				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
 			&app.CircuitKeeper,
 		},

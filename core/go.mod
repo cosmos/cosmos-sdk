@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/math v1.5.2
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )
 

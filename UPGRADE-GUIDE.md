@@ -2,6 +2,8 @@
 
 This document provides a full guide for upgrading a Cosmos SDK chain from `v0.50.x` to `v0.53.x`.
 
+This guide includes one **required** change and three **optional** features.
+
 After completing this guide, applications will have:
 
 - The `x/protocolpool` module
@@ -12,15 +14,15 @@ After completing this guide, applications will have:
 
 - [App Wiring Changes](#app-wiring-changes)
 - [Adding ProtocolPool Module](#adding-protocolpool-module)
-    - [Manual Wiring](#protocolpool-manual-wiring)
-    - [DI Wiring](#protocolpool-di-wiring)
+  - [Manual Wiring](#protocolpool-manual-wiring)
+  - [DI Wiring](#protocolpool-di-wiring)
 - [Adding Epochs Module](#adding-epochs-module)
-    - [Manual Wiring](#epochs-manual-wiring)
-    - [DI Wiring](#epochs-di-wiring)
+  - [Manual Wiring](#epochs-manual-wiring)
+  - [DI Wiring](#epochs-di-wiring)
 - [Enable Unordered Transactions](#enable-unordered-transactions)
 - [Upgrade Handler](#upgrade-handler)
 
-## App Wiring Changes
+## App Wiring Changes **REQUIRED**
 
 The `x/auth` module now contains a `PreBlocker` that _must_ be set in the module manager's `SetOrderPreBlockers` method.
 
@@ -31,7 +33,7 @@ app.ModuleManager.SetOrderPreBlockers(
 )
 ```
 
-## Adding ProtocolPool Module
+## Adding ProtocolPool Module **OPTIONAL**
 
 ### Manual Wiring
 
@@ -39,7 +41,7 @@ Import the following:
 
 ```go
 import (
-	// ...
+    // ...
     "github.com/cosmos/cosmos-sdk/x/protocolpool"
     protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
     protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
@@ -49,37 +51,39 @@ import (
 Set the module account permissions.
 
 ```go
-	maccPerms = map[string][]string{
-		// ...
-		protocolpooltypes.ModuleName:                nil,
-		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
-	}
+maccPerms = map[string][]string{
+    // ...
+    protocolpooltypes.ModuleName:                nil,
+    protocolpooltypes.ProtocolPoolEscrowAccount: nil,
+}
 ```
 
 Add the protocol pool keeper to your application struct.
 
 ```go
-	ProtocolPoolKeeper protocolpoolkeeper.Keeper
+ProtocolPoolKeeper protocolpoolkeeper.Keeper
 ```
 
 Add the store key:
 
 ```go
 keys := storetypes.NewKVStoreKeys(
-		// ...
-		protocolpooltypes.StoreKey,
-	)
+    // ...
+    protocolpooltypes.StoreKey,
+)
 ```
 
-Instantiate the keeper:
+Instantiate the keeper.
+
+Make sure to do this before the distribution module instantiation, as you will pass the keeper there next.
 
 ```go
 app.ProtocolPoolKeeper = protocolpoolkeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[protocolpooltypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+    appCodec,
+    runtime.NewKVStoreService(keys[protocolpooltypes.StoreKey]),
+    app.AccountKeeper,
+    app.BankKeeper,
+    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 )
 ```
 
@@ -87,14 +91,14 @@ Pass the protocolpool keeper to the distribution keeper:
 
 ```go
 app.DistrKeeper = distrkeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper), // NEW
+    appCodec,
+    runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
+    app.AccountKeeper,
+    app.BankKeeper,
+    app.StakingKeeper,
+    authtypes.FeeCollectorName,
+    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+    distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper), // NEW
 )
 ```
 
@@ -102,8 +106,8 @@ Add the protocolpool module to the module manager:
 
 ```go
 app.ModuleManager = module.NewManager(
-		// ...
-		protocolpool.NewAppModule(appCodec, app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
+    // ...
+    protocolpool.NewAppModule(appCodec, app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
 )
 ```
 
@@ -111,22 +115,22 @@ Add an entry for SetOrderBeginBlockers, SetOrderEndBlockers, SetOrderInitGenesis
 
 ```go
 app.ModuleManager.SetOrderBeginBlockers(
-		// must come AFTER distribution.
-        distrtypes.ModuleName,
-		protocolpooltypes.ModuleName,
+    // must come AFTER distribution.
+    distrtypes.ModuleName,
+    protocolpooltypes.ModuleName,
 )
 ```
 
 ```go
 app.ModuleManager.SetOrderEndBlockers(
-		// order does not matter.
-		protocolpooltypes.ModuleName,
+    // order does not matter.
+    protocolpooltypes.ModuleName,
 )
 ```
 
 ```go
 app.ModuleManager.SetOrderInitGenesis(
-	// order does not matter.
+    // order does not matter.
     protocolpooltypes.ModuleName,   
 )
 ```
@@ -145,7 +149,7 @@ First, set up the keeper for the application.
 Import the protocolpool keeper:
 
 ```go
-	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
+protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 ```
 
 Add the keeper to your application struct:
@@ -158,15 +162,15 @@ Add the keeper to the depinject system:
 
 ```go
 depinject.Inject(
-	    appConfig,
-		&appBuilder,
-		&app.appCodec,
-		&app.legacyAmino,
-		&app.txConfig,
-		&app.interfaceRegistry,
-		// ... other modules
-		&app.ProtocolPoolKeeper, // NEW MODULE!
-	)
+    appConfig,
+    &appBuilder,
+    &app.appCodec,
+    &app.legacyAmino,
+    &app.txConfig,
+    &app.interfaceRegistry,
+    // ... other modules
+    &app.ProtocolPoolKeeper, // NEW MODULE!
+)
 ```
 
 Next, set up configuration for the module.
@@ -176,7 +180,7 @@ Import the following:
 ```go
 import (
     protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
-	
+    
     _ "github.com/cosmos/cosmos-sdk/x/protocolpool" // import for side-effects
     protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
@@ -196,48 +200,48 @@ Next, add an entry for BeginBlockers, EndBlockers, InitGenesis, and ExportGenesi
 
 ```go
 BeginBlockers: []string{
-        // ...
-	    // must be AFTER distribution.
-		distrtypes.ModuleName,
-        protocolpooltypes.ModuleName,
-    },
+    // ...
+    // must be AFTER distribution.
+    distrtypes.ModuleName,
+    protocolpooltypes.ModuleName,
+},
 ```
 
 ```go
 EndBlockers: []string{
-        // ...
-	    // order for protocolpool does not matter.
-        protocolpooltypes.ModuleName,
-    },
+    // ...
+    // order for protocolpool does not matter.
+    protocolpooltypes.ModuleName,
+},
 ```
 
 ```go
 InitGenesis: []string{
-                // ... must be AFTER distribution.
-                distrtypes.ModuleName,
-                protocolpooltypes.ModuleName,
-			},
+    // ... must be AFTER distribution.
+    distrtypes.ModuleName,
+    protocolpooltypes.ModuleName,
+},
 ```
 
 ```go
 ExportGenesis: []string{
-                  // ...
-                  // Must be exported before x/bank.
-                  protocolpooltypes.ModuleName, 
-                  banktypes.ModuleName,
-				},
+    // ...
+    // Must be exported before x/bank.
+    protocolpooltypes.ModuleName, 
+    banktypes.ModuleName,
+},
 ```
 
 Lastly, add an entry for protocolpool in the ModuleConfig.
 
 ```go
-    {
-        Name:   protocolpooltypes.ModuleName,
-        Config: appconfig.WrapAny(&protocolpoolmodulev1.Module{}),
-    },
+{
+    Name:   protocolpooltypes.ModuleName,
+    Config: appconfig.WrapAny(&protocolpoolmodulev1.Module{}),
+},
 ```
 
-## Adding Epochs Module
+## Adding Epochs Module **OPTIONAL**
 
 ### Manual Wiring
 
@@ -284,7 +288,7 @@ To learn how to write hooks for the epoch keeper, see the [x/epoch README](https
 app.EpochsKeeper.SetHooks(
     epochstypes.NewMultiEpochHooks(
         // insert epoch hooks receivers here
-		app.SomeOtherModule
+        app.SomeOtherModule
     ),
 )
 ```
@@ -383,16 +387,16 @@ Lastly, add an entry for epochs in the ModuleConfig:
 },
 ```
 
-## Enable Unordered Transactions
+## Enable Unordered Transactions **OPTIONAL**
 
 To enable unordered transaction support on an application, the ante handler options must be updated.
 
 ```go
 options := ante.HandlerOptions{
-	// ...
+    // ...
     UnorderedNonceManager: app.AccountKeeper,
-	// The following options are set by default.
-	// If you do not want to change these, you may remove the UnorderedTxOptions field entirely.
+    // The following options are set by default.
+    // If you do not want to change these, you may remove the UnorderedTxOptions field entirely.
     UnorderedTxOptions: []ante.UnorderedTxDecoratorOptions{
         ante.WithUnorderedTxGasCost(2240),
         ante.WithTimeoutDuration(10 * time.Minute),
@@ -413,7 +417,7 @@ anteDecorators := []sdk.AnteDecorator{
     ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
     ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
     ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-	// NEW !! NEW !! NEW !!
+    // NEW !! NEW !! NEW !!
     ante.NewUnorderedTxDecorator(options.UnorderedNonceManager, options.UnorderedTxOptions...)
 }
 ```
@@ -433,28 +437,28 @@ If your application is not adding `x/protocolpool` or `x/epochs`, you do not nee
 const UpgradeName = "v050-to-v053"
 
 func (app SimApp) RegisterUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(
-		UpgradeName,
-		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
-		},
-	)
+    app.UpgradeKeeper.SetUpgradeHandler(
+        UpgradeName,
+        func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+            return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+        },
+    )
 
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(err)
-	}
+    upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+    if err != nil {
+        panic(err)
+    }
 
-	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{
-				epochstypes.ModuleName, // if not adding x/epochs to your chain, remove this line.
-				protocolpooltypes.ModuleName, // if not adding x/protocolpool to your chain, remove this line.
-			},
-		}
+    if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+        storeUpgrades := storetypes.StoreUpgrades{
+            Added: []string{
+                epochstypes.ModuleName, // if not adding x/epochs to your chain, remove this line.
+                protocolpooltypes.ModuleName, // if not adding x/protocolpool to your chain, remove this line.
+            },
+        }
 
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
+        // configure store loader that checks if version == upgradeHeight and applies store upgrades
+        app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+    }
 }
 ```

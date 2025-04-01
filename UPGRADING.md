@@ -92,15 +92,15 @@ Required wiring:
 The new, supplemental `x/protocolpool` module provides extended functionality for managing and distributing block reward revenue.
 
 Required wiring:
-- Module Account Permissions For:
+- Module Account Permissions
   - protocolpooltypes.ModuleName (nil)
   - protocolpooltypes.ProtocolPoolEscrowAccount (nil)
 - Keeper Instantiation
 - StoreKey addition
-- Passing the keeper the Distribution Keeper
+- Passing the keeper to the Distribution Keeper
   - `distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper)`
 - App Module Registration
 - entry in SetOrderBeginBlockers
 - entry in SetOrderEndBlockers
 - entry in SetGenesisModuleOrder
-- entry in SetExportModuleOrder before x/bank
+- entry in SetExportModuleOrder **before `x/bank`**

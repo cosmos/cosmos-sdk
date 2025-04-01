@@ -1,6 +1,8 @@
 module cosmossdk.io/tools/rosetta
 
-go 1.22
+go 1.22.7
+
+toolchain go1.23.4
 
 require (
 	cosmossdk.io/math v1.3.0

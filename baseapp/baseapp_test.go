@@ -12,6 +12,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
@@ -32,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -688,6 +690,67 @@ func TestBaseAppPostHandler(t *testing.T) {
 	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.NotContains(t, suite.logBuffer.String(), "panic recovered in runTx")
+}
+
+func TestBaseAppPostHandlerErrorHandling(t *testing.T) {
+	specs := map[string]struct {
+		msgHandlerErr  error
+		postHandlerErr error
+		expCode        uint32
+		expLog         string
+	}{
+		"msg handler ok, post ok": {
+			expLog:  "",
+			expCode: 0,
+		},
+		"msg handler fails, post ok": {
+			msgHandlerErr: sdkerrors.ErrUnknownRequest.Wrap("my svc error"),
+			expCode:       sdkerrors.ErrUnknownRequest.ABCICode(),
+			expLog:        "failed to execute message; message index: 0: my svc error: unknown request",
+		},
+		"msg handler ok, post fails": {
+			postHandlerErr: sdkerrors.ErrInsufficientFunds.Wrap("my post handler error"),
+			expCode:        sdkerrors.ErrInsufficientFunds.ABCICode(),
+			expLog:         "my post handler error: insufficient funds",
+		},
+		"both fail": {
+			msgHandlerErr:  sdkerrors.ErrUnknownRequest.Wrap("my svc error"),
+			postHandlerErr: sdkerrors.ErrInsufficientFunds.Wrap("my post handler error"),
+			expCode:        sdkerrors.ErrUnknownRequest.ABCICode(),
+			expLog:         "postHandler: my post handler error: insufficient funds: failed to execute message; message index: 0: my svc error: unknown request",
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			anteOpt := func(bapp *baseapp.BaseApp) {
+				bapp.SetPostHandler(func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (newCtx sdk.Context, err error) {
+					return ctx, spec.postHandlerErr
+				})
+			}
+			suite := NewBaseAppSuite(t, anteOpt)
+			csMock := mockCounterServer{
+				incrementCounterFn: func(ctx context.Context, counter *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+					return &baseapptestutil.MsgCreateCounterResponse{}, spec.msgHandlerErr
+				},
+			}
+			baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), csMock)
+
+			_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+				ConsensusParams: &cmtproto.ConsensusParams{},
+			})
+			require.NoError(t, err)
+
+			txBytes, err := suite.txConfig.TxEncoder()(newTxCounter(t, suite.txConfig, 0, 0))
+			require.NoError(t, err)
+
+			// when
+			res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			// then
+			require.NoError(t, err)
+			assert.Equal(t, spec.expCode, res.TxResults[0].Code)
+			assert.Equal(t, spec.expLog, res.TxResults[0].Log)
+		})
+	}
 }
 
 // Test and ensure that invalid block heights always cause errors.

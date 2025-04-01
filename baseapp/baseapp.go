@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
 	"math"
@@ -9,7 +10,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -980,7 +980,11 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 
 		newCtx, errPostHandler := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
 		if errPostHandler != nil {
-			return gInfo, nil, anteEvents, errors.Join(err, errPostHandler)
+			if err == nil {
+				return gInfo, nil, anteEvents, errPostHandler
+			}
+			// append to msg error to give priority to this and preserve the error code
+			return gInfo, nil, anteEvents, errorsmod.Wrapf(err, "postHandler: %s", errPostHandler)
 		}
 
 		// we don't want runTx to panic if runMsgs has failed earlier

@@ -25,8 +25,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sims "github.com/cosmos/cosmos-sdk/simsx"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/testutils/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -56,9 +56,11 @@ func TestFullAppSimulation(t *testing.T) {
 
 func setupStateFactory(app *SimApp) sims.SimStateFactory {
 	return sims.SimStateFactory{
-		Codec:       app.AppCodec(),
-		AppStateFn:  simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		BlockedAddr: BlockedAddresses(),
+		Codec:         app.AppCodec(),
+		AppStateFn:    simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		BlockedAddr:   BlockedAddresses(),
+		AccountSource: app.AccountKeeper,
+		BalanceSource: app.BankKeeper,
 	}
 }
 
@@ -68,29 +70,29 @@ var (
 )
 
 func TestAppImportExport(t *testing.T) {
-	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
-		t.Helper()
+	sims.Run(t, NewSimApp, setupStateFactory, func(tb testing.TB, ti sims.TestInstance[*SimApp], accs []simtypes.Account) {
+		tb.Helper()
 		app := ti.App
-		t.Log("exporting genesis...\n")
+		tb.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
-		require.NoError(t, err)
+		require.NoError(tb, err)
 
-		t.Log("importing genesis...\n")
-		newTestInstance := sims.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
+		tb.Log("importing genesis...\n")
+		newTestInstance := sims.NewSimulationAppInstance(tb, ti.Cfg, NewSimApp)
 		newApp := newTestInstance.App
 		var genesisState GenesisState
-		require.NoError(t, json.Unmarshal(exported.AppState, &genesisState))
+		require.NoError(tb, json.Unmarshal(exported.AppState, &genesisState))
 		ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 		_, err = newApp.ModuleManager.InitGenesis(ctxB, newApp.appCodec, genesisState)
 		if IsEmptyValidatorSetErr(err) {
-			t.Skip("Skipping simulation as all validators have been unbonded")
+			tb.Skip("Skipping simulation as all validators have been unbonded")
 			return
 		}
-		require.NoError(t, err)
+		require.NoError(tb, err)
 		err = newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
-		require.NoError(t, err)
+		require.NoError(tb, err)
 
-		t.Log("comparing stores...")
+		tb.Log("comparing stores...")
 		// skip certain prefixes
 		skipPrefixes := map[string][][]byte{
 			stakingtypes.StoreKey: {
@@ -103,7 +105,7 @@ func TestAppImportExport(t *testing.T) {
 			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
 			slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
 		}
-		AssertEqualStores(t, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes)
+		AssertEqualStores(tb, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes)
 	})
 }
 
@@ -113,28 +115,28 @@ func TestAppImportExport(t *testing.T) {
 //	set up a new node instance, Init chain from exported genesis
 //	run new instance for n blocks
 func TestAppSimulationAfterImport(t *testing.T) {
-	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
-		t.Helper()
+	sims.Run(t, NewSimApp, setupStateFactory, func(tb testing.TB, ti sims.TestInstance[*SimApp], accs []simtypes.Account) {
+		tb.Helper()
 		app := ti.App
-		t.Log("exporting genesis...\n")
+		tb.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
-		require.NoError(t, err)
+		require.NoError(tb, err)
 
-		t.Log("importing genesis...\n")
-		newTestInstance := sims.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
+		tb.Log("importing genesis...\n")
+		newTestInstance := sims.NewSimulationAppInstance(tb, ti.Cfg, NewSimApp)
 		newApp := newTestInstance.App
 		_, err = newApp.InitChain(&abci.RequestInitChain{
 			AppStateBytes: exported.AppState,
 			ChainId:       sims.SimAppChainID,
 		})
 		if IsEmptyValidatorSetErr(err) {
-			t.Skip("Skipping simulation as all validators have been unbonded")
+			tb.Skip("Skipping simulation as all validators have been unbonded")
 			return
 		}
-		require.NoError(t, err)
+		require.NoError(tb, err)
 		newStateFactory := setupStateFactory(newApp)
-		_, err = simulation.SimulateFromSeedX(
-			t,
+		_, _, err = simulation.SimulateFromSeedX(
+			tb,
 			newTestInstance.AppLogger,
 			sims.WriteToDebugLog(newTestInstance.AppLogger),
 			newApp.BaseApp,
@@ -146,7 +148,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			newStateFactory.Codec,
 			ti.ExecLogWriter,
 		)
-		require.NoError(t, err)
+		require.NoError(tb, err)
 	})
 }
 
@@ -180,7 +182,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				"streaming.abci.stop-node-on-err": true,
 			}
 			others := appOpts
-			appOpts = sims.AppOptionsFn(func(k string) any {
+			appOpts = appOptionsFn(func(k string) any {
 				if v, ok := m[k]; ok {
 					return v
 				}
@@ -192,8 +194,8 @@ func TestAppStateDeterminism(t *testing.T) {
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)
 	appSimLogger := make(map[int64][]simulation.LogWriter)
-	captureAndCheckHash := func(t *testing.T, ti sims.TestInstance[*SimApp]) {
-		t.Helper()
+	captureAndCheckHash := func(tb testing.TB, ti sims.TestInstance[*SimApp], _ []simtypes.Account) {
+		tb.Helper()
 		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
 		mx.Lock()
 		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
@@ -208,14 +210,14 @@ func TestAppStateDeterminism(t *testing.T) {
 		var failNow bool
 		// and check that all app hashes per seed are equal for each iteration
 		for i := 0; i < len(otherHashes); i++ {
-			if !assert.Equal(t, otherHashes[i], appHash) {
+			if !assert.Equal(tb, otherHashes[i], appHash) {
 				execWriters[i].PrintLogs()
 				failNow = true
 			}
 		}
 		if failNow {
 			ti.ExecLogWriter.PrintLogs()
-			t.Fatalf("non-determinism in seed %d", seed)
+			tb.Fatalf("non-determinism in seed %d", seed)
 		}
 	}
 	// run simulations
@@ -229,13 +231,18 @@ type ComparableStoreApp interface {
 	GetStoreKeys() []storetypes.StoreKey
 }
 
-func AssertEqualStores(t *testing.T, app, newApp ComparableStoreApp, storeDecoders simtypes.StoreDecoderRegistry, skipPrefixes map[string][][]byte) {
-	t.Helper()
+func AssertEqualStores(
+	tb testing.TB,
+	app, newApp ComparableStoreApp,
+	storeDecoders simtypes.StoreDecoderRegistry,
+	skipPrefixes map[string][][]byte,
+) {
+	tb.Helper()
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
 	storeKeys := app.GetStoreKeys()
-	require.NotEmpty(t, storeKeys)
+	require.NotEmpty(tb, storeKeys)
 
 	for _, appKeyA := range storeKeys {
 		// only compare kvstores
@@ -250,16 +257,29 @@ func AssertEqualStores(t *testing.T, app, newApp ComparableStoreApp, storeDecode
 		storeB := ctxB.KVStore(appKeyB)
 
 		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
-		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare %s, key stores %s and %s", keyName, appKeyA, appKeyB)
+		require.Equal(tb, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare %s, key stores %s and %s", keyName, appKeyA, appKeyB)
 
-		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
-		if !assert.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, storeDecoders, failedKVAs, failedKVBs)) {
+		tb.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
+		if !assert.Equal(tb, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, storeDecoders, failedKVAs, failedKVBs)) {
 			for _, v := range failedKVAs {
-				t.Logf("store mismatch: %q\n", v)
+				tb.Logf("store mismatch: %q\n", v)
 			}
-			t.FailNow()
+			tb.FailNow()
 		}
 	}
+}
+
+// appOptionsFn is an adapter to the single method AppOptions interface
+type appOptionsFn func(string) any
+
+func (f appOptionsFn) Get(k string) any {
+	return f(k)
+}
+
+// FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
+func FauxMerkleModeOpt(bapp *baseapp.BaseApp) {
+	bapp.SetFauxMerkleMode()
 }
 
 func FuzzFullAppSimulation(f *testing.F) {

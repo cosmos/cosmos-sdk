@@ -353,18 +353,27 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
-	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
-	if err != nil {
-		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+	if app.checkTxHandler == nil {
+		gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
+		if err != nil {
+			return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+		}
+
+		return &abci.ResponseCheckTx{
+			GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+			GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+			Log:       result.Log,
+			Data:      result.Data,
+			Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		}, nil
 	}
 
-	return &abci.ResponseCheckTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}, nil
+	// Create wrapper to avoid users overriding the execution mode
+	runTx := func(txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+		return app.runTx(mode, txBytes, tx)
+	}
+
+	return app.checkTxHandler(runTx, req)
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a

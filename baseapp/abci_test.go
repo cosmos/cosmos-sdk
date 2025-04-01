@@ -927,7 +927,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 		require.Error(t, err)
 		space, code, _ := errorsmod.ABCIInfo(err, false)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
+		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code)
 		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)
 	}
 }

@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 	"time"
 
@@ -159,7 +160,7 @@ func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time
 
 // RemoveEntry - remove entry at index i to the unbonding delegation
 func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
-	ubd.Entries = append(ubd.Entries[:i], ubd.Entries[i+1:]...)
+	ubd.Entries = slices.Delete(ubd.Entries, int(i), int(i+1))
 }
 
 // return the unbonding delegation
@@ -251,7 +252,7 @@ func (red *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balan
 
 // RemoveEntry - remove entry at index i to the unbonding delegation
 func (red *Redelegation) RemoveEntry(i int64) {
-	red.Entries = append(red.Entries[:i], red.Entries[i+1:]...)
+	red.Entries = slices.Delete(red.Entries, int(i), int(i+1))
 }
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.

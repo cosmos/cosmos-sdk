@@ -5,10 +5,10 @@ go 1.23.0
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/math v1.5.1
+	cosmossdk.io/math v1.5.2
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )
 
@@ -60,3 +60,5 @@ require (
 
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0
+
+retract v1.0.0

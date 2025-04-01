@@ -1,6 +1,6 @@
 module cosmossdk.io/tests/systemtests
 
-go 1.23.0
+go 1.23.2
 
 replace (
 	cosmossdk.io/systemtests => ../../systemtests
@@ -31,11 +31,12 @@ require (
 
 require (
 	cosmossdk.io/api v0.9.0 // indirect
-	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/core v0.11.0 // indirect
+	cosmossdk.io/collections v1.2.0 // indirect
+	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.0-rc.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.5.1 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
 	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -108,7 +109,7 @@ require (
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -159,7 +160,7 @@ require (
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
-	google.golang.org/grpc v1.71.0 // indirect
+	google.golang.org/grpc v1.71.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect

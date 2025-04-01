@@ -2,6 +2,8 @@ module cosmossdk.io/x/evidence
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/collections v0.4.0
@@ -9,7 +11,7 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
-	cosmossdk.io/math v1.5.1
+	cosmossdk.io/math v1.5.2
 	cosmossdk.io/store v1.1.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

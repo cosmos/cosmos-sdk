@@ -177,19 +177,19 @@ Import the following:
 import (
     protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	
-_ "github.com/cosmos/cosmos-sdk/x/protocolpool" // import for side-effects
-protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
+    _ "github.com/cosmos/cosmos-sdk/x/protocolpool" // import for side-effects
+    protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 ```
 
 The protocolpool module has module accounts that handle funds. Add them to the module account permission configuration:
 
 ```go
-	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
-	    // ...
-		{Account: protocolpooltypes.ModuleName},
-		{Account: protocolpooltypes.ProtocolPoolEscrowAccount},
-	}
+moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
+    // ...
+    {Account: protocolpooltypes.ModuleName},
+    {Account: protocolpooltypes.ProtocolPoolEscrowAccount},
+}
 ```
 
 Next, add an entry for BeginBlockers, EndBlockers, InitGenesis, and ExportGenesis.
@@ -214,17 +214,17 @@ EndBlockers: []string{
 ```go
 InitGenesis: []string{
                 // ... must be AFTER distribution.
-				distrtypes.ModuleName,
+                distrtypes.ModuleName,
                 protocolpooltypes.ModuleName,
 			},
 ```
 
 ```go
 ExportGenesis: []string{
-					// ...
-					// Must be exported before x/bank.
-					protocolpooltypes.ModuleName, 
-					banktypes.ModuleName,
+                  // ...
+                  // Must be exported before x/bank.
+                  protocolpooltypes.ModuleName, 
+                  banktypes.ModuleName,
 				},
 ```
 

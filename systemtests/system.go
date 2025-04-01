@@ -45,6 +45,7 @@ var (
 	DefaultRestPort      = 8080
 	DefaultGrpcPort      = 9090
 	DefaultP2PPort       = 16656
+	DefaultSwaggerPort   = 8090
 )
 
 type TestnetInitializer interface {
@@ -739,6 +740,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultApiPort+nodeNumber), "grpc-gateway", "address")
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultRestPort+nodeNumber), "rest", "address")
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultTelemetryPort+nodeNumber), "telemetry", "address")
+				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultSwaggerPort+nodeNumber), "swagger", "address")
 			})
 		}
 	}

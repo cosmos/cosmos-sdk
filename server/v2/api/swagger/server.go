@@ -64,7 +64,7 @@ func New[T transaction.Tx](
 	return s, nil
 }
 
-// NewWithConfigOptions creates a new telemetry server with the provided config options.
+// NewWithConfigOptions creates a new Swagger UI server with the provided config options.
 // It is *not* a fully functional server (since it has been created without dependencies)
 // The returned server should only be used to get and set configuration.
 func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {

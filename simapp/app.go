@@ -8,7 +8,6 @@ import (
 	"io"
 	"maps"
 	"os"
-	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"

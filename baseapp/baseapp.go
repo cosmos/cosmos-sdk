@@ -983,7 +983,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 			if err == nil {
 				return gInfo, nil, anteEvents, errPostHandler
 			}
-			// append to msg error to give priority to this and preserve the error code
+			// append to the msg error to preserve the original error code.
 			return gInfo, nil, anteEvents, errorsmod.Wrapf(err, "postHandler: %s", errPostHandler)
 		}
 

@@ -2,8 +2,6 @@ module cosmossdk.io/tests/systemtests
 
 go 1.23.2
 
-toolchain go1.23.7
-
 replace (
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..

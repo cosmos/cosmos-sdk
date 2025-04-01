@@ -2,8 +2,6 @@ module cosmossdk.io/systemtests
 
 go 1.23.2
 
-toolchain go1.23.7
-
 require (
 	cosmossdk.io/math v1.5.1
 	github.com/cometbft/cometbft v0.38.17

@@ -89,6 +89,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#24055](https://github.com/cosmos/cosmos-sdk/pull/24055) Align block header when query with latest height.
 * (baseapp) [#24074](https://github.com/cosmos/cosmos-sdk/pull/24074) Use CometBFT's ComputeProtoSizeForTxs in defaultTxSelector.SelectTxForProposal for consistency.
 * (cli) [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Prune cmd should disable async pruning.
+* (cli) [#24330](https://github.com/cosmos/cosmos-sdk/pull/24330) Use the gogoproto merge registry as a file resolver instead of the interface registry.
 
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20

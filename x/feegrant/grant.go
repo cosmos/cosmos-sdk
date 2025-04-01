@@ -5,12 +5,13 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/gogoproto/types/any"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ types.UnpackInterfacesMessage = &Grant{}
+var _ codectypes.UnpackInterfacesMessage = &Grant{}
 
 // NewGrant creates a new FeeAllowanceGrant.
 func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Grant, error) {
@@ -19,7 +20,7 @@ func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Gran
 		return Grant{}, errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", feeAllowance)
 	}
 
-	any, err := types.NewAnyWithValue(msg)
+	value, err := codectypes.NewAnyWithCacheWithValue(msg)
 	if err != nil {
 		return Grant{}, err
 	}
@@ -27,7 +28,7 @@ func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Gran
 	return Grant{
 		Granter:   granter.String(),
 		Grantee:   grantee.String(),
-		Allowance: any,
+		Allowance: value,
 	}, nil
 }
 
@@ -63,7 +64,7 @@ func (a Grant) GetGrant() (FeeAllowanceI, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a Grant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (a Grant) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }

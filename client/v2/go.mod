@@ -2,14 +2,12 @@ module cosmossdk.io/client/v2
 
 go 1.23.0
 
-replace cosmossdk.io/depinject => ../../depinject
-
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.0
-	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/math v1.5.1
-	cosmossdk.io/x/tx v0.13.8
+	cosmossdk.io/depinject v1.2.0-rc.1
+	cosmossdk.io/math v1.5.2
+	cosmossdk.io/x/tx v0.14.0-rc.1
 	github.com/cockroachdb/errors v1.11.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.1

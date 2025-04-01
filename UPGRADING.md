@@ -16,7 +16,7 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 
 ### Unordered Transactions
 
-The Cosmos SDK now supports unordered transactions. This is an opt-in feature.
+The Cosmos SDK now supports unordered transactions. _This is an opt-in feature_.
 
 Clients that use this feature may now submit their transactions in a fire-and-forget manner to chains that enabled unordered transactions.
 

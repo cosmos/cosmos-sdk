@@ -2,6 +2,8 @@ module cosmossdk.io/store
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
@@ -9,7 +11,7 @@ require (
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/iavl v1.2.0
+	github.com/cosmos/iavl v1.3.5
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/hashicorp/go-hclog v1.6.3
@@ -29,6 +31,7 @@ require (
 require github.com/cosmos/cosmos-proto v1.0.0-beta.5
 
 require (
+	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212 // indirect
 	github.com/DataDog/zstd v1.5.6 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.13.1 // indirect

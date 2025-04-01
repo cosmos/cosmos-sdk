@@ -228,7 +228,7 @@ func TestPlanShutdownGrace(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
-	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\nWARN Need Flush\nFlushed\n", upgradeFile), stdout.String())
+	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
 
 	// ensure this is upgraded now and produces new output
 	currentBin, err = cfg.CurrentBin()

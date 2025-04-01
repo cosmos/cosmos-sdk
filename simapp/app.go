@@ -127,8 +127,7 @@ var (
 		govtypes.ModuleName:                         {authtypes.Burner},
 		nft.ModuleName:                              nil,
 		protocolpooltypes.ModuleName:                nil,
-		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
-	}
+		protocolpooltypes.ProtocolPoolEscrowAccount: nil}
 )
 
 var (
@@ -470,7 +469,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -500,7 +499,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
+			// insert epoch hooks receivers here
 		),
 	)
 
@@ -714,15 +713,11 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 		HandlerOptions{
 			ante.HandlerOptions{
 				UnorderedNonceManager: app.AccountKeeper,
-				UnorderedTxOptions: []ante.UnorderedTxDecoratorOptions{
-					ante.WithUnorderedTxGasCost(2240),
-					ante.WithTimeoutDuration(10 * time.Minute),
-				},
-				AccountKeeper:   app.AccountKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+				AccountKeeper:         app.AccountKeeper,
+				BankKeeper:            app.BankKeeper,
+				SignModeHandler:       txConfig.SignModeHandler(),
+				FeegrantKeeper:        app.FeeGrantKeeper,
+				SigGasConsumer:        ante.DefaultSigVerificationGasConsumer,
 			},
 			&app.CircuitKeeper,
 		},

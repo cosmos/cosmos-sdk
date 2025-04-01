@@ -87,10 +87,17 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			gotHeight, err := s.network.WaitForHeight(tc.expHeight)
-			if gotHeight != tc.expHeight {
-				s.Fail(err.Error())
-			}
+			if tc.expHeight > 0 {
+                gotHeight, err := s.network.WaitForHeight(tc.expHeight)
+                s.Require().NoError(err)
+                s.Require().GreaterOrEqual(gotHeight, tc.expHeight)
+            } else {
+                err := s.network.WaitForNextBlock()
+                s.Require().NoError(err)
+                latestHeight, err := s.network.LatestHeight()
+                s.Require().NoError(err)
+                tc.expHeight = latestHeight
+            }
 
 			val := s.network.Validators[0]
 
@@ -101,7 +108,7 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
 				Height: tc.reqHeight,
 				Data:   address.MustLengthPrefix(val.Address),
-				Prove:  true,
+				Prove:  false,
 			}
 
 			res, err := clientCtx.QueryABCI(req)

@@ -2,6 +2,8 @@ module cosmossdk.io/x/nft
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.0
@@ -19,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 )
 
 require (

@@ -2,6 +2,8 @@ module cosmossdk.io/tools/cosmovisor
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	cosmossdk.io/log v1.5.1
 	cosmossdk.io/x/upgrade v0.1.4
@@ -14,7 +16,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 )
 
 require (

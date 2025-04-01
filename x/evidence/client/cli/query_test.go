@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 )
 
-func TestGetQueryCmd(t *testing.T) {
+func TecstGetQueryCmd(t *testing.T) {
 	cmd := cli.GetQueryCmd()
 	cmd.SetOut(io.Discard)
 	require.NotNil(t, cmd)

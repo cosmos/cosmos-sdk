@@ -485,6 +485,9 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
 	handler := ph.PrepareProposalHandler()
 
+	phf := baseapp.NewDefaultProposalHandlerFast(mempool.NoOpMempool{}, app)
+	handlerFast := phf.PrepareProposalHandler()
+
 	// build a tx
 	_, _, addr := testdata.KeyTestPubAddr()
 	addrStr, err := signingCtx.AddressCodec().BytesToString(addr)
@@ -567,6 +570,10 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 				resp, err := handler(tc.ctx, tc.req)
 				s.Require().NoError(err)
 				s.Require().Len(resp.Txs, tc.expectedTxs)
+
+				resp, err = handlerFast(tc.ctx, tc.req)
+				s.Require().NoError(err)
+				s.Require().Equal(resp.Txs, tc.req.Txs)
 			}
 		})
 	}

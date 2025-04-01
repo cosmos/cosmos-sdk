@@ -237,6 +237,9 @@ type (
 		txVerifier       ProposalTxVerifier
 		txSelector       TxSelector
 		signerExtAdapter mempool.SignerExtractionAdapter
+
+		// fastPrepareProposal together with NoOpMempool will bypass tx selector
+		fastPrepareProposal bool
 	}
 )
 
@@ -247,6 +250,12 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 		txSelector:       NewDefaultTxSelector(),
 		signerExtAdapter: mempool.NewDefaultSignerExtractionAdapter(),
 	}
+}
+
+func NewDefaultProposalHandlerFast(mp mempool.Mempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
+	h := NewDefaultProposalHandler(mp, txVerifier)
+	h.fastPrepareProposal = true
+	return h
 }
 
 // SetTxSelector sets the TxSelector function on the DefaultProposalHandler.
@@ -283,23 +292,38 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 
 		defer h.txSelector.Clear()
 
-		// decode transactions
-		decodedTxs := make([]sdk.Tx, len(req.Txs))
-		for i, txBz := range req.Txs {
-			tx, err := h.txVerifier.TxDecode(txBz)
-			if err != nil {
-				return nil, err
-			}
-
-			decodedTxs[i] = tx
-		}
-
 		// If the mempool is nil or NoOp we simply return the transactions
 		// requested from CometBFT, which, by default, should be in FIFO order.
 		//
 		// Note, we still need to ensure the transactions returned respect req.MaxTxBytes.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
+		// decode transactions
+		var decodedTxs []sdk.Tx
+		getDecodedTxs := func() error {
+			if decodedTxs != nil {
+				return nil
+			}
+
+			decodedTxs = make([]sdk.Tx, len(req.Txs))
+			for i, txBz := range req.Txs {
+				tx, err := h.txVerifier.TxDecode(txBz)
+				if err != nil {
+					return err
+				}
+
+				decodedTxs[i] = tx
+			}
+			return nil
+		}
 		if h.mempool == nil || isNoOp {
+			if h.fastPrepareProposal {
+				txs := h.txSelector.SelectTxForProposalFast(ctx, req.Txs)
+				return &abci.PrepareProposalResponse{Txs: txs}, nil
+			}
+			err := getDecodedTxs()
+			if err != nil {
+				return nil, err
+			}
 			for i, tx := range decodedTxs {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, tx, req.Txs[i])
 				if stop {
@@ -316,6 +340,10 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			selectedTxsNums int
 			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
+		err := getDecodedTxs()
+		if err != nil {
+			return nil, err
+		}
 		h.mempool.SelectBy(ctx, decodedTxs, func(memTx sdk.Tx) bool {
 			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
 			isUnordered := ok && unorderedTx.GetUnordered()
@@ -504,6 +532,11 @@ type TxSelector interface {
 	// return <true> if the caller should halt the transaction selection loop
 	// (typically over a mempool) or <false> otherwise.
 	SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool
+	// SelectTxForProposalFast is called in the case of NoOpMempool,
+	// where cometbft already checked the block gas/size limit,
+	// so the tx selector should simply accept them all to the proposal.
+	// But extra validations on the tx are still possible though.
+	SelectTxForProposalFast(ctx context.Context, txs [][]byte) [][]byte
 }
 
 type defaultTxSelector struct {
@@ -525,7 +558,7 @@ func (ts *defaultTxSelector) SelectedTxs(_ context.Context) [][]byte {
 func (ts *defaultTxSelector) Clear() {
 	ts.totalTxBytes = 0
 	ts.totalTxGas = 0
-	ts.selectedTxs = nil
+	ts.selectedTxs = ts.selectedTxs[:0] // keep the allocated memory
 }
 
 func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool {
@@ -556,4 +589,8 @@ func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, 
 
 	// check if we've reached capacity; if so, we cannot select any more transactions
 	return ts.totalTxBytes >= maxTxBytes || (maxBlockGas > 0 && (ts.totalTxGas >= maxBlockGas))
+}
+
+func (ts *defaultTxSelector) SelectTxForProposalFast(ctx context.Context, txs [][]byte) [][]byte {
+	return txs
 }

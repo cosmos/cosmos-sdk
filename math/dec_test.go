@@ -881,7 +881,7 @@ func TestQuoInteger(t *testing.T) {
 			y:      NewDecFromInt64(1),
 			expErr: ErrInvalidDec,
 		},
-		"1e100000 - 1^1 -> Err": {
+		"1e100000 / 1e-1 -> Err": {
 			x:      NewDecWithExp(1, 100_000),
 			y:      NewDecWithExp(1, -1),
 			expErr: ErrInvalidDec,

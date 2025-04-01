@@ -3,13 +3,13 @@
 This guide provides instructions for upgrading from `v0.50.x` to `v0.53.x` of Cosmos SDK.
 Note, always read the **SimApp** section for more information on application wiring updates.
 
-🚨Upgrading to v0.53.x will require a **coordinated** chain upgrade.
+🚨Upgrading to v0.53.x will require a **coordinated** chain upgrade.🚨
 
 ### TLDR;
 
 Unordered transactions, x/protocolpool, and x/epoch are the major new features added in v0.53.x.
 
-We also added the ability to add a checkTx handler, enabled ed25519 transaction signature verification, and various bug fixes and DevX changes.
+We also added the ability to add a `CheckTx` handler and enabled ed25519 signature verification.
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/CHANGELOG.md).
 
@@ -68,18 +68,39 @@ That's it.
 ### New Modules
 
 Below are some **optional** new modules you can include in your chain. 
-To see a full example of wiring these modules, please see our [SimApp](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/simapp/app.go).
+To see a full example of wiring these modules, please check out [SimApp](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/simapp/app.go).
 
 #### Epochs
 
-⚠️This module requires a `StoreUpgrade`⚠️
+⚠️Adding this module requires a `StoreUpgrade`⚠️
 
 The new, supplemental `x/epochs` module provides Cosmos SDK modules functionality to register and execute custom logic at fixed time-intervals.
 
+Required wiring:
+- Keeper Instantiation
+- StoreKey addition
+- Hooks Registration 
+- App Module Registration
+- entry in SetOrderBeginBlockers
+- entry in SetGenesisModuleOrder
+- entry in SetExportModuleOrder
 
 #### ProtocolPool
 
-⚠️This module requires a `StoreUpgrade`⚠️
+⚠️Adding this module requires a `StoreUpgrade`⚠️
 
 The new, supplemental `x/protocolpool` module provides extended functionality for managing and distributing block reward revenue.
 
+Required wiring:
+- Module Account Permissions For:
+  - protocolpooltypes.ModuleName (nil)
+  - protocolpooltypes.ProtocolPoolEscrowAccount (nil)
+- Keeper Instantiation
+- StoreKey addition
+- Passing the keeper the Distribution Keeper
+  - `distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper)`
+- App Module Registration
+- entry in SetOrderBeginBlockers
+- entry in SetOrderEndBlockers
+- entry in SetGenesisModuleOrder
+- entry in SetExportModuleOrder before x/bank

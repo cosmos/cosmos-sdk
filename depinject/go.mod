@@ -15,7 +15,7 @@ require (
 
 require (
 	cosmossdk.io/api v0.9.0 // indirect
-	cosmossdk.io/core v0.11.3 // indirect
+	cosmossdk.io/core v0.11.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	github.com/cometbft/cometbft v0.38.17 // indirect

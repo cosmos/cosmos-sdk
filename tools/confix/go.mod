@@ -1,6 +1,6 @@
 module cosmossdk.io/tools/confix
 
-go 1.23.2
+go 1.23.0
 
 require (
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
@@ -12,15 +12,16 @@ require (
 	gotest.tools/v3 v3.5.2
 )
 
+require go.uber.org/mock v0.5.0 // indirect
+
 require (
 	cosmossdk.io/api v0.9.0 // indirect
-	cosmossdk.io/collections v1.2.0 // indirect
-	cosmossdk.io/core v0.11.3 // indirect
+	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/core v0.11.1 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.5.1 // indirect
 	cosmossdk.io/math v1.5.2 // indirect
-	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
 	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -100,7 +101,7 @@ require (
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -140,7 +141,6 @@ require (
 	github.com/zondax/ledger-go v0.14.3 // indirect; indirectÎ
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/mock v0.5.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect

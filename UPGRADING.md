@@ -15,15 +15,16 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 
 ### Unordered Transactions
 
-The Cosmos SDK now supports unordered transactions. Clients that use this feature may now submit their transactions
-in a fire-and-forget manner.
+The Cosmos SDK now supports unordered transactions. This is an opt-in feature.
+
+Clients that use this feature may now submit their transactions in a fire-and-forget manner to chains that enable unordered transactions.
 
 To submit an unordered transaction, clients must set the `unordered` flag to
 `true` and ensure a reasonable `timeout_timestamp` is set. The `timeout_timestamp` is
 used as a TTL for the transaction and provides replay protection. Each transaction's `timeout_timestamp` must be
 unique to the account; however, the difference may be as small as a nanosecond. See [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md) for more details.
 
-#### Enable Unordered Transactions
+#### Enabling Unordered Transactions
 
 To enable unordered transactions, set the new `UnorderedNonceManager` field in the `x/auth` `ante.HandlerOptions`.
 
@@ -34,26 +35,26 @@ ante.HandlerOptions{
 }
 ```
 
-By default, unordered transaction support uses a transaction timeout duration of 10 minutes, and charges 2240 gas.
+By default, unordered transactions use a transaction timeout duration of 10 minutes and a default gas charge of 2240 gas.
 To modify these default values, pass in the corresponding options to the new `UnorderedTxOptions` field in `x/auth's` `ante.HandlerOptions`.
 
 ```go
 ante.HandlerOptions{
     UnorderedNonceManager: app.AccountKeeper,
     UnorderedTxOptions: []ante.UnorderedTxDecoratorOptions{
-        ante.WithTimeoutDuration(10 * time.Minute),
-        ante.WithUnorderedTxGasCost(2240),
+        ante.WithTimeoutDuration(XXXX * time.Minute),
+        ante.WithUnorderedTxGasCost(XXXX),
     },
-	// ... other options
+	// ... 
 }	
 ```
 
-### SimApp
+### Required Changes
 
-In this section we describe the changes made in Cosmos SDK's SimApp.
+In this section we describe the required changes to run a v0.53.x Cosmos SDK application.
 **These changes are directly applicable to your application wiring.**
 
-The `x/auth` module now contains a PreBlocker that must be set in the module manager's `SetOrderPreBlockers` method.
+The `x/auth` module now contains a `PreBlocker` that _must_ be set in the module manager's `SetOrderPreBlockers` method.
 
 ```go
 app.ModuleManager.SetOrderPreBlockers(

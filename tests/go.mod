@@ -8,13 +8,13 @@ require (
 	cosmossdk.io/depinject v1.2.0-rc.1
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
-	cosmossdk.io/math v1.5.1
+	cosmossdk.io/math v1.5.2
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/evidence v0.2.0-rc.2
 	cosmossdk.io/x/feegrant v0.2.0-rc.2
 	cosmossdk.io/x/nft v0.2.0-rc.2 // indirect
-	cosmossdk.io/x/tx v0.13.7
+	cosmossdk.io/x/tx v0.14.0-rc.1
 	cosmossdk.io/x/upgrade v0.2.0-rc.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1

@@ -104,3 +104,18 @@ Required wiring:
 - entry in SetOrderEndBlockers
 - entry in SetGenesisModuleOrder
 - entry in SetExportModuleOrder **before `x/bank`**
+
+### Misc Changes
+
+#### Testnet's init-files Command
+
+Some changes were made to `testnet`'s `init-files` command to support our new testing framework, `Systemtest`.
+
+##### Flag Changes
+
+- The flag for validator count was changed from `--v` to `--validator-count`(shorthand: `-v`).
+
+##### Flag Additions
+- `--staking-denom` allows changing the default stake denom, `stake`.
+- `--commit-timeout` enables changing the commit timeout of the chain.
+- `--single-host` enables running a multi-node network on a single host. This bumps each subsequent node's network addresses by 1. For example, node1's gRPC address will be 9090, node2's 9091, etc...

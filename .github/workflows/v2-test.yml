@@ -171,5 +171,5 @@ jobs:
         if: failure()
         with:
           name: "testnet-setup"
-          path: ./systemtests/testnet/
+          path: ./tests/systemtests/testnet/
           retention-days: 3

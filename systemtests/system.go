@@ -45,6 +45,7 @@ var (
 	DefaultRestPort      = 8080
 	DefaultGrpcPort      = 9090
 	DefaultP2PPort       = 16656
+	DefaultSwaggerPort   = 8090
 )
 
 type TestnetInitializer interface {
@@ -208,7 +209,7 @@ func (s *SystemUnderTest) IsDirty() bool {
 
 // watchLogs stores stdout/stderr in a file and in a ring buffer to output the last n lines on test error
 func (s *SystemUnderTest) watchLogs(node int, cmd *exec.Cmd) {
-	logfile, err := os.Create(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node)))
+	logfile, err := os.OpenFile(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node)), os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
 	if err != nil {
 		panic(fmt.Sprintf("open logfile error %#+v", err))
 	}
@@ -459,7 +460,6 @@ func (s *SystemUnderTest) ResetChain(t *testing.T) {
 	// remove all additional nodes
 	for i := s.initialNodesCount; i < s.nodesCount; i++ {
 		_ = os.RemoveAll(filepath.Join(WorkDir, s.nodePath(i)))
-		_ = os.Remove(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", i)))
 	}
 	s.nodesCount = s.initialNodesCount
 
@@ -739,6 +739,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultApiPort+nodeNumber), "grpc-gateway", "address")
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultRestPort+nodeNumber), "rest", "address")
 				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultTelemetryPort+nodeNumber), "telemetry", "address")
+				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultSwaggerPort+nodeNumber), "swagger", "address")
 			})
 		}
 	}

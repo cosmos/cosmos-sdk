@@ -170,6 +170,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		EditToml(filepath.Join(nodeDir, "app.toml"), func(doc *tomledit.Document) {
 			UpdatePort(doc, DefaultApiPort+i, "api", "address")
 			UpdatePort(doc, DefaultGrpcPort+i, "grpc", "address")
+			UpdatePort(doc, DefaultSwaggerPort+i, "swagger", "address")
 		})
 	}
 }

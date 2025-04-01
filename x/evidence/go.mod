@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
-	cosmossdk.io/math v1.5.1
+	cosmossdk.io/math v1.5.2
 	cosmossdk.io/store v1.1.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )
 

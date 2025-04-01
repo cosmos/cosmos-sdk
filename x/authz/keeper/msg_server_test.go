@@ -15,7 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func (suite *TestSuite) createAccounts(accs int) []sdk.AccAddress {
+func (suite *TestSuite) createAccounts() []sdk.AccAddress {
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0])).AnyTimes()
 	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1])).AnyTimes()
@@ -24,7 +24,7 @@ func (suite *TestSuite) createAccounts(accs int) []sdk.AccAddress {
 
 func (suite *TestSuite) TestGrant() {
 	ctx := suite.ctx.WithBlockTime(time.Now())
-	addrs := suite.createAccounts(2)
+	addrs := suite.createAccounts()
 	curBlockTime := ctx.BlockTime()
 
 	suite.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
@@ -207,7 +207,7 @@ func (suite *TestSuite) TestGrant() {
 }
 
 func (suite *TestSuite) TestRevoke() {
-	addrs := suite.createAccounts(2)
+	addrs := suite.createAccounts()
 
 	grantee, granter := addrs[0], addrs[1]
 
@@ -305,7 +305,7 @@ func (suite *TestSuite) TestRevoke() {
 }
 
 func (suite *TestSuite) TestExec() {
-	addrs := suite.createAccounts(2)
+	addrs := suite.createAccounts()
 
 	grantee, granter := addrs[0], addrs[1]
 	coins := sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10)))
@@ -367,4 +367,48 @@ func (suite *TestSuite) TestExec() {
 			}
 		})
 	}
+}
+
+func (suite *TestSuite) TestPruneExpiredGrants() {
+	addrs := suite.createAccounts()
+
+	timeNow := suite.ctx.BlockTime()
+	expiration := timeNow.Add(time.Hour)
+	coins := sdk.NewCoins(sdk.NewCoin("steak", sdkmath.NewInt(10)))
+	grant, err := authz.NewGrant(timeNow, banktypes.NewSendAuthorization(coins, nil), &expiration)
+	suite.Require().NoError(err)
+
+	_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
+		Granter: addrs[0].String(),
+		Grantee: addrs[1].String(),
+		Grant:   grant,
+	})
+	suite.Require().NoError(err)
+
+	_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
+		Granter: addrs[1].String(),
+		Grantee: addrs[0].String(),
+		Grant:   grant,
+	})
+	suite.Require().NoError(err)
+
+	totalGrants := 0
+	suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) bool {
+		totalGrants++
+		return false
+	})
+	suite.Require().Equal(len(addrs), totalGrants)
+
+	// prune expired grants
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(2 * time.Hour))
+
+	_, err = suite.authzKeeper.PruneExpiredGrants(suite.ctx, &authz.MsgPruneExpiredGrants{Pruner: addrs[0].String()})
+	suite.Require().NoError(err)
+
+	totalGrants = 0
+	suite.authzKeeper.IterateGrants(suite.ctx, func(sdk.AccAddress, sdk.AccAddress, authz.Grant) bool {
+		totalGrants++
+		return false
+	})
+	suite.Require().Equal(0, totalGrants)
 }

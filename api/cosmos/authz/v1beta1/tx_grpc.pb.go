@@ -21,9 +21,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_Grant_FullMethodName  = "/cosmos.authz.v1beta1.Msg/Grant"
-	Msg_Exec_FullMethodName   = "/cosmos.authz.v1beta1.Msg/Exec"
-	Msg_Revoke_FullMethodName = "/cosmos.authz.v1beta1.Msg/Revoke"
+	Msg_Grant_FullMethodName              = "/cosmos.authz.v1beta1.Msg/Grant"
+	Msg_Exec_FullMethodName               = "/cosmos.authz.v1beta1.Msg/Exec"
+	Msg_Revoke_FullMethodName             = "/cosmos.authz.v1beta1.Msg/Revoke"
+	Msg_PruneExpiredGrants_FullMethodName = "/cosmos.authz.v1beta1.Msg/PruneExpiredGrants"
 )
 
 // MsgClient is the client API for Msg service.
@@ -42,6 +43,10 @@ type MsgClient interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.CallOption) (*MsgRevokeResponse, error)
+	// PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
+	//
+	// Since cosmos-sdk 0.51
+	PruneExpiredGrants(ctx context.Context, in *MsgPruneExpiredGrants, opts ...grpc.CallOption) (*MsgPruneExpiredGrantsResponse, error)
 }
 
 type msgClient struct {
@@ -79,6 +84,15 @@ func (c *msgClient) Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.Call
 	return out, nil
 }
 
+func (c *msgClient) PruneExpiredGrants(ctx context.Context, in *MsgPruneExpiredGrants, opts ...grpc.CallOption) (*MsgPruneExpiredGrantsResponse, error) {
+	out := new(MsgPruneExpiredGrantsResponse)
+	err := c.cc.Invoke(ctx, Msg_PruneExpiredGrants_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -95,6 +109,10 @@ type MsgServer interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error)
+	// PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
+	//
+	// Since cosmos-sdk 0.51
+	PruneExpiredGrants(context.Context, *MsgPruneExpiredGrants) (*MsgPruneExpiredGrantsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -110,6 +128,9 @@ func (UnimplementedMsgServer) Exec(context.Context, *MsgExec) (*MsgExecResponse,
 }
 func (UnimplementedMsgServer) Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Revoke not implemented")
+}
+func (UnimplementedMsgServer) PruneExpiredGrants(context.Context, *MsgPruneExpiredGrants) (*MsgPruneExpiredGrantsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PruneExpiredGrants not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -178,6 +199,24 @@ func _Msg_Revoke_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_PruneExpiredGrants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgPruneExpiredGrants)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).PruneExpiredGrants(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_PruneExpiredGrants_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).PruneExpiredGrants(ctx, req.(*MsgPruneExpiredGrants))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -196,6 +235,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Revoke",
 			Handler:    _Msg_Revoke_Handler,
+		},
+		{
+			MethodName: "PruneExpiredGrants",
+			Handler:    _Msg_PruneExpiredGrants_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

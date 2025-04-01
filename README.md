@@ -8,6 +8,7 @@ The fork include the following changes compared to upstream:
 * Re-add query router for custom abci queries
 * Add v0.52 helpers to facilitate testing
 * Disable heavy bank migrations
+* Backport improvements for DOS protection for x/authz
 * Support historical account number queries 
 
 Read the [CHANGELOG.md](CHANGELOG.md) for more details.

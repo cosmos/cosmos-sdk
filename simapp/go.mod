@@ -7,17 +7,17 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.1
-	cosmossdk.io/depinject v1.1.0
+	cosmossdk.io/depinject v1.2.0-rc.1
 	cosmossdk.io/log v1.5.1
-	cosmossdk.io/math v1.5.1
+	cosmossdk.io/math v1.5.2
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
-	cosmossdk.io/x/circuit v0.1.1
-	cosmossdk.io/x/evidence v0.1.1
-	cosmossdk.io/x/feegrant v0.1.1
-	cosmossdk.io/x/nft v0.1.1
-	cosmossdk.io/x/tx v0.13.7
-	cosmossdk.io/x/upgrade v0.1.4
+	cosmossdk.io/x/circuit v0.2.0-rc.2
+	cosmossdk.io/x/evidence v0.2.0-rc.2
+	cosmossdk.io/x/feegrant v0.2.0-rc.2
+	cosmossdk.io/x/nft v0.2.0-rc.2
+	cosmossdk.io/x/tx v0.14.0-rc.1
+	cosmossdk.io/x/upgrade v0.2.0-rc.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

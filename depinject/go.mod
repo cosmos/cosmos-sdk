@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 	gotest.tools/v3 v3.5.2
 	sigs.k8s.io/yaml v1.4.0
@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/api v0.9.0 // indirect
 	cosmossdk.io/core v0.11.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
-	cosmossdk.io/x/tx v0.13.7 // indirect
+	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	github.com/cometbft/cometbft v0.38.17 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect

@@ -3,14 +3,14 @@ module cosmossdk.io/systemtests
 go 1.23.0
 
 require (
-	cosmossdk.io/math v1.5.1
+	cosmossdk.io/math v1.5.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
 	github.com/creachadair/tomledit v0.0.27
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 )
 
 require (

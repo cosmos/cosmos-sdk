@@ -1,6 +1,8 @@
 module cosmossdk.io/tools/confix
 
-go 1.23.0
+go 1.23.2
+
+toolchain go1.23.7
 
 require (
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
@@ -12,11 +14,14 @@ require (
 	gotest.tools/v3 v3.5.2
 )
 
-require go.uber.org/mock v0.5.0 // indirect
+require (
+	cosmossdk.io/schema v1.0.0 // indirect
+	go.uber.org/mock v0.5.0 // indirect
+)
 
 require (
 	cosmossdk.io/api v0.9.0 // indirect
-	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/collections v1.2.0 // indirect
 	cosmossdk.io/core v0.11.1 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect

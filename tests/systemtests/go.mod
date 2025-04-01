@@ -1,6 +1,8 @@
 module cosmossdk.io/tests/systemtests
 
-go 1.23.0
+go 1.23.2
+
+toolchain go1.23.7
 
 replace (
 	cosmossdk.io/systemtests => ../../systemtests
@@ -31,11 +33,12 @@ require (
 
 require (
 	cosmossdk.io/api v0.9.0 // indirect
-	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/collections v1.2.0 // indirect
 	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.0-rc.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.5.1 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
 	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

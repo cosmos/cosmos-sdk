@@ -209,7 +209,7 @@ func (s *SystemUnderTest) IsDirty() bool {
 
 // watchLogs stores stdout/stderr in a file and in a ring buffer to output the last n lines on test error
 func (s *SystemUnderTest) watchLogs(node int, cmd *exec.Cmd) {
-	logfile, err := os.Create(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node)))
+	logfile, err := os.OpenFile(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node)), os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
 	if err != nil {
 		panic(fmt.Sprintf("open logfile error %#+v", err))
 	}
@@ -460,7 +460,6 @@ func (s *SystemUnderTest) ResetChain(t *testing.T) {
 	// remove all additional nodes
 	for i := s.initialNodesCount; i < s.nodesCount; i++ {
 		_ = os.RemoveAll(filepath.Join(WorkDir, s.nodePath(i)))
-		_ = os.Remove(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", i)))
 	}
 	s.nodesCount = s.initialNodesCount
 

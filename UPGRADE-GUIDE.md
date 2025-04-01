@@ -8,6 +8,18 @@ After completing this guide, applications will have:
 - The `x/epochs` module
 - Unordered Transaction support
 
+## Table of Contents
+
+- [App Wiring Changes](#app-wiring-changes)
+- [Adding ProtocolPool Module](#adding-protocolpool-module)
+    - [Manual Wiring](#protocolpool-manual-wiring)
+    - [DI Wiring](#protocolpool-di-wiring)
+- [Adding Epochs Module](#adding-epochs-module)
+    - [Manual Wiring](#epochs-manual-wiring)
+    - [DI Wiring](#epochs-di-wiring)
+- [Enable Unordered Transactions](#enable-unordered-transactions)
+- [Upgrade Handler](#upgrade-handler)
+
 ## App Wiring Changes
 
 The `x/auth` module now contains a `PreBlocker` that _must_ be set in the module manager's `SetOrderPreBlockers` method.
@@ -114,6 +126,7 @@ app.ModuleManager.SetOrderEndBlockers(
 
 ```go
 app.ModuleManager.SetOrderInitGenesis(
+	// order does not matter.
     protocolpooltypes.ModuleName,   
 )
 ```
@@ -263,7 +276,7 @@ app.EpochsKeeper = epochskeeper.NewKeeper(
 )
 ```
 
-Set up hooks for the epochs keeper
+Set up hooks for the epochs keeper:
 
 To learn how to write hooks for the epoch keeper, see the [x/epoch README](https://github.com/cosmos/cosmos-sdk/blob/main/x/epochs/README.md)
 
@@ -435,8 +448,8 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{
-				epochstypes.ModuleName, // if not adding x/epochs to your chain, remove this line. 
-				protocolpooltypes.ModuleName, // if not adding x/protocolpool to your chain, remove this line. 
+				epochstypes.ModuleName, // if not adding x/epochs to your chain, remove this line.
+				protocolpooltypes.ModuleName, // if not adding x/protocolpool to your chain, remove this line.
 			},
 		}
 

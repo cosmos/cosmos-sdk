@@ -2,6 +2,8 @@ module cosmossdk.io/simapp
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e
@@ -16,7 +18,7 @@ require (
 	cosmossdk.io/x/evidence v0.2.0-rc.2
 	cosmossdk.io/x/feegrant v0.2.0-rc.2
 	cosmossdk.io/x/nft v0.2.0-rc.2
-	cosmossdk.io/x/tx v0.14.0-rc.1
+	cosmossdk.io/x/tx v1.1.0
 	cosmossdk.io/x/upgrade v0.2.0-rc.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1

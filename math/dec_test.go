@@ -349,7 +349,7 @@ func TestSub(t *testing.T) {
 			y:      NewDecWithExp(1, -1),
 			expErr: ErrInvalidDec,
 		},
-		"1e100000 - 1^1-> Err": {
+		"1e100000 - 1e-1 -> Err": {
 			x:      NewDecWithExp(1, 100_000),
 			y:      NewDecWithExp(1, -1),
 			expErr: ErrInvalidDec,
@@ -811,7 +811,7 @@ func TestQuoInteger(t *testing.T) {
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
-		"-123 / -> Err": {
+		"-123 / 0 -> Err": {
 			x:      NewDecFromInt64(-123),
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
@@ -1084,7 +1084,7 @@ func TestReduce(t *testing.T) {
 		"positive value": {
 			src:       "10",
 			exp:       "10",
-			decPlaces: 1,
+			decPlaces: 0,
 		},
 		"negative value": {
 			src:       "-10",

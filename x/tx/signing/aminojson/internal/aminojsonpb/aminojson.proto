@@ -28,5 +28,6 @@ message AminoSignDoc {
   AminoSignFee fee                  = 6 [(amino.dont_omitempty) = true];
   repeated google.protobuf.Any msgs = 7 [(amino.dont_omitempty) = true];
   bool unordered = 8 [(amino.dont_omitempty) = false, (cosmos_proto.field_added_in) = "cosmos-sdk 0.53"];
-  google.protobuf.Timestamp timeout_timestamp = 9 [(amino.dont_omitempty) = false, (cosmos_proto.field_added_in) = "cosmos-sdk 0.53"];
+  google.protobuf.Timestamp timeout_timestamp = 9
+      [(amino.dont_omitempty) = false, (cosmos_proto.field_added_in) = "cosmos-sdk 0.53"];
 }

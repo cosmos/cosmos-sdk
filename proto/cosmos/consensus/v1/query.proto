@@ -11,7 +11,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 service Query {
   // Params queries the parameters of x/consensus module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/consensus/v1/params";
+    option (google.api.http).get          = "/cosmos/consensus/v1/params";
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   }
 }

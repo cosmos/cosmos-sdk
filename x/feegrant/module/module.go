@@ -212,5 +212,8 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 // WeightedOperationsX registers weighted feegrant module operations for simulation.
 func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
 	reg.Add(weights.Get("msg_grant_fee_allowance", 100), simulation.MsgGrantAllowanceFactory(am.keeper))
-	reg.Add(weights.Get("msg_grant_revoke_allowance", 100), simulation.MsgRevokeAllowanceFactory(am.keeper))
+	// use old misspelled OpWeightMsgRevokeAllowance key for legacy reasons but default to the new key
+	// so that we can replace it at some point
+	w := weights.Get("msg_grant_revoke_allowance", weights.Get("msg_revoke_allowance", 100))
+	reg.Add(w, simulation.MsgRevokeAllowanceFactory(am.keeper))
 }

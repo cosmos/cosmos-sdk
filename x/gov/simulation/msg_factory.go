@@ -45,7 +45,7 @@ func MsgVoteFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFact
 		r := testData.Rand()
 		proposalID, ok := randomProposalID(r.Rand, k, sdk.UnwrapSDKContext(ctx), v1.StatusVotingPeriod, sharedState)
 		if !ok {
-			reporter.Skip("no proposal in deposit state")
+			reporter.Skip("no proposal in voting state")
 			return nil, nil
 		}
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())

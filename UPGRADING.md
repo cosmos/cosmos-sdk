@@ -1,110 +1,137 @@
-# Upgrading Cosmos SDK
+# Upgrading Cosmos SDK [v0.53.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0)
 
-This guide provides instructions for upgrading to specific versions of Cosmos SDK.
-Note, always read the **SimApp** section for more information on application wiring updates.
+This guide provides instructions for upgrading from `v0.50.x` to `v0.53.x` of Cosmos SDK.
 
-## [v0.53.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0)
+Note, always read the **App Wiring Changes** section for more information on application wiring updates.
 
-#### Unordered Transactions
+🚨Upgrading to v0.53.x will require a **coordinated** chain upgrade.🚨
 
-The Cosmos SDK now supports unordered transactions. This means that transactions
-can be executed in any order and doesn't require the client to deal with or manage
-nonces. This also means the order of execution is not guaranteed.
+### TLDR;
 
-Unordered transactions are automatically enabled when using `depinject` / app di, simply supply the `servertypes.AppOptions` in `app.go`:
+Unordered transactions, `x/protocolpool`, and `x/epoch` are the major new features added in v0.53.x.
 
-```diff
-	depinject.Supply(
-+		// supply the application options
-+		appOpts,
-		// supply the logger
-		logger,
-	)
+We also added the ability to add a `CheckTx` handler and enabled ed25519 signature verification.
+
+For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/CHANGELOG.md).
+
+### Unordered Transactions
+
+The Cosmos SDK now supports unordered transactions. _This is an opt-in feature_.
+
+Clients that use this feature may now submit their transactions in a fire-and-forget manner to chains that enabled unordered transactions.
+
+To submit an unordered transaction, clients must set the `unordered` flag to
+`true` and ensure a reasonable `timeout_timestamp` is set. The `timeout_timestamp` is
+used as a TTL for the transaction and provides replay protection. Each transaction's `timeout_timestamp` must be
+unique to the account; however, the difference may be as small as a nanosecond. See [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md) for more details.
+
+#### Enabling Unordered Transactions
+
+To enable unordered transactions, set the new `UnorderedNonceManager` field in the `x/auth` `ante.HandlerOptions`.
+
+By default, unordered transactions use a transaction timeout duration of 10 minutes and a default gas charge of 2240 gas.
+To modify these default values, pass in the corresponding options to the new `UnorderedTxOptions` field in `x/auth's` `ante.HandlerOptions`.
+
+```go
+options := ante.HandlerOptions{
+    UnorderedNonceManager: app.AccountKeeper,
+	// The following options are set by default.
+	// If you do not want to change these, you may remove the UnorderedTxOptions field entirely.
+    UnorderedTxOptions: []ante.UnorderedTxDecoratorOptions{
+        ante.WithUnorderedTxGasCost(2240),
+        ante.WithTimeoutDuration(10 * time.Minute),
+    },
+}
 ```
 
-<details>
-<summary>Step-by-step Wiring </summary>
-If you are still using the legacy wiring, you must enable unordered transactions manually:
+```go
+anteDecorators := []sdk.AnteDecorator{
+  ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+  circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
+  ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
+  ante.NewValidateBasicDecorator(),
+  ante.NewTxTimeoutHeightDecorator(),
+  ante.NewValidateMemoDecorator(options.AccountKeeper),
+  ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+  ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+  ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
+  ante.NewValidateSigCountDecorator(options.AccountKeeper),
+  ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+  ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+  ante.NewIncrementSequenceDecorator(options.AccountKeeper),
+  // NEW !! NEW !! NEW !!
+  ante.NewUnorderedTxDecorator(options.UnorderedNonceManager, options.UnorderedTxOptions...)
+}
+```
 
-* Update the `App` constructor to create, load, and save the unordered transaction
-  manager.
+### App Wiring Changes
 
-  ```go
-  func NewApp(...) *App {
-      // ...
+In this section, we describe the required app wiring changes to run a v0.53.x Cosmos SDK application.
 
-      // create, start, and load the unordered tx manager
-      utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-      app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-      app.UnorderedTxManager.Start()
+**These changes are directly applicable to your application wiring.**
 
-      if err := app.UnorderedTxManager.OnInit(); err != nil {
-          panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-      }
-  }
-  ```
+The `x/auth` module now contains a `PreBlocker` that _must_ be set in the module manager's `SetOrderPreBlockers` method.
 
-* Add the decorator to the existing AnteHandler chain, which should be as early
-  as possible.
+```go
+app.ModuleManager.SetOrderPreBlockers(
+    upgradetypes.ModuleName,
+    authtypes.ModuleName, // NEW
+)
+```
 
-  ```go
-  anteDecorators := []sdk.AnteDecorator{
-      ante.NewSetUpContextDecorator(),
-      // ...
-      ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.TxManager, options.Environment),
-      // ...
-  }
+That's it.
 
-  return sdk.ChainAnteDecorators(anteDecorators...), nil
-  ```
+### New Modules
 
-* If the App has a SnapshotManager defined, you must also register the extension
-  for the TxManager.
+Below are some **optional** new modules you can include in your chain. 
+To see a full example of wiring these modules, please check out the [SimApp](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/simapp/app.go).
 
-  ```go
-  if manager := app.SnapshotManager(); manager != nil {
-      err := manager.RegisterExtensions(unorderedtx.NewSnapshotter(app.UnorderedTxManager))
-      if err != nil {
-          panic(fmt.Errorf("failed to register snapshot extension: %w", err))
-      }
-  }
-  ```
+#### Epochs
 
-* Create or update the App's `Preblocker()` method to call the unordered tx
-  manager's `OnNewBlock()` method.
+⚠️Adding this module requires a `StoreUpgrade`⚠️
 
-  ```go
-  ...
-  app.SetPreblocker(app.PreBlocker)
-  ...
+The new, supplemental `x/epochs` module provides Cosmos SDK modules functionality to register and execute custom logic at fixed time-intervals.
 
-  func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-      app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
-      return app.ModuleManager.PreBlock(ctx, req)
-  }
-  ```
+Required wiring:
+- Keeper Instantiation
+- StoreKey addition
+- Hooks Registration 
+- App Module Registration
+- entry in SetOrderBeginBlockers
+- entry in SetGenesisModuleOrder
+- entry in SetExportModuleOrder
 
-* Create or update the App's `Close()` method to close the unordered tx manager.
-  Note, this is critical as it ensures the manager's state is written to file
-  such that when the node restarts, it can recover the state to provide replay
-  protection.
+#### ProtocolPool
 
-  ```go
-  func (app *App) Close() error {
-      // ...
+⚠️Adding this module requires a `StoreUpgrade`⚠️
 
-      // close the unordered tx manager
-      if e := app.UnorderedTxManager.Close(); e != nil {
-          err = errors.Join(err, e)
-      }
+The new, supplemental `x/protocolpool` module provides extended functionality for managing and distributing block reward revenue.
 
-      return err
-  }
-  ```
+Required wiring:
+- Module Account Permissions
+  - protocolpooltypes.ModuleName (nil)
+  - protocolpooltypes.ProtocolPoolEscrowAccount (nil)
+- Keeper Instantiation
+- StoreKey addition
+- Passing the keeper to the Distribution Keeper
+  - `distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper)`
+- App Module Registration
+- entry in SetOrderBeginBlockers
+- entry in SetOrderEndBlockers
+- entry in SetGenesisModuleOrder
+- entry in SetExportModuleOrder **before `x/bank`**
 
-</details>
+### Misc Changes
 
-To submit an unordered transaction, the client must set the `unordered` flag to
-`true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
-used as a TTL for the transaction and is used to provide replay protection. See
-[ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md) for more details.
+#### Testnet's init-files Command
+
+Some changes were made to `testnet`'s `init-files` command to support our new testing framework, `Systemtest`.
+
+##### Flag Changes
+
+- The flag for validator count was changed from `--v` to `--validator-count`(shorthand: `-v`).
+
+##### Flag Additions
+- `--staking-denom` allows changing the default stake denom, `stake`.
+- `--commit-timeout` enables changing the commit timeout of the chain.
+- `--single-host` enables running a multi-node network on a single host. This bumps each subsequent node's network addresses by 1. For example, node1's gRPC address will be 9090, node2's 9091, etc...

@@ -29,23 +29,39 @@ unique to the account; however, the difference may be as small as a nanosecond. 
 
 To enable unordered transactions, set the new `UnorderedNonceManager` field in the `x/auth` `ante.HandlerOptions`.
 
-```go
-ante.HandlerOptions{
-    UnorderedNonceManager: app.AccountKeeper, // NEW
-}
-```
-
 By default, unordered transactions use a transaction timeout duration of 10 minutes and a default gas charge of 2240 gas.
 To modify these default values, pass in the corresponding options to the new `UnorderedTxOptions` field in `x/auth's` `ante.HandlerOptions`.
 
 ```go
-ante.HandlerOptions{
+options := ante.HandlerOptions{
     UnorderedNonceManager: app.AccountKeeper,
+	// The following options are set by default.
+	// If you do not want to change these, you may remove the UnorderedTxOptions field entirely.
     UnorderedTxOptions: []ante.UnorderedTxDecoratorOptions{
-        ante.WithTimeoutDuration(XXXX * time.Minute),
-        ante.WithUnorderedTxGasCost(XXXX),
+        ante.WithUnorderedTxGasCost(2240),
+        ante.WithTimeoutDuration(10 * time.Minute),
     },
-}	
+}
+```
+
+```go
+anteDecorators := []sdk.AnteDecorator{
+  ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+  circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
+  ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
+  ante.NewValidateBasicDecorator(),
+  ante.NewTxTimeoutHeightDecorator(),
+  ante.NewValidateMemoDecorator(options.AccountKeeper),
+  ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+  ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+  ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
+  ante.NewValidateSigCountDecorator(options.AccountKeeper),
+  ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+  ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+  ante.NewIncrementSequenceDecorator(options.AccountKeeper),
+  // NEW !! NEW !! NEW !!
+  ante.NewUnorderedTxDecorator(options.UnorderedNonceManager, options.UnorderedTxOptions...)
+}
 ```
 
 ### App Wiring Changes

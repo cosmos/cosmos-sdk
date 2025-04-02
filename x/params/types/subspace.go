@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 
 	"cosmossdk.io/store/prefix"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"maps"
 )
 
 const (

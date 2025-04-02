@@ -465,6 +465,7 @@ func NewSimApp(
 
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
+	// govKeeper.SetCustomCalculateVoteResultsAndVotingPowerFn(...) add if you want to add a custom tallying function
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(

@@ -143,10 +143,10 @@ func (k *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	return k
 }
 
-// SetCalculateVoteResultsAndVotingPowerFn sets a custom CalculateVoteResultsAndVotingPowerFn
+// SetCustomCalculateVoteResultsAndVotingPowerFn sets a custom CalculateVoteResultsAndVotingPowerFn
 //
 // If this function is not called, defaultCalculateVoteResultsAndVotingPower is always used.
-func (k *Keeper) SetCalculateVoteResultsAndVotingPowerFn(fn CalculateVoteResultsAndVotingPowerFn) {
+func (k *Keeper) SetCustomCalculateVoteResultsAndVotingPowerFn(fn CalculateVoteResultsAndVotingPowerFn) {
 	if k.calculateVoteResultsAndVotingPowerFn != nil {
 		panic("cannot set CalculateVoteResultsAndVotingPowerFn twice")
 	}

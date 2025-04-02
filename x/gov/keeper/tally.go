@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -11,66 +12,51 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// TODO: Break into several smaller functions for clarity
+// CalculateVoteResultsAndVotingPowerFn is a function signature for calculating vote results and voting power
+// It can be overridden to customize the voting power calculation for proposals
+// It gets the proposal tallied and the validators governance infos (bonded tokens, voting power, etc.)
+// It must return the total voting power and the results of the vote
+type CalculateVoteResultsAndVotingPowerFn func(
+	ctx context.Context,
+	k Keeper,
+	proposal v1.Proposal,
+	validators map[string]v1.ValidatorGovInfo,
+) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error)
 
-// Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
-// voters
-func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
-	results := make(map[v1.VoteOption]math.LegacyDec)
-	results[v1.OptionYes] = math.LegacyZeroDec()
-	results[v1.OptionAbstain] = math.LegacyZeroDec()
-	results[v1.OptionNo] = math.LegacyZeroDec()
-	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
-
+func defaultCalculateVoteResultsAndVotingPower(
+	ctx context.Context,
+	k Keeper,
+	proposal v1.Proposal,
+	validators map[string]v1.ValidatorGovInfo,
+) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error) {
 	totalVotingPower := math.LegacyZeroDec()
-	currValidators := make(map[string]v1.ValidatorGovInfo)
-
-	// fetch all the bonded validators, insert them into currValidators
-	err = keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-		valBz, err := keeper.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
-		if err != nil {
-			return false
-		}
-		currValidators[validator.GetOperator()] = v1.NewValidatorGovInfo(
-			valBz,
-			validator.GetBondedTokens(),
-			validator.GetDelegatorShares(),
-			math.LegacyZeroDec(),
-			v1.WeightedVoteOptions{},
-		)
-
-		return false
-	})
-	if err != nil {
-		return false, false, tallyResults, err
-	}
 
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
-	err = keeper.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
+	err = k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
-		voter, err := keeper.authKeeper.AddressCodec().StringToBytes(vote.Voter)
+		voter, err := k.authKeeper.AddressCodec().StringToBytes(vote.Voter)
 		if err != nil {
 			return false, err
 		}
 
-		valAddrStr, err := keeper.sk.ValidatorAddressCodec().BytesToString(voter)
+		valAddrStr, err := k.sk.ValidatorAddressCodec().BytesToString(voter)
 		if err != nil {
 			return false, err
 		}
-		if val, ok := currValidators[valAddrStr]; ok {
+		if val, ok := validators[valAddrStr]; ok {
 			val.Vote = vote.Options
-			currValidators[valAddrStr] = val
+			validators[valAddrStr] = val
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
-		err = keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
+		err = k.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
 			valAddrStr := delegation.GetValidatorAddr()
 
-			if val, ok := currValidators[valAddrStr]; ok {
+			if val, ok := validators[valAddrStr]; ok {
 				// There is no need to handle the special case that validator address equal to voter address.
 				// Because voter's voting power will tally again even if there will be deduction of voter's voting power from validator.
 				val.DelegatorDeductions = val.DelegatorDeductions.Add(delegation.GetShares())
-				currValidators[valAddrStr] = val
+				validators[valAddrStr] = val
 
 				// delegation shares * bonded / total shares
 				votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
@@ -89,14 +75,14 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 			return false, err
 		}
 
-		return false, keeper.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
+		return false, k.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
 	})
 	if err != nil {
-		return false, false, tallyResults, err
+		return math.LegacyZeroDec(), nil, fmt.Errorf("error while iterating delegations: %w", err)
 	}
 
 	// iterate over the validators again to tally their voting power
-	for _, val := range currValidators {
+	for _, val := range validators {
 		if len(val.Vote) == 0 {
 			continue
 		}
@@ -112,7 +98,50 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
-	params, err := keeper.Params.Get(ctx)
+	return totalVotingPower, results, nil
+}
+
+// Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
+// voters
+func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+	results := make(map[v1.VoteOption]math.LegacyDec)
+	results[v1.OptionYes] = math.LegacyZeroDec()
+	results[v1.OptionAbstain] = math.LegacyZeroDec()
+	results[v1.OptionNo] = math.LegacyZeroDec()
+	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
+
+	totalVotingPower := math.LegacyZeroDec()
+	currValidators := make(map[string]v1.ValidatorGovInfo)
+
+	// fetch all the bonded validators, insert them into currValidators
+	err = k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+		valBz, err := k.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			return false
+		}
+		currValidators[validator.GetOperator()] = v1.NewValidatorGovInfo(
+			valBz,
+			validator.GetBondedTokens(),
+			validator.GetDelegatorShares(),
+			math.LegacyZeroDec(),
+			v1.WeightedVoteOptions{},
+		)
+
+		return false
+	})
+	if err != nil {
+		return false, false, tallyResults, err
+	}
+
+	if k.tallyFn == nil {
+		k.tallyFn = defaultCalculateVoteResultsAndVotingPower
+	}
+	totalVotingPower, results, err = k.tallyFn(ctx, k, proposal, currValidators)
+	if err != nil {
+		return false, false, tallyResults, fmt.Errorf("error while calculating tally results: %w", err)
+	}
+
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return false, false, tallyResults, err
 	}
@@ -120,7 +149,7 @@ func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, b
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
-	totalBonded, err := keeper.sk.TotalBondedTokens(ctx)
+	totalBonded, err := k.sk.TotalBondedTokens(ctx)
 	if err != nil {
 		return false, false, tallyResults, err
 	}

@@ -24,27 +24,27 @@ func NewCustomLogger(log *slog.Logger) Logger {
 	return Logger{log: log}
 }
 
-func (l Logger) Info(msg string, keyVals ...any) {
+func (l *Logger) Info(msg string, keyVals ...any) {
 	l.log.Info(msg, keyVals...)
 }
 
-func (l Logger) Warn(msg string, keyVals ...any) {
+func (l *Logger) Warn(msg string, keyVals ...any) {
 	l.log.Warn(msg, keyVals...)
 }
 
-func (l Logger) Error(msg string, keyVals ...any) {
+func (l *Logger) Error(msg string, keyVals ...any) {
 	l.log.Error(msg, keyVals...)
 }
 
-func (l Logger) Debug(msg string, keyVals ...any) {
+func (l *Logger) Debug(msg string, keyVals ...any) {
 	l.log.Debug(msg, keyVals...)
 }
 
-func (l Logger) With(keyVals ...any) log.Logger {
+func (l *Logger) With(keyVals ...any) log.Logger {
 	return Logger{log: l.log.With(keyVals...)}
 }
 
 // Impl returns l's underlying [*slog.Logger].
-func (l Logger) Impl() any {
+func (l *Logger) Impl() any {
 	return l.log
 }

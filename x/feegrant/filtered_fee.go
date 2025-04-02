@@ -8,8 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	codectypes "github.com/cosmos/gogoproto/types/any"
-
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -21,12 +20,12 @@ const (
 )
 
 var (
-	_ FeeAllowanceI                      = (*AllowedMsgAllowance)(nil)
-	_ codectypes.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+	_ FeeAllowanceI                 = (*AllowedMsgAllowance)(nil)
+	_ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
@@ -37,13 +36,13 @@ func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*All
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
 	}
-	value, err := codectypes.NewAnyWithCacheWithValue(msg)
+	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &AllowedMsgAllowance{
-		Allowance:       value,
+		Allowance:       any,
 		AllowedMessages: allowedMsgs,
 	}, nil
 }
@@ -61,7 +60,7 @@ func (a *AllowedMsgAllowance) GetAllowance() (FeeAllowanceI, error) {
 // SetAllowance sets allowed fee allowance.
 func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 	var err error
-	a.Allowance, err = codectypes.NewAnyWithCacheWithValue(allowance.(proto.Message))
+	a.Allowance, err = types.NewAnyWithValue(allowance.(proto.Message))
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", allowance)
 	}

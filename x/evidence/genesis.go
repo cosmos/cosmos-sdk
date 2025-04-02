@@ -7,9 +7,8 @@ import (
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	codectypes "github.com/cosmos/gogoproto/types/any"
 )
 
 // InitGenesis initializes the evidence module's state from a provided genesis
@@ -38,7 +37,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	gs := new(types.GenesisState)
 	err := k.Evidences.Walk(ctx, nil, func(_ []byte, value exported.Evidence) (stop bool, err error) {
-		anyEvi, err := codectypes.NewAnyWithCacheWithValue(value)
+		anyEvi, err := codectypes.NewAnyWithValue(value)
 		if err != nil {
 			return false, err
 		}

@@ -3,28 +3,28 @@ package types
 import (
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/x/evidence/exported"
 
-	codectypes "github.com/cosmos/gogoproto/types/any"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-var _ codectypes.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState creates a new genesis state for the evidence module.
 func NewGenesisState(e []exported.Evidence) *GenesisState {
-	evidence := make([]*codectypes.Any, len(e))
+	evidence := make([]*types.Any, len(e))
 	for i, evi := range e {
 		msg, ok := evi.(proto.Message)
 		if !ok {
 			panic(fmt.Errorf("cannot proto marshal %T", evi))
 		}
-		value, err := codectypes.NewAnyWithCacheWithValue(msg)
+		any, err := types.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
-		evidence[i] = value
+		evidence[i] = any
 	}
 	return &GenesisState{
 		Evidence: evidence,
@@ -34,7 +34,7 @@ func NewGenesisState(e []exported.Evidence) *GenesisState {
 // DefaultGenesisState returns the evidence module's default genesis state.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Evidence: []*codectypes.Any{},
+		Evidence: []*types.Any{},
 	}
 }
 
@@ -55,10 +55,10 @@ func (gs GenesisState) Validate() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	for _, value := range gs.Evidence {
+func (gs GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, any := range gs.Evidence {
 		var evi exported.Evidence
-		err := unpacker.UnpackAny(value, &evi)
+		err := unpacker.UnpackAny(any, &evi)
 		if err != nil {
 			return err
 		}

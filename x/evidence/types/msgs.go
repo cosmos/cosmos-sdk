@@ -7,15 +7,14 @@ import (
 
 	"cosmossdk.io/x/evidence/exported"
 
-	gogoany "github.com/cosmos/gogoproto/types/any"
-
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	_ sdk.Msg                         = &MsgSubmitEvidence{}
-	_ gogoany.UnpackInterfacesMessage = MsgSubmitEvidence{}
-	_ exported.MsgSubmitEvidenceI     = &MsgSubmitEvidence{}
+	_ sdk.Msg                       = &MsgSubmitEvidence{}
+	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}
+	_ exported.MsgSubmitEvidenceI   = &MsgSubmitEvidence{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
@@ -24,11 +23,11 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEv
 	if !ok {
 		return nil, fmt.Errorf("cannot proto marshal %T", evi)
 	}
-	value, err := gogoany.NewAnyWithCacheWithValue(msg)
+	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}
-	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: value}, nil
+	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
 }
 
 func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {
@@ -52,7 +51,7 @@ func (m MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
 	return accAddr
 }
 
-func (m MsgSubmitEvidence) UnpackInterfaces(ctx gogoany.AnyUnpacker) error {
+func (m MsgSubmitEvidence) UnpackInterfaces(ctx types.AnyUnpacker) error {
 	var evi exported.Evidence
 	return ctx.UnpackAny(m.Evidence, &evi)
 }

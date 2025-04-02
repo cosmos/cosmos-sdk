@@ -194,12 +194,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 		valAddrStr := string(valAddr)
 		// fetch the old power bytes
-		oldPowerBytes, found := last[valAddrStr]
+		oldPower, found := last[valAddrStr]
 		newPower := validator.ConsensusPower(powerReduction)
-		newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
 
 		// update the validator set if power has changed
-		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+		if !found || oldPower != newPower {
 			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
 
 			if err = k.SetLastValidatorPower(ctx, valAddr, newPower); err != nil {
@@ -458,9 +457,9 @@ func (k Keeper) completeUnbondingValidator(ctx context.Context, validator types.
 	return validator, nil
 }
 
-// map of operator bech32-addresses to serialized power
-// We use bech32 strings here, because we can't have slices as keys: map[[]byte][]byte
-type validatorsByAddr map[string][]byte
+// map of operator addresses to power
+// We use (non bech32) strings here, because we can't have slices as keys: map[[]byte][]byte
+type validatorsByAddr map[string]int64
 
 // get the last validator set
 func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, error) {
@@ -472,12 +471,12 @@ func (k Keeper) getLastValidatorsByAddr(ctx context.Context) (validatorsByAddr, 
 	}
 	defer iterator.Close()
 
+	var intVal gogotypes.Int64Value
 	for ; iterator.Valid(); iterator.Next() {
 		// extract the validator address from the key (prefix is 1-byte, addrLen is 1-byte)
 		valAddrStr := string(types.AddressFromLastValidatorPowerKey(iterator.Key()))
-		powerBytes := iterator.Value()
-		last[valAddrStr] = make([]byte, len(powerBytes))
-		copy(last[valAddrStr], powerBytes)
+		k.cdc.MustUnmarshal(iterator.Value(), &intVal)
+		last[valAddrStr] = intVal.GetValue()
 	}
 
 	return last, nil

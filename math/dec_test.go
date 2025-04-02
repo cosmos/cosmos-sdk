@@ -1484,6 +1484,11 @@ func TestMustAdd(t *testing.T) {
 			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
 		})
 	}
+	t.Run("panic on invalid addition", func(t *testing.T) {
+		x := NewDecWithExp(1, 100_001)
+		y := NewDecFromInt64(1)
+		assert.Panics(t, func() { x.MustAdd(y) }, "Expected MustAdd to panic on overflow")
+	})
 }
 
 func TestMustSub(t *testing.T) {
@@ -1515,6 +1520,12 @@ func TestMustSub(t *testing.T) {
 			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
 		})
 	}
+
+	t.Run("panic on invalid subtraction", func(t *testing.T) {
+		x := NewDecWithExp(1, 100_001)
+		y := NewDecFromInt64(1)
+		assert.Panics(t, func() { x.MustSub(y) }, "Expected MustSub to panic on overflow")
+	})
 }
 
 func TestMustMul(t *testing.T) {
@@ -1546,6 +1557,13 @@ func TestMustMul(t *testing.T) {
 			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
 		})
 	}
+
+	t.Run("panic on invalid multiplication", func(t *testing.T) {
+		x := NewDecWithExp(1, 500_000)
+		y := NewDecFromInt64(10)
+
+		assert.Panics(t, func() { x.MustMul(y) }, "Expected MustMul to panic on overflow")
+	})
 }
 
 func TestMulInt(t *testing.T) {
@@ -1577,6 +1595,12 @@ func TestMulInt(t *testing.T) {
 			assert.Equal(t, spec.exp, got, "x: %s, y: %d", spec.x.String(), spec.y)
 		})
 	}
+
+	t.Run("panic on invalid multiplication", func(t *testing.T) {
+		x := NewDecWithExp(1, 100_001)
+		y := int64(10)
+		assert.Panics(t, func() { x.MulInt(y) }, "Expected MulInt to panic on overflow")
+	})
 }
 
 func TestToLegacyDec(t *testing.T) {

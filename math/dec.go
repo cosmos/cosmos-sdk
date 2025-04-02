@@ -521,6 +521,8 @@ func (x *Dec) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MustAdd performs addition between two Dec values.
+// If an error occurs during the addition, it panics.
 func (x Dec) MustAdd(y Dec) Dec {
 	z, err := x.Add(y)
 	if err != nil {
@@ -529,6 +531,8 @@ func (x Dec) MustAdd(y Dec) Dec {
 	return z
 }
 
+// MustSub performs subtraction between two Dec values.
+// If an error occurs during the subtraction, it panics.
 func (x Dec) MustSub(y Dec) Dec {
 	z, err := x.Sub(y)
 	if err != nil {
@@ -537,6 +541,8 @@ func (x Dec) MustSub(y Dec) Dec {
 	return z
 }
 
+// MustMul performs multiplication between two Dec values.
+// If an error occurs during the multiplication, it panics.
 func (x Dec) MustMul(y Dec) Dec {
 	z, err := x.Mul(y)
 	if err != nil {
@@ -545,14 +551,18 @@ func (x Dec) MustMul(y Dec) Dec {
 	return z
 }
 
+// MulInt multiplies a Dec value by an int64.
+// If an error occurs during the multiplication, it panics.
 func (x Dec) MulInt(y int64) Dec {
-    var z Dec
-    if _, err := dec128Context.Mul(&z.dec, &x.dec, apd.New(y, 0)); err != nil {
-        panic("MulInt failed: " + err.Error())
-    }
-    return z
+	var z Dec
+	if _, err := dec128Context.Mul(&z.dec, &x.dec, apd.New(y, 0)); err != nil {
+		panic("MulInt failed: " + err.Error())
+	}
+	return z
 }
 
+// ToLegacyDec converts a Dec value to a LegacyDec value.
+// If the conversion fails, it returns an error.
 func (x Dec) ToLegacyDec() (LegacyDec, error) {
     coeff := x.dec.Coeff
     i := new(big.Int)
@@ -567,4 +577,3 @@ func (x Dec) ToLegacyDec() (LegacyDec, error) {
 
     return LegacyDec{i: i}, nil
 }
-

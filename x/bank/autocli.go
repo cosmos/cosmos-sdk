@@ -91,7 +91,7 @@ To look up all denoms, do not provide any arguments.`,
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service:              bankv1beta1.Msg_ServiceDesc.ServiceName,
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
+			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Send",
@@ -121,10 +121,6 @@ Note: multiple coins can be send by space separated.`,
 						"use_default_for": {Name: "use-default-for", Usage: "Use default for the given denom (delete a send enabled entry)"},
 					},
 					GovProposal: true,
-				},
-				{
-					RpcMethod: "Burn",
-					Skip:      true, // skipped because available from v0.51
 				},
 			},
 		},

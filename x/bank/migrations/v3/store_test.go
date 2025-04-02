@@ -27,7 +27,7 @@ func TestMigrateStore(t *testing.T) {
 	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
-	addr := sdk.AccAddress([]byte("addr________________"))
+	addr := sdk.AccAddress("addr________________")
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
 	balances := sdk.NewCoins(

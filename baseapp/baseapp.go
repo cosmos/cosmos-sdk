@@ -981,9 +981,10 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 		newCtx, errPostHandler := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
 		if errPostHandler != nil {
 			if err == nil {
+				// when the msg was handled successfully, return the post handler error only
 				return gInfo, nil, anteEvents, errPostHandler
 			}
-			// append to the msg error to preserve the original error code.
+			// otherwise append to the msg error so that we keep the original error code for better user experience
 			return gInfo, nil, anteEvents, errorsmod.Wrapf(err, "postHandler: %s", errPostHandler)
 		}
 

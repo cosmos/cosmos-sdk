@@ -102,7 +102,7 @@ func NewKeeper(
 		cdc:                                  cdc,
 		router:                               router,
 		config:                               config,
-		calculateVoteResultsAndVotingPowerFn: defaultCalculateVoteResultsAndVotingPower,
+		calculateVoteResultsAndVotingPowerFn: nil,
 		authority:                            authority,
 		Constitution:                         collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                               collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
@@ -141,6 +141,17 @@ func (k *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	k.hooks = gh
 
 	return k
+}
+
+// SetCalculateVoteResultsAndVotingPowerFn sets a custom CalculateVoteResultsAndVotingPowerFn
+//
+// If this function is not called, defaultCalculateVoteResultsAndVotingPower is always used.
+func (k *Keeper) SetCalculateVoteResultsAndVotingPowerFn(fn CalculateVoteResultsAndVotingPowerFn) {
+	if k.calculateVoteResultsAndVotingPowerFn != nil {
+		panic("cannot set CalculateVoteResultsAndVotingPowerFn twice")
+	}
+
+	k.calculateVoteResultsAndVotingPowerFn = fn
 }
 
 // SetLegacyRouter sets the legacy router for governance

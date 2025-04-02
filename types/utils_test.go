@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"bytes"
+	"slices"
 	"testing"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"slices"
 )
 
 type utilsTestSuite struct {

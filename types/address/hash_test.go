@@ -2,12 +2,12 @@ package address
 
 import (
 	"crypto/sha256"
+	"slices"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"slices"
 )
 
 func TestAddressSuite(t *testing.T) {

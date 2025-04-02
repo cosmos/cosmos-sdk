@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
-	"slices"
 )
 
 var _ exported.GenesisBalance = (*Balance)(nil)
@@ -84,7 +83,9 @@ type GenesisBalancesIterator struct{}
 func (GenesisBalancesIterator) IterateGenesisBalances(
 	cdc codec.JSONCodec, appState map[string]json.RawMessage, cb func(exported.GenesisBalance) (stop bool),
 ) {
-	if slices.ContainsFunc(GetGenesisStateFromAppState(cdc, appState).Balances, cb) {
-
+	for _, balance := range GetGenesisStateFromAppState(cdc, appState).Balances {
+		if cb(balance) {
+			break
+		}
 	}
 }

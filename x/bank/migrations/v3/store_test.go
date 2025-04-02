@@ -1,6 +1,7 @@
 package v3_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,6 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	"slices"
 )
 
 func TestMigrateStore(t *testing.T) {

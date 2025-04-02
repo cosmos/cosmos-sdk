@@ -137,6 +137,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,
 		AppHash:         app.LastCommitID().Hash,
+		TimeoutInfo:     res.TimeoutInfo,
 	}, nil
 }
 
@@ -858,6 +859,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
+		TimeoutInfo:           endBlock.TimeoutInfo,
 	}, nil
 }
 

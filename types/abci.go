@@ -60,6 +60,7 @@ type EndBlocker func(Context) (EndBlock, error)
 type EndBlock struct {
 	ValidatorUpdates []abci.ValidatorUpdate
 	Events           []abci.Event
+	TimeoutInfo      abci.TimeoutInfo
 }
 
 // BeginBlock defines a type which contains beginBlock events

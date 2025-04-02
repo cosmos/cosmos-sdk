@@ -75,7 +75,9 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 
 	// TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
-	resTx, err := node.Tx(context.Background(), hash, true)
+	// FIXME: We have disabled the prove flag for now as celestia-core doesn't yet support it.
+	// Ref: https://github.com/celestiaorg/celestia-core/issues/918
+	resTx, err := node.Tx(context.Background(), hash, false)
 	if err != nil {
 		return nil, err
 	}

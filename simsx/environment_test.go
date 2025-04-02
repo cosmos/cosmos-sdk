@@ -16,7 +16,7 @@ func TestChainDataSourceAnyAccount(t *testing.T) {
 	accs := simtypes.RandomAccounts(r, 3)
 	specs := map[string]struct {
 		filters []SimAccountFilter
-		retry int
+		retry   int
 		assert  func(t *testing.T, got SimAccount, reporter SimulationReporter)
 	}{
 		"no filters": {

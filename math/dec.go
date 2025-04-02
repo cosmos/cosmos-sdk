@@ -520,3 +520,51 @@ func (x *Dec) UnmarshalJSON(data []byte) error {
 	*x = val
 	return nil
 }
+
+func (x Dec) MustAdd(y Dec) Dec {
+	z, err := x.Add(y)
+	if err != nil {
+		panic("MustAdd failed: " + err.Error())
+	}
+	return z
+}
+
+func (x Dec) MustSub(y Dec) Dec {
+	z, err := x.Sub(y)
+	if err != nil {
+		panic("MustSub failed: " + err.Error())
+	}
+	return z
+}
+
+func (x Dec) MustMul(y Dec) Dec {
+	z, err := x.Mul(y)
+	if err != nil {
+		panic("MustMul failed: " + err.Error())
+	}
+	return z
+}
+
+func (x Dec) MulInt(y int64) Dec {
+	var z Dec
+	z.dec.Set(&x.dec)
+	if _, err := dec128Context.Mul(&z.dec, &x.dec, apd.New(y, 0)); err != nil {
+		panic("MulInt failed: " + err.Error())
+	}
+	return z
+}
+
+func (x Dec) ToLegacyDec() LegacyDec {
+    coeff := x.dec.Coeff
+    i := new(big.Int)
+
+    if _, ok := i.SetString(coeff.String(), 10); !ok {
+        panic("failed to convert apd.BigInt to big.Int")
+    }
+
+    if x.dec.Sign() == -1 {
+        i.Neg(i)
+    }
+
+    return LegacyDec{i: i}
+}

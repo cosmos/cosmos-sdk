@@ -3,6 +3,7 @@ package math
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -1450,6 +1451,157 @@ func TestMarshalUnmarshal(t *testing.T) {
 			require.NoError(t, unmarshalledDec.Unmarshal(marshaled))
 			assert.Equal(t, spec.exp, unmarshalledDec.String())
 			assert.True(t, spec.x.Equal(*unmarshalledDec))
+		})
+	}
+}
+
+func TestMustAdd(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp Dec
+	}{
+		"0 + 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"123 + 456": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(456),
+			exp: NewDecFromInt64(579),
+		},
+		"0 + (-100)": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(-100),
+			exp: NewDecFromInt64(-100),
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.MustAdd(spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestMustSub(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp Dec
+	}{
+		"0 - 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"456 - 123": {
+			x:   NewDecFromInt64(456),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(333),
+		},
+		"0 - (-100)": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(-100),
+			exp: NewDecFromInt64(100),
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.MustSub(spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestMustMul(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp Dec
+	}{
+		"0 * 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"123 * 2": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(2),
+			exp: NewDecFromInt64(246),
+		},
+		"100 * (-5)": {
+			x:   NewDecFromInt64(100),
+			y:   NewDecFromInt64(-5),
+			exp: NewDecFromInt64(-500),
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.MustMul(spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestMulInt(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   int64
+		exp Dec
+	}{
+		"0 * 0": {
+			x:   NewDecFromInt64(0),
+			y:   0,
+			exp: NewDecFromInt64(0),
+		},
+		"123 * 2": {
+			x:   NewDecFromInt64(123),
+			y:   2,
+			exp: NewDecFromInt64(246),
+		},
+		"100 * (-5)": {
+			x:   NewDecFromInt64(100),
+			y:   -5,
+			exp: NewDecFromInt64(-500),
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.MulInt(spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %d", spec.x.String(), spec.y)
+		})
+	}
+}
+
+func TestToLegacyDec(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		exp LegacyDec
+	}{
+		"0": {
+			x:   NewDecFromInt64(0),
+			exp: LegacyDec{i: big.NewInt(0)},
+		},
+		"123": {
+			x:   NewDecFromInt64(123),
+			exp: LegacyDec{i: big.NewInt(123)},
+		},
+		"-100": {
+			x:   NewDecFromInt64(-100),
+			exp: LegacyDec{i: big.NewInt(-100)},
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.ToLegacyDec()
+			assert.Equal(t, spec.exp, got, "x: %s", spec.x.String())
 		})
 	}
 }

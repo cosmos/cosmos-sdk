@@ -16,6 +16,7 @@ func TestChainDataSourceAnyAccount(t *testing.T) {
 	accs := simtypes.RandomAccounts(r, 3)
 	specs := map[string]struct {
 		filters []SimAccountFilter
+		retry   int
 		assert  func(t *testing.T, got SimAccount, reporter SimulationReporter)
 	}{
 		"no filters": {
@@ -30,6 +31,7 @@ func TestChainDataSourceAnyAccount(t *testing.T) {
 				assert.Equal(t, accs[2].AddressBech32, got.AddressBech32)
 				assert.False(t, reporter.IsSkipped())
 			},
+			retry: 6,
 		},
 		"no match": {
 			filters: []SimAccountFilter{SimAccountFilterFn(func(a SimAccount) bool { return false })},
@@ -43,7 +45,7 @@ func TestChainDataSourceAnyAccount(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			reporter := NewBasicSimulationReporter()
 			c := NewChainDataSource(sdk.Context{}, r, nil, nil, codec, accs...)
-			a := c.AnyAccount(reporter, spec.filters...)
+			a := c.AnyAccountN(spec.retry, reporter, spec.filters...)
 			spec.assert(t, a, reporter)
 		})
 	}

@@ -1580,28 +1580,23 @@ func TestMulInt(t *testing.T) {
 }
 
 func TestToLegacyDec(t *testing.T) {
-	specs := map[string]struct {
-		x   Dec
-		exp LegacyDec
+	tests := []struct {
+		name string
+		x    Dec
+		exp  LegacyDec
 	}{
-		"0": {
-			x:   NewDecFromInt64(0),
-			exp: LegacyDec{i: big.NewInt(0)},
-		},
-		"123": {
-			x:   NewDecFromInt64(123),
-			exp: LegacyDec{i: big.NewInt(123)},
-		},
-		"-100": {
-			x:   NewDecFromInt64(-100),
-			exp: LegacyDec{i: big.NewInt(-100)},
-		},
+		{"0", NewDecFromInt64(0), LegacyDec{i: big.NewInt(0)}},
+		{"123", NewDecFromInt64(123), LegacyDec{i: big.NewInt(123)}},
+		{"-100", NewDecFromInt64(-100), LegacyDec{i: big.NewInt(-100)}},
 	}
 
-	for name, spec := range specs {
-		t.Run(name, func(t *testing.T) {
-			got := spec.x.ToLegacyDec()
-			assert.Equal(t, spec.exp, got, "x: %s", spec.x.String())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.x.ToLegacyDec()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			assert.Equal(t, tt.exp, got, "x: %s", tt.x.String())
 		})
 	}
 }

@@ -49,7 +49,7 @@ type Any struct {
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 
-	cachedValue interface{}
+	cachedValue any
 
 	compat *anyCompat
 }
@@ -89,7 +89,7 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 // be used in situations where compatibility is needed with amino. Amino-only
 // values can safely be packed using this method when they will only be
 // marshaled with amino and not protobuf.
-func UnsafePackAny(x interface{}) *Any {
+func UnsafePackAny(x any) *Any {
 	if msg, ok := x.(proto.Message); ok {
 		any, err := NewAnyWithValue(msg)
 		if err == nil {
@@ -126,7 +126,7 @@ func (any *Any) pack(x proto.Message) error {
 }
 
 // GetCachedValue returns the cached value from the Any if present
-func (any *Any) GetCachedValue() interface{} {
+func (any *Any) GetCachedValue() any {
 	return any.cachedValue
 }
 

@@ -17,6 +17,7 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"slices"
 )
 
 func TestMigrateStore(t *testing.T) {
@@ -94,7 +95,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 
 	for i := range []int{0, 1} {
 		// keys before 0.45 had denom two times in the key
-		key := append([]byte{}, []byte(metaData[i].Base)...)
+		key := slices.Clone([]byte(metaData[i].Base))
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
 		require.NoError(t, err)

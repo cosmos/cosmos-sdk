@@ -18,7 +18,7 @@ type anyCompat struct {
 
 var Debug = true
 
-func anyCompatError(errType string, x interface{}) error {
+func anyCompatError(errType string, x any) error {
 	if Debug {
 		debug.PrintStack()
 	}
@@ -73,7 +73,7 @@ type AminoUnpacker struct {
 
 var _ AnyUnpacker = AminoUnpacker{}
 
-func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
+func (a AminoUnpacker) UnpackAny(any *Any, iface any) error {
 	ac := any.compat
 	if ac == nil {
 		return anyCompatError("amino binary unmarshal", reflect.TypeOf(iface))
@@ -110,7 +110,7 @@ type AminoPacker struct {
 
 var _ AnyUnpacker = AminoPacker{}
 
-func (a AminoPacker) UnpackAny(any *Any, _ interface{}) error {
+func (a AminoPacker) UnpackAny(any *Any, _ any) error {
 	err := UnpackInterfaces(any.cachedValue, a)
 	if err != nil {
 		return err
@@ -131,7 +131,7 @@ type AminoJSONUnpacker struct {
 
 var _ AnyUnpacker = AminoJSONUnpacker{}
 
-func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
+func (a AminoJSONUnpacker) UnpackAny(any *Any, iface any) error {
 	ac := any.compat
 	if ac == nil {
 		return anyCompatError("JSON unmarshal", reflect.TypeOf(iface))
@@ -168,7 +168,7 @@ type AminoJSONPacker struct {
 
 var _ AnyUnpacker = AminoJSONPacker{}
 
-func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
+func (a AminoJSONPacker) UnpackAny(any *Any, _ any) error {
 	err := UnpackInterfaces(any.cachedValue, a)
 	if err != nil {
 		return err
@@ -188,7 +188,7 @@ type ProtoJSONPacker struct {
 
 var _ AnyUnpacker = ProtoJSONPacker{}
 
-func (a ProtoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
+func (a ProtoJSONPacker) UnpackAny(any *Any, _ any) error {
 	if any == nil {
 		return nil
 	}

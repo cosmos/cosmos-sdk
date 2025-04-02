@@ -27,7 +27,7 @@ func NewMultisig(n int) *signing.MultiSignatureData {
 
 // GetIndex returns the index of pk in keys. Returns -1 if not found
 func getIndex(pk types.PubKey, keys []types.PubKey) int {
-	for i := 0; i < len(keys); i++ {
+	for i := range keys {
 		if pk.Equals(keys[i]) {
 			return i
 		}

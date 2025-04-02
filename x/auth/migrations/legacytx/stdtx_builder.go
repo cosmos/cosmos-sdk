@@ -136,7 +136,7 @@ func SignatureV2ToStdSignature(cdc *codec.LegacyAmino, sig signing.SignatureV2) 
 }
 
 // Unmarshaler is a generic type for Unmarshal functions
-type Unmarshaler func(bytes []byte, ptr interface{}) error
+type Unmarshaler func(bytes []byte, ptr any) error
 
 // DefaultTxEncoder logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.LegacyAmino) sdk.TxEncoder {

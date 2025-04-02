@@ -7,6 +7,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"slices"
 )
 
 func TestAddressSuite(t *testing.T) {
@@ -40,7 +41,7 @@ func (suite *AddressSuite) TestComposed() {
 	assert.Len(ac, Len)
 
 	// check if optimizations work
-	checkingKey := append([]byte{}, a1.AddressWithLen(suite.T())...)
+	checkingKey := slices.Clone(a1.AddressWithLen(suite.T()))
 	checkingKey = append(checkingKey, a2.AddressWithLen(suite.T())...)
 	ac2 := Hash(typ, checkingKey)
 	assert.Equal(ac, ac2, "NewComposed works correctly")

@@ -25,7 +25,7 @@ var (
 	MaxUnpackAnyRecursionDepth = 10
 )
 
-// AnyUnpacker is an alias for github.com/cosmos/gogoproto/types/any.AnyUnpacker
+// AnyUnpacker is an alias for github.com/cosmos/gogoproto/types/any.AnyUnpacker.
 type AnyUnpacker = gogoprotoany.AnyUnpacker
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces

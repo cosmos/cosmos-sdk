@@ -126,12 +126,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-<<<<<<< HEAD
 	if err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
-=======
-	err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true)
-	if err != nil {
->>>>>>> bb34c42f0 (feat(client): add default key name (#18101))
 		return err
 	}
 

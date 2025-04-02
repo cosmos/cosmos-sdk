@@ -60,11 +60,6 @@ account key. It implies --signature-only.
 
 	flags.AddTxFlagsToCmd(cmd)
 
-<<<<<<< HEAD
-	_ = cmd.MarkFlagRequired(flags.FlagFrom)
-
-=======
->>>>>>> bb34c42f0 (feat(client): add default key name (#18101))
 	return cmd
 }
 
@@ -358,11 +353,6 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
 
-<<<<<<< HEAD
-	_ = cmd.MarkFlagRequired(flags.FlagFrom)
-
-=======
->>>>>>> bb34c42f0 (feat(client): add default key name (#18101))
 	return cmd
 }
 

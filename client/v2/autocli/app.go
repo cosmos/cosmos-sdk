@@ -82,6 +82,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			sdkflags.AddKeyringFlags(c.Flags())
 		},
 		AddTxConnFlags: sdkflags.AddTxFlagsToCmd,
+		ClientCtx:      appOptions.ClientCtx,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)

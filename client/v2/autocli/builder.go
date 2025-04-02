@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -19,6 +20,9 @@ type Builder struct {
 	// AddQueryConnFlags and AddTxConnFlags are functions that add flags to query and transaction commands
 	AddQueryConnFlags func(*cobra.Command)
 	AddTxConnFlags    func(*cobra.Command)
+
+	// ClientCtx is the SDK client context.
+	ClientCtx client.Context
 }
 
 // ValidateAndComplete the builder fields.

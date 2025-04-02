@@ -27,7 +27,8 @@ func ExampleDec() {
 	}
 	fmt.Println(d.String())
 
-	// Output: 1
+	// Output:
+	// 1
 	// -1.234
 	// 1234
 	// 12340
@@ -43,12 +44,12 @@ func ExampleDec_Add() {
 	fmt.Println(sum.String())
 
 	const maxExp = 100_000
-	_, err = NewDecWithExp(1, maxExp).Add(NewDecFromInt64(1)) // 1E+1000000 + 1
+	_, err = NewDecWithExp(1, maxExp).Add(NewDecFromInt64(1)) // 1E+100000 + 1
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	sum, err = NewDecWithExp(1, maxExp).Add(NewDecWithExp(1, maxExp)) // 1E+1000000 + 1E+1000000
+	sum, err = NewDecWithExp(1, maxExp).Add(NewDecWithExp(1, maxExp)) // 1E+100000 + 1E+1000000
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +73,8 @@ func ExampleDec_Add() {
 		fmt.Println(err.Error())
 	}
 
-	// Output: 2
+	// Output:
+	// 2
 	// 2E+100000
 	// add: exponent out of range: invalid decimal
 	// add: exponent out of range: invalid decimal
@@ -116,7 +118,8 @@ func ExampleDec_Sub() {
 		fmt.Println(err.Error())
 	}
 
-	// Output: 1
+	// Output:
+	// 1
 	// 0E+100000
 	// sub: exponent out of range: invalid decimal
 	// sub: exponent out of range: invalid decimal
@@ -153,7 +156,8 @@ func ExampleDec_Quo() {
 		fmt.Println(err.Error())
 	}
 
-	// Output: 3.000000000000000000000000000000000
+	// Output:
+	// 3.000000000000000000000000000000000
 	// 3.500000000000000000000000000000000
 	// 0.4444444444444444444444444444444444
 	// exponent out of range: invalid decimal
@@ -189,7 +193,8 @@ func ExampleDec_QuoExact() {
 		fmt.Println(err.Error())
 	}
 
-	// Output: 3.000000000000000000000000000000000
+	// Output:
+	// 3.000000000000000000000000000000000
 	// 3.500000000000000000000000000000000
 	// unexpected rounding
 	// exponent out of range: invalid decimal
@@ -227,7 +232,8 @@ func ExampleDec_QuoInteger() {
 		fmt.Println(err.Error())
 	}
 
-	// Output: 3
+	// Output:
+	// 3
 	// 3
 	// 0
 	// 0
@@ -259,7 +265,8 @@ func ExampleDec_Mul() {
 	}
 	fmt.Println(sum.String())
 
-	// Output: 6
+	// Output:
+	// 6
 	// 2.50
 	// exponent out of range: invalid decimal
 	// 0
@@ -304,7 +311,8 @@ func ExampleDec_MulExact() {
 	}
 	fmt.Println(sum.String())
 
-	// Output: 6
+	// Output:
+	// 6
 	// 2.50
 	// exponent out of range: invalid decimal
 	// unexpected rounding
@@ -319,5 +327,6 @@ func ExampleDec_Modulo() {
 	}
 	fmt.Println(sum.String())
 
-	// Output: 1
+	// Output:
+	// 1
 }

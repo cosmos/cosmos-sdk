@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (cli) [#24330](https://github.com/cosmos/cosmos-sdk/pull/24330) Use the gogoproto merge registry as a file resolver instead of the interface registry.
+
 ## [v2.0.0-beta.8] - 2025-01-29
 
 * [#23544](https://github.com/cosmos/cosmos-sdk/pull/23544) Support map in queries for autocli.

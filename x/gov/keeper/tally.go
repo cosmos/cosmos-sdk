@@ -31,6 +31,12 @@ func defaultCalculateVoteResultsAndVotingPower(
 ) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error) {
 	totalVotingPower := math.LegacyZeroDec()
 
+	results = make(map[v1.VoteOption]math.LegacyDec)
+	results[v1.OptionYes] = math.LegacyZeroDec()
+	results[v1.OptionAbstain] = math.LegacyZeroDec()
+	results[v1.OptionNo] = math.LegacyZeroDec()
+	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
+
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
 	err = k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
@@ -101,20 +107,10 @@ func defaultCalculateVoteResultsAndVotingPower(
 	return totalVotingPower, results, nil
 }
 
-// Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
-// voters
-func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
-	results := make(map[v1.VoteOption]math.LegacyDec)
-	results[v1.OptionYes] = math.LegacyZeroDec()
-	results[v1.OptionAbstain] = math.LegacyZeroDec()
-	results[v1.OptionNo] = math.LegacyZeroDec()
-	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
-
-	totalVotingPower := math.LegacyZeroDec()
+// getCurrentValidators fetches all the bonded validators, insert them into currValidators
+func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.ValidatorGovInfo, error) {
 	currValidators := make(map[string]v1.ValidatorGovInfo)
-
-	// fetch all the bonded validators, insert them into currValidators
-	err = k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+	if err := k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
 		valBz, err := k.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 		if err != nil {
 			return false
@@ -128,23 +124,29 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 		)
 
 		return false
-	})
-	if err != nil {
-		return false, false, tallyResults, err
+	}); err != nil {
+		return nil, err
 	}
 
-	if k.tallyFn == nil {
-		k.tallyFn = defaultCalculateVoteResultsAndVotingPower
+	return currValidators, nil
+}
+
+// Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
+// voters
+func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
+	currValidators, err := k.getCurrentValidators(ctx)
+	if err != nil {
+		return false, false, tallyResults, fmt.Errorf("error while getting current validators: %w", err)
 	}
-	totalVotingPower, results, err = k.tallyFn(ctx, k, proposal, currValidators)
+
+	if k.calculateVoteResultsAndVotingPowerFn == nil {
+		k.calculateVoteResultsAndVotingPowerFn = defaultCalculateVoteResultsAndVotingPower
+	}
+	totalVotingPower, results, err := k.calculateVoteResultsAndVotingPowerFn(ctx, k, proposal, currValidators)
 	if err != nil {
 		return false, false, tallyResults, fmt.Errorf("error while calculating tally results: %w", err)
 	}
 
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		return false, false, tallyResults, err
-	}
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
@@ -156,6 +158,11 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 
 	if totalBonded.IsZero() {
 		return false, false, tallyResults, nil
+	}
+
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return false, false, tallyResults, fmt.Errorf("error while getting params: %w", err)
 	}
 
 	// If there is not enough quorum of votes, the proposal fails

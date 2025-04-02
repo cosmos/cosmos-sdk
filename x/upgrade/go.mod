@@ -1,24 +1,18 @@
 module cosmossdk.io/x/upgrade
 
-go 1.23.0
-
-replace cosmossdk.io/store => ../../store
-
-replace cosmossdk.io/api => ../../api
-
-replace github.com/cosmos/cosmos-sdk => ../..
+go 1.23.2
 
 require (
-	cosmossdk.io/api v0.7.6
-	cosmossdk.io/core v0.11.0
+	cosmossdk.io/api v0.9.0
+	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
-	cosmossdk.io/store v1.1.1
+	cosmossdk.io/store v1.1.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.50.13
+	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -31,7 +25,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )
 
@@ -44,9 +38,10 @@ require (
 	cloud.google.com/go/iam v1.2.2 // indirect
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cloud.google.com/go/storage v1.49.0 // indirect
-	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/math v1.5.0 // indirect
-	cosmossdk.io/x/tx v0.13.7 // indirect
+	cosmossdk.io/collections v1.2.0 // indirect
+	cosmossdk.io/math v1.5.2 // indirect
+	cosmossdk.io/schema v1.0.0 // indirect
+	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -135,7 +130,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -191,7 +186,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
+	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect

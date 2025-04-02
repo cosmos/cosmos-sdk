@@ -287,9 +287,16 @@ func NewChainDataSource(
 }
 
 // AnyAccount returns a random SimAccount matching the filter criteria. Module accounts are excluded.
-// In case of an error or no matching account found, the reporter is set to skip and an empty value is returned.
+// In case of an error or no matching account was found with 1 retry, the reporter is set to skip and an empty value is returned.
 func (c *ChainDataSource) AnyAccount(r SimulationReporter, filters ...SimAccountFilter) SimAccount {
-	acc := c.randomAccount(r, 1, filters...)
+	acc := c.AnyAccountN(1, r, filters...)
+	return acc
+}
+
+// AnyAccountN returns a random SimAccount matching the filter criteria with given number of retries. Module accounts are excluded.
+// In case of an error or no matching account found, the reporter is set to skip and an empty value is returned.
+func (c *ChainDataSource) AnyAccountN(retries int, r SimulationReporter, filters ...SimAccountFilter) SimAccount {
+	acc := c.randomAccount(r, retries, filters...)
 	return acc
 }
 

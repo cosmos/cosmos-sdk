@@ -55,10 +55,10 @@ digits after the decimal place built-in. This meant that the value `1` was store
 `Dec`, however, stores the correct decimal string `1`.
 
 There are two options for migrating state based on `LegacyDec`  to `Dec`:
-1. Write a state migration function and execute it in an upgrade handler. This involves reading `LegacyDec` values from the state, converting them to `Dec`, and writing them back to the state.
+1. Write a state migration function and execute it in an upgrade handler. This involves reading `LegacyDec` values from the state, converting them to `Dec`, and writing them back to state.
 2. Convert `LegacyDec` to `Dec` at runtime without a state migration, see the section below.
 
-When `LegacyDec` is used in APIs, it will likely result in user error to simply change `gogoproto.custom` type
+When `LegacyDec` is used in APIs, it will likely result in user error to simply change the `gogoproto.custom` type
 annotation from `LegacyDec` to `Dec`. This is because the serialization formats of `Dec` and `LegacyDec` are different
 and clients are now used to the legacy 18-digit precision.
 In order to safely update APIs, a safer strategy is to introduce a new field in the proto files or to create a newly
@@ -73,7 +73,8 @@ message MsgFoo {
 
 The state machine should then inspect where `value` or `value_v2` is set and use the correct one. This allows for a
 smooth transition to the new `Dec` type while maintaining backward compatibility with existing clients.
-Alternatively, a new `v2` package or message type could be created which only uses the new `Dec` type.
+Alternatively, a new `v2` package or message type could be created which only uses the new `Dec` type
+and clients can be updated to use the new type.
 
 ## Converting `LegacyDec` to `Dec` without storing the data
 

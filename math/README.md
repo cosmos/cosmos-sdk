@@ -25,5 +25,5 @@ fixed 18 digits of precision after the decimal point.
 More documentation on using these types and how to migrate code from using `LegacyDec` to `Dec` can be found in
 the [Decimal Handling in Cosmos SDK](https://docs.cosmos.network/main/build/building-modules/decimal-handling) documentation.
 It is important to note that the serialization formats of `Dec` and `LegacyDec` are different,
-so it is NOT SAFE to simply replace `LegacyDec` with `Dec` in your code and **state migrations
-and API changes are needed**.
+so it is NOT SAFE to simply replace `LegacyDec` with `Dec` in your code.
+**State migrations and/or API changes are needed**.

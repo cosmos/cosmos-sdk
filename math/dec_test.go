@@ -1,6 +1,7 @@
 package math
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
@@ -1932,6 +1933,47 @@ func TestAbs(t *testing.T) {
 			}
 			require.NoError(t, gotErr)
 			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+
+func TestMarshalUnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{"Zero", "0"},
+		{"Positive Integer", "123"},
+		{"Negative Decimal", "-123.456"},
+		{"Scientific Notation", "1.23E4"},
+		{"Small Value", "1.23456789E-10"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Convert the input string to a Dec using NewDecFromString.
+			dec, err := NewDecFromString(tc.input)
+			if err != nil {
+				t.Fatalf("failed to create Dec from %q: %v", tc.input, err)
+			}
+
+			// Marshal the Dec value into JSON.
+			jsonData, err := json.Marshal(dec)
+			if err != nil {
+				t.Fatalf("failed to marshal Dec %v: %v", dec, err)
+			}
+
+			// Unmarshal the JSON back into a new Dec variable.
+			var decoded Dec
+			err = json.Unmarshal(jsonData, &decoded)
+			if err != nil {
+				t.Fatalf("failed to unmarshal JSON %q: %v", string(jsonData), err)
+			}
+
+			// Verify that the original Dec and the decoded Dec are equal.
+			if !dec.Equal(decoded) {
+				t.Errorf("round-trip mismatch: original %q, decoded %q", dec.String(), decoded.String())
+			}
 		})
 	}
 }

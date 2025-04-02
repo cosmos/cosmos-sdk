@@ -3,6 +3,7 @@ package math
 import (
 	"encoding/json"
 	stderrors "errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -543,22 +544,29 @@ func (x Dec) Size() int {
 
 // MarshalJSON serializes the Dec struct into a JSON-encoded byte slice using scientific notation.
 func (x Dec) MarshalJSON() ([]byte, error) {
-	return json.Marshal(fmtE(x.dec, 'E'))
+	// NOTE: proto3 JSON marshaling of a string should be identical to binary marshaling except
+	// for the fact that the string is quoted.
+	// So we first marshal and then quote the result.
+	// This method is only used by gogoproto's jsonpb, but following this procedure ensures
+	// that the output is identical to a compliant proto3 JSON marshaler.
+	bz, err := x.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	return []byte(fmt.Sprintf("%q", bz)), nil
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface for the Dec type, converting JSON strings to Dec objects.
 func (x *Dec) UnmarshalJSON(data []byte) error {
+	// Here we perform the reverse of marshaling where we unmarshal the raw JSON string and then unmarshal
+	// that using the regular binary Unmarshal method.
 	var text string
 	err := json.Unmarshal(data, &text)
 	if err != nil {
 		return err
 	}
-	val, err := NewDecFromString(text)
-	if err != nil {
-		return err
-	}
-	*x = val
-	return nil
+
+	return x.Unmarshal([]byte(text))
 }
 
 // MinDec returns the smaller of x and y

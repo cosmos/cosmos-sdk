@@ -7,11 +7,11 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -81,7 +81,7 @@ func (m *QueryAccountsRequest) GetPagination() *query.PageRequest {
 // QueryAccountsResponse is the response type for the Query/Accounts RPC method.
 type QueryAccountsResponse struct {
 	// accounts are the existing accounts
-	Accounts []*types.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
+	Accounts []*any.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -119,7 +119,7 @@ func (m *QueryAccountsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAccountsResponse proto.InternalMessageInfo
 
-func (m *QueryAccountsResponse) GetAccounts() []*types.Any {
+func (m *QueryAccountsResponse) GetAccounts() []*any.Any {
 	if m != nil {
 		return m.Accounts
 	}
@@ -175,7 +175,7 @@ var xxx_messageInfo_QueryAccountRequest proto.InternalMessageInfo
 // QueryAccountResponse is the response type for the Query/Account RPC method.
 type QueryAccountResponse struct {
 	// account defines the account of the corresponding address.
-	Account *types.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	Account *any.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 }
 
 func (m *QueryAccountResponse) Reset()         { *m = QueryAccountResponse{} }
@@ -211,7 +211,7 @@ func (m *QueryAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAccountResponse proto.InternalMessageInfo
 
-func (m *QueryAccountResponse) GetAccount() *types.Any {
+func (m *QueryAccountResponse) GetAccount() *any.Any {
 	if m != nil {
 		return m.Account
 	}
@@ -340,7 +340,7 @@ var xxx_messageInfo_QueryModuleAccountsRequest proto.InternalMessageInfo
 
 // QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
 type QueryModuleAccountsResponse struct {
-	Accounts []*types.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
+	Accounts []*any.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
 }
 
 func (m *QueryModuleAccountsResponse) Reset()         { *m = QueryModuleAccountsResponse{} }
@@ -376,7 +376,7 @@ func (m *QueryModuleAccountsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryModuleAccountsResponse proto.InternalMessageInfo
 
-func (m *QueryModuleAccountsResponse) GetAccounts() []*types.Any {
+func (m *QueryModuleAccountsResponse) GetAccounts() []*any.Any {
 	if m != nil {
 		return m.Accounts
 	}
@@ -430,7 +430,7 @@ func (m *QueryModuleAccountByNameRequest) GetName() string {
 
 // QueryModuleAccountByNameResponse is the response type for the Query/ModuleAccountByName RPC method.
 type QueryModuleAccountByNameResponse struct {
-	Account *types.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	Account *any.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 }
 
 func (m *QueryModuleAccountByNameResponse) Reset()         { *m = QueryModuleAccountByNameResponse{} }
@@ -466,7 +466,7 @@ func (m *QueryModuleAccountByNameResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryModuleAccountByNameResponse proto.InternalMessageInfo
 
-func (m *QueryModuleAccountByNameResponse) GetAccount() *types.Any {
+func (m *QueryModuleAccountByNameResponse) GetAccount() *any.Any {
 	if m != nil {
 		return m.Account
 	}
@@ -2512,7 +2512,7 @@ func (m *QueryAccountsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Accounts = append(m.Accounts, &types.Any{})
+			m.Accounts = append(m.Accounts, &any.Any{})
 			if err := m.Accounts[len(m.Accounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2715,7 +2715,7 @@ func (m *QueryAccountResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Account == nil {
-				m.Account = &types.Any{}
+				m.Account = &any.Any{}
 			}
 			if err := m.Account.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2983,7 +2983,7 @@ func (m *QueryModuleAccountsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Accounts = append(m.Accounts, &types.Any{})
+			m.Accounts = append(m.Accounts, &any.Any{})
 			if err := m.Accounts[len(m.Accounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3150,7 +3150,7 @@ func (m *QueryModuleAccountByNameResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Account == nil {
-				m.Account = &types.Any{}
+				m.Account = &any.Any{}
 			}
 			if err := m.Account.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

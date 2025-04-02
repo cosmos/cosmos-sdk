@@ -40,6 +40,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ### Features
 
+* [#24343](https://github.com/cosmos/cosmos-sdk/pull/24343) feat(math/Dec): Add comparison and utility APIs MinDec, MaxDec, Neg(), Abs(), GT(), GTE(), LT(), LTE().
 * [#24229](https://github.com/cosmos/cosmos-sdk/pull/24229) Add `DecFromLegacyDec` migration function.
  
 ## [math/v1.5.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.1) - 2025-03-28

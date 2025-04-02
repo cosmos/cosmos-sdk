@@ -1939,14 +1939,15 @@ func TestAbs(t *testing.T) {
 
 func TestMarshalUnmarshalJSON(t *testing.T) {
 	tests := []struct {
-		name  string
-		input string
+		name         string
+		input        string
+		expectedJSON string
 	}{
-		{"Zero", "0"},
-		{"Positive Integer", "123"},
-		{"Negative Decimal", "-123.456"},
-		{"Scientific Notation", "1.23E4"},
-		{"Small Value", "1.23456789E-10"},
+		{"Zero", "0", `"0"`},
+		{"Positive Integer", "123", `"123"`},
+		{"Negative Decimal", "-123.456", `"-123.456"`},
+		{"Scientific Notation", "1.23E4", `"12300"`},
+		{"Small Value", "1.23456789E-10", `"123.456789E-12"`},
 	}
 
 	for _, tc := range tests {
@@ -1961,6 +1962,11 @@ func TestMarshalUnmarshalJSON(t *testing.T) {
 			jsonData, err := json.Marshal(dec)
 			if err != nil {
 				t.Fatalf("failed to marshal Dec %v: %v", dec, err)
+			}
+
+			// Check that the JSON output matches the expected JSON string.
+			if string(jsonData) != tc.expectedJSON {
+				t.Errorf("expected JSON %q, got %q", tc.expectedJSON, string(jsonData))
 			}
 
 			// Unmarshal the JSON back into a new Dec variable.

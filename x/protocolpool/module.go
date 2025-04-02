@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -141,6 +142,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalMsgs returns msgs used for governance proposals for simulations.
+// migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
 func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return simulation.ProposalMsgs()
 }
@@ -149,6 +151,8 @@ func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedPropo
 func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 }
 
+// WeightedOperations returns the all the protocolpool module operations with their respective weights.
+// migrate to WeightedOperationsX. This method is ignored when WeightedOperationsX exists and will be removed in the future
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		simState.AppParams,
@@ -157,4 +161,14 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		am.bankKeeper,
 		am.keeper,
 	)
+}
+
+// ProposalMsgsX registers governance proposal messages in the simulation registry.
+func (am AppModule) ProposalMsgsX(weight simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weight.Get("msg_community_pool_spend", 50), simulation.MsgCommunityPoolSpendFactory())
+}
+
+// WeightedOperationsX registers weighted protocolpool module operations for simulation.
+func (am AppModule) WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weight.Get("msg_fund_community_pool", 50), simulation.MsgFundCommunityPoolFactory())
 }

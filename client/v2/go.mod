@@ -2,8 +2,6 @@ module cosmossdk.io/client/v2
 
 go 1.23.2
 
-toolchain go1.24.1
-
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.3

@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -142,5 +144,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		startingProposalID,
 		v1.NewParams(minDeposit, expeditedMinDeposit, depositPeriod, votingPeriod, expeditedVotingPeriod, quorum.String(), threshold.String(), expitedVotingThreshold.String(), veto.String(), minInitialDepositRatio.String(), proposalCancelRate.String(), "", simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0, simState.Rand.Intn(2) == 0, minDepositRatio.String()),
 	)
+
+	bz, err := json.MarshalIndent(&govGenesis, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(govGenesis)
 }

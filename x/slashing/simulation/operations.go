@@ -18,7 +18,6 @@ import (
 )
 
 // Simulation operation weights constants
-// will be removed in the future
 const (
 	OpWeightMsgUnjail = "op_weight_msg_unjail"
 
@@ -26,7 +25,6 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-// migrate to the msg factories instead, this method will be removed in the future
 func WeightedOperations(
 	registry codectypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
@@ -51,7 +49,6 @@ func WeightedOperations(
 }
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
-// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgUnjail(
 	cdc *codec.ProtoCodec,
 	txGen client.TxConfig,

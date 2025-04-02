@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"cosmossdk.io/x/evidence/exported"
@@ -25,5 +27,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(evidence, &ev, simState.Rand, func(r *rand.Rand) { ev = GenEvidences(r, simState.Accounts) })
 
 	evidenceGenesis := types.NewGenesisState(ev)
+
+	bz, err := json.MarshalIndent(&evidenceGenesis, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(evidenceGenesis)
 }

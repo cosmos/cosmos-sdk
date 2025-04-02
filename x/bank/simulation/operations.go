@@ -17,7 +17,6 @@ import (
 )
 
 // Simulation operation weights constants
-// will be removed in the future
 const (
 	OpWeightMsgSend           = "op_weight_msg_send"
 	OpWeightMsgMultiSend      = "op_weight_msg_multisend"

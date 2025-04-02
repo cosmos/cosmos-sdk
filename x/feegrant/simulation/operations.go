@@ -17,7 +17,6 @@ import (
 )
 
 // Simulation operation weights constants
-// will be removed in the future
 const (
 	OpWeightMsgGrantAllowance        = "op_weight_msg_grant_fee_allowance"
 	OpWeightMsgRevokeAllowance       = "op_weight_msg_grant_revoke_allowance"
@@ -25,13 +24,11 @@ const (
 	DefaultWeightRevokeAllowance int = 100
 )
 
-// will be removed in the future
 var (
 	TypeMsgGrantAllowance  = sdk.MsgTypeURL(&feegrant.MsgGrantAllowance{})
 	TypeMsgRevokeAllowance = sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{})
 )
 
-// will be removed in the future in favor of msg factory
 func WeightedOperations(
 	registry codectypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
@@ -74,7 +71,6 @@ func WeightedOperations(
 }
 
 // SimulateMsgGrantAllowance generates MsgGrantAllowance with random values.
-// will be removed in the future in favor of msg factory
 func SimulateMsgGrantAllowance(
 	cdc *codec.ProtoCodec,
 	txConfig client.TxConfig,
@@ -130,7 +126,6 @@ func SimulateMsgGrantAllowance(
 }
 
 // SimulateMsgRevokeAllowance generates a MsgRevokeAllowance with random values.
-// will be removed in the future in favor of msg factory
 func SimulateMsgRevokeAllowance(
 	cdc *codec.ProtoCodec,
 	txConfig client.TxConfig,

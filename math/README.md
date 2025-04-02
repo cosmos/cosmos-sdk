@@ -21,3 +21,9 @@ with a precision of 34 significant decimal digits.
 
 `LegacyDec` on the other hand is a wrapper around [`big.Int`](https://pkg.go.dev/math/big#Int) which provides a
 fixed 18 digits of precision after the decimal point.
+
+More documentation on using these types and how to migrate code from using `LegacyDec` to `Dec` can be found in
+the [Decimal Handling in Cosmos SDK](https://docs.cosmos.network/main/build/building-modules/decimal-handling) documentation.
+It is important to note that the serialization formats of `Dec` and `LegacyDec` are different,
+so it is NOT SAFE to simply replace `LegacyDec` with `Dec` in your code and **state migrations
+and API changes are needed**.

@@ -50,17 +50,30 @@ Ensure proper error handling.
 ## Modules migrating from `LegacyDec` to `Dec`
 
 When migrating from `LegacyDec` to `Dec`, you need to update your module to use the new decimal type. **These types are state breaking changes and require a migration.**
+Historically, `LegacyDec` values were encoded as the string value of the underlying integer type which had 18
+digits after the decimal place built-in. This meant that the value `1` was stored as `1000000000000000000` in the database.
+`Dec`, however, stores the correct decimal string `1`.
 
-## Precision Handling
+There are two options for migrating state based on `LegacyDec`  to `Dec`:
+1. Write a state migration function and execute it in an upgrade handler. This involves reading `LegacyDec` values from the state, converting them to `Dec`, and writing them back to the state.
+2. Convert `LegacyDec` to `Dec` at runtime without a state migration, see the section below.
 
-The reason for the state breaking change is the difference in precision handling between the two decimal types:
+When `LegacyDec` is used in APIs, it will likely result in user error to simply change `gogoproto.custom` type
+annotation from `LegacyDec` to `Dec`. This is because the serialization formats of `Dec` and `LegacyDec` are different
+and clients are now used to the legacy 18-digit precision.
+In order to safely update APIs, a safer strategy is to introduce a new field in the proto files or to create a newly
+versioned message type. Adding a new field might look like this:
 
-* **LegacyDec**: Fixed precision of 18 decimal places.
-* **Dec**: Flexible precision up to 34 decimal places using the apd library.
+```proto
+message MsgFoo {
+  string value = 1 [ deprecated = true, (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec" ];
+  string value_v2 = 2 [ (gogoproto.customtype) = "cosmossdk.io/math.Dec" ];
+}
+```
 
-## Impact of Precision Change
-
-The increase in precision from 18 to 34 decimal places allows for more detailed decimal values but requires data migration. This change in how data is formatted and stored is a key aspect of why the transition is considered state-breaking.
+The state machine should then inspect where `value` or `value_v2` is set and use the correct one. This allows for a
+smooth transition to the new `Dec` type while maintaining backward compatibility with existing clients.
+Alternatively, a new `v2` package or message type could be created which only uses the new `Dec` type.
 
 ## Converting `LegacyDec` to `Dec` without storing the data
 

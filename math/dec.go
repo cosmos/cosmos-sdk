@@ -254,6 +254,26 @@ func (x Dec) Mul(y Dec) (Dec, error) {
 	return z, nil
 }
 
+// Neg returns a new Dec with value `-x` (negation of x) without mutating the argument x.
+// It returns an error if the negation operation fails.
+func (x Dec) Neg() (Dec, error) {
+	var z Dec
+	if _, err := dec128Context.Neg(&z.dec, &x.dec); err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}
+
+// Abs returns a new Dec with the absolute value of x without mutating the argument x.
+// It returns an error if the absolute value operation fails.
+func (x Dec) Abs() (Dec, error) {
+	var z Dec
+	if _, err := dec128Context.Abs(&z.dec, &x.dec); err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}
+
 // MulExact multiplies two Dec values x and y without rounding, using decimal128 precision.
 // It returns an error if rounding is necessary to fit the result within the 34-digit limit.
 //
@@ -363,6 +383,26 @@ func (x Dec) Text(format byte) string {
 // undefined if d or x are NaN
 func (x Dec) Cmp(y Dec) int {
 	return x.dec.Cmp(&y.dec)
+}
+
+// LT (less than) returns true if x is less than y, false otherwise
+func (x Dec) LT(y Dec) bool {
+	return x.Cmp(y) == -1
+}
+
+// LTE (less than or equal) returns true if x is less than or equal to y, false otherwise
+func (x Dec) LTE(y Dec) bool {
+	return x.Cmp(y) != 1
+}
+
+// GT (greater than) returns true if x is greater than y, false otherwise
+func (x Dec) GT(y Dec) bool {
+	return x.Cmp(y) == 1
+}
+
+// GTE (greater than or equal) returns true if x is greater than or equal to y, false otherwise
+func (x Dec) GTE(y Dec) bool {
+	return x.Cmp(y) != -1
 }
 
 // Equal checks if the decimal values of x and y are exactly equal.
@@ -519,6 +559,22 @@ func (x *Dec) UnmarshalJSON(data []byte) error {
 	}
 	*x = val
 	return nil
+}
+
+// MinDec returns the smaller of x and y
+func MinDec(x, y Dec) Dec {
+	if x.LT(y) {
+		return x
+	}
+	return y
+}
+
+// MaxDec returns the larger of x and y
+func MaxDec(x, y Dec) Dec {
+	if x.GT(y) {
+		return x
+	}
+	return y
 }
 
 // MustAdd performs addition between two Dec values.

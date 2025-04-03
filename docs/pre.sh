@@ -22,6 +22,9 @@ cp ../x/auth/tx/README.md ./docs/build/modules/auth/2-tx.md
 ## Add modules page list
 cat ../x/README.md | sed 's/\.\.\/docs\/build\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/build/modules/README.md
 
+# copy release process as the x/readme depends on it.
+cp ../RELEASE_PROCESS.md ./docs/build/RELEASE_PROCESS.md
+
 ## Add tooling documentation
 cp ../tools/cosmovisor/README.md ./docs/build/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./docs/build/tooling/02-confix.md

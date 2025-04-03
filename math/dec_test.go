@@ -1947,6 +1947,7 @@ func TestMarshalUnmarshalJSON(t *testing.T) {
 		{"Negative Decimal", "-123.456", `"-123.456"`},
 		{"Scientific Notation", "1.23E4", `"12300"`},
 		{"Small Value", "1.23456789E-10", `"123.456789E-12"`},
+		{"Negative Integer", "-1000000", `"-1E+6"`},
 	}
 
 	for _, tc := range tests {
@@ -1968,4 +1969,36 @@ func TestMarshalUnmarshalJSON(t *testing.T) {
 			require.True(t, dec.Equal(decoded), fmt.Sprintf("round-trip mismatch: original %q, decoded %q", dec.String(), decoded.String()))
 		})
 	}
+}
+
+func FuzzDecMarshalUnmarshalJSON(f *testing.F) {
+	// Seed the fuzzer with some known good inputs.
+	seedInputs := []string{
+		"0", "123", "-123", "123.456", "-123.456", "1.23E4", "1.23e4", "1.23456789E-10",
+	}
+	for _, seed := range seedInputs {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, input string) {
+		// Try to create a Dec from the fuzz input.
+		dec, err := NewDecFromString(input)
+		if err != nil {
+			// Skip inputs that do not represent a valid decimal.
+			t.Skip()
+		}
+
+		// Marshal the decimal into JSON.
+		jsonData, err := dec.MarshalJSON()
+		require.NoError(t, err, "error marshaling decimal %q", input)
+
+		// Unmarshal the JSON back to a Dec.
+		var decoded Dec
+		err = decoded.UnmarshalJSON(jsonData)
+		require.NoError(t, err, "error unmarshaling JSON for input %q", input)
+
+		// Ensure the round-trip produces an equivalent Dec.
+		require.True(t, dec.Equal(decoded),
+			"round-trip mismatch: original %q, decoded %q from input %q", dec.String(), decoded.String(), input)
+	})
 }

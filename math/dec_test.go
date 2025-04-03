@@ -1,7 +1,6 @@
 package math
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
@@ -1959,7 +1958,7 @@ func TestMarshalUnmarshalJSON(t *testing.T) {
 			}
 
 			// Marshal the Dec value into JSON.
-			jsonData, err := json.Marshal(dec)
+			jsonData, err := dec.MarshalJSON()
 			if err != nil {
 				t.Fatalf("failed to marshal Dec %v: %v", dec, err)
 			}
@@ -1971,7 +1970,7 @@ func TestMarshalUnmarshalJSON(t *testing.T) {
 
 			// Unmarshal the JSON back into a new Dec variable.
 			var decoded Dec
-			err = json.Unmarshal(jsonData, &decoded)
+			err = decoded.UnmarshalJSON(jsonData)
 			if err != nil {
 				t.Fatalf("failed to unmarshal JSON %q: %v", string(jsonData), err)
 			}

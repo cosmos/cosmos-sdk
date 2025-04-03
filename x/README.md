@@ -40,6 +40,9 @@ capabilities of your blockchain or further specialize it.
 
 ## Deprecated Modules
 
+The following modules are deprecated.  They will no longer be maintained and eventually will be removed
+in an upcoming release of the Cosmos SDK per our [release process](https://github.com/cosmos/cosmos-sdk/blob/main/RELEASE_PROCESS.md).
+
 * [Crisis](./crisis/README.md) - *Deprecated* halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 * [Params](./params/README.md) - *Deprecated* Globally available parameter store.
 

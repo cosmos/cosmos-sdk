@@ -1,4 +1,3 @@
-// Since: cosmos-sdk 0.46
 syntax = "proto3";
 package cosmos.gov.v1;
 
@@ -18,20 +17,30 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
 
   // SubmitProposal defines a method to create new proposal given the messages.
-  rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
+  rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
+  };
 
   // ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
   // to execute a legacy content-based proposal.
-  rpc ExecLegacyContent(MsgExecLegacyContent) returns (MsgExecLegacyContentResponse);
+  rpc ExecLegacyContent(MsgExecLegacyContent) returns (MsgExecLegacyContentResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
+  };
 
   // Vote defines a method to add a vote on a specific proposal.
-  rpc Vote(MsgVote) returns (MsgVoteResponse);
+  rpc Vote(MsgVote) returns (MsgVoteResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
+  };
 
   // VoteWeighted defines a method to add a weighted vote on a specific proposal.
-  rpc VoteWeighted(MsgVoteWeighted) returns (MsgVoteWeightedResponse);
+  rpc VoteWeighted(MsgVoteWeighted) returns (MsgVoteWeightedResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
+  };
 
   // Deposit defines a method to add deposit on a specific proposal.
-  rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
+  rpc Deposit(MsgDeposit) returns (MsgDepositResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
+  };
 
   // UpdateParams defines a governance operation for updating the x/gov module
   // parameters. The authority is defined in the keeper.

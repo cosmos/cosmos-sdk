@@ -134,7 +134,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		// handle gov proposals commands
 		skipProposal, _ := cmd.Flags().GetBool(flags.FlagNoProposal)
 		if options.GovProposal && !skipProposal {
-			return b.handleGovProposal(options, cmd, input, clientCtx, addressCodec, fd)
+			return b.handleGovProposal(cmd, input, clientCtx, addressCodec, fd)
 		}
 
 		// set signer to signer field if empty
@@ -191,7 +191,6 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 // handleGovProposal sets the authority field of the message to the gov module address and creates a gov proposal.
 func (b *Builder) handleGovProposal(
-	options *autocliv1.RpcCommandOptions,
 	cmd *cobra.Command,
 	input protoreflect.Message,
 	clientCtx client.Context,

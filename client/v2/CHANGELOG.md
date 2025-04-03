@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
+
 ### Features
 
 * [#24359](https://github.com/cosmos/cosmos-sdk/pull/24359) Support governance proposals.
@@ -66,9 +70,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
+* [#21936](https://github.com/cosmos/cosmos-sdk/pull/21936) Print possible enum values in error message after an invalid input was provided.
 
 ## [v2.0.0-beta.4] - 2024-07-16
+
+### Improvements
+
+* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
 
 ### Bug Fixes
 

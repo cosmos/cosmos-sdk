@@ -1453,3 +1453,485 @@ func TestMarshalUnmarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestLT(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp bool
+	}{
+		"0 == 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: false,
+		},
+		"0 < 123": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: true,
+		},
+		"123 > 0": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(0),
+			exp: false,
+		},
+		"-123 < 0": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(0),
+			exp: true,
+		},
+		"123 == 123": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: false,
+		},
+		"-123 == -123": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: false,
+		},
+		"1.234 == 1.234": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: false,
+		},
+		"1.234 > 1.233": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1233, -3),
+			exp: false,
+		},
+		"1.233 < 1.234": {
+			x:   NewDecWithExp(1233, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.LT(spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestLTE(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp bool
+	}{
+		"0 == 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: true,
+		},
+		"0 < 123": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: true,
+		},
+		"123 > 0": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(0),
+			exp: false,
+		},
+		"-123 < 0": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(0),
+			exp: true,
+		},
+		"123 == 123": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: true,
+		},
+		"-123 == -123": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: true,
+		},
+		"1.234 == 1.234": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: true,
+		},
+		"1.234 > 1.233": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1233, -3),
+			exp: false,
+		},
+		"1.233 < 1.234": {
+			x:   NewDecWithExp(1233, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.LTE(spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestGT(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp bool
+	}{
+		"0 == 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: false,
+		},
+		"0 < 123": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: false,
+		},
+		"123 > 0": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(0),
+			exp: true,
+		},
+		"-123 < 0": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(0),
+			exp: false,
+		},
+		"123 == 123": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: false,
+		},
+		"-123 == -123": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: false,
+		},
+		"1.234 == 1.234": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: false,
+		},
+		"1.234 > 1.233": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1233, -3),
+			exp: true,
+		},
+		"1.233 < 1.234": {
+			x:   NewDecWithExp(1233, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: false,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.GT(spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestGTE(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp bool
+	}{
+		"0 == 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: true,
+		},
+		"0 < 123": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: false,
+		},
+		"123 > 0": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(0),
+			exp: true,
+		},
+		"-123 < 0": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(0),
+			exp: false,
+		},
+		"123 == 123": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: true,
+		},
+		"-123 == -123": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: true,
+		},
+		"1.234 == 1.234": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: true,
+		},
+		"1.234 > 1.233": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1233, -3),
+			exp: true,
+		},
+		"1.233 < 1.234": {
+			x:   NewDecWithExp(1233, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: false,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := spec.x.GTE(spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestMinDec(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp Dec
+	}{
+		"0 == 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"0 < 123": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(0),
+		},
+		"123 > 0": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"-123 < 0": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(-123),
+		},
+		"123 == 123": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(123),
+		},
+		"-123 == -123": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: NewDecFromInt64(-123),
+		},
+		"1.234 == 1.234": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: NewDecWithExp(1234, -3),
+		},
+		"1.234 > 1.233": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1233, -3),
+			exp: NewDecWithExp(1233, -3),
+		},
+		"1.233 < 1.234": {
+			x:   NewDecWithExp(1233, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: NewDecWithExp(1233, -3),
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := MinDec(spec.x, spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestMaxDec(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		y   Dec
+		exp Dec
+	}{
+		"0 == 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"0 < 123 ": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(123),
+		},
+		"123 > 0 ": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(123),
+		},
+		"-123 < 0": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"123 == 123": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(123),
+		},
+		"-123 == -123": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: NewDecFromInt64(-123),
+		},
+		"1.234 == 1.234": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: NewDecWithExp(1234, -3),
+		},
+		"1.234 > 1.233": {
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1233, -3),
+			exp: NewDecWithExp(1234, -3),
+		},
+		"1.233 < 1.234": {
+			x:   NewDecWithExp(1233, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: NewDecWithExp(1234, -3),
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got := MaxDec(spec.x, spec.y)
+			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+		})
+	}
+}
+
+func TestNeg(t *testing.T) {
+	specs := map[string]struct {
+		x      Dec
+		exp    Dec
+		expErr error
+	}{
+		"0": {
+			x:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"123": {
+			x:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(-123),
+		},
+		"-123": {
+			x:   NewDecFromInt64(-123),
+			exp: NewDecFromInt64(123),
+		},
+		"1.234": {
+			x:   NewDecWithExp(1234, -3),
+			exp: NewDecWithExp(-1234, -3),
+		},
+		"-1.234 ": {
+			x:   NewDecWithExp(-1234, -3),
+			exp: NewDecWithExp(1234, -3),
+		},
+
+		"1e100000": {
+			x:   NewDecWithExp(1, 100_000),
+			exp: NewDecWithExp(-1, 100_000),
+		},
+		"-9e900000 -> Err": {
+			x:      NewDecWithExp(-9, 900_000),
+			expErr: ErrInvalidDec,
+		},
+		"-1e^-1": {
+			x:   NewDecWithExp(-1, -1),
+			exp: NewDecWithExp(1, -1),
+		},
+		"-1e100001": {
+			x:      NewDecWithExp(-1, 100_001),
+			expErr: ErrInvalidDec,
+		},
+		"1e100001": {
+			x:      NewDecWithExp(1, 100_001),
+			expErr: ErrInvalidDec,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.Neg()
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr, got)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+
+func TestAbs(t *testing.T) {
+	specs := map[string]struct {
+		x      Dec
+		exp    Dec
+		expErr error
+	}{
+		"0": {
+			x:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"123": {
+			x:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(123),
+		},
+		"-123": {
+			x:   NewDecFromInt64(-123),
+			exp: NewDecFromInt64(123),
+		},
+		"1.234": {
+			x:   NewDecWithExp(1234, -3),
+			exp: NewDecWithExp(1234, -3),
+		},
+		"-1.234 ": {
+			x:   NewDecWithExp(-1234, -3),
+			exp: NewDecWithExp(1234, -3),
+		},
+
+		"1e100000": {
+			x:   NewDecWithExp(1, 100_000),
+			exp: NewDecWithExp(1, 100_000),
+		},
+		"-9e900000 -> Err": {
+			x:      NewDecWithExp(-9, 900_000),
+			expErr: ErrInvalidDec,
+		},
+		"-1e^-1": {
+			x:   NewDecWithExp(-1, -1),
+			exp: NewDecWithExp(1, -1),
+		},
+		"-1e100001": {
+			x:      NewDecWithExp(-1, 100_001),
+			expErr: ErrInvalidDec,
+		},
+		"1e100001": {
+			x:      NewDecWithExp(1, 100_001),
+			expErr: ErrInvalidDec,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.Abs()
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr, got)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}

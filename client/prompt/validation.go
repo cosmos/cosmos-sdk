@@ -41,6 +41,8 @@ func ValidatePromptURL(input string) error {
 }
 
 // ValidatePromptAddress validates that the input is a valid Bech32 address.
+// Deprecated: This function is not used and is deprecated.
+// It will be removed in future versions.
 func ValidatePromptAddress(input string) error {
 	_, err := sdk.AccAddressFromBech32(input)
 	if err == nil {

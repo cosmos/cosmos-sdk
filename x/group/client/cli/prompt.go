@@ -6,7 +6,6 @@ import (
 	"os"
 	"sort"
 
-	"cosmossdk.io/core/address"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
@@ -16,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/prompt"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -35,7 +35,13 @@ type proposalType struct {
 }
 
 // Prompt the proposal type values and return the proposal and its metadata.
-func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec, validatorAddressCodec, consensusAddressCodec address.Codec) (*Proposal, govtypes.ProposalMetadata, error) {
+func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*Proposal, govtypes.ProposalMetadata, error) {
+	// before codecs are not more in context, we re-create them from global SDK config
+	cfg := sdk.GetConfig()
+	addressCodec := address.NewBech32Codec(cfg.GetBech32AccountAddrPrefix())
+	validatorAddressCodec := address.NewBech32Codec(cfg.GetBech32ValidatorAddrPrefix())
+	consensusAddressCodec := address.NewBech32Codec(cfg.GetBech32ConsensusAddrPrefix())
+
 	// set metadata
 	metadata, err := govcli.PromptMetadata(skipMetadata)
 	if err != nil {
@@ -145,7 +151,7 @@ func NewCmdDraftProposal() *cobra.Command {
 
 			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
 
-			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt, clientCtx.AddressCodec, clientCtx.ValidatorAddressCodec, clientCtx.ConsensusAddressCodec)
+			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt)
 			if err != nil {
 				return err
 			}

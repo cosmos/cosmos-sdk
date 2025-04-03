@@ -2,15 +2,13 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
-	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -22,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -57,95 +54,10 @@ var suggestedProposalTypes = []proposalType{
 }
 
 // Prompt prompts the user for all values of the given type.
-// data is the struct to be filled
-// namePrefix is the name to be displayed as "Enter <namePrefix> <field>"
-// Deprecated: This is not used anymore anywhere thanks to client/v2 proto prompt.
+// Deprecated: This is not used anymore anywhere thanks to client proto prompt.
 // It will be removed in a future release.
 func Prompt[T any](data T, namePrefix string) (T, error) {
-	v := reflect.ValueOf(&data).Elem()
-	if v.Kind() == reflect.Interface {
-		v = reflect.ValueOf(data)
-		if v.Kind() == reflect.Ptr {
-			v = v.Elem()
-		}
-	}
-
-	for i := range v.NumField() {
-		// if the field is a struct skip or not slice of string or int then skip
-		switch v.Field(i).Kind() {
-		case reflect.Struct:
-			// TODO(@julienrbrt) in the future we can add a recursive call to Prompt
-			continue
-		case reflect.Slice:
-			if v.Field(i).Type().Elem().Kind() != reflect.String && v.Field(i).Type().Elem().Kind() != reflect.Int {
-				continue
-			}
-		}
-
-		// create prompts
-		p := promptui.Prompt{
-			Label:    fmt.Sprintf("Enter %s %s", namePrefix, strings.ToLower(prompt.CamelCaseToString(v.Type().Field(i).Name))),
-			Validate: prompt.ValidatePromptNotEmpty,
-		}
-
-		fieldName := strings.ToLower(v.Type().Field(i).Name)
-
-		if strings.EqualFold(fieldName, "authority") {
-			// pre-fill with gov address
-			p.Default = authtypes.NewModuleAddress(types.ModuleName).String()
-			p.Validate = prompt.ValidatePromptAddress
-		}
-
-		// TODO(@julienrbrt) use scalar annotation instead of dumb string name matching
-		if strings.Contains(fieldName, "addr") ||
-			strings.Contains(fieldName, "sender") ||
-			strings.Contains(fieldName, "voter") ||
-			strings.Contains(fieldName, "depositor") ||
-			strings.Contains(fieldName, "granter") ||
-			strings.Contains(fieldName, "grantee") ||
-			strings.Contains(fieldName, "recipient") {
-			p.Validate = prompt.ValidatePromptAddress
-		}
-
-		result, err := p.Run()
-		if err != nil {
-			return data, fmt.Errorf("failed to prompt for %s: %w", fieldName, err)
-		}
-
-		switch v.Field(i).Kind() {
-		case reflect.String:
-			v.Field(i).SetString(result)
-		case reflect.Int:
-			resultInt, err := strconv.ParseInt(result, 10, 0)
-			if err != nil {
-				return data, fmt.Errorf("invalid value for int: %w", err)
-			}
-			// If a value was successfully parsed the ranges of:
-			//      [minInt,     maxInt]
-			// are within the ranges of:
-			//      [minInt64, maxInt64]
-			// of which on 64-bit machines, which are most common,
-			// int==int64
-			v.Field(i).SetInt(resultInt)
-		case reflect.Slice:
-			switch v.Field(i).Type().Elem().Kind() {
-			case reflect.String:
-				v.Field(i).Set(reflect.ValueOf([]string{result}))
-			case reflect.Int:
-				resultInt, err := strconv.ParseInt(result, 10, 0)
-				if err != nil {
-					return data, fmt.Errorf("invalid value for int: %w", err)
-				}
-
-				v.Field(i).Set(reflect.ValueOf([]int{int(resultInt)}))
-			}
-		default:
-			// skip any other types
-			continue
-		}
-	}
-
-	return data, nil
+	return data, errors.New("use client/prompt instead")
 }
 
 type proposalType struct {

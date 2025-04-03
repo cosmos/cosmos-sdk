@@ -698,7 +698,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	if msCache.TracingEnabled() {
 		msCache = msCache.SetTracingContext(
 			storetypes.TraceContext(
-				map[string]interface{}{
+				map[string]any{
 					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
 				},
 			),

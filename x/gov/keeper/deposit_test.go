@@ -375,7 +375,7 @@ func TestChargeDeposit(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			testName := func(i int) string {
 				switch i {
 				case 0:

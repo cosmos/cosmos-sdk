@@ -28,7 +28,7 @@ type (
 	// the expected types and could result in type assertion errors. It is recommend
 	// to either use the cast package or perform manual conversion for safety.
 	AppOptions interface {
-		Get(string) interface{}
+		Get(string) any
 	}
 
 	// Application defines an application interface that wraps abci.Application.

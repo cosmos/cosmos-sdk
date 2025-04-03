@@ -148,7 +148,7 @@ func TestRandomMessagesWithRandomKeys(t *testing.T) {
 }
 
 func signAndRecoverWithRandomMessages(t *testing.T, keys func() ([]byte, []byte)) {
-	for i := 0; i < TestCount; i++ {
+	for range TestCount {
 		pubkey1, seckey := keys()
 		msg := csprngEntropy(32)
 		sig, err := Sign(msg, seckey)
@@ -180,7 +180,7 @@ func TestRecoveryOfRandomSignature(t *testing.T) {
 	pubkey1, _ := generateKeyPair()
 	msg := csprngEntropy(32)
 
-	for i := 0; i < TestCount; i++ {
+	for i := range TestCount {
 		// recovery can sometimes work, but if so should always give wrong pubkey
 		pubkey2, _ := RecoverPubkey(msg, randSig())
 		if bytes.Equal(pubkey1, pubkey2) {
@@ -194,7 +194,7 @@ func TestRandomMessagesAgainstValidSig(t *testing.T) {
 	msg := csprngEntropy(32)
 	sig, _ := Sign(msg, seckey)
 
-	for i := 0; i < TestCount; i++ {
+	for i := range TestCount {
 		msg = csprngEntropy(32)
 		pubkey2, _ := RecoverPubkey(msg, sig)
 		// recovery can sometimes work, but if so should always give wrong pubkey

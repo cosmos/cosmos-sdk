@@ -121,7 +121,7 @@ func TestProtoCodecMarshal(t *testing.T) {
 
 // Emulate grpc server implementation
 // https://github.com/grpc/grpc-go/blob/b1d7f56b81b7902d871111b82dec6ba45f854ede/rpc_util.go#L590
-func grpcServerEncode(c encoding.Codec, msg interface{}) ([]byte, error) {
+func grpcServerEncode(c encoding.Codec, msg any) ([]byte, error) {
 	if msg == nil { // NOTE: typed nils will not be caught by this check
 		return nil, nil
 	}

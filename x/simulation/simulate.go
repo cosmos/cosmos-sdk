@@ -323,14 +323,14 @@ func createBlockSimulator(tb testing.TB, printProgress bool, w io.Writer, params
 
 		// Predetermine the blocksize slice so that we can do things like block
 		// out certain operations without changing the ops that follow.
-		for i := 0; i < blocksize; i++ {
+		for range blocksize {
 			opAndRz = append(opAndRz, opAndR{
 				op:   selectOp(r),
 				rand: r,
 			})
 		}
 
-		for i := 0; i < blocksize; i++ {
+		for i := range blocksize {
 			// NOTE: the Rand 'r' should not be used here.
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
@@ -387,7 +387,7 @@ func runQueuedOperations(
 	allFutureOps = make([]simulation.FutureOperation, 0)
 
 	numOpsRan = len(queuedOp)
-	for i := 0; i < numOpsRan; i++ {
+	for i := range numOpsRan {
 		opMsg, futureOps, err := queuedOp[i](r, app, ctx, accounts, chainID)
 		if len(futureOps) > 0 {
 			allFutureOps = append(allFutureOps, futureOps...)

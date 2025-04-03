@@ -241,7 +241,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
 
 	groupIDs := make([]string, 2)
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		validMembers := fmt.Sprintf(`{"members": [{
 	  "address": "%s",
 		"weight": "1",
@@ -1208,7 +1208,7 @@ func (s *CLITestSuite) TestTxVote() {
 	cmd.SetOut(io.Discard)
 
 	ids := make([]string, 4)
-	for i := 0; i < len(ids); i++ {
+	for i := range ids {
 		ids[i] = fmt.Sprint(i + 1)
 	}
 

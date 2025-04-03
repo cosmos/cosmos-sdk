@@ -1,16 +1,15 @@
 package staking_test
 
 import (
-	sdkmath "cosmossdk.io/math"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -109,6 +109,7 @@ func newTestEnvironment(tb testing.TB) *KeeperTestEnvironment {
 }
 
 func setupState(b *testing.B, r *rand.Rand, numBonded int) ([]types.Validator, []sdk.ValAddress) {
+	b.Helper()
 	accs := simtypes.RandomAccounts(r, numBonded)
 	initialStake := sdkmath.NewInt(r.Int63n(1000) + 10)
 

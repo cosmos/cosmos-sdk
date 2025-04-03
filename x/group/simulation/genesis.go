@@ -22,7 +22,7 @@ const (
 
 func checkAccExists(acc sdk.AccAddress, g []*group.GroupMember, lastIndex int) bool {
 	s := acc.String()
-	for i := 0; i < lastIndex; i++ {
+	for i := range lastIndex {
 		if g[i].Member.Address == s {
 			return true
 		}
@@ -32,7 +32,7 @@ func checkAccExists(acc sdk.AccAddress, g []*group.GroupMember, lastIndex int) b
 
 func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
 	groups := make([]*group.GroupInfo, 3)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		acc, _ := simtypes.RandomAcc(r, accounts)
 		groups[i] = &group.GroupInfo{
 			Id:          uint64(i + 1),
@@ -47,7 +47,7 @@ func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
 
 func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMember {
 	groupMembers := make([]*group.GroupMember, 3)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		acc, _ := simtypes.RandomAcc(r, accounts)
 		for checkAccExists(acc.Address, groupMembers, i) {
 			acc, _ = simtypes.RandomAcc(r, accounts)
@@ -100,7 +100,7 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies []*group.GroupPolicyInfo) []*group.Proposal {
 	proposals := make([]*group.Proposal, 3)
 	proposers := []string{simState.Accounts[0].Address.String(), simState.Accounts[1].Address.String()}
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		idx := r.Intn(len(groupPolicies))
 		groupPolicyAddress := groupPolicies[idx].Address
 		to, _ := simtypes.RandomAcc(r, simState.Accounts)
@@ -144,7 +144,7 @@ func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies 
 func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 	votes := make([]*group.Vote, 3)
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		votes[i] = &group.Vote{
 			ProposalId: uint64(i + 1),
 			Voter:      simState.Accounts[i].Address.String(),

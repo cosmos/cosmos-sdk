@@ -211,7 +211,7 @@ func submitProposalWithVotesScheduled(
 	// future ops so that votes do not flood the sims.
 	if r.Intn(100) == 1 { // 1% chance
 		now := simsx.BlockTime(ctx)
-		for i := 0; i < numVotes; i++ {
+		for i := range numVotes {
 			var vF simsx.SimMsgFactoryFn[*v1.MsgVote] = func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVote) {
 				switch p, err := k.Proposals.Get(ctx, proposalID); {
 				case err != nil:

@@ -554,7 +554,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	for name, tc := range testCases {
 		s.Run(name, func() {
 			// iterate multiple times to ensure the tx selector is cleared each time
-			for i := 0; i < 6; i++ {
+			for range 6 {
 				resp, err := handler(tc.ctx, tc.req)
 				s.Require().NoError(err)
 				s.Require().Len(resp.Txs, tc.expectedTxs)

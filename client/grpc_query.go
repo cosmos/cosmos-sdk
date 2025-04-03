@@ -29,7 +29,7 @@ var _ gogogrpc.ClientConn = Context{}
 var fallBackCodec = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
+func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply any, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
 	// 1. either we're broadcasting a Tx, in which call we call CometBFT's broadcast endpoint directly,
 	// 2-1. or we are querying for state, in which case we call grpc if grpc client set.

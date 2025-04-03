@@ -99,7 +99,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 
 // InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext
 // except it also sets the server context on the command and the server logger.
-func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
+func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig any, cmtConfig *cmtcfg.Config) error {
 	serverCtx, err := InterceptConfigsAndCreateContext(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 // is used to read and parse the application configuration. Command handlers can
 // fetch the server Context to get the CometBFT configuration or to get access
 // to Viper.
-func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*Context, error) {
+func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig any, cmtConfig *cmtcfg.Config) (*Context, error) {
 	serverCtx := NewDefaultContext()
 
 	// Get the executable name and configure the viper instance so that environmental
@@ -231,7 +231,7 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 // configuration file. The CometBFT configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
 // viperCfg object.
-func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
+func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig any, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
 	configPath := filepath.Join(rootDir, "config")
 	cmtCfgFile := filepath.Join(configPath, "config.toml")

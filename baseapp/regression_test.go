@@ -18,7 +18,7 @@ func TestNilCmsCheckBeforeSeal(t *testing.T) {
 
 	// 1. Invoking app.Init with a nil cms MUST not seal the app
 	// and should return an error firstly, which can later be reversed.
-	for i := 0; i < 10; i++ { // N times, the app shouldn't be sealed.
+	for range 10 { // N times, the app shouldn't be sealed.
 		err := app.Init()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "commit multi-store must not be nil")

@@ -153,7 +153,7 @@ func WeightedOperations(
 
 	// create two proposals for weightedOperations
 	var createProposalOps simulation.WeightedOperations
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		createProposalOps = append(createProposalOps, simulation.NewWeightedOperation(
 			weightMsgSubmitProposal,
 			simulateMsgSubmitProposal(pCdc, txGen, ak, bk, k, state),
@@ -1491,7 +1491,7 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.MemberRe
 	membersLen := simtypes.RandIntBetween(r, 1, maxMembers)
 	members := make([]group.MemberRequest, membersLen)
 
-	for i := 0; i < membersLen; i++ {
+	for i := range membersLen {
 		members[i] = group.MemberRequest{
 			Address:  accounts[i].Address.String(),
 			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),

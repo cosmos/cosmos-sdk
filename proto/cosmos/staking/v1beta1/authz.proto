@@ -34,8 +34,6 @@ message StakeAuthorization {
 }
 
 // AuthorizationType defines the type of staking module authorization type
-//
-// Since: cosmos-sdk 0.43
 enum AuthorizationType {
   // AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type
   AUTHORIZATION_TYPE_UNSPECIFIED = 0;

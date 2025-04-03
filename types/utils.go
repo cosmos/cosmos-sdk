@@ -18,7 +18,7 @@ import (
 // If the passed JSON isn't valid it will return an error.
 // Deprecated: SortJSON was used for GetSignbytes, this is now automatic with amino signing
 func SortJSON(toSortJSON []byte) ([]byte, error) {
-	var c interface{}
+	var c any
 	err := json.Unmarshal(toSortJSON, &c)
 	if err != nil {
 		return nil, err

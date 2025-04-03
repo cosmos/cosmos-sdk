@@ -576,3 +576,56 @@ func MaxDec(x, y Dec) Dec {
 	}
 	return y
 }
+
+// Floor returns the largest integer less than or equal to x.
+func (x Dec) Floor() (Dec, error) {
+	if x.dec.Exponent > 9999 || x.dec.Exponent < -9999 { 
+		return Dec{}, ErrInvalidDec.Wrap("exponent out of range")
+	}
+
+	var z Dec
+	_, err := dec128Context.Floor(&z.dec, &x.dec)
+	if err != nil {
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}
+
+// Ceil returns the smallest integer greater than or equal to x.
+func (x Dec) Ceil() (Dec, error) {
+	if x.dec.Exponent > 9999 || x.dec.Exponent < -9999 { 
+		return Dec{}, ErrInvalidDec.Wrap("exponent out of range")
+	}
+
+	var z Dec
+	if _, err := dec128Context.Ceil(&z.dec, &x.dec); err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}
+
+// RoundToIntegralValue rounds x to the nearest integer, with ties rounding to even.
+func (x Dec) RoundToIntegralValue() (Dec, error) {
+	if x.dec.Exponent > 9999 || x.dec.Exponent < -9999 { 
+		return Dec{}, ErrInvalidDec.Wrap("exponent out of range")
+	}
+
+	var z Dec
+	if _, err := dec128Context.RoundToIntegralValue(&z.dec, &x.dec); err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}
+
+// RoundToIntegralExact rounds x to the nearest integer, with ties rounding away from zero.
+func (x Dec) RoundToIntegralExact() (Dec, error) {
+	if x.dec.Exponent > 9999 || x.dec.Exponent < -9999 { 
+		return Dec{}, ErrInvalidDec.Wrap("exponent out of range")
+	}
+
+	var z Dec
+	if _, err := dec128Context.RoundToIntegralExact(&z.dec, &x.dec); err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}

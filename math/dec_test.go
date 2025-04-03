@@ -1935,3 +1935,213 @@ func TestAbs(t *testing.T) {
 		})
 	}
 }
+
+func TestFloor(t *testing.T) {
+	specs := map[string]struct {
+		x      Dec
+		exp    Dec
+		expErr error
+	}{
+		"Floor of 0 = 0": {
+			x:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"Floor of 1.9 = 1": {
+			x:   NewDecWithExp(19, -1),
+			exp: NewDecFromInt64(1),
+		},
+		"Floor of -1.9 = -2": {
+			x:   NewDecWithExp(-19, -1),
+			exp: NewDecFromInt64(-2),
+		},
+		"Floor of 123.456 = 123": {
+			x:   NewDecWithExp(123456, -3),
+			exp: NewDecFromInt64(123),
+		},
+		"Floor of -123.456 = -124": {
+			x:   NewDecWithExp(-123456, -3),
+			exp: NewDecFromInt64(-124),
+		},
+		"Floor of 1e100000 -> Err": {
+			x:      NewDecWithExp(1, 100_000),
+			expErr: ErrInvalidDec,
+		},
+		"Floor of -1e100000 -> Err": {
+			x:      NewDecWithExp(-1, 100_000),
+			expErr: ErrInvalidDec,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.Floor()
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr, got)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+
+func TestCeil(t *testing.T) {
+	specs := map[string]struct {
+		x      Dec
+		exp    Dec
+		expErr error
+	}{
+		"Ceil of 0 = 0": {
+			x:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"Ceil of 1.1 = 2": {
+			x:   NewDecWithExp(11, -1),
+			exp: NewDecFromInt64(2),
+		},
+		"Ceil of -1.1 = -1": {
+			x:   NewDecWithExp(-11, -1),
+			exp: NewDecFromInt64(-1),
+		},
+		"Ceil of 123.456 = 124": {
+			x:   NewDecWithExp(123456, -3),
+			exp: NewDecFromInt64(124),
+		},
+		"Ceil of -123.456 = -123": {
+			x:   NewDecWithExp(-123456, -3),
+			exp: NewDecFromInt64(-123),
+		},
+		"Ceil of 1e100000 -> Err": {
+			x:      NewDecWithExp(1, 100_000),
+			expErr: ErrInvalidDec,
+		},
+		"Ceil of -1e100000 -> Err": {
+			x:      NewDecWithExp(-1, 100_000),
+			expErr: ErrInvalidDec,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.Ceil()
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr, got)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+
+func TestRoundToIntegralValue(t *testing.T) {
+	specs := map[string]struct {
+		x      Dec
+		exp    Dec
+		expErr error
+	}{
+		"Round of 0 = 0": {
+			x:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"Round of 1.4 = 1": {
+			x:   NewDecWithExp(14, -1),
+			exp: NewDecFromInt64(1),
+		},
+		"Round of 1.5 = 2": {
+			x:   NewDecWithExp(15, -1),
+			exp: NewDecFromInt64(2),
+		},
+		"Round of -1.5 = -2": {
+			x:   NewDecWithExp(-15, -1),
+			exp: NewDecFromInt64(-2),
+		},
+		"Round of 123.456 = 123": {
+			x:   NewDecWithExp(123456, -3),
+			exp: NewDecFromInt64(123),
+		},
+		"Round of -123.456 = -123": {
+			x:   NewDecWithExp(-123456, -3),
+			exp: NewDecFromInt64(-123),
+		},
+		"Round of 1e100000 -> Err": {
+			x:      NewDecWithExp(1, 100_000),
+			expErr: ErrInvalidDec,
+		},
+		"Round of -1e100000 -> Err": {
+			x:      NewDecWithExp(-1, 100_000),
+			expErr: ErrInvalidDec,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.RoundToIntegralValue()
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr, got)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+
+func TestRoundToIntegralExact(t *testing.T) {
+	specs := map[string]struct {
+		x      Dec
+		exp    Dec
+		expErr error
+	}{
+		"Round 1.5 to 2": {
+			x:   NewDecWithExp(15, -1),
+			exp: NewDecFromInt64(2),
+		},
+		"Round -1.5 to -2": {
+			x:   NewDecWithExp(-15, -1),
+			exp: NewDecFromInt64(-2),
+		},
+		"Round 2.3 to 2": {
+			x:   NewDecWithExp(23, -1),
+			exp: NewDecFromInt64(2),
+		},
+		"Round -2.3 to -2": {
+			x:   NewDecWithExp(-23, -1),
+			exp: NewDecFromInt64(-2),
+		},
+		"Round 2.8 to 3": {
+			x:   NewDecWithExp(28, -1),
+			exp: NewDecFromInt64(3),
+		},
+		"Round -2.8 to -3": {
+			x:   NewDecWithExp(-28, -1),
+			exp: NewDecFromInt64(-3),
+		},
+		"Round 0.9 to 1": {
+			x:   NewDecWithExp(9, -1),
+			exp: NewDecFromInt64(1),
+		},
+		"Round -0.9 to -1": {
+			x:   NewDecWithExp(-9, -1),
+			exp: NewDecFromInt64(-1),
+		},
+		"Round 1e100000 -> Err": {
+			x:      NewDecWithExp(1, 100_000),
+			expErr: ErrInvalidDec,
+		},
+		"Round -1e100000 -> Err": {
+			x:      NewDecWithExp(-1, 100_000),
+			expErr: ErrInvalidDec,
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.RoundToIntegralExact()
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr, got)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+

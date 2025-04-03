@@ -117,7 +117,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	var accounts []TestAccount
 
-	for i := 0; i < numAccs; i++ {
+	for i := range numAccs {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		err := acc.SetAccountNumber(uint64(i + 1000))

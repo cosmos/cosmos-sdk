@@ -38,15 +38,15 @@ type Validateable interface {
 // variable length and scanned iteratively.
 type Index interface {
 	// Has checks if a key exists. Panics on nil key.
-	Has(store storetypes.KVStore, key interface{}) (bool, error)
+	Has(store storetypes.KVStore, key any) (bool, error)
 
 	// Get returns a result iterator for the searchKey.
 	// searchKey must not be nil.
-	Get(store storetypes.KVStore, searchKey interface{}) (Iterator, error)
+	Get(store storetypes.KVStore, searchKey any) (Iterator, error)
 
 	// GetPaginated returns a result iterator for the searchKey and optional pageRequest.
 	// searchKey must not be nil.
-	GetPaginated(store storetypes.KVStore, searchKey interface{}, pageRequest *query.PageRequest) (Iterator, error)
+	GetPaginated(store storetypes.KVStore, searchKey any, pageRequest *query.PageRequest) (Iterator, error)
 
 	// PrefixScan returns an Iterator over a domain of keys in ascending order. End is exclusive.
 	// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid and error is returned.
@@ -64,7 +64,7 @@ type Index interface {
 	//			it = LimitIterator(it, defaultLimit)
 	//
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	PrefixScan(store storetypes.KVStore, startI, endI interface{}) (Iterator, error)
+	PrefixScan(store storetypes.KVStore, startI, endI any) (Iterator, error)
 
 	// ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
 	// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
@@ -75,7 +75,7 @@ type Index interface {
 	// this as an endpoint to the public without further limits. See `LimitIterator`
 	//
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	ReversePrefixScan(store storetypes.KVStore, startI, endI interface{}) (Iterator, error)
+	ReversePrefixScan(store storetypes.KVStore, startI, endI any) (Iterator, error)
 }
 
 // Iterator allows iteration through a sequence of key value pairs

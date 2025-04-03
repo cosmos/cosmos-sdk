@@ -63,7 +63,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	valAddrs := make([]sdk.ValAddress, simState.NumBonded)
 
-	for i := 0; i < int(simState.NumBonded); i++ {
+	for i := range int(simState.NumBonded) {
 		valAddr := sdk.ValAddress(simState.Accounts[i].Address)
 		valAddrs[i] = valAddr
 

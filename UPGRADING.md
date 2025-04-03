@@ -1,6 +1,6 @@
-# Upgrading Cosmos SDK [v0.53.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0)
+# Upgrade Reference
 
-This guide provides instructions for upgrading from `v0.50.x` to `v0.53.x` of Cosmos SDK.
+This document provides a quick reference for the upgrades from `v0.50.x` to `v0.53.x` of Cosmos SDK.
 
 Note, always read the **App Wiring Changes** section for more information on application wiring updates.
 

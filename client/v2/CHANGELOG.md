@@ -36,26 +36,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Bug Fixes
-
-* [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
-
 ### Features
 
 * [#24359](https://github.com/cosmos/cosmos-sdk/pull/24359) Support governance proposals.
 
-<<<<<<< HEAD
-=======
 ### Improvements
 
 * [#22890](https://github.com/cosmos/cosmos-sdk/pull/22890)  Added support for flattening inner message fields in autocli as positional arguments.
 
 ### Bug Fixes
 
-* (cli) [#24330](https://github.com/cosmos/cosmos-sdk/pull/24330) Use the gogoproto merge registry as a file resolver instead of the interface registry.
 * [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
 
->>>>>>> 4215914f6 (feat(client/v2): support definitions of inner messages (cherry-pick #22890) (#24366))
 ## [v2.0.0-beta.8] - 2025-01-29
 
 * [#23544](https://github.com/cosmos/cosmos-sdk/pull/23544) Support map in queries for autocli.

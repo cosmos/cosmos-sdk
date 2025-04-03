@@ -1,11 +1,11 @@
 package internal
 
 import (
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
 const (

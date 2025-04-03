@@ -2,8 +2,9 @@ package math
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func FuzzLegacyNewDecFromStr(f *testing.F) {
@@ -83,6 +84,5 @@ func FuzzLegacyDecMarshalUnmarshal(f *testing.F) {
 
 		// Check that the round-trip value is equal.
 		require.True(t, dec.Equal(decoded), fmt.Sprintf("JSON round-trip mismatch for input %q: original %q, decoded %q", input, dec.String(), decoded.String()))
-
 	})
 }

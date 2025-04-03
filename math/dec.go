@@ -3,6 +3,7 @@ package math
 import (
 	"encoding/json"
 	stderrors "errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -607,12 +608,20 @@ func (x Dec) MustMul(y Dec) Dec {
 	return z
 }
 
-// MulInt multiplies a Dec value by an int64.
-// If an error occurs during the multiplication, it panics.
-func (x Dec) MulInt(y int64) Dec {
+// MulInt multiplies the decimal by an int64 and returns the result or an error.
+func (x Dec) MulInt(y int64) (Dec, error) {
 	var z Dec
 	if _, err := dec128Context.Mul(&z.dec, &x.dec, apd.New(y, 0)); err != nil {
-		panic("MulInt failed: " + err.Error())
+		return Dec{}, fmt.Errorf("MulInt failed: %w", err)
+	}
+	return z, nil
+}
+
+// MustMulInt multiplies the decimal by an int64 and panics if an error occurs.
+func (x Dec) MustMulInt(y int64) Dec {
+	z, err := x.MulInt(y)
+	if err != nil {
+		panic(err)
 	}
 	return z
 }
@@ -620,16 +629,16 @@ func (x Dec) MulInt(y int64) Dec {
 // ToLegacyDec converts a Dec value to a LegacyDec value.
 // If the conversion fails, it returns an error.
 func (x Dec) ToLegacyDec() (LegacyDec, error) {
-    coeff := x.dec.Coeff
-    i := new(big.Int)
+	coeff := x.dec.Coeff
+	i := new(big.Int)
 
-    if _, ok := i.SetString(coeff.String(), 10); !ok {
-        return LegacyDec{}, errors.Wrap(ErrInvalidDec, "failed to convert apd.BigInt to big.Int")
-    }
+	if _, ok := i.SetString(coeff.String(), 10); !ok {
+		return LegacyDec{}, errors.Wrap(ErrInvalidDec, "failed to convert apd.BigInt to big.Int")
+	}
 
-    if x.dec.Sign() == -1 {
-        i.Neg(i)
-    }
+	if x.dec.Sign() == -1 {
+		i.Neg(i)
+	}
 
-    return LegacyDec{i: i}, nil
+	return LegacyDec{i: i}, nil
 }

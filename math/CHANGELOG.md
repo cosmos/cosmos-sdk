@@ -36,7 +36,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
-## [math/v1.5.4](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.2) - 2025-04-04
+## [math/v1.5.3](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.3) - 2025-04-04
 
 * [#24185](https://github.com/cosmos/cosmos-sdk/issues/24185) Minor dependency bumps
 

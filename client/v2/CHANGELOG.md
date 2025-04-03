@@ -36,14 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<<<<<<< HEAD
-=======
 ### Bug Fixes
 
-* (cli) [#24330](https://github.com/cosmos/cosmos-sdk/pull/24330) Use the gogoproto merge registry as a file resolver instead of the interface registry.
 * [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
 
->>>>>>> df0778984 (fix(client/v2): *big.Int unmarshal (cherry-pick #21853) (#24361))
 ## [v2.0.0-beta.8] - 2025-01-29
 
 * [#23544](https://github.com/cosmos/cosmos-sdk/pull/23544) Support map in queries for autocli.

@@ -51,6 +51,7 @@ func TestMsg(t *testing.T) {
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--generate-only",
 		"--output", "json",
+		"--chain-id", "test-chain",
 	)
 	assert.NilError(t, err)
 	golden.Assert(t, out.String(), "msg-output.golden")

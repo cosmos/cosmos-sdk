@@ -70,7 +70,7 @@ var (
 
 func init() {
 	closeFns := []func() error{}
-	for i := 0; i < 200; i++ {
+	for range 200 {
 		_, port, closeFn, err := FreeTCPAddr()
 		if err != nil {
 			panic(err)
@@ -304,8 +304,8 @@ type (
 	// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
 	// This is not to be confused with logging that may happen at an individual node or validator level
 	Logger interface {
-		Log(args ...interface{})
-		Logf(format string, args ...interface{})
+		Log(args ...any)
+		Logf(format string, args ...any)
 	}
 )
 
@@ -329,12 +329,12 @@ type CLILogger struct {
 }
 
 // Log logs given args.
-func (s CLILogger) Log(args ...interface{}) {
+func (s CLILogger) Log(args ...any) {
 	s.cmd.Println(args...)
 }
 
 // Logf logs given args according to a format specifier.
-func (s CLILogger) Logf(format string, args ...interface{}) {
+func (s CLILogger) Logf(format string, args ...any) {
 	s.cmd.Printf(format, args...)
 }
 
@@ -371,7 +371,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	buf := bufio.NewReader(os.Stdin)
 
 	// generate private keys, node IDs, and initial transactions
-	for i := 0; i < cfg.NumValidators; i++ {
+	for i := range cfg.NumValidators {
 		appCfg := srvconfig.DefaultConfig()
 		appCfg.Pruning = cfg.PruningStrategy
 		appCfg.MinGasPrices = cfg.MinGasPrices
@@ -757,7 +757,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 // It will do this until the function returns a nil error or until the number of
 // blocks has been reached.
 func (n *Network) RetryForBlocks(retryFunc func() error, blocks int) error {
-	for i := 0; i < blocks; i++ {
+	for i := range blocks {
 		_ = n.WaitForNextBlock() // ignore the error as we use the retry for validation
 		err := retryFunc()
 		if err == nil {

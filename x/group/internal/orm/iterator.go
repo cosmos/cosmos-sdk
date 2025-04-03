@@ -225,7 +225,7 @@ func Paginate(
 // *[]Model Because of Go's type system, using []Model type would not work for us.
 // Instead we use a placeholder type and the validation is done during the
 // runtime.
-type ModelSlicePtr interface{}
+type ModelSlicePtr any
 
 // ReadAll consumes all values for the iterator and stores them in a new slice at the passed ModelSlicePtr.
 // The slice can be empty when the iterator does not return any values but not nil. The iterator

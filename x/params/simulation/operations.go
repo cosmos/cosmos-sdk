@@ -35,7 +35,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.LegacyParam
 		// perm here takes at most len(paramChangePool) calls to random
 		paramChoices := r.Perm(len(paramChangePool))
 
-		for i := 0; i < numChanges; i++ {
+		for i := range numChanges {
 			spc := paramChangePool[paramChoices[i]]
 			// add a new distinct parameter to the set of changes
 			paramChanges[i] = proposal.NewParamChange(spc.Subspace(), spc.Key(), spc.SimValue()(r))

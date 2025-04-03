@@ -10,5 +10,6 @@ The fork include the following changes compared to upstream:
 * Disable heavy bank migrations
 * Backport improvements for DOS protection for x/authz
 * Support historical account number queries 
+* Support [CIP-30](https://github.com/celestiaorg/CIPs/blob/main/cips/cip-030.md)
 
 Read the [CHANGELOG.md](CHANGELOG.md) for more details.

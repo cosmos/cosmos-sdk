@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/simapp"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
+	memiavlcfg "cosmossdk.io/store/memiavl/config"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -58,7 +59,9 @@ func initAppConfig() (string, interface{}) {
 	type CustomAppConfig struct {
 		serverconfig.Config `mapstructure:",squash"`
 
-		Custom CustomConfig `mapstructure:"custom"`
+		Custom    CustomConfig               `mapstructure:"custom"`
+		MemIAVL   memiavlcfg.MemIAVLConfig   `mapstructure:"memiavl"`
+		VersionDB memiavlcfg.VersionDBConfig `mapstructure:"versiondb"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -81,7 +84,9 @@ func initAppConfig() (string, interface{}) {
 
 	// Now we set the custom config default values.
 	customAppConfig := CustomAppConfig{
-		Config: *srvCfg,
+		Config:    *srvCfg,
+		MemIAVL:   memiavlcfg.DefaultMemIAVLConfig(),
+		VersionDB: memiavlcfg.DefaultVersionDBConfig(),
 		Custom: CustomConfig{
 			CustomField: "anything",
 		},
@@ -94,7 +99,9 @@ func initAppConfig() (string, interface{}) {
 [custom]
 # That field will be parsed by server.InterceptConfigsPreRunHandler and held by viper.
 # Do not forget to add quotes around the value if it is a string.
-custom-field = "{{ .Custom.CustomField }}"`
+custom-field = "{{ .Custom.CustomField }}"` +
+		memiavlcfg.DefaultConfigTemplate +
+		memiavlcfg.DefaultVersionDBTemplate
 
 	return customAppTemplate, customAppConfig
 }

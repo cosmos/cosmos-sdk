@@ -38,7 +38,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server, skipCheckHeader bool) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
-	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	interceptor := func(grpcCtx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		// If there's some metadata in the context, retrieve it.
 		md, ok := metadata.FromIncomingContext(grpcCtx)
 		if !ok {
@@ -106,7 +106,7 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 			methodHandler := method.Handler
 			newMethods[i] = grpc.MethodDesc{
 				MethodName: method.MethodName,
-				Handler: func(srv interface{}, ctx context.Context, dec func(interface{}) error, _ grpc.UnaryServerInterceptor) (interface{}, error) {
+				Handler: func(srv any, ctx context.Context, dec func(any) error, _ grpc.UnaryServerInterceptor) (any, error) {
 					return methodHandler(srv, ctx, dec, grpcmiddleware.ChainUnaryServer(
 						grpcrecovery.UnaryServerInterceptor(),
 						interceptor,

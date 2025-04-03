@@ -17,7 +17,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	)
 }
 
-func validateConstantFee(i interface{}) error {
+func validateConstantFee(i any) error {
 	v, ok := i.(sdk.Coin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

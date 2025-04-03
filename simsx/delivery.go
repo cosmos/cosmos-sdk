@@ -65,7 +65,7 @@ func DeliverSimsMsg(
 	}
 	accountNumbers := make([]uint64, len(senders))
 	sequenceNumbers := make([]uint64, len(senders))
-	for i := 0; i < len(senders); i++ {
+	for i := range senders {
 		acc := ak.GetAccount(ctx, senders[i].Address)
 		accountNumbers[i] = acc.GetAccountNumber()
 		sequenceNumbers[i] = acc.GetSequence()

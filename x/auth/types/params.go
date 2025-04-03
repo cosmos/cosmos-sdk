@@ -47,7 +47,7 @@ func (p Params) SigVerifyCostSecp256r1() uint64 {
 	return p.SigVerifyCostSecp256k1 / 2
 }
 
-func validateTxSigLimit(i interface{}) error {
+func validateTxSigLimit(i any) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -60,7 +60,7 @@ func validateTxSigLimit(i interface{}) error {
 	return nil
 }
 
-func validateSigVerifyCostED25519(i interface{}) error {
+func validateSigVerifyCostED25519(i any) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -73,7 +73,7 @@ func validateSigVerifyCostED25519(i interface{}) error {
 	return nil
 }
 
-func validateSigVerifyCostSecp256k1(i interface{}) error {
+func validateSigVerifyCostSecp256k1(i any) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -86,7 +86,7 @@ func validateSigVerifyCostSecp256k1(i interface{}) error {
 	return nil
 }
 
-func validateMaxMemoCharacters(i interface{}) error {
+func validateMaxMemoCharacters(i any) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -99,7 +99,7 @@ func validateMaxMemoCharacters(i interface{}) error {
 	return nil
 }
 
-func validateTxSizeCostPerByte(i interface{}) error {
+func validateTxSizeCostPerByte(i any) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

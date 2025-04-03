@@ -309,7 +309,7 @@ func (s *serverReflectionServer) fileDescEncodingByFilename(name string, sentFil
 // For SupportPackageIsVersion4, m is the name of the proto file, we
 // call proto.FileDescriptor to get the byte slice.
 // For SupportPackageIsVersion3, m is a byte slice itself.
-func parseMetadata(meta interface{}) ([]byte, bool) {
+func parseMetadata(meta any) ([]byte, bool) {
 	// Check if meta is the file name.
 	if fileNameForMeta, ok := meta.(string); ok {
 		return getFileDescriptor(fileNameForMeta), true

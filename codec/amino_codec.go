@@ -104,7 +104,7 @@ func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 //
 //	var x MyInterface
 //	err := cdc.UnmarshalInterface(bz, &x)
-func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
+func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr any) error {
 	return ac.LegacyAmino.Unmarshal(bz, ptr)
 }
 
@@ -126,6 +126,6 @@ func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
 //
 //	var x MyInterface
 //	err := cdc.UnmarshalInterfaceJSON(bz, &x)
-func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
+func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr any) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }

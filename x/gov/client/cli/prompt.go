@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/core/address"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -20,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/prompt"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -83,17 +83,17 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		}
 
 		// create prompts
-		prompt := promptui.Prompt{
-			Label:    fmt.Sprintf("Enter %s %s", namePrefix, strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))),
-			Validate: client.ValidatePromptNotEmpty,
+		p := promptui.Prompt{
+			Label:    fmt.Sprintf("Enter %s %s", namePrefix, strings.ToLower(prompt.CamelCaseToString(v.Type().Field(i).Name))),
+			Validate: prompt.ValidatePromptNotEmpty,
 		}
 
 		fieldName := strings.ToLower(v.Type().Field(i).Name)
 
 		if strings.EqualFold(fieldName, "authority") {
 			// pre-fill with gov address
-			prompt.Default = authtypes.NewModuleAddress(types.ModuleName).String()
-			prompt.Validate = client.ValidatePromptAddress
+			p.Default = authtypes.NewModuleAddress(types.ModuleName).String()
+			p.Validate = prompt.ValidatePromptAddress
 		}
 
 		// TODO(@julienrbrt) use scalar annotation instead of dumb string name matching
@@ -104,10 +104,10 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 			strings.Contains(fieldName, "granter") ||
 			strings.Contains(fieldName, "grantee") ||
 			strings.Contains(fieldName, "recipient") {
-			prompt.Validate = client.ValidatePromptAddress
+			p.Validate = prompt.ValidatePromptAddress
 		}
 
-		result, err := prompt.Run()
+		result, err := p.Run()
 		if err != nil {
 			return data, fmt.Errorf("failed to prompt for %s: %w", fieldName, err)
 		}
@@ -155,7 +155,13 @@ type proposalType struct {
 }
 
 // Prompt the proposal type values and return the proposal and its metadata
-func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec, validatorAddressCodec, consensusAddressCodec address.Codec) (*proposal, types.ProposalMetadata, error) {
+func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*proposal, types.ProposalMetadata, error) {
+	// before codecs are not more in context, we re-create them from global SDK config
+	cfg := sdk.GetConfig()
+	addressCodec := address.NewBech32Codec(cfg.GetBech32AccountAddrPrefix())
+	validatorAddressCodec := address.NewBech32Codec(cfg.GetBech32ValidatorAddrPrefix())
+	consensusAddressCodec := address.NewBech32Codec(cfg.GetBech32ConsensusAddrPrefix())
+
 	metadata, err := PromptMetadata(skipMetadata)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
@@ -168,7 +174,7 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec, 
 	}
 
 	// set deposit
-	proposal.Deposit, err = prompt.PromptString("Enter proposal deposit", ValidatePromptCoins)
+	proposal.Deposit, err = prompt.PromptString("Enter proposal deposit", prompt.ValidatePromptCoins)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal deposit: %w", err)
 	}
@@ -190,7 +196,13 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec, 
 	}
 
 	prompt.SetDefaults(newMsg, map[string]interface{}{"authority": govAddrStr})
-	result, err := prompt.PromptMessage(addressCodec, validatorAddressCodec, consensusAddressCodec, "msg", newMsg)
+	result, err := prompt.PromptMessage(
+		addressCodec,
+		validatorAddressCodec,
+		consensusAddressCodec,
+		"msg",
+		newMsg,
+	)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal message: %w", err)
 	}
@@ -235,12 +247,12 @@ func PromptMetadata(skip bool) (types.ProposalMetadata, error) {
 		return metadata, nil
 	}
 
-	title, err := prompt.PromptString("Enter proposal title", ValidatePromptNotEmpty)
+	title, err := prompt.PromptString("Enter proposal title", prompt.ValidatePromptNotEmpty)
 	if err != nil {
 		return types.ProposalMetadata{}, fmt.Errorf("failed to set proposal title: %w", err)
 	}
 
-	summary, err := prompt.PromptString("Enter proposal summary", ValidatePromptNotEmpty)
+	summary, err := prompt.PromptString("Enter proposal summary", prompt.ValidatePromptNotEmpty)
 	if err != nil {
 		return types.ProposalMetadata{}, fmt.Errorf("failed to set proposal summary: %w", err)
 	}
@@ -297,7 +309,7 @@ func NewCmdDraftProposal() *cobra.Command {
 
 			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
 
-			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt, clientCtx.AddressCodec, clientCtx.ValidatorAddressCodec, clientCtx.ConsensusAddressCodec)
+			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt)
 			if err != nil {
 				return err
 			}

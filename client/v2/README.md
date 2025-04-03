@@ -110,7 +110,7 @@ This field is automatically filled when using the `--from` flag or defining the 
 AutoCLI currently supports only one signer per transaction.
 :::
 
-## Module Wiring & Customization
+## Module wiring & Customization
 
 The `AutoCLIOptions()` method on your module allows to specify custom commands, sub-commands or flags for each service, as it was a `cobra.Command` instance, within the `RpcCommandOptions` struct. Defining such options will customize the behavior of the `autocli` command generation, which by default generates a command for each method in your gRPC service.
 
@@ -125,6 +125,11 @@ The `AutoCLIOptions()` method on your module allows to specify custom commands, 
   },
 }
 ```
+
+:::tip
+AutoCLI can create a gov proposal of any tx by simply setting the `GovProposal` field to `true` in the `autocli.RpcCommandOptions` struct.
+Users can however use the `--no-proposal` flag to disable the proposal creation (which is useful if the authority isn't the gov module on a chain).
+:::
 
 ### Specifying Subcommands
 

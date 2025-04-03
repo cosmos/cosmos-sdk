@@ -39,7 +39,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 ## [math/v1.5.2](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.2) - 2025-03-31
 
 ### Features
-
+* [#24367](https://github.com/cosmos/cosmos-sdk/pull/24367) feat(math/Dec): Add rounding functions Floor, Ceil, RoundToIntegralValue, RoundToIntegralExact.
 * [#24343](https://github.com/cosmos/cosmos-sdk/pull/24343) feat(math/Dec): Add comparison and utility APIs MinDec, MaxDec, Neg(), Abs(), GT(), GTE(), LT(), LTE().
 * [#24229](https://github.com/cosmos/cosmos-sdk/pull/24229) Add `DecFromLegacyDec` migration function.
  

@@ -8,17 +8,17 @@ import (
 	compress_gzip "compress/gzip"
 	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
-	types3 "github.com/cometbft/cometbft/abci/types"
+	types2 "github.com/cometbft/cometbft/abci/types"
 	types "github.com/cometbft/cometbft/proto/tendermint/types"
 	_ "github.com/cosmos/cosmos-proto"
-	types1 "github.com/cosmos/cosmos-sdk/codec/types"
-	types2 "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	github_com_cosmos_gogoproto_proto "github.com/cosmos/gogoproto/proto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_protoc_gen_gogo_descriptor "github.com/cosmos/gogoproto/protoc-gen-gogo/descriptor"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
@@ -350,7 +350,7 @@ type Validator struct {
 	// operator_address defines the address of the validator's operator; bech encoded in JSON.
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
 	// consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
-	ConsensusPubkey *types1.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
+	ConsensusPubkey *any.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
 	// jailed defined whether the validator has been jailed from bonded status or not.
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// status is the validator status (bonded/unbonding/unbonded).
@@ -1004,7 +1004,7 @@ func (m *Params) GetBondDenom() string {
 // balance in addition to shares which is more suitable for client responses.
 type DelegationResponse struct {
 	Delegation Delegation  `protobuf:"bytes,1,opt,name=delegation,proto3" json:"delegation"`
-	Balance    types2.Coin `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance"`
+	Balance    types1.Coin `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance"`
 }
 
 func (m *DelegationResponse) Reset()         { *m = DelegationResponse{} }
@@ -1047,11 +1047,11 @@ func (m *DelegationResponse) GetDelegation() Delegation {
 	return Delegation{}
 }
 
-func (m *DelegationResponse) GetBalance() types2.Coin {
+func (m *DelegationResponse) GetBalance() types1.Coin {
 	if m != nil {
 		return m.Balance
 	}
-	return types2.Coin{}
+	return types1.Coin{}
 }
 
 // RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
@@ -1200,7 +1200,7 @@ var xxx_messageInfo_Pool proto.InternalMessageInfo
 // ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
 // TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
 type ValidatorUpdates struct {
-	Updates []types3.ValidatorUpdate `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates"`
+	Updates []types2.ValidatorUpdate `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates"`
 }
 
 func (m *ValidatorUpdates) Reset()         { *m = ValidatorUpdates{} }
@@ -1236,7 +1236,7 @@ func (m *ValidatorUpdates) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorUpdates proto.InternalMessageInfo
 
-func (m *ValidatorUpdates) GetUpdates() []types3.ValidatorUpdate {
+func (m *ValidatorUpdates) GetUpdates() []types2.ValidatorUpdate {
 	if m != nil {
 		return m.Updates
 	}
@@ -4686,7 +4686,7 @@ func (m *Validator) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.ConsensusPubkey == nil {
-				m.ConsensusPubkey = &types1.Any{}
+				m.ConsensusPubkey = &any.Any{}
 			}
 			if err := m.ConsensusPubkey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -7201,7 +7201,7 @@ func (m *ValidatorUpdates) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Updates = append(m.Updates, types3.ValidatorUpdate{})
+			m.Updates = append(m.Updates, types2.ValidatorUpdate{})
 			if err := m.Updates[len(m.Updates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

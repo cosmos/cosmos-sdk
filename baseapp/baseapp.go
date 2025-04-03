@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/cockroachdb/errors"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"

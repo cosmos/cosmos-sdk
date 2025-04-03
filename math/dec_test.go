@@ -1939,38 +1939,49 @@ func TestAbs(t *testing.T) {
 
 func TestMustAdd(t *testing.T) {
 	specs := map[string]struct {
-		x   Dec
-		y   Dec
-		exp Dec
+		x         Dec
+		y         Dec
+		exp       Dec
+		expPanics bool
 	}{
 		"0 + 0": {
-			x:   NewDecFromInt64(0),
-			y:   NewDecFromInt64(0),
-			exp: NewDecFromInt64(0),
+			x:         NewDecFromInt64(0),
+			y:         NewDecFromInt64(0),
+			exp:       NewDecFromInt64(0),
+			expPanics: false,
 		},
 		"123 + 456": {
-			x:   NewDecFromInt64(123),
-			y:   NewDecFromInt64(456),
-			exp: NewDecFromInt64(579),
+			x:         NewDecFromInt64(123),
+			y:         NewDecFromInt64(456),
+			exp:       NewDecFromInt64(579),
+			expPanics: false,
 		},
 		"0 + (-100)": {
-			x:   NewDecFromInt64(0),
-			y:   NewDecFromInt64(-100),
-			exp: NewDecFromInt64(-100),
+			x:         NewDecFromInt64(0),
+			y:         NewDecFromInt64(-100),
+			exp:       NewDecFromInt64(-100),
+			expPanics: false,
+		},
+		"1e100000 + 9e900000 -> panic": {
+			x:         NewDecWithExp(1, 100_000),
+			y:         NewDecWithExp(9, 900_000),
+			expPanics: true,
 		},
 	}
 
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got := spec.x.MustAdd(spec.y)
-			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+			if spec.expPanics {
+				assert.Panics(t, func() { spec.x.MustAdd(spec.y) }, "Expected MustAdd to panic on overflow")
+				return
+
+			} else {
+				got := spec.x.MustAdd(spec.y)
+				assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+			}
+
 		})
 	}
-	t.Run("panic on invalid addition", func(t *testing.T) {
-		x := NewDecWithExp(1, 100_001)
-		y := NewDecFromInt64(1)
-		assert.Panics(t, func() { x.MustAdd(y) }, "Expected MustAdd to panic on overflow")
-	})
 }
 
 func TestMustSub(t *testing.T) {

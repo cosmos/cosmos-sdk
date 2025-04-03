@@ -2,13 +2,14 @@ package baseapp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"maps"
 	"math"
 	"slices"
 	"strconv"
 	"sync"
+
+	"github.com/cockroachdb/errors"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"

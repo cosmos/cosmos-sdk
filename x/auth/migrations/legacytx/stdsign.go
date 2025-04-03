@@ -109,7 +109,7 @@ func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
 }
 
 // MarshalYAML returns the YAML representation of the signature.
-func (ss StdSignature) MarshalYAML() (interface{}, error) {
+func (ss StdSignature) MarshalYAML() (any, error) {
 	pk := ""
 	if ss.PubKey != nil {
 		pk = ss.String()
@@ -168,7 +168,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 	n := multiSig.BitArray.Count()
 	signatures := multisig.NewMultisig(n)
 	sigIdx := 0
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if bitArray.GetIndex(i) {
 			data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
 			if err != nil {

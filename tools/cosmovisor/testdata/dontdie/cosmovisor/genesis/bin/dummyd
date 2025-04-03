@@ -5,7 +5,7 @@ warn() {
     echo "WARN Need Flush"
 }
 
-trap warn INT
+trap warn TERM
 echo Genesis $@
 sleep 1
 test -z $4 && exit 1001

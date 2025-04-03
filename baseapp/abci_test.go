@@ -635,10 +635,10 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	nBlocks := 3
 	txPerHeight := 5
 
-	for blockN := 0; blockN < nBlocks; blockN++ {
+	for blockN := range nBlocks {
 
 		txs := [][]byte{}
-		for i := 0; i < txPerHeight; i++ {
+		for i := range txPerHeight {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(t, suite.txConfig, counter, counter)
 
@@ -654,7 +654,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		for i := 0; i < txPerHeight; i++ {
+		for i := range txPerHeight {
 			counter := int64(blockN*txPerHeight + i)
 			require.True(t, res.TxResults[i].IsOK(), fmt.Sprintf("%v", res))
 
@@ -762,7 +762,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{gasConsumed})
 
 	nBlocks := 3
-	for blockN := 0; blockN < nBlocks; blockN++ {
+	for blockN := range nBlocks {
 		count := int64(blockN + 1)
 
 		tx := newTxCounter(t, suite.txConfig, count, count)
@@ -1093,7 +1093,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		require.NoError(t, err)
 
 		// execute the transaction multiple times
-		for j := 0; j < tc.numDelivers; j++ {
+		for j := range tc.numDelivers {
 
 			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
@@ -1594,7 +1594,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		tx2 := newTxCounter(t, suite.txConfig, int64(i), int64(i))
 		err := pool.Insert(sdk.Context{}, tx2)
 		require.NoError(t, err)
@@ -1970,7 +1970,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 
 	// Let's pretend something happened and PrepareProposal gets called many
 	// times, this must be safe to do.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 		require.NoError(t, err)
 		require.Equal(t, 0, len(resPrepareProposal.Txs))
@@ -1984,7 +1984,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 
 	// Let's pretend something happened and ProcessProposal gets called many
 	// times, this must be safe to do.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 		require.NoError(t, err)
 		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
@@ -2080,7 +2080,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	numVals := 12
 	privKeys := make([]secp256k1.PrivKey, numVals)
 	vals := make([]sdk.ConsAddress, numVals)
-	for i := 0; i < numVals; i++ {
+	for i := range numVals {
 		privKey := secp256k1.GenPrivKey()
 		privKeys[i] = privKey
 
@@ -2190,7 +2190,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	allVEs := [][]byte{}
 	// simulate getting 10 vote extensions from 10 validators
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		ve, err := suite.baseApp.ExtendVote(context.TODO(), &abci.RequestExtendVote{Height: 1})
 		require.NoError(t, err)
 		allVEs = append(allVEs, ve.VoteExtension)
@@ -2375,7 +2375,7 @@ func TestOptimisticExecution(t *testing.T) {
 	require.NoError(t, err)
 
 	// run 50 blocks
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		tx := newTxCounter(t, suite.txConfig, 0, 1)
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)

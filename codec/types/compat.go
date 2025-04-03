@@ -19,5 +19,5 @@ type AminoJSONUnpacker = gogoany.AminoJSONUnpacker
 // AminoJSONPacker is an alias for github.com/cosmos/gogoproto/types/any.AminoJSONPacker.
 type AminoJSONPacker = gogoany.AminoJSONPacker
 
-// ProtoUnpacker is an alias for github.com/cosmos/gogoproto/types/any.ProtoJSONPacker.
+// ProtoJSONPacker is an alias for github.com/cosmos/gogoproto/types/any.ProtoJSONPacker.
 type ProtoJSONPacker = gogoany.ProtoJSONPacker

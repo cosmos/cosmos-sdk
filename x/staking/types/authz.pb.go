@@ -27,8 +27,6 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AuthorizationType defines the type of staking module authorization type
-//
-// Since: cosmos-sdk 0.43
 type AuthorizationType int32
 
 const (

@@ -145,10 +145,10 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 
 		_, _, addr := testdata.KeyTestPubAddr()
 		txs := [][]byte{}
-		for txNum := 0; txNum < cfg.blockTxs; txNum++ {
+		for range cfg.blockTxs {
 			var msgs []sdk.Msg
-			for msgNum := 0; msgNum < 100; msgNum++ {
-				key := []byte(fmt.Sprintf("%v", keyCounter))
+			for range 100 {
+				key := fmt.Appendf(nil, "%v", keyCounter)
 				value := make([]byte, 10000)
 
 				_, err := r.Read(value)
@@ -539,7 +539,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
+	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj any) error {
 		err, ok := recoveryObj.(error)
 		if !ok {
 			return nil

@@ -49,7 +49,7 @@ func NewSendEnabled(denom string, sendEnabled bool) *SendEnabled {
 }
 
 // validateIsBool is used by the x/params module to validate that a thing is a bool.
-func validateIsBool(i interface{}) error {
+func validateIsBool(i any) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

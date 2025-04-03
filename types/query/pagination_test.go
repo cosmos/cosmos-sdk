@@ -112,7 +112,7 @@ func (s *paginationTestSuite) TestPagination() {
 
 	var balances sdk.Coins
 
-	for i := 0; i < numBalances; i++ {
+	for i := range numBalances {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
@@ -220,7 +220,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 
 	var balances sdk.Coins
 
-	for i := 0; i < numBalances; i++ {
+	for i := range numBalances {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
@@ -339,7 +339,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 func (s *paginationTestSuite) TestPaginate() {
 	var balances sdk.Coins
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}

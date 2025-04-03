@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 	}
 
 	for tcIndex, tc := range tests {
-		for epochActionSelector := 0; epochActionSelector < 2; epochActionSelector++ {
+		for epochActionSelector := range 2 {
 			s.SetupTest()
 			hookRefs := []types.EpochHooks{}
 
@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 				}
 			}
 
-			for i := 0; i < len(hooks); i++ {
+			for i := range hooks {
 				epochHook := hookRefs[i].(*dummyEpochHook)
 				s.Require().Equal(tc.expectedCounterValues[i], epochHook.successCounter, "test case index %d", tcIndex)
 			}

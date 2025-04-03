@@ -579,7 +579,7 @@ func MaxDec(x, y Dec) Dec {
 
 // Floor returns the largest integer less than or equal to x.
 func (x Dec) Floor() (Dec, error) {
-	if x.dec.Exponent > 9999 || x.dec.Exponent < -9999 { 
+	if x.dec.Exponent > MaxExponent || x.dec.Exponent < MinExponent { 
 		return Dec{}, ErrInvalidDec.Wrap("exponent out of range")
 	}
 
@@ -593,7 +593,7 @@ func (x Dec) Floor() (Dec, error) {
 
 // Ceil returns the smallest integer greater than or equal to x.
 func (x Dec) Ceil() (Dec, error) {
-	if x.dec.Exponent > 9999 || x.dec.Exponent < -9999 { 
+	if x.dec.Exponent > MaxExponent || x.dec.Exponent < MinExponent { 
 		return Dec{}, ErrInvalidDec.Wrap("exponent out of range")
 	}
 
@@ -606,7 +606,7 @@ func (x Dec) Ceil() (Dec, error) {
 
 // RoundToIntegralValue rounds x to the nearest integer, with ties rounding to even.
 func (x Dec) RoundToIntegralValue() (Dec, error) {
-	if x.dec.Exponent > 9999 || x.dec.Exponent < -9999 { 
+	if x.dec.Exponent > MaxExponent || x.dec.Exponent < MinExponent { 
 		return Dec{}, ErrInvalidDec.Wrap("exponent out of range")
 	}
 
@@ -619,7 +619,7 @@ func (x Dec) RoundToIntegralValue() (Dec, error) {
 
 // RoundToIntegralExact rounds x to the nearest integer, with ties rounding away from zero.
 func (x Dec) RoundToIntegralExact() (Dec, error) {
-	if x.dec.Exponent > 9999 || x.dec.Exponent < -9999 { 
+	if x.dec.Exponent > MaxExponent || x.dec.Exponent < MinExponent { 
 		return Dec{}, ErrInvalidDec.Wrap("exponent out of range")
 	}
 

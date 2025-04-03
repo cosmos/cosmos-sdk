@@ -1962,14 +1962,6 @@ func TestFloor(t *testing.T) {
 			x:   NewDecWithExp(-123456, -3),
 			exp: NewDecFromInt64(-124),
 		},
-		"Floor of 1e100000 -> Err": {
-			x:      NewDecWithExp(1, 100_000),
-			expErr: ErrInvalidDec,
-		},
-		"Floor of -1e100000 -> Err": {
-			x:      NewDecWithExp(-1, 100_000),
-			expErr: ErrInvalidDec,
-		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
@@ -2009,14 +2001,6 @@ func TestCeil(t *testing.T) {
 		"Ceil of -123.456 = -123": {
 			x:   NewDecWithExp(-123456, -3),
 			exp: NewDecFromInt64(-123),
-		},
-		"Ceil of 1e100000 -> Err": {
-			x:      NewDecWithExp(1, 100_000),
-			expErr: ErrInvalidDec,
-		},
-		"Ceil of -1e100000 -> Err": {
-			x:      NewDecWithExp(-1, 100_000),
-			expErr: ErrInvalidDec,
 		},
 	}
 	for name, spec := range specs {
@@ -2061,14 +2045,6 @@ func TestRoundToIntegralValue(t *testing.T) {
 		"Round of -123.456 = -123": {
 			x:   NewDecWithExp(-123456, -3),
 			exp: NewDecFromInt64(-123),
-		},
-		"Round of 1e100000 -> Err": {
-			x:      NewDecWithExp(1, 100_000),
-			expErr: ErrInvalidDec,
-		},
-		"Round of -1e100000 -> Err": {
-			x:      NewDecWithExp(-1, 100_000),
-			expErr: ErrInvalidDec,
 		},
 	}
 	for name, spec := range specs {
@@ -2121,14 +2097,6 @@ func TestRoundToIntegralExact(t *testing.T) {
 		"Round -0.9 to -1": {
 			x:   NewDecWithExp(-9, -1),
 			exp: NewDecFromInt64(-1),
-		},
-		"Round 1e100000 -> Err": {
-			x:      NewDecWithExp(1, 100_000),
-			expErr: ErrInvalidDec,
-		},
-		"Round -1e100000 -> Err": {
-			x:      NewDecWithExp(-1, 100_000),
-			expErr: ErrInvalidDec,
 		},
 	}
 

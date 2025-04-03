@@ -1936,7 +1936,7 @@ func TestAbs(t *testing.T) {
 	}
 }
 
-func TestMulInt(t *testing.T) {
+func TestMulRawInt(t *testing.T) {
 	specs := map[string]struct {
 		x      Dec
 		y      int64
@@ -1970,14 +1970,14 @@ func TestMulInt(t *testing.T) {
 
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got, err := spec.x.MulInt(spec.y)
+			got, err := spec.x.MulRawInt(spec.y)
 
 			if spec.expErr {
-				assert.Error(t, err, "Expected MulInt to return an error on overflow")
+				assert.Error(t, err, "Expected MulRawInt to return an error on overflow")
 				return
 			}
 
-			require.NoError(t, err, "MulInt should not return an error")
+			require.NoError(t, err, "MulRawInt should not return an error")
 			assert.Equal(t, spec.exp, got, "x: %s, y: %d", spec.x.String(), spec.y)
 		})
 	}

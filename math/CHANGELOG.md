@@ -40,7 +40,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ### Features
 
-* [#24352](https://github.com/cosmos/cosmos-sdk/pull/24352) feat(math/Dec): Add Arithmetic Helpers MulInt, ToLegacyDec
+* [#24352](https://github.com/cosmos/cosmos-sdk/pull/24352) feat(math/Dec): Add Arithmetic Helpers MulRawInt, ToLegacyDec
 * [#24343](https://github.com/cosmos/cosmos-sdk/pull/24343) feat(math/Dec): Add comparison and utility APIs MinDec, MaxDec, Neg(), Abs(), GT(), GTE(), LT(), LTE().
 * [#24229](https://github.com/cosmos/cosmos-sdk/pull/24229) Add `DecFromLegacyDec` migration function.
  

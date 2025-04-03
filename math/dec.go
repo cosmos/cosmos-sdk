@@ -578,11 +578,11 @@ func MaxDec(x, y Dec) Dec {
 	return y
 }
 
-// MulInt multiplies the decimal by an int64 and returns the result or an error.
-func (x Dec) MulInt(y int64) (Dec, error) {
+// MulRawInt multiplies the decimal by an int64 and returns the result or an error.
+func (x Dec) MulRawInt(y int64) (Dec, error) {
 	var z Dec
 	if _, err := dec128Context.Mul(&z.dec, &x.dec, apd.New(y, 0)); err != nil {
-		return Dec{}, fmt.Errorf("MulInt failed: %w", err)
+		return Dec{}, fmt.Errorf("MulRawInt failed: %w", err)
 	}
 	return z, nil
 }

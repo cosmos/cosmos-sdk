@@ -163,9 +163,9 @@ func TestGlobalLabelsEventsMarshalling(t *testing.T) {
 
 func TestGlobalLabelsWriteRead(t *testing.T) {
 	expected := [][]string{{"labelname3", "labelvalue3"}, {"labelname4", "labelvalue4"}}
-	expectedRaw := make([]interface{}, len(expected))
+	expectedRaw := make([]any, len(expected))
 	for i, exp := range expected {
-		pair := make([]interface{}, len(exp))
+		pair := make([]any, len(exp))
 		for j, s := range exp {
 			pair[j] = s
 		}

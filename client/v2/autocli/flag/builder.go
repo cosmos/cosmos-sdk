@@ -28,6 +28,7 @@ const (
 	ValidatorAddressStringScalarType = "cosmos.ValidatorAddressString"
 	ConsensusAddressStringScalarType = "cosmos.ConsensusAddressString"
 	PubkeyScalarType                 = "cosmos.Pubkey"
+	DecScalarType                    = "cosmos.Dec"
 )
 
 // Builder manages options for building pflag flags for protobuf messages.
@@ -70,6 +71,7 @@ func (b *Builder) init() {
 		b.scalarFlagTypes[ValidatorAddressStringScalarType] = validatorAddressStringType{}
 		b.scalarFlagTypes[ConsensusAddressStringScalarType] = consensusAddressStringType{}
 		b.scalarFlagTypes[PubkeyScalarType] = pubkeyType{}
+		b.scalarFlagTypes[DecScalarType] = decType{}
 	}
 }
 
@@ -246,10 +248,10 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 
 		flagOpts := commandOptions.FlagOptions[fieldName]
 		name, hasValue, err := b.addFieldFlag(ctx, flagSet, field, flagOpts, options)
-		flagOptsByFlagName[name] = flagOpts
 		if err != nil {
 			return nil, err
 		}
+		flagOptsByFlagName[name] = flagOpts
 
 		messageBinder.flagBindings = append(messageBinder.flagBindings, fieldBinding{
 			hasValue: hasValue,

@@ -1,7 +1,7 @@
 # Cosmos SDK Math
 
 This library contains types for preforming arbitrary precision integer and decimal arithmetic
-which is essentially for performing accurate financial calculations. The main types provided
+which is essential for performing accurate financial calculations. The main types provided
 are `Int`, `Uint`, `Dec` and `LegacyDec`.
 
 All of these types can be used as [gogoproto custom types](https://pkg.go.dev/github.com/cosmos/gogoproto/gogoproto).

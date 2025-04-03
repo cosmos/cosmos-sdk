@@ -460,9 +460,9 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())
 }
 
-type mapGetter map[string]interface{}
+type mapGetter map[string]any
 
-func (m mapGetter) Get(key string) interface{} {
+func (m mapGetter) Get(key string) any {
 	return m[key]
 }
 

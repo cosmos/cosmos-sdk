@@ -26,7 +26,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	)
 }
 
-func validateDepositParams(i interface{}) error {
+func validateDepositParams(i any) error {
 	v, ok := i.(DepositParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -42,7 +42,7 @@ func validateDepositParams(i interface{}) error {
 	return nil
 }
 
-func validateTallyParams(i interface{}) error {
+func validateTallyParams(i any) error {
 	v, ok := i.(TallyParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -84,7 +84,7 @@ func validateTallyParams(i interface{}) error {
 	return nil
 }
 
-func validateVotingParams(i interface{}) error {
+func validateVotingParams(i any) error {
 	v, ok := i.(VotingParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

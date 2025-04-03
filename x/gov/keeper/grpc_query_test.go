@@ -211,7 +211,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			"request proposals with limit 3",
 			func() {
 				// create 5 test proposals
-				for i := 0; i < 5; i++ {
+				for i := range 5 {
 					govAddress := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 					testProposal := []sdk.Msg{
 						v1.NewMsgVote(govAddress, uint64(i), v1.OptionYes, ""),
@@ -313,7 +313,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				}
 
 				var proposals []*v1.Proposal
-				for i := 0; i < len(testProposals); i++ {
+				for i := range testProposals {
 					if testProposals[i].GetStatus() == v1.StatusVotingPeriod {
 						proposals = append(proposals, testProposals[i])
 					}
@@ -333,7 +333,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				}
 
 				var proposals []*v1.Proposal
-				for i := 0; i < len(testProposals); i++ {
+				for i := range testProposals {
 					if testProposals[i].GetStatus() == v1.StatusDepositPeriod {
 						proposals = append(proposals, testProposals[i])
 					}
@@ -381,7 +381,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				suite.Require().NoError(err)
 
 				suite.Require().Len(proposals.GetProposals(), len(expRes.GetProposals()))
-				for i := 0; i < len(proposals.GetProposals()); i++ {
+				for i := range proposals.GetProposals() {
 					suite.Require().NoError(err)
 					suite.Require().NotEmpty(proposals.GetProposals()[i])
 					suite.Require().Equal(expRes.GetProposals()[i].String(), proposals.GetProposals()[i].String())

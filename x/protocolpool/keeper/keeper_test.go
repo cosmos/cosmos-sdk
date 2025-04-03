@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestGetAllContinuousFunds() {
 		totalFunds := 10
 
 		// Insert a number of funds.
-		for i := 0; i < totalFunds; i++ {
+		for i := range totalFunds {
 			accAddr := sdk.AccAddress(fmt.Sprintf("ao%d__________________", i))
 
 			fund := types.ContinuousFund{

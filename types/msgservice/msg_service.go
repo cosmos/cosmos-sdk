@@ -41,7 +41,7 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 	}
 
 	prefSd := fd.Services().ByName(protoreflect.FullName(sd.ServiceName).Name())
-	for i := 0; i < prefSd.Methods().Len(); i++ {
+	for i := range prefSd.Methods().Len() {
 		md := prefSd.Methods().Get(i)
 		requestDesc := md.Input()
 		responseDesc := md.Output()

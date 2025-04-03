@@ -250,7 +250,7 @@ func MsgExecFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 }
 
 func randomGroupPolicyWithAdmin(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, k keeper.Keeper, s *SharedState) (*group.GroupPolicyInfo, simsx.SimAccount) {
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		_, groupPolicy := randomGroupPolicyX(ctx, testData, reporter, k, s)
 		if groupPolicy != nil && testData.HasAccount(groupPolicy.Admin) {
 			return groupPolicy, testData.GetAccount(reporter, groupPolicy.Admin)
@@ -450,7 +450,7 @@ func randomGroupPolicyX(
 	k keeper.Keeper,
 	s *SharedState,
 ) (*group.GroupInfo, *group.GroupPolicyInfo) {
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		groupInfo := randomGroupX(ctx, k, testdata, reporter, s)
 		if reporter.IsSkipped() {
 			return nil, nil

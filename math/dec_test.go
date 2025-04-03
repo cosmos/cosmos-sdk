@@ -1953,32 +1953,19 @@ func TestMarshalUnmarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Convert the input string to a Dec using NewDecFromString.
 			dec, err := NewDecFromString(tc.input)
-			if err != nil {
-				t.Fatalf("failed to create Dec from %q: %v", tc.input, err)
-			}
+			require.NoError(t, err)
 
 			// Marshal the Dec value into JSON.
 			jsonData, err := dec.MarshalJSON()
-			if err != nil {
-				t.Fatalf("failed to marshal Dec %v: %v", dec, err)
-			}
 
 			// Check that the JSON output matches the expected JSON string.
-			if string(jsonData) != tc.expectedJSON {
-				t.Errorf("expected JSON %q, got %q", tc.expectedJSON, string(jsonData))
-			}
-
+			require.Equal(t, tc.expectedJSON, string(jsonData), fmt.Sprintf("expected JSON %q, got %q", tc.expectedJSON, string(jsonData)))
 			// Unmarshal the JSON back into a new Dec variable.
 			var decoded Dec
 			err = decoded.UnmarshalJSON(jsonData)
-			if err != nil {
-				t.Fatalf("failed to unmarshal JSON %q: %v", string(jsonData), err)
-			}
+			require.NoError(t, err)
 
-			// Verify that the original Dec and the decoded Dec are equal.
-			if !dec.Equal(decoded) {
-				t.Errorf("round-trip mismatch: original %q, decoded %q", dec.String(), decoded.String())
-			}
+			require.True(t, dec.Equal(decoded), fmt.Sprintf("round-trip mismatch: original %q, decoded %q", dec.String(), decoded.String()))
 		})
 	}
 }

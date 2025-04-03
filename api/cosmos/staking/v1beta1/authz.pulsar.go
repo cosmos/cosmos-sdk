@@ -1215,8 +1215,6 @@ const (
 )
 
 // AuthorizationType defines the type of staking module authorization type
-//
-// Since: cosmos-sdk 0.43
 type AuthorizationType int32
 
 const (

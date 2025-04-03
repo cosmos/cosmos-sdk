@@ -578,36 +578,6 @@ func MaxDec(x, y Dec) Dec {
 	return y
 }
 
-// MustAdd performs addition between two Dec values.
-// If an error occurs during the addition, it panics.
-func (x Dec) MustAdd(y Dec) Dec {
-	z, err := x.Add(y)
-	if err != nil {
-		panic("MustAdd failed: " + err.Error())
-	}
-	return z
-}
-
-// MustSub performs subtraction between two Dec values.
-// If an error occurs during the subtraction, it panics.
-func (x Dec) MustSub(y Dec) Dec {
-	z, err := x.Sub(y)
-	if err != nil {
-		panic("MustSub failed: " + err.Error())
-	}
-	return z
-}
-
-// MustMul performs multiplication between two Dec values.
-// If an error occurs during the multiplication, it panics.
-func (x Dec) MustMul(y Dec) Dec {
-	z, err := x.Mul(y)
-	if err != nil {
-		panic("MustMul failed: " + err.Error())
-	}
-	return z
-}
-
 // MulInt multiplies the decimal by an int64 and returns the result or an error.
 func (x Dec) MulInt(y int64) (Dec, error) {
 	var z Dec
@@ -617,28 +587,16 @@ func (x Dec) MulInt(y int64) (Dec, error) {
 	return z, nil
 }
 
-// MustMulInt multiplies the decimal by an int64 and panics if an error occurs.
-func (x Dec) MustMulInt(y int64) Dec {
-	z, err := x.MulInt(y)
+// ToLegacyDec converts a high-precision Dec to a LegacyDec using its string representation.
+// Returns an error if the conversion fails due to unsupported format or overflow.
+func ToLegacyDec(x Dec) (LegacyDec, error) {
+	str := x.dec.String()
+
+	legacyDec, err := LegacyNewDecFromStr(str)
 	if err != nil {
-		panic(err)
+		return LegacyDec{}, errors.Wrapf(err, "failed to convert Dec (%s) to LegacyDec", str)
 	}
-	return z
+
+	return legacyDec, nil
 }
 
-// ToLegacyDec converts a Dec value to a LegacyDec value.
-// If the conversion fails, it returns an error.
-func (x Dec) ToLegacyDec() (LegacyDec, error) {
-	coeff := x.dec.Coeff
-	i := new(big.Int)
-
-	if _, ok := i.SetString(coeff.String(), 10); !ok {
-		return LegacyDec{}, errors.Wrap(ErrInvalidDec, "failed to convert apd.BigInt to big.Int")
-	}
-
-	if x.dec.Sign() == -1 {
-		i.Neg(i)
-	}
-
-	return LegacyDec{i: i}, nil
-}

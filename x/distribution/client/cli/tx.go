@@ -159,21 +159,25 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			delValsRes, err := queryClient.DelegatorValidators(cmd.Context(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr})
+			delTotalRewards, err := queryClient.DelegationTotalRewards(cmd.Context(), &types.QueryDelegationTotalRewardsRequest{DelegatorAddress: delAddr})
 			if err != nil {
 				return err
 			}
 
-			validators := delValsRes.Validators
+			rewards := delTotalRewards.Rewards
+			if len(rewards) == 0 {
+				return fmt.Errorf("no rewards to withdraw")
+			}
+
 			// build multi-message transaction
-			msgs := make([]sdk.Msg, 0, len(validators))
-			for _, valAddr := range validators {
-				_, err := valCodec.StringToBytes(valAddr)
+			msgs := make([]sdk.Msg, 0, len(rewards))
+			for _, r := range rewards {
+				_, err := valCodec.StringToBytes(r.ValidatorAddress)
 				if err != nil {
 					return err
 				}
 
-				msg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
+				msg := types.NewMsgWithdrawDelegatorReward(delAddr, r.ValidatorAddress)
 				msgs = append(msgs, msg)
 			}
 

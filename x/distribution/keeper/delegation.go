@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -191,7 +193,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	return rewards, nil
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
+func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, withdrawNow bool) (sdk.Coins, error) {
 	addrCodec := k.authKeeper.AddressCodec()
 	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
 	if err != nil {
@@ -247,15 +249,44 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	finalRewards, remainder := rewards.TruncateDecimal()
 
 	// add coins to user account
+	// or put them in outstanding rewards
 	if !finalRewards.IsZero() {
-		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
-		if err != nil {
+		key := collections.Join(sdk.AccAddress(delAddr), sdk.ValAddress(valAddr))
+		// check if the user has outstanding rewards
+		// we need to check the outstanding rewards, in case a user has
+		// redelegated away and redelegated back to the same validator
+		// or to set them if withdrawNow is false
+		outstanding, err := k.UserOutstandingRewards.Get(ctx, key)
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
 		}
 
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, finalRewards)
-		if err != nil {
-			return nil, err
+		if withdrawNow {
+			withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
+			if err != nil {
+				return nil, err
+			}
+
+			// add the outstanding rewards to the rewards
+			finalRewards = finalRewards.Add(outstanding.Rewards...)
+
+			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, finalRewards)
+			if err != nil {
+				return nil, err
+			}
+
+			// delete the outstanding rewards
+			if err := k.UserOutstandingRewards.Remove(ctx, key); err != nil {
+				return nil, err
+			}
+		} else {
+			outstanding.Rewards = outstanding.Rewards.Add(finalRewards...)
+			if err := k.UserOutstandingRewards.Set(ctx, key, outstanding); err != nil {
+				return nil, err
+			}
+
+			// reset final rewards
+			finalRewards = sdk.Coins{}
 		}
 	}
 

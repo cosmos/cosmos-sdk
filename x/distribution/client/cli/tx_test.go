@@ -178,7 +178,7 @@ func (s *CLITestSuite) TestTxWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
-			"",
+			"no rewards to withdraw",
 		},
 	}
 

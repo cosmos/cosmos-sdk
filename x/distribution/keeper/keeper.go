@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -29,6 +30,12 @@ type Keeper struct {
 	Schema  collections.Schema
 	Params  collections.Item[types.Params]
 	FeePool collections.Item[types.FeePool]
+	// UserOutstandingRewards is an indexed of automatically withdrawn rewards
+	// yet to be claimed by the user.
+	UserOutstandingRewards collections.Map[
+		collections.Pair[sdk.AccAddress, sdk.ValAddress],
+		types.UserOutstandingRewards,
+	]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -55,6 +62,13 @@ func NewKeeper(
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		UserOutstandingRewards: collections.NewMap(
+			sb,
+			types.UserOutstandingRewardsKey,
+			"user_outstanding_rewards",
+			collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey),
+			codec.CollValue[types.UserOutstandingRewards](cdc),
+		),
 	}
 
 	schema, err := sb.Build()
@@ -119,12 +133,50 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 		return nil, err
 	}
 
-	if del == nil {
-		return nil, types.ErrEmptyDelegationDistInfo
+	if del == nil { // flow where the user doesn't have a delegation anymore to the validator
+		key := collections.Join(delAddr, valAddr)
+		outstandingRewards, err := k.UserOutstandingRewards.Get(ctx, key)
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, types.ErrEmptyDelegationDistInfo
+		} else if err != nil {
+			return nil, err
+		}
+
+		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		if err = k.bankKeeper.SendCoinsFromModuleToAccount(
+			ctx,
+			types.ModuleName,
+			withdrawAddr,
+			outstandingRewards.Rewards,
+		); err != nil {
+			return nil, err
+		}
+
+		// delete the outstanding rewards
+		if err = k.UserOutstandingRewards.Remove(ctx, key); err != nil {
+			return nil, err
+		}
+
+		// send event
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeWithdrawRewards,
+				sdk.NewAttribute(sdk.AttributeKeyAmount, outstandingRewards.Rewards.String()),
+				sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
+				sdk.NewAttribute(types.AttributeKeyDelegator, delAddr.String()),
+			),
+		)
+
+		return outstandingRewards.Rewards, nil
 	}
 
 	// withdraw rewards
-	rewards, err := k.withdrawDelegationRewards(ctx, val, del)
+	rewards, err := k.withdrawDelegationRewards(ctx, val, del, true)
 	if err != nil {
 		return nil, err
 	}
@@ -134,6 +186,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 	if err != nil {
 		return nil, err
 	}
+
 	return rewards, nil
 }
 

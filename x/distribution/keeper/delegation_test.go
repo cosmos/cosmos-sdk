@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -432,7 +433,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial)}}, valCommission.Commission)
 }
 
-func TestWithdrawDelegationRewardsBasic(t *testing.T) {
+func TestWithdrawDelegationRewards(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -472,8 +473,8 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// delegation mock
 	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
-	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).Times(5)
-	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).Times(3)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
 
 	// run the necessary hooks manually (given that we are not running an actual staking module)
 	err = distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr)
@@ -491,18 +492,40 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	// historical count should be 2 (initial + latest for delegation)
 	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
-	// withdraw rewards (the bank keeper should be called with the right amount of tokens to transfer)
+	// fake modify delegation to trigger withdraw rewards from hooks
+	// that claims rewards but not do receive them
+	err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, addr, valAddr)
+	require.NoError(t, err)
+	err = distrKeeper.Hooks().AfterDelegationModified(ctx, addr, valAddr)
+	require.NoError(t, err)
+
+	// check user outstanding rewards
 	expRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial.QuoRaw(2))}
-	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(ctx, disttypes.ModuleName, addr, expRewards)
-	_, err = distrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddr), valAddr)
+
+	savedRewards, err := distrKeeper.UserOutstandingRewards.Get(ctx, collections.Join(addr, valAddr))
+	require.NoError(t, err)
+	require.True(t, savedRewards.Rewards.Equal(expRewards))
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// set more rewards
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+	newRewards := tokens.Sub(tokens.MulDec(val.GetCommission())).Add(sdk.NewDecCoinsFromCoins(savedRewards.Rewards...)...)
+
+	// withdraw rewards (the bank keeper should be called with the right amount of tokens to transfer)
+	newRewardsCoin, _ := newRewards.TruncateDecimal()
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(ctx, disttypes.ModuleName, addr, newRewardsCoin)
+	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, addr, valAddr)
 	require.Nil(t, err)
+	require.True(t, !rewards.IsZero())
 
 	// historical count should still be 2 (added one record, cleared one)
 	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// withdraw commission (the bank keeper should be called with the right amount of tokens to transfer)
-	expCommission := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial.QuoRaw(2))}
-	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(ctx, disttypes.ModuleName, addr, expCommission)
+	expCommission := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial)}
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(ctx, disttypes.ModuleName, addr, expCommission).AnyTimes()
 	_, err = distrKeeper.WithdrawValidatorCommission(ctx, valAddr)
 	require.Nil(t, err)
 }

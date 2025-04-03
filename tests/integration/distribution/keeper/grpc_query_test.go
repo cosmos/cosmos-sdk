@@ -6,11 +6,13 @@ import (
 
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -224,7 +226,7 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	addr2 := sdk.AccAddress(PKS[1].Address())
+	addr2 := sdk.AccAddress(valConsPk1.Address())
 	valAddr2 := sdk.ValAddress(addr2)
 
 	slashes := []types.ValidatorSlashEvent{
@@ -375,7 +377,7 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	addr2 := sdk.AccAddress(PKS[1].Address())
+	addr2 := sdk.AccAddress(valConsPk1.Address())
 
 	err := f.distrKeeper.SetWithdrawAddr(f.sdkCtx, f.addr, addr2)
 	assert.Assert(t, err == nil)
@@ -480,37 +482,62 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	}))
 
 	// set module account coins
-	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(2000))
 	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
 
 	// Set default staking params
 	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
 
+	// register staking msg server
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(f.stakingKeeper)
+	stakingtypes.RegisterMsgServer(f.app.MsgServiceRouter(), stakingMsgServer)
+
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	addr2 := sdk.AccAddress(PKS[1].Address())
+	addr2 := sdk.AccAddress(valConsPk1.Address())
 	valAddr2 := sdk.ValAddress(addr2)
-	delAddr := sdk.AccAddress(PKS[2].Address())
+	delAddr := sdk.AccAddress(valConsPk0.Address())
 
-	// send funds to val addr
+	// send funds to val addr and delegator
 	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
 	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
 
+	// setup staking validator using MsgServer
 	initialStake := int64(10)
-	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
+	createValMsg, err := stakingtypes.NewMsgCreateValidator(
+		f.valAddr.String(),
+		valConsPk0,
+		sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(initialStake)),
+		stakingtypes.NewDescription("test", "test", "test", "test", "test"),
+		stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)),
+		math.OneInt(),
+	)
+	assert.NilError(t, err)
+
+	_, err = f.app.RunMsg(createValMsg)
+	assert.NilError(t, err)
 
 	val, found := f.stakingKeeper.GetValidator(f.sdkCtx, f.valAddr)
 	assert.Assert(t, found)
 
-	// setup delegation
+	// setup delegation using MsgServer
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
-	validator, issuedShares := val.AddTokensFromDel(delTokens)
-	delegation := stakingtypes.NewDelegation(delAddr.String(), f.valAddr.String(), issuedShares)
-	assert.NilError(t, f.stakingKeeper.SetDelegation(f.sdkCtx, delegation))
-	valBz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	delegateMsg := stakingtypes.NewMsgDelegate(
+		delAddr.String(),
+		f.valAddr.String(),
+		sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
+	)
+
+	_, err = f.app.RunMsg(delegateMsg)
+	assert.NilError(t, err)
+
+	_, found = f.stakingKeeper.GetDelegation(f.sdkCtx, delAddr, f.valAddr)
+	assert.Assert(t, found)
+
+	// We still need to directly set up the distribution-specific information
+	valBz, err := f.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 	assert.NilError(t, err)
 	assert.NilError(t, f.distrKeeper.SetDelegatorStartingInfo(f.sdkCtx, valBz, delAddr, types.NewDelegatorStartingInfo(2, math.LegacyNewDec(initialStake), 20)))
 
@@ -518,21 +545,35 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
 	assert.NilError(t, f.distrKeeper.SetValidatorHistoricalRewards(f.sdkCtx, valBz, 2, historicalRewards))
+
 	// setup current rewards and outstanding rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	assert.NilError(t, f.distrKeeper.SetValidatorCurrentRewards(f.sdkCtx, f.valAddr, currentRewards))
 	assert.NilError(t, f.distrKeeper.SetValidatorOutstandingRewards(f.sdkCtx, f.valAddr, types.ValidatorOutstandingRewards{Rewards: decCoins}))
 
-	expRes := &types.QueryDelegationRewardsResponse{
-		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initialStake / 10)}},
-	}
+	// Also add some outstanding rewards to test the withdrawNow=false case
+	outstandingCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
+	key := collections.Join(delAddr, f.valAddr)
+	err = f.distrKeeper.UserOutstandingRewards.Set(
+		f.sdkCtx,
+		key,
+		types.UserOutstandingRewards{Rewards: outstandingCoins},
+	)
+	assert.NilError(t, err)
+
+	// calculate expected rewards
+	expectedRewards := sdk.DecCoins{sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDecFromIntWithPrec(math.NewInt(499997500012), 17)}} // hardcoded as changed of token amount doesn't make it a round number
+
+	// add the outstanding rewards as DecCoins
+	expectedWithOutstandingRewards := expectedRewards.Add(sdk.NewDecCoinsFromCoins(outstandingCoins...)...)
 
 	// test command delegation rewards grpc
 	testCases := []struct {
-		name      string
-		msg       *types.QueryDelegationRewardsRequest
-		expPass   bool
-		expErrMsg string
+		name       string
+		msg        *types.QueryDelegationRewardsRequest
+		expPass    bool
+		expErrMsg  string
+		expRewards sdk.DecCoins
 	}{
 		{
 			name:      "empty request",
@@ -573,7 +614,8 @@ func TestGRPCDelegationRewards(t *testing.T) {
 				DelegatorAddress: delAddr.String(),
 				ValidatorAddress: f.valAddr.String(),
 			},
-			expPass: true,
+			expPass:    true,
+			expRewards: expectedWithOutstandingRewards, // should include outstanding rewards
 		},
 	}
 
@@ -584,11 +626,34 @@ func TestGRPCDelegationRewards(t *testing.T) {
 
 			if tc.expPass {
 				assert.NilError(t, err)
-				assert.DeepEqual(t, expRes, rewards)
+				assert.DeepEqual(t, tc.expRewards, rewards.Rewards)
 			} else {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Assert(t, rewards == nil)
 			}
 		})
 	}
+
+	// Test querying after removing outstanding rewards
+	err = f.distrKeeper.UserOutstandingRewards.Remove(f.sdkCtx, key)
+	assert.NilError(t, err)
+
+	// Query should now return only calculated rewards, not outstanding rewards
+	rewards, err := queryClient.DelegationRewards(f.sdkCtx, &types.QueryDelegationRewardsRequest{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: f.valAddr.String(),
+	})
+	assert.NilError(t, err)
+	assert.DeepEqual(t, expectedRewards, rewards.Rewards)
+
+	// Test total rewards with unwithdrawn rewards in another validator
+	err = f.distrKeeper.UserOutstandingRewards.Set(f.sdkCtx, collections.Join(delAddr, sdk.ValAddress(valConsPk1.Address())), types.UserOutstandingRewards{Rewards: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))})
+	assert.NilError(t, err)
+
+	totalRewards, err := queryClient.DelegationTotalRewards(f.sdkCtx, &types.QueryDelegationTotalRewardsRequest{
+		DelegatorAddress: delAddr.String(),
+	})
+	assert.NilError(t, err)
+	assert.Assert(t, totalRewards != nil)
+	assert.Equal(t, len(totalRewards.Rewards), 2)
 }

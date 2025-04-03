@@ -20,7 +20,7 @@ func FuzzLegacyNewDecFromStr(f *testing.F) {
 	f.Fuzz(func(t *testing.T, input string) {
 		dec, err := LegacyNewDecFromStr(input)
 		require.NoError(t, err)
-		require.True(t, !dec.IsZero())
+		require.True(t, !dec.IsNil())
 	})
 }
 

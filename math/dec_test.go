@@ -1986,153 +1986,185 @@ func TestMustAdd(t *testing.T) {
 
 func TestMustSub(t *testing.T) {
 	specs := map[string]struct {
-		x   Dec
-		y   Dec
-		exp Dec
+		x         Dec
+		y         Dec
+		exp       Dec
+		expPanics bool
 	}{
 		"0 - 0": {
-			x:   NewDecFromInt64(0),
-			y:   NewDecFromInt64(0),
-			exp: NewDecFromInt64(0),
+			x:         NewDecFromInt64(0),
+			y:         NewDecFromInt64(0),
+			exp:       NewDecFromInt64(0),
+			expPanics: false,
 		},
 		"456 - 123": {
-			x:   NewDecFromInt64(456),
-			y:   NewDecFromInt64(123),
-			exp: NewDecFromInt64(333),
+			x:         NewDecFromInt64(456),
+			y:         NewDecFromInt64(123),
+			exp:       NewDecFromInt64(333),
+			expPanics: false,
 		},
 		"0 - (-100)": {
-			x:   NewDecFromInt64(0),
-			y:   NewDecFromInt64(-100),
-			exp: NewDecFromInt64(100),
+			x:         NewDecFromInt64(0),
+			y:         NewDecFromInt64(-100),
+			exp:       NewDecFromInt64(100),
+			expPanics: false,
+		},
+		"1e100001 - 1 -> panic": {
+			x:         NewDecWithExp(1, 100_001),
+			y:         NewDecFromInt64(1),
+			expPanics: true,
 		},
 	}
 
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got := spec.x.MustSub(spec.y)
-			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+			if spec.expPanics {
+				assert.Panics(t, func() { spec.x.MustSub(spec.y) }, "Expected MustSub to panic on overflow")
+				return
+			} else {
+				got := spec.x.MustSub(spec.y)
+				assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+			}
 		})
 	}
-
-	t.Run("panic on invalid subtraction", func(t *testing.T) {
-		x := NewDecWithExp(1, 100_001)
-		y := NewDecFromInt64(1)
-		assert.Panics(t, func() { x.MustSub(y) }, "Expected MustSub to panic on overflow")
-	})
 }
 
 func TestMustMul(t *testing.T) {
 	specs := map[string]struct {
-		x   Dec
-		y   Dec
-		exp Dec
+		x         Dec
+		y         Dec
+		exp       Dec
+		expPanics bool
 	}{
 		"0 * 0": {
-			x:   NewDecFromInt64(0),
-			y:   NewDecFromInt64(0),
-			exp: NewDecFromInt64(0),
+			x:         NewDecFromInt64(0),
+			y:         NewDecFromInt64(0),
+			exp:       NewDecFromInt64(0),
+			expPanics: false,
 		},
 		"123 * 2": {
-			x:   NewDecFromInt64(123),
-			y:   NewDecFromInt64(2),
-			exp: NewDecFromInt64(246),
+			x:         NewDecFromInt64(123),
+			y:         NewDecFromInt64(2),
+			exp:       NewDecFromInt64(246),
+			expPanics: false,
 		},
 		"100 * (-5)": {
-			x:   NewDecFromInt64(100),
-			y:   NewDecFromInt64(-5),
-			exp: NewDecFromInt64(-500),
+			x:         NewDecFromInt64(100),
+			y:         NewDecFromInt64(-5),
+			exp:       NewDecFromInt64(-500),
+			expPanics: false,
+		},
+		"1e500000 * 10 -> panic": {
+			x:         NewDecWithExp(1, 500_000),
+			y:         NewDecFromInt64(10),
+			expPanics: true,
 		},
 	}
 
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got := spec.x.MustMul(spec.y)
-			assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+			if spec.expPanics {
+				assert.Panics(t, func() { spec.x.MustMul(spec.y) }, "Expected MustMul to panic on overflow")
+				return
+			} else {
+				got := spec.x.MustMul(spec.y)
+				assert.Equal(t, spec.exp, got, "x: %s, y: %s", spec.x.String(), spec.y.String())
+			}
 		})
 	}
-
-	t.Run("panic on invalid multiplication", func(t *testing.T) {
-		x := NewDecWithExp(1, 500_000)
-		y := NewDecFromInt64(10)
-
-		assert.Panics(t, func() { x.MustMul(y) }, "Expected MustMul to panic on overflow")
-	})
 }
 
 func TestMulInt(t *testing.T) {
 	specs := map[string]struct {
-		x   Dec
-		y   int64
-		exp Dec
+		x         Dec
+		y         int64
+		exp       Dec
+		expErr    bool
 	}{
 		"0 * 0": {
-			x:   NewDecFromInt64(0),
-			y:   0,
-			exp: NewDecFromInt64(0),
+			x:      NewDecFromInt64(0),
+			y:      0,
+			exp:    NewDecFromInt64(0),
+			expErr: false,
 		},
 		"123 * 2": {
-			x:   NewDecFromInt64(123),
-			y:   2,
-			exp: NewDecFromInt64(246),
+			x:      NewDecFromInt64(123),
+			y:      2,
+			exp:    NewDecFromInt64(246),
+			expErr: false,
 		},
 		"100 * (-5)": {
-			x:   NewDecFromInt64(100),
-			y:   -5,
-			exp: NewDecFromInt64(-500),
+			x:      NewDecFromInt64(100),
+			y:      -5,
+			exp:    NewDecFromInt64(-500),
+			expErr: false,
+		},
+		"1e100001 * 10 -> error": {
+			x:      NewDecWithExp(1, 100_001),
+			y:      10,
+			expErr: true,
 		},
 	}
 
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			got, err := spec.x.MulInt(spec.y)
+
+			if spec.expErr {
+				assert.Error(t, err, "Expected MulInt to return an error on overflow")
+				return
+			}
+
 			require.NoError(t, err, "MulInt should not return an error")
 			assert.Equal(t, spec.exp, got, "x: %s, y: %d", spec.x.String(), spec.y)
 		})
 	}
-
-	t.Run("error on invalid multiplication", func(t *testing.T) {
-		x := NewDecWithExp(1, 100_001)
-		y := int64(10)
-		_, err := x.MulInt(y)
-		assert.Error(t, err, "Expected MulInt to return an error on overflow")
-	})
 }
+
 
 func TestMustMulInt(t *testing.T) {
 	specs := map[string]struct {
-		x   Dec
-		y   int64
-		exp Dec
+		x         Dec
+		y         int64
+		exp       Dec
+		expPanics bool
 	}{
 		"0 * 0": {
-			x:   NewDecFromInt64(0),
-			y:   0,
-			exp: NewDecFromInt64(0),
+			x:         NewDecFromInt64(0),
+			y:         0,
+			exp:       NewDecFromInt64(0),
+			expPanics: false,
 		},
 		"123 * 2": {
-			x:   NewDecFromInt64(123),
-			y:   2,
-			exp: NewDecFromInt64(246),
+			x:         NewDecFromInt64(123),
+			y:         2,
+			exp:       NewDecFromInt64(246),
+			expPanics: false,
 		},
 		"100 * (-5)": {
-			x:   NewDecFromInt64(100),
-			y:   -5,
-			exp: NewDecFromInt64(-500),
+			x:         NewDecFromInt64(100),
+			y:         -5,
+			exp:       NewDecFromInt64(-500),
+			expPanics: false,
+		},
+		"1e100001 * 10 -> panic": {
+			x:         NewDecWithExp(1, 100_001),
+			y:         10,
+			expPanics: true,
 		},
 	}
 
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
+			if spec.expPanics {
+				assert.Panics(t, func() { spec.x.MustMulInt(spec.y) }, "Expected MustMulInt to panic on overflow")
+				return
+			}
+
 			got := spec.x.MustMulInt(spec.y)
 			assert.Equal(t, spec.exp, got, "x: %s, y: %d", spec.x.String(), spec.y)
 		})
 	}
-
-	t.Run("panic on invalid multiplication", func(t *testing.T) {
-		x := NewDecWithExp(1, 100_001)
-		y := int64(10)
-		assert.Panics(t, func() { x.MustMulInt(y) }, "Expected MustMulInt to panic on overflow")
-	})
 }
 
 func TestToLegacyDec(t *testing.T) {

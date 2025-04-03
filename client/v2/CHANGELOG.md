@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* [#24359](https://github.com/cosmos/cosmos-sdk/pull/24359) Support governance proposals.
+
 ### Bug Fixes
 
 * (cli) [#24330](https://github.com/cosmos/cosmos-sdk/pull/24330) Use the gogoproto merge registry as a file resolver instead of the interface registry.
@@ -99,7 +103,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20083](https://github.com/cosmos/cosmos-sdk/pull/20083) Integrate latest version of cosmos-proto and improve version filtering.
 * [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Marshal enum as string in queries.
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
-    * Note, the given command must have a `client.Context` in its context.
+  * Note, the given command must have a `client.Context` in its context.
 * [#19216](https://github.com/cosmos/cosmos-sdk/pull/19216) Do not overwrite TxConfig, use directly the one provided in context. TxConfig should always be set in the `client.Context` in `root.go` of an app.
 * [#20266](https://github.com/cosmos/cosmos-sdk/pull/20266) Add ability to override the short description in AutoCLI-generated top-level commands.
 

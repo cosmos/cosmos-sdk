@@ -35,7 +35,7 @@ func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
 func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMember {
 	addressPool := simtestutil.CreateIncrementalAccounts(numMembers)
 	members := make([]group.MemberRequest, numMembers)
-	for i := 0; i < len(members); i++ {
+	for i := range members {
 		members[i] = group.MemberRequest{
 			Address: addressPool[i].String(),
 			Weight:  "1",
@@ -1823,7 +1823,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"with try exec": {
 			preRun: func(msgs []sdk.Msg) {
-				for i := 0; i < len(msgs); i++ {
+				for i := range msgs {
 					s.bankKeeper.EXPECT().Send(gomock.Any(), msgs[i]).Return(nil, nil)
 				}
 			},

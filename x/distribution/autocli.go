@@ -144,10 +144,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "CommunityPoolSpend",
-					Skip:      true, // skipped because deprecated in favor of protocolpool
+					Use:       "community-pool-spend-proposal [recipient] [amount]",
+					Example:   fmt.Sprintf(`$ %s tx distribution community-pool-spend-proposal [recipient] 100uatom`, version.AppName),
+					Short:     "Submit a proposal to spend from the community pool",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "recipient"},
+						{ProtoField: "amount", Varargs: true},
+					},
+					GovProposal: true,
 				},
 			},
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
+			EnhanceCustomCommand: true,
 		},
 	}
 }

@@ -27,6 +27,10 @@ import (
 )
 
 func BenchmarkApplyAndReturnValidatorSetUpdates(b *testing.B) {
+	// goal of this benchmark to measure the performance changes in ApplyAndReturnValidatorSetUpdates
+	// for dropping the bench32 conversion and different index types.
+	// therefore the validator power, max or state is not modified to focus on comparing the valset
+	// for an update only.
 	const validatorCount = 150
 	testEnv := newTestEnvironment(b)
 	keeper, ctx := testEnv.stakingKeeper, testEnv.ctx

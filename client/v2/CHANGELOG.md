@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (cli) [#24330](https://github.com/cosmos/cosmos-sdk/pull/24330) Use the gogoproto merge registry as a file resolver instead of the interface registry.
+* [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
 
 ## [v2.0.0-beta.8] - 2025-01-29
 
@@ -66,9 +67,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
+* [#21936](https://github.com/cosmos/cosmos-sdk/pull/21936) Print possible enum values in error message after an invalid input was provided.
 
 ## [v2.0.0-beta.4] - 2024-07-16
+
+### Improvements
+
+* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
 
 ### Bug Fixes
 

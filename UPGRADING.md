@@ -1,13 +1,6 @@
-<<<<<<< HEAD
-# Upgrading Cosmos SDK
-
-This guide provides instructions for upgrading to specific versions of Cosmos SDK.
-Note, always read the **SimApp** section for more information on application wiring updates.
-=======
 # Upgrade Reference
 
 This document provides a quick reference for the upgrades from `v0.50.x` to `v0.53.x` of Cosmos SDK.
->>>>>>> 0d68f6586 (docs: include upgrade reference in docs (#24380))
 
 ## [v0.53.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0)
 

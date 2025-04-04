@@ -217,13 +217,16 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace cosmossdk.io/client/v2 => ../client/v2
-
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 // replace (
 // 	<temporary replace>
 // )
+
+replace (
+	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/x/circuit => ../x/circuit
+)
 
 // Below are the long-lived replace of the SimApp
 replace (

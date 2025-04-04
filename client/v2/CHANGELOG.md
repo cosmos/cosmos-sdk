@@ -36,13 +36,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Bug Fixes
-
-* [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
-
 ### Features
 
 * [#24359](https://github.com/cosmos/cosmos-sdk/pull/24359) Support governance proposals.
+
+### Improvements
+
+* [#22890](https://github.com/cosmos/cosmos-sdk/pull/22890)  Added support for flattening inner message fields in autocli as positional arguments.
+
+### Bug Fixes
+
+* [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
 
 ## [v2.0.0-beta.8] - 2025-01-29
 

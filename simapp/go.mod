@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e
 	cosmossdk.io/collections v1.2.0 // indirect
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0-rc.1
+	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.5.1
 	cosmossdk.io/math v1.5.2
 	cosmossdk.io/store v1.1.2
@@ -218,13 +218,16 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace cosmossdk.io/client/v2 => ../client/v2
-
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 // replace (
 // 	<temporary replace>
 // )
+
+replace (
+	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/x/circuit => ../x/circuit
+)
 
 // Below are the long-lived replace of the SimApp
 replace (

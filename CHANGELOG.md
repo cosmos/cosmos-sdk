@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (x/gov) [#24386](https://github.com/cosmos/cosmos-sdk/pull/24386) Improve helpers to easily create governance proposals from CLI.
+
 ### Bug Fixes
 
 * (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.

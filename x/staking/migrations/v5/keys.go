@@ -15,9 +15,10 @@ const (
 )
 
 var (
-	DelegationKey           = []byte{0x31} // key for a delegation
-	HistoricalInfoKey       = []byte{0x50} // prefix for the historical info
-	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
+	DelegationKey                             = []byte{0x31} // key for a delegation
+	HistoricalInfoKey                         = []byte{0x50} // prefix for the historical info
+	DelegationByValIndexKey                   = []byte{0x71} // key for delegations by a validator
+	NextMigrateDelegationsByValidatorIndexKey = []byte{0x81} // key used to migrate to the new validator index
 )
 
 // ParseDelegationKey parses given key and returns delagator, validator address bytes

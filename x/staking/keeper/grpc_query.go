@@ -108,6 +108,13 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 		pageRes *query.PageResponse
 	)
 	pageRes, err = query.Paginate(delStore, req.Pagination, func(delAddr, value []byte) error {
+		// Check the store to see if there is a value stored under the key
+		key := store.Get(types.NextMigrateDelegationsByValidatorIndexKey)
+		if key != nil {
+			// Users will never see this error as if there is an error the function defaults to the legacy implementation below
+			return status.Error(codes.Internal, "store migration is not finished, try again later")
+		}
+
 		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 
 		var delegation types.Delegation

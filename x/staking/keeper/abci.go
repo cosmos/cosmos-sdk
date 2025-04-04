@@ -6,6 +6,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -13,6 +14,20 @@ import (
 // and prune the oldest entry based on the HistoricalEntries parameter
 func (k *Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+
+	// TODO: Remove migration code and panic catch in the next upgrade
+	// Wrap the migration call in a function that can recover from panics
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				k.Logger(sdk.UnwrapSDKContext(ctx)).Error("Panic in MigrateDelegationsByValidatorIndex", "recover", r)
+			}
+		}()
+
+		// Only migrate 10000 items per block to make the migration as fast as possible
+		k.MigrateDelegationsByValidatorIndex(sdk.UnwrapSDKContext(ctx), 10000)
+	}()
+
 	return k.TrackHistoricalInfo(ctx)
 }
 

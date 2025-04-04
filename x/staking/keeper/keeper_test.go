@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -40,6 +41,7 @@ type KeeperTestSuite struct {
 	accountKeeper *stakingtestutil.MockAccountKeeper
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
+	storeService  store.KVStoreService
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -73,6 +75,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.stakingKeeper = keeper
 	s.bankKeeper = bankKeeper
 	s.accountKeeper = accountKeeper
+	s.storeService = storeService
 
 	stakingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)

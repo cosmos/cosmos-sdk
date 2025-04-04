@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#432](https://github.com/celestiaorg/cosmos-sdk/pull/432) Extend the `sdk.EndBlock` type with `TimeoutInfo` to be propagated to `ResponseFinalizeBlock`.
 * (auth/tx) [#432](https://github.com/celestiaorg/cosmos-sdk/pull/432) Set the `prove` flag to `false` for tx queries. 
 * (x/authz) [#442](https://github.com/celestiaorg/cosmos-sdk/pull/442) Added a limit of 200 grants pruned per `BeginBlock` and the `PruneExpiredGrants` message that prunes 75 expired grants on every run.
+* (x/staking) [#443](https://github.com/celestiaorg/cosmos-sdk/pull/443) Added a limit of 1000 to delegation keys migration. A further 10000 keys are migrated per `BeginBlock`, tracked by `NextMigrateDelegationsByValidatorIndexKey`. 
 * (x/distribution) [#437](https://github.com/celestiaorg/cosmos-sdk/pull/437) Implement [CIP-30](https://github.com/celestiaorg/CIPs/blob/main/cips/cip-030.md).
 
 ## [Unreleased-Cosmos-SDK]

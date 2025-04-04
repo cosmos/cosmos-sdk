@@ -140,9 +140,6 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 	}
 
 	tallyFn := k.calculateVoteResultsAndVotingPowerFn
-	if tallyFn == nil {
-		tallyFn = defaultCalculateVoteResultsAndVotingPower
-	}
 	totalVotingPower, results, err := tallyFn(ctx, k, proposal, currValidators)
 	if err != nil {
 		return false, false, tallyResults, fmt.Errorf("error while calculating tally results: %w", err)

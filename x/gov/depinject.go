@@ -71,6 +71,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	var opts []keeper.InitOption
+	if in.CustomCalculateVoteResultsAndVotingPowerFn != nil {
+		opts = append(opts, keeper.WithCustomCalculateVoteResultsAndVotingPowerFn(in.CustomCalculateVoteResultsAndVotingPowerFn))
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -81,13 +86,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.MsgServiceRouter,
 		defaultConfig,
 		authority.String(),
+		opts...,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
-
-	if in.CustomCalculateVoteResultsAndVotingPowerFn != nil {
-		k.SetCustomCalculateVoteResultsAndVotingPowerFn(in.CustomCalculateVoteResultsAndVotingPowerFn)
-	}
 
 	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}
 }

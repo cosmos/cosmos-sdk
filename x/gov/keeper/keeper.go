@@ -61,6 +61,16 @@ type Keeper struct {
 	VotingPeriodProposals  collections.Map[uint64, []byte]                              // TODO(tip): this could be a keyset or index.
 }
 
+type InitOption func(*Keeper)
+
+// WithCustomCalculateVoteResultsAndVotingPowerFn is an optional input to set a custom CalculateVoteResultsAndVotingPowerFn.
+// If this function is not provided, the default function is used.
+func WithCustomCalculateVoteResultsAndVotingPowerFn(calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn) InitOption {
+	return func(k *Keeper) {
+		k.calculateVoteResultsAndVotingPowerFn = calculateVoteResultsAndVotingPowerFn
+	}
+}
+
 // GetAuthority returns the x/gov module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
@@ -76,7 +86,7 @@ func (k Keeper) GetAuthority() string {
 func NewKeeper(
 	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrKeeper types.DistributionKeeper,
-	router baseapp.MessageRouter, config types.Config, authority string,
+	router baseapp.MessageRouter, config types.Config, authority string, InitOptions ...InitOption,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -102,7 +112,7 @@ func NewKeeper(
 		cdc:                                  cdc,
 		router:                               router,
 		config:                               config,
-		calculateVoteResultsAndVotingPowerFn: nil,
+		calculateVoteResultsAndVotingPowerFn: defaultCalculateVoteResultsAndVotingPower,
 		authority:                            authority,
 		Constitution:                         collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                               collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
@@ -114,6 +124,11 @@ func NewKeeper(
 		InactiveProposalsQueue:               collections.NewMap(sb, types.InactiveProposalQueuePrefix, "inactive_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value), // sdk.TimeKey is needed to retain state compatibility
 		VotingPeriodProposals:                collections.NewMap(sb, types.VotingPeriodProposalKeyPrefix, "voting_period_proposals", collections.Uint64Key, collections.BytesValue),
 	}
+
+	for _, opt := range InitOptions {
+		opt(k)
+	}
+
 	schema, err := sb.Build()
 	if err != nil {
 		panic(err)
@@ -141,17 +156,6 @@ func (k *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	k.hooks = gh
 
 	return k
-}
-
-// SetCustomCalculateVoteResultsAndVotingPowerFn sets a custom CalculateVoteResultsAndVotingPowerFn
-//
-// If this function is not called, defaultCalculateVoteResultsAndVotingPower is always used.
-func (k *Keeper) SetCustomCalculateVoteResultsAndVotingPowerFn(fn CalculateVoteResultsAndVotingPowerFn) {
-	if k.calculateVoteResultsAndVotingPowerFn != nil {
-		panic("cannot set CalculateVoteResultsAndVotingPowerFn twice")
-	}
-
-	k.calculateVoteResultsAndVotingPowerFn = fn
 }
 
 // SetLegacyRouter sets the legacy router for governance

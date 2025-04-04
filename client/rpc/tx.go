@@ -119,7 +119,11 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return err
 			}
 
-			c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
+			// NOTE: New for Comet v1.x: caller should have appended the RPC API version at the end of the URL
+			//       as shown in CometBFT v1.x docs, e.g.: "http://192.168.1.10:26657/v1"
+			// See: Doc in cometbft/rpc/client/http/http.go
+			// See: https://docs.cometbft.com/v1.0/rpc/
+			c, err := rpchttp.New(clientCtx.NodeURI)
 			if err != nil {
 				return err
 			}

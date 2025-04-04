@@ -70,7 +70,7 @@ func (r RPCClient) Invoke(ctx context.Context, method string, req, reply interfa
 		}
 	}
 
-	abciReq := abci.RequestQuery{
+	abciReq := abci.QueryRequest{
 		Path:   method,
 		Data:   reqBz,
 		Height: height,

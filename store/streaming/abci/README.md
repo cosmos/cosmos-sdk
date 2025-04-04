@@ -82,7 +82,7 @@ func (a FilePlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestBeg
 	return nil
 }
 
-func (a FilePlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error {
+func (a FilePlugin) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*store.StoreKVPair) error {
     // process data
     return nil
 }

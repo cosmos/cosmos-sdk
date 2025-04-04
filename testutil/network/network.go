@@ -39,6 +39,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -460,7 +461,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(cmtCfg)
+		var mnemonic string
+		if i < len(cfg.Mnemonics) {
+			mnemonic = cfg.Mnemonics[i]
+		}
+
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic, ed25519.PrivKeyName)
 		if err != nil {
 			return nil, err
 		}
@@ -477,11 +483,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		algo, err := keyring.NewSigningAlgoFromString(cfg.SigningAlgo, keyringAlgos)
 		if err != nil {
 			return nil, err
-		}
-
-		var mnemonic string
-		if i < len(cfg.Mnemonics) {
-			mnemonic = cfg.Mnemonics[i]
 		}
 
 		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)

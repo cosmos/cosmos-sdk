@@ -52,7 +52,7 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := InitializeNodeValidatorFilesFromMnemonic(cfg, tt.mnemonic)
+			_, _, err := InitializeNodeValidatorFilesFromMnemonic(cfg, tt.mnemonic, "ed25519")
 
 			if tt.expError {
 				require.Error(t, err)

@@ -1,8 +1,8 @@
 package mock
 
 import (
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -28,13 +28,21 @@ func (pv PV) GetPubKey() (crypto.PubKey, error) {
 }
 
 // SignVote implements PrivValidator interface
-func (pv PV) SignVote(chainID string, vote *cmtproto.Vote) error {
+func (pv PV) SignVote(chainID string, vote *cmtproto.Vote, signExtension bool) error {
 	signBytes := cmttypes.VoteSignBytes(chainID, vote)
 	sig, err := pv.PrivKey.Sign(signBytes)
 	if err != nil {
 		return err
 	}
 	vote.Signature = sig
+	if signExtension {
+		extSignBytes := cmttypes.VoteExtensionSignBytes(chainID, vote)
+		extSig, err := pv.PrivKey.Sign(extSignBytes)
+		if err != nil {
+			return err
+		}
+		vote.ExtensionSignature = extSig
+	}
 	return nil
 }
 

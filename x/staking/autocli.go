@@ -140,7 +140,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: stakingv1beta.Msg_ServiceDesc.ServiceName,
+			Service:              stakingv1beta.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "Delegate",
@@ -183,7 +184,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					GovProposal:    true,
 				},
 			},
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
 		},
 	}
 }

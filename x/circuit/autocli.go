@@ -33,7 +33,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: circuitv1.Msg_ServiceDesc.ServiceName,
+			Service:              circuitv1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "AuthorizeCircuitBreaker",

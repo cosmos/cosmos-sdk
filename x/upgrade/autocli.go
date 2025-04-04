@@ -47,7 +47,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: upgradev1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              upgradev1beta1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:   "CancelUpgrade",
@@ -60,7 +61,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Skip:      true, // skipped because authority gated
 				},
 			},
-			EnhanceCustomCommand: true,
 		},
 	}
 }

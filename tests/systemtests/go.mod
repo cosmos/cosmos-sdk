@@ -8,7 +8,7 @@ replace (
 )
 
 require (
-	cosmossdk.io/math v1.5.2
+	cosmossdk.io/math v1.5.3
 	cosmossdk.io/systemtests v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.1

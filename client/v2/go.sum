@@ -14,6 +14,7 @@ cosmossdk.io/log v1.5.1 h1:wLwiYXmfrort/O+j6EkjF+HvbdrRQd+4cYCPKFSm+zM=
 cosmossdk.io/log v1.5.1/go.mod h1:5cXXBvfBkR2/BcXmosdCSLXllvgSjphrrDVdfVRmBGM=
 cosmossdk.io/math v1.5.2 h1:PIhyy1JzmgPA712ewaYRjs+Hhh0iNuM8+fH18WPSejU=
 cosmossdk.io/math v1.5.2/go.mod h1:ToembcWID/wR94cucsMD+2gq6xrlBBOfWcGwC7ZdwZA=
+cosmossdk.io/math v1.5.3/go.mod h1:uqcZv7vexnhMFJF+6zh9EWdm/+Ylyln34IvPnBauPCQ=
 cosmossdk.io/schema v1.0.0 h1:/diH4XJjpV1JQwuIozwr+A4uFuuwanFdnw2kKeiXwwQ=
 cosmossdk.io/schema v1.0.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
 cosmossdk.io/store v1.1.2 h1:3HOZG8+CuThREKv6cn3WSohAc6yccxO3hLzwK6rBC7o=

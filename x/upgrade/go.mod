@@ -39,7 +39,7 @@ require (
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cloud.google.com/go/storage v1.49.0 // indirect
 	cosmossdk.io/collections v1.2.0 // indirect
-	cosmossdk.io/math v1.5.2 // indirect
+	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

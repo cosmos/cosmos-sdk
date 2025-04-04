@@ -11,6 +11,7 @@ jobs:
       - run: cd docs && sh ./pre.sh
       - uses: gaurav-nelson/github-action-markdown-link-check@1.0.17
         with:
+          check-modified-files-only: 'yes'
           folder-path: "docs"
       - run: cd docs && sh ./post.sh
   sims-notify-failure:

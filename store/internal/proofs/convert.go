@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/bits"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1" // NOTE: review
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	ics23 "github.com/cosmos/ics23/go"
 )
 

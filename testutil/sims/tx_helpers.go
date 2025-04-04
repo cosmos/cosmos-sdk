@@ -1,5 +1,26 @@
 package sims
 
+/*import (
+	"context"
+	"math/rand"
+	"testing"
+	"time"
+
+	types2 "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/api/tendermint/types"
+	"cosmossdk.io/errors"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+)*/
+
 import (
 	"context"
 	"math/rand"
@@ -7,7 +28,7 @@ import (
 	"time"
 
 	types2 "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: import by tests
+	types "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/errors"
@@ -127,7 +148,7 @@ func SignCheckDeliver(
 	bz, err := txCfg.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	resBlock, err := app.FinalizeBlock(&types2.RequestFinalizeBlock{
+	resBlock, err := app.FinalizeBlock(&types2.FinalizeBlockRequest{
 		Height: header.Height,
 		Txs:    [][]byte{bz},
 	})

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1" // NOTE: review
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
@@ -18,6 +18,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -263,11 +264,11 @@ func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
 	if err != nil {
 		panic(err)
 	}
-
-	return abci.ValidatorUpdate{
-		PubKey: tmProtoPk,
-		Power:  v.ConsensusPower(r),
+	validatorUpdate, err := conv.ValidatorUpdateFromPublicKey(tmProtoPk, v.ConsensusPower(r))
+	if err != nil {
+		panic(err)
 	}
+	return validatorUpdate
 }
 
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
@@ -277,11 +278,11 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	if err != nil {
 		panic(err)
 	}
-
-	return abci.ValidatorUpdate{
-		PubKey: tmProtoPk,
-		Power:  0,
+	validatorUpdate, err := conv.ValidatorUpdateFromPublicKey(tmProtoPk, 0)
+	if err != nil {
+		panic(err)
 	}
+	return validatorUpdate
 }
 
 // SetInitialCommission attempts to set a validator's initial commission. An

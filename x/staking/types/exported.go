@@ -1,7 +1,7 @@
 package types
 
 import (
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1" // NOTE: review
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
 	"cosmossdk.io/math"
 

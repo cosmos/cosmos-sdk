@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/mock"
@@ -237,7 +238,7 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
-	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
+	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg, ed25519.KeyType)
 	require.NoError(t, err)
 
 	require.NotEqual(t, "", nodeID)

@@ -3,7 +3,7 @@ package mock
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: import by tests
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,9 +17,10 @@ func TestGetPubKey(t *testing.T) {
 func TestSignVote(t *testing.T) {
 	pv := NewPV()
 	v := cmtproto.Vote{}
-	err := pv.SignVote("chain-id", &v)
+	err := pv.SignVote("chain-id", &v, true)
 	require.NoError(t, err)
 	require.NotNil(t, v.Signature)
+	require.NotNil(t, v.ExtensionSignature)
 }
 
 func TestSignProposal(t *testing.T) {

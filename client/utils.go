@@ -78,7 +78,11 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 // NewClientFromNode sets up Client implementation that communicates with a CometBFT node over
 // JSON RPC and WebSockets
 func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
-	return rpchttp.New(nodeURI, "/websocket")
+	// NOTE: New for Comet v1.x: caller should have appended the RPC API version at the end of the URL
+	//       as shown in CometBFT v1.x docs, e.g.: "http://192.168.1.10:26657/v1"
+	// See: Doc in cometbft/rpc/client/http/http.go
+	// See: https://docs.cometbft.com/v1.0/rpc/
+	return rpchttp.New(nodeURI)
 }
 
 // FlagSetWithPageKeyDecoded returns the provided flagSet with the page-key value base64 decoded (if it exists).

@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: review; test
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -123,7 +123,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t.Log("importing genesis...\n")
 		newTestInstance := sims.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
 		newApp := newTestInstance.App
-		_, err = newApp.InitChain(&abci.RequestInitChain{
+		_, err = newApp.InitChain(&abci.InitChainRequest{
 			AppStateBytes: exported.AppState,
 			ChainId:       sims.SimAppChainID,
 		})

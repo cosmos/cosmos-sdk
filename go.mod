@@ -212,6 +212,3 @@ retract (
 
 // FIXME: remove temporary replace; replaced since published store references tendermint protos (local store was fixed to reference cometbft v1)
 replace cosmossdk.io/store => ./store
-
-// FIXME: remove temporary replace with local cometbft (also works with the modified "make proto-gen" target)
-//replace github.com/cometbft/cometbft => ../cometbft

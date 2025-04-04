@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1" // NOTE: review
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/cometbft/cometbft/crypto/merkle"
 	ics23 "github.com/cosmos/ics23/go"
 

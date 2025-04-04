@@ -2,7 +2,7 @@ package cmtservice
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1" // NOTE: Example: Not changed; SDK-owned already, Header bech32 field #14 replace returned in queries.
+	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
 )
 
 var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{

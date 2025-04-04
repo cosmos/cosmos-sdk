@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: review; test
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 

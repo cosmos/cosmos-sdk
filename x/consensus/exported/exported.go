@@ -3,7 +3,7 @@ package exported
 import (
 	"context"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: review. very likely we want to export the SDK api types in this package
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

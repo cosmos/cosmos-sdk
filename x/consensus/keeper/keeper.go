@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: review
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

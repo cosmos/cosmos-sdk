@@ -240,9 +240,6 @@ replace cosmossdk.io/x/feegrant => ../x/feegrant
 // FIXME: remove temporary replace; replaced since published package uses tendermint protos (local copy uses cometbft v1)
 replace cosmossdk.io/x/nft => ../x/nft
 
-// FIXME: remove temporary replace with local cometbft
-//replace github.com/cometbft/cometbft => ../../cometbft
-
 // Below are the long-lived replace of the SimApp
 replace (
 	cosmossdk.io/api => ../api

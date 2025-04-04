@@ -103,7 +103,7 @@ if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.
 When starting a new chain, the consensus version of each module MUST be saved to state during the application's genesis. To save the consensus version, add the following line to the `InitChainer` method in `app.go`:
 
 ```diff
-func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *MyApp) InitChainer(ctx sdk.Context, req abci.InitChainRequest) abci.InitChainResponse {
   ...
 + app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
   ...

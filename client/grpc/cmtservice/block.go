@@ -3,8 +3,8 @@ package cmtservice
 import (
 	"context"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1" // NOTE: Example: Path changed in new CometBFT versions (in any case, current CometBFT)
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"       // NOTE: Example: Path not changed in new CometBFT versions (in any case, current CometBFT)
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )

@@ -2,12 +2,14 @@ module cosmossdk.io/simapp
 
 go 1.23.2
 
+toolchain go1.24.1
+
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e
 	cosmossdk.io/collections v1.2.0 // indirect
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0-rc.1
+	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.5.1
 	cosmossdk.io/math v1.5.2
 	cosmossdk.io/store v1.1.2

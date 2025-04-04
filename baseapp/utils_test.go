@@ -133,6 +133,17 @@ func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg
 	return &baseapptestutil.MsgCreateCounterResponse{}, nil
 }
 
+type mockCounterServer struct {
+	incrementCounterFn func(context.Context, *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error)
+}
+
+func (m mockCounterServer) IncrementCounter(ctx context.Context, req *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	if m.incrementCounterFn == nil {
+		panic("not expected to be called")
+	}
+	return m.incrementCounterFn(ctx, req)
+}
+
 type NoopCounterServerImpl struct{}
 
 func (m NoopCounterServerImpl) IncrementCounter(

@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0-rc.1
+	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.5.1
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.2

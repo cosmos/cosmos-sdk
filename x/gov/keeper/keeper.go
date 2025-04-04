@@ -90,7 +90,7 @@ func (k Keeper) GetAuthority() string {
 func NewKeeper(
 	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrKeeper types.DistributionKeeper,
-	router baseapp.MessageRouter, config types.Config, authority string, InitOptions ...InitOption,
+	router baseapp.MessageRouter, config types.Config, authority string, initOptions ...InitOption,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -129,7 +129,7 @@ func NewKeeper(
 		VotingPeriodProposals:                collections.NewMap(sb, types.VotingPeriodProposalKeyPrefix, "voting_period_proposals", collections.Uint64Key, collections.BytesValue),
 	}
 
-	for _, opt := range InitOptions {
+	for _, opt := range initOptions {
 		opt(k)
 	}
 

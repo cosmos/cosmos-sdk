@@ -229,7 +229,10 @@ integer value.
 
 #### Using an External Community Pool
 
-Starting with Cosmos SDK v0.53.0, an external community pool can be used in place of the `x/distribution` managed community pool.
+Starting with Cosmos SDK v0.53.0, an external community pool, such as `x/protocolpool`, can be used in place of the `x/distribution` managed community pool.
+
+
+Please view the warning in the next section before deciding to use an external community pool.
 
 ```go
 // ExternalCommunityPoolKeeper is the interface that an external community pool module keeper must fulfill
@@ -246,10 +249,22 @@ type ExternalCommunityPoolKeeper interface {
 }
 ```
 
+```go
+app.DistrKeeper = distrkeeper.NewKeeper(
+    appCodec,
+    runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
+    app.AccountKeeper,
+    app.BankKeeper,
+    app.StakingKeeper,
+    authtypes.FeeCollectorName,
+    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+    distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper), // New option.
+)
+```
 
 #### External Community Pool Usage Warning
 
-When using an external community pool with `x/distribution`, the following handlers will break:
+When using an external community pool with `x/distribution`, the following handlers will return an error:
 
 **QueryService**
 

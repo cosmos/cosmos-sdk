@@ -12,7 +12,7 @@ This module is `supplemental`; it is not required to run a Cosmos SDK chain. `x/
 
 ## Usage Limitations
 
-The following `x/distribution` handlers will now return an error when the protocolpool module is used with `x/distribution`:
+The following `x/distribution` handlers will now return an error when the `protocolpool` module is used with `x/distribution`:
 
 **QueryService**
 

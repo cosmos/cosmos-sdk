@@ -67,6 +67,10 @@ type InitOption func(*Keeper)
 // If this function is not provided, the default function is used.
 func WithCustomCalculateVoteResultsAndVotingPowerFn(calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn) InitOption {
 	return func(k *Keeper) {
+		if calculateVoteResultsAndVotingPowerFn == nil {
+			panic("calculateVoteResultsAndVotingPowerFn cannot be nil")
+		}
+
 		k.calculateVoteResultsAndVotingPowerFn = calculateVoteResultsAndVotingPowerFn
 	}
 }

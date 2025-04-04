@@ -35,6 +35,24 @@ app.ModuleManager.SetOrderPreBlockers(
 
 ## Adding ProtocolPool Module **OPTIONAL**
 
+:::warning
+
+Using `protocolpool` will cause the following `x/distribution` handlers to return an error:
+
+
+**QueryService**
+
+- `CommunityPool`
+
+**MsgService**
+
+- `CommunityPoolSpend`
+- `FundCommunityPool`
+
+If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
+
+:::
+
 ### Manual Wiring
 
 Import the following:

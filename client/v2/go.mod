@@ -7,7 +7,7 @@ replace github.com/cosmos/cosmos-sdk => ../..
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0-rc.1
+	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/math v1.5.2
 	cosmossdk.io/x/tx v0.14.0-rc.1
 	github.com/cockroachdb/errors v1.11.3

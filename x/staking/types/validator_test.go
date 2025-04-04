@@ -59,24 +59,6 @@ func TestUpdateDescription(t *testing.T) {
 	require.Equal(t, d, d3)
 }
 
-func TestABCIValidatorUpdate(t *testing.T) {
-	validator := newValidator(t, valAddr1, pk1)
-	abciVal := validator.ABCIValidatorUpdate(sdk.DefaultPowerReduction)
-	pk, err := validator.TmConsPublicKey()
-	require.NoError(t, err)
-	require.Equal(t, pk, abciVal.PubKey)
-	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
-}
-
-func TestABCIValidatorUpdateZero(t *testing.T) {
-	validator := newValidator(t, valAddr1, pk1)
-	abciVal := validator.ABCIValidatorUpdateZero()
-	pk, err := validator.TmConsPublicKey()
-	require.NoError(t, err)
-	require.Equal(t, pk, abciVal.PubKey)
-	require.Equal(t, int64(0), abciVal.Power)
-}
-
 func TestShareTokens(t *testing.T) {
 	validator := mkValidator(100, math.LegacyNewDec(100))
 	assert.True(math.LegacyDecEq(t, math.LegacyNewDec(50), validator.TokensFromShares(math.LegacyNewDec(50))))

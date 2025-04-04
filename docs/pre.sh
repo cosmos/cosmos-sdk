@@ -42,4 +42,6 @@ cp -r ./spec ./docs/build
 cp -r ./rfc ./docs/build/rfc
 
 ## Add SDK migration documentation
-cp -r ../UPGRADING.md ./docs/build/migrations/02-upgrading.md
+cp -r ../UPGRADING.md ./docs/build/migrations/02-upgrade-reference.md
+
+cp -r ../UPGRADE_GUIDE.md ./docs/build/migrations/03-upgrade-guide.md

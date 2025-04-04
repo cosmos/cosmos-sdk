@@ -701,7 +701,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		Height: height,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1945, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 2945, false)
 }
 
 func TestGRPCDelegatorValidators(t *testing.T) {

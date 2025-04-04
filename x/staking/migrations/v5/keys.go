@@ -19,6 +19,7 @@ var (
 	HistoricalInfoKey                         = []byte{0x50} // prefix for the historical info
 	DelegationByValIndexKey                   = []byte{0x71} // key for delegations by a validator
 	NextMigrateDelegationsByValidatorIndexKey = []byte{0x81} // key used to migrate to the new validator index
+	NextMigrateHistoricalInfoKey              = []byte{0x82} // key used for lazy historical info migration
 )
 
 // ParseDelegationKey parses given key and returns delagator, validator address bytes

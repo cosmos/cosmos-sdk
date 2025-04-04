@@ -63,8 +63,19 @@ func TestHistoricalKeysMigration(t *testing.T) {
 		store.Set(tc.oldKey, tc.historicalInfo)
 	}
 
-	// migrate store to new key format
-	require.NoErrorf(t, v5.MigrateStore(ctx, store, cdc), "v5.MigrateStore failed, seed: %d", seed)
+	// migrate store to new key format (in chunks of 5)
+	require.NoErrorf(t, v5.MigrateHistoricalInfoKeys(ctx, store, nil, 5), "v5.MigrateStore failed, seed: %d", seed)
+
+	nextIndex := store.Get(v5.NextMigrateHistoricalInfoKey)
+	require.NotNil(t, nextIndex)
+	require.NoErrorf(t, v5.MigrateHistoricalInfoKeys(ctx, store, nextIndex, 5), "v5.MigrateStore failed, seed: %d", seed)
+
+	nextIndex = store.Get(v5.NextMigrateHistoricalInfoKey)
+	require.NotNil(t, nextIndex)
+	require.NoErrorf(t, v5.MigrateHistoricalInfoKeys(ctx, store, nextIndex, 5), "v5.MigrateStore failed, seed: %d", seed)
+
+	// assert the next migration index is cleared from the store
+	require.Nil(t, store.Get(v5.NextMigrateHistoricalInfoKey))
 
 	// check results
 	for _, tc := range testCases {

@@ -13,5 +13,6 @@ The fork include the following changes compared to upstream:
 * Support [CIP-30](https://github.com/celestiaorg/CIPs/blob/main/cips/cip-030.md)
 * The `prove` flag for is set to `false` for tx queries, similarly to celestia/cosmos-sdk v0.46
 * The x/staking migration for delegation keys has been made a lazy migration
+* The x/staking migration for historical info keys has been made a lazy migration
 
 Read the [CHANGELOG.md](CHANGELOG.md) for more details.

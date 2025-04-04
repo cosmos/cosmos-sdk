@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
@@ -43,22 +42,32 @@ func MigrateStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCod
 	if err := migrateDelegationsByValidatorIndex(ctx, store, cdc); err != nil {
 		return err
 	}
-	return migrateHistoricalInfoKeys(store, ctx.Logger())
+	return MigrateHistoricalInfoKeys(ctx, store, nil, 1000)
 }
 
-// migrateHistoricalInfoKeys migrate HistoricalInfo keys to binary format
-func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) error {
-	// old key is of format:
-	// prefix (0x50) || heightBytes (string representation of height in 10 base)
-	// new key is of format:
-	// prefix (0x50) || heightBytes (byte array representation using big-endian byte order)
-	oldStore := prefix.NewStore(store, HistoricalInfoKey)
+// MigrateHistoricalInfoKeys migrate HistoricalInfo keys to binary format
+// old key is of format:
+// prefix (0x50) || heightBytes (string representation of height in 10 base)
+// new key is of format:
+// prefix (0x50) || heightBytes (byte array representation using big-endian byte order)
+//
+// The migration function accepts a starting index and a limit. A nil index will start iterator from the beginning
+// of the historical info keyspace.
+func MigrateHistoricalInfoKeys(ctx sdk.Context, store storetypes.KVStore, index []byte, limit uint32) error {
+	prefixStore := prefix.NewStore(store, HistoricalInfoKey)
 
-	oldStoreIter := oldStore.Iterator(nil, nil)
-	defer sdk.LogDeferred(logger, func() error { return oldStoreIter.Close() })
+	iter := prefixStore.Iterator(index, nil)
+	defer sdk.LogDeferred(ctx.Logger(), func() error { return iter.Close() })
 
-	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-		strHeight := oldStoreIter.Key()
+	iterationCounter := 0
+	for ; iter.Valid(); iter.Next() {
+		if iterationCounter >= int(limit) {
+			ctx.Logger().Info(fmt.Sprintf("migrated %d historical info entries, next key %s", limit, iter.Key()))
+			store.Set(NextMigrateHistoricalInfoKey, iter.Key())
+			break
+		}
+
+		strHeight := iter.Key()
 
 		intHeight, err := strconv.ParseInt(string(strHeight), 10, 64)
 		if err != nil {
@@ -68,8 +77,15 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 		newStoreKey := GetHistoricalInfoKey(intHeight)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
-		oldStore.Delete(oldStoreIter.Key())
+		store.Set(newStoreKey, iter.Value())
+		prefixStore.Delete(iter.Key())
+
+		iterationCounter++
+	}
+
+	if !iter.Valid() {
+		ctx.Logger().Info(fmt.Sprintf("successfully completed migration for historical info to binary key format"))
+		store.Delete(NextMigrateHistoricalInfoKey)
 	}
 
 	return nil

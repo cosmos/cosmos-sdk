@@ -397,6 +397,10 @@ func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalI
 		return nil, status.Error(codes.InvalidArgument, "height cannot be negative")
 	}
 
+	if has, err := k.storeService.OpenKVStore(ctx).Has(types.NextMigrateHistoricalInfoKey); has || err != nil {
+		return nil, status.Error(codes.Internal, "store migration has not finished, try again later")
+	}
+
 	hi, err := k.GetHistoricalInfo(ctx, req.Height)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "historical info for height %d not found", req.Height)

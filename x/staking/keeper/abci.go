@@ -5,8 +5,10 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v5 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v5"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -20,12 +22,17 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
-				k.Logger(sdk.UnwrapSDKContext(ctx)).Error("Panic in MigrateDelegationsByValidatorIndex", "recover", r)
+				k.Logger(sdk.UnwrapSDKContext(ctx)).Error("Panic in x/staking migrations", "recover", r)
 			}
 		}()
 
 		// Only migrate 10000 items per block to make the migration as fast as possible
 		k.MigrateDelegationsByValidatorIndex(sdk.UnwrapSDKContext(ctx), 10000)
+
+		store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+		if index := store.Get(types.NextMigrateHistoricalInfoKey); index != nil {
+			v5.MigrateHistoricalInfoKeys(sdk.UnwrapSDKContext(ctx), store, index, 1000)
+		}
 	}()
 
 	return k.TrackHistoricalInfo(ctx)

@@ -58,6 +58,7 @@ var (
 	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
 
 	NextMigrateDelegationsByValidatorIndexKey = []byte{0x81} // key used to migrate to the new validator index
+	NextMigrateHistoricalInfoKey              = []byte{0x82} // key used for lazy historical info migration
 )
 
 // UnbondingType defines the type of unbonding operation

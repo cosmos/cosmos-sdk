@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -183,6 +182,10 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 				return err
 			}
 		}
+		// ensure that group has one or more members
+		if totalWeight.IsZero() {
+			return errors.ErrInvalid.Wrap("group must not be empty")
+		}
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
 		g.Version++
@@ -334,23 +337,27 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	// collision with an existing address.
 	for {
 		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, nextAccVal)
+		derivationKey := make([]byte, 8)
+		binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-		parentAcc := address.Module(group.ModuleName, []byte{GroupPolicyTablePrefix})
-		accountAddr = address.Derive(parentAcc, buf)
-
+		ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
+		if err != nil {
+			return nil, err
+		}
+		accountAddr = sdk.AccAddress(ac.Address())
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision, in which case we just go on to the
 			// next sequence value and derive a new address.
 			continue
 		}
-		acc := k.accKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
-			BaseAccount: &authtypes.BaseAccount{
-				Address: accountAddr.String(),
-			},
-			Name: accountAddr.String(),
-		})
+
+		// group policy accounts are unclaimable base accounts
+		account, err := authtypes.NewBaseAccountWithPubKey(ac)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "could not create group policy account")
+		}
+
+		acc := k.accKeeper.NewAccount(ctx, account)
 		k.accKeeper.SetAccount(ctx, acc)
 
 		break
@@ -471,6 +478,14 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
+	if err := k.assertMetadataLength(req.Summary, "proposal summary"); err != nil {
+		return nil, err
+	}
+
+	if err := k.assertMetadataLength(req.Title, "proposal Title"); err != nil {
+		return nil, err
+	}
+
 	policyAcc, err := k.getGroupPolicyInfo(ctx, req.GroupPolicyAddress)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
@@ -516,6 +531,8 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
 		FinalTallyResult:   group.DefaultTallyResult(),
+		Title:              req.Title,
+		Summary:            req.Summary,
 	}
 
 	if err := m.SetMsgs(msgs); err != nil {
@@ -674,33 +691,40 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 // doTallyAndUpdate performs a tally, and, if the tally result is final, then:
 // - updates the proposal's `Status` and `FinalTallyResult` fields,
 // - prune all the votes.
-func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
+func (k Keeper) doTallyAndUpdate(ctx sdk.Context, proposal *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy, err := policyInfo.GetDecisionPolicy()
 	if err != nil {
 		return err
 	}
 
-	tallyResult, err := k.Tally(ctx, *p, policyInfo.GroupId)
-	if err != nil {
-		return err
+	var result group.DecisionPolicyResult
+	tallyResult, err := k.Tally(ctx, *proposal, policyInfo.GroupId)
+	if err == nil {
+		result, err = policy.Allow(tallyResult, electorate.TotalWeight)
 	}
-
-	result, err := policy.Allow(tallyResult, electorate.TotalWeight)
 	if err != nil {
-		return sdkerrors.Wrap(err, "policy allow")
+		if err := k.pruneVotes(ctx, proposal.Id); err != nil {
+			return err
+		}
+		proposal.Status = group.PROPOSAL_STATUS_REJECTED
+		return ctx.EventManager().EmitTypedEvents(
+			&group.EventTallyError{
+				ProposalId:   proposal.Id,
+				ErrorMessage: err.Error(),
+			})
 	}
 
 	// If the result was final (i.e. enough votes to pass) or if the voting
 	// period ended, then we consider the proposal as final.
-	if isFinal := result.Final || ctx.BlockTime().After(p.VotingPeriodEnd); isFinal {
-		if err := k.pruneVotes(ctx, p.Id); err != nil {
+	if isFinal := result.Final || ctx.BlockTime().After(proposal.VotingPeriodEnd); isFinal {
+		if err := k.pruneVotes(ctx, proposal.Id); err != nil {
 			return err
 		}
-		p.FinalTallyResult = tallyResult
+		proposal.FinalTallyResult = tallyResult
 		if result.Allow {
-			p.Status = group.PROPOSAL_STATUS_ACCEPTED
+			proposal.Status = group.PROPOSAL_STATUS_ACCEPTED
 		} else {
-			p.Status = group.PROPOSAL_STATUS_REJECTED
+			proposal.Status = group.PROPOSAL_STATUS_REJECTED
 		}
 
 	}

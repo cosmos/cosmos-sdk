@@ -1,21 +1,26 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 )
 
 func testComponents() (*codec.LegacyAmino, sdk.Context, storetypes.StoreKey, storetypes.StoreKey, paramskeeper.Keeper) {
-	marshaler := simapp.MakeTestEncodingConfig().Codec
+	var cdc codec.Codec
+	if err := depinject.Inject(testutil.AppConfig, &cdc); err != nil {
+		panic(err)
+	}
+
 	legacyAmino := createTestCodec()
 	mkey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(mkey, tkey)
-	keeper := paramskeeper.NewKeeper(marshaler, legacyAmino, mkey, tkey)
+	ctx := sdktestutil.DefaultContext(mkey, tkey)
+	keeper := paramskeeper.NewKeeper(cdc, legacyAmino, mkey, tkey)
 
 	return legacyAmino, ctx, mkey, tkey, keeper
 }

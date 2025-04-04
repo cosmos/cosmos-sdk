@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// GetQueryCmd returns the parent command for all x/upgrade CLi query commands.
+// GetQueryCmd returns the parent command for all x/upgrade CLI query commands.
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   types.ModuleName,

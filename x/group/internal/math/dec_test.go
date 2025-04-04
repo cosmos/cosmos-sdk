@@ -95,8 +95,8 @@ func TestDec(t *testing.T) {
 	require.True(t, minusOne.IsNegative())
 }
 
-var genDec *rapid.Generator = rapid.Custom(func(t *rapid.T) Dec {
-	f := rapid.Float64().Draw(t, "f").(float64)
+var genDec *rapid.Generator[Dec] = rapid.Custom(func(t *rapid.T) Dec {
+	f := rapid.Float64().Draw(t, "f")
 	dec, err := NewDecFromString(fmt.Sprintf("%g", f))
 	require.NoError(t, err)
 	return dec
@@ -109,8 +109,8 @@ type floatAndDec struct {
 }
 
 // Generate a Dec value along with the float used to create it
-var genFloatAndDec *rapid.Generator = rapid.Custom(func(t *rapid.T) floatAndDec {
-	f := rapid.Float64().Draw(t, "f").(float64)
+var genFloatAndDec *rapid.Generator[floatAndDec] = rapid.Custom(func(t *rapid.T) floatAndDec {
+	f := rapid.Float64().Draw(t, "f")
 	dec, err := NewDecFromString(fmt.Sprintf("%g", f))
 	require.NoError(t, err)
 	return floatAndDec{f, dec}
@@ -118,7 +118,7 @@ var genFloatAndDec *rapid.Generator = rapid.Custom(func(t *rapid.T) floatAndDec 
 
 // Property: n == NewDecFromInt64(n).Int64()
 func testDecInt64(t *rapid.T) {
-	nIn := rapid.Int64().Draw(t, "n").(int64)
+	nIn := rapid.Int64().Draw(t, "n")
 	nOut, err := NewDecFromInt64(nIn).Int64()
 
 	require.NoError(t, err)
@@ -127,7 +127,7 @@ func testDecInt64(t *rapid.T) {
 
 // Property: 0 + a == a
 func testAddLeftIdentity(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
+	a := genDec.Draw(t, "a")
 	zero := NewDecFromInt64(0)
 
 	b, err := zero.Add(a)
@@ -138,7 +138,7 @@ func testAddLeftIdentity(t *rapid.T) {
 
 // Property: a + 0 == a
 func testAddRightIdentity(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
+	a := genDec.Draw(t, "a")
 	zero := NewDecFromInt64(0)
 
 	b, err := a.Add(zero)
@@ -149,8 +149,8 @@ func testAddRightIdentity(t *rapid.T) {
 
 // Property: a + b == b + a
 func testAddCommutative(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
-	b := genDec.Draw(t, "b").(Dec)
+	a := genDec.Draw(t, "a")
+	b := genDec.Draw(t, "b")
 
 	c, err := a.Add(b)
 	require.NoError(t, err)
@@ -163,9 +163,9 @@ func testAddCommutative(t *rapid.T) {
 
 // Property: (a + b) + c == a + (b + c)
 func testAddAssociative(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
-	b := genDec.Draw(t, "b").(Dec)
-	c := genDec.Draw(t, "c").(Dec)
+	a := genDec.Draw(t, "a")
+	b := genDec.Draw(t, "b")
+	c := genDec.Draw(t, "c")
 
 	// (a + b) + c
 	d, err := a.Add(b)
@@ -186,7 +186,7 @@ func testAddAssociative(t *rapid.T) {
 
 // Property: a - 0 == a
 func testSubRightIdentity(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
+	a := genDec.Draw(t, "a")
 	zero := NewDecFromInt64(0)
 
 	b, err := a.Sub(zero)
@@ -197,7 +197,7 @@ func testSubRightIdentity(t *rapid.T) {
 
 // Property: a - a == 0
 func testSubZero(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
+	a := genDec.Draw(t, "a")
 	zero := NewDecFromInt64(0)
 
 	b, err := a.Sub(a)
@@ -208,8 +208,8 @@ func testSubZero(t *rapid.T) {
 
 // Property: (a - b) + b == a
 func testSubAdd(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
-	b := genDec.Draw(t, "b").(Dec)
+	a := genDec.Draw(t, "a")
+	b := genDec.Draw(t, "b")
 
 	c, err := a.Sub(b)
 	require.NoError(t, err)
@@ -222,8 +222,8 @@ func testSubAdd(t *rapid.T) {
 
 // Property: (a + b) - b == a
 func testAddSub(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
-	b := genDec.Draw(t, "b").(Dec)
+	a := genDec.Draw(t, "a")
+	b := genDec.Draw(t, "b")
 
 	c, err := a.Add(b)
 	require.NoError(t, err)
@@ -236,23 +236,23 @@ func testAddSub(t *rapid.T) {
 
 // Property: Cmp(a, b) == -Cmp(b, a)
 func testCmpInverse(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
-	b := genDec.Draw(t, "b").(Dec)
+	a := genDec.Draw(t, "a")
+	b := genDec.Draw(t, "b")
 
 	require.Equal(t, a.Cmp(b), -b.Cmp(a))
 }
 
 // Property: IsEqual(a, b) == IsEqual(b, a)
 func testEqualCommutative(t *rapid.T) {
-	a := genDec.Draw(t, "a").(Dec)
-	b := genDec.Draw(t, "b").(Dec)
+	a := genDec.Draw(t, "a")
+	b := genDec.Draw(t, "b")
 
 	require.Equal(t, a.IsEqual(b), b.IsEqual(a))
 }
 
 // Property: isNegative(f) == isNegative(NewDecFromString(f.String()))
 func testIsNegative(t *rapid.T) {
-	floatAndDec := genFloatAndDec.Draw(t, "floatAndDec").(floatAndDec)
+	floatAndDec := genFloatAndDec.Draw(t, "floatAndDec")
 	f, dec := floatAndDec.float, floatAndDec.dec
 
 	require.Equal(t, f < 0, dec.IsNegative())

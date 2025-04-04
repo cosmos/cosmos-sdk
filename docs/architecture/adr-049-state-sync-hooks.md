@@ -35,7 +35,7 @@ snapshot and the restoration. Each module could have mutiple snapshotters, and f
 implement `ExtensionSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
 `RegisterExtensions([]ExtensionSnapshotter…)` to register all the extension snapshotters.
 
-```proto
+```protobuf
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
 // On top of the exsiting SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
 message SnapshotItem {

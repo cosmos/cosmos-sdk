@@ -6,25 +6,28 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/module"
+	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
 type GenesisTestSuite struct {
 	suite.Suite
 
-	app    *simapp.SimApp
 	ctx    context.Context
 	sdkCtx sdk.Context
 	keeper keeper.Keeper
@@ -42,17 +45,30 @@ var (
 	memberAddr = sdk.AccAddress(memberPub.Address())
 )
 
-func (s *GenesisTestSuite) SetupSuite() {
-	checkTx := false
-	db := dbm.NewMemDB()
-	encCdc := simapp.MakeTestEncodingConfig()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
+func (s *GenesisTestSuite) SetupTest() {
+	key := sdk.NewKVStoreKey(group.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	s.app = app
-	s.sdkCtx = app.BaseApp.NewUncachedContext(checkTx, tmproto.Header{})
-	s.keeper = app.GroupKeeper
-	s.cdc = codec.NewProtoCodec(app.InterfaceRegistry())
+	ctrl := gomock.NewController(s.T())
+	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), memberAddr).Return(authtypes.NewBaseAccountWithAddress(memberAddr)).AnyTimes()
+
+	bApp := baseapp.NewBaseApp(
+		"group",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+
+	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	s.sdkCtx = testCtx.Ctx
+	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	s.ctx = sdk.WrapSDKContext(s.sdkCtx)
+
+	s.keeper = keeper.NewKeeper(key, s.cdc, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -508,7 +509,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/MsgUpdateGroupPolicyMetadata.
+// MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/UpdateGroupPolicyMetadata.
 func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-policy-metadata [admin] [group-policy-account] [new-metadata]",
@@ -567,9 +568,24 @@ Parameters:
 		"amount":[{"denom": "stake","amount": "10"}]
 	}
 	],
+	// metadata can be any of base64 encoded, raw text, stringified json, IPFS link to json
+	// see below for example metadata
 	"metadata": "4pIMOgIGx1vZGU=", // base64-encoded metadata
+	"title": "My proposal",
+	"summary": "This is a proposal to send 10 stake to cosmos1...",
 	"proposers": ["cosmos1...", "cosmos1..."],
-}`, version.AppName),
+}
+
+metadata example: 
+{
+	"title": "",
+	"authors": [""],
+	"summary": "",
+	"details": "", 
+	"proposal_forum_url": "",
+	"vote_option_context": "",
+} 
+`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			prop, err := getCLIProposal(args[0])
@@ -579,6 +595,9 @@ Parameters:
 
 			// Since the --from flag is not required on this CLI command, we
 			// ignore it, and just use the 1st proposer in the JSON file.
+			if prop.Proposers == nil || len(prop.Proposers) == 0 {
+				return errors.New("no proposers specified in proposal")
+			}
 			cmd.Flags().Set(flags.FlagFrom, prop.Proposers[0])
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -599,6 +618,8 @@ Parameters:
 				msgs,
 				prop.Metadata,
 				execFromString(execStr),
+				prop.Title,
+				prop.Summary,
 			)
 			if err != nil {
 				return err
@@ -736,7 +757,7 @@ Parameters:
 	return cmd
 }
 
-// MsgExecCmd creates a CLI command for Msg/MsgExec.
+// MsgExecCmd creates a CLI command for Msg/Exec.
 func MsgExecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [proposal-id]",

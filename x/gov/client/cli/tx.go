@@ -20,7 +20,6 @@ import (
 
 // Proposal flags
 const (
-	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagTitle = "title"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagDescription = "description"
@@ -30,7 +29,8 @@ const (
 	flagVoter        = "voter"
 	flagDepositor    = "depositor"
 	flagStatus       = "status"
-	flagMetadata     = "metadata"
+	FlagMetadata     = "metadata"
+	FlagSummary      = "summary"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposal = "proposal"
 )
@@ -106,8 +106,22 @@ Where proposal.json contains:
       "amount":[{"denom": "stake","amount": "10"}]
     }
   ],
-  "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
-  "deposit": "10stake"
+  // metadata can be any of base64 encoded, raw text, stringified json, IPFS link to json
+  // see below for example metadata
+  "metadata": "4pIMOgIGx1vZGU=",
+  "deposit": "10stake",
+  "title": "My proposal",
+  "summary": "A short summary of my proposal"
+}
+
+metadata example: 
+{
+	"title": "",
+	"authors": [""],
+	"summary": "",
+	"details": "", 
+	"proposal_forum_url": "",
+	"vote_option_context": "",
 }
 
 Legacy Syntax:
@@ -140,7 +154,7 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 			}
 
 			// try to interpret as a legacy submit-proposal call
-			proposal, err := parseSubmitLegacyProposalFlags(cmd.Flags())
+			proposal, err := parseSubmitLegacyProposal(cmd.Flags())
 			if err == nil {
 				amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 				if err != nil {
@@ -166,12 +180,12 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return err
 			}
 
-			msgs, metadata, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			msgs, metadata, title, summary, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, title, summary)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -281,7 +295,7 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			metadata, err := cmd.Flags().GetString(flagMetadata)
+			metadata, err := cmd.Flags().GetString(FlagMetadata)
 			if err != nil {
 				return err
 			}
@@ -293,7 +307,7 @@ $ %s tx gov vote 1 yes --from mykey
 		},
 	}
 
-	cmd.Flags().String(flagMetadata, "", "Specify metadata of the vote")
+	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -336,7 +350,7 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 				return err
 			}
 
-			metadata, err := cmd.Flags().GetString(flagMetadata)
+			metadata, err := cmd.Flags().GetString(FlagMetadata)
 			if err != nil {
 				return err
 			}
@@ -347,7 +361,7 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 		},
 	}
 
-	cmd.Flags().String(flagMetadata, "", "Specify metadata of the weighted vote")
+	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the weighted vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

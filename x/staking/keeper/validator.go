@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -182,8 +182,9 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorByConsAddrKey(valConsAddr))
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
-	// call hooks
-	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
+	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator()); err != nil {
+		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
+	}
 }
 
 // get groups of validators
@@ -380,9 +381,21 @@ func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 	addrs := k.GetUnbondingValidators(ctx, val.UnbondingTime, val.UnbondingHeight)
 	newAddrs := []string{}
 
+	// since address string may change due to Bech32 prefix change, we parse the addresses into bytes
+	// format for normalization
+	deletingAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	if err != nil {
+		panic(err)
+	}
+
 	for _, addr := range addrs {
-		if addr != val.OperatorAddress {
-			newAddrs = append(newAddrs, addr)
+		storedAddr, err := sdk.ValAddressFromBech32(addr)
+		if err != nil {
+			// even if we don't panic here, it will panic in UnbondAllMatureValidators at unbond time
+			panic(err)
+		}
+		if !storedAddr.Equals(deletingAddr) {
+			newAddrs = append(newAddrs, storedAddr.String())
 		}
 	}
 
@@ -403,8 +416,6 @@ func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHe
 // UnbondAllMatureValidators unbonds all the mature unbonding validators that
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()
 
@@ -444,13 +455,33 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 					panic("unexpected validator in unbonding queue; status was not unbonding")
 				}
 
-				val = k.UnbondingToUnbonded(ctx, val)
-				if val.GetDelegatorShares().IsZero() {
-					k.RemoveValidator(ctx, val.GetOperator())
+				if val.UnbondingOnHoldRefCount == 0 {
+					for _, id := range val.UnbondingIds {
+						k.DeleteUnbondingIndex(ctx, id)
+					}
+
+					val = k.UnbondingToUnbonded(ctx, val)
+
+					if val.GetDelegatorShares().IsZero() {
+						k.RemoveValidator(ctx, val.GetOperator())
+					} else {
+						// remove unbonding ids
+						val.UnbondingIds = []uint64{}
+					}
+
+					// remove validator from queue
+					k.DeleteValidatorQueue(ctx, val)
 				}
 			}
-
-			store.Delete(key)
 		}
 	}
+}
+
+func (k Keeper) IsValidatorJailed(ctx sdk.Context, addr sdk.ConsAddress) bool {
+	v, ok := k.GetValidatorByConsAddr(ctx, addr)
+	if !ok {
+		return false
+	}
+
+	return v.Jailed
 }

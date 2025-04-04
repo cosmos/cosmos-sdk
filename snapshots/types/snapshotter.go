@@ -1,7 +1,7 @@
 package types
 
 import (
-	protoio "github.com/gogo/protobuf/io"
+	protoio "github.com/cosmos/gogoproto/io"
 )
 
 // Snapshotter is something that can create and restore snapshots, consisting of streamed binary
@@ -22,9 +22,7 @@ type Snapshotter interface {
 	// to determine which heights to retain until after the snapshot is complete.
 	SetSnapshotInterval(snapshotInterval uint64)
 
-	// Restore restores a state snapshot, taking snapshot chunk readers as input.
-	// If the ready channel is non-nil, it returns a ready signal (by being closed) once the
-	// restorer is ready to accept chunks.
+	// Restore restores a state snapshot, taking the reader of protobuf message stream as input.
 	Restore(height uint64, format uint32, protoReader protoio.Reader) (SnapshotItem, error)
 }
 

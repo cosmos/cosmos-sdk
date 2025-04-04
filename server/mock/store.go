@@ -3,11 +3,11 @@ package mock
 import (
 	"io"
 
-	protoio "github.com/gogo/protobuf/io"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
+	protoio "github.com/cosmos/gogoproto/io"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

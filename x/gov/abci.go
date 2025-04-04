@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -12,18 +13,25 @@ import (
 )
 
 // EndBlocker called every block, process inflation, update validator set.
-func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := keeper.Logger(ctx)
 
-	// delete dead proposals from store and returns theirs deposits. A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
+	// delete dead proposals from store and returns theirs deposits.
+	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.Id)
-		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+
+		params := keeper.GetParams(ctx)
+		if !params.BurnProposalDepositPrevote {
+			keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+		} else {
+			keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
+		}
 
 		// called when proposal become inactive
-		keeper.AfterProposalFailedMinDeposit(ctx, proposal.Id)
+		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -36,7 +44,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
-			"min_deposit", sdk.NewCoins(keeper.GetDepositParams(ctx).MinDeposit...).String(),
+			"min_deposit", sdk.NewCoins(params.MinDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 
@@ -71,9 +79,8 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			if err == nil {
 				for idx, msg = range messages {
 					handler := keeper.Router().Handler(msg)
-
 					var res *sdk.Result
-					res, err = handler(cacheCtx, msg)
+					res, err = safeExecuteHandler(cacheCtx, msg, handler)
 					if err != nil {
 						break
 					}
@@ -111,7 +118,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
 		// when proposal become active
-		keeper.AfterProposalVotingPeriodEnded(ctx, proposal.Id)
+		keeper.Hooks().AfterProposalVotingPeriodEnded(ctx, proposal.Id)
 
 		logger.Info(
 			"proposal tallied",
@@ -128,4 +135,16 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		)
 		return false
 	})
+}
+
+// executes handle(msg) and recovers from panic.
+func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgServiceHandler,
+) (res *sdk.Result, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICKED: %v", msg, r)
+		}
+	}()
+	res, err = handler(ctx, msg)
+	return
 }

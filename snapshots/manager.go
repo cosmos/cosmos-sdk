@@ -11,7 +11,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -347,7 +347,6 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	}
 
 	var nextItem types.SnapshotItem
-
 	streamReader, err := NewStreamReader(chChunks)
 	if err != nil {
 		return err
@@ -371,6 +370,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	if err != nil {
 		return sdkerrors.Wrap(err, "multistore restore")
 	}
+
 	for {
 		if nextItem.Item == nil {
 			// end of stream

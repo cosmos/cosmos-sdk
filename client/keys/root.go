@@ -1,8 +1,8 @@
 package keys
 
 import (
+	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
@@ -42,7 +42,9 @@ The pass backend requires GnuPG: https://gnupg.org/
 		AddKeyCommand(),
 		ExportKeyCommand(),
 		ImportKeyCommand(),
+		ImportKeyHexCommand(),
 		ListKeysCmd(),
+		ListKeyTypesCmd(),
 		ShowKeysCmd(),
 		DeleteKeyCommand(),
 		RenameKeyCommand(),
@@ -51,9 +53,8 @@ The pass backend requires GnuPG: https://gnupg.org/
 	)
 
 	cmd.PersistentFlags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	cmd.PersistentFlags().String(flags.FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
-	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.PersistentFlags().String(cli.OutputFlag, "text", "Output format (text|json)")
+	flags.AddKeyringFlags(cmd.PersistentFlags())
 
 	return cmd
 }

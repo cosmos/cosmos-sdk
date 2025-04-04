@@ -1,7 +1,6 @@
 package v1beta1
 
 import (
-	"fmt"
 	"time"
 
 	"sigs.k8s.io/yaml"
@@ -30,7 +29,7 @@ func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) Depo
 	}
 }
 
-// DefaultDepositParams default parameters for deposits
+// DefaultDepositParams returns the default parameters for deposits
 func DefaultDepositParams() DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
@@ -49,22 +48,6 @@ func (dp DepositParams) Equal(dp2 DepositParams) bool {
 	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
-func validateDepositParams(i interface{}) error { //nolint:unused
-	v, ok := i.(DepositParams)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if !v.MinDeposit.IsValid() {
-		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
-	}
-	if v.MaxDepositPeriod <= 0 {
-		return fmt.Errorf("maximum deposit period must be positive: %d", v.MaxDepositPeriod)
-	}
-
-	return nil
-}
-
 // NewTallyParams creates a new TallyParams object
 func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 	return TallyParams{
@@ -74,7 +57,7 @@ func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 	}
 }
 
-// DefaultTallyParams default parameters for tallying
+// DefaultTallyParams returns default parameters for tallying
 func DefaultTallyParams() TallyParams {
 	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
 }
@@ -88,34 +71,6 @@ func (tp TallyParams) Equal(other TallyParams) bool {
 func (tp TallyParams) String() string {
 	out, _ := yaml.Marshal(tp)
 	return string(out)
-}
-
-func validateTallyParams(i interface{}) error { //nolint:unused
-	v, ok := i.(TallyParams)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.Quorum.IsNegative() {
-		return fmt.Errorf("quorom cannot be negative: %s", v.Quorum)
-	}
-	if v.Quorum.GT(sdk.OneDec()) {
-		return fmt.Errorf("quorom too large: %s", v)
-	}
-	if !v.Threshold.IsPositive() {
-		return fmt.Errorf("vote threshold must be positive: %s", v.Threshold)
-	}
-	if v.Threshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("vote threshold too large: %s", v)
-	}
-	if !v.VetoThreshold.IsPositive() {
-		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)
-	}
-	if v.VetoThreshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("veto threshold too large: %s", v)
-	}
-
-	return nil
 }
 
 // NewVotingParams creates a new VotingParams object
@@ -141,20 +96,6 @@ func (vp VotingParams) String() string {
 	return string(out)
 }
 
-//nolint:unused
-func validateVotingParams(i interface{}) error {
-	v, ok := i.(VotingParams)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.VotingPeriod <= 0 {
-		return fmt.Errorf("voting period must be positive: %s", v.VotingPeriod)
-	}
-
-	return nil
-}
-
 // Params returns all of the governance params
 type Params struct {
 	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
@@ -162,6 +103,7 @@ type Params struct {
 	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
 }
 
+// String implements stringer interface
 func (gp Params) String() string {
 	return gp.VotingParams.String() + "\n" +
 		gp.TallyParams.String() + "\n" + gp.DepositParams.String()
@@ -176,7 +118,7 @@ func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
 	}
 }
 
-// DefaultParams default governance params
+// DefaultParams returns the default governance params
 func DefaultParams() Params {
 	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
 }

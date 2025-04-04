@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	fmt "fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -19,7 +19,7 @@ type (
 		// doesn't require access to any other information.
 		ValidateBasic() error
 
-		// Signers returns the addrs of signers that must sign.
+		// GetSigners returns the addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
 		// CONTRACT: Returns addrs in some deterministic order.
 		GetSigners() []AccAddress
@@ -41,7 +41,7 @@ type (
 
 	// Tx defines the interface a transaction must fulfill.
 	Tx interface {
-		// Gets the all the transaction's messages.
+		// GetMsgs gets the all the transaction's messages.
 		GetMsgs() []Msg
 
 		// ValidateBasic does a simple and lightweight validation check that doesn't
@@ -58,7 +58,7 @@ type (
 		FeeGranter() AccAddress
 	}
 
-	// Tx must have GetMemo() method to use ValidateMemoDecorator
+	// TxWithMemo must have GetMemo() method to use ValidateMemoDecorator
 	TxWithMemo interface {
 		Tx
 		GetMemo() string

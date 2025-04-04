@@ -3,24 +3,21 @@ package mock
 import (
 	"fmt"
 	"os"
+	"testing"
 
-	"github.com/rs/zerolog"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmlog "github.com/tendermint/tendermint/libs/log"
-
-	"github.com/cosmos/cosmos-sdk/server"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmlog "github.com/cometbft/cometbft/libs/log"
 )
 
-// SetupApp returns an application as well as a clean-up function
-// to be used to quickly setup a test case with an app
+// SetupApp returns an application as well as a clean-up function to be used to
+// quickly setup a test case with an app.
 func SetupApp() (abci.Application, func(), error) {
 	var logger tmlog.Logger
-
-	logWriter := zerolog.ConsoleWriter{Out: os.Stderr}
-	logger = server.ZeroLogWrapper{
-		Logger: zerolog.New(logWriter).Level(zerolog.InfoLevel).With().Timestamp().Logger(),
+	if testing.Verbose() {
+		logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout)).With("module", "mock")
+	} else {
+		logger = tmlog.NewNopLogger()
 	}
-	logger = logger.With("module", "mock")
 
 	rootDir, err := os.MkdirTemp("", "mock-sdk")
 	if err != nil {

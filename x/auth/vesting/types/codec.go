@@ -10,6 +10,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
 )
 
 // RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the
@@ -24,8 +26,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&PermanentLockedAccount{}, "cosmos-sdk/PermanentLockedAccount", nil)
 	legacy.RegisterAminoMsg(cdc, &MsgClawback{}, "cosmos-sdk/MsgClawback")
 	// msgName needs to be 39 chars or less, but only needs to be unique - abbreviate next two
-	legacy.RegisterAminoMsg(cdc, &MsgCreateClawbackVestingAccount{}, "cosmos-sdk/MsgCreateClawbackVestingAcc")
-	legacy.RegisterAminoMsg(cdc, &MsgCreatePeriodicVestingAccount{}, "cosmos-sdk/MsgCreatePeriodicVestingAcc")
+	legacy.RegisterAminoMsg(cdc, &MsgCreateClawbackVestingAccount{}, "cosmos-sdk/MsgCreateClawbkVestAccount")
+	legacy.RegisterAminoMsg(cdc, &MsgCreatePeriodicVestingAccount{}, "cosmos-sdk/MsgCreatePeriodVestAccount")
 	legacy.RegisterAminoMsg(cdc, &MsgCreatePermanentLockedAccount{}, "cosmos-sdk/MsgCreatePermLockedAccount")
 	legacy.RegisterAminoMsg(cdc, &MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount")
 	legacy.RegisterAminoMsg(cdc, &MsgReturnGrants{}, "cosmos-sdk/MsgReturnGrants")
@@ -87,7 +89,9 @@ func init() {
 	cryptocodec.RegisterCrypto(amino)
 	sdk.RegisterLegacyAminoCodec(amino)
 
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
+	// Register all Amino interfaces and concrete types on the authz  and gov Amino codec so that this can later be
+	// used to properly serialize MsgGrant, MsgExec and MsgSubmitProposal instances
 	RegisterLegacyAminoCodec(authzcodec.Amino)
+	RegisterLegacyAminoCodec(govcodec.Amino)
+	RegisterLegacyAminoCodec(groupcodec.Amino)
 }

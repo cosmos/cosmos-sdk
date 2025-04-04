@@ -66,21 +66,34 @@ func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMe
 }
 
 func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.GroupPolicyInfo {
-	groupPolicies := make([]*group.GroupPolicyInfo, 3)
+	var groupPolicies []*group.GroupPolicyInfo
+
+	usedAccs := make(map[string]bool)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, simState.Accounts)
+
+		if usedAccs[acc.Address.String()] {
+			if len(usedAccs) != len(simState.Accounts) {
+				// Go again if the account is used and there are more to take from
+				i--
+			}
+
+			continue
+		}
+		usedAccs[acc.Address.String()] = true
+
 		any, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second, 0))
 		if err != nil {
 			panic(err)
 		}
-		groupPolicies[i] = &group.GroupPolicyInfo{
+		groupPolicies = append(groupPolicies, &group.GroupPolicyInfo{
 			GroupId:        uint64(i + 1),
 			Admin:          acc.Address.String(),
 			Address:        acc.Address.String(),
 			Version:        1,
 			DecisionPolicy: any,
 			Metadata:       simtypes.RandStringOfLength(r, 10),
-		}
+		})
 	}
 	return groupPolicies
 }

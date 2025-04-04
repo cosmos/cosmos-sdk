@@ -6,14 +6,15 @@ import (
 	"os"
 	"sort"
 
+	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/manifoldco/promptui"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -28,17 +29,19 @@ type proposalType struct {
 	Msg  sdk.Msg
 }
 
-// Prompt the proposal type values and return the proposal and its metadata
-func (p *proposalType) Prompt(cdc codec.Codec) (*Proposal, govtypes.ProposalMetadata, error) {
-	proposal := &Proposal{}
-
+// Prompt the proposal type values and return the proposal and its metadata.
+func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*Proposal, govtypes.ProposalMetadata, error) {
 	// set metadata
-	metadata, err := govcli.Prompt(govtypes.ProposalMetadata{}, "proposal")
+	metadata, err := govcli.PromptMetadata(skipMetadata)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
-	// the metadata must be saved on IPFS, set placeholder
-	proposal.Metadata = "ipfs://CID"
+
+	proposal := &Proposal{
+		Metadata: "ipfs://CID", // the metadata must be saved on IPFS, set placeholder
+		Title:    metadata.Title,
+		Summary:  metadata.Summary,
+	}
 
 	// set group policy address
 	policyAddressPrompt := promptui.Prompt{
@@ -50,6 +53,17 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*Proposal, govtypes.ProposalMeta
 		return nil, metadata, fmt.Errorf("failed to set group policy address: %w", err)
 	}
 	proposal.GroupPolicyAddress = groupPolicyAddress
+
+	// set proposer address
+	proposerPrompt := promptui.Prompt{
+		Label:    "Enter proposer address",
+		Validate: client.ValidatePromptAddress,
+	}
+	proposerAddress, err := proposerPrompt.Run()
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to set proposer address: %w", err)
+	}
+	proposal.Proposers = []string{proposerAddress}
 
 	if p.Msg == nil {
 		return proposal, metadata, nil
@@ -66,11 +80,14 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*Proposal, govtypes.ProposalMeta
 		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
 	}
 	proposal.Messages = append(proposal.Messages, message)
+
 	return proposal, metadata, nil
 }
 
 // NewCmdDraftProposal let a user generate a draft proposal.
 func NewCmdDraftProposal() *cobra.Command {
+	flagSkipMetadata := "skip-metadata"
+
 	cmd := &cobra.Command{
 		Use:          "draft-proposal",
 		Short:        "Generate a draft proposal json file. The generated proposal json contains only one message (skeleton).",
@@ -122,7 +139,9 @@ func NewCmdDraftProposal() *cobra.Command {
 				panic("unexpected proposal type")
 			}
 
-			result, metadata, err := proposal.Prompt(clientCtx.Codec)
+			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
+
+			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt)
 			if err != nil {
 				return err
 			}
@@ -131,21 +150,25 @@ func NewCmdDraftProposal() *cobra.Command {
 				return err
 			}
 
-			if err := writeFile(draftMetadataFileName, metadata); err != nil {
-				return err
+			if !skipMetadataPrompt {
+				if err := writeFile(draftMetadataFileName, metadata); err != nil {
+					return err
+				}
 			}
 
-			fmt.Printf("Your draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
+			cmd.Println("The draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.")
 
 			return nil
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Bool(flagSkipMetadata, false, "skip metadata prompt")
 
 	return cmd
 }
 
+// writeFile writes the input to the file.
 func writeFile(fileName string, input any) error {
 	raw, err := json.MarshalIndent(input, "", " ")
 	if err != nil {

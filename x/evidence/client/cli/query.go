@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -63,15 +62,11 @@ func QueryEvidenceCmd() func(*cobra.Command, []string) error {
 	}
 }
 
+// queryEvidence queries for a single evidence by the given hash.
 func queryEvidence(clientCtx client.Context, hash string) error {
-	decodedHash, err := hex.DecodeString(hash)
-	if err != nil {
-		return fmt.Errorf("invalid evidence hash: %w", err)
-	}
-
 	queryClient := types.NewQueryClient(clientCtx)
 
-	params := &types.QueryEvidenceRequest{EvidenceHash: decodedHash}
+	params := &types.QueryEvidenceRequest{Hash: hash}
 	res, err := queryClient.Evidence(context.Background(), params)
 	if err != nil {
 		return err
@@ -80,6 +75,7 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 	return clientCtx.PrintProto(res.Evidence)
 }
 
+// queryAllEvidence returns all evidences.
 func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) error {
 	queryClient := types.NewQueryClient(clientCtx)
 

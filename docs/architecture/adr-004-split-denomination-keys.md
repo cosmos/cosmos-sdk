@@ -50,7 +50,7 @@ core functionality or persistence.
 Balances will be stored first by the address, then by the denomination (the reverse is also possible,
 but retrieval of all balances for a single account is presumed to be more frequent):
 
-```golang
+```go
 var BalancesPrefix = []byte("balances")
 
 func (k Keeper) SetBalance(ctx Context, addr AccAddress, balance Coin) error {

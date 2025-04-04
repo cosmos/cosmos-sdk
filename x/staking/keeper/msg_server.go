@@ -5,25 +5,25 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/armon/go-metrics"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type msgServer struct {
-	Keeper
+	*Keeper
 }
 
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
@@ -112,7 +112,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
-	if err := k.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+	if err := k.Hooks().AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
 		return nil, err
 	}
 
@@ -129,11 +129,6 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 			types.EventTypeCreateValidator,
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -168,7 +163,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		// call the before-modification hook since we're about to update the commission
-		if err := k.BeforeValidatorModified(ctx, valAddr); err != nil {
+		if err := k.Hooks().BeforeValidatorModified(ctx, valAddr); err != nil {
 			return nil, err
 		}
 
@@ -194,11 +189,6 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 			types.EventTypeEditValidator,
 			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
 			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress),
 		),
 	})
 
@@ -251,13 +241,9 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		sdk.NewEvent(
 			types.EventTypeDelegate,
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -320,11 +306,6 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
 		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
-		),
 	})
 
 	return &types.MsgBeginRedelegateResponse{
@@ -379,12 +360,8 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 			types.EventTypeUnbond,
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -498,4 +475,19 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	)
 
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
+}
+
+func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if ms.authority != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.authority, msg.Authority)
+	}
+
+	// store params
+	if err := ms.SetParams(ctx, msg.Params); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

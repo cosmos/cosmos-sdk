@@ -28,7 +28,7 @@ func TestMarshalYAML(t *testing.T) {
 	bz, err := codec.MarshalYAML(protoCdc, hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t, `animal:
-  '@type': /testdata.Dog
+  '@type': /testpb.Dog
   name: Spot
   size: small
 x: "0"
@@ -38,10 +38,10 @@ x: "0"
 	aminoCdc := codec.NewAminoCodec(&codec.LegacyAmino{testdata.NewTestAmino()})
 	bz, err = codec.MarshalYAML(aminoCdc, hasAnimal)
 	require.NoError(t, err)
-	require.Equal(t, `type: testdata/HasAnimal
+	require.Equal(t, `type: testpb/HasAnimal
 value:
   animal:
-    type: testdata/Dog
+    type: testpb/Dog
     value:
       name: Spot
       size: small

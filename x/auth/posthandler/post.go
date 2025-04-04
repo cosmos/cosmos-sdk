@@ -7,9 +7,9 @@ import (
 // HandlerOptions are the options required for constructing a default SDK PostHandler.
 type HandlerOptions struct{}
 
-// NewPostHandler returns an empty posthandler chain.
-func NewPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
-	postDecorators := []sdk.AnteDecorator{}
+// NewPostHandler returns an empty PostHandler chain.
+func NewPostHandler(_ HandlerOptions) (sdk.PostHandler, error) {
+	postDecorators := []sdk.PostDecorator{}
 
-	return sdk.ChainAnteDecorators(postDecorators...), nil
+	return sdk.ChainPostDecorators(postDecorators...), nil
 }

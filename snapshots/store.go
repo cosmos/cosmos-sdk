@@ -11,11 +11,10 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
-	db "github.com/tendermint/tm-db"
+	db "github.com/cometbft/cometbft-db"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

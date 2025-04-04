@@ -14,19 +14,69 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Querier{}
+
+type Querier struct {
+	Keeper
+}
+
+func NewQuerier(keeper Keeper) Querier {
+	return Querier{Keeper: keeper}
+}
 
 // Params queries params of distribution module
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	var params types.Params
-	k.paramSpace.GetParamSet(ctx, &params)
+	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
+// ValidatorDistributionInfo query validator's commission and self-delegation rewards
+func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryValidatorDistributionInfoRequest) (*types.QueryValidatorDistributionInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// self-delegation rewards
+	val := k.stakingKeeper.Validator(ctx, valAdr)
+	if val == nil {
+		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
+	}
+
+	delAdr := sdk.AccAddress(valAdr)
+
+	del := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
+	if del == nil {
+		return nil, types.ErrNoDelegationExists
+	}
+
+	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// validator's commission
+	validatorCommission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+
+	return &types.QueryValidatorDistributionInfoResponse{
+		Commission:      validatorCommission.Commission,
+		OperatorAddress: delAdr.String(),
+		SelfBondRewards: rewards,
+	}, nil
+}
+
 // ValidatorOutstandingRewards queries rewards of a validator address
-func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryValidatorOutstandingRewardsRequest) (*types.QueryValidatorOutstandingRewardsResponse, error) {
+func (k Querier) ValidatorOutstandingRewards(c context.Context, req *types.QueryValidatorOutstandingRewardsRequest) (*types.QueryValidatorOutstandingRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -47,7 +97,7 @@ func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryV
 }
 
 // ValidatorCommission queries accumulated commission for a validator
-func (k Keeper) ValidatorCommission(c context.Context, req *types.QueryValidatorCommissionRequest) (*types.QueryValidatorCommissionResponse, error) {
+func (k Querier) ValidatorCommission(c context.Context, req *types.QueryValidatorCommissionRequest) (*types.QueryValidatorCommissionResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -68,7 +118,7 @@ func (k Keeper) ValidatorCommission(c context.Context, req *types.QueryValidator
 }
 
 // ValidatorSlashes queries slash events of a validator
-func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSlashesRequest) (*types.QueryValidatorSlashesResponse, error) {
+func (k Querier) ValidatorSlashes(c context.Context, req *types.QueryValidatorSlashesRequest) (*types.QueryValidatorSlashesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -111,7 +161,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 }
 
 // DelegationRewards the total rewards accrued by a delegation
-func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationRewardsRequest) (*types.QueryDelegationRewardsResponse, error) {
+func (k Querier) DelegationRewards(c context.Context, req *types.QueryDelegationRewardsRequest) (*types.QueryDelegationRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -152,7 +202,7 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 }
 
 // DelegationTotalRewards the total rewards accrued by a each validator
-func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
+func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -189,7 +239,7 @@ func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelega
 }
 
 // DelegatorValidators queries the validators list of a delegator
-func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
+func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -217,7 +267,7 @@ func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegator
 }
 
 // DelegatorWithdrawAddress queries Query/delegatorWithdrawAddress
-func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDelegatorWithdrawAddressRequest) (*types.QueryDelegatorWithdrawAddressResponse, error) {
+func (k Querier) DelegatorWithdrawAddress(c context.Context, req *types.QueryDelegatorWithdrawAddressRequest) (*types.QueryDelegatorWithdrawAddressResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -237,7 +287,7 @@ func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDele
 }
 
 // CommunityPool queries the community pool coins
-func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+func (k Querier) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	pool := k.GetFeePoolCommunityCoins(ctx)
 

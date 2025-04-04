@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,7 +24,10 @@ import (
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
-	txf := NewFactoryCLI(clientCtx, flagSet)
+	txf, err := NewFactoryCLI(clientCtx, flagSet)
+	if err != nil {
+		return err
+	}
 
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
@@ -69,6 +72,10 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
+		if clientCtx.Offline {
+			return errors.New("cannot estimate gas in offline mode")
+		}
+
 		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
@@ -286,7 +293,8 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	if overwriteSig {
 		sigs = []signing.SignatureV2{sig}
 	} else {
-		sigs = append(prevSignatures, sig) //nolint:gocritic
+		sigs = append(sigs, prevSignatures...)
+		sigs = append(sigs, sig)
 	}
 	if err := txBuilder.SetSignatures(sigs...); err != nil {
 		return err
@@ -320,10 +328,19 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	}
 
 	if overwriteSig {
-		return txBuilder.SetSignatures(sig)
+		err = txBuilder.SetSignatures(sig)
+	} else {
+		prevSignatures = append(prevSignatures, sig)
+		err = txBuilder.SetSignatures(prevSignatures...)
 	}
-	prevSignatures = append(prevSignatures, sig)
-	return txBuilder.SetSignatures(prevSignatures...)
+
+	if err != nil {
+		return fmt.Errorf("unable to set signatures on payload: %w", err)
+	}
+
+	// Run optional preprocessing if specified. By default, this is unset
+	// and will return nil.
+	return txf.PreprocessTx(name, txBuilder)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

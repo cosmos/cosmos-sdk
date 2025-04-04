@@ -18,3 +18,11 @@ type Content interface {
 // Handler defines a function that handles a proposal after it has passed the
 // governance process.
 type Handler func(ctx sdk.Context, content Content) error
+
+type HandlerRoute struct {
+	Handler  Handler
+	RouteKey string
+}
+
+// IsManyPerContainerType implements the depinject.ManyPerContainerType interface.
+func (HandlerRoute) IsManyPerContainerType() {}

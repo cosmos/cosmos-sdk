@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +19,7 @@ import (
 
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
-func (ctx Context) GetNode() (rpcclient.Client, error) {
+func (ctx Context) GetNode() (TendermintRPC, error) {
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client is defined in offline mode")
 	}

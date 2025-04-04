@@ -3,8 +3,9 @@ package proofs
 import (
 	"sort"
 
-	"github.com/tendermint/tendermint/libs/rand"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"github.com/cometbft/cometbft/libs/rand"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	"golang.org/x/exp/maps"
 
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 )
@@ -46,12 +47,7 @@ const (
 )
 
 func SortedKeys(data map[string][]byte) []string {
-	keys := make([]string, len(data))
-	i := 0
-	for k := range data {
-		keys[i] = k
-		i++
-	}
+	keys := maps.Keys(data)
 	sort.Strings(keys)
 	return keys
 }

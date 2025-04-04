@@ -5,14 +5,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -20,34 +26,50 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	homeDir string
-	app     *simapp.SimApp
-	ctx     sdk.Context
-	msgSrvr types.MsgServer
-	addrs   []sdk.AccAddress
+	key           *storetypes.KVStoreKey
+	baseApp       *baseapp.BaseApp
+	upgradeKeeper *keeper.Keeper
+	homeDir       string
+	ctx           sdk.Context
+	msgSrvr       types.MsgServer
+	addrs         []sdk.AccAddress
+	encCfg        moduletestutil.TestEncodingConfig
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(s.T(), false)
-	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
-	app.UpgradeKeeper = keeper.NewKeeper( // recreate keeper in order to use a custom home path
-		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir, app.BaseApp,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	s.key = key
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+
+	s.baseApp = baseapp.NewBaseApp(
+		"upgrade",
+		log.NewNopLogger(),
+		testCtx.DB,
+		s.encCfg.TxConfig.TxDecoder(),
 	)
+
+	skipUpgradeHeights := make(map[int64]bool)
+
+	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
+	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, s.encCfg.Codec, homeDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	s.upgradeKeeper.SetVersionSetter(s.baseApp)
+
+	vs := s.upgradeKeeper.GetVersionSetter()
+	s.Require().Equal(vs, s.baseApp)
+
+	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
-	s.app = app
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{
-		Time:   time.Now(),
-		Height: 10,
-	})
-	s.msgSrvr = keeper.NewMsgServerImpl(s.app.UpgradeKeeper)
-	s.addrs = simapp.AddTestAddrsIncremental(app, s.ctx, 1, sdk.NewInt(30000000))
+	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now(), Height: 10})
+
+	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
+	s.addrs = simtestutil.CreateIncrementalAccounts(1)
 }
 
 func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 	// require no error when the upgrade info file does not exist
-	_, err := s.app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	_, err := s.upgradeKeeper.ReadUpgradeInfoFromDisk()
 	s.Require().NoError(err)
 
 	expected := types.Plan{
@@ -56,12 +78,18 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 	}
 
 	// create an upgrade info file
-	s.Require().NoError(s.app.UpgradeKeeper.DumpUpgradeInfoToDisk(101, expected))
+	s.Require().NoError(s.upgradeKeeper.DumpUpgradeInfoToDisk(101, expected))
 
-	ui, err := s.app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	ui, err := s.upgradeKeeper.ReadUpgradeInfoFromDisk()
 	s.Require().NoError(err)
 	expected.Height = 101
 	s.Require().Equal(expected, ui)
+
+	// create invalid upgrade plan (with empty name)
+	expected.Name = ""
+	s.Require().NoError(s.upgradeKeeper.DumpUpgradeInfoToDisk(101, expected))
+	_, err = s.upgradeKeeper.ReadUpgradeInfoFromDisk()
+	s.Require().ErrorContains(err, "name cannot be empty: invalid request")
 }
 
 func (s *KeeperTestSuite) TestScheduleUpgrade() {
@@ -89,7 +117,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
+				s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
 					Name:   "alt-good",
 					Info:   "new text here",
 					Height: 543210000,
@@ -123,10 +151,10 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.app.UpgradeKeeper.SetUpgradeHandler("all-good", func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				s.upgradeKeeper.SetUpgradeHandler("all-good", func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
-				s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
+				s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
 					Name:   "all-good",
 					Info:   "some text here",
 					Height: 123450000,
@@ -146,7 +174,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			// setup test case
 			tc.setup()
 
-			err := s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, tc.plan)
+			err := s.upgradeKeeper.ScheduleUpgrade(s.ctx, tc.plan)
 
 			if tc.expPass {
 				s.Require().NoError(err, "valid test case failed")
@@ -176,7 +204,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			name:   "success",
 			height: 10,
 			setup: func() {
-				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
+				s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
 			},
 			exists: true,
 		},
@@ -189,7 +217,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		// setup test case
 		tc.setup()
 
-		gotCs, exists := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
+		gotCs, exists := s.upgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
 		if tc.exists {
 			s.Require().Equal(cs, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
 			s.Require().True(exists, "valid case: %s did not retrieve client state", tc.name)
@@ -200,18 +228,51 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 	}
 }
 
+func (s *KeeperTestSuite) TestIsSkipHeight() {
+	var skipOne int64 = 9
+	ok := s.upgradeKeeper.IsSkipHeight(11)
+	s.Require().False(ok)
+	skip := map[int64]bool{skipOne: true}
+	upgradeKeeper := keeper.NewKeeper(skip, s.key, s.encCfg.Codec, s.T().TempDir(), nil, string(authtypes.NewModuleAddress(govtypes.ModuleName).String()))
+	upgradeKeeper.SetVersionSetter(s.baseApp)
+	s.Require().True(upgradeKeeper.IsSkipHeight(9))
+	s.Require().False(upgradeKeeper.IsSkipHeight(10))
+}
+
+func (s *KeeperTestSuite) TestUpgradedConsensusState() {
+	cs := []byte("IBC consensus state")
+	s.Require().NoError(s.upgradeKeeper.SetUpgradedConsensusState(s.ctx, 10, cs))
+	bz, ok := s.upgradeKeeper.GetUpgradedConsensusState(s.ctx, 10)
+	s.Require().True(ok)
+	s.Require().Equal(cs, bz)
+}
+
+func (s *KeeperTestSuite) TestDowngradeVerified() {
+	s.upgradeKeeper.SetDowngradeVerified(true)
+	ok := s.upgradeKeeper.DowngradeVerified()
+	s.Require().True(ok)
+}
+
 // Test that the protocol version successfully increments after an
 // upgrade and is successfully set on BaseApp's appVersion.
 func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
-	oldProtocolVersion := s.app.BaseApp.AppVersion()
-	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
+	oldProtocolVersion := s.baseApp.AppVersion()
+	res := s.upgradeKeeper.HasHandler("dummy")
+	s.Require().False(res)
 	dummyPlan := types.Plan{
 		Name:   "dummy",
 		Info:   "some text here",
 		Height: 100,
 	}
-	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	upgradedProtocolVersion := s.app.BaseApp.AppVersion()
+	s.Require().PanicsWithValue("ApplyUpgrade should never be called without first checking HasHandler",
+		func() {
+			s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+		},
+	)
+
+	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
+	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	upgradedProtocolVersion := s.baseApp.AppVersion()
 
 	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
 }
@@ -220,9 +281,9 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
 	initialVM := module.VersionMap{"bank": uint64(1)}
-	s.app.UpgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
-	vmBefore := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
-	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	s.upgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
+	vmBefore := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
+	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// simulate upgrading the bank module
 		vm["bank"] = vm["bank"] + 1
 		return vm, nil
@@ -233,13 +294,13 @@ func (s *KeeperTestSuite) TestMigrations() {
 		Height: 123450000,
 	}
 
-	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	vm := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
+	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	vm := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().Equal(vmBefore["bank"]+1, vm["bank"])
 }
 
 func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
-	keeper := s.app.UpgradeKeeper
+	keeper := s.upgradeKeeper
 	require := s.Require()
 
 	s.T().Log("verify empty name if applied upgrades are empty")
@@ -280,7 +341,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 // This test ensures that `GetLastDoneUpgrade` always returns the last upgrade according to the block height
 // it was executed at, rather than using an ordering based on upgrade names.
 func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
-	keeper := s.app.UpgradeKeeper
+	keeper := s.upgradeKeeper
 	require := s.Require()
 
 	// apply first upgrade

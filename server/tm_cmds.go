@@ -5,17 +5,16 @@ package server
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/light"
-	"github.com/tendermint/tendermint/node"
-	cmtstore "github.com/tendermint/tendermint/proto/tendermint/store"
-	sm "github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/statesync"
-
+	"github.com/cometbft/cometbft/light"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	cmtstore "github.com/cometbft/cometbft/proto/tendermint/store"
+	sm "github.com/cometbft/cometbft/state"
+	"github.com/cometbft/cometbft/statesync"
+	"github.com/cometbft/cometbft/store"
+	tversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/store"
-	tversion "github.com/tendermint/tendermint/version"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/client"

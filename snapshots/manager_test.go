@@ -5,10 +5,10 @@ import (
 	"io"
 	"testing"
 
+	db "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -275,7 +275,7 @@ func TestManager_RestoreLargeItem(t *testing.T) {
 	// Starting a restore works
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   2,
+		Format:   types.CurrentFormat,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   1,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -314,7 +314,7 @@ func TestManager_CannotRestoreTooLargeItem(t *testing.T) {
 	// Starting a restore works
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   2,
+		Format:   types.CurrentFormat,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   1,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -335,7 +335,7 @@ func TestManager_CannotRestoreTooLargeItem(t *testing.T) {
 
 func TestManager_TakeError(t *testing.T) {
 	snapshotter := &mockErrorSnapshotter{}
-	store, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
+	store, err := snapshots.NewStore(db.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 

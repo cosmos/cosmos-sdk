@@ -31,7 +31,7 @@ func testCodec(t *testing.T, spec testutil.TestFieldSpec) {
 	})
 }
 
-func testCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.Generator, nonTerminal bool) {
+func testCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.Generator[any], nonTerminal bool) {
 	cdc, err := testutil.MakeTestCodec(fname, nonTerminal)
 	assert.NilError(t, err)
 	rapid.Check(t, func(t *rapid.T) {
@@ -98,8 +98,8 @@ func TestCompactUInt32(t *testing.T) {
 
 	// randomized tests
 	rapid.Check(t, func(t *rapid.T) {
-		x := rapid.Uint32().Draw(t, "x").(uint32)
-		y := rapid.Uint32().Draw(t, "y").(uint32)
+		x := rapid.Uint32().Draw(t, "x")
+		y := rapid.Uint32().Draw(t, "y")
 
 		bx := ormfield.EncodeCompactUint32(x)
 		by := ormfield.EncodeCompactUint32(y)
@@ -146,8 +146,8 @@ func TestCompactUInt64(t *testing.T) {
 
 	// randomized tests
 	rapid.Check(t, func(t *rapid.T) {
-		x := rapid.Uint64().Draw(t, "x").(uint64)
-		y := rapid.Uint64().Draw(t, "y").(uint64)
+		x := rapid.Uint64().Draw(t, "x")
+		y := rapid.Uint64().Draw(t, "y")
 
 		bx := ormfield.EncodeCompactUint64(x)
 		by := ormfield.EncodeCompactUint64(y)

@@ -135,7 +135,7 @@ message QueryParamsResponse {
 As a result of implementing the module parameter methodology, we gain the ability
 for module parameter changes to be stateful and extensible to fit nearly every
 application's use case. We will be able to emit events (and trigger hooks registered
-to that events using the work proposed in [even hooks](https://github.com/cosmos/cosmos-sdk/discussions/9656)),
+to that events using the work proposed in [event hooks](https://github.com/cosmos/cosmos-sdk/discussions/9656)),
 call other Msg service methods or perform migration.
 In addition, there will be significant gains in performance when it comes to reading
 and writing parameters from and to state, especially if a specific set of parameters

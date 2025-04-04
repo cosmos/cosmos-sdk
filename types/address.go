@@ -314,7 +314,7 @@ func (aa AccAddress) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (aa AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -370,7 +370,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
-// Returns boolean for whether an AccAddress is empty
+// Returns boolean for whether an ValAddress is empty
 func (va ValAddress) Empty() bool {
 	return len(va) == 0
 }
@@ -468,7 +468,7 @@ func (va ValAddress) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (va ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -651,7 +651,7 @@ func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

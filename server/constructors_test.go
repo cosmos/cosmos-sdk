@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 )
 
 func Test_openDB(t *testing.T) {

@@ -3,9 +3,9 @@ package maps
 import (
 	"encoding/binary"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto/merkle"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )

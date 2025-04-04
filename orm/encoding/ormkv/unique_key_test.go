@@ -17,8 +17,8 @@ import (
 
 func TestUniqueKeyCodec(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		keyCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "keyCodec").(testutil.TestKeyCodec)
-		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "primaryKeyCodec").(testutil.TestKeyCodec)
+		keyCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "keyCodec")
+		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "primaryKeyCodec")
 
 		// check if we have a trivial unique index where all of the fields
 		// in the primary key are in the unique key, we should expect an
@@ -51,7 +51,7 @@ func TestUniqueKeyCodec(t *testing.T) {
 		}
 
 		for i := 0; i < 100; i++ {
-			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.ExampleTable)
+			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i))
 			key := keyCodec.Codec.GetKeyValues(a.ProtoReflect())
 			pk := pkCodec.Codec.GetKeyValues(a.ProtoReflect())
 			uniq1 := &ormkv.IndexKeyEntry{

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,9 +18,6 @@ import (
 
 // Keeper defines the governance module Keeper
 type Keeper struct {
-	// The reference to the Paramstore to get and set gov specific params
-	paramSpace types.ParamSubspace
-
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 
@@ -43,6 +40,15 @@ type Keeper struct {
 	router *baseapp.MsgServiceRouter
 
 	config types.Config
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account.
+	authority string
+}
+
+// GetAuthority returns the x/gov module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -53,37 +59,44 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
-	legacyRouter v1beta1.Router, router *baseapp.MsgServiceRouter,
-	config types.Config,
-) Keeper {
+	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	router *baseapp.MsgServiceRouter, config types.Config, authority string,
+) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	// It is vital to seal the governance proposal router here as to not allow
-	// further handlers to be registered after the keeper is created since this
-	// could create invalid or non-deterministic behavior.
-	legacyRouter.Seal()
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address: %s", authority))
+	}
 
 	// If MaxMetadataLen not set by app developer, set to default value.
 	if config.MaxMetadataLen == 0 {
 		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
 	}
 
-	return Keeper{
-		storeKey:     key,
-		paramSpace:   paramSpace,
-		authKeeper:   authKeeper,
-		bankKeeper:   bankKeeper,
-		sk:           sk,
-		cdc:          cdc,
-		legacyRouter: legacyRouter,
-		router:       router,
-		config:       config,
+	return &Keeper{
+		storeKey:   key,
+		authKeeper: authKeeper,
+		bankKeeper: bankKeeper,
+		sk:         sk,
+		cdc:        cdc,
+		router:     router,
+		config:     config,
+		authority:  authority,
 	}
+}
+
+// Hooks gets the hooks for governance *Keeper {
+func (keeper *Keeper) Hooks() types.GovHooks {
+	if keeper.hooks == nil {
+		// return a no-op implementation if no hooks are set
+		return types.MultiGovHooks{}
+	}
+
+	return keeper.hooks
 }
 
 // SetHooks sets the hooks for governance
@@ -95,6 +108,15 @@ func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	keeper.hooks = gh
 
 	return keeper
+}
+
+// SetLegacyRouter sets the legacy router for governance
+func (keeper *Keeper) SetLegacyRouter(router v1beta1.Router) {
+	// It is vital to seal the governance proposal router here as to not allow
+	// further handlers to be registered after the keeper is created since this
+	// could create invalid or non-deterministic behavior.
+	router.Seal()
+	keeper.legacyRouter = router
 }
 
 // Logger returns a module-specific logger.
@@ -119,7 +141,7 @@ func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleAccou
 
 // ProposalQueues
 
-// InsertActiveProposalQueue inserts a ProposalID into the active proposal queue at endTime
+// InsertActiveProposalQueue inserts a proposalID into the active proposal queue at endTime
 func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
@@ -132,7 +154,7 @@ func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID u
 	store.Delete(types.ActiveProposalQueueKey(proposalID, endTime))
 }
 
-// InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
+// InsertInactiveProposalQueue inserts a proposalID into the inactive proposal queue at endTime
 func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
@@ -198,9 +220,9 @@ func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time
 }
 
 // assertMetadataLength returns an error if given metadata length
-// is greater than a pre-defined maxMetadataLen.
-func (k Keeper) assertMetadataLength(metadata string) error {
-	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+// is greater than a pre-defined MaxMetadataLen.
+func (keeper Keeper) assertMetadataLength(metadata string) error {
+	if metadata != "" && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
 	}
 	return nil

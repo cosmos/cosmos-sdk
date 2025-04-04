@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"

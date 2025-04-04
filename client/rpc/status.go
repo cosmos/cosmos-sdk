@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/p2p"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cometbft/cometbft/p2p"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -47,10 +47,13 @@ func StatusCommand() *cobra.Command {
 				return err
 			}
 
+			var pk cryptotypes.PubKey
 			// `status` has TM pubkeys, we need to convert them to our pubkeys.
-			pk, err := cryptocodec.FromTmPubKeyInterface(status.ValidatorInfo.PubKey)
-			if err != nil {
-				return err
+			if status.ValidatorInfo.PubKey != nil {
+				pk, err = cryptocodec.FromTmPubKeyInterface(status.ValidatorInfo.PubKey)
+				if err != nil {
+					return err
+				}
 			}
 			statusWithPk := resultStatus{
 				NodeInfo: status.NodeInfo,

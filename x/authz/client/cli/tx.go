@@ -26,6 +26,7 @@ const (
 	FlagExpiration        = "expiration"
 	FlagAllowedValidators = "allowed-validators"
 	FlagDenyValidators    = "deny-validators"
+	FlagAllowList         = "allow-list"
 	delegate              = "delegate"
 	redelegate            = "redelegate"
 	unbond                = "unbond"
@@ -60,9 +61,9 @@ func NewCmdGrantAuthorization() *cobra.Command {
 			fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
 
 Examples:
- $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
+ $ %s tx %s grant cosmos1skjw.. send --spend-limit=1000stake --from=cosmos1skl..
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1.MsgVote --from=cosmos1sk..
-	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName),
+	`, version.AppName, authz.ModuleName, version.AppName, authz.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -93,7 +94,18 @@ Examples:
 					return fmt.Errorf("spend-limit should be greater than zero")
 				}
 
-				authorization = bank.NewSendAuthorization(spendLimit)
+				allowList, err := cmd.Flags().GetStringSlice(FlagAllowList)
+				if err != nil {
+					return err
+				}
+
+				allowed, err := bech32toAccAddresses(allowList)
+				if err != nil {
+					return err
+				}
+
+				authorization = bank.NewSendAuthorization(spendLimit, allowed)
+
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
 				if err != nil {
@@ -140,12 +152,12 @@ Examples:
 					delegateLimit = &spendLimit
 				}
 
-				allowed, err := bech32toValidatorAddresses(allowValidators)
+				allowed, err := bech32toValAddresses(allowValidators)
 				if err != nil {
 					return err
 				}
 
-				denied, err := bech32toValidatorAddresses(denyValidators)
+				denied, err := bech32toValAddresses(denyValidators)
 				if err != nil {
 					return err
 				}
@@ -184,6 +196,7 @@ Examples:
 	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
 	cmd.Flags().StringSlice(FlagAllowedValidators, []string{}, "Allowed validators addresses separated by ,")
 	cmd.Flags().StringSlice(FlagDenyValidators, []string{}, "Deny validators addresses separated by ,")
+	cmd.Flags().StringSlice(FlagAllowList, []string{}, "Allowed addresses grantee is allowed to send funds separated by ,")
 	cmd.Flags().Int64(FlagExpiration, 0, "Expire time as Unix timestamp. Set zero (0) for no expiry. Default is 0.")
 	return cmd
 }
@@ -273,7 +286,8 @@ Example:
 	return cmd
 }
 
-func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
+// bech32toValAddresses returns []ValAddress from a list of Bech32 string addresses.
+func bech32toValAddresses(validators []string) ([]sdk.ValAddress, error) {
 	vals := make([]sdk.ValAddress, len(validators))
 	for i, validator := range validators {
 		addr, err := sdk.ValAddressFromBech32(validator)
@@ -283,4 +297,17 @@ func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
 		vals[i] = addr
 	}
 	return vals, nil
+}
+
+// bech32toAccAddresses returns []AccAddress from a list of Bech32 string addresses.
+func bech32toAccAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
+	addrs := make([]sdk.AccAddress, len(accAddrs))
+	for i, addr := range accAddrs {
+		accAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs[i] = accAddr
+	}
+	return addrs, nil
 }

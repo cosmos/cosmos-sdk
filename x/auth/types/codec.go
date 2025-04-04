@@ -2,11 +2,15 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
 )
 
 // RegisterLegacyAminoCodec registers the account interfaces and concrete types on the
@@ -17,6 +21,10 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*AccountI)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
+	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/auth/Params", nil)
+	cdc.RegisterConcrete(&ModuleCredential{}, "cosmos-sdk/GroupAccountCredential", nil)
+
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams")
 
 	legacytx.RegisterLegacyAminoCodec(cdc)
 }
@@ -37,6 +45,16 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&BaseAccount{},
 		&ModuleAccount{},
 	)
+
+	registry.RegisterInterface(
+		"cosmos.auth.v1.ModuleCredential",
+		(*cryptotypes.PubKey)(nil),
+		&ModuleCredential{},
+	)
+
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUpdateParams{},
+	)
 }
 
 var (
@@ -49,7 +67,9 @@ func init() {
 	cryptocodec.RegisterCrypto(amino)
 	sdk.RegisterLegacyAminoCodec(amino)
 
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
+	// Register all Amino interfaces and concrete types on the authz  and gov Amino codec so that this can later be
+	// used to properly serialize MsgGrant, MsgExec and MsgSubmitProposal instances
 	RegisterLegacyAminoCodec(authzcodec.Amino)
+	RegisterLegacyAminoCodec(govcodec.Amino)
+	RegisterLegacyAminoCodec(groupcodec.Amino)
 }

@@ -6,10 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// GetMsgs unpacks p.Messages Any's into sdk.Msg's
 func (p *Proposal) GetMsgs() ([]sdk.Msg, error) {
 	return tx.GetMsgs(p.Messages, "proposal")
 }
 
+// SetMsgs packs msgs into Any's
 func (p *Proposal) SetMsgs(msgs []sdk.Msg) error {
 	anys, err := tx.SetMsgs(msgs)
 	if err != nil {

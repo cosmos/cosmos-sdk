@@ -4,7 +4,7 @@ This document outlines the process for releasing a new version of Cosmos SDK, wh
 
 ## Major Release Procedure
 
-A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
+A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1.0 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
 
 Before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
 
@@ -21,10 +21,11 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
 * After the team feels that the `main` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
     * **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
     * update the GitHub mergify integration by adding instructions for automatically backporting commits from `main` to the `release/vY` using the `backport/Y` label.
-* In the release branch, prepare a new version section in the `CHANGELOG.md`
+* In the release branch prepare a new version section in the `CHANGELOG.md`
     * All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
-    * Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
-* Create a new annotated git tag for a release candidate  (eg: `git tag -a v1.1.0-rc1`) in the release branch.
+    * Create release notes, in `RELEASE_NOTES.md`, highlighting the changes and how to upgrade the SDK. This is needed so the bot knows which entries to add to the release page on GitHub.
+* Remove GitHub workflows that should not be in the release branch (eg: `deploy-docs.yml`).
+* Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.
     * when bugs are found, create a PR for `main`, and backport fixes to the release branch.
@@ -58,9 +59,11 @@ Point Release must follow the [Stable Release Policy](#stable-release-policy).
 
 After the release branch has all commits required for the next patch release:
 
-* update `CHANGELOG.md`.
-* create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
-* Create a GitHub release.
+* Update `CHANGELOG.md` and `RELEASE_NOTES.md` (if applicable).
+* Create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
+    * If the release is a submodule update, first go the submodule folder and name the tag prepending the path to the version:
+      `cd core && git -a core/v1.1.0` or `cd tools/cosmovisor && git -a tools/cosmovisor/v1.4.0`
+* Create a GitHub release (if applicable).
 
 ## Major Release Maintenance
 
@@ -70,16 +73,16 @@ Note: not every Major Release is denoted as stable releases.
 
 Only the following major release series have a stable release status:
 
-* **0.42 «Stargate»** is supported until 2022-02-09. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.44** is supported until 2022-07-17. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.45** is the latest major release and will be supported until 6 months after **0.46.0** release.
+* **0.45** is supported until 6 months after **0.46.0** release. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+* **0.46** is the last major release and will be supportted until 6 months after **0.47.0** release.
+* **0.47** is the next major release and will be supported until 6 months after **0.48.0** release.
 
 ## Stable Release Policy
 
 ### Patch Releases
 
 Once a Cosmos-SDK release has been completed and published, updates for it are released under certain circumstances
-and must follow the [Patch Release Procedure][CONTRIBUTING.md#patch-release-procedure](Point Release Procedure).
+and must follow the [Patch Release Procedure](CONTRIBUTING.md#branching-model-and-release).
 
 ### Rationale
 
@@ -108,7 +111,7 @@ ways in stable releases and `main` branch.
 
 ### Migrations
 
-To smoothen the update to the latest stable release, the SDK includes a set of CLI commands for managing migrations between SDK versions, under the `migrate` subcommand. Only migration scripts between stable releases are included. For the current major release, and later, migrations are supported.
+See the SDK's policy on migrations [here](https://docs.cosmos.network/main/migrations/intro).
 
 ### What qualifies as a Stable Release Update (SRU)
 
@@ -188,7 +191,7 @@ It's crucial to make the effort of thinking about what could happen in case a re
 ### Stable Release Managers
 
 The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos-SDK Stable Release series,
-according to the [stable release policy](#stable-release-policy) and [release procedure](#stable-release-exception-procedure).
+according to the [stable release policy](#stable-release-policy) and [release procedure](#major-release-procedure).
 Decisions are made by consensus.
 
 Their responsibilites include:
@@ -199,6 +202,4 @@ Their responsibilites include:
 
 The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
 
-* @clevinson - Cory Levinson
 * @amaurym - Amaury Martiny
-* @robert-zaremba - Robert Zaremba

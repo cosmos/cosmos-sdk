@@ -10,7 +10,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
@@ -42,16 +41,19 @@ func TestRandomizedGenState(t *testing.T) {
 	var govGenesis v1.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
-	dec1, _ := sdk.NewDecFromStr("0.361000000000000000")
-	dec2, _ := sdk.NewDecFromStr("0.512000000000000000")
-	dec3, _ := sdk.NewDecFromStr("0.267000000000000000")
+	const (
+		tallyQuorum          = "0.400000000000000000"
+		tallyThreshold       = "0.539000000000000000"
+		tallyVetoThreshold   = "0.314000000000000000"
+		minInitialDepositDec = "0.590000000000000000"
+	)
 
-	require.Equal(t, "905stake", govGenesis.DepositParams.MinDeposit[0].String())
-	require.Equal(t, "77h26m10s", govGenesis.DepositParams.MaxDepositPeriod.String())
-	require.Equal(t, float64(148296), govGenesis.VotingParams.VotingPeriod.Seconds())
-	require.Equal(t, dec1.String(), govGenesis.TallyParams.Quorum)
-	require.Equal(t, dec2.String(), govGenesis.TallyParams.Threshold)
-	require.Equal(t, dec3.String(), govGenesis.TallyParams.VetoThreshold)
+	require.Equal(t, "905stake", govGenesis.Params.MinDeposit[0].String())
+	require.Equal(t, "77h26m10s", govGenesis.Params.MaxDepositPeriod.String())
+	require.Equal(t, float64(275567), govGenesis.Params.VotingPeriod.Seconds())
+	require.Equal(t, tallyQuorum, govGenesis.Params.Quorum)
+	require.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
+	require.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)
 	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
 	require.Equal(t, []*v1.Deposit{}, govGenesis.Deposits)
 	require.Equal(t, []*v1.Vote{}, govGenesis.Votes)

@@ -17,10 +17,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck
+	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we do old keys, they're keys after all.
 )
 
-var flagPubkeyType = "type"
+var (
+	flagPubkeyType = "type"
+	ed             = "ed25519"
+)
 
 // Cmd creates a main CLI command
 func Cmd() *cobra.Command {
@@ -34,6 +37,7 @@ func Cmd() *cobra.Command {
 	cmd.AddCommand(PubkeyRawCmd())
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
+	cmd.AddCommand(PrefixesCmd())
 
 	return cmd
 }
@@ -69,7 +73,7 @@ $ %s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfP
 }
 
 func bytesToPubkey(bz []byte, keytype string) (cryptotypes.PubKey, bool) {
-	if keytype == "ed25519" { //nolint:goconst
+	if keytype == ed {
 		if len(bz) == ed25519.PubKeySize {
 			return &ed25519.PubKey{Key: bz}, true
 		}
@@ -102,17 +106,17 @@ func getPubKeyFromRawString(pkstr string, keytype string) (cryptotypes.PubKey, e
 		}
 	}
 
-	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr) //nolint:staticcheck
+	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr) //nolint:staticcheck
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr) //nolint:staticcheck
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr) //nolint:staticcheck // we do old keys, they're keys after all.
 	if err == nil {
 		return pk, nil
 	}
@@ -138,7 +142,7 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 				return err
 			}
 			pubkeyType = strings.ToLower(pubkeyType)
-			if pubkeyType != "secp256k1" && pubkeyType != "ed25519" {
+			if pubkeyType != "secp256k1" && pubkeyType != ed {
 				return errors.Wrapf(errors.ErrInvalidType, "invalid pubkey type, expected oneof ed25519 or secp256k1")
 			}
 
@@ -149,8 +153,8 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 
 			var consensusPub string
 			edPK, ok := pk.(*ed25519.PubKey)
-			if ok && pubkeyType == "ed25519" {
-				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK) //nolint:staticcheck
+			if ok && pubkeyType == ed {
+				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK) //nolint:staticcheck // we do old keys, they're keys after all.
 				if err != nil {
 					return err
 				}
@@ -163,11 +167,11 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			if err != nil {
 				return err
 			}
-			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk) //nolint:staticcheck
+			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk) //nolint:staticcheck // we do old keys, they're keys after all.
 			if err != nil {
 				return err
 			}
-			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk) //nolint:staticcheck
+			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk) //nolint:staticcheck // we do old keys, they're keys after all.
 			if err != nil {
 				return err
 			}
@@ -182,7 +186,7 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			return nil
 		},
 	}
-	cmd.Flags().StringP(flagPubkeyType, "t", "ed25519", "Pubkey type to decode (oneof secp256k1, ed25519)")
+	cmd.Flags().StringP(flagPubkeyType, "t", ed, "Pubkey type to decode (oneof secp256k1, ed25519)")
 	return cmd
 }
 
@@ -250,6 +254,21 @@ $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 11
 				byteArray = append(byteArray, byte(b))
 			}
 			fmt.Printf("%X\n", byteArray)
+			return nil
+		},
+	}
+}
+
+func PrefixesCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "prefixes",
+		Short:   "List prefixes used for Human-Readable Part (HRP) in Bech32",
+		Long:    "List prefixes used in Bech32 addresses.",
+		Example: fmt.Sprintf("$ %s debug prefixes", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())
+			cmd.Printf("Bech32 Val: %s\n", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+			cmd.Printf("Bech32 Con: %s\n", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
 			return nil
 		},
 	}

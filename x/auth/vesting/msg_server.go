@@ -84,13 +84,6 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	)
-
 	return &types.MsgCreateVestingAccountResponse{}, nil
 }
 
@@ -143,13 +136,6 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	)
 
 	return &types.MsgCreatePermanentLockedAccountResponse{}, nil
 }
@@ -353,9 +339,17 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
+	if acc := ak.GetAccount(ctx, to); acc != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+	}
+
 	var totalCoins sdk.Coins
 	for _, period := range msg.VestingPeriods {
 		totalCoins = totalCoins.Add(period.Amount...)
+	}
+
+	if err := bk.IsSendEnabledCoins(ctx, totalCoins...); err != nil {
+		return nil, err
 	}
 
 	madeNewAcc := false
@@ -401,11 +395,5 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	)
 	return &types.MsgCreatePeriodicVestingAccountResponse{}, nil
 }

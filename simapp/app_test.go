@@ -2,18 +2,20 @@ package simapp
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -37,24 +39,27 @@ import (
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
-		Logger:             logger,
-		DB:                 db,
-		InvCheckPeriod:     0,
-		EncConfig:          encCfg,
-		HomePath:           DefaultNodeHome,
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            EmptyAppOptions{},
+		Logger:  logger,
+		DB:      db,
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
-	for acc := range maccPerms {
+	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app v2.
+	for acc := range BlockedAddresses() {
+		var addr sdk.AccAddress
+		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
+			addr = modAddr
+		} else {
+			addr = app.AccountKeeper.GetModuleAddress(acc)
+		}
+
 		require.True(
 			t,
-			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
-			"ensure that blocked addresses are properly set in bank keeper",
+			app.BankKeeper.BlockedAddr(addr),
+			fmt.Sprintf("ensure that blocked addresses are properly set in bank keeper: %s should be blocked", acc),
 		)
 	}
 
@@ -62,40 +67,36 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	logger2 := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewSimApp(logger2, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	_, err := app2.ExportAppStateAndValidators(false, []string{})
+	app2 := NewSimApp(logger2, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	_, err := app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
-}
-
-func TestGetMaccPerms(t *testing.T) {
-	dup := GetMaccPerms()
-	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
 }
 
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCfg := MakeTestEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
 	// Create a new baseapp and configurator for the purpose of this test.
-	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
+	bApp := baseapp.NewBaseApp(app.Name(), logger, db, app.TxConfig().TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
-	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	bApp.SetInterfaceRegistry(app.InterfaceRegistry())
 	app.BaseApp = bApp
-	app.configurator = module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
+	configurator := module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.
 	//
 	// The loop below is the same as calling `RegisterServices` on
 	// ModuleManager, except that we skip x/bank.
-	for _, module := range app.mm.Modules {
-		if module.Name() == banktypes.ModuleName {
+	for name, mod := range app.ModuleManager.Modules {
+		if name == banktypes.ModuleName {
 			continue
 		}
 
-		module.RegisterServices(app.configurator)
+		if mod, ok := mod.(module.HasServices); ok {
+			mod.RegisterServices(configurator)
+		}
 	}
 
 	// Initialize the chain
@@ -106,6 +107,7 @@ func TestRunMigrations(t *testing.T) {
 		name         string
 		moduleName   string
 		fromVersion  uint64
+		toVersion    uint64
 		expRegErr    bool // errors while registering migration
 		expRegErrMsg string
 		expRunErr    bool // errors while running migration
@@ -114,33 +116,33 @@ func TestRunMigrations(t *testing.T) {
 	}{
 		{
 			"cannot register migration for version 0",
-			"bank", 0,
+			"bank", 0, 1,
 			true, "module migration versions should start at 1: invalid version", false, "", 0,
 		},
 		{
 			"throws error on RunMigrations if no migration registered for bank",
-			"", 1,
+			"", 1, 2,
 			false, "", true, "no migrations found for module bank: not found", 0,
 		},
 		{
 			"can register 1->2 migration handler for x/bank, cannot run migration",
-			"bank", 1,
+			"bank", 1, 2,
 			false, "", true, "no migration found for module bank from version 2 to version 3: not found", 0,
 		},
 		{
 			"can register 2->3 migration handler for x/bank, can run migration",
-			"bank", 2,
-			false, "", false, "", 1,
+			"bank", 2, bank.AppModule{}.ConsensusVersion(),
+			false, "", false, "", int(bank.AppModule{}.ConsensusVersion() - 2), // minus 2 because 1-2 is run in the previous test case.
 		},
 		{
 			"cannot register migration handler for same module & fromVersion",
-			"bank", 1,
+			"bank", 1, 2,
 			true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(tt *testing.T) {
 			var err error
 
 			// Since it's very hard to test actual in-place store migrations in
@@ -150,26 +152,29 @@ func TestRunMigrations(t *testing.T) {
 			called := 0
 
 			if tc.moduleName != "" {
-				// Register migration for module from version `fromVersion` to `fromVersion+1`.
-				err = app.configurator.RegisterMigration(tc.moduleName, tc.fromVersion, func(sdk.Context) error {
-					called++
+				for i := tc.fromVersion; i < tc.toVersion; i++ {
+					// Register migration for module from version `fromVersion` to `fromVersion+1`.
+					tt.Logf("Registering migration for %q v%d", tc.moduleName, i)
+					err = configurator.RegisterMigration(tc.moduleName, i, func(sdk.Context) error {
+						called++
 
-					return nil
-				})
+						return nil
+					})
 
-				if tc.expRegErr {
-					require.EqualError(t, err, tc.expRegErrMsg)
+					if tc.expRegErr {
+						require.EqualError(tt, err, tc.expRegErrMsg)
 
-					return
+						return
+					}
+					require.NoError(tt, err, "registering migration")
 				}
 			}
-			require.NoError(t, err)
 
 			// Run migrations only for bank. That's why we put the initial
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
-			_, err = app.mm.RunMigrations(
-				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), app.configurator,
+			_, err = app.ModuleManager.RunMigrations(
+				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), configurator,
 				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -191,11 +196,11 @@ func TestRunMigrations(t *testing.T) {
 				},
 			)
 			if tc.expRunErr {
-				require.EqualError(t, err, tc.expRunErrMsg)
+				require.EqualError(tt, err, tc.expRunErrMsg, "running migration")
 			} else {
-				require.NoError(t, err)
+				require.NoError(tt, err, "running migration")
 				// Make sure bank's migration is called.
-				require.Equal(t, tc.expCalled, called)
+				require.Equal(tt, tc.expCalled, called)
 			}
 		})
 	}
@@ -203,26 +208,25 @@ func TestRunMigrations(t *testing.T) {
 
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCfg := MakeTestEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
 	// adding during a migration.
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	mockModule := mocks.NewMockAppModule(mockCtrl)
+	mockModule := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
 	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
 	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
-	app.mm.Modules["mock"] = mockModule
+	app.ModuleManager.Modules["mock"] = mockModule
 
 	// Run migrations only for "mock" module. We exclude it from
 	// the VersionMap to simulate upgrading with a new module.
-	_, err := app.mm.RunMigrations(ctx, app.configurator,
+	_, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(),
 		module.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -246,23 +250,22 @@ func TestInitGenesisOnMigration(t *testing.T) {
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
-	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
-		Logger:             logger,
-		DB:                 db,
-		InvCheckPeriod:     0,
-		EncConfig:          encCfg,
-		HomePath:           DefaultNodeHome,
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            EmptyAppOptions{},
+		Logger:  logger,
+		DB:      db,
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
 	// make sure the upgrade keeper has version map in state
 	ctx := app.NewContext(false, tmproto.Header{})
 	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-	for v, i := range app.mm.Modules {
-		require.Equal(t, vm[v], i.ConsensusVersion())
+	for v, i := range app.ModuleManager.Modules {
+		if i, ok := i.(module.HasConsensusVersion); ok {
+			require.Equal(t, vm[v], i.ConsensusVersion())
+		}
 	}
+
+	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
 }

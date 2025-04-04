@@ -5,14 +5,16 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 // Simulation operation weights constants
@@ -21,6 +23,11 @@ const (
 	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"    //nolint:gosec
 	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission" //nolint:gosec
 	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"           //nolint:gosec
+
+	DefaultWeightMsgSetWithdrawAddress          int = 50
+	DefaultWeightMsgWithdrawDelegationReward    int = 50
+	DefaultWeightMsgWithdrawValidatorCommission int = 50
+	DefaultWeightMsgFundCommunityPool           int = 50
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -28,55 +35,56 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 	var weightMsgSetWithdrawAddress int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
 		func(_ *rand.Rand) {
-			weightMsgSetWithdrawAddress = simappparams.DefaultWeightMsgSetWithdrawAddress
+			weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
 		},
 	)
 
 	var weightMsgWithdrawDelegationReward int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawDelegationReward = simappparams.DefaultWeightMsgWithdrawDelegationReward
+			weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
 		},
 	)
 
 	var weightMsgWithdrawValidatorCommission int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawValidatorCommission = simappparams.DefaultWeightMsgWithdrawValidatorCommission
+			weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
 		},
 	)
 
 	var weightMsgFundCommunityPool int
 	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
 		func(_ *rand.Rand) {
-			weightMsgFundCommunityPool = simappparams.DefaultWeightMsgFundCommunityPool
+			weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
 		},
 	)
 
-	stakeKeeper := sk.(stakingkeeper.Keeper)
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	txConfig := tx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), tx.DefaultSignModes)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSetWithdrawAddress,
-			SimulateMsgSetWithdrawAddress(ak, bk, k),
+			SimulateMsgSetWithdrawAddress(txConfig, ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawDelegationReward,
-			SimulateMsgWithdrawDelegatorReward(ak, bk, k, stakeKeeper),
+			SimulateMsgWithdrawDelegatorReward(txConfig, ak, bk, k, sk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawValidatorCommission,
-			SimulateMsgWithdrawValidatorCommission(ak, bk, k, stakeKeeper),
+			SimulateMsgWithdrawValidatorCommission(txConfig, ak, bk, k, sk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
-			SimulateMsgFundCommunityPool(ak, bk, k, stakeKeeper),
+			SimulateMsgFundCommunityPool(txConfig, ak, bk, k, sk),
 		),
 	}
 }
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
-func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -95,7 +103,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           txConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
@@ -112,7 +120,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -137,7 +145,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           txConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
@@ -154,11 +162,11 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
+		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "random validator is not ok"), nil, nil
 		}
@@ -181,7 +189,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           txConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
@@ -199,7 +207,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 // SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
 // a random account sends a random amount of its funds to the community pool.
-func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -231,7 +239,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:         txConfig,
 			Cdc:           nil,
 			Msg:           msg,
 			MsgType:       msg.Type(),

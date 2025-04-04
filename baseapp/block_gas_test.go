@@ -1,33 +1,58 @@
 package baseapp_test
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"testing"
 
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"cosmossdk.io/depinject"
+
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var blockMaxGas = uint64(simapp.DefaultConsensusParams.Block.MaxGas)
+var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
+
+type BlockGasImpl struct {
+	panicTx      bool
+	gasToConsume uint64
+	key          store.StoreKey
+}
+
+func (m BlockGasImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.KVStore(m.key).Set(msg.Key, msg.Value)
+	sdkCtx.GasMeter().ConsumeGas(m.gasToConsume, "TestMsg")
+	if m.panicTx {
+		panic("panic in tx execution")
+	}
+	return &baseapptestutil.MsgCreateKeyValueResponse{}, nil
+}
 
 func TestBaseApp_BlockGas(t *testing.T) {
 	testcases := []struct {
@@ -39,44 +64,57 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		{"less than block gas meter", 10, false, false},
 		{"more than block gas meter", blockMaxGas, false, true},
 		{"more than block gas meter", uint64(float64(blockMaxGas) * 1.2), false, true},
-		{"consume MaxUint64", math.MaxUint64, false, true},
+		{"consume MaxUint64", math.MaxUint64, true, true},
 		{"consume MaxGasWanted", txtypes.MaxGasWanted, false, true},
-		{"consume block gas when paniced", 10, true, true},
+		{"consume block gas when panicked", 10, true, true},
 	}
+
 	for _, tc := range testcases {
+		var (
+			bankKeeper        bankkeeper.Keeper
+			accountKeeper     authkeeper.AccountKeeper
+			appBuilder        *runtime.AppBuilder
+			txConfig          client.TxConfig
+			cdc               codec.Codec
+			pcdc              codec.ProtoCodecMarshaler
+			interfaceRegistry codectypes.InterfaceRegistry
+			err               error
+		)
+
+		appConfig := depinject.Configs(makeTestConfig())
+
+		err = depinject.Inject(appConfig,
+			&bankKeeper,
+			&accountKeeper,
+			&interfaceRegistry,
+			&txConfig,
+			&cdc,
+			&pcdc,
+			&appBuilder)
+		require.NoError(t, err)
+
+		bapp := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+		err = bapp.Load(true)
+		require.NoError(t, err)
+
 		t.Run(tc.name, func(t *testing.T) {
-			var app *simapp.SimApp
-			routerOpt := func(bapp *baseapp.BaseApp) {
-				route := (&testdata.TestMsg{}).Route()
-				bapp.Router().AddRoute(sdk.NewRoute(route, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-					_, ok := msg.(*testdata.TestMsg)
-					if !ok {
-						return &sdk.Result{}, fmt.Errorf("Wrong Msg type, expected %T, got %T", (*testdata.TestMsg)(nil), msg)
-					}
-					ctx.KVStore(app.GetKey(banktypes.ModuleName)).Set([]byte("ok"), []byte("ok"))
-					ctx.GasMeter().ConsumeGas(tc.gasToConsume, "TestMsg")
-					if tc.panicTx {
-						panic("panic in tx execution")
-					}
-					return &sdk.Result{}, nil
-				}))
-			}
-			encCfg := simapp.MakeTestEncodingConfig()
-			encCfg.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
-			encCfg.InterfaceRegistry.RegisterImplementations((*sdk.Msg)(nil),
-				&testdata.TestMsg{},
-			)
-			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{}, "", 0, encCfg, simapp.EmptyAppOptions{}, routerOpt)
-			genState := simapp.GenesisStateWithSingleValidator(t, app)
+			baseapptestutil.RegisterInterfaces(interfaceRegistry)
+			baseapptestutil.RegisterKeyValueServer(bapp.MsgServiceRouter(), BlockGasImpl{
+				panicTx:      tc.panicTx,
+				gasToConsume: tc.gasToConsume,
+				key:          bapp.UnsafeFindStoreKey(banktypes.ModuleName),
+			})
+
+			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := tmjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
-			app.InitChain(abci.RequestInitChain{
+			bapp.InitChain(abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
+				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			})
 
-			ctx := app.NewContext(false, tmproto.Header{})
+			ctx := bapp.NewContext(false, tmproto.Header{})
 
 			// tx fee
 			feeCoin := sdk.NewCoin("atom", sdk.NewInt(150))
@@ -84,32 +122,38 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			// test account and fund
 			priv1, _, addr1 := testdata.KeyTestPubAddr()
-			err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, feeAmount)
+			err = bankKeeper.MintCoins(ctx, minttypes.ModuleName, feeAmount)
 			require.NoError(t, err)
-			err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr1, feeAmount)
+			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr1, feeAmount)
 			require.NoError(t, err)
-			require.Equal(t, feeCoin.Amount, app.BankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount)
-			seq, _ := app.AccountKeeper.GetSequence(ctx, addr1)
+			require.Equal(t, feeCoin.Amount, bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount)
+			seq := accountKeeper.GetAccount(ctx, addr1).GetSequence()
 			require.Equal(t, uint64(0), seq)
 
 			// msg and signatures
-			msg := testdata.NewTestMsg(addr1)
+			msg := &baseapptestutil.MsgKeyValue{
+				Key:    []byte("ok"),
+				Value:  []byte("ok"),
+				Signer: addr1.String(),
+			}
 
-			txBuilder := encCfg.TxConfig.NewTxBuilder()
+			txBuilder := txConfig.NewTxBuilder()
+
 			require.NoError(t, txBuilder.SetMsgs(msg))
 			txBuilder.SetFeeAmount(feeAmount)
-			txBuilder.SetGasLimit(txtypes.MaxGasWanted) // tx validation checks that gasLimit can't be bigger than this
+			txBuilder.SetGasLimit(uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
 
-			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{7}, []uint64{0}
-			_, txBytes, err := createTestTx(encCfg.TxConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
+			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
-			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
-			rsp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			bapp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+			rsp := bapp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
 			// check result
-			ctx = app.GetContextForDeliverTx(txBytes)
-			okValue := ctx.KVStore(app.GetKey(banktypes.ModuleName)).Get([]byte("ok"))
+			ctx = bapp.GetContextForDeliverTx(txBytes)
+			okValue := ctx.KVStore(bapp.UnsafeFindStoreKey(banktypes.ModuleName)).Get([]byte("ok"))
 
 			if tc.expErr {
 				if tc.panicTx {
@@ -123,17 +167,17 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(70184) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(51682) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
-			if expGasConsumed > txtypes.MaxGasWanted {
+			if expGasConsumed > uint64(simtestutil.DefaultConsensusParams.Block.MaxGas) {
 				// capped by gasLimit
-				expGasConsumed = txtypes.MaxGasWanted
+				expGasConsumed = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 			}
-			require.Equal(t, expGasConsumed, ctx.BlockGasMeter().GasConsumed())
+			require.Equal(t, expGasConsumed, ctx.BlockGasMeter().GasConsumed(), fmt.Sprintf("exp: %d, got: %d", expGasConsumed, ctx.BlockGasMeter().GasConsumed()))
 			// tx fee is always deducted
-			require.Equal(t, int64(0), app.BankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
+			require.Equal(t, int64(0), bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
 			// sender's sequence is always increased
-			seq, err = app.AccountKeeper.GetSequence(ctx, addr1)
+			seq = accountKeeper.GetAccount(ctx, addr1).GetSequence()
 			require.NoError(t, err)
 			require.Equal(t, uint64(1), seq)
 		})

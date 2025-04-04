@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -107,7 +107,7 @@ func DeliverGenTxs(
 
 		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
 		if !res.IsOK() {
-			return nil, fmt.Errorf("failed to execute DelverTx for '%s': %s", genTx, res.Log)
+			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, res.Log)
 		}
 	}
 

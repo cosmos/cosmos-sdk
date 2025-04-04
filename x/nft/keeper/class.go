@@ -20,7 +20,7 @@ func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
 	return nil
 }
 
-// UpdateClass defines a method for updating a exist nft class
+// UpdateClass defines a method for updating an exist nft class
 func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
 	if !k.HasClass(ctx, class.Id) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, class.Id)

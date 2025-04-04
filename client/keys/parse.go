@@ -2,13 +2,14 @@ package keys
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"strings"
 
+	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
 	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -140,7 +141,7 @@ func displayParseKeyInfo(w io.Writer, stringer fmt.Stringer, output string) {
 		out, err = yaml.Marshal(&stringer)
 
 	case OutputFormatJSON:
-		out, err = KeysCdc.MarshalJSON(stringer)
+		out, err = json.Marshal(&stringer)
 	}
 
 	if err != nil {

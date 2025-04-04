@@ -3,12 +3,12 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/libs/log"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -26,6 +26,7 @@ type Keeper struct {
 	slashingKeeper types.SlashingKeeper
 }
 
+// NewKeeper creates a new Keeper object.
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,

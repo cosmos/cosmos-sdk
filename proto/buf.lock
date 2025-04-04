@@ -8,8 +8,8 @@ deps:
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto
-    commit: bee5511075b7499da6178d9e4aaa628b
+    commit: 34d970b699f84aa382f3c29773a60836
   - remote: buf.build
     owner: googleapis
     repository: googleapis
-    commit: 8d7204855ec14631a499bd7393ce1970
+    commit: 75b4300737fb4efca0831636be94e517

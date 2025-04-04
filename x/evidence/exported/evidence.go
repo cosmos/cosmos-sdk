@@ -1,8 +1,8 @@
 package exported
 
 import (
-	"github.com/gogo/protobuf/proto"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

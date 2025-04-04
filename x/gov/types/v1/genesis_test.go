@@ -3,6 +3,7 @@ package v1_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/require"
 )
@@ -16,67 +17,165 @@ func TestEmptyGenesis(t *testing.T) {
 }
 
 func TestValidateGenesis(t *testing.T) {
-	depositParams := v1.DefaultDepositParams()
-	votingParams := v1.DefaultVotingParams()
-	tallyParams := v1.DefaultTallyParams()
+	params := v1.DefaultParams()
 
 	testCases := []struct {
 		name         string
-		genesisState *v1.GenesisState
-		expErr       bool
+		genesisState func() *v1.GenesisState
+		expErrMsg    string
 	}{
 		{
-			name:         "valid",
-			genesisState: v1.DefaultGenesisState(),
+			name: "valid",
+			genesisState: func() *v1.GenesisState {
+				return v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+			},
 		},
 		{
 			name: "invalid StartingProposalId",
-			genesisState: &v1.GenesisState{
-				StartingProposalId: 0,
-				DepositParams:      &depositParams,
-				VotingParams:       &votingParams,
-				TallyParams:        &tallyParams,
+			genesisState: func() *v1.GenesisState {
+				return v1.NewGenesisState(0, params)
 			},
-			expErr: true,
+			expErrMsg: "starting proposal id must be greater than 0",
 		},
 		{
-			name: "invalid TallyParams",
-			genesisState: &v1.GenesisState{
-				StartingProposalId: v1.DefaultStartingProposalID,
-				DepositParams:      &depositParams,
-				VotingParams:       &votingParams,
-				TallyParams:        &v1.TallyParams{},
+			name: "invalid min deposit",
+			genesisState: func() *v1.GenesisState {
+				params1 := params
+				params1.MinDeposit = sdk.Coins{{
+					Denom:  sdk.DefaultBondDenom,
+					Amount: sdk.NewInt(-100),
+				}}
+
+				return v1.NewGenesisState(v1.DefaultStartingProposalID, params1)
 			},
-			expErr: true,
+			expErrMsg: "invalid minimum deposit",
 		},
 		{
-			name: "invalid VotingParams",
-			genesisState: &v1.GenesisState{
-				StartingProposalId: v1.DefaultStartingProposalID,
-				DepositParams:      &depositParams,
-				VotingParams:       &v1.VotingParams{},
-				TallyParams:        &tallyParams,
+			name: "invalid max deposit period",
+			genesisState: func() *v1.GenesisState {
+				params1 := params
+				params1.MaxDepositPeriod = nil
+
+				return v1.NewGenesisState(v1.DefaultStartingProposalID, params1)
 			},
-			expErr: true,
+			expErrMsg: "maximum deposit period must not be nil",
 		},
 		{
-			name: "invalid DepositParams",
-			genesisState: &v1.GenesisState{
-				StartingProposalId: v1.DefaultStartingProposalID,
-				DepositParams:      &v1.DepositParams{},
-				VotingParams:       &votingParams,
-				TallyParams:        &tallyParams,
+			name: "invalid quorum",
+			genesisState: func() *v1.GenesisState {
+				params1 := params
+				params1.Quorum = "2"
+
+				return v1.NewGenesisState(v1.DefaultStartingProposalID, params1)
 			},
-			expErr: true,
+			expErrMsg: "quorom too large",
+		},
+		{
+			name: "invalid threshold",
+			genesisState: func() *v1.GenesisState {
+				params1 := params
+				params1.Threshold = "2"
+
+				return v1.NewGenesisState(v1.DefaultStartingProposalID, params1)
+			},
+			expErrMsg: "vote threshold too large",
+		},
+		{
+			name: "invalid veto threshold",
+			genesisState: func() *v1.GenesisState {
+				params1 := params
+				params1.VetoThreshold = "2"
+
+				return v1.NewGenesisState(v1.DefaultStartingProposalID, params1)
+			},
+			expErrMsg: "veto threshold too large",
+		},
+		{
+			name: "duplicate proposals",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Proposals = append(state.Proposals, &v1.Proposal{Id: 1})
+				state.Proposals = append(state.Proposals, &v1.Proposal{Id: 1})
+
+				return state
+			},
+			expErrMsg: "duplicate proposal id: 1",
+		},
+		{
+			name: "duplicate votes",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Proposals = append(state.Proposals, &v1.Proposal{Id: 1})
+				state.Votes = append(state.Votes,
+					&v1.Vote{
+						ProposalId: 1,
+						Voter:      "voter",
+					},
+					&v1.Vote{
+						ProposalId: 1,
+						Voter:      "voter",
+					})
+
+				return state
+			},
+			expErrMsg: "duplicate vote",
+		},
+		{
+			name: "duplicate deposits",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Proposals = append(state.Proposals, &v1.Proposal{Id: 1})
+				state.Deposits = append(state.Deposits,
+					&v1.Deposit{
+						ProposalId: 1,
+						Depositor:  "depositor",
+					},
+					&v1.Deposit{
+						ProposalId: 1,
+						Depositor:  "depositor",
+					})
+
+				return state
+			},
+			expErrMsg: "duplicate deposit: proposal_id:1 depositor:\"depositor\"",
+		},
+		{
+			name: "non-existent proposal id in votes",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Votes = append(state.Votes,
+					&v1.Vote{
+						ProposalId: 1,
+						Voter:      "voter",
+					})
+
+				return state
+			},
+			expErrMsg: "vote proposal_id:1 voter:\"voter\"  has non-existent proposal id: 1",
+		},
+		{
+			name: "non-existent proposal id in deposits",
+			genesisState: func() *v1.GenesisState {
+				state := v1.NewGenesisState(v1.DefaultStartingProposalID, params)
+				state.Deposits = append(state.Deposits,
+					&v1.Deposit{
+						ProposalId: 1,
+						Depositor:  "depositor",
+					})
+
+				return state
+			},
+			expErrMsg: "deposit proposal_id:1 depositor:\"depositor\"",
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := v1.ValidateGenesis(tc.genesisState)
-			if tc.expErr {
+			err := v1.ValidateGenesis(tc.genesisState())
+			if tc.expErrMsg != "" {
 				require.Error(t, err)
+				require.ErrorContains(t, err, tc.expErrMsg)
 			} else {
 				require.NoError(t, err)
 			}

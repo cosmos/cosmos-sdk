@@ -6,15 +6,15 @@ import (
 	"io"
 	"time"
 
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/iavl"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	dbm "github.com/tendermint/tm-db"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -223,7 +223,9 @@ func (st *Store) Has(key []byte) (exists bool) {
 // Implements types.KVStore.
 func (st *Store) Delete(key []byte) {
 	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "delete")
-	st.tree.Remove(key)
+	if _, _, err := st.tree.Remove(key); err != nil {
+		panic(err)
+	}
 }
 
 // DeleteVersions deletes a series of versions from the MutableTree. An error
@@ -370,7 +372,8 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		for ; iterator.Valid(); iterator.Next() {
 			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
 		}
-		iterator.Close()
+
+		_ = iterator.Close()
 
 		bz, err := pairs.Marshal()
 		if err != nil {
@@ -413,27 +416,4 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
 	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
-}
-
-//----------------------------------------
-
-// iavlIterator implements types.Iterator.
-type iavlIterator struct {
-	dbm.Iterator
-}
-
-var _ types.Iterator = (*iavlIterator)(nil)
-
-// newIAVLIterator will create a new iavlIterator.
-// CONTRACT: Caller must release the iavlIterator, as each one creates a new
-// goroutine.
-func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator { //nolint:unused
-	iterator, err := tree.Iterator(start, end, ascending)
-	if err != nil {
-		panic(err)
-	}
-	iter := &iavlIterator{
-		Iterator: iterator,
-	}
-	return iter
 }

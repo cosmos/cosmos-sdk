@@ -2,9 +2,11 @@ package types
 
 import (
 	"errors"
-	"math"
 	"time"
 
+	stdmath "math"
+
+	"cosmossdk.io/math"
 	"sigs.k8s.io/yaml"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -71,7 +73,7 @@ func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk
 		// compute x and y per the specification, where:
 		// X := min(max(V - DV, 0), D)
 		// Y := D - X
-		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt()), coin.Amount)
+		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), math.ZeroInt()), coin.Amount)
 		y := coin.Amount.Sub(x)
 
 		if !x.IsZero() {
@@ -239,7 +241,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	// calculate the vesting scalar
 	x := blockTime.Unix() - cva.StartTime
 	y := cva.EndTime - cva.StartTime
-	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
+	s := math.LegacyNewDec(x).Quo(math.LegacyNewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
 		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
@@ -941,7 +943,7 @@ func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, requestor, dest sdk.
 
 	// If we need more, transfer UnbondingDelegations.
 	want := toClawBack.AmountOf(bondDenom)
-	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
+	unbondings := sk.GetUnbondingDelegations(ctx, addr, stdmath.MaxUint16)
 	for _, unbonding := range unbondings {
 		valAddr, err := sdk.ValAddressFromBech32(unbonding.ValidatorAddress)
 		if err != nil {
@@ -956,7 +958,7 @@ func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, requestor, dest sdk.
 
 	// If we need more, transfer Delegations.
 	if want.IsPositive() {
-		delegations := sk.GetDelegatorDelegations(ctx, addr, math.MaxUint16)
+		delegations := sk.GetDelegatorDelegations(ctx, addr, stdmath.MaxUint16)
 		for _, delegation := range delegations {
 			validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 			if err != nil {
@@ -1025,7 +1027,7 @@ func (va *BaseVestingAccount) forceTransfer(ctx sdk.Context, amt sdk.Coins, dest
 		return
 	}
 	got := sdk.NewInt(0)
-	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
+	unbondings := sk.GetUnbondingDelegations(ctx, addr, stdmath.MaxUint16)
 	for _, unbonding := range unbondings {
 		valAddr, err := sdk.ValAddressFromBech32(unbonding.ValidatorAddress)
 		if err != nil {
@@ -1041,7 +1043,7 @@ func (va *BaseVestingAccount) forceTransfer(ctx sdk.Context, amt sdk.Coins, dest
 
 	// If we need more, transfer Delegations.
 	if want.IsPositive() {
-		delegations := sk.GetDelegatorDelegations(ctx, addr, math.MaxUint16)
+		delegations := sk.GetDelegatorDelegations(ctx, addr, stdmath.MaxUint16)
 		for _, delegation := range delegations {
 			validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 			if err != nil {

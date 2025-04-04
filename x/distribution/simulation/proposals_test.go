@@ -4,46 +4,39 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-func TestProposalContents(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+func TestProposalMsgs(t *testing.T) {
 	// initialize parameters
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
+	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
-	// execute ProposalContents function
-	weightedProposalContent := simulation.ProposalContents(app.DistrKeeper)
-	require.Len(t, weightedProposalContent, 1)
+	// execute ProposalMsgs function
+	weightedProposalMsgs := simulation.ProposalMsgs()
+	assert.Assert(t, len(weightedProposalMsgs) == 1)
 
-	w0 := weightedProposalContent[0]
+	w0 := weightedProposalMsgs[0]
 
 	// tests w0 interface:
-	require.Equal(t, simulation.OpWeightSubmitCommunitySpendProposal, w0.AppParamsKey())
-	require.Equal(t, simappparams.DefaultWeightTextProposal, w0.DefaultWeight())
+	assert.Equal(t, simulation.OpWeightMsgUpdateParams, w0.AppParamsKey())
+	assert.Equal(t, simulation.DefaultWeightMsgUpdateParams, w0.DefaultWeight())
 
-	amount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)), sdk.NewCoin("atoken", sdk.NewInt(2)))
+	msg := w0.MsgSimulatorFn()(r, ctx, accounts)
+	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
+	assert.Assert(t, ok)
 
-	feePool := app.DistrKeeper.GetFeePool(ctx)
-	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(amount...)
-	app.DistrKeeper.SetFeePool(ctx, feePool)
-
-	content := w0.ContentSimulatorFn()(r, ctx, accounts)
-
-	require.Equal(t, "sTxPjfweXhSUkMhPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhu", content.GetDescription())
-	require.Equal(t, "xKGLwQvuyN", content.GetTitle())
-	require.Equal(t, "distribution", content.ProposalRoute())
-	require.Equal(t, "CommunityPoolSpend", content.ProposalType())
+	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
+	assert.DeepEqual(t, sdk.NewDec(0), msgUpdateParams.Params.CommunityTax)
+	assert.Equal(t, true, msgUpdateParams.Params.WithdrawAddrEnabled)
 }

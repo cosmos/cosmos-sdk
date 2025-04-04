@@ -23,3 +23,16 @@ func TestEncodeAndDecode(t *testing.T) {
 	require.Equal(t, hrp, ss, "Invalid hrp")
 	require.True(t, bytes.Equal(data, sum[:]), "Invalid decode")
 }
+
+func FuzzDecodeAndConvert(f *testing.F) {
+	if testing.Short() {
+		f.Skip()
+	}
+
+	f.Add("shasum149yfqne0parehrupja55kvqcfvxja5wpe54pas8mshffngvj53rs93fk75")
+	f.Add("bech321er8m900ayvv9rg5r6ush4nzvqhj4p9tqnxqkxaaxrs4ueuvhurcs4x3j4j")
+
+	f.Fuzz(func(t *testing.T, str string) {
+		_, _, _ = bech32.DecodeAndConvert(str)
+	})
+}

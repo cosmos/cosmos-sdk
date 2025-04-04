@@ -11,20 +11,20 @@ import (
 )
 
 // RegisterInvariants registers all governance invariants
-func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKeeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, keeper *Keeper, bk types.BankKeeper) {
 	ir.RegisterRoute(types.ModuleName, "module-account", ModuleAccountInvariant(keeper, bk))
 }
 
 // AllInvariants runs all invariants of the governance module
-func AllInvariants(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
+func AllInvariants(keeper *Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		return ModuleAccountInvariant(keeper, bk)(ctx)
 	}
 }
 
 // ModuleAccountInvariant checks that the module account coins reflects the sum of
-// deposit amounts held on store
-func ModuleAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
+// deposit amounts held on store.
+func ModuleAccountInvariant(keeper *Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var expectedDeposits sdk.Coins
 

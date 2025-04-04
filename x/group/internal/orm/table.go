@@ -308,6 +308,5 @@ func (i typeSafeIterator) LoadNext(dest codec.ProtoMarshaler) (RowID, error) {
 }
 
 func (i typeSafeIterator) Close() error {
-	i.it.Close()
-	return nil
+	return i.it.Close()
 }

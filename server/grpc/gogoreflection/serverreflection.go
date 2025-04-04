@@ -46,8 +46,7 @@ import (
 	"sort"
 	"sync"
 
-	// nolint: staticcheck
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

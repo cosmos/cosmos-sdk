@@ -1,7 +1,7 @@
 package types
 
 import (
-	protoio "github.com/gogo/protobuf/io"
+	protoio "github.com/cosmos/gogoproto/io"
 )
 
 // WriteExtensionPayload writes an extension payload for current extension snapshotter.

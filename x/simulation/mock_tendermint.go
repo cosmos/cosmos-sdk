@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type mockValidator struct {
@@ -166,14 +166,14 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	if len(pastTimes) == 0 {
 		return abci.RequestBeginBlock{
 			Header: header,
-			LastCommitInfo: abci.LastCommitInfo{
+			LastCommitInfo: abci.CommitInfo{
 				Votes: voteInfos,
 			},
 		}
 	}
 
 	// TODO: Determine capacity before allocation
-	evidence := make([]abci.Evidence, 0)
+	evidence := make([]abci.Misbehavior, 0)
 
 	for r.Float64() < params.EvidenceFraction() {
 		height := header.Height
@@ -195,8 +195,8 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		}
 
 		evidence = append(evidence,
-			abci.Evidence{
-				Type:             abci.EvidenceType_DUPLICATE_VOTE,
+			abci.Misbehavior{
+				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
 				Time:             time,
@@ -209,7 +209,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 	return abci.RequestBeginBlock{
 		Header: header,
-		LastCommitInfo: abci.LastCommitInfo{
+		LastCommitInfo: abci.CommitInfo{
 			Votes: voteInfos,
 		},
 		ByzantineValidators: evidence,

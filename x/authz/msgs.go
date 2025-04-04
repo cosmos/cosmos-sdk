@@ -3,14 +3,14 @@ package authz
 import (
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
@@ -220,6 +220,16 @@ func (msg MsgExec) ValidateBasic() error {
 
 	if len(msg.Msgs) == 0 {
 		return sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
+	}
+
+	msgs, err := msg.GetMessages()
+	if err != nil {
+		return err
+	}
+	for _, msg := range msgs {
+		if err = msg.ValidateBasic(); err != nil {
+			return err
+		}
 	}
 
 	return nil

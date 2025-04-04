@@ -7,19 +7,20 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/spf13/cast"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/spf13/cast"
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec) (baseapp.StreamingService, error)
+type ServiceConstructor func(servertypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -87,9 +88,10 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 // NewFileStreamingService is the streaming.ServiceConstructor function for
 // creating a FileStreamingService.
 func NewFileStreamingService(
-	opts serverTypes.AppOptions,
+	opts servertypes.AppOptions,
 	keys []types.StoreKey,
 	marshaller codec.BinaryCodec,
+	logger log.Logger,
 ) (baseapp.StreamingService, error) {
 	homePath := cast.ToString(opts.Get(flags.FlagHome))
 	filePrefix := cast.ToString(opts.Get(OptStreamersFilePrefix))
@@ -110,7 +112,7 @@ func NewFileStreamingService(
 		}
 	}
 
-	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller, outputMetadata, stopNodeOnErr, fsync)
+	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller, logger, outputMetadata, stopNodeOnErr, fsync)
 }
 
 // LoadStreamingServices is a function for loading StreamingServices onto the
@@ -119,8 +121,9 @@ func NewFileStreamingService(
 // and any error that occurs during the setup.
 func LoadStreamingServices(
 	bApp *baseapp.BaseApp,
-	appOpts serverTypes.AppOptions,
+	appOpts servertypes.AppOptions,
 	appCodec codec.BinaryCodec,
+	logger log.Logger,
 	keys map[string]*types.KVStoreKey,
 ) ([]baseapp.StreamingService, *sync.WaitGroup, error) {
 	// waitgroup and quit channel for optional shutdown coordination of the streaming service(s)
@@ -160,7 +163,7 @@ func LoadStreamingServices(
 			// Close any services we may have already spun up before hitting the error
 			// on this one.
 			for _, activeStreamer := range activeStreamers {
-				activeStreamer.Close()
+				_ = activeStreamer.Close()
 			}
 
 			return nil, nil, err
@@ -168,12 +171,12 @@ func LoadStreamingServices(
 
 		// Generate the streaming service using the constructor, appOptions, and the
 		// StoreKeys we want to expose.
-		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
+		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec, logger)
 		if err != nil {
 			// Close any services we may have already spun up before hitting the error
 			// on this one.
 			for _, activeStreamer := range activeStreamers {
-				activeStreamer.Close()
+				_ = activeStreamer.Close()
 			}
 
 			return nil, nil, err
@@ -183,7 +186,9 @@ func LoadStreamingServices(
 		bApp.SetStreamingService(streamingService)
 
 		// kick off the background streaming service loop
-		streamingService.Stream(wg)
+		if err := streamingService.Stream(wg); err != nil {
+			return nil, nil, err
+		}
 
 		// add to the list of active streamers
 		activeStreamers = append(activeStreamers, streamingService)

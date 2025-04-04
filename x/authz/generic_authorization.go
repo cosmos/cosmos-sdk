@@ -1,6 +1,8 @@
 package authz
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,5 +27,8 @@ func (a GenericAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (AcceptRespon
 
 // ValidateBasic implements Authorization.ValidateBasic.
 func (a GenericAuthorization) ValidateBasic() error {
+	if a.Msg == "" {
+		return errors.New("msg type cannot be empty")
+	}
 	return nil
 }

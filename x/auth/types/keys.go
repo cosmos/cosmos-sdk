@@ -13,12 +13,12 @@ const (
 
 	// FeeCollectorName the root string for the fee collector account address
 	FeeCollectorName = "fee_collector"
-
-	// QuerierRoute is the querier route for auth
-	QuerierRoute = ModuleName
 )
 
 var (
+	// ParamsKey is the prefix for params key
+	ParamsKey = []byte{0x00}
+
 	// AddressStoreKeyPrefix prefix for account-by-address store
 	AddressStoreKeyPrefix = []byte{0x01}
 

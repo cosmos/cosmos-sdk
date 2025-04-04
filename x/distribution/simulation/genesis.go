@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -14,24 +15,12 @@ import (
 
 // Simulation parameter constants
 const (
-	CommunityTax        = "community_tax"
-	BaseProposerReward  = "base_proposer_reward"
-	BonusProposerReward = "bonus_proposer_reward"
-	WithdrawEnabled     = "withdraw_enabled"
+	CommunityTax    = "community_tax"
+	WithdrawEnabled = "withdraw_enabled"
 )
 
 // GenCommunityTax randomized CommunityTax
-func GenCommunityTax(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
-}
-
-// GenBaseProposerReward randomized BaseProposerReward
-func GenBaseProposerReward(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
-}
-
-// GenBonusProposerReward randomized BonusProposerReward
-func GenBonusProposerReward(r *rand.Rand) sdk.Dec {
+func GenCommunityTax(r *rand.Rand) math.LegacyDec {
 	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
@@ -48,18 +37,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { communityTax = GenCommunityTax(r) },
 	)
 
-	var baseProposerReward sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, BaseProposerReward, &baseProposerReward, simState.Rand,
-		func(r *rand.Rand) { baseProposerReward = GenBaseProposerReward(r) },
-	)
-
-	var bonusProposerReward sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, BonusProposerReward, &bonusProposerReward, simState.Rand,
-		func(r *rand.Rand) { bonusProposerReward = GenBonusProposerReward(r) },
-	)
-
 	var withdrawEnabled bool
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, WithdrawEnabled, &withdrawEnabled, simState.Rand,
@@ -70,8 +47,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		FeePool: types.InitialFeePool(),
 		Params: types.Params{
 			CommunityTax:        communityTax,
-			BaseProposerReward:  baseProposerReward,
-			BonusProposerReward: bonusProposerReward,
 			WithdrawAddrEnabled: withdrawEnabled,
 		},
 	}

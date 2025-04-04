@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 	"testing"
 )
 
@@ -431,4 +432,45 @@ func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func hasOnlyDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+const thousandSeparator string = "'"
+
+// FormatInt formats an integer (encoded as in protobuf) into a value-rendered
+// string following ADR-050. This function operates with string manipulation
+// (instead of manipulating the int or sdk.Int object).
+func FormatInt(v string) (string, error) {
+	sign := ""
+	if v[0] == '-' {
+		sign = "-"
+		v = v[1:]
+	}
+	if len(v) > 1 {
+		v = strings.TrimLeft(v, "0")
+	}
+
+	// Ensure that the string contains only digits at this point.
+	if !hasOnlyDigits(v) {
+		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)
+	}
+
+	startOffset := 3
+	for outputIndex := len(v); outputIndex > startOffset; {
+		outputIndex -= 3
+		v = v[:outputIndex] + thousandSeparator + v[outputIndex:]
+	}
+
+	return sign + v, nil
 }

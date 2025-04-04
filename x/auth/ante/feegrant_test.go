@@ -5,159 +5,178 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
-func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
-	suite.SetupTest(false)
-	// setup
-	app, ctx := suite.app, suite.ctx
-
-	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
-
-	// this just tests our handler
-	dfd := ante.NewDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, nil)
-	feeAnteHandler := sdk.ChainAnteDecorators(dfd)
-
-	// this tests the whole stack
-	anteHandlerStack := suite.anteHandler
-
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	priv2, _, addr2 := testdata.KeyTestPubAddr()
-	priv3, _, addr3 := testdata.KeyTestPubAddr()
-	priv4, _, addr4 := testdata.KeyTestPubAddr()
-	priv5, _, addr5 := testdata.KeyTestPubAddr()
-
-	// Set addr1 with insufficient funds
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
-	suite.Require().NoError(err)
-
-	// Set addr2 with more funds
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
-	suite.Require().NoError(err)
-
-	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
-	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
-	})
-	suite.Require().NoError(err)
-
-	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
-	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
-	})
-	suite.Require().NoError(err)
-
+func TestDeductFeesNoDelegation(t *testing.T) {
 	cases := map[string]struct {
-		signerKey  cryptotypes.PrivKey
-		signer     sdk.AccAddress
-		feeAccount sdk.AccAddress
-		fee        int64
-		valid      bool
+		fee      int64
+		valid    bool
+		err      error
+		malleate func(*AnteTestSuite) (signer TestAccount, feeAcc sdk.AccAddress)
 	}{
 		"paying with low funds": {
-			signerKey: priv1,
-			signer:    addr1,
-			fee:       50,
-			valid:     false,
+			fee:   50,
+			valid: false,
+			err:   sdkerrors.ErrInsufficientFunds,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				accs := suite.CreateTestAccounts(1)
+				// 2 calls are needed because we run the ante twice
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(sdkerrors.ErrInsufficientFunds).Times(2)
+				return accs[0], nil
+			},
 		},
 		"paying with good funds": {
-			signerKey: priv2,
-			signer:    addr2,
-			fee:       50,
-			valid:     true,
+			fee:   50,
+			valid: true,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				accs := suite.CreateTestAccounts(1)
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(nil).Times(2)
+				return accs[0], nil
+			},
 		},
 		"paying with no account": {
-			signerKey: priv3,
-			signer:    addr3,
-			fee:       1,
-			valid:     false,
+			fee:   1,
+			valid: false,
+			err:   sdkerrors.ErrUnknownAddress,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				// Do not register the account
+				priv, _, addr := testdata.KeyTestPubAddr()
+				return TestAccount{
+					acc:  authtypes.NewBaseAccountWithAddress(addr),
+					priv: priv,
+				}, nil
+			},
 		},
 		"no fee with real account": {
-			signerKey: priv1,
-			signer:    addr1,
-			fee:       0,
-			valid:     true,
+			fee:   0,
+			valid: true,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				accs := suite.CreateTestAccounts(1)
+				return accs[0], nil
+			},
 		},
 		"no fee with no account": {
-			signerKey: priv5,
-			signer:    addr5,
-			fee:       0,
-			valid:     false,
+			fee:   0,
+			valid: false,
+			err:   sdkerrors.ErrUnknownAddress,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				// Do not register the account
+				priv, _, addr := testdata.KeyTestPubAddr()
+				return TestAccount{
+					acc:  authtypes.NewBaseAccountWithAddress(addr),
+					priv: priv,
+				}, nil
+			},
 		},
-		"valid fee grant without account": {
-			signerKey:  priv3,
-			signer:     addr3,
-			feeAccount: addr2,
-			fee:        50,
-			valid:      true,
+		"valid fee grant": {
+			// note: the original test said "valid fee grant with no account".
+			// this is impossible given that feegrant.GrantAllowance calls
+			// SetAccount for the grantee.
+			fee:   50,
+			valid: true,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				accs := suite.CreateTestAccounts(2)
+				suite.feeGrantKeeper.EXPECT().UseGrantedFees(gomock.Any(), accs[1].acc.GetAddress(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[1].acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(nil).Times(2)
+
+				return accs[0], accs[1].acc.GetAddress()
+			},
 		},
 		"no fee grant": {
-			signerKey:  priv3,
-			signer:     addr3,
-			feeAccount: addr1,
-			fee:        2,
-			valid:      false,
+			fee:   2,
+			valid: false,
+			err:   sdkerrors.ErrNotFound,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				accs := suite.CreateTestAccounts(2)
+				suite.feeGrantKeeper.EXPECT().
+					UseGrantedFees(gomock.Any(), accs[1].acc.GetAddress(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).
+					Return(sdkerrors.ErrNotFound.Wrap("fee-grant not found")).
+					Times(2)
+				return accs[0], accs[1].acc.GetAddress()
+			},
 		},
 		"allowance smaller than requested fee": {
-			signerKey:  priv4,
-			signer:     addr4,
-			feeAccount: addr2,
-			fee:        50,
-			valid:      false,
+			fee:   50,
+			valid: false,
+			err:   feegrant.ErrFeeLimitExceeded,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				accs := suite.CreateTestAccounts(2)
+				suite.feeGrantKeeper.EXPECT().
+					UseGrantedFees(gomock.Any(), accs[1].acc.GetAddress(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).
+					Return(feegrant.ErrFeeLimitExceeded.Wrap("basic allowance")).
+					Times(2)
+				return accs[0], accs[1].acc.GetAddress()
+			},
 		},
 		"granter cannot cover allowed fee grant": {
-			signerKey:  priv4,
-			signer:     addr4,
-			feeAccount: addr1,
-			fee:        50,
-			valid:      false,
+			fee:   50,
+			valid: false,
+			err:   sdkerrors.ErrInsufficientFunds,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				accs := suite.CreateTestAccounts(2)
+				suite.feeGrantKeeper.EXPECT().UseGrantedFees(gomock.Any(), accs[1].acc.GetAddress(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[1].acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(sdkerrors.ErrInsufficientFunds).Times(2)
+				return accs[0], accs[1].acc.GetAddress()
+			},
 		},
 	}
 
 	for name, stc := range cases {
 		tc := stc // to make scopelint happy
-		suite.T().Run(name, func(t *testing.T) {
-			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
-			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
+		t.Run(name, func(t *testing.T) {
+			suite := SetupTestSuite(t, false)
+			protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry), tx.DefaultSignModes)
+			// this just tests our handler
+			dfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, suite.feeGrantKeeper, nil)
+			feeAnteHandler := sdk.ChainAnteDecorators(dfd)
 
-			acc := app.AccountKeeper.GetAccount(ctx, tc.signer)
-			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
+			// this tests the whole stack
+			anteHandlerStack := suite.anteHandler
+
+			signer, feeAcc := stc.malleate(suite)
+
+			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
+			msgs := []sdk.Msg{testdata.NewTestMsg(signer.acc.GetAddress())}
+
+			acc := suite.accountKeeper.GetAccount(suite.ctx, signer.acc.GetAddress())
+			privs, accNums, seqs := []cryptotypes.PrivKey{signer.priv}, []uint64{0}, []uint64{0}
 			if acc != nil {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
-			suite.Require().NoError(err)
-			_, err = feeAnteHandler(ctx, tx, false) // tests only feegrant ante
+			var defaultGenTxGas uint64 = 10000000
+			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, defaultGenTxGas, suite.ctx.ChainID(), accNums, seqs, feeAcc, privs...)
+			require.NoError(t, err)
+			_, err = feeAnteHandler(suite.ctx, tx, false) // tests only feegrant ante
 			if tc.valid {
-				suite.Require().NoError(err)
+				require.NoError(t, err)
 			} else {
-				suite.Require().Error(err)
+				require.ErrorIs(t, err, tc.err)
 			}
 
-			_, err = anteHandlerStack(ctx, tx, false) // tests while stack
+			_, err = anteHandlerStack(suite.ctx, tx, false) // tests while stack
 			if tc.valid {
-				suite.Require().NoError(err)
+				require.NoError(t, err)
 			} else {
-				suite.Require().Error(err)
+				require.ErrorIs(t, err, tc.err)
 			}
 		})
 	}

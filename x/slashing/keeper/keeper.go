@@ -3,36 +3,42 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cometbft/cometbft/libs/log"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	sk         types.StakingKeeper
-	paramspace types.ParamSubspace
+	storeKey    storetypes.StoreKey
+	cdc         codec.BinaryCodec
+	legacyAmino *codec.LegacyAmino
+	sk          types.StakingKeeper
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account.
+	authority string
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
-	// set KeyTable if it has not already been set
-	if !paramspace.HasKeyTable() {
-		paramspace = paramspace.WithKeyTable(types.ParamKeyTable())
-	}
-
+func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key storetypes.StoreKey, sk types.StakingKeeper, authority string) Keeper {
 	return Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		sk:         sk,
-		paramspace: paramspace,
+		storeKey:    key,
+		cdc:         cdc,
+		legacyAmino: legacyAmino,
+		sk:          sk,
+		authority:   authority,
 	}
+}
+
+// GetAuthority returns the x/slashing module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.
@@ -64,15 +70,30 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes.
+// module to make the necessary validator changes. It specifies no intraction reason.
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64) {
-	coinsBurned := k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
+	k.SlashWithInfractionReason(ctx, consAddr, fraction, power, distributionHeight, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
+}
+
+// SlashWithInfractionReason attempts to slash a validator. The slash is delegated to the staking
+// module to make the necessary validator changes. It specifies an intraction reason.
+func (k Keeper) SlashWithInfractionReason(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64, infraction stakingtypes.Infraction) {
+	coinsBurned := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, fraction, infraction)
+
+	reasonAttr := sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueUnspecified)
+	switch infraction {
+	case stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN:
+		reasonAttr = sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign)
+	case stakingtypes.Infraction_INFRACTION_DOWNTIME:
+		reasonAttr = sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature)
+	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
 			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
 			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
+			reasonAttr,
 			sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 		),
 	)

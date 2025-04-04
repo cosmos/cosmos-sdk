@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -61,7 +61,7 @@ func TestCollectTxsHandlesDirectories(t *testing.T) {
 	balItr := new(doNothingIterator)
 
 	dnc := &doNothingUnmarshalJSON{cdc}
-	if _, _, err := genutil.CollectTxs(dnc, txDecoder, "foo", testDir, gdoc, balItr); err != nil {
+	if _, _, err := genutil.CollectTxs(dnc, txDecoder, "foo", testDir, gdoc, balItr, gtypes.DefaultMessageValidator); err != nil {
 		t.Fatal(err)
 	}
 }

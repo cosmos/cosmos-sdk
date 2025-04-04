@@ -3,7 +3,7 @@ package staking
 import (
 	"fmt"
 
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +12,7 @@ import (
 )
 
 // WriteValidators returns a slice of bonded genesis validators.
-func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator, returnErr error) {
+func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []tmtypes.GenesisValidator, returnErr error) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
 		pk, err := validator.ConsPubKey()
 		if err != nil {

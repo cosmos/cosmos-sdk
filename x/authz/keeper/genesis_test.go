@@ -4,29 +4,56 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/golang/mock/gomock"
 )
 
 type GenesisTestSuite struct {
 	suite.Suite
 
-	ctx    sdk.Context
-	keeper keeper.Keeper
+	ctx           sdk.Context
+	keeper        keeper.Keeper
+	baseApp       *baseapp.BaseApp
+	accountKeeper *authztestutil.MockAccountKeeper
+	encCfg        moduletestutil.TestEncodingConfig
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
+	key := sdk.NewKVStoreKey(keeper.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
-	suite.keeper = app.AuthzKeeper
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
+
+	suite.baseApp = baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		suite.encCfg.TxConfig.TxDecoder(),
+	)
+	suite.baseApp.SetCMS(testCtx.CMS)
+
+	bank.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
+
+	msr := suite.baseApp.MsgServiceRouter()
+	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
+
+	suite.keeper = keeper.NewKeeper(key, suite.encCfg.Codec, msr, suite.accountKeeper)
 }
 
 var (

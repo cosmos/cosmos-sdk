@@ -3,9 +3,9 @@ package secp256r1
 import (
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -112,4 +112,15 @@ func (suite *SKSuite) TestSize() {
 
 	var nilPk *ecdsaSK
 	require.Equal(0, nilPk.Size(), "nil value must have zero size")
+}
+
+func (suite *SKSuite) TestJson() {
+	require := suite.Require()
+	asd := suite.sk.(*PrivKey)
+	bz, err := asd.Secret.MarshalJSON()
+	require.NoError(err)
+
+	sk := &ecdsaSK{}
+	require.NoError(sk.UnmarshalJSON(bz))
+	require.Equal(suite.sk.(*PrivKey).Secret, sk)
 }

@@ -16,8 +16,7 @@ var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	errInternal = Register(UndefinedCodespace, 1, "internal")
 
-	// ErrPanic is only set when we recover from a panic, so we know to
-	// redact potentially sensitive system info
+	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
 )
 

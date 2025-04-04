@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -36,7 +36,7 @@ type Context struct {
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice          DecCoins
-	consParams           *abci.ConsensusParams
+	consParams           *tmproto.ConsensusParams
 	eventManager         *EventManager
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
@@ -78,8 +78,8 @@ func (c Context) HeaderHash() tmbytes.HexBytes {
 	return hash
 }
 
-func (c Context) ConsensusParams() *abci.ConsensusParams {
-	return proto.Clone(c.consParams).(*abci.ConsensusParams)
+func (c Context) ConsensusParams() *tmproto.ConsensusParams {
+	return proto.Clone(c.consParams).(*tmproto.ConsensusParams)
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -142,11 +142,12 @@ func (c Context) WithHeaderHash(hash []byte) Context {
 	return c
 }
 
-// WithBlockTime returns a Context with an updated tendermint block header time in UTC time
+// WithBlockTime returns a Context with an updated tendermint block header time in UTC with no monotonic component.
+// Stripping the monotonic component is for time equality.
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
-	newHeader.Time = newTime.UTC()
+	newHeader.Time = newTime.Round(0).UTC()
 	return c.WithBlockHeader(newHeader)
 }
 
@@ -237,7 +238,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params *tmproto.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }
@@ -248,7 +249,7 @@ func (c Context) WithEventManager(em *EventManager) Context {
 	return c
 }
 
-// WithEventManager returns a Context with an updated tx priority
+// WithPriority returns a Context with an updated tx priority
 func (c Context) WithPriority(p int64) Context {
 	c.priority = p
 	return c

@@ -7,14 +7,13 @@ import (
 	"os"
 	"path/filepath"
 
+	cfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/libs/cli"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,7 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -33,8 +31,8 @@ const (
 	// FlagSeed defines a flag to initialize the private validator key from a specific seed.
 	FlagRecover = "recover"
 
-	// FlagStakingBondDenom defines a flag to specify the staking token in the genesis file.
-	FlagStakingBondDenom = "staking-bond-denom"
+	// FlagDefaultBondDenom defines the default denom to use in the genesis file.
+	FlagDefaultBondDenom = "default-denom"
 )
 
 type printInfo struct {
@@ -107,6 +105,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				}
 			}
 
+			// Get initial height
+			initHeight, _ := cmd.Flags().GetInt64(flags.FlagInitHeight)
+			if initHeight < 1 {
+				initHeight = 1
+			}
+
 			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
 			if err != nil {
 				return err
@@ -116,31 +120,19 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			genFile := config.GenesisFile()
 			overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
-			stakingBondDenom, _ := cmd.Flags().GetString(FlagStakingBondDenom)
+			defaultDenom, _ := cmd.Flags().GetString(FlagDefaultBondDenom)
 
-			if !overwrite && tmos.FileExists(genFile) {
+			// use os.Stat to check if the file exists
+			_, err = os.Stat(genFile)
+			if !overwrite && !os.IsNotExist(err) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
 
-			appGenState := mbm.DefaultGenesis(cdc)
-
-			if stakingBondDenom != "" {
-				var stakingGenesis stakingtypes.GenesisState
-
-				stakingRaw := appGenState[stakingtypes.ModuleName]
-				err := clientCtx.Codec.UnmarshalJSON(stakingRaw, &stakingGenesis)
-				if err != nil {
-					return err
-				}
-
-				stakingGenesis.Params.BondDenom = stakingBondDenom
-				modifiedStakingStr, err := clientCtx.Codec.MarshalJSON(&stakingGenesis)
-				if err != nil {
-					return err
-				}
-
-				appGenState[stakingtypes.ModuleName] = modifiedStakingStr
+			// Overwrites the SDK default denom for side-effects
+			if defaultDenom != "" {
+				sdk.DefaultBondDenom = defaultDenom
 			}
+			appGenState := mbm.DefaultGenesis(cdc)
 
 			appState, err := json.MarshalIndent(appGenState, "", " ")
 			if err != nil {
@@ -162,6 +154,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			genDoc.ChainID = chainID
 			genDoc.Validators = nil
 			genDoc.AppState = appState
+			genDoc.InitialHeight = initHeight
 
 			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
 				return errors.Wrap(err, "Failed to export genesis file")
@@ -178,7 +171,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(FlagStakingBondDenom, "", "genesis file staking bond denomination, if left blank default value is 'stake'")
+	cmd.Flags().String(FlagDefaultBondDenom, "", "genesis file default denomination, if left blank default value is 'stake'")
+	cmd.Flags().Int64(flags.FlagInitHeight, 1, "specify the initial block height at genesis")
 
 	return cmd
 }

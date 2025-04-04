@@ -3,12 +3,11 @@ package config
 import (
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/spf13/viper"
 
 	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,13 +26,13 @@ const (
 	DefaultABCIClientType = AbciClientTypeCommitting // [AGORIC]
 
 	// DefaultAPIAddress defines the default address to bind the API server to.
-	DefaultAPIAddress = "tcp://0.0.0.0:1317"
+	DefaultAPIAddress = "tcp://localhost:1317"
 
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
-	DefaultGRPCAddress = "0.0.0.0:9090"
+	DefaultGRPCAddress = "localhost:9090"
 
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
-	DefaultGRPCWebAddress = "0.0.0.0:9091"
+	DefaultGRPCWebAddress = "localhost:9091"
 
 	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
 	// bytes the server can receive.
@@ -137,7 +136,7 @@ type APIConfig struct {
 	// RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds)
 	RPCWriteTimeout uint `mapstructure:"rpc-write-timeout"`
 
-	// RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes)
+	// RPCMaxBodyBytes defines the Tendermint maximum request body (in bytes)
 	RPCMaxBodyBytes uint `mapstructure:"rpc-max-body-bytes"`
 
 	// TODO: TLS/Proxy configuration.
@@ -217,6 +216,16 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
+// MempoolConfig defines the configurations for the SDK built-in app-side mempool
+// implementations.
+type MempoolConfig struct {
+	// MaxTxs defines the behavior of the mempool. A negative value indicates
+	// the mempool is disabled entirely, zero indicates that the mempool is
+	// unbounded in how many txs it may contain, and a positive value indicates
+	// the maximum amount of txs it may contain.
+	MaxTxs int `mapstructure:"max-txs"`
+}
+
 type (
 	// StoreConfig defines application configuration for state streaming and other
 	// storage related operations.
@@ -261,6 +270,7 @@ type Config struct {
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 	Store     StoreConfig      `mapstructure:"store"`
 	Streamers StreamersConfig  `mapstructure:"streamers"`
+	Mempool   MempoolConfig    `mapstructure:"mempool"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -268,23 +278,15 @@ func (c *Config) SetMinGasPrices(gasPrices sdk.DecCoins) {
 	c.MinGasPrices = gasPrices.String()
 }
 
-// GetMinGasPrices returns the validator's minimum gas prices based on the set
-// configuration.
+// GetMinGasPrices returns the validator's minimum gas prices based on the set configuration.
 func (c *Config) GetMinGasPrices() sdk.DecCoins {
 	if c.MinGasPrices == "" {
 		return sdk.DecCoins{}
 	}
 
-	gasPricesStr := strings.Split(c.MinGasPrices, ";")
-	gasPrices := make(sdk.DecCoins, len(gasPricesStr))
-
-	for i, s := range gasPricesStr {
-		gasPrice, err := sdk.ParseDecCoin(s)
-		if err != nil {
-			panic(fmt.Errorf("failed to parse minimum gas price coin (%s): %s", s, err))
-		}
-
-		gasPrices[i] = gasPrice
+	gasPrices, err := sdk.ParseDecCoins(c.MinGasPrices)
+	if err != nil {
+		panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
 	}
 
 	return gasPrices
@@ -301,7 +303,7 @@ func DefaultConfig() *Config {
 			PruningInterval:     "0",
 			MinRetainBlocks:     0,
 			IndexEvents:         make([]string, 0),
-			IAVLCacheSize:       781250, // 50 MB
+			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
 			IAVLLazyLoading:     false,
 			ABCIClientType:      DefaultABCIClientType, // [AGORIC]
@@ -357,6 +359,9 @@ func DefaultConfig() *Config {
 				// in face of system crash.
 				Fsync: false,
 			},
+		},
+		Mempool: MempoolConfig{
+			MaxTxs: 5_000,
 		},
 	}
 }

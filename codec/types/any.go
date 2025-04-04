@@ -3,7 +3,7 @@ package types
 import (
 	fmt "fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -38,14 +38,13 @@ type Any struct {
 	// used with implementation specific semantics.
 
 	TypeUrl string `protobuf:"bytes,1,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
+
 	// Must be a valid serialized protocol buffer of the above specified type.
 	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-
-	XXX_unrecognized []byte `json:"-"`
-
-	XXX_sizecache int32 `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 
 	cachedValue interface{}
 

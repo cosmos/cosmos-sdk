@@ -2,12 +2,15 @@ package appconfig_test
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"reflect"
+	"sort"
 	"testing"
 
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/container"
+	"cosmossdk.io/depinject"
 
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/core/appmodule"
@@ -16,9 +19,9 @@ import (
 	_ "cosmossdk.io/core/internal/testpb"
 )
 
-func expectContainerErrorContains(t *testing.T, option container.Option, contains string) {
+func expectContainerErrorContains(t *testing.T, option depinject.Config, contains string) {
 	t.Helper()
-	err := container.Build(option)
+	err := depinject.Inject(option)
 	assert.ErrorContains(t, err, contains)
 }
 
@@ -57,7 +60,7 @@ modules:
 	expectContainerErrorContains(t, opt, "registered modules are")
 	expectContainerErrorContains(t, opt, "testpb.TestModuleA")
 
-	var app testpb.App
+	var app App
 	opt = appconfig.LoadYAML([]byte(`
 modules:
 - name: runtime
@@ -70,7 +73,7 @@ modules:
   config:
    "@type": testpb.TestModuleB
 `))
-	assert.NilError(t, container.Build(opt, &app))
+	assert.NilError(t, depinject.Inject(opt, &app))
 	buf := &bytes.Buffer{}
 	app(buf)
 	const expected = `got store key a
@@ -81,6 +84,24 @@ running module handler b
 result: goodbye
 `
 	assert.Equal(t, expected, buf.String())
+
+	opt = appconfig.LoadYAML([]byte(`
+golang_bindings:
+  - interfaceType: interfaceType/package.name 
+    implementation: implementationType/package.name
+  - interfaceType: interfaceType/package.nameTwo 
+    implementation: implementationType/package.nameTwo
+modules:
+  - name: a
+    config:
+      "@type": testpb.TestModuleA
+    golang_bindings:
+      - interfaceType: interfaceType/package.name 
+        implementation: implementationType/package.name
+      - interfaceType: interfaceType/package.nameTwo 
+        implementation: implementationType/package.nameTwo
+`))
+	assert.NilError(t, depinject.Inject(opt))
 
 	// module registration failures:
 	appmodule.Register(&testpb.TestNoModuleOptionModule{})
@@ -102,3 +123,103 @@ modules:
 `))
 	expectContainerErrorContains(t, opt, "module should have ModuleDescriptor.go_import specified")
 }
+
+//
+// Test Module Initialization Logic
+//
+
+func init() {
+	appmodule.Register(&testpb.TestRuntimeModule{},
+		appmodule.Provide(ProvideRuntimeState, ProvideStoreKey, ProvideApp),
+	)
+
+	appmodule.Register(&testpb.TestModuleA{},
+		appmodule.Provide(ProvideModuleA),
+	)
+
+	appmodule.Register(&testpb.TestModuleB{},
+		appmodule.Provide(ProvideModuleB),
+	)
+}
+
+func ProvideRuntimeState() *RuntimeState {
+	return &RuntimeState{}
+}
+
+func ProvideStoreKey(key depinject.ModuleKey, state *RuntimeState) StoreKey {
+	sk := StoreKey{name: key.Name()}
+	state.storeKeys = append(state.storeKeys, sk)
+	return sk
+}
+
+func ProvideApp(state *RuntimeState, handlers map[string]Handler) App {
+	return func(w io.Writer) {
+		sort.Slice(state.storeKeys, func(i, j int) bool {
+			return state.storeKeys[i].name < state.storeKeys[j].name
+		})
+
+		for _, key := range state.storeKeys {
+			_, _ = fmt.Fprintf(w, "got store key %s\n", key.name)
+		}
+
+		var modNames []string
+		for modName := range handlers {
+			modNames = append(modNames, modName)
+		}
+
+		sort.Strings(modNames)
+		for _, name := range modNames {
+			_, _ = fmt.Fprintf(w, "running module handler %s\n", name)
+			_, _ = fmt.Fprintf(w, "result: %s\n", handlers[name].DoSomething())
+		}
+	}
+}
+
+type App func(writer io.Writer)
+
+type RuntimeState struct {
+	storeKeys []StoreKey
+}
+
+type StoreKey struct{ name string }
+
+type Handler struct {
+	DoSomething func() string
+}
+
+func (h Handler) IsOnePerModuleType() {}
+
+func ProvideModuleA(key StoreKey) (KeeperA, Handler) {
+	return keeperA{key: key}, Handler{DoSomething: func() string {
+		return "hello"
+	}}
+}
+
+type keeperA struct {
+	key StoreKey
+}
+
+type KeeperA interface {
+	Foo()
+}
+
+func (k keeperA) Foo() {}
+
+func ProvideModuleB(key StoreKey, a KeeperA) (KeeperB, Handler) {
+	return keeperB{key: key, a: a}, Handler{
+		DoSomething: func() string {
+			return "goodbye"
+		},
+	}
+}
+
+type keeperB struct {
+	key StoreKey
+	a   KeeperA
+}
+
+type KeeperB interface {
+	isKeeperB()
+}
+
+func (k keeperB) isKeeperB() {}

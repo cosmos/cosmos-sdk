@@ -183,7 +183,7 @@ func TestDuplicateGrantsInGenesis(t *testing.T) {
 		},
 	}
 
-	// Initialization should fail with duplicate feegrant error
-	err = f.feegrantKeeper.InitGenesis(f.ctx, genesisState)
+	// Validation should fail with duplicate feegrant error
+	err = feegrant.ValidateGenesis(*genesisState)
 	assert.ErrorContains(t, err, "duplicate feegrant found")
 }

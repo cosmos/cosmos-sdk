@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -56,7 +56,7 @@ func TestGRPCQueryRouter(t *testing.T) {
 func TestGRPCRouterHybridHandlers(t *testing.T) {
 	assertRouterBehaviour := func(helper *baseapp.QueryServiceTestHelper) {
 		// test getting the handler by name
-		handlers := helper.GRPCQueryRouter.HybridHandlerByRequestName("testpb.EchoRequest")
+		handlers := helper.HybridHandlerByRequestName("testpb.EchoRequest")
 		require.NotNil(t, handlers)
 		require.Len(t, handlers, 1)
 		handler := handlers[0]
@@ -95,31 +95,6 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 		}
 		assertRouterBehaviour(helper)
 	})
-
-	t.Run("any cached value is not dropped", func(t *testing.T) {
-		// ref: https://github.com/cosmos/cosmos-sdk/issues/22779
-		qr := baseapp.NewGRPCQueryRouter()
-		interfaceRegistry := testdata.NewTestInterfaceRegistry()
-		testdata.RegisterInterfaces(interfaceRegistry)
-		qr.SetInterfaceRegistry(interfaceRegistry)
-		testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
-		helper := &baseapp.QueryServiceTestHelper{
-			GRPCQueryRouter: qr,
-			Ctx:             sdk.Context{}.WithContext(context.Background()),
-		}
-
-		anyMsg, err := types.NewAnyWithValue(&testdata.Dog{})
-		require.NoError(t, err)
-
-		handler := qr.HybridHandlerByRequestName("testpb.TestAnyRequest")[0]
-
-		resp := new(testdata.TestAnyResponse)
-		err = handler(helper.Ctx, &testdata.TestAnyRequest{
-			AnyAnimal: anyMsg,
-		}, resp)
-		require.NoError(t, err)
-		require.NotNil(t, resp.HasAnimal.Animal.GetCachedValue())
-	})
 }
 
 func TestRegisterQueryServiceTwice(t *testing.T) {
@@ -132,7 +107,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 		),
 		&appBuilder)
 	require.NoError(t, err)
-	db := coretesting.NewMemDB()
+	db := dbm.NewMemDB()
 	app := appBuilder.Build(db, nil)
 
 	// First time registering service shouldn't panic.
@@ -193,7 +168,7 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 	qr := baseapp.NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
-	testdata_pulsar.RegisterQueryServer(qr, testdata_pulsar.QueryImpl{})
+	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
 
 	// The goal is to invoke the router concurrently and check for any data races.
 	// 0. Run with: go test -race
@@ -207,13 +182,13 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 	n := 1000
 	ready := make(chan bool, n)
 	go func() {
-		for i := 0; i < n; i++ {
+		for range n {
 			<-ready
 		}
 		close(greenlight)
 	}()
 
-	for i := 0; i < n; i++ {
+	for range n {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

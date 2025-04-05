@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -14,15 +15,6 @@ import (
 func WithCollectionPaginationPairPrefix[K1, K2 any](prefix K1) func(o *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
 	return func(o *CollectionsPaginateOptions[collections.Pair[K1, K2]]) {
 		prefix := collections.PairPrefix[K1, K2](prefix)
-		o.Prefix = &prefix
-	}
-}
-
-// WithCollectionPaginationTriplePrefix applies a prefix to a collection, whose key is a collection.Triple,
-// being paginated that needs prefixing.
-func WithCollectionPaginationTriplePrefix[K1, K2, K3 any](prefix K1) func(o *CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
-	return func(o *CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
-		prefix := collections.TriplePrefix[K1, K2, K3](prefix)
 		o.Prefix = &prefix
 	}
 }
@@ -86,7 +78,7 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V], T any](
 	reverse := pageReq.Reverse
 
 	if offset > 0 && key != nil {
-		return nil, nil, errors.New("invalid request, either offset or key is expected, got both")
+		return nil, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
 	}
 
 	opt := new(CollectionsPaginateOptions[K])

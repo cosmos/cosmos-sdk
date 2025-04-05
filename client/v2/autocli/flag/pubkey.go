@@ -2,7 +2,6 @@ package flag
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -48,7 +47,7 @@ func (a *pubkeyValue) Set(s string) error {
 
 	any, err := types.NewAnyWithValue(pk)
 	if err != nil {
-		return errors.New("error converting to any type")
+		return fmt.Errorf("error converting to any type")
 	}
 
 	a.value = any

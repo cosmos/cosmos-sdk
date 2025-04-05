@@ -1,70 +1,74 @@
 package ante
 
 import (
-	"bytes"
-	"context"
-	"crypto/sha256"
-	"encoding/binary"
-	"fmt"
-	"sync"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
-
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// bufPool is a pool of bytes.Buffer objects to reduce memory allocations.
-var bufPool = sync.Pool{
-	New: func() interface{} {
-		return new(bytes.Buffer)
-	},
-}
-
-const DefaultSha256Cost = 25
+const (
+	// DefaultMaxTimoutDuration defines a default maximum TTL a transaction can define.
+	DefaultMaxTimoutDuration = 10 * time.Minute
+	// DefaultUnorderedTxGasCost defines a default gas cost for unordered transactions.
+	// We must charge extra gas for unordered transactions
+	// as they incur extra processing time for cleaning up the expired txs in x/auth PreBlocker.
+	// Note: this value was chosen by 2x-ing the cost of fetching and removing an unordered nonce entry.
+	DefaultUnorderedTxGasCost = uint64(2240)
+)
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 
+type UnorderedTxDecoratorOptions func(*UnorderedTxDecorator)
+
+// WithTimeoutDuration allows for changing the timeout duration for unordered txs.
+func WithTimeoutDuration(duration time.Duration) UnorderedTxDecoratorOptions {
+	return func(utx *UnorderedTxDecorator) {
+		utx.maxTxTimeoutDuration = duration
+	}
+}
+
+func WithUnorderedTxGasCost(cost uint64) UnorderedTxDecoratorOptions {
+	return func(utx *UnorderedTxDecorator) {
+		utx.txGasCost = cost
+	}
+}
+
 // UnorderedTxDecorator defines an AnteHandler decorator that is responsible for
-// checking if a transaction is intended to be unordered and if so, evaluates
-// the transaction accordingly. An unordered transaction will bypass having it's
-// nonce incremented, which allows fire-and-forget along with possible parallel
-// transaction processing, without having to deal with nonces.
+// checking if a transaction is intended to be unordered and, if so, evaluates
+// the transaction accordingly. An unordered transaction will bypass having its
+// nonce incremented, which allows fire-and-forget transaction broadcasting,
+// removing the necessity of ordering on the sender-side.
 //
 // The transaction sender must ensure that unordered=true and a timeout_height
 // is appropriately set. The AnteHandler will check that the transaction is not
-// a duplicate and will evict it from memory when the timeout is reached.
+// a duplicate and will evict it from state when the timeout is reached.
 //
 // The UnorderedTxDecorator should be placed as early as possible in the AnteHandler
-// chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
+// chain to ensure that during DeliverTx, the transaction is added to the UnorderedNonceManager.
 type UnorderedTxDecorator struct {
-	// maxTimeoutDuration defines the maximum TTL a transaction can define.
-	maxTimeoutDuration time.Duration
-	txManager          *unorderedtx.Manager
-	env                appmodulev2.Environment
-	sha256Cost         uint64
+	maxTxTimeoutDuration time.Duration
+	txGasCost            uint64
+	txManager            UnorderedNonceManager
 }
 
 func NewUnorderedTxDecorator(
-	maxDuration time.Duration,
-	m *unorderedtx.Manager,
-	env appmodulev2.Environment,
-	gasCost uint64,
+	utxm UnorderedNonceManager,
+	opts ...UnorderedTxDecoratorOptions,
 ) *UnorderedTxDecorator {
-	return &UnorderedTxDecorator{
-		maxTimeoutDuration: maxDuration,
-		txManager:          m,
-		env:                env,
-		sha256Cost:         gasCost,
+	utx := &UnorderedTxDecorator{
+		maxTxTimeoutDuration: DefaultMaxTimoutDuration,
+		txGasCost:            DefaultUnorderedTxGasCost,
+		txManager:            utxm,
 	}
+	for _, opt := range opts {
+		opt(utx)
+	}
+
+	return utx
 }
 
 func (d *UnorderedTxDecorator) AnteHandle(
@@ -79,12 +83,7 @@ func (d *UnorderedTxDecorator) AnteHandle(
 	return next(ctx, tx, false)
 }
 
-func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
-	sdkTx, ok := tx.(sdk.Tx)
-	if !ok {
-		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
-	}
-
+func (d *UnorderedTxDecorator) ValidateTx(ctx sdk.Context, tx sdk.Tx) error {
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the
@@ -92,7 +91,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx
 		return nil
 	}
 
-	headerInfo := d.env.HeaderService.HeaderInfo(ctx)
+	blockTime := ctx.BlockTime()
 	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
 	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
 		return errorsmod.Wrap(
@@ -100,146 +99,48 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx
 			"unordered transaction must have timeout_timestamp set",
 		)
 	}
-	if timeoutTimestamp.Before(headerInfo.Time) {
+	if timeoutTimestamp.Before(blockTime) {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"unordered transaction has a timeout_timestamp that has already passed",
 		)
 	}
-	if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
+	if timeoutTimestamp.After(blockTime.Add(d.maxTxTimeoutDuration)) {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"unordered tx ttl exceeds %s",
-			d.maxTimeoutDuration.String(),
+			d.maxTxTimeoutDuration.String(),
 		)
 	}
 
-	// consume gas in all exec modes to avoid gas estimation discrepancies
-	if err := d.env.GasService.GasMeter(ctx).Consume(d.sha256Cost, "consume gas for calculating tx hash"); err != nil {
-		return errorsmod.Wrap(sdkerrors.ErrOutOfGas, "out of gas")
-	}
+	ctx.GasMeter().ConsumeGas(d.txGasCost, "unordered tx")
 
-	// Avoid checking for duplicates and creating the identifier in simulation mode
-	// This is done to avoid sha256 computation in simulation mode
-	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate {
+	execMode := ctx.ExecMode()
+	if execMode == sdk.ExecModeSimulate {
 		return nil
 	}
 
-	// calculate the tx hash
-	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), sdkTx)
+	signerAddrs, err := extractSignersBytes(tx)
 	if err != nil {
 		return err
 	}
 
-	// check for duplicates
-	if d.txManager.Contains(txHash) {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"tx %X is duplicated",
-		)
-	}
-	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
-		// a new tx included in the block, add the hash to the unordered tx manager
-		d.txManager.Add(txHash, timeoutTimestamp)
+	for _, signerAddr := range signerAddrs {
+		if err := d.txManager.TryAddUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"failed to add unordered nonce: %s", err,
+			)
+		}
 	}
 
 	return nil
 }
 
-// TxIdentifier returns a unique identifier for a transaction that is intended to be unordered.
-func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
-	sigTx, ok := tx.(authsigning.Tx)
+func extractSignersBytes(tx sdk.Tx) ([][]byte, error) {
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
-
-	if sigTx.GetFee().IsZero() {
-		return [32]byte{}, errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"unordered transaction must have a fee",
-		)
-	}
-
-	buf := bufPool.Get().(*bytes.Buffer)
-	// Make sure to reset the buffer
-	buf.Reset()
-	defer bufPool.Put(buf)
-
-	// Add signatures to the transaction identifier
-	signatures, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return [32]byte{}, err
-	}
-
-	for _, sig := range signatures {
-		if err := addSignatures(sig.Data, buf); err != nil {
-			return [32]byte{}, err
-		}
-	}
-
-	// Use the buffer
-	for _, msg := range tx.GetMsgs() {
-		// loop through the messages and write them to the buffer
-		// encoding the msg to bytes makes it deterministic within the state machine.
-		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
-		bz, err := proto.Marshal(msg)
-		if err != nil {
-			return [32]byte{}, errorsmod.Wrap(
-				sdkerrors.ErrInvalidRequest,
-				"failed to marshal message",
-			)
-		}
-
-		if _, err := buf.Write(bz); err != nil {
-			return [32]byte{}, errorsmod.Wrap(
-				sdkerrors.ErrInvalidRequest,
-				"failed to write message to buffer",
-			)
-		}
-	}
-
-	// write the timeout height to the buffer
-	if err := binary.Write(buf, binary.LittleEndian, timeout); err != nil {
-		return [32]byte{}, errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"failed to write timeout_height to buffer",
-		)
-	}
-
-	// write gas to the buffer
-	if err := binary.Write(buf, binary.LittleEndian, sigTx.GetGas()); err != nil {
-		return [32]byte{}, errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"failed to write unordered to buffer",
-		)
-	}
-
-	txHash := sha256.Sum256(buf.Bytes())
-
-	// Return the Buffer to the pool
-	return txHash, nil
-}
-
-func addSignatures(sig signing.SignatureData, buf *bytes.Buffer) error {
-	switch data := sig.(type) {
-	case *signing.SingleSignatureData:
-		if _, err := buf.Write(data.Signature); err != nil {
-			return errorsmod.Wrap(
-				sdkerrors.ErrInvalidRequest,
-				"failed to write single signature to buffer",
-			)
-		}
-		return nil
-
-	case *signing.MultiSignatureData:
-		for _, sigdata := range data.Signatures {
-			if err := addSignatures(sigdata, buf); err != nil {
-				return err
-			}
-		}
-	default:
-		return fmt.Errorf("unexpected SignatureData %T", data)
-	}
-
-	return nil
+	return sigTx.GetSigners()
 }

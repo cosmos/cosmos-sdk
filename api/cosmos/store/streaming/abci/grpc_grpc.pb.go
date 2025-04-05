@@ -29,8 +29,7 @@ const (
 //
 // ABCIListenerService is the service for the BaseApp ABCIListener interface
 type ABCIListenerServiceClient interface {
-	// ListenFinalizeBlock is the corresponding endpoint for
-	// ABCIListener.ListenEndBlock
+	// ListenFinalizeBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
 	ListenFinalizeBlock(ctx context.Context, in *ListenFinalizeBlockRequest, opts ...grpc.CallOption) (*ListenFinalizeBlockResponse, error)
 	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
 	ListenCommit(ctx context.Context, in *ListenCommitRequest, opts ...grpc.CallOption) (*ListenCommitResponse, error)
@@ -70,8 +69,7 @@ func (c *aBCIListenerServiceClient) ListenCommit(ctx context.Context, in *Listen
 //
 // ABCIListenerService is the service for the BaseApp ABCIListener interface
 type ABCIListenerServiceServer interface {
-	// ListenFinalizeBlock is the corresponding endpoint for
-	// ABCIListener.ListenEndBlock
+	// ListenFinalizeBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
 	ListenFinalizeBlock(context.Context, *ListenFinalizeBlockRequest) (*ListenFinalizeBlockResponse, error)
 	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
 	ListenCommit(context.Context, *ListenCommitRequest) (*ListenCommitResponse, error)

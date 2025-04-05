@@ -4,15 +4,13 @@ import (
 	"testing"
 	"time"
 
+	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -21,7 +19,6 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -41,15 +38,12 @@ type VestingAccountTestSuite struct {
 }
 
 func (s *VestingAccountTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, vesting.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
-
-	// gomock initializations
-	ctrl := gomock.NewController(&testing.T{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -61,10 +55,9 @@ func (s *VestingAccountTestSuite) SetupTest() {
 	}
 
 	s.accountKeeper = keeper.NewAccountKeeper(
-		env,
 		encCfg.Codec,
+		storeService,
 		authtypes.ProtoBaseAccount,
-		authtestutil.NewMockAccountsModKeeper(ctrl),
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
@@ -73,20 +66,15 @@ func (s *VestingAccountTestSuite) SetupTest() {
 }
 
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
-	now := time.Now()
-	startTime := now.Add(24 * time.Hour)
-	endTime := startTime.Add(24 * time.Hour)
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
-	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, startTime.Unix(), endTime.Unix())
+	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
 
-	// require no coins vested _before_ the start time of the vesting schedule
+	// require no coins vested in the very beginning of the vesting schedule
 	vestedCoins := cva.GetVestedCoins(now)
-	require.Nil(t, vestedCoins)
-
-	// require no coins vested _before_ the very beginning of the vesting schedule
-	vestedCoins = cva.GetVestedCoins(startTime.Add(-1))
 	require.Nil(t, vestedCoins)
 
 	// require all coins vested at the end of the vesting schedule
@@ -94,86 +82,59 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, vestedCoins)
 
 	// require 50% of coins vested
-	t50 := time.Duration(0.5 * float64(endTime.Sub(startTime)))
-	vestedCoins = cva.GetVestedCoins(startTime.Add(t50))
+	vestedCoins = cva.GetVestedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestedCoins)
 
-	// require 75% of coins vested
-	t75 := time.Duration(0.75 * float64(endTime.Sub(startTime)))
-	vestedCoins = cva.GetVestedCoins(startTime.Add(t75))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75)}, vestedCoins)
-
 	// require 100% of coins vested
-	vestedCoins = cva.GetVestedCoins(endTime)
+	vestedCoins = cva.GetVestedCoins(now.Add(48 * time.Hour))
 	require.Equal(t, origCoins, vestedCoins)
 }
 
 func TestGetVestingCoinsContVestingAcc(t *testing.T) {
-	now := time.Now()
-	startTime := now.Add(24 * time.Hour)
-	endTime := startTime.Add(24 * time.Hour)
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
-	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, startTime.Unix(), endTime.Unix())
+	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
 
-	// require all coins vesting before the start time of the vesting schedule
+	// require all coins vesting in the beginning of the vesting schedule
 	vestingCoins := cva.GetVestingCoins(now)
-	require.Equal(t, origCoins, vestingCoins)
-
-	// require all coins vesting right before the start time of the vesting schedule
-	vestingCoins = cva.GetVestingCoins(startTime.Add(-1))
 	require.Equal(t, origCoins, vestingCoins)
 
 	// require no coins vesting at the end of the vesting schedule
 	vestingCoins = cva.GetVestingCoins(endTime)
 	require.Equal(t, emptyCoins, vestingCoins)
 
-	// require 50% of coins vesting in the middle between start and end time
-	t50 := time.Duration(0.5 * float64(endTime.Sub(startTime)))
-	vestingCoins = cva.GetVestingCoins(startTime.Add(t50))
+	// require 50% of coins vesting
+	vestingCoins = cva.GetVestingCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestingCoins)
-
-	// require 25% of coins vesting after 3/4 of the time between start and end time has passed
-	t75 := time.Duration(0.75 * float64(endTime.Sub(startTime)))
-	vestingCoins = cva.GetVestingCoins(startTime.Add(t75))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}, vestingCoins)
 }
 
 func TestSpendableCoinsContVestingAcc(t *testing.T) {
-	now := time.Now()
-	startTime := now.Add(24 * time.Hour)
-	endTime := startTime.Add(24 * time.Hour)
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
-	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, startTime.Unix(), endTime.Unix())
+	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
 
-	// require that all original coins are locked before the beginning of the vesting
+	// require that all original coins are locked at the end of the vesting
 	// schedule
 	lockedCoins := cva.LockedCoins(now)
 	require.Equal(t, origCoins, lockedCoins)
 
-	// require that all original coins are locked at the beginning of the vesting
-	// schedule
-	lockedCoins = cva.LockedCoins(startTime)
-	require.Equal(t, origCoins, lockedCoins)
-
-	// require that there exist no locked coins in the end of the vesting schedule
+	// require that there exist no locked coins in the beginning of the
 	lockedCoins = cva.LockedCoins(endTime)
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all vested coins (50%) are spendable
-	lockedCoins = cva.LockedCoins(startTime.Add(12 * time.Hour))
+	lockedCoins = cva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
-
-	// require 25% of coins vesting after 3/4 of the time between start and end time has passed
-	lockedCoins = cva.LockedCoins(startTime.Add(18 * time.Hour))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}, lockedCoins)
 }
 
 func TestTrackDelegationContVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -214,7 +175,7 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationContVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -262,7 +223,7 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -279,7 +240,7 @@ func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -296,7 +257,7 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsDelVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -326,7 +287,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationDelVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -364,7 +325,7 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationDelVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -413,7 +374,7 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -458,7 +419,7 @@ func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestOverflowAndNegativeVestedCoinsPeriods(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	tests := []struct {
 		name    string
 		periods []types.Period
@@ -509,7 +470,7 @@ func TestOverflowAndNegativeVestedCoinsPeriods(t *testing.T) {
 }
 
 func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -547,7 +508,7 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -575,7 +536,7 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -637,7 +598,7 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
 		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
@@ -698,7 +659,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsPermLockedVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -715,7 +676,7 @@ func TestGetVestedCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsPermLockedVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -732,7 +693,7 @@ func TestGetVestingCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -757,7 +718,7 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()
@@ -787,7 +748,7 @@ func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
-	now := time.Now()
+	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
 	bacc, origCoins := initBaseAccount()

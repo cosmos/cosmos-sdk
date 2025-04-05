@@ -4,9 +4,9 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Simulation parameter constants
@@ -40,6 +40,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 			WithdrawAddrEnabled: withdrawEnabled,
 		},
 	}
-
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&distrGenesis)
 }

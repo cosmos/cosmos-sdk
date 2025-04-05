@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/keeper"
-	"cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgCreateValidator] {
@@ -46,10 +46,6 @@ func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 			r.StringN(10),
 			r.StringN(10),
 			r.StringN(10),
-			&types.Metadata{
-				ProfilePicUri:    RandURIOfHostLength(r.Rand, 10),
-				SocialHandleUris: RandSocialHandleURIs(r.Rand, 2, 10),
-			},
 		)
 
 		maxCommission := math.LegacyNewDecWithPrec(int64(r.IntInRange(0, 100)), 2)
@@ -143,10 +139,7 @@ func MsgEditValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgE
 		}
 		valOpAddrBz := must(k.ValidatorAddressCodec().StringToBytes(val.GetOperator()))
 		valOper := testData.GetAccountbyAccAddr(reporter, valOpAddrBz)
-		d := types.NewDescription(r.StringN(10), r.StringN(10), r.StringN(10), r.StringN(10), r.StringN(10), &types.Metadata{
-			ProfilePicUri:    RandURIOfHostLength(r.Rand, 10),
-			SocialHandleUris: RandSocialHandleURIs(r.Rand, 2, 10),
-		})
+		d := types.NewDescription(r.StringN(10), r.StringN(10), r.StringN(10), r.StringN(10), r.StringN(10))
 
 		msg := types.NewMsgEditValidator(val.GetOperator(), d, &newCommissionRate, nil)
 		return []simsx.SimAccount{valOper}, msg
@@ -185,6 +178,10 @@ func MsgBeginRedelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 		redAmount, err := r.PositiveSDKIntn(totalBond)
 		if err != nil || redAmount.IsZero() {
 			reporter.Skip("unable to generate positive amount")
+			return nil, nil
+		}
+		if totalBond.Sub(redAmount).IsZero() {
+			reporter.Skip("can not redelegate all")
 			return nil, nil
 		}
 
@@ -291,45 +288,6 @@ func MsgCancelUnbondingDelegationFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn
 	}
 }
 
-func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgRotateConsPubKey] {
-	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgRotateConsPubKey) {
-		r := testData.Rand()
-		val := randomValidator(ctx, reporter, k, r)
-		if reporter.IsSkipped() {
-			return nil, nil
-		}
-		if val.Status != types.Bonded || val.ConsensusPower(sdk.DefaultPowerReduction) == 0 {
-			reporter.Skip("validator not bonded.")
-			return nil, nil
-		}
-		valOpAddrBz := must(k.ValidatorAddressCodec().StringToBytes(val.GetOperator()))
-		valOper := testData.GetAccountbyAccAddr(reporter, valOpAddrBz)
-		otherAccount := testData.AnyAccount(reporter, simsx.ExcludeAddresses(valOper.AddressBech32))
-
-		consAddress := must(k.ConsensusAddressCodec().BytesToString(must(val.GetConsAddr())))
-		accAddress := must(k.ConsensusAddressCodec().BytesToString(otherAccount.ConsKey.PubKey().Address()))
-		if consAddress == accAddress {
-			reporter.Skip("new pubkey and current pubkey should be different")
-			return nil, nil
-		}
-		if !valOper.LiquidBalance().BlockAmount(must(k.Params.Get(ctx)).KeyRotationFee) {
-			reporter.Skip("not enough balance to pay for key rotation fee")
-			return nil, nil
-		}
-		if err := k.ExceedsMaxRotations(ctx, valOpAddrBz); err != nil {
-			reporter.Skip("rotations limit reached within unbonding period")
-			return nil, nil
-		}
-		// check whether the new cons key associated with another validator
-		assertKeyUnused(ctx, reporter, k, otherAccount.ConsKey.PubKey())
-		if reporter.IsSkipped() {
-			return nil, nil
-		}
-		msg := must(types.NewMsgRotateConsPubKey(val.GetOperator(), otherAccount.ConsKey.PubKey()))
-		return []simsx.SimAccount{valOper}, msg
-	}
-}
-
 // MsgUpdateParamsFactory creates a gov proposal for param updates
 func MsgUpdateParamsFactory() simsx.SimMsgFactoryFn[*types.MsgUpdateParams] {
 	return func(_ context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgUpdateParams) {
@@ -362,25 +320,9 @@ func randomValidator(ctx context.Context, reporter simsx.SimulationReporter, k *
 // skips execution if there's another key rotation for the same key in the same block
 func assertKeyUnused(ctx context.Context, reporter simsx.SimulationReporter, k *keeper.Keeper, newPubKey cryptotypes.PubKey) {
 	newConsAddr := sdk.ConsAddress(newPubKey.Address())
-	if rotatedTo, _ := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newConsAddr); rotatedTo != nil {
-		reporter.Skip("consensus key already used")
-		return
-	}
 	if _, err := k.GetValidatorByConsAddr(ctx, newConsAddr); err == nil {
 		reporter.Skip("cons key already used")
 		return
-	}
-
-	allRotations, err := k.GetBlockConsPubKeyRotationHistory(ctx)
-	if err != nil {
-		reporter.Skipf("cannot get block cons key rotation history: %s", err.Error())
-		return
-	}
-	for _, r := range allRotations {
-		if r.NewConsPubkey.Compare(newPubKey) != 0 {
-			reporter.Skip("cons key already used in this block")
-			return
-		}
 	}
 }
 

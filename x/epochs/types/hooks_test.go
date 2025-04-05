@@ -8,10 +8,10 @@ import (
 
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 type KeeperTestSuite struct {
@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 	}
 
 	for tcIndex, tc := range tests {
-		for epochActionSelector := 0; epochActionSelector < 2; epochActionSelector++ {
+		for epochActionSelector := range 2 {
 			s.SetupTest()
 			hookRefs := []types.EpochHooks{}
 
@@ -86,14 +86,15 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 
 			hooks := types.NewMultiEpochHooks(hookRefs...)
 
-			if epochActionSelector == 0 {
+			switch epochActionSelector {
+			case 0:
 				err := hooks.BeforeEpochStart(s.Ctx, "id", 0)
 				if tc.expErr {
 					s.Require().Error(err)
 				} else {
 					s.Require().NoError(err)
 				}
-			} else if epochActionSelector == 1 {
+			case 1:
 				err := hooks.AfterEpochEnd(s.Ctx, "id", 0)
 				if tc.expErr {
 					s.Require().Error(err)
@@ -102,7 +103,7 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 				}
 			}
 
-			for i := 0; i < len(hooks); i++ {
+			for i := range hooks {
 				epochHook := hookRefs[i].(*dummyEpochHook)
 				s.Require().Equal(tc.expectedCounterValues[i], epochHook.successCounter, "test case index %d", tcIndex)
 			}

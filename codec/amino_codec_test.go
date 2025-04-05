@@ -17,8 +17,8 @@ func createTestCodec() *codec.LegacyAmino {
 	cdc.RegisterInterface((*testdata.Animal)(nil), nil)
 	// NOTE: since we unmarshal interface using pointers, we need to register a pointer
 	// types here.
-	cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dog")
-	cdc.RegisterConcrete(&testdata.Cat{}, "testdata/Cat")
+	cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dog", nil)
+	cdc.RegisterConcrete(&testdata.Cat{}, "testdata/Cat", nil)
 
 	return cdc
 }

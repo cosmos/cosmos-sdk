@@ -8,19 +8,19 @@ import (
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/bank"
-	"cosmossdk.io/x/gov"
-	v5 "cosmossdk.io/x/gov/migrations/v5"
-	v1 "cosmossdk.io/x/gov/types/v1"
 
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
+	v5 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v5"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 func TestMigrateStore(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, gov.AppModule{}, bank.AppModule{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(gov.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
 	govKey := storetypes.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
@@ -29,7 +29,7 @@ func TestMigrateStore(t *testing.T) {
 	constitutionCollection := collections.NewItem(sb, v5.ConstitutionKey, "constitution", collections.StringValue)
 
 	var params v1.Params
-	bz := store.Get(v5.ParamsKey)
+	bz := store.Get(v4.ParamsKey)
 	require.NoError(t, cdc.Unmarshal(bz, &params))
 	require.NotNil(t, params)
 	require.Equal(t, "", params.ExpeditedThreshold)
@@ -40,7 +40,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check params
-	bz = store.Get(v5.ParamsKey)
+	bz = store.Get(v4.ParamsKey)
 	require.NoError(t, cdc.Unmarshal(bz, &params))
 	require.NotNil(t, params)
 	require.Equal(t, v1.DefaultParams().ExpeditedMinDeposit, params.ExpeditedMinDeposit)

@@ -1,7 +1,7 @@
 package types_test
 
 import (
-	"errors"
+	"fmt"
 	"runtime"
 	"testing"
 
@@ -17,7 +17,7 @@ type errOnMarshal struct {
 
 var _ proto.Message = (*errOnMarshal)(nil)
 
-var errAlways = errors.New("always erroring")
+var errAlways = fmt.Errorf("always erroring")
 
 func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return nil, errAlways
@@ -53,7 +53,7 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 	}
 }
 
-var sink interface{}
+var sink any
 
 func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	b.ResetTimer()
@@ -71,5 +71,5 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	if sink == nil {
 		b.Fatal("benchmark didn't run")
 	}
-	sink = (interface{})(nil)
+	sink = (any)(nil)
 }

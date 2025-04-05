@@ -2,7 +2,7 @@ package types
 
 import (
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	"github.com/cosmos/gogoproto/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // PubKey defines a public key and extends proto.Message.

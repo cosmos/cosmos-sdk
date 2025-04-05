@@ -4,18 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	proto "github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/group/errors"
-	"cosmossdk.io/x/group/internal/math"
-	"cosmossdk.io/x/group/internal/orm"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
 // DecisionPolicyResult is the result of whether a proposal passes or not a
@@ -248,13 +246,13 @@ func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string) (D
 var _ orm.Validateable = GroupPolicyInfo{}
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
-func NewGroupPolicyInfo(address string, group uint64, admin, metadata string,
+func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata string,
 	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time,
 ) (GroupPolicyInfo, error) {
 	p := GroupPolicyInfo{
-		Address:   address,
+		Address:   address.String(),
 		GroupId:   group,
-		Admin:     admin,
+		Admin:     admin.String(),
 		Metadata:  metadata,
 		Version:   version,
 		CreatedAt: createdAt,
@@ -289,13 +287,13 @@ func (g GroupPolicyInfo) GetDecisionPolicy() (DecisionPolicy, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g GroupPolicyInfo) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (g GroupPolicyInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
 }
 
-func (g GroupInfo) PrimaryKeyFields(_ address.Codec) ([]interface{}, error) {
-	return []interface{}{g.Id}, nil
+func (g GroupInfo) PrimaryKeyFields() []any {
+	return []any{g.Id}
 }
 
 // ValidateBasic does basic validation on group info.
@@ -318,17 +316,14 @@ func (g GroupInfo) ValidateBasic() error {
 	return nil
 }
 
-func (g GroupPolicyInfo) PrimaryKeyFields(addressCodec address.Codec) ([]interface{}, error) {
-	addr, err := addressCodec.StringToBytes(g.Address)
-	if err != nil {
-		return nil, err
-	}
+func (g GroupPolicyInfo) PrimaryKeyFields() []any {
+	addr := sdk.MustAccAddressFromBech32(g.Address)
 
-	return []interface{}{addr}, nil
+	return []any{addr.Bytes()}
 }
 
-func (g Proposal) PrimaryKeyFields(_ address.Codec) ([]interface{}, error) {
-	return []interface{}{g.Id}, nil
+func (g Proposal) PrimaryKeyFields() []any {
+	return []any{g.Id}
 }
 
 // ValidateBasic does basic validation on group policy info.
@@ -359,13 +354,10 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 	return nil
 }
 
-func (g GroupMember) PrimaryKeyFields(addressCodec address.Codec) ([]interface{}, error) {
-	addr, err := addressCodec.StringToBytes(g.Member.Address)
-	if err != nil {
-		return nil, err
-	}
+func (g GroupMember) PrimaryKeyFields() []any {
+	addr := sdk.MustAccAddressFromBech32(g.Member.Address)
 
-	return []interface{}{g.GroupId, addr}, nil
+	return []any{g.GroupId, addr.Bytes()}
 }
 
 // ValidateBasic does basic validation on group member.
@@ -431,13 +423,10 @@ func (g Proposal) ValidateBasic() error {
 	return nil
 }
 
-func (v Vote) PrimaryKeyFields(addressCodec address.Codec) ([]interface{}, error) {
-	addr, err := addressCodec.StringToBytes(v.Voter)
-	if err != nil {
-		return nil, err
-	}
+func (v Vote) PrimaryKeyFields() []any {
+	addr := sdk.MustAccAddressFromBech32(v.Voter)
 
-	return []interface{}{v.ProposalId, addr}, nil
+	return []any{v.ProposalId, addr.Bytes()}
 }
 
 var _ orm.Validateable = Vote{}
@@ -461,16 +450,16 @@ func (v Vote) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (q QueryGroupPoliciesByGroupResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (q QueryGroupPoliciesByGroupResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpackGroupPolicies(unpacker, q.GroupPolicies)
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (q QueryGroupPoliciesByAdminResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (q QueryGroupPoliciesByAdminResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpackGroupPolicies(unpacker, q.GroupPolicies)
 }
 
-func unpackGroupPolicies(unpacker gogoprotoany.AnyUnpacker, accs []*GroupPolicyInfo) error {
+func unpackGroupPolicies(unpacker codectypes.AnyUnpacker, accs []*GroupPolicyInfo) error {
 	for _, g := range accs {
 		err := g.UnpackInterfaces(unpacker)
 		if err != nil {

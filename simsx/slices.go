@@ -23,7 +23,7 @@ func Collect[T, E any](source []T, f func(a T) E) []E {
 
 // First returns the first element in the slice that matches the condition
 func First[T any](source []T, f func(a T) bool) *T {
-	for i := 0; i < len(source); i++ {
+	for i := range source {
 		if f(source[i]) {
 			return &source[i]
 		}

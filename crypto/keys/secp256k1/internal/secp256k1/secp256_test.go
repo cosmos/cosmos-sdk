@@ -13,7 +13,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"io"
 	"testing"
 )
@@ -25,8 +24,8 @@ func generateKeyPair() (pubkey, privkey []byte) {
 	if err != nil {
 		panic(err)
 	}
+	pubkey = elliptic.Marshal(S256(), key.X, key.Y)
 
-	pubkey = elliptic.Marshal(S256(), key.X, key.Y) //nolint:staticcheck // crypto will be refactored soon.
 	privkey = make([]byte, 32)
 	blob := key.D.Bytes()
 	copy(privkey[32-len(blob):], blob)
@@ -52,7 +51,6 @@ func randSig() []byte {
 // tests for malleability
 // highest bit of signature ECDSA s value must be 0, in the 33th byte
 func compactSigCheck(t *testing.T, sig []byte) {
-	t.Helper()
 	b := int(sig[32])
 	if b < 0 {
 		t.Errorf("highest bit is negative: %d", b)
@@ -94,7 +92,7 @@ func TestInvalidRecoveryID(t *testing.T) {
 	sig, _ := Sign(msg, seckey)
 	sig[64] = 99
 	_, err := RecoverPubkey(msg, sig)
-	if !errors.Is(err, ErrInvalidRecoveryID) {
+	if err != ErrInvalidRecoveryID {
 		t.Fatalf("got %q, want %q", err, ErrInvalidRecoveryID)
 	}
 }
@@ -150,8 +148,7 @@ func TestRandomMessagesWithRandomKeys(t *testing.T) {
 }
 
 func signAndRecoverWithRandomMessages(t *testing.T, keys func() ([]byte, []byte)) {
-	t.Helper()
-	for i := 0; i < TestCount; i++ {
+	for range TestCount {
 		pubkey1, seckey := keys()
 		msg := csprngEntropy(32)
 		sig, err := Sign(msg, seckey)
@@ -183,7 +180,7 @@ func TestRecoveryOfRandomSignature(t *testing.T) {
 	pubkey1, _ := generateKeyPair()
 	msg := csprngEntropy(32)
 
-	for i := 0; i < TestCount; i++ {
+	for i := range TestCount {
 		// recovery can sometimes work, but if so should always give wrong pubkey
 		pubkey2, _ := RecoverPubkey(msg, randSig())
 		if bytes.Equal(pubkey1, pubkey2) {
@@ -197,7 +194,7 @@ func TestRandomMessagesAgainstValidSig(t *testing.T) {
 	msg := csprngEntropy(32)
 	sig, _ := Sign(msg, seckey)
 
-	for i := 0; i < TestCount; i++ {
+	for i := range TestCount {
 		msg = csprngEntropy(32)
 		pubkey2, _ := RecoverPubkey(msg, sig)
 		// recovery can sometimes work, but if so should always give wrong pubkey
@@ -228,10 +225,7 @@ func BenchmarkSign(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := Sign(msg, seckey)
-		if err != nil {
-			panic(err)
-		}
+		Sign(msg, seckey)
 	}
 }
 
@@ -242,9 +236,6 @@ func BenchmarkRecover(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := RecoverPubkey(msg, sig)
-		if err != nil {
-			panic(err)
-		}
+		RecoverPubkey(msg, sig)
 	}
 }

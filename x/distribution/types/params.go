@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -22,20 +21,29 @@ func (p Params) ValidateBasic() error {
 	return validateCommunityTax(p.CommunityTax)
 }
 
-func validateCommunityTax(i interface{}) error {
+func validateCommunityTax(i any) error {
 	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v.IsNil() {
-		return errors.New("community tax must be not nil")
+		return fmt.Errorf("community tax must be not nil")
 	}
 	if v.IsNegative() {
 		return fmt.Errorf("community tax must be positive: %s", v)
 	}
 	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("community tax too large: %s", v)
+	}
+
+	return nil
+}
+
+func validateWithdrawAddrEnabled(i any) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	return nil

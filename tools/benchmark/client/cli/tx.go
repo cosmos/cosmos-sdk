@@ -146,7 +146,7 @@ func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				err = clienttx.Sign(clientCtx, txf, clientCtx.From, tx, true)
+				err = clienttx.Sign(clientCtx.CmdContext, txf, clientCtx.From, tx, true)
 				if err != nil {
 					return err
 				}

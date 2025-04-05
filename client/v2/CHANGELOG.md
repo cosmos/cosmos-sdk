@@ -36,29 +36,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* [#23325](https://github.com/cosmos/cosmos-sdk/pull/23325) Remove `NewAppOptionsFromConfig` that isn't needed in normal wiring.
-* [#23544](https://github.com/cosmos/cosmos-sdk/pull/23544) Support map in queries for autocli.
-
-## [v2.10.0-beta.1](https://github.com/cosmos/cosmos-sdk/releases/tag/client/v2/v2.10.0-beta.1) - 2024-12-18
-
 ### Features
 
-* [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
-* [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
-* [#20623](https://github.com/cosmos/cosmos-sdk/pull/20623) Introduce client/v2 tx factory.
-* [#20623](https://github.com/cosmos/cosmos-sdk/pull/20623) Extend client/v2 keyring interface with `KeyType` and `KeyInfo`.
-* [#22282](https://github.com/cosmos/cosmos-sdk/pull/22282) Added custom broadcast logic.
-* [#22775](https://github.com/cosmos/cosmos-sdk/pull/22775) Added interactive autocli prompt functionality, including message field prompting, validation helpers, and default value support.
+* [#24359](https://github.com/cosmos/cosmos-sdk/pull/24359) Support governance proposals.
+
+### Improvements
+
 * [#22890](https://github.com/cosmos/cosmos-sdk/pull/22890)  Added support for flattening inner message fields in autocli as positional arguments.
-
-### API Breaking Changes
-
-* [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
-* [#22493](https://github.com/cosmos/cosmos-sdk/pull/22493) Refactored `client/v2` package to remove v1 context dependencies, while introducing new packages for client configuration, context management, and formatted output with improved transaction handling and flag support.
 
 ### Bug Fixes
 
+* (cli) [#24330](https://github.com/cosmos/cosmos-sdk/pull/24330) Use the gogoproto merge registry as a file resolver instead of the interface registry.
 * [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
+
+## [v2.0.0-beta.8] - 2025-01-29
+
+* [#23544](https://github.com/cosmos/cosmos-sdk/pull/23544) Support map in queries for autocli.
 
 ## [v2.0.0-beta.7] - 2024-12-10
 
@@ -82,9 +75,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
+* [#21936](https://github.com/cosmos/cosmos-sdk/pull/21936) Print possible enum values in error message after an invalid input was provided.
 
 ## [v2.0.0-beta.4] - 2024-07-16
+
+### Improvements
+
+* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
 
 ### Bug Fixes
 

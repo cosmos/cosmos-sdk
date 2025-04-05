@@ -1,8 +1,7 @@
 package group
 
 import (
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -23,6 +22,6 @@ func (p *Proposal) SetMsgs(msgs []sdk.Msg) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, p.Messages)
 }

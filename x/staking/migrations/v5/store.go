@@ -1,17 +1,18 @@
 package v5
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
-	"cosmossdk.io/core/codec"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func migrateDelegationsByValidatorIndex(store storetypes.KVStore) error {
+func migrateDelegationsByValidatorIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	iterator := storetypes.KVStorePrefixIterator(store, DelegationKey)
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -28,11 +29,11 @@ func migrateDelegationsByValidatorIndex(store storetypes.KVStore) error {
 }
 
 // MigrateStore performs in-place store migrations from v4 to v5.
-func MigrateStore(ctx context.Context, store storetypes.KVStore, cdc codec.BinaryCodec, logger log.Logger) error {
-	if err := migrateDelegationsByValidatorIndex(store); err != nil {
+func MigrateStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+	if err := migrateDelegationsByValidatorIndex(ctx, store, cdc); err != nil {
 		return err
 	}
-	return migrateHistoricalInfoKeys(store, logger)
+	return migrateHistoricalInfoKeys(store, ctx.Logger())
 }
 
 // migrateHistoricalInfoKeys migrate HistoricalInfo keys to binary format
@@ -44,7 +45,7 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 	oldStore := prefix.NewStore(store, HistoricalInfoKey)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
-	defer logDeferred(logger, func() error { return oldStoreIter.Close() })
+	defer sdk.LogDeferred(logger, func() error { return oldStoreIter.Close() })
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		strHeight := oldStoreIter.Key()
@@ -62,11 +63,4 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 	}
 
 	return nil
-}
-
-// logDeferred logs an error in a deferred function call if the returned error is non-nil.
-func logDeferred(logger log.Logger, f func() error) {
-	if err := f(); err != nil {
-		logger.Error(err.Error())
-	}
 }

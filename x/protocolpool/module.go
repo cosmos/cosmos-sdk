@@ -6,29 +6,32 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/codec"
-	"cosmossdk.io/core/registry"
-	"cosmossdk.io/x/protocolpool/keeper"
-	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/simulation"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // ConsensusVersion defines the current x/protocolpool module consensus version.
 const ConsensusVersion = 1
 
 var (
-	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
+	_ module.AppModule           = AppModule{}
 
-	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasGenesis            = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-	_ appmodule.HasBeginBlocker       = AppModule{}
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // AppModule implements an application module for the pool module
@@ -65,21 +68,23 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 	}
 }
 
-// RegisterInterfaces registers interfaces and implementations of the bank module.
-func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	types.RegisterInterfaces(registrar)
+// RegisterInterfaces registers interfaces and implementations of the protocolpool module.
+func (AppModule) RegisterInterfaces(ir codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(ir)
+}
+
+func (am AppModule) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(amino)
 }
 
 // RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
-
-	return nil
+func (am AppModule) RegisterServices(configurator module.Configurator) {
+	types.RegisterMsgServer(configurator, keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(configurator, keeper.NewQuerier(am.keeper))
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the protocolpool module.
-func (am AppModule) DefaultGenesis() json.RawMessage {
+func (am AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
 	if err != nil {
 		panic(err)
@@ -88,38 +93,82 @@ func (am AppModule) DefaultGenesis() json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the protocolpool module.
-func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(&data)
+	return data.Validate()
 }
 
 // InitGenesis performs genesis initialization for the protocolpool module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
+func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
-	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
-		return err
-	}
+	am.cdc.MustUnmarshalJSON(data, &genesisState)
 
-	return am.keeper.InitGenesis(ctx, &genesisState)
+	if err := am.keeper.InitGenesis(ctx, &genesisState); err != nil {
+		panic(fmt.Errorf("failed to init genesis state: %w", err))
+	}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the protocolpool module.
-func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
 	gs, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
-		return nil, err
+		panic(fmt.Errorf("failed to export genesis state: %w", err))
 	}
-	return am.cdc.MarshalJSON(gs)
+	return am.cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock implements appmodule.HasBeginBlocker.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return am.keeper.BeginBlocker(sdkCtx)
 }
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+// ____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the protocolpool module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	// GenerateGenesisState creates a randomized GenState of the protocolpool module.
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalMsgs returns msgs used for governance proposals for simulations.
+// migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs()
+}
+
+// RegisterStoreDecoder registers a decoder for protocolpool module's types
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
+}
+
+// WeightedOperations returns the all the protocolpool module operations with their respective weights.
+// migrate to WeightedOperationsX. This method is ignored when WeightedOperationsX exists and will be removed in the future
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams,
+		simState.TxConfig,
+		am.accountKeeper,
+		am.bankKeeper,
+		am.keeper,
+	)
+}
+
+// ProposalMsgsX registers governance proposal messages in the simulation registry.
+func (am AppModule) ProposalMsgsX(weight simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weight.Get("msg_community_pool_spend", 50), simulation.MsgCommunityPoolSpendFactory())
+}
+
+// WeightedOperationsX registers weighted protocolpool module operations for simulation.
+func (am AppModule) WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weight.Get("msg_fund_community_pool", 50), simulation.MsgFundCommunityPoolFactory())
+}

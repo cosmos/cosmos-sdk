@@ -30,7 +30,7 @@ const (
 // Query defines the gRPC querier service.
 type QueryClient interface {
 	// EpochInfos provide running epochInfos
-	EpochInfos(ctx context.Context, in *QueryEpochsInfoRequest, opts ...grpc.CallOption) (*QueryEpochsInfoResponse, error)
+	EpochInfos(ctx context.Context, in *QueryEpochInfosRequest, opts ...grpc.CallOption) (*QueryEpochInfosResponse, error)
 	// CurrentEpoch provide current epoch of specified identifier
 	CurrentEpoch(ctx context.Context, in *QueryCurrentEpochRequest, opts ...grpc.CallOption) (*QueryCurrentEpochResponse, error)
 }
@@ -43,9 +43,9 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) EpochInfos(ctx context.Context, in *QueryEpochsInfoRequest, opts ...grpc.CallOption) (*QueryEpochsInfoResponse, error) {
+func (c *queryClient) EpochInfos(ctx context.Context, in *QueryEpochInfosRequest, opts ...grpc.CallOption) (*QueryEpochInfosResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(QueryEpochsInfoResponse)
+	out := new(QueryEpochInfosResponse)
 	err := c.cc.Invoke(ctx, Query_EpochInfos_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (c *queryClient) CurrentEpoch(ctx context.Context, in *QueryCurrentEpochReq
 // Query defines the gRPC querier service.
 type QueryServer interface {
 	// EpochInfos provide running epochInfos
-	EpochInfos(context.Context, *QueryEpochsInfoRequest) (*QueryEpochsInfoResponse, error)
+	EpochInfos(context.Context, *QueryEpochInfosRequest) (*QueryEpochInfosResponse, error)
 	// CurrentEpoch provide current epoch of specified identifier
 	CurrentEpoch(context.Context, *QueryCurrentEpochRequest) (*QueryCurrentEpochResponse, error)
 	mustEmbedUnimplementedQueryServer()
@@ -83,7 +83,7 @@ type QueryServer interface {
 // pointer dereference when methods are called.
 type UnimplementedQueryServer struct{}
 
-func (UnimplementedQueryServer) EpochInfos(context.Context, *QueryEpochsInfoRequest) (*QueryEpochsInfoResponse, error) {
+func (UnimplementedQueryServer) EpochInfos(context.Context, *QueryEpochInfosRequest) (*QueryEpochInfosResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EpochInfos not implemented")
 }
 func (UnimplementedQueryServer) CurrentEpoch(context.Context, *QueryCurrentEpochRequest) (*QueryCurrentEpochResponse, error) {
@@ -111,7 +111,7 @@ func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {
 }
 
 func _Query_EpochInfos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryEpochsInfoRequest)
+	in := new(QueryEpochInfosRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func _Query_EpochInfos_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: Query_EpochInfos_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).EpochInfos(ctx, req.(*QueryEpochsInfoRequest))
+		return srv.(QueryServer).EpochInfos(ctx, req.(*QueryEpochInfosRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -31,12 +31,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v2.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/errors/%2Fv2.0.0)
+## [v1.0.2](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.0.2)
 
-### API Breaking Changes
+### Improvements 
 
-* [#20402](https://github.com/cosmos/cosmos-sdk/pull/20402) Remove Grpc error codes from the error package. This is done in order to keep the dependency graph of errors minimal
-* [#20539](https://github.com/cosmos/cosmos-sdk/pull/20539) Removes `IsOf`, `Recover`, `WithType` and wrapped error. The errors package uses the go std library errors. It provides a `Wrap` and `Wrapf` to help in the migration from v1 to v2. 
+* [#23901](https://github.com/cosmos/cosmos-sdk/pull/23901) Minor dependency improvements.
 
 ## [v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.0.1)
 

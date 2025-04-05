@@ -2,11 +2,11 @@ package client
 
 import (
 	gocontext "context"
-	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
@@ -29,7 +29,7 @@ var _ gogogrpc.ClientConn = Context{}
 var fallBackCodec = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
+func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply any, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
 	// 1. either we're broadcasting a Tx, in which call we call CometBFT's broadcast endpoint directly,
 	// 2-1. or we are querying for state, in which case we call grpc if grpc client set.
@@ -83,7 +83,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		ctx = ctx.WithHeight(height)
 	}
 
-	abciReq := abci.QueryRequest{
+	abciReq := abci.RequestQuery{
 		Path:   method,
 		Data:   reqBz,
 		Height: ctx.Height,
@@ -123,7 +123,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 
 // NewStream implements the grpc ClientConn.NewStream method
 func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, errors.New("streaming rpc not supported")
+	return nil, fmt.Errorf("streaming rpc not supported")
 }
 
 // gRPCCodec checks if Context's Codec is codec.GRPCCodecProvider

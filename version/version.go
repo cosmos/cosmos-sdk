@@ -39,37 +39,23 @@ var (
 	BuildTags = ""
 )
 
-type sdkBuildInfo struct {
-	sdkVersion         string
-	runtimeVersion     string
-	stfVersion         string
-	cometServerVersion string
-}
-
-func getSDKBuildInfo(debugBuildInfo *debug.BuildInfo) sdkBuildInfo {
-	var buildInfo sdkBuildInfo
-	for _, dep := range debugBuildInfo.Deps {
-		switch dep.Path {
-		case "github.com/cosmos/cosmos-sdk":
-			buildInfo.sdkVersion = extractVersionFromBuildInfo(dep)
-		case "cosmossdk.io/server/v2/cometbft":
-			buildInfo.cometServerVersion = extractVersionFromBuildInfo(dep)
-		case "cosmossdk.io/runtime/v2":
-			buildInfo.runtimeVersion = extractVersionFromBuildInfo(dep)
-		case "cosmossdk.io/server/v2/stf":
-			buildInfo.stfVersion = extractVersionFromBuildInfo(dep)
+func getSDKVersion() string {
+	deps, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unable to read deps"
+	}
+	var sdkVersion string
+	for _, dep := range deps.Deps {
+		if dep.Path == "github.com/cosmos/cosmos-sdk" {
+			if dep.Replace != nil && dep.Replace.Version != "(devel)" {
+				sdkVersion = dep.Replace.Version
+			} else {
+				sdkVersion = dep.Version
+			}
 		}
 	}
 
-	return buildInfo
-}
-
-func extractVersionFromBuildInfo(dep *debug.Module) string {
-	if dep.Replace != nil && dep.Replace.Version != "(devel)" {
-		return dep.Replace.Version
-	}
-
-	return dep.Version
+	return sdkVersion
 }
 
 // ExtraInfo contains a set of extra information provided by apps
@@ -77,43 +63,29 @@ type ExtraInfo map[string]string
 
 // Info defines the application version information.
 type Info struct {
-	Name               string     `json:"name" yaml:"name"`
-	AppName            string     `json:"server_name" yaml:"server_name"`
-	Version            string     `json:"version" yaml:"version"`
-	GitCommit          string     `json:"commit" yaml:"commit"`
-	BuildTags          string     `json:"build_tags" yaml:"build_tags"`
-	GoVersion          string     `json:"go" yaml:"go"`
-	BuildDeps          []buildDep `json:"build_deps" yaml:"build_deps"`
-	CosmosSdkVersion   string     `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
-	RuntimeVersion     string     `json:"runtime_version,omitempty" yaml:"runtime_version,omitempty"`
-	StfVersion         string     `json:"stf_version,omitempty" yaml:"stf_version,omitempty"`
-	CometServerVersion string     `json:"comet_server_version,omitempty" yaml:"comet_server_version,omitempty"`
-	ExtraInfo          ExtraInfo  `json:"extra_info,omitempty" yaml:"extra_info,omitempty"`
+	Name             string     `json:"name" yaml:"name"`
+	AppName          string     `json:"server_name" yaml:"server_name"`
+	Version          string     `json:"version" yaml:"version"`
+	GitCommit        string     `json:"commit" yaml:"commit"`
+	BuildTags        string     `json:"build_tags" yaml:"build_tags"`
+	GoVersion        string     `json:"go" yaml:"go"`
+	BuildDeps        []buildDep `json:"build_deps" yaml:"build_deps"`
+	CosmosSdkVersion string     `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
+	ExtraInfo        ExtraInfo  `json:"extra_info,omitempty" yaml:"extra_info,omitempty"`
 }
 
 func NewInfo() Info {
-	info := Info{
+	sdkVersion := getSDKVersion()
+	return Info{
 		Name:             Name,
 		AppName:          AppName,
 		Version:          Version,
 		GitCommit:        Commit,
 		BuildTags:        BuildTags,
 		GoVersion:        fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
-		CosmosSdkVersion: "unable to read deps",
+		BuildDeps:        depsFromBuildInfo(),
+		CosmosSdkVersion: sdkVersion,
 	}
-
-	// use debug info more granular build info if available
-	debugBuildInfo, ok := debug.ReadBuildInfo()
-	if ok {
-		info.BuildDeps = depsFromBuildInfo(debugBuildInfo)
-		sdkBuildInfo := getSDKBuildInfo(debugBuildInfo)
-		info.CosmosSdkVersion = sdkBuildInfo.sdkVersion
-		info.RuntimeVersion = sdkBuildInfo.runtimeVersion
-		info.StfVersion = sdkBuildInfo.stfVersion
-		info.CometServerVersion = sdkBuildInfo.cometServerVersion
-	}
-
-	return info
 }
 
 func (vi Info) String() string {
@@ -125,8 +97,13 @@ build tags: %s
 	)
 }
 
-func depsFromBuildInfo(debugBuildInfo *debug.BuildInfo) (deps []buildDep) {
-	for _, dep := range debugBuildInfo.Deps {
+func depsFromBuildInfo() (deps []buildDep) {
+	buildInfo, ok := debug.ReadBuildInfo()
+	if !ok {
+		return nil
+	}
+
+	for _, dep := range buildInfo.Deps {
 		deps = append(deps, buildDep{dep})
 	}
 
@@ -145,5 +122,5 @@ func (d buildDep) String() string {
 	return fmt.Sprintf("%s@%s", d.Path, d.Version)
 }
 
-func (d buildDep) MarshalJSON() ([]byte, error)      { return json.Marshal(d.String()) }
-func (d buildDep) MarshalYAML() (interface{}, error) { return d.String(), nil }
+func (d buildDep) MarshalJSON() ([]byte, error) { return json.Marshal(d.String()) }
+func (d buildDep) MarshalYAML() (any, error)    { return d.String(), nil }

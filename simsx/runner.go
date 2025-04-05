@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/server"
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -58,7 +59,7 @@ type SimStateFactory struct {
 
 // SimulationApp abstract app that is used by sims
 type SimulationApp interface {
-	runtime.AppSimI
+	runtime.AppI
 	SetNotSigverifyTx()
 	GetBaseApp() *baseapp.BaseApp
 	TxConfig() client.TxConfig
@@ -73,10 +74,10 @@ func Run[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db corestore.KVStoreWithBatch,
+		db dbm.DB,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts server.DynamicConfig,
+		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -99,10 +100,10 @@ func RunWithSeeds[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db corestore.KVStoreWithBatch,
+		db dbm.DB,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts server.DynamicConfig,
+		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -119,10 +120,10 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db corestore.KVStoreWithBatch,
+		db dbm.DB,
 		traceStore io.Writer,
 		loadLatest bool,
-		appOpts server.DynamicConfig,
+		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
@@ -132,6 +133,10 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
 	t.Helper()
+	if deprecatedParams := cli.GetDeprecatedFlagUsed(); len(deprecatedParams) != 0 {
+		fmt.Printf("Warning: Deprecated flag are used: %s", strings.Join(deprecatedParams, ","))
+	}
+
 	cfg := cli.NewConfigFromFlags()
 	cfg.ChainID = SimAppChainID
 	for i := range seeds {
@@ -152,7 +157,7 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 func RunWithSeed[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -166,7 +171,7 @@ func RunWithSeed[T SimulationApp](
 func RunWithSeedAndRandAcc[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -188,12 +193,24 @@ func RunWithSeedAndRandAcc[T SimulationApp](
 	app := testInstance.App
 	stateFactory := setupStateFactory(app)
 	ops, reporter := prepareWeightedOps(app.SimulationManager(), stateFactory, tCfg, testInstance.App.TxConfig(), runLogger)
-	simParams, accs, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, randAccFn, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
+	simParams, accs, err := simulation.SimulateFromSeedX(
+		tb,
+		runLogger,
+		WriteToDebugLog(runLogger),
+		app.GetBaseApp(),
+		stateFactory.AppStateFn,
+		randAccFn,
+		ops,
+		stateFactory.BlockedAddr,
+		tCfg,
+		stateFactory.Codec,
+		testInstance.ExecLogWriter,
+	)
 	require.NoError(tb, err)
 	err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 	require.NoError(tb, err)
-	if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
-		simtestutil.PrintStats(testInstance.DB.(*dbm.GoLevelDB), tb.Log)
+	if tCfg.Commit {
+		simtestutil.PrintStats(testInstance.DB)
 	}
 	// not using tb.Log to always print the summary
 	fmt.Printf("+++ DONE (seed: %d): \n%s\n", seed, reporter.Summary().String())
@@ -246,7 +263,7 @@ type (
 //   - ExecLogWriter: Captures block and operation data coming from the simulation
 type TestInstance[T SimulationApp] struct {
 	App           T
-	DB            corestore.KVStoreWithBatch
+	DB            dbm.DB
 	WorkDir       string
 	Cfg           simtypes.Config
 	AppLogger     log.Logger
@@ -262,14 +279,11 @@ func prepareWeightedOps(
 	logger log.Logger,
 ) (simulation.WeightedOperations, *BasicSimulationReporter) {
 	cdc := stateFact.Codec
-	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{
-		AppParams:      make(simtypes.AppParams),
-		Cdc:            cdc,
-		AddressCodec:   signingCtx.AddressCodec(),
-		ValidatorCodec: signingCtx.ValidatorAddressCodec(),
-		TxConfig:       txConfig,
-		BondDenom:      sdk.DefaultBondDenom,
+		AppParams: make(simtypes.AppParams),
+		Cdc:       cdc,
+		TxConfig:  txConfig,
+		BondDenom: sdk.DefaultBondDenom,
 	}
 
 	if config.ParamsFile != "" {
@@ -297,7 +311,7 @@ func prepareWeightedOps(
 			xm.ProposalMsgsX(weights, pReg)
 		case HasLegacyProposalMsgs:
 			for _, p := range xm.ProposalMsgs(simState) {
-				weight := weights.Get(p.AppParamsKey(), uint32(p.DefaultWeight()))
+				weight := weights.Get(p.AppParamsKey(), safeUint(p.DefaultWeight()))
 				legacyPReg.Add(weight, legacyToMsgFactoryAdapter(p.MsgSimulatorFn()))
 			}
 		case HasLegacyProposalContents:
@@ -305,7 +319,13 @@ func prepareWeightedOps(
 		}
 	}
 
-	oReg := NewSimsMsgRegistryAdapter(reporter, stateFact.AccountSource, stateFact.BalanceSource, txConfig, logger)
+	oReg := NewSimsMsgRegistryAdapter(
+		reporter,
+		stateFact.AccountSource,
+		stateFact.BalanceSource,
+		txConfig,
+		logger,
+	)
 	wOps := make([]simtypes.WeightedOperation, 0, len(sm.Modules))
 	for _, m := range sm.Modules {
 		// add operations
@@ -318,7 +338,14 @@ func prepareWeightedOps(
 			wOps = append(wOps, xm.WeightedOperations(simState)...)
 		}
 	}
-	return append(wOps, oReg.ToLegacyObjects()...), reporter
+	return append(wOps, Collect(oReg.items, func(a weightedOperation) simtypes.WeightedOperation { return a })...), reporter
+}
+
+func safeUint(p int) uint32 {
+	if p < 0 || p > math.MaxUint32 {
+		panic(fmt.Sprintf("can not cast to uint32: %d", p))
+	}
+	return uint32(p)
 }
 
 // NewSimulationAppInstance initializes and returns a TestInstance of a SimulationApp.
@@ -329,11 +356,11 @@ func prepareWeightedOps(
 func NewSimulationAppInstance[T SimulationApp](
 	tb testing.TB,
 	tCfg simtypes.Config,
-	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts server.DynamicConfig, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
 	tb.Helper()
 	workDir := tb.TempDir()
-	require.NoError(tb, os.Mkdir(filepath.Join(workDir, "data"), 0o755))
+	require.NoError(tb, os.Mkdir(filepath.Join(workDir, "data"), 0o750))
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {
@@ -381,22 +408,6 @@ func WriteToDebugLog(logger log.Logger) io.Writer {
 		logger.Debug(string(p))
 		return len(p), nil
 	})
-}
-
-// AppOptionsFn is an adapter to the single method AppOptions interface
-type AppOptionsFn func(string) any
-
-func (f AppOptionsFn) Get(k string) any {
-	return f(k)
-}
-
-func (f AppOptionsFn) GetString(k string) string {
-	str, ok := f(k).(string)
-	if !ok {
-		return ""
-	}
-
-	return str
 }
 
 // FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of

@@ -4,7 +4,6 @@ package testutil
 // Those constants are defined here to be used in the SDK without importing those modules.
 
 const (
-	AccountsModuleName              = "accounts"
 	AuthModuleName                  = "auth"
 	AuthzModuleName                 = "authz"
 	BankModuleName                  = "bank"
@@ -23,5 +22,4 @@ const (
 	AuthTxConfigDepinjectModuleName = "tx"
 	UpgradeModuleName               = "upgrade"
 	EpochsModuleName                = "epochs"
-	ValidateModuleName              = "validate"
 )

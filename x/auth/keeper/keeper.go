@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -39,6 +40,9 @@ type AccountKeeperI interface {
 	// Remove an account from the store.
 	RemoveAccount(context.Context, sdk.AccountI)
 
+	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
+	IterateAccounts(context.Context, func(sdk.AccountI) bool)
+
 	// Fetch the public key of an account at a specified address
 	GetPubKey(context.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
 
@@ -46,8 +50,6 @@ type AccountKeeperI interface {
 	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	//
-	// Deprecated: keep this to avoid breaking api
 	NextAccountNumber(context.Context) uint64
 
 	// GetModulePermissions fetches per-module account permissions
@@ -82,11 +84,9 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
-	appmodule.Environment
+	addressCodec address.Codec
 
-	addressCodec      address.Codec
-	AccountsModKeeper types.AccountsModKeeper
-
+	storeService store.KVStoreService
 	cdc          codec.BinaryCodec
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
@@ -99,15 +99,11 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	Schema collections.Schema
-	Params collections.Item[types.Params]
-
-	// only use for upgrade handler
-	//
-	// Deprecated: move to accounts module accountNumber
-	accountNumber collections.Sequence
-	// Accounts key: AccAddr | value: AccountI | index: AccountsIndex
-	Accounts *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
+	Schema          collections.Schema
+	Params          collections.Item[types.Params]
+	AccountNumber   collections.Sequence
+	Accounts        *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
+	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -119,7 +115,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI, accountsModKeeper types.AccountsModKeeper,
+	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -127,20 +123,20 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	sb := collections.NewSchemaBuilder(env.KVStoreService)
+	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
-		Environment:       env,
-		addressCodec:      ac,
-		bech32Prefix:      bech32Prefix,
-		proto:             proto,
-		cdc:               cdc,
-		AccountsModKeeper: accountsModKeeper,
-		permAddrs:         permAddrs,
-		authority:         authority,
-		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		accountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
-		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		addressCodec:    ac,
+		bech32Prefix:    bech32Prefix,
+		storeService:    storeService,
+		proto:           proto,
+		cdc:             cdc,
+		permAddrs:       permAddrs,
+		authority:       authority,
+		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -150,29 +146,9 @@ func NewAccountKeeper(
 	return ak
 }
 
-// removeLegacyAccountNumberUnsafe is used for migration purpose only. It deletes the sequence in the DB
-// and returns the last value used on success.
-// Deprecated
-func (ak AccountKeeper) removeLegacyAccountNumberUnsafe(ctx context.Context) (uint64, error) {
-	accNum, err := ak.accountNumber.Peek(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	// Delete DB entry for legacy account number
-	store := ak.KVStoreService.OpenKVStore(ctx)
-	err = store.Delete(types.GlobalAccountNumberKey.Bytes())
-
-	return accNum, err
-}
-
 // GetAuthority returns the x/auth module's authority.
 func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
-}
-
-func (ak AccountKeeper) GetEnvironment() appmodule.Environment {
-	return ak.Environment
 }
 
 // AddressCodec returns the x/auth account address codec.
@@ -181,13 +157,17 @@ func (ak AccountKeeper) AddressCodec() address.Codec {
 	return ak.addressCodec
 }
 
+// Logger returns a module-specific logger.
+func (ak AccountKeeper) Logger(ctx context.Context) log.Logger {
+	return sdk.UnwrapSDKContext(ctx).Logger().With("module", "x/"+types.ModuleName)
+}
+
 // GetPubKey Returns the PubKey of the account at address
 func (ak AccountKeeper) GetPubKey(ctx context.Context, addr sdk.AccAddress) (cryptotypes.PubKey, error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
-
 	return acc.GetPubKey(), nil
 }
 
@@ -203,10 +183,8 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
-//
-// Deprecated: NextAccountNumber is deprecated
 func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	n, err := ak.AccountsModKeeper.NextAccountNumber(ctx)
+	n, err := ak.AccountNumber.Next(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -302,54 +280,49 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	return params
 }
 
-func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*types.NonAtomicExecResult, error) {
-	msgResponses := make([]*types.NonAtomicExecResult, 0, len(msgs))
+// -------------------------------------
+// Unordered Nonce management methods
+// -------------------------------------
 
-	for _, msg := range msgs {
-		if m, ok := msg.(sdk.HasValidateBasic); ok {
-			if err := m.ValidateBasic(); err != nil {
-				value := &types.NonAtomicExecResult{Error: err.Error()}
-				msgResponses = append(msgResponses, value)
-				continue
-			}
-		}
-
-		if err := ak.BranchService.Execute(ctx, func(ctx context.Context) error {
-			result, err := ak.AccountsModKeeper.SendModuleMessage(ctx, signer, msg)
-			if err != nil {
-				// If an error occurs during message execution, append error response
-				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
-				msgResponses = append(msgResponses, response)
-			} else {
-				resp, err := codectypes.NewAnyWithValue(result)
-				if err != nil {
-					response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
-					msgResponses = append(msgResponses, response)
-				}
-				response := &types.NonAtomicExecResult{Resp: resp, Error: ""}
-				msgResponses = append(msgResponses, response)
-			}
-
-			return nil
-		}); err != nil {
-			return nil, err
-		}
-	}
-
-	return msgResponses, nil
+// ContainsUnorderedNonce reports whether the sender has used this timeout already.
+func (ak AccountKeeper) ContainsUnorderedNonce(ctx sdk.Context, sender []byte, timeout time.Time) (bool, error) {
+	return ak.UnorderedNonces.Has(ctx, collections.Join(timeout.UnixNano(), sender))
 }
 
-// MigrateAccountNumberUnsafe migrates auth's account number to accounts's account number
-// and delete store entry for auth legacy GlobalAccountNumberKey.
-//
-// Should only use in an upgrade handler for migrating account number.
-func MigrateAccountNumberUnsafe(ctx context.Context, ak *AccountKeeper) error {
-	currentAccNum, err := ak.removeLegacyAccountNumberUnsafe(ctx)
+// TryAddUnorderedNonce tries to add a new unordered nonce for the sender.
+// If the sender already has an entry with the provided timeout, an error is returned.
+func (ak AccountKeeper) TryAddUnorderedNonce(ctx sdk.Context, sender []byte, timeout time.Time) error {
+	alreadyHas, err := ak.ContainsUnorderedNonce(ctx, sender, timeout)
 	if err != nil {
-		return fmt.Errorf("failed to migrate account number: %w", err)
+		return fmt.Errorf("failed to check unordered nonce in storage: %w", err)
+	}
+	if alreadyHas {
+		return fmt.Errorf("sender %s has already used timeout %d", sdk.AccAddress(sender).String(), timeout.UnixNano())
 	}
 
-	err = ak.AccountsModKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
+	return ak.UnorderedNonces.Set(ctx, collections.Join(timeout.UnixNano(), sender))
+}
 
-	return err
+// RemoveExpiredUnorderedNonces removes all unordered nonces that have a timeout value before
+// the current block time.
+func (ak AccountKeeper) RemoveExpiredUnorderedNonces(ctx sdk.Context) error {
+	blkTime := ctx.BlockTime().UnixNano()
+	it, err := ak.UnorderedNonces.Iterate(ctx, collections.NewPrefixUntilPairRange[int64, []byte](blkTime))
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	keys, err := it.Keys()
+	if err != nil {
+		return err
+	}
+
+	for _, key := range keys {
+		if err := ak.UnorderedNonces.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

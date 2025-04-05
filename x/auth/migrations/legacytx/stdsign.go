@@ -2,14 +2,11 @@ package legacytx
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"sigs.k8s.io/yaml"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -26,7 +23,7 @@ import (
 type LegacyMsg interface {
 	sdk.Msg
 
-	// GetSignBytes get the canonical byte representation of the Msg.
+	// Get the canonical byte representation of the Msg.
 	GetSignBytes() []byte
 }
 
@@ -65,7 +62,7 @@ func mustSortJSON(bz []byte) []byte {
 // Deprecated: Please use x/tx/signing/aminojson instead.
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	if RegressionTestingAminoCodec == nil {
-		panic(errors.New("must set RegressionTestingAminoCodec before calling StdSignBytes"))
+		panic(fmt.Errorf("must set RegressionTestingAminoCodec before calling StdSignBytes"))
 	}
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
@@ -95,7 +92,7 @@ type StdSignature struct {
 	Signature          []byte                          `json:"signature" yaml:"signature"`
 }
 
-// Deprecated: NewStdSignature returns a std signature
+// Deprecated
 func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
 	return StdSignature{PubKey: pk, Signature: sig}
 }
@@ -112,10 +109,10 @@ func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
 }
 
 // MarshalYAML returns the YAML representation of the signature.
-func (ss StdSignature) MarshalYAML() (interface{}, error) {
+func (ss StdSignature) MarshalYAML() (any, error) {
 	pk := ""
 	if ss.PubKey != nil {
-		pk = ss.PubKey.String()
+		pk = ss.String()
 	}
 
 	bz, err := yaml.Marshal(struct {
@@ -132,7 +129,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	return string(bz), nil
 }
 
-func (ss StdSignature) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return codectypes.UnpackInterfaces(ss.PubKey, unpacker)
 }
 
@@ -154,7 +151,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 	multiPK, ok := key.(multisig.PubKey)
 	if !ok {
 		return &signing.SingleSignatureData{
-			SignMode:  apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: sig,
 		}, nil
 	}
@@ -171,11 +168,11 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 	n := multiSig.BitArray.Count()
 	signatures := multisig.NewMultisig(n)
 	sigIdx := 0
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if bitArray.GetIndex(i) {
 			data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
 			if err != nil {
-				return nil, errorsmod.Wrapf(err, "Unable to convert Signature to SigData %d", sigIdx)
+				return nil, errors.Wrapf(err, "Unable to convert Signature to SigData %d", sigIdx)
 			}
 
 			sigDatas[sigIdx] = data

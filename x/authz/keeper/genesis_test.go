@@ -4,25 +4,25 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/authz/keeper"
-	authzmodule "cosmossdk.io/x/authz/module"
-	bank "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -35,19 +35,24 @@ var (
 type GenesisTestSuite struct {
 	suite.Suite
 
-	ctx     sdk.Context
-	keeper  keeper.Keeper
-	baseApp *baseapp.BaseApp
-	encCfg  moduletestutil.TestEncodingConfig
+	ctx           sdk.Context
+	keeper        keeper.Keeper
+	baseApp       *baseapp.BaseApp
+	accountKeeper *authztestutil.MockAccountKeeper
+	encCfg        moduletestutil.TestEncodingConfig
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(keeper.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
+	suite.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",
@@ -61,34 +66,29 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	msr := suite.baseApp.MsgServiceRouter()
 	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(msr))
 
-	addrCdc := addresscodec.NewBech32Codec("cosmos")
-	suite.keeper = keeper.NewKeeper(env, suite.encCfg.Codec, addrCdc)
+	suite.keeper = keeper.NewKeeper(storeService, suite.encCfg.Codec, msr, suite.accountKeeper)
 }
 
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	coins := sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(1_000)))
 
-	now := suite.ctx.HeaderInfo().Time
+	now := suite.ctx.BlockTime()
 	expires := now.Add(time.Hour)
 	grant := &bank.SendAuthorization{SpendLimit: coins}
 	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, &expires)
 	suite.Require().NoError(err)
-	genesis, err := suite.keeper.ExportGenesis(suite.ctx)
-	suite.Require().NoError(err)
+	genesis := suite.keeper.ExportGenesis(suite.ctx)
+
+	// TODO, recheck!
 	// Clear keeper
-	err = suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
-	suite.Require().NoError(err)
-	newGenesis, err := suite.keeper.ExportGenesis(suite.ctx)
-	suite.Require().NoError(err)
+	suite.Require().NoError(suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL()))
+	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().NotEqual(genesis, newGenesis)
 	suite.Require().Empty(newGenesis)
 
-	err = suite.keeper.InitGenesis(suite.ctx, genesis)
-	suite.Require().NoError(err)
-	newGenesis, err = suite.keeper.ExportGenesis(suite.ctx)
-	suite.Require().NoError(err)
+	suite.keeper.InitGenesis(suite.ctx, genesis)
+	newGenesis = suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().Equal(genesis, newGenesis)
 }
 

@@ -4,24 +4,21 @@ import (
 	"bytes"
 	"sort"
 	"testing"
-	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
-	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -29,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -96,16 +92,14 @@ func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
 	s.valStore = valStore
 
 	// set up mock
-	for _, val := range s.vals {
-		pk, err := cryptocodec.FromCmtProtoPublicKey(val.tmPk)
-		require.NoError(t, err)
-		valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), val.consAddr.Bytes()).Return(pk, nil).AnyTimes()
-	}
+	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[0].consAddr.Bytes()).Return(s.vals[0].tmPk, nil).AnyTimes()
+	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[1].consAddr.Bytes()).Return(s.vals[1].tmPk, nil).AnyTimes()
+	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[2].consAddr.Bytes()).Return(s.vals[2].tmPk, nil).AnyTimes()
 
 	// create context
 	s.ctx = sdk.Context{}.WithConsensusParams(cmtproto.ConsensusParams{
-		Feature: &cmtproto.FeatureParams{
-			VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 2,
 		},
 	}).WithBlockHeader(cmtproto.Header{
 		ChainID: chainID,
@@ -170,7 +164,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsHappyPath() {
 	s.ctx = s.ctx.WithCometInfo(info)
 
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 0, "", llc))
 }
 
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Absent
@@ -192,7 +186,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteAbsent() {
 	extSig2, err := s.vals[2].privKey.Sign(bz)
 	s.Require().NoError(err)
 
-	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+	s.ctx = s.ctx.WithBlockHeight(3).WithHeaderInfo(header.Info{Height: 3, ChainID: chainID}) // vote-extensions are enabled
 
 	llc := abci.ExtendedCommitInfo{
 		Round: 0,
@@ -221,7 +215,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteAbsent() {
 	s.ctx = s.ctx.WithCometInfo(info)
 
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 0, "", llc))
 }
 
 // check ValidateVoteExtensions works with duplicate votes
@@ -262,12 +256,12 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsDuplicateVotes() {
 		},
 	}
 
-	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+	s.ctx = s.ctx.WithBlockHeight(3).WithHeaderInfo(header.Info{Height: 3, ChainID: chainID}) // vote-extensions are enabled
 	llc, info := extendedCommitToLastCommit(llc)
 	s.ctx = s.ctx.WithCometInfo(info)
 
 	// expect fail (duplicate votes)
-	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 0, "", llc))
 }
 
 // check ValidateVoteExtensions works when a single node has submitted a BlockID_Nil
@@ -312,14 +306,14 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteNil() {
 		},
 	}
 
-	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+	s.ctx = s.ctx.WithBlockHeight(3).WithHeaderInfo(header.Info{Height: 3, ChainID: chainID}) // vote-extensions are enabled
 
 	// create last commit
 	llc, info := extendedCommitToLastCommit(llc)
 	s.ctx = s.ctx.WithCometInfo(info)
 
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+	s.Require().NoError(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 0, "", llc))
 }
 
 // check ValidateVoteExtensions works when two nodes have submitted a BlockID_Nil / BlockID_Absent
@@ -360,14 +354,14 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsTwoVotesNilAbsent() {
 		},
 	}
 
-	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+	s.ctx = s.ctx.WithBlockHeight(3).WithHeaderInfo(header.Info{Height: 3, ChainID: chainID}) // vote-extensions are enabled
 
 	// create last commit
 	llc, info := extendedCommitToLastCommit(llc)
 	s.ctx = s.ctx.WithCometInfo(info)
 
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 0, "", llc))
 }
 
 func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectVotingPower() {
@@ -407,7 +401,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectVotingPower() {
 		},
 	}
 
-	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+	s.ctx = s.ctx.WithBlockHeight(3).WithHeaderInfo(header.Info{Height: 3, ChainID: chainID}) // vote-extensions are enabled
 
 	// create last commit
 	llc, info := extendedCommitToLastCommit(llc)
@@ -418,7 +412,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectVotingPower() {
 	llc.Votes[2].Validator.Power = 332
 
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 0, "", llc))
 }
 
 func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectOrder() {
@@ -458,7 +452,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectOrder() {
 		},
 	}
 
-	s.ctx = s.ctx.WithBlockHeight(3) // vote-extensions are enabled
+	s.ctx = s.ctx.WithBlockHeight(3).WithHeaderInfo(header.Info{Height: 3, ChainID: chainID}) // vote-extensions are enabled
 
 	// create last commit
 	llc, info := extendedCommitToLastCommit(llc)
@@ -468,18 +462,17 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectOrder() {
 	llc.Votes[0], llc.Votes[2] = llc.Votes[2], llc.Votes[0]
 
 	// expect-pass (votes of height 2 are included in next block)
-	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
+	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, 0, "", llc))
 }
 
 func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection() {
 	// create a codec for marshaling
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
 	// create a baseapp along with a tx config for tx generation
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
-	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), coretesting.NewMemDB(), txConfig.TxDecoder())
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), dbm.NewMemDB(), txConfig.TxDecoder())
 
 	// create a proposal handler
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
@@ -487,11 +480,9 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 
 	// build a tx
 	_, _, addr := testdata.KeyTestPubAddr()
-	addrStr, err := signingCtx.AddressCodec().BytesToString(addr)
-	require.NoError(s.T(), err)
 	builder := txConfig.NewTxBuilder()
 	s.Require().NoError(builder.SetMsgs(
-		&baseapptestutil.MsgCounter{Counter: 0, FailOnHandler: false, Signer: addrStr},
+		&baseapptestutil.MsgCounter{Counter: 0, FailOnHandler: false, Signer: addr.String()},
 	))
 	builder.SetGasLimit(100)
 	setTxSignature(s.T(), builder, 0)
@@ -503,16 +494,16 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	s.Require().Len(txBz, 152)
 
 	txDataSize := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz}))
-	s.Require().Equal(155, txDataSize)
+	s.Require().Equal(txDataSize, 155)
 
 	testCases := map[string]struct {
 		ctx         sdk.Context
-		req         *abci.PrepareProposalRequest
+		req         *abci.RequestPrepareProposal
 		expectedTxs int
 	}{
 		"small max tx bytes": {
 			ctx: s.ctx,
-			req: &abci.PrepareProposalRequest{
+			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 10,
 			},
@@ -524,7 +515,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 					MaxGas: 10,
 				},
 			}),
-			req: &abci.PrepareProposalRequest{
+			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 465,
 			},
@@ -532,19 +523,19 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 		},
 		"large max tx bytes": {
 			ctx: s.ctx,
-			req: &abci.PrepareProposalRequest{
+			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 464,
+				MaxTxBytes: 465,
 			},
-			expectedTxs: 2,
+			expectedTxs: 3,
 		},
 		"large max tx bytes len calculation": {
 			ctx: s.ctx,
-			req: &abci.PrepareProposalRequest{
+			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 504,
+				MaxTxBytes: 456,
 			},
-			expectedTxs: 3,
+			expectedTxs: 2,
 		},
 		"max gas and tx bytes": {
 			ctx: s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -552,7 +543,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 					MaxGas: 200,
 				},
 			}),
-			req: &abci.PrepareProposalRequest{
+			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 465,
 			},
@@ -563,7 +554,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	for name, tc := range testCases {
 		s.Run(name, func() {
 			// iterate multiple times to ensure the tx selector is cleared each time
-			for i := 0; i < 6; i++ {
+			for range 6 {
 				resp, err := handler(tc.ctx, tc.req)
 				s.Require().NoError(err)
 				s.Require().Len(resp.Txs, tc.expectedTxs)
@@ -575,8 +566,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSelection() {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-	signingCtx := cdc.InterfaceRegistry().SigningContext()
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 
 	var (
 		secret1 = []byte("secret1")
@@ -596,24 +586,24 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 
 	testTxs := []testTx{
 		// test 1
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`0`), [][]byte{secret1}, []uint64{1}, false), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`12345678910`), [][]byte{secret1}, []uint64{2}, false), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`22`), [][]byte{secret1}, []uint64{3}, false), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`32`), [][]byte{secret2}, []uint64{1}, false), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`0`), [][]byte{secret1}, []uint64{1}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`12345678910`), [][]byte{secret1}, []uint64{2}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`22`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`32`), [][]byte{secret2}, []uint64{1}), priority: 8},
 		// test 2
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`4`), [][]byte{secret1, secret2}, []uint64{3, 3}, false), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`52345678910`), [][]byte{secret1, secret3}, []uint64{4, 3}, false), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`62`), [][]byte{secret1, secret4}, []uint64{5, 3}, false), priority: 8},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`72`), [][]byte{secret3, secret5}, []uint64{4, 3}, false), priority: 8},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`82`), [][]byte{secret2, secret6}, []uint64{4, 3}, false), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`4`), [][]byte{secret1, secret2}, []uint64{3, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`52345678910`), [][]byte{secret1, secret3}, []uint64{4, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`62`), [][]byte{secret1, secret4}, []uint64{5, 3}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`72`), [][]byte{secret3, secret5}, []uint64{4, 3}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`82`), [][]byte{secret2, secret6}, []uint64{4, 3}), priority: 8},
 		// test 3
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`9`), [][]byte{secret3, secret4}, []uint64{3, 3}, false), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`1052345678910`), [][]byte{secret1, secret2}, []uint64{4, 4}, false), priority: 8},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`11`), [][]byte{secret1, secret2}, []uint64{5, 5}, false), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`9`), [][]byte{secret3, secret4}, []uint64{3, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`1052345678910`), [][]byte{secret1, secret2}, []uint64{4, 4}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`11`), [][]byte{secret1, secret2}, []uint64{5, 5}), priority: 8},
 		// test 4
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`1252345678910`), [][]byte{secret1}, []uint64{3}, false), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`13`), [][]byte{secret1}, []uint64{5}, false), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`14`), [][]byte{secret1}, []uint64{6}, false), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, []byte(`1252345678910`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`13`), [][]byte{secret1}, []uint64{5}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, []byte(`14`), [][]byte{secret1}, []uint64{6}), priority: 8},
 	}
 
 	for i := range testTxs {
@@ -623,36 +613,36 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 		testTxs[i].size = int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{bz}))
 	}
 
-	s.Require().Equal(180, testTxs[0].size)
-	s.Require().Equal(190, testTxs[1].size)
-	s.Require().Equal(181, testTxs[2].size)
-	s.Require().Equal(181, testTxs[3].size)
-	s.Require().Equal(263, testTxs[4].size)
-	s.Require().Equal(273, testTxs[5].size)
-	s.Require().Equal(264, testTxs[6].size)
-	s.Require().Equal(264, testTxs[7].size)
-	s.Require().Equal(264, testTxs[8].size)
+	s.Require().Equal(testTxs[0].size, 111)
+	s.Require().Equal(testTxs[1].size, 121)
+	s.Require().Equal(testTxs[2].size, 112)
+	s.Require().Equal(testTxs[3].size, 112)
+	s.Require().Equal(testTxs[4].size, 195)
+	s.Require().Equal(testTxs[5].size, 205)
+	s.Require().Equal(testTxs[6].size, 196)
+	s.Require().Equal(testTxs[7].size, 196)
+	s.Require().Equal(testTxs[8].size, 196)
 
 	testCases := map[string]struct {
 		ctx         sdk.Context
 		txInputs    []testTx
-		req         *abci.PrepareProposalRequest
+		req         *abci.RequestPrepareProposal
 		handler     sdk.PrepareProposalHandler
 		expectedTxs []int
 	}{
 		"skip same-sender non-sequential sequence and then add others txs": {
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[0], testTxs[1], testTxs[2], testTxs[3]},
-			req: &abci.PrepareProposalRequest{
-				MaxTxBytes: 180 + 181,
+			req: &abci.RequestPrepareProposal{
+				MaxTxBytes: 111 + 112,
 			},
 			expectedTxs: []int{0, 3},
 		},
 		"skip multi-signers msg non-sequential sequence": {
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[4], testTxs[5], testTxs[6], testTxs[7], testTxs[8]},
-			req: &abci.PrepareProposalRequest{
-				MaxTxBytes: 263 + 264,
+			req: &abci.RequestPrepareProposal{
+				MaxTxBytes: 195 + 196,
 			},
 			expectedTxs: []int{4, 8},
 		},
@@ -660,17 +650,17 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			// Because tx 10 is valid, tx 11 can't be valid as they have higher sequence numbers.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[9], testTxs[10], testTxs[11]},
-			req: &abci.PrepareProposalRequest{
-				MaxTxBytes: 263 + 264,
+			req: &abci.RequestPrepareProposal{
+				MaxTxBytes: 195 + 196,
 			},
 			expectedTxs: []int{9},
 		},
 		"no txs added": {
-			// Because the first tx was deemed valid but too big, the next expected valid sequence is tx[0].seq (3), so
+			// Becasuse the first tx was deemed valid but too big, the next expected valid sequence is tx[0].seq (3), so
 			// the rest of the txs fail because they have a seq of 4.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[12], testTxs[13], testTxs[14]},
-			req: &abci.PrepareProposalRequest{
+			req: &abci.RequestPrepareProposal{
 				MaxTxBytes: 112,
 			},
 			expectedTxs: []int{},
@@ -692,7 +682,6 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ph := baseapp.NewDefaultProposalHandler(mp, app)
 
 			for _, v := range tc.txInputs {
-				app.EXPECT().TxDecode(v.bz).Return(v.tx, nil).AnyTimes()
 				app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()
 				s.NoError(mp.Insert(s.ctx.WithPriority(v.priority), v.tx))
 				tc.req.Txs = append(tc.req.Txs, v.bz)
@@ -723,10 +712,12 @@ func marshalDelimitedFn(msg proto.Message) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func buildMsg(t *testing.T, txConfig client.TxConfig, ac address.Codec, value []byte, secrets [][]byte, nonces []uint64, unordered bool) sdk.Tx {
+func buildMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]byte, nonces []uint64) sdk.Tx {
 	t.Helper()
 	builder := txConfig.NewTxBuilder()
-
+	_ = builder.SetMsgs(
+		&baseapptestutil.MsgKeyValue{Value: value},
+	)
 	require.Equal(t, len(secrets), len(nonces))
 	signatures := make([]signingtypes.SignatureV2, 0)
 	for index, secret := range secrets {
@@ -739,22 +730,6 @@ func buildMsg(t *testing.T, txConfig client.TxConfig, ac address.Codec, value []
 			Data:     &signingtypes.SingleSignatureData{},
 		})
 	}
-
-	addr, err := ac.BytesToString(signatures[0].PubKey.Bytes())
-	require.NoError(t, err)
-
-	builder.SetUnordered(unordered)
-	if unordered {
-		builder.SetTimeoutTimestamp(time.Now().Add(time.Hour))
-	}
-
-	_ = builder.SetMsgs(
-		&baseapptestutil.MsgKeyValue{
-			Signer: addr,
-			Value:  value,
-		},
-	)
-
 	setTxSignatureWithSecret(t, builder, signatures...)
 	return builder.GetTx()
 }
@@ -767,28 +742,31 @@ func setTxSignatureWithSecret(t *testing.T, builder client.TxBuilder, signatures
 	require.NoError(t, err)
 }
 
-func extendedCommitToLastCommit(ec abci.ExtendedCommitInfo) (abci.ExtendedCommitInfo, comet.Info) {
+func extendedCommitToLastCommit(ec abci.ExtendedCommitInfo) (abci.ExtendedCommitInfo, comet.BlockInfo) {
 	// sort the extended commit info
 	sort.Sort(extendedVoteInfos(ec.Votes))
 
 	// convert the extended commit info to last commit info
-	lastCommit := comet.CommitInfo{
+	lastCommit := abci.CommitInfo{
 		Round: ec.Round,
-		Votes: make([]comet.VoteInfo, len(ec.Votes)),
+		Votes: make([]abci.VoteInfo, len(ec.Votes)),
 	}
 
 	for i, vote := range ec.Votes {
-		lastCommit.Votes[i] = comet.VoteInfo{
-			Validator: comet.Validator{
+		lastCommit.Votes[i] = abci.VoteInfo{
+			Validator: abci.Validator{
 				Address: vote.Validator.Address,
 				Power:   vote.Validator.Power,
 			},
 		}
 	}
 
-	return ec, comet.Info{
-		LastCommit: lastCommit,
-	}
+	return ec, baseapp.NewBlockInfo(
+		nil,
+		nil,
+		nil,
+		lastCommit,
+	)
 }
 
 type extendedVoteInfos []abci.ExtendedVoteInfo

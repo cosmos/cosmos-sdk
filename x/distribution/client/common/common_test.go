@@ -7,15 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
-	cdcOpts := codectestutil.CodecOptions{}
-	clientCtx := client.Context{}.
-		WithLegacyAmino(legacy.Cdc).
-		WithAddressCodec(cdcOpts.GetAddressCodec()).
-		WithValidatorAddressCodec(cdcOpts.GetValidatorCodec())
+	clientCtx := client.Context{}.WithLegacyAmino(legacy.Cdc)
 
 	type args struct {
 		delAddr string

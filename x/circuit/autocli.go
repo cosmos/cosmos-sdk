@@ -16,7 +16,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "Account",
-					Use:            "account <address>",
+					Use:            "account [address]",
 					Short:          "Query a specific account's permissions",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
 				},
@@ -37,30 +37,30 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "AuthorizeCircuitBreaker",
-					Use:       "authorize <grantee> <level> <msg_type_urls> --from <granter>",
+					Use:       "authorize [grantee] [level] [msg_type_urls] --from [granter]",
 					Short:     "Authorize an account to trip the circuit breaker.",
 					Long:      `Authorize an account to trip the circuit breaker. Level can be: some-msgs, all-msgs or super-admin.`,
-					Example:   fmt.Sprintf(`%s tx circuit authorize [address] super-admin "/cosmos.bank.v1beta1.MsgSend,/cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+					Example:   fmt.Sprintf(`%s tx circuit authorize [address] super-admin "/cosmos.bank.v1beta1.MsgSend /cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "grantee"},
 						{ProtoField: "permissions.level"},
-						{ProtoField: "permissions.limit_type_urls"},
+						{ProtoField: "permissions.limit_type_urls", Varargs: true},
 					},
 				},
 				{
 					RpcMethod: "TripCircuitBreaker",
-					Use:       "disable <msg_type_urls>",
+					Use:       "disable [msg_type_urls]",
 					Short:     "Disable a message from being executed",
-					Example:   fmt.Sprintf(`%s tx circuit disable "/cosmos.bank.v1beta1.MsgSend /cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+					Example:   fmt.Sprintf(`%s circuit disable "/cosmos.bank.v1beta1.MsgSend /cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "msg_type_urls", Varargs: true},
 					},
 				},
 				{
 					RpcMethod: "ResetCircuitBreaker",
-					Use:       "reset <msg_type_urls>",
+					Use:       "reset [msg_type_urls]",
 					Short:     "Enable a message to be executed",
-					Example:   fmt.Sprintf(`%s tx circuit reset "/cosmos.bank.v1beta1.MsgSend /cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
+					Example:   fmt.Sprintf(`%s circuit reset "/cosmos.bank.v1beta1.MsgSend /cosmos.bank.v1beta1.MsgMultiSend"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "msg_type_urls", Varargs: true},
 					},

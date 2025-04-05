@@ -7,22 +7,25 @@ import (
 	"path/filepath"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
-	banktypes "cosmossdk.io/x/bank/types"
-	stakingcli "cosmossdk.io/x/staking/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 type CLITestSuite struct {
@@ -39,20 +42,22 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(codectestutil.CodecOptions{}, genutil.AppModule{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(genutil.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(clitestutil.MockCometRPC{}).
+		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPCWithResponseQueryValue(bz)
+		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+			Value: bz,
+		})
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen()
@@ -115,9 +120,16 @@ func (s *CLITestSuite) TestGenTxCmd() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.clientCtx
+			ctx := svrcmd.CreateExecuteContext(context.Background())
 
-			cmd := cli.GenTxCmd(module.NewManager(), banktypes.GenesisBalancesIterator{})
-			cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}))
+			cmd := cli.GenTxCmd(
+				module.NewBasicManager(),
+				clientCtx.TxConfig,
+				banktypes.GenesisBalancesIterator{},
+				clientCtx.HomeDir,
+				address.NewBech32Codec("cosmosvaloper"),
+			)
+			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 
 			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))

@@ -13,38 +13,32 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coreaddress "cosmossdk.io/core/address"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group"
-	"cosmossdk.io/x/group/internal/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
 func TestDoTallyAndUpdate(t *testing.T) {
-	addrCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
 	var (
-		myAddr, _      = addrCodec.BytesToString(sdk.AccAddress(bytes.Repeat([]byte{0x01}, 20)))
-		myOtherAddr, _ = addrCodec.BytesToString(sdk.AccAddress(bytes.Repeat([]byte{0x02}, 20)))
+		myAddr      = sdk.AccAddress(bytes.Repeat([]byte{0x01}, 20))
+		myOtherAddr = sdk.AccAddress(bytes.Repeat([]byte{0x02}, 20))
 	)
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	group.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	storeKey := storetypes.NewKVStoreKey(group.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test"))
 	myAccountKeeper := &mockAccountKeeper{
 		AddressCodecFn: func() coreaddress.Codec {
-			return addrCodec
+			return address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
 		},
 	}
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(storeKey), log.NewNopLogger())
-
-	groupKeeper := NewKeeper(env, encCfg.Codec, myAccountKeeper, group.DefaultConfig())
+	groupKeeper := NewKeeper(storeKey, encCfg.Codec, nil, myAccountKeeper, group.DefaultConfig())
 	noEventsFn := func(proposalID uint64) sdk.Events { return sdk.Events{} }
 	type memberVote struct {
 		address string
@@ -60,8 +54,8 @@ func TestDoTallyAndUpdate(t *testing.T) {
 	}{
 		"proposal accepted": {
 			votes: []memberVote{
-				{address: myAddr, option: group.VOTE_OPTION_YES, weight: "2"},
-				{address: myOtherAddr, option: group.VOTE_OPTION_NO, weight: "1"},
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "2"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "1"},
 			},
 			policy: mockDecisionPolicy{
 				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
@@ -74,8 +68,8 @@ func TestDoTallyAndUpdate(t *testing.T) {
 		},
 		"proposal rejected": {
 			votes: []memberVote{
-				{address: myAddr, option: group.VOTE_OPTION_YES, weight: "1"},
-				{address: myOtherAddr, option: group.VOTE_OPTION_NO, weight: "2"},
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "1"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "2"},
 			},
 			policy: mockDecisionPolicy{
 				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
@@ -88,8 +82,8 @@ func TestDoTallyAndUpdate(t *testing.T) {
 		},
 		"proposal in flight": {
 			votes: []memberVote{
-				{address: myAddr, option: group.VOTE_OPTION_YES, weight: "1"},
-				{address: myOtherAddr, option: group.VOTE_OPTION_NO, weight: "1"},
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "1"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "1"},
 			},
 			policy: mockDecisionPolicy{
 				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
@@ -102,8 +96,8 @@ func TestDoTallyAndUpdate(t *testing.T) {
 		},
 		"policy errors": {
 			votes: []memberVote{
-				{address: myAddr, option: group.VOTE_OPTION_YES, weight: "1"},
-				{address: myOtherAddr, option: group.VOTE_OPTION_NO, weight: "2"},
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "1"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "2"},
 			},
 			policy: mockDecisionPolicy{
 				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
@@ -136,12 +130,12 @@ func TestDoTallyAndUpdate(t *testing.T) {
 			require.NoError(t, err)
 			// given a group, policy and persisted votes
 			for _, v := range spec.votes {
-				err := groupKeeper.groupMemberTable.Create(env.KVStoreService.OpenKVStore(ctx), &group.GroupMember{
+				err := groupKeeper.groupMemberTable.Create(ctx.KVStore(storeKey), &group.GroupMember{
 					GroupId: groupID,
 					Member:  &group.Member{Address: v.address, Weight: v.weight},
 				})
 				require.NoError(t, err)
-				err = groupKeeper.voteTable.Create(env.KVStoreService.OpenKVStore(ctx), &group.Vote{
+				err = groupKeeper.voteTable.Create(ctx.KVStore(storeKey), &group.Vote{
 					ProposalId: proposalId,
 					Voter:      v.address,
 					Option:     v.option,

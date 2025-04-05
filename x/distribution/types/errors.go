@@ -16,6 +16,4 @@ var (
 	ErrEmptyProposalRecipient  = errors.Register(ModuleName, 11, "invalid community pool spend proposal recipient")
 	ErrNoValidatorExists       = errors.Register(ModuleName, 12, "validator does not exist")
 	ErrNoDelegationExists      = errors.Register(ModuleName, 13, "delegation does not exist")
-	ErrInvalidProposalContent  = errors.Register(ModuleName, 14, "invalid proposal content")
-	ErrInvalidSigner           = errors.Register(ModuleName, 15, "expected authority account as only signer for proposal message")
 )

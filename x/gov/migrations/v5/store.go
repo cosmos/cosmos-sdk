@@ -1,12 +1,13 @@
 package v5
 
 import (
-	"context"
-
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/codec"
 	corestoretypes "cosmossdk.io/core/store"
-	govv1 "cosmossdk.io/x/gov/types/v1"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 var (
@@ -21,9 +22,9 @@ var (
 //
 // Addition of the new proposal expedited parameters that are set to 0 by default.
 // Set of default chain constitution.
-func MigrateStore(ctx context.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec, constitutionCollection collections.Item[string]) error {
+func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec, constitutionCollection collections.Item[string]) error {
 	store := storeService.OpenKVStore(ctx)
-	paramsBz, err := store.Get(ParamsKey)
+	paramsBz, err := store.Get(v4.ParamsKey)
 	if err != nil {
 		return err
 	}

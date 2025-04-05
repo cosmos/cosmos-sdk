@@ -5,13 +5,13 @@ import (
 	"reflect"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	testdata "github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -90,7 +90,7 @@ func (s *eventsTestSuite) TestEventManager() {
 
 func (s *eventsTestSuite) TestEmitTypedEvent() {
 	s.Run("deterministic key-value order", func() {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			em := sdk.NewEventManager()
 			coin := sdk.NewCoin("fakedenom", math.NewInt(1999999))
 			s.Require().NoError(em.EmitTypedEvent(&coin))

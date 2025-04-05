@@ -13,33 +13,37 @@ import (
 
 	"github.com/hashicorp/go-metrics"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/codec"
-	"cosmossdk.io/core/server"
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	xp "cosmossdk.io/x/upgrade/exported"
 	"cosmossdk.io/x/upgrade/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-type Keeper struct {
-	appmodule.Environment
+// Deprecated: UpgradeInfoFileName file to store upgrade information
+// use x/upgrade/types.UpgradeInfoFilename instead.
+const UpgradeInfoFileName string = "upgrade-info.json"
 
+type Keeper struct {
 	homePath           string                          // root directory of app config
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
+	storeService       corestore.KVStoreService        // key to access x/upgrade store
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
-	versionModifier    server.VersionModifier          // implements setting the protocol version field on BaseApp
+	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
-	initVersionMap     appmodule.VersionMap            // the module version map at init genesis
-
-	consensusKeeper types.ConsensusKeeper
+	initVersionMap     module.VersionMap               // the module version map at init genesis
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -48,42 +52,39 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(
-	env appmodule.Environment,
-	skipUpgradeHeights map[int64]bool,
-	cdc codec.BinaryCodec,
-	homePath string,
-	vs server.VersionModifier,
-	authority string,
-	ck types.ConsensusKeeper,
-) *Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStoreService, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
 	k := &Keeper{
-		Environment:        env,
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
+		storeService:       storeService,
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
-		versionModifier:    vs,
+		versionSetter:      vs,
 		authority:          authority,
-		consensusKeeper:    ck,
-	}
-
-	if homePath == "" {
-		k.Logger.Warn("homePath is empty; upgrade info will be written to the current directory")
 	}
 
 	return k
 }
 
+// SetVersionSetter sets the interface implemented by baseapp which allows setting baseapp's protocol version field
+func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
+	k.versionSetter = vs
+}
+
+// GetVersionSetter gets the protocol version field of baseapp
+func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
+	return k.versionSetter
+}
+
 // SetInitVersionMap sets the initial version map.
 // This is only used in app wiring and should not be used in any other context.
-func (k *Keeper) SetInitVersionMap(vm appmodule.VersionMap) {
+func (k *Keeper) SetInitVersionMap(vm module.VersionMap) {
 	k.initVersionMap = vm
 }
 
 // GetInitVersionMap gets the initial version map
 // This is only used in upgrade InitGenesis and should not be used in any other context.
-func (k *Keeper) GetInitVersionMap() appmodule.VersionMap {
+func (k *Keeper) GetInitVersionMap() module.VersionMap {
 	return k.initVersionMap
 }
 
@@ -94,10 +95,39 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
+// setProtocolVersion sets the protocol version to state
+func (k Keeper) setProtocolVersion(ctx context.Context, v uint64) error {
+	store := k.storeService.OpenKVStore(ctx)
+	versionBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(versionBytes, v)
+	return store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
+}
+
+// getProtocolVersion gets the protocol version from state
+func (k Keeper) getProtocolVersion(ctx context.Context) (uint64, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	ok, err := store.Has([]byte{types.ProtocolVersionByte})
+	if err != nil {
+		return 0, err
+	}
+
+	if ok {
+		pvBytes, err := store.Get([]byte{types.ProtocolVersionByte})
+		if err != nil {
+			return 0, err
+		}
+
+		protocolVersion := binary.BigEndian.Uint64(pvBytes)
+		return protocolVersion, nil
+	}
+	// default value
+	return 0, nil
+}
+
 // SetModuleVersionMap saves a given version map to state
-func (k Keeper) SetModuleVersionMap(ctx context.Context, vm appmodule.VersionMap) error {
+func (k Keeper) SetModuleVersionMap(ctx context.Context, vm module.VersionMap) error {
 	if len(vm) > 0 {
-		store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
+		store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
 		// Even though the underlying store (cachekv) store is sorted, we still
 		// prefer a deterministic iteration order of the map, to avoid undesired
@@ -123,8 +153,8 @@ func (k Keeper) SetModuleVersionMap(ctx context.Context, vm appmodule.VersionMap
 
 // GetModuleVersionMap returns a map of key module name and value module consensus version
 // as defined in ADR-041.
-func (k Keeper) GetModuleVersionMap(ctx context.Context) (appmodule.VersionMap, error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
+func (k Keeper) GetModuleVersionMap(ctx context.Context) (module.VersionMap, error) {
+	store := k.storeService.OpenKVStore(ctx)
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
@@ -132,7 +162,7 @@ func (k Keeper) GetModuleVersionMap(ctx context.Context) (appmodule.VersionMap, 
 	}
 	defer it.Close()
 
-	vm := make(appmodule.VersionMap)
+	vm := make(module.VersionMap)
 	for ; it.Valid(); it.Next() {
 		moduleBytes := it.Key()
 		// first byte is prefix key, so we remove it here
@@ -146,7 +176,7 @@ func (k Keeper) GetModuleVersionMap(ctx context.Context) (appmodule.VersionMap, 
 
 // GetModuleVersions gets a slice of module consensus versions
 func (k Keeper) GetModuleVersions(ctx context.Context) ([]*types.ModuleVersion, error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
@@ -171,7 +201,7 @@ func (k Keeper) GetModuleVersions(ctx context.Context) ([]*types.ModuleVersion, 
 // getModuleVersion gets the version for a given module. If it doesn't exist it returns ErrNoModuleVersionFound, other
 // errors may be returned if there is an error reading from the store.
 func (k Keeper) getModuleVersion(ctx context.Context, name string) (uint64, error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
@@ -201,7 +231,8 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 
 	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
 	// as a strategy for emergency hard fork recoveries
-	if plan.Height < k.HeaderService.HeaderInfo(ctx).Height {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if plan.Height < sdkCtx.HeaderInfo().Height {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
@@ -214,7 +245,7 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 
 	// clear any old IBC state stored by previous plan
 	oldPlan, err := k.GetUpgradePlan(ctx)
@@ -247,14 +278,14 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 
 // SetUpgradedClient sets the expected upgraded client for the next version of this chain at the last height the current chain will commit.
 func (k Keeper) SetUpgradedClient(ctx context.Context, planHeight int64, bz []byte) error {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	return store.Set(types.UpgradedClientKey(planHeight), bz)
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain. If not found it returns
 // ErrNoUpgradedClientFound, but other errors may be returned if there is an error reading from the store.
 func (k Keeper) GetUpgradedClient(ctx context.Context, height int64) ([]byte, error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.UpgradedClientKey(height))
 	if err != nil {
 		return nil, err
@@ -270,14 +301,14 @@ func (k Keeper) GetUpgradedClient(ctx context.Context, height int64) ([]byte, er
 // SetUpgradedConsensusState sets the expected upgraded consensus state for the next version of this chain
 // using the last height committed on this chain.
 func (k Keeper) SetUpgradedConsensusState(ctx context.Context, planHeight int64, bz []byte) error {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	return store.Set(types.UpgradedConsStateKey(planHeight), bz)
 }
 
 // GetUpgradedConsensusState gets the expected upgraded consensus state for the next version of this chain. If not found
 // it returns ErrNoUpgradedConsensusStateFound, but other errors may be returned if there is an error reading from the store.
 func (k Keeper) GetUpgradedConsensusState(ctx context.Context, lastHeight int64) ([]byte, error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.UpgradedConsStateKey(lastHeight))
 	if err != nil {
 		return nil, err
@@ -292,7 +323,7 @@ func (k Keeper) GetUpgradedConsensusState(ctx context.Context, lastHeight int64)
 
 // GetLastCompletedUpgrade returns the last applied upgrade name and height.
 func (k Keeper) GetLastCompletedUpgrade(ctx context.Context) (string, int64, error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	prefix := []byte{types.DoneByte}
 	it, err := store.ReverseIterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
@@ -327,7 +358,7 @@ func encodeDoneKey(name string, height int64) []byte {
 
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx context.Context, name string) (int64, error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	prefix := []byte{types.DoneByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
@@ -348,7 +379,7 @@ func (k Keeper) GetDoneHeight(ctx context.Context, name string) (int64, error) {
 // ClearIBCState clears any planned IBC state
 func (k Keeper) ClearIBCState(ctx context.Context, lastHeight int64) error {
 	// delete IBC client and consensus state from store if this is IBC plan
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	err := store.Delete(types.UpgradedClientKey(lastHeight))
 	if err != nil {
 		return err
@@ -374,14 +405,20 @@ func (k Keeper) ClearUpgradePlan(ctx context.Context) error {
 		return err
 	}
 
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	return store.Delete(types.PlanKey())
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // GetUpgradePlan returns the currently scheduled Plan if any. If not found it returns
 // ErrNoUpgradePlanFound, but other errors may be returned if there is an error reading from the store.
 func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, err error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.PlanKey())
 	if err != nil {
 		return plan, err
@@ -401,11 +438,9 @@ func (k Keeper) GetUpgradePlan(ctx context.Context) (plan types.Plan, err error)
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx context.Context, name string) error {
-	store := k.KVStoreService.OpenKVStore(ctx)
-
-	k.Logger.Debug("setting done", "height", k.HeaderService.HeaderInfo(ctx).Height, "name", name)
-
-	return store.Set(encodeDoneKey(name, k.HeaderService.HeaderInfo(ctx).Height), []byte{1})
+	store := k.storeService.OpenKVStore(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return store.Set(encodeDoneKey(name, sdkCtx.HeaderInfo().Height), []byte{1})
 }
 
 // HasHandler returns true iff there is a handler registered for this name
@@ -415,11 +450,10 @@ func (k Keeper) HasHandler(name string) bool {
 }
 
 // ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
-// If successful, it will increment the app version and clear the IBC state
 func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {
-		return errors.New("ApplyUpgrade should never be called without first checking HasHandler")
+		return fmt.Errorf("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
 	vm, err := k.GetModuleVersionMap(ctx)
@@ -437,16 +471,20 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// incremement the app version and set it in state and baseapp
-	if k.versionModifier != nil {
-		currentAppVersion, err := k.versionModifier.AppVersion(ctx)
-		if err != nil {
-			return err
-		}
+	// incremement the protocol version and set it in state and baseapp
+	nextProtocolVersion, err := k.getProtocolVersion(ctx)
+	if err != nil {
+		return err
+	}
+	nextProtocolVersion++
+	err = k.setProtocolVersion(ctx, nextProtocolVersion)
+	if err != nil {
+		return err
+	}
 
-		if err := k.versionModifier.SetAppVersion(ctx, currentAppVersion+1); err != nil {
-			return err
-		}
+	if k.versionSetter != nil {
+		// set protocol version on BaseApp
+		k.versionSetter.SetProtocolVersion(nextProtocolVersion)
 	}
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.

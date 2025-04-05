@@ -25,9 +25,9 @@ func NewMultisig(n int) *signing.MultiSignatureData {
 	}
 }
 
-// getIndex returns the index of pk in keys. Returns -1 if not found
+// GetIndex returns the index of pk in keys. Returns -1 if not found
 func getIndex(pk types.PubKey, keys []types.PubKey) int {
-	for i := 0; i < len(keys); i++ {
+	for i := range keys {
 		if pk.Equals(keys[i]) {
 			return i
 		}
@@ -36,7 +36,7 @@ func getIndex(pk types.PubKey, keys []types.PubKey) int {
 }
 
 // AddSignature adds a signature to the multisig, at the corresponding index. The index must
-// represent the pubkey index in the LegacyAminoPubKey structure, which verifies this signature.
+// represent the pubkey index in the LegacyAmingPubKey structure, which verifies this signature.
 // If the signature already exists, replace it.
 func AddSignature(mSig *signing.MultiSignatureData, sig signing.SignatureData, index int) {
 	newSigIndex := mSig.BitArray.NumTrueBitsBefore(index)

@@ -71,6 +71,20 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
 }
 
+// GetAllAccounts mocks base method.
+func (m *MockAccountKeeper) GetAllAccounts(ctx context.Context) []types.AccountI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllAccounts", ctx)
+	ret0, _ := ret[0].([]types.AccountI)
+	return ret0
+}
+
+// GetAllAccounts indicates an expected call of GetAllAccounts.
+func (mr *MockAccountKeeperMockRecorder) GetAllAccounts(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAccounts", reflect.TypeOf((*MockAccountKeeper)(nil).GetAllAccounts), ctx)
+}
+
 // GetModuleAccount mocks base method.
 func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types.ModuleAccountI {
 	m.ctrl.T.Helper()
@@ -85,6 +99,21 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, moduleName any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAccount), ctx, moduleName)
 }
 
+// GetModuleAccountAndPermissions mocks base method.
+func (m *MockAccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, moduleName string) (types.ModuleAccountI, []string) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetModuleAccountAndPermissions", ctx, moduleName)
+	ret0, _ := ret[0].(types.ModuleAccountI)
+	ret1, _ := ret[1].([]string)
+	return ret0, ret1
+}
+
+// GetModuleAccountAndPermissions indicates an expected call of GetModuleAccountAndPermissions.
+func (mr *MockAccountKeeperMockRecorder) GetModuleAccountAndPermissions(ctx, moduleName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAccountAndPermissions", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAccountAndPermissions), ctx, moduleName)
+}
+
 // GetModuleAddress mocks base method.
 func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types.AccAddress {
 	m.ctrl.T.Helper()
@@ -97,6 +126,21 @@ func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types.AccAddress
 func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(moduleName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddress), moduleName)
+}
+
+// GetModuleAddressAndPermissions mocks base method.
+func (m *MockAccountKeeper) GetModuleAddressAndPermissions(moduleName string) (types.AccAddress, []string) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetModuleAddressAndPermissions", moduleName)
+	ret0, _ := ret[0].(types.AccAddress)
+	ret1, _ := ret[1].([]string)
+	return ret0, ret1
+}
+
+// GetModuleAddressAndPermissions indicates an expected call of GetModuleAddressAndPermissions.
+func (mr *MockAccountKeeperMockRecorder) GetModuleAddressAndPermissions(moduleName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddressAndPermissions", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddressAndPermissions), moduleName)
 }
 
 // GetModulePermissions mocks base method.
@@ -127,6 +171,46 @@ func (mr *MockAccountKeeperMockRecorder) HasAccount(ctx, addr any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasAccount", reflect.TypeOf((*MockAccountKeeper)(nil).HasAccount), ctx, addr)
 }
 
+// IterateAccounts mocks base method.
+func (m *MockAccountKeeper) IterateAccounts(ctx context.Context, process func(types.AccountI) bool) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IterateAccounts", ctx, process)
+}
+
+// IterateAccounts indicates an expected call of IterateAccounts.
+func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, process any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateAccounts", reflect.TypeOf((*MockAccountKeeper)(nil).IterateAccounts), ctx, process)
+}
+
+// NewAccount mocks base method.
+func (m *MockAccountKeeper) NewAccount(arg0 context.Context, arg1 types.AccountI) types.AccountI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
+	ret0, _ := ret[0].(types.AccountI)
+	return ret0
+}
+
+// NewAccount indicates an expected call of NewAccount.
+func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAccount", reflect.TypeOf((*MockAccountKeeper)(nil).NewAccount), arg0, arg1)
+}
+
+// NewAccountWithAddress mocks base method.
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) types.AccountI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
+	ret0, _ := ret[0].(types.AccountI)
+	return ret0
+}
+
+// NewAccountWithAddress indicates an expected call of NewAccountWithAddress.
+func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAccountWithAddress", reflect.TypeOf((*MockAccountKeeper)(nil).NewAccountWithAddress), ctx, addr)
+}
+
 // SetAccount mocks base method.
 func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
@@ -137,4 +221,30 @@ func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) 
 func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), ctx, acc)
+}
+
+// SetModuleAccount mocks base method.
+func (m *MockAccountKeeper) SetModuleAccount(ctx context.Context, macc types.ModuleAccountI) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetModuleAccount", ctx, macc)
+}
+
+// SetModuleAccount indicates an expected call of SetModuleAccount.
+func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(ctx, macc any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetModuleAccount), ctx, macc)
+}
+
+// ValidatePermissions mocks base method.
+func (m *MockAccountKeeper) ValidatePermissions(macc types.ModuleAccountI) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatePermissions", macc)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidatePermissions indicates an expected call of ValidatePermissions.
+func (mr *MockAccountKeeperMockRecorder) ValidatePermissions(macc any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissions", reflect.TypeOf((*MockAccountKeeper)(nil).ValidatePermissions), macc)
 }

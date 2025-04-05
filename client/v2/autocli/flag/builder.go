@@ -20,6 +20,8 @@ import (
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 const (
@@ -51,8 +53,8 @@ type Builder struct {
 
 	// Address Codecs are the address codecs to use for client/v2.
 	AddressCodec          address.Codec
-	ValidatorAddressCodec address.ValidatorAddressCodec
-	ConsensusAddressCodec address.ConsensusAddressCodec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
 }
 
 func (b *Builder) init() {

@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
+	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 
-	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
@@ -62,7 +62,7 @@ func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 	return bodies
 }
 
-// snapshotItems serialize an array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
+// snapshotItems serialize a array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
 func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]byte {
 	// copy the same parameters from the code
 	snapshotChunkSize := uint64(10e6)
@@ -207,7 +207,7 @@ func (m *mockErrorSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
 	t.Helper()
-	store, err := snapshots.NewStore(coretesting.NewMemDB(), t.TempDir())
+	store, err := snapshots.NewStore(db.NewMemDB(), t.TempDir())
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
 	hung.SetSnapshotInterval(opts.Interval)
@@ -309,7 +309,7 @@ func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshot
 	return nil
 }
 
-func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshottypes.ExtensionPayloadReader) error {
+func (s *extSnapshotter) RestoreExtension(_ uint64, _ uint32, payloadReader snapshottypes.ExtensionPayloadReader) error {
 	for {
 		payload, err := payloadReader()
 		if errors.Is(err, io.EOF) {

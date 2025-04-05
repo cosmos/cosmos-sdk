@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -256,10 +255,6 @@ func (k *Keeper) emitUseGrantEvent(ctx context.Context, granter, grantee string)
 
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) error {
-	// Check for duplicate grants by (granter, grantee) pair
-	// to avoid false positives in invariants
-	seen := make(map[string]struct{})
-
 	for _, f := range data.Allowances {
 		granter, err := k.addrCdc.StringToBytes(f.Granter)
 		if err != nil {
@@ -269,13 +264,6 @@ func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) er
 		if err != nil {
 			return err
 		}
-
-		// Create a unique key for (granter, grantee) pair using a delimiter
-		key := fmt.Sprintf("%s|%s", string(granter), string(grantee))
-		if _, exists := seen[key]; exists {
-			return fmt.Errorf("duplicate feegrant found from granter %q to grantee %q", f.Granter, f.Grantee)
-		}
-		seen[key] = struct{}{}
 
 		grant, err := f.GetGrant()
 		if err != nil {

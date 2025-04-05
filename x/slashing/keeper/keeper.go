@@ -10,7 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v4 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -120,6 +122,17 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 			sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
 		),
 	)
+	return nil
+}
+
+// RemoveLegacyValidatorMissedBlocks will attempt to perform the v4 migration handler to remove
+// legacy validator missed blocks bit arrays. If no index is found then this function returns immediately.
+func (k Keeper) RemoveLegacyValidatorMissedBlocks(ctx sdk.Context) error {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	if index := store.Get(types.NextMigrateValidatorMissedBlocksKey); index != nil {
+		return v4.Migrate(ctx, store, index, 10)
+	}
+
 	return nil
 }
 

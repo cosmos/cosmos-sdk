@@ -39,9 +39,5 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 // bitmap.
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	store := runtime.KVStoreAdapter(m.keeper.storeService.OpenKVStore(ctx))
-	params, err := m.keeper.GetParams(ctx)
-	if err != nil {
-		return err
-	}
-	return v4.Migrate(ctx, m.keeper.cdc, store, params)
+	return v4.Migrate(ctx, store, nil, 10)
 }

@@ -11,8 +11,9 @@ import (
 const MissedBlockBitmapChunkSize = 1024 // 2^10 bits
 
 var (
-	ValidatorSigningInfoKeyPrefix         = []byte{0x01}
-	validatorMissedBlockBitArrayKeyPrefix = []byte{0x02}
+	ValidatorSigningInfoKeyPrefix               = []byte{0x01}
+	legacyValidatorMissedBlockBitArrayKeyPrefix = []byte{0x02}
+	NextMigrateValidatorMissedBlocksKey         = []byte{0xFF}
 )
 
 func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
@@ -28,7 +29,7 @@ func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 }
 
 func validatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
-	return append(validatorMissedBlockBitArrayKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
+	return append(legacyValidatorMissedBlockBitArrayKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
 func ValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
@@ -38,7 +39,7 @@ func ValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
 }
 
 func validatorMissedBlockBitmapPrefixKey(v sdk.ConsAddress) []byte {
-	return append(validatorMissedBlockBitArrayKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
+	return append(legacyValidatorMissedBlockBitArrayKeyPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
 func ValidatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {

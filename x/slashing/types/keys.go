@@ -43,15 +43,19 @@ const (
 //
 // - 0x01<consAddrLen (1 Byte)><consAddress_Bytes>: ValidatorSigningInfo
 //
-// - 0x02<consAddrLen (1 Byte)><consAddress_Bytes><chunk_index>: bitmap_chunk
+// - 0x12<consAddrLen (1 Byte)><consAddress_Bytes><chunk_index>: bitmap_chunk
 //
 // - 0x03<accAddrLen (1 Byte)><accAddr_Bytes>: cryptotypes.PubKey
 
 var (
-	ParamsKey                           = []byte{0x00} // Prefix for params key
-	ValidatorSigningInfoKeyPrefix       = []byte{0x01} // Prefix for signing info
-	ValidatorMissedBlockBitmapKeyPrefix = []byte{0x02} // Prefix for missed block bitmap
-	AddrPubkeyRelationKeyPrefix         = []byte{0x03} // Prefix for address-pubkey relation
+	ParamsKey                     = []byte{0x00} // Prefix for params key
+	ValidatorSigningInfoKeyPrefix = []byte{0x01} // Prefix for signing info
+	// Deprecated: use ValidatorMissedBlockBitmapKeyPrefix. This can be removed in a later release.
+	LegacyValidatorMissedBlockBitmapKeyPrefix = []byte{0x02} // Prefix for missed block bitmap
+	AddrPubkeyRelationKeyPrefix               = []byte{0x03} // Prefix for address-pubkey relation
+	ValidatorMissedBlockBitmapKeyPrefix       = []byte{0x12} // Prefix for missed block bitmap
+
+	NextMigrateValidatorMissedBlocksKey = []byte{0xFF} // Migration offset key
 )
 
 // ValidatorSigningInfoKey - stored by *Consensus* address (not operator address)

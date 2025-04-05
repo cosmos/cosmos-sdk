@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#443](https://github.com/celestiaorg/cosmos-sdk/pull/443) Added a limit of 1000 to delegation keys migration. A further 10000 keys are migrated per `BeginBlock`, tracked by `NextMigrateDelegationsByValidatorIndexKey`. 
 * (x/distribution) [#437](https://github.com/celestiaorg/cosmos-sdk/pull/437) Implement [CIP-30](https://github.com/celestiaorg/CIPs/blob/main/cips/cip-030.md).
 * (x/staking) [#444](https://github.com/celestiaorg/cosmos-sdk/pull/443) Added a limit of 1000 to historical info key migration. A further 1000 keys are migrated per `BeginBlock`, tracked by `NextMigrateHistoricalInfoKey`. 
+* (x/slashing) [#447](https://github.com/celestiaorg/cosmos-sdk/pull/447) Updates the x/slashing key prefix for validator missed block bitarray from `0x02` to `0x12` and modifies the x/slashing v4 migration handler to be deletion of old keys, only. The migration is now done lazily via `BeginBlocker`.
 
 ## [Unreleased-Cosmos-SDK]
 

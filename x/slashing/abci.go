@@ -26,5 +26,6 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 			return err
 		}
 	}
-	return nil
+
+	return k.RemoveLegacyValidatorMissedBlocks(sdkCtx)
 }

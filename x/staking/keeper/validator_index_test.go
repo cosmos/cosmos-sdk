@@ -1,6 +1,10 @@
 package keeper_test
 
 import (
+	"bytes"
+	"fmt"
+	"testing"
+
 	"cosmossdk.io/core/store"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -11,7 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDelegationsByValidatorMigration tests the multi block migration of the reverse delegation index
@@ -147,4 +153,81 @@ func getValDelegations(cdc codec.Codec, keeperStore store.KVStore, valAddr sdk.V
 	}
 
 	return delegations
+}
+
+func TestParseDelegationKey(t *testing.T) {
+	validatorAddress := sdk.ValAddress([]byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF})
+	delegatorAddress := sdk.AccAddress([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+	delegatorLength := len(delegatorAddress)
+	validatorLength := len(validatorAddress)
+	require.Equal(t, 20, delegatorLength)
+	require.Equal(t, 20, validatorLength)
+
+	delegationKey := bytes.Join([][]byte{
+		{byte(delegatorLength)},
+		delegatorAddress,
+		{byte(validatorLength)},
+		validatorAddress,
+	}, []byte{})
+
+	type testCase struct {
+		name          string
+		input         []byte
+		wantDelegator sdk.AccAddress
+		wantValidator sdk.ValAddress
+		wantErr       error
+	}
+	testCases := []testCase{
+		{
+			name:          "valid delegation key",
+			input:         delegationKey,
+			wantDelegator: delegatorAddress,
+			wantValidator: validatorAddress,
+		},
+		{
+			name:    "empty delegation key should return error",
+			input:   []byte{},
+			wantErr: fmt.Errorf("no bytes left to parse delegator length: %X", []byte{}),
+		},
+		{
+			name:    "empty delegator should return error",
+			input:   []byte{byte(delegatorLength)},
+			wantErr: fmt.Errorf("no bytes left to parse delegator address: %X", []byte{}),
+		},
+		{
+			name: "empty validator length should return error",
+			input: bytes.Join([][]byte{
+				{byte(delegatorLength)},
+				delegatorAddress,
+			}, []byte{}),
+			wantErr: fmt.Errorf("no bytes left to parse validator length: %X", []byte{}),
+		},
+		{
+			name: "empty validator should return error",
+			input: bytes.Join([][]byte{
+				{byte(delegatorLength)},
+				delegatorAddress,
+				{byte(validatorLength)},
+			}, []byte{}),
+			wantErr: fmt.Errorf("no bytes left to parse validator address: %X", []byte{}),
+		},
+		{
+			name:    "input with DelegationKey prefix should return error",
+			input:   types.DelegationKey,
+			wantErr: fmt.Errorf("input should not contain the DelegationKey prefix: %X", types.DelegationKey),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			delegator, validator, err := keeper.ParseDelegationKey(tc.input)
+			if tc.wantErr != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.wantErr.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.wantDelegator, delegator)
+				require.Equal(t, tc.wantValidator, validator)
+			}
+		})
+	}
 }

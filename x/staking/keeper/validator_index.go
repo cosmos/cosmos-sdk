@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
@@ -62,25 +63,34 @@ func (k Keeper) MigrateDelegationsByValidatorIndex(ctx sdk.Context, iterationLim
 }
 
 // ParseDelegationKey parses given key and returns delagator, validator address bytes
-func ParseDelegationKey(bz []byte) (sdk.AccAddress, sdk.ValAddress, error) {
-	delAddrLen := bz[0]
-	bz = bz[1:] // remove the length byte of delegator address.
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", bz)
+//
+// input should not contain the DelegationKey prefix.
+func ParseDelegationKey(input []byte) (sdk.AccAddress, sdk.ValAddress, error) {
+	if len(input) == 0 {
+		return nil, nil, fmt.Errorf("no bytes left to parse delegator length: %X", input)
 	}
 
-	del := bz[:int(delAddrLen)]
-	bz = bz[int(delAddrLen):] // remove the length byte of a delegator address
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", bz)
+	if bytes.HasPrefix(input, types.DelegationKey) {
+		return nil, nil, fmt.Errorf("input should not contain the DelegationKey prefix: %X", input)
 	}
 
-	bz = bz[1:] // remove the validator address bytes.
-	if len(bz) == 0 {
-		return nil, nil, fmt.Errorf("no bytes left to parse validator address: %X", bz)
+	delegatorLen := input[0]
+	input = input[1:] // remove the length byte of delegator address.
+	if len(input) == 0 {
+		return nil, nil, fmt.Errorf("no bytes left to parse delegator address: %X", input)
 	}
 
-	val := bz
+	delegator := input[:int(delegatorLen)]
+	input = input[int(delegatorLen):] // remove the delegator address.
+	if len(input) == 0 {
+		return nil, nil, fmt.Errorf("no bytes left to parse validator length: %X", input)
+	}
 
-	return del, val, nil
+	input = input[1:] // remove the length byte of the validator address.
+	if len(input) == 0 {
+		return nil, nil, fmt.Errorf("no bytes left to parse validator address: %X", input)
+	}
+
+	validator := input
+	return delegator, validator, nil
 }

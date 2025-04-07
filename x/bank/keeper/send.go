@@ -140,6 +140,8 @@ func (k BaseSendKeeper) SetParams(ctx context.Context, params types.Params) erro
 // InputOutputCoins performs multi-send functionality. It accepts an
 // input that corresponds to a series of outputs. It returns an error if the
 // input and outputs don't line up or if any single transfer of tokens fails.
+//
+// Deprecated: this function is deprecated as of Cosmos SDK v0.53 and will be removed in a future release.
 func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// Check supply invariant and validity of Coins.

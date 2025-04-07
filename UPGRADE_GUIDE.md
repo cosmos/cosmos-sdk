@@ -48,7 +48,7 @@ Using an external community pool such as `x/protocolpool` will cause the followi
 - `CommunityPoolSpend`
 - `FundCommunityPool`
 
-If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
+If your services depend on this functionality from `x/distribution`, please update them to use either `x/protocolpool` or your custom external community pool alternatives.
 
 :::
 

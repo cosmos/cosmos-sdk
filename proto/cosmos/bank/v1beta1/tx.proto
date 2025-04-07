@@ -60,6 +60,7 @@ message MsgSendResponse {}
 message MsgMultiSend {
   option (cosmos.msg.v1.signer) = "inputs";
   option (amino.name)           = "cosmos-sdk/MsgMultiSend";
+  option deprecated             = true;
 
   option (gogoproto.equal) = false;
 
@@ -70,7 +71,9 @@ message MsgMultiSend {
 }
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
-message MsgMultiSendResponse {}
+message MsgMultiSendResponse {
+  option deprecated = true;
+}
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

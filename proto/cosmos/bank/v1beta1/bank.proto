@@ -36,6 +36,8 @@ message Input {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
+  option deprecated = true;
+
   string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
@@ -49,6 +51,8 @@ message Input {
 message Output {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
+
+  option deprecated = true;
 
   string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2 [

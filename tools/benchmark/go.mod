@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0-rc.1
+	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.5.1
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.2
@@ -19,7 +19,7 @@ require (
 require (
 	cosmossdk.io/collections v1.2.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
-	cosmossdk.io/math v1.5.2 // indirect
+	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
 	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
@@ -34,7 +34,6 @@ require (
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
-	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect

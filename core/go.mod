@@ -4,8 +4,8 @@ go 1.23.0
 
 require (
 	cosmossdk.io/api v0.9.0
-	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/math v1.5.2
+	cosmossdk.io/depinject v1.2.0
+	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.71.1
@@ -13,11 +13,9 @@ require (
 )
 
 require (
-	cosmossdk.io/errors v1.0.2 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect

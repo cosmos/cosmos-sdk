@@ -37,7 +37,7 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 * SDK v0.53.x support.
 * [#23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support.
-* [#22311](https://github.com/cosmos/cosmos-sdk/pull/22311) Fix add feePayer as signer.
+* [#24408](https://github.com/cosmos/cosmos-sdk/pull/24408) Fix add feePayer as signer.
 
 ## [v0.13.8](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.8) - 2025-01-28
 

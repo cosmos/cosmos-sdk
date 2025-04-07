@@ -103,11 +103,16 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	Schema             collections.Schema
-	Params             collections.Item[types.Params]
-	AccountNumber      collections.Sequence
+	Schema        collections.Schema
+	Params        collections.Item[types.Params]
+	AccountNumber collections.Sequence
+
+	// legacy accounts contains unmigrated account data which should now implement the LegacyAccountI interface
+	// when an unmigrated account is transacted, its Migrate method is called which breaks apart
+	// the account data into address, account id, sequence, pubkey, account data, etc.
+	// and then this data is stored in the new storage formats
 	LegacyAccounts     *collections.IndexedMap[sdk.AccAddress, sdk.LegacyAccountI, AccountsIndexes]
-	AccountData        collections.Map[AccountID, sdk.AccountI]
+	AccountData        collections.Map[AccountID, sdk.AccountData]
 	AddressByAccountID collections.Map[collections.Pair[AccountID, AddressType], Address]
 	AccountIDByAddress collections.Map[collections.Pair[AddressType, Address], AccountID]
 

@@ -15,10 +15,11 @@ type AccountMigrationData struct {
 	Address       []byte
 	AccountNumber uint64
 	Sequence      uint64
-	NewAccount    AccountI
+	AccountData   AccountData
 }
 
-type AccountI interface {
+// AccountData represents any data that accounts stored
+type AccountData interface {
 	proto.Message
 }
 

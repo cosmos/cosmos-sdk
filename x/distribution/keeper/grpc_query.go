@@ -194,7 +194,7 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 		return nil, err
 	}
 
-	slashes := []types.ValidatorSlashEvent{}
+	var slashes []types.ValidatorSlashEvent
 	for _, event := range events {
 		slashes = append(slashes, *event)
 	}

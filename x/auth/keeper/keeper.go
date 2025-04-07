@@ -81,6 +81,10 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 	}
 }
 
+type AccountID = []byte
+type AddressType = uint8
+type Address = []byte
+
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
@@ -99,10 +103,15 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	Schema          collections.Schema
-	Params          collections.Item[types.Params]
-	AccountNumber   collections.Sequence
-	Accounts        *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
+	Schema             collections.Schema
+	Params             collections.Item[types.Params]
+	AccountNumber      collections.Sequence
+	LegacyAccounts     *collections.IndexedMap[sdk.AccAddress, sdk.LegacyAccountI, AccountsIndexes]
+	AccountData        collections.Map[AccountID, sdk.AccountI]
+	AddressByAccountID collections.Map[collections.Pair[AccountID, AddressType], Address]
+	AccountIDByAddress collections.Map[collections.Pair[AddressType, Address], AccountID]
+
+	Sequences       collections.Map[AccountID, uint64]
 	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
 }
 

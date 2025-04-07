@@ -77,11 +77,11 @@ var (
 	// ErrWrongPassword defines an error when the key password is invalid.
 	ErrWrongPassword = errorsmod.Register(RootCodespace, 23, "invalid account password")
 
-	// ErrInvalidSigner defines an error when the tx intended signer does not match the given signer.
-	ErrInvalidSigner = errorsmod.Register(RootCodespace, 24, "tx intended signer does not match the given signer")
+	// ErrorInvalidSigner defines an error when the tx intended signer does not match the given signer.
+	ErrorInvalidSigner = errorsmod.Register(RootCodespace, 24, "tx intended signer does not match the given signer")
 
-	// ErrInvalidGasAdjustment defines an error for an invalid gas adjustment
-	ErrInvalidGasAdjustment = errorsmod.Register(RootCodespace, 25, "invalid gas adjustment")
+	// ErrorInvalidGasAdjustment defines an error for an invalid gas adjustment
+	ErrorInvalidGasAdjustment = errorsmod.Register(RootCodespace, 25, "invalid gas adjustment")
 
 	// ErrInvalidHeight defines an error for an invalid height
 	ErrInvalidHeight = errorsmod.Register(RootCodespace, 26, "invalid height")

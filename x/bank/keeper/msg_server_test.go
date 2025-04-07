@@ -159,7 +159,6 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 func (suite *KeeperTestSuite) TestMsgMultiSend() {
 	origDenom := "sendableCoin"
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin(origDenom, 100))
-	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(origDenom, 50))
 	suite.bankKeeper.SetSendEnabled(suite.ctx, origDenom, true)
 
 	testCases := []struct {
@@ -169,65 +168,10 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 		expErrMsg string
 	}{
 		{
-			name:      "no inputs to send transaction",
-			input:     &banktypes.MsgMultiSend{},
-			expErr:    true,
-			expErrMsg: "no inputs to send transaction",
-		},
-		{
-			name: "no inputs to send transaction",
-			input: &banktypes.MsgMultiSend{
-				Outputs: []banktypes.Output{
-					{Address: accAddrs[4].String(), Coins: sendCoins},
-				},
-			},
-			expErr:    true,
-			expErrMsg: "no inputs to send transaction",
-		},
-		{
-			name: "more than one inputs to send transaction",
-			input: &banktypes.MsgMultiSend{
-				Inputs: []banktypes.Input{
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
-				},
-			},
-			expErr:    true,
-			expErrMsg: "multiple senders not allowed",
-		},
-		{
-			name: "no outputs to send transaction",
-			input: &banktypes.MsgMultiSend{
-				Inputs: []banktypes.Input{
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
-				},
-			},
-			expErr:    true,
-			expErrMsg: "no outputs to send transaction",
-		},
-		{
 			name: "invalid send to blocked address",
 			input: &banktypes.MsgMultiSend{
 				Inputs: []banktypes.Input{
 					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
-				},
-				Outputs: []banktypes.Output{
-					{Address: accAddrs[0].String(), Coins: sendCoins},
-					{Address: accAddrs[4].String(), Coins: sendCoins},
-				},
-			},
-			expErr:    true,
-			expErrMsg: "is not allowed to receive funds",
-		},
-		{
-			name: "invalid send to blocked address",
-			input: &banktypes.MsgMultiSend{
-				Inputs: []banktypes.Input{
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
-				},
-				Outputs: []banktypes.Output{
-					{Address: accAddrs[0].String(), Coins: sendCoins},
-					{Address: accAddrs[1].String(), Coins: sendCoins},
 				},
 			},
 			expErr: false,
@@ -236,18 +180,8 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			suite.mockMintCoins(minterAcc)
-			_ = suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
-			if !tc.expErr {
-				suite.mockInputOutputCoins([]sdk.AccountI{minterAcc}, accAddrs[:2])
-			}
 			_, err := suite.msgServer.MultiSend(suite.ctx, tc.input)
-			if tc.expErr {
-				suite.Require().Error(err)
-				suite.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				suite.Require().NoError(err)
-			}
+			suite.Require().Error(err)
 		})
 	}
 }

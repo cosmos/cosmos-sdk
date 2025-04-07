@@ -128,40 +128,6 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-// TestSimulateMsgSend tests the normal scenario of a valid message of type TypeMsgMultiSend.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
-	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 3)
-
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
-
-	// execute operation
-	op := simulation.SimulateMsgMultiSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	require := suite.Require()
-	require.NoError(err)
-
-	var msg types.MsgMultiSend
-	err = proto.Unmarshal(operationMsg.Msg, &msg)
-	suite.Require().NoError(err)
-	require.True(operationMsg.OK)
-	require.Len(msg.Inputs, 1)
-	require.Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Inputs[0].Address)
-	require.Equal("114949958stake", msg.Inputs[0].Coins.String())
-	require.Len(msg.Outputs, 2)
-	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Outputs[1].Address)
-	require.Equal("107287087stake", msg.Outputs[1].Coins.String())
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgMultiSend{}), sdk.MsgTypeURL(&msg))
-	require.Len(futureOperations, 0)
-}
-
 func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	const (
 		accCount       = 1
@@ -193,37 +159,6 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	suite.Require().False(operationMsg.OK)
 	suite.Require().Equal(operationMsg.Comment, "invalid transfers")
 	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgSend{}), sdk.MsgTypeURL(&msg))
-	suite.Require().Len(futureOperations, 0)
-}
-
-func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
-	const (
-		accCount  = 2
-		mAccCount = 2
-	)
-
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, accCount)
-
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: suite.app.LastBlockHeight() + 1,
-		Hash:   suite.app.LastCommitID().Hash,
-	})
-	suite.Require().NoError(err)
-
-	// execute operation
-	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccCount)
-
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().Error(err)
-
-	var msg types.MsgMultiSend
-	err = proto.Unmarshal(operationMsg.Msg, &msg)
-	suite.Require().NoError(err)
-	suite.Require().False(operationMsg.OK) // sending tokens to a module account should fail
-	suite.Require().Equal(operationMsg.Comment, "invalid transfers")
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgMultiSend{}), sdk.MsgTypeURL(&msg))
 	suite.Require().Len(futureOperations, 0)
 }
 

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-metrics"
 
@@ -82,53 +83,9 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 	return &types.MsgSendResponse{}, nil
 }
 
-func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*types.MsgMultiSendResponse, error) {
-	if len(msg.Inputs) == 0 {
-		return nil, types.ErrNoInputs
-	}
-
-	if len(msg.Inputs) != 1 {
-		return nil, types.ErrMultipleSenders
-	}
-
-	if len(msg.Outputs) == 0 {
-		return nil, types.ErrNoOutputs
-	}
-
-	if err := types.ValidateInputOutputs(msg.Inputs[0], msg.Outputs); err != nil {
-		return nil, err
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// NOTE: totalIn == totalOut should already have been checked
-	for _, in := range msg.Inputs {
-		if err := k.IsSendEnabledCoins(ctx, in.Coins...); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, out := range msg.Outputs {
-		if base, ok := k.Keeper.(BaseKeeper); ok {
-			accAddr, err := base.ak.AddressCodec().StringToBytes(out.Address)
-			if err != nil {
-				return nil, err
-			}
-
-			if k.BlockedAddr(accAddr) {
-				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", out.Address)
-			}
-		} else {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid keeper type: %T", k.Keeper)
-		}
-	}
-
-	err := k.InputOutputCoins(ctx, msg.Inputs[0], msg.Outputs)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.MsgMultiSendResponse{}, nil
+// Deprecated: to send multiple coins, construct a Tx with multiple Send messages.
+func (k msgServer) MultiSend(_ context.Context, _ *types.MsgMultiSend) (*types.MsgMultiSendResponse, error) {
+	return nil, fmt.Errorf("MsgMultiSend is deprecated")
 }
 
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {

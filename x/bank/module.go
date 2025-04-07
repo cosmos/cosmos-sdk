@@ -199,7 +199,6 @@ func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
 // WeightedOperationsX registers weighted bank module operations for simulation.
 func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
 	reg.Add(weights.Get("msg_send", 100), simulation.MsgSendFactory())
-	reg.Add(weights.Get("msg_multisend", 10), simulation.MsgMultiSendFactory())
 }
 
 // App Wiring Setup

@@ -156,6 +156,7 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 	}
 }
 
+// nolint: staticcheck // testing deprecated failure
 func (suite *KeeperTestSuite) TestMsgMultiSend() {
 	origDenom := "sendableCoin"
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin(origDenom, 100))

@@ -632,6 +632,7 @@ func (suite *KeeperTestSuite) TestSendCoinsNewAccount() {
 	require.Equal(acc1Balances, updatedAcc1Bal)
 }
 
+// nolint: staticcheck // testing deprecated code
 func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	ctx := suite.ctx
 	require := suite.Require()
@@ -661,6 +662,7 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	require.Equal(expected, acc2Balances)
 }
 
+// nolint: staticcheck // testing deprecated code
 func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
@@ -715,6 +717,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	require.Equal(expected, acc3Balances)
 }
 
+// nolint: staticcheck // testing deprecated code
 func (suite *KeeperTestSuite) TestInputOutputCoins_AccountCreated() {
 	ctx := suite.ctx
 	require := suite.Require()
@@ -748,6 +751,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoins_AccountCreated() {
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 }
 
+// nolint: staticcheck // testing deprecated code
 func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 	type restrictionArgs struct {
 		ctx      context.Context
@@ -1423,93 +1427,6 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	require.Equal(10, len(events))
 	require.Equal(abci.Event(event1), events[8])
 	require.Equal(abci.Event(event2), events[9])
-}
-
-func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
-	require := suite.Require()
-	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-
-	require.NoError(suite.bankKeeper.SetParams(ctx, banktypes.DefaultParams()))
-
-	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
-	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
-	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-	input := banktypes.Input{
-		Address: accAddrs[0].String(),
-		Coins:   coins,
-	}
-	outputs := []banktypes.Output{
-		{Address: accAddrs[2].String(), Coins: newCoins},
-		{Address: accAddrs[3].String(), Coins: newCoins2},
-	}
-
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
-	suite.authKeeper.EXPECT().HasAccount(gomock.Any(), gomock.Any()).Return(true).Times(len(outputs))
-
-	require.Error(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
-
-	events := ctx.EventManager().ABCIEvents()
-	require.Equal(1, len(events))
-
-	// Set addr's coins but not accAddrs[1]'s coins
-	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))))
-
-	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
-	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
-
-	events = ctx.EventManager().ABCIEvents()
-	require.Equal(13, len(events)) // 13 events because account funding causes extra minting + coin_spent + coin_recv events
-
-	event1 := sdk.Event{
-		Type:       sdk.EventTypeMessage,
-		Attributes: []abci.EventAttribute{},
-	}
-	event1.Attributes = append(
-		event1.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
-	)
-	require.Equal(abci.Event(event1), events[7])
-
-	// Set addr's coins and accAddrs[1]'s coins
-	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
-	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
-
-	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
-	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-
-	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
-	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
-
-	events = ctx.EventManager().ABCIEvents()
-	require.Equal(31, len(events)) // 31 due to account funding + coin_spent + coin_recv events
-
-	event2 := sdk.Event{
-		Type:       banktypes.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
-	}
-	event2.Attributes = append(
-		event2.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[2].String()},
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
-	)
-	event3 := sdk.Event{
-		Type:       banktypes.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
-	}
-	event3.Attributes = append(
-		event3.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[3].String()},
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
-	)
-	require.Contains(events, abci.Event(event1))
-	require.Contains(events, abci.Event(event2))
-	require.Contains(events, abci.Event(event3))
 }
 
 func (suite *KeeperTestSuite) TestSpendableCoins() {

@@ -333,10 +333,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &banktypes.SendAuthorization{AllowList: nil},
 			pulsar: &bankapi.SendAuthorization{AllowList: nil},
 		},
-		"bank/msg_multi_send/nil_everything": {
-			gogo:   &banktypes.MsgMultiSend{},
-			pulsar: &bankapi.MsgMultiSend{},
-		},
 		"gov/v1_msg_submit_proposal": {
 			gogo:   &gov_v1_types.MsgSubmitProposal{},
 			pulsar: &gov_v1_api.MsgSubmitProposal{},

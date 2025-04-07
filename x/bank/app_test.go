@@ -14,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -36,21 +35,13 @@ import (
 )
 
 type (
-	expectedBalance struct {
-		addr  sdk.AccAddress
-		coins sdk.Coins
-	}
-
 	appTestCase struct {
-		desc             string
-		expSimPass       bool
-		expPass          bool
-		msgs             []sdk.Msg
-		accNums          []uint64
-		accSeqs          []uint64
-		privKeys         []cryptotypes.PrivKey
-		expectedBalances []expectedBalance
-		expInError       []string
+		desc       string
+		expSimPass bool
+		expPass    bool
+		msgs       []sdk.Msg
+		accSeqs    []uint64
+		expInError []string
 	}
 )
 
@@ -59,40 +50,10 @@ var (
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
-	addr3 = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
+	coins = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 
 	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
-
-	multiSendMsg1 = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{types.NewOutput(addr2, coins)},
-	}
-	multiSendMsg2 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(addr2, halfCoins),
-			types.NewOutput(addr3, halfCoins),
-		},
-	}
-	multiSendMsg3 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr2, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(addr1, coins),
-		},
-	}
-	multiSendMsg4 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(moduleAccAddr, coins),
-		},
-	}
-	invalidMultiSendMsg = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins), types.NewInput(addr2, coins)},
-		Outputs: []types.Output{},
-	}
 )
 
 type suite struct {
@@ -183,189 +144,6 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	require.Equal(t, origAccNum, res2.GetAccountNumber())
 	require.Equal(t, origSeq+1, res2.GetSequence())
-}
-
-func TestMsgMultiSendWithAccounts(t *testing.T) {
-	acc := &authtypes.BaseAccount{
-		Address: addr1.String(),
-	}
-
-	genAccs := []authtypes.GenesisAccount{acc}
-	s := createTestSuite(t, genAccs)
-	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false)
-
-	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
-	require.NoError(t, err)
-	_, err = baseApp.Commit()
-	require.NoError(t, err)
-
-	res1 := s.AccountKeeper.GetAccount(ctx, addr1)
-	require.NotNil(t, res1)
-	require.Equal(t, acc, res1.(*authtypes.BaseAccount))
-
-	testCases := []appTestCase{
-		{
-			desc:       "make a valid tx",
-			msgs:       []sdk.Msg{multiSendMsg1},
-			accNums:    []uint64{0},
-			accSeqs:    []uint64{0},
-			expSimPass: true,
-			expPass:    true,
-			privKeys:   []cryptotypes.PrivKey{priv1},
-			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 57)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
-			},
-		},
-		{
-			desc:       "wrong accNum should pass Simulate, but not Deliver",
-			msgs:       []sdk.Msg{multiSendMsg1, multiSendMsg2},
-			accNums:    []uint64{1}, // wrong account number
-			accSeqs:    []uint64{1},
-			expSimPass: true, // doesn't check signature
-			expPass:    false,
-			privKeys:   []cryptotypes.PrivKey{priv1},
-		},
-		{
-			desc:       "wrong accSeq should not pass Simulate",
-			msgs:       []sdk.Msg{multiSendMsg4},
-			accNums:    []uint64{0},
-			accSeqs:    []uint64{0}, // wrong account sequence
-			expSimPass: false,
-			expPass:    false,
-			privKeys:   []cryptotypes.PrivKey{priv1},
-		},
-		{
-			desc:       "multiple inputs not allowed",
-			msgs:       []sdk.Msg{invalidMultiSendMsg},
-			accNums:    []uint64{0},
-			accSeqs:    []uint64{0},
-			expSimPass: false,
-			expPass:    false,
-			privKeys:   []cryptotypes.PrivKey{priv1},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Logf("testing %s", tc.desc)
-		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
-		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
-		if tc.expPass {
-			require.NoError(t, err)
-		} else {
-			require.Error(t, err)
-		}
-
-		for _, eb := range tc.expectedBalances {
-			checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
-		}
-	}
-}
-
-func TestMsgMultiSendMultipleOut(t *testing.T) {
-	acc1 := &authtypes.BaseAccount{
-		Address: addr1.String(),
-	}
-	acc2 := &authtypes.BaseAccount{
-		Address: addr2.String(),
-	}
-
-	genAccs := []authtypes.GenesisAccount{acc1, acc2}
-	s := createTestSuite(t, genAccs)
-	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false)
-
-	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
-	require.NoError(t, err)
-	_, err = baseApp.Commit()
-	require.NoError(t, err)
-
-	testCases := []appTestCase{
-		{
-			msgs:       []sdk.Msg{multiSendMsg2},
-			accNums:    []uint64{0},
-			accSeqs:    []uint64{0},
-			expSimPass: true,
-			expPass:    true,
-			privKeys:   []cryptotypes.PrivKey{priv1},
-			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 47)}},
-				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
-		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
-		require.NoError(t, err)
-
-		for _, eb := range tc.expectedBalances {
-			checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
-		}
-	}
-}
-
-func TestMsgMultiSendDependent(t *testing.T) {
-	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
-	acc2 := authtypes.NewBaseAccountWithAddress(addr2)
-	err := acc2.SetAccountNumber(1)
-	require.NoError(t, err)
-
-	genAccs := []authtypes.GenesisAccount{acc1, acc2}
-	s := createTestSuite(t, genAccs)
-	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false)
-
-	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	_, err = baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
-	require.NoError(t, err)
-	_, err = baseApp.Commit()
-	require.NoError(t, err)
-
-	testCases := []appTestCase{
-		{
-			msgs:       []sdk.Msg{multiSendMsg1},
-			accNums:    []uint64{0},
-			accSeqs:    []uint64{0},
-			expSimPass: true,
-			expPass:    true,
-			privKeys:   []cryptotypes.PrivKey{priv1},
-			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
-			},
-		},
-		{
-			msgs:       []sdk.Msg{multiSendMsg3},
-			accNums:    []uint64{1},
-			accSeqs:    []uint64{0},
-			expSimPass: true,
-			expPass:    true,
-			privKeys:   []cryptotypes.PrivKey{priv2},
-			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
-		txConfig := moduletestutil.MakeTestTxConfig()
-		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
-		require.NoError(t, err)
-
-		for _, eb := range tc.expectedBalances {
-			checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
-		}
-	}
 }
 
 func TestMsgSetSendEnabled(t *testing.T) {

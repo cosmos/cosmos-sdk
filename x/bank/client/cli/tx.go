@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -85,7 +86,7 @@ func NewMultiSendTxCmd(ac address.Codec) *cobra.Command {
 		Short: "Deprecated: multi-send is deprecated as of Cosmos SDK v0.53",
 		Args:  cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("Deprecated: multi-send is deprecated as of Cosmos SDK v0.53")
+			return fmt.Errorf("deprecated: multi-send is deprecated as of Cosmos SDK v0.53")
 		},
 	}
 

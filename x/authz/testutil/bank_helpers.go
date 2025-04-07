@@ -12,6 +12,7 @@ func (k MockBankKeeper) Send(goCtx context.Context, msg *bank.MsgSend) (*bank.Ms
 	return nil, nil
 }
 
+// nolint: staticcheck // keep deprecated method until removed
 func (k MockBankKeeper) MultiSend(goCtx context.Context, msg *bank.MsgMultiSend) (*bank.MsgMultiSendResponse, error) {
 	return nil, nil
 }

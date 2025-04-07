@@ -26,7 +26,7 @@ type SendKeeper interface {
 	PrependSendRestriction(restriction types.SendRestrictionFn)
 	ClearSendRestriction()
 
-	InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error
+	InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error // nolint: staticcheck // keep deprecated code until we remove all
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	GetParams(ctx context.Context) types.Params

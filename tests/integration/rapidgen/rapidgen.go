@@ -118,7 +118,6 @@ var (
 
 		// bank
 		GenType(&banktypes.MsgSend{}, &bankapi.MsgSend{}, GenOpts.WithDisallowNil()),
-		GenType(&banktypes.MsgMultiSend{}, &bankapi.MsgMultiSend{}, GenOpts.WithDisallowNil()),
 		GenType(&banktypes.MsgUpdateParams{}, &bankapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 		GenType(&banktypes.MsgSetSendEnabled{}, &bankapi.MsgSetSendEnabled{}, GenOpts),
 

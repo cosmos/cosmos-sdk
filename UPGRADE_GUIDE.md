@@ -37,8 +37,7 @@ app.ModuleManager.SetOrderPreBlockers(
 
 :::warning
 
-Using `protocolpool` will cause the following `x/distribution` handlers to return an error:
-
+Using an external community pool such as `x/protocolpool` will cause the following `x/distribution` handlers to return an error:
 
 **QueryService**
 

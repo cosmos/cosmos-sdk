@@ -2,6 +2,7 @@ package prompt
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -36,7 +37,7 @@ func promptMessage(
 		fieldName := string(field.Name())
 
 		// Set up validation function
-		var validate func(string) error = ValidatePromptNotEmpty
+		validate := ValidatePromptNotEmpty
 
 		// If this signer field has already a valid default value set,
 		// use that value as the default prompt value. This is useful for
@@ -97,7 +98,7 @@ func promptMessage(
 			// For testing, read from provided input
 			reader := bufio.NewReader(stdIn)
 			result, err = reader.ReadString('\n')
-			if err != nil && err != io.EOF {
+			if err != nil && !errors.Is(err, io.EOF) {
 				return msg, fmt.Errorf("failed to read input for %s: %w", fieldName, err)
 			}
 			result = strings.TrimSpace(result)

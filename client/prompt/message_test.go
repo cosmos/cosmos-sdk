@@ -12,16 +12,14 @@ import (
 	address2 "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
+// getReader creates an io.ReadCloser for testing input simulation.
+// it provides inputs as newline-separated strings.
 func getReader(inputs []string) io.ReadCloser {
-	// https://github.com/manifoldco/promptui/issues/63#issuecomment-621118463
-	var paddedInputs []string
-	for _, input := range inputs {
-		padding := strings.Repeat("a", 4096-1-len(input)%4096)
-		paddedInputs = append(paddedInputs, input+"\n"+padding)
-	}
-	return io.NopCloser(strings.NewReader(strings.Join(paddedInputs, "")))
+	return io.NopCloser(strings.NewReader(strings.Join(inputs, "\n")))
 }
 
+// TestPromptMessage tests the standard library implementation of the message prompting system.
+// It verifies that various input types are correctly handled when populating protobuf messages.
 func TestPromptMessage(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -42,15 +40,17 @@ func TestPromptMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// https://github.com/manifoldco/promptui/issues/63#issuecomment-621118463
-			var paddedInputs []string
-			for _, input := range tt.inputs {
-				padding := strings.Repeat("a", 4096-1-len(input)%4096)
-				paddedInputs = append(paddedInputs, input+"\n"+padding)
-			}
-			reader := io.NopCloser(strings.NewReader(strings.Join(paddedInputs, "")))
+			reader := getReader(tt.inputs)
 
-			got, err := promptMessage(address2.NewBech32Codec("cosmos"), address2.NewBech32Codec("cosmosvaloper"), address2.NewBech32Codec("cosmosvalcons"), "prefix", reader, tt.msg)
+			// test with the standard library-based implementation
+			got, err := promptMessage(
+				address2.NewBech32Codec("cosmos"),
+				address2.NewBech32Codec("cosmosvaloper"),
+				address2.NewBech32Codec("cosmosvalcons"),
+				"prefix",
+				reader,
+				tt.msg,
+			)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 		})

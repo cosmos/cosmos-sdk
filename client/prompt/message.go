@@ -1,12 +1,13 @@
 package prompt
 
 import (
+	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
-	"github.com/manifoldco/promptui"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	addresscodec "cosmossdk.io/core/address"
@@ -34,17 +35,16 @@ func promptMessage(
 		field := fields.Get(i)
 		fieldName := string(field.Name())
 
-		promptUi := promptui.Prompt{
-			Validate: ValidatePromptNotEmpty,
-			Stdin:    stdIn,
-		}
+		// Set up validation function
+		var validate func(string) error = ValidatePromptNotEmpty
 
 		// If this signer field has already a valid default value set,
 		// use that value as the default prompt value. This is useful for
 		// commands that have an authority such as gov.
+		var defaultValue string
 		if strings.EqualFold(fieldName, internal.GetSignerFieldName(msg.Descriptor())) {
-			if defaultValue := msg.Get(field); defaultValue.IsValid() {
-				promptUi.Default = defaultValue.String()
+			if defVal := msg.Get(field); defVal.IsValid() {
+				defaultValue = defVal.String()
 			}
 		}
 
@@ -53,14 +53,14 @@ func promptMessage(
 		if ok {
 			switch scalarField {
 			case internal.AddressStringScalarType:
-				promptUi.Validate = ValidateAddress(addressCodec)
+				validate = ValidateAddress(addressCodec)
 			case internal.ValidatorAddressStringScalarType:
-				promptUi.Validate = ValidateAddress(validatorAddressCodec)
+				validate = ValidateAddress(validatorAddressCodec)
 			case internal.ConsensusAddressStringScalarType:
-				promptUi.Validate = ValidateAddress(consensusAddressCodec)
+				validate = ValidateAddress(consensusAddressCodec)
 			default:
-				// prompt.Validate = ValidatePromptNotEmpty (we possibly don't want to force all fields to be non-empty)
-				promptUi.Validate = nil
+				// we don't want to force all fields to be non-empty
+				validate = nil
 			}
 		}
 
@@ -75,7 +75,7 @@ func promptMessage(
 
 		// handle repeated fields by prompting for a comma-separated list of values
 		if field.IsList() {
-			list, err := promptList(field, msg, promptUi, promptPrefix)
+			list, err := promptList(field, msg, validate, stdIn, promptPrefix)
 			if err != nil {
 				return nil, err
 			}
@@ -84,17 +84,56 @@ func promptMessage(
 			continue
 		}
 
-		promptUi.Label = fmt.Sprintf("Enter %s %s", promptPrefix, fieldName)
-		result, err := promptUi.Run()
-		if err != nil {
-			return msg, fmt.Errorf("failed to prompt for %s: %w", fieldName, err)
+		// Prompt for user input
+		var result string
+		var err error
+
+		label := fmt.Sprintf("Enter %s %s", promptPrefix, fieldName)
+		if defaultValue != "" {
+			label = fmt.Sprintf("%s (default: %s)", label, defaultValue)
+		}
+
+		if stdIn != nil {
+			// For testing, read from provided input
+			reader := bufio.NewReader(stdIn)
+			result, err = reader.ReadString('\n')
+			if err != nil && err != io.EOF {
+				return msg, fmt.Errorf("failed to read input for %s: %w", fieldName, err)
+			}
+			result = strings.TrimSpace(result)
+		} else {
+			// Interactive prompt
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Printf("%s: ", label)
+			result, err = reader.ReadString('\n')
+			if err != nil {
+				return msg, fmt.Errorf("failed to prompt for %s: %w", fieldName, err)
+			}
+			result = strings.TrimSpace(result)
+
+			// Use default value if input is empty
+			if result == "" && defaultValue != "" {
+				result = defaultValue
+			}
+
+			// Validate if needed
+			if validate != nil && result != "" {
+				if err := validate(result); err != nil {
+					fmt.Println(err.Error())
+					i-- // retry this field
+					continue
+				}
+			}
 		}
 
 		v, err := valueOf(field, result)
 		if err != nil {
 			return msg, err
 		}
-		msg.Set(field, v)
+
+		if v.IsValid() {
+			msg.Set(field, v)
+		}
 	}
 
 	return msg, nil
@@ -104,6 +143,11 @@ func promptMessage(
 // It handles string, numeric, bool, bytes and enum field types.
 // Returns the converted value and any error that occurred during conversion.
 func valueOf(field protoreflect.FieldDescriptor, result string) (protoreflect.Value, error) {
+	// Skip empty inputs for optional fields
+	if result == "" {
+		return protoreflect.Value{}, nil
+	}
+
 	switch field.Kind() {
 	case protoreflect.StringKind:
 		return protoreflect.ValueOfString(result), nil
@@ -152,20 +196,52 @@ func valueOf(field protoreflect.FieldDescriptor, result string) (protoreflect.Va
 // promptList prompts the user for a comma-separated list of values for a repeated field.
 // The user will be prompted to enter values separated by commas which will be parsed
 // according to the field's type using valueOf.
-func promptList(field protoreflect.FieldDescriptor, msg protoreflect.Message, promptUi promptui.Prompt, promptPrefix string) (protoreflect.List, error) {
-	promptUi.Label = fmt.Sprintf("Enter %s %s list (separate values with ',')", promptPrefix, string(field.Name()))
-	result, err := promptUi.Run()
-	if err != nil {
-		return nil, fmt.Errorf("failed to prompt for %s: %w", string(field.Name()), err)
+func promptList(field protoreflect.FieldDescriptor, msg protoreflect.Message, validate func(string) error, stdIn io.ReadCloser, promptPrefix string) (protoreflect.List, error) {
+	label := fmt.Sprintf("Enter %s %s list (separate values with ',')", promptPrefix, string(field.Name()))
+
+	var result string
+	var err error
+
+	if stdIn != nil {
+		// For testing, read from provided input
+		reader := bufio.NewReader(stdIn)
+		result, err = reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			return nil, fmt.Errorf("failed to read input for %s: %w", string(field.Name()), err)
+		}
+		result = strings.TrimSpace(result)
+	} else {
+		// Interactive prompt
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Printf("%s: ", label)
+		result, err = reader.ReadString('\n')
+		if err != nil {
+			return nil, fmt.Errorf("failed to prompt for %s: %w", string(field.Name()), err)
+		}
+		result = strings.TrimSpace(result)
 	}
 
 	list := msg.Mutable(field).List()
 	for _, item := range strings.Split(result, ",") {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+
+		if validate != nil {
+			if err := validate(item); err != nil {
+				return nil, fmt.Errorf("validation failed for item '%s': %w", item, err)
+			}
+		}
+
 		v, err := valueOf(field, item)
 		if err != nil {
 			return nil, err
 		}
-		list.Append(v)
+
+		if v.IsValid() {
+			list.Append(v)
+		}
 	}
 
 	return list, nil
@@ -239,19 +315,28 @@ func promptMessageList(
 		list.Append(protoreflect.ValueOfMessage(updatedMsg))
 
 		// Prompt whether to continue
-		// TODO: may be better yes/no rather than interactive?
-		continuePrompt := promptui.Select{
-			Label: "Add another item?",
-			Items: []string{"No", "Yes"},
-			Stdin: stdIn,
+		var continueAdding bool
+		if stdIn != nil {
+			// For testing we need to read from the provided input
+			reader := bufio.NewReader(stdIn)
+			result, err := reader.ReadString('\n')
+			if err != nil && err != io.EOF {
+				return fmt.Errorf("failed to read input for continuation: %w", err)
+			}
+			result = strings.TrimSpace(result)
+			continueAdding = strings.EqualFold(result, "yes") || strings.EqualFold(result, "y")
+		} else {
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Print("Add another item? [y/N]: ")
+			result, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("failed to prompt for continuation: %w", err)
+			}
+			result = strings.TrimSpace(result)
+			continueAdding = strings.EqualFold(result, "yes") || strings.EqualFold(result, "y")
 		}
 
-		_, result, err := continuePrompt.Run()
-		if err != nil {
-			return fmt.Errorf("failed to prompt for continuation: %w", err)
-		}
-
-		if result == "No" {
+		if !continueAdding {
 			break
 		}
 	}

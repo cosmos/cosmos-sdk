@@ -5,3 +5,5 @@ module cosmossdk.io/schema
 // apps could be patched to support indexing if desired.
 
 go 1.12
+
+retract v1.0.0

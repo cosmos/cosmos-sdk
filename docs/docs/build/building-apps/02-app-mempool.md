@@ -52,7 +52,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go
 ```
 
 This default implementation can be overridden by the application developer in
-favor of a custom implementation in [`app.go`](./01-app-go-v2.md):
+favor of a custom implementation in [`app.go`](./01-app-go-di.md):
 
 ```go
 prepareOpt := func(app *baseapp.BaseApp) {
@@ -83,7 +83,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#
 ```
 
 Like `PrepareProposal` this implementation is the default and can be modified by
-the application developer in [`app.go`](./01-app-go-v2.md). If you decide to implement
+the application developer in [`app.go`](./01-app-go-di.md). If you decide to implement
 your own `ProcessProposal` handler, you must be sure to ensure that the transactions
 provided in the proposal DO NOT exceed the maximum block gas (if set).
 
@@ -107,7 +107,7 @@ Namely, the SDK provides the following mempools:
 * [Sender Nonce Mempool](#sender-nonce-mempool)
 * [Priority Nonce Mempool](#priority-nonce-mempool)
 
-The default SDK is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-v2.md):
+The default SDK is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-di.md):
 
 ```go
 nonceMempool := mempool.NewSenderNonceMempool()

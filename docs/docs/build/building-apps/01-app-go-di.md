@@ -29,13 +29,13 @@ The `app_config.go` file is the single place to configure all modules parameters
 1. Create the `AppConfig` variable:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/simapp/app_di.go#L93-L99
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_di.go#L113-L161
     ```
 
     Where the `appConfig`, combine the [runtime](./00-runtime.md) and the modules configuration.
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/simapp/app_config.go#L107-L111
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L102-L106
     ```
 
 2. Configure the `runtime` module:
@@ -44,7 +44,7 @@ The `app_config.go` file is the single place to configure all modules parameters
     They are named in the order they should be executed by the module manager.
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/simapp/app_config.go#L110-L187
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L103-L188
     ```
 
 3. Wire the other modules:

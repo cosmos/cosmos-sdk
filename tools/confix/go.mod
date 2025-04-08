@@ -3,7 +3,7 @@ module cosmossdk.io/tools/confix
 go 1.23.2
 
 require (
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
+	github.com/cosmos/cosmos-sdk v0.53.0-rc.2
 	github.com/creachadair/atomicfile v0.3.7
 	github.com/creachadair/tomledit v0.0.27
 	github.com/pelletier/go-toml/v2 v2.2.4

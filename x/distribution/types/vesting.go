@@ -1,4 +1,4 @@
-package exported
+package types
 
 import (
 	"time"
@@ -6,10 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// VestingAccount defines an account type that vests coins via a vesting schedule.
+// VestingAccount defines an interface used for account vesting.
 type VestingAccount interface {
-	sdk.AccountI
-
 	// LockedCoins returns the set of coins that are not spendable (i.e. locked),
 	// defined as the vesting coins that are not delegated.
 	//
@@ -28,16 +26,10 @@ type VestingAccount interface {
 	// vesting account performs an undelegation.
 	TrackUndelegation(amount sdk.Coins)
 
-	GetVestedCoins(blockTime time.Time) sdk.Coins
-	GetVestingCoins(blockTime time.Time) sdk.Coins
-
-	GetStartTime() int64
-	GetEndTime() int64
-
 	GetOriginalVesting() sdk.Coins
 	GetDelegatedFree() sdk.Coins
 	GetDelegatedVesting() sdk.Coins
 
-	// UpdateSchedule updates the original vesting amount for the account.
+	// UpdateSchedule updates the original vesting schedule for the account.
 	UpdateSchedule(blockTime time.Time, amount sdk.Coins) error
 }

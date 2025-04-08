@@ -254,6 +254,34 @@ func (cva ContinuousVestingAccount) Validate() error {
 	return cva.BaseVestingAccount.Validate()
 }
 
+// UpdateSchedule updates the vesting schedule for a continuous vesting account.
+// It adds the entirety of the input amount to the OriginalVesting schedule.
+// Denominations in the input amount that are not present in the OriginalVesting schedule are ignored.
+func (cva *ContinuousVestingAccount) UpdateSchedule(blockTime time.Time, amount sdk.Coins) error {
+	if blockTime.Unix() >= cva.EndTime {
+		return nil
+	}
+
+	// 1. Get the original vesting schedule
+	originalVesting := cva.BaseVestingAccount.GetOriginalVesting()
+
+	// 2. Iterate over the input amount
+	for _, coin := range amount {
+		// 3. Check if the denomination is originally vesting
+		origCoin := originalVesting.AmountOf(coin.Denom)
+		// 4. If the denomination wasn't originally vesting, skip it.
+		// Do not add new denominations to the original vesting schedule during an update.
+		if origCoin.IsZero() {
+			continue
+		}
+
+		// 5. Add the coin to the original vesting schedule
+		cva.BaseVestingAccount.OriginalVesting = cva.BaseVestingAccount.OriginalVesting.Add(coin)
+	}
+
+	return nil
+}
+
 // Periodic Vesting Account
 
 var (
@@ -387,6 +415,11 @@ func (pva PeriodicVestingAccount) Validate() error {
 	return pva.BaseVestingAccount.Validate()
 }
 
+// UpdateSchedule for periodic vesting accounts is not implemented.
+func (pva *PeriodicVestingAccount) UpdateSchedule(blockTime time.Time, amount sdk.Coins) error {
+	return nil
+}
+
 // Delayed Vesting Account
 
 var (
@@ -453,6 +486,35 @@ func (dva DelayedVestingAccount) Validate() error {
 	return dva.BaseVestingAccount.Validate()
 }
 
+// UpdateSchedule updates the vesting schedule for a delayed vesting account.
+// if the block time is before the end time, it adds the input amount to the original vesting schedule.
+// If the block time is at or after the end time, it does nothing.
+func (dva *DelayedVestingAccount) UpdateSchedule(blockTime time.Time, amount sdk.Coins) error {
+	if blockTime.Unix() >= dva.EndTime {
+		// Account is fully vested, no updates to the original vesting schedule.
+		return nil
+	}
+
+	// 1. Get the original vesting schedule
+	originalVesting := dva.BaseVestingAccount.GetOriginalVesting()
+
+	// 2. Iterate over the input amount
+	for _, coin := range amount {
+		// 3. Check if the denomination is originally vesting
+		origCoin := originalVesting.AmountOf(coin.Denom)
+		// 4. If the denomination wasn't originally vesting, skip it.
+		// Do not add new denominations to the original vesting schedule during an update.
+		if origCoin.IsZero() {
+			continue
+		}
+
+		// 5. Add the coin to the original vesting schedule
+		dva.BaseVestingAccount.OriginalVesting = dva.BaseVestingAccount.OriginalVesting.Add(coin)
+	}
+
+	return nil
+}
+
 //-----------------------------------------------------------------------------
 // Permanent Locked Vesting Account
 
@@ -517,4 +579,9 @@ func (plva PermanentLockedAccount) Validate() error {
 	}
 
 	return plva.BaseVestingAccount.Validate()
+}
+
+// UpdateSchedule updates the vesting schedule for a permanent locked account.
+func (plva *PermanentLockedAccount) UpdateSchedule(blockTime time.Time, amount sdk.Coins) error {
+	return nil
 }

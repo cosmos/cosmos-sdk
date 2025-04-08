@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -923,4 +924,535 @@ func initBaseAccount() (*authtypes.BaseAccount, sdk.Coins) {
 
 func TestVestingAccountTestSuite(t *testing.T) {
 	suite.Run(t, new(VestingAccountTestSuite))
+}
+
+func TestUpdateScheduleContinuousVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	bacc, _ := initBaseAccount()
+
+	testCases := []struct {
+		name            string
+		startTime       int64
+		endTime         int64
+		originalVesting sdk.Coins
+		rewardCoins     sdk.Coins
+		testTime        int64     // Time at which UpdateSchedule is called
+		expectedVesting sdk.Coins // Expected OriginalVesting *after* update
+		expectedEndTime int64     // EndTime should not change
+		expectError     bool      // Error expected from New... or UpdateSchedule
+	}{
+		{
+			name:            "update halfway through vesting period",
+			startTime:       now.Unix(),
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100)),
+			testTime:        now.Add(12 * time.Hour).Unix(),
+			// Expected: 1000 (original) + 100 (full reward) = 1100
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1100)),
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+			expectError:     false,
+		},
+		{
+			name:            "update 75% through vesting period",
+			startTime:       now.Unix(),
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100)),
+			testTime:        now.Add(18 * time.Hour).Unix(),
+			// Expected: 1000 (original) + 100 (full reward) = 1100
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1100)),
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+			expectError:     false,
+		},
+		{
+			name:            "update after vesting period completed - should error",
+			startTime:       now.Add(-48 * time.Hour).Unix(),
+			endTime:         now.Add(-24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100)),
+			testTime:        now.Unix(), // Test time is after end time
+			// Expected: UpdateSchedule should error, OriginalVesting remains 1000
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			expectedEndTime: now.Add(-24 * time.Hour).Unix(),
+			expectError:     true, // Expect error from UpdateSchedule
+		},
+		{
+			name:            "update at exactly the vesting end time - should error",
+			startTime:       now.Add(-24 * time.Hour).Unix(),
+			endTime:         now.Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100)),
+			testTime:        now.Unix(), // Test time is exactly end time
+			// Expected: UpdateSchedule should error, OriginalVesting remains 1000
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			expectedEndTime: now.Unix(),
+			expectError:     true, // Expect error from UpdateSchedule
+		},
+		{
+			name:            "update before start time",
+			startTime:       now.Add(1 * time.Hour).Unix(),
+			endTime:         now.Add(25 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100)),
+			testTime:        now.Unix(), // Test time is before start time
+			// Expected: 1000 (original) + 100 (full reward) = 1100
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1100)),
+			expectedEndTime: now.Add(25 * time.Hour).Unix(),
+			expectError:     false,
+		},
+		{
+			name:            "update at exactly the start time",
+			startTime:       now.Unix(),
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100)),
+			testTime:        now.Unix(), // Test time is exactly start time
+			// Expected: 1000 (original) + 100 (full reward) = 1100
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1100)),
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+			expectError:     false,
+		},
+		{
+			name:            "multiple denominations, update halfway",
+			startTime:       now.Unix(),
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000), sdk.NewInt64Coin(feeDenom, 500)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100), sdk.NewInt64Coin(feeDenom, 50)),
+			testTime:        now.Add(12 * time.Hour).Unix(),
+			// Expected: stake: 1000 + 100 = 1100, fee: 500 + 50 = 550
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1100), sdk.NewInt64Coin(feeDenom, 550)),
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+			expectError:     false,
+		},
+		{
+			name:            "rewards contain denom not in original vesting",
+			startTime:       now.Unix(),
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100), sdk.NewInt64Coin(feeDenom, 50)), // feeDenom not in original
+			testTime:        now.Add(12 * time.Hour).Unix(),
+			// Expected: stake: 1000 + 100 = 1100. Fee denom ignored.
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1100)),
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+			expectError:     false,
+		},
+		{
+			name:            "zero rewards",
+			startTime:       now.Unix(),
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 0)),
+			testTime:        now.Add(12 * time.Hour).Unix(),
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)), // No change
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+			expectError:     false,
+		},
+		{
+			name:            "nil rewards",
+			startTime:       now.Unix(),
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     nil,
+			testTime:        now.Add(12 * time.Hour).Unix(),
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)), // No change
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+			expectError:     false,
+		},
+		{
+			name:            "start time equals end time (zero duration) - should error on creation",
+			startTime:       now.Unix(),
+			endTime:         now.Unix(), // Zero duration
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000)),
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100)),
+			testTime:        now.Add(-1 * time.Hour).Unix(),
+			// Expected: Error during NewContinuousVestingAccount due to zero duration
+			expectedVesting: nil, // Not relevant as creation fails
+			expectedEndTime: now.Unix(),
+			expectError:     true, // Expect error from NewContinuousVestingAccount
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cva, err := types.NewContinuousVestingAccount(bacc, tc.originalVesting, tc.startTime, tc.endTime)
+			if tc.expectError && err != nil {
+				// If we expected an error from New... and got one, test passes
+				require.Error(t, err)
+				return
+			} else if err != nil {
+				// If we got an error from New... but didn't expect one
+				require.NoError(t, err, "Unexpected error during account creation")
+			}
+
+			// Store original vesting before update for comparison in post-update checks
+			originalVestingBeforeUpdate := cva.GetOriginalVesting()
+
+			// Update the vesting schedule
+			err = cva.UpdateSchedule(time.Unix(tc.testTime, 0), tc.rewardCoins)
+			if tc.expectError {
+				// Check that OriginalVesting did NOT change
+				require.Equal(t, originalVestingBeforeUpdate, cva.OriginalVesting, "OriginalVesting should not change on failed update")
+				return
+			}
+
+			// If no error was expected from UpdateSchedule
+			require.NoError(t, err, "Unexpected error during UpdateSchedule")
+
+			// Verify results after successful update
+			require.Equal(t, tc.expectedVesting, cva.OriginalVesting, "OriginalVesting mismatch after update")
+			require.Equal(t, tc.expectedEndTime, cva.EndTime, "EndTime mismatch")
+
+			// Verify GetVestedCoins logic still works correctly based on the *new* original vesting amount
+			// Check at the test time itself
+			currentVested := cva.GetVestedCoins(time.Unix(tc.testTime, 0))
+
+			// Check at a future time (e.g., end time) - only if duration > 0
+			if tc.endTime > tc.startTime {
+				futureVested := cva.GetVestedCoins(time.Unix(tc.endTime, 0))
+				// At the end time, the vested amount should equal the *new* original vesting total
+				require.Equal(t, tc.expectedVesting, futureVested, "Vesting at end time should equal the new original vesting")
+
+				// Check that vesting progresses correctly after the update
+				if tc.testTime < tc.endTime {
+					midPointTime := tc.testTime + (tc.endTime-tc.testTime)/2
+					midPointVested := cva.GetVestedCoins(time.Unix(midPointTime, 0))
+
+					// Vested amount should be >= current vested amount (unless currentVested is nil due to testTime < startTime)
+					if currentVested != nil {
+						require.True(t, midPointVested.IsAllGTE(currentVested), "Vested coins should not decrease over time after update (%v vs %v)", currentVested, midPointVested)
+					}
+
+					// If the schedule was actually updated (expectedVesting > originalVestingBeforeUpdate)
+					// and the midpoint is after the start time, check that more coins vested than at testTime.
+					if !originalVestingBeforeUpdate.Equal(tc.expectedVesting) && midPointTime > tc.startTime {
+						// Get vested coins based on OLD schedule at midpoint
+						oldScalar := math.LegacyNewDec(midPointTime - tc.startTime).Quo(math.LegacyNewDec(tc.endTime - tc.startTime))
+						var oldMidPointVested sdk.Coins
+						for _, ovc := range originalVestingBeforeUpdate {
+							vestedAmt := math.LegacyNewDecFromInt(ovc.Amount).Mul(oldScalar).RoundInt()
+							oldMidPointVested = oldMidPointVested.Add(sdk.NewCoin(ovc.Denom, vestedAmt))
+						}
+
+						// New vested amount at midpoint should be greater than old vested amount at midpoint
+						require.True(t, midPointVested.IsAnyGT(oldMidPointVested), "Expected more coins to vest at midpoint after update (Old: %v, New: %v)", oldMidPointVested, midPointVested)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestUpdateScheduleDelayedVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	bacc, initialOrigCoins := initBaseAccount()
+	rewardCoins := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100))
+	feeReward := sdk.NewInt64Coin(feeDenom, 50)
+
+	testCases := []struct {
+		name            string
+		endTime         int64
+		originalVesting sdk.Coins
+		rewardCoins     sdk.Coins
+		testTime        int64 // Time at which UpdateSchedule is called
+		expectedVesting sdk.Coins
+		expectedEndTime int64 // EndTime should not change
+	}{
+		{
+			name:            "update before end time",
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: initialOrigCoins,
+			rewardCoins:     rewardCoins,
+			testTime:        now.Unix(),
+			// Expected: Add full reward amount as testTime < endTime
+			expectedVesting: initialOrigCoins.Add(rewardCoins...), // stake: 100 + 100 = 200
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+		},
+		{
+			name:            "update at end time",
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: initialOrigCoins,
+			rewardCoins:     rewardCoins,
+			testTime:        now.Add(24 * time.Hour).Unix(), // Exactly end time
+			// Expected: No change as testTime >= endTime
+			expectedVesting: initialOrigCoins,
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+		},
+		{
+			name:            "update after end time",
+			endTime:         now.Add(-1 * time.Hour).Unix(), // End time already passed
+			originalVesting: initialOrigCoins,
+			rewardCoins:     rewardCoins,
+			testTime:        now.Unix(),
+			// Expected: No change as testTime >= endTime
+			expectedVesting: initialOrigCoins,
+			expectedEndTime: now.Add(-1 * time.Hour).Unix(),
+		},
+		{
+			name:            "zero rewards, update before end time",
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: initialOrigCoins,
+			rewardCoins:     sdk.NewCoins(),
+			testTime:        now.Unix(),
+			expectedVesting: initialOrigCoins, // No change
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+		},
+		{
+			name:            "nil rewards, update before end time",
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: initialOrigCoins,
+			rewardCoins:     nil,
+			testTime:        now.Unix(),
+			expectedVesting: initialOrigCoins, // No change
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+		},
+		{
+			name:            "rewards contain denom not in original vesting",
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100)),            // Only stake
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100), feeReward), // stake + fee
+			testTime:        now.Unix(),
+			// Expected: Add only stake reward as fee is not in original vesting
+			expectedVesting: sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 200)),
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+		},
+		{
+			name:            "multiple denoms, update before end time",
+			endTime:         now.Add(24 * time.Hour).Unix(),
+			originalVesting: initialOrigCoins, // stake + fee
+			rewardCoins:     sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 100), feeReward),
+			testTime:        now.Unix(),
+			// Expected: Add both rewards
+			expectedVesting: initialOrigCoins.Add(sdk.NewCoin(stakeDenom, math.NewInt(100))).Add(feeReward),
+			expectedEndTime: now.Add(24 * time.Hour).Unix(),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			dva, err := types.NewDelayedVestingAccount(bacc, tc.originalVesting, tc.endTime)
+			require.NoError(t, err)
+
+			// Update schedule
+			err = dva.UpdateSchedule(time.Unix(tc.testTime, 0), tc.rewardCoins)
+			require.NoError(t, err)
+
+			// Verify results
+			require.Equal(t, tc.expectedVesting, dva.OriginalVesting, "OriginalVesting mismatch")
+			require.Equal(t, tc.expectedEndTime, dva.EndTime, "EndTime mismatch")
+
+			// Verify GetVestedCoins logic still works correctly based on the *new* original vesting amount
+			vestedAtEndTime := dva.GetVestedCoins(time.Unix(tc.endTime, 0))
+			require.Equal(t, tc.expectedVesting, vestedAtEndTime, "Vested coins at end time should equal the new original vesting")
+			vestedBeforeEndTime := dva.GetVestedCoins(time.Unix(tc.endTime-1, 0))
+			require.Nil(t, vestedBeforeEndTime, "No coins should be vested before end time")
+		})
+	}
+}
+
+// TestGetVestedCoinsAfterMultipleUpdates verifies that GetVestedCoins returns
+// the correct amounts after multiple UpdateSchedule calls, including consecutive
+// updates at the same time point, according to the *current* implementation
+// where the full reward is added to OriginalVesting for existing denominations.
+func TestGetVestedCoinsAfterMultipleUpdates(t *testing.T) {
+	now := tmtime.Now()
+	bacc, _ := initBaseAccount()
+
+	// Set up a continuous vesting account with a 100-second vesting period
+	initialVesting := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000))
+	startTime := now.Unix()
+	duration := int64(100) // 100 seconds vesting duration
+	endTime := startTime + duration
+
+	// Create the continuous vesting account
+	cva, err := types.NewContinuousVestingAccount(bacc, initialVesting, startTime, endTime)
+	require.NoError(t, err)
+
+	// Define checkpoints at 0%, 25%, 50%, 75%, and 100% of vesting period
+	checkpoints := []struct {
+		offsetPercent int64
+		offsetSeconds int64
+		label         string
+	}{
+		{0, 0, "start (0%)"},
+		{25, 25, "25%"},
+		{50, 50, "50%"},
+		{75, 75, "75%"},
+		{100, 100, "end (100%)"},
+	}
+
+	// STEP 1: Check initial vested coins at each checkpoint
+	for _, cp := range checkpoints {
+		checkpointTime := time.Unix(startTime+cp.offsetSeconds, 0)
+		actual := cva.GetVestedCoins(checkpointTime)
+
+		if cp.offsetPercent == 0 {
+			require.Nil(t, actual, "At start, vested coins should be nil")
+		} else {
+			// Hardcoded expected values based on 1000 total
+			expectedValues := map[int64]int64{
+				25:  250,  // 25% of 1000
+				50:  500,  // 50% of 1000
+				75:  750,  // 75% of 1000
+				100: 1000, // 100% of 1000
+			}
+			expected := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, expectedValues[cp.offsetPercent]))
+			require.Equal(t, expected, actual,
+				"Initial vested coins at %s mismatch. Expected: %v, Got: %v",
+				cp.label, expected, actual)
+		}
+	}
+
+	// STEP 2: First update at 25% mark (Add full 400 tokens)
+	update1Time := time.Unix(startTime+25, 0)
+	update1Amount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 400))
+	err = cva.UpdateSchedule(update1Time, update1Amount)
+	require.NoError(t, err)
+
+	// Verify total after first update: 1000 + 400 = 1400 tokens
+	expectedTotal1 := int64(1400)
+	actualTotal1 := cva.GetOriginalVesting().AmountOf(stakeDenom).Int64()
+	require.Equal(t, expectedTotal1, actualTotal1,
+		"OriginalVesting mismatch after 25% update. Expected: %v, Got: %v",
+		expectedTotal1, actualTotal1)
+
+	// Check vested coins at all checkpoints at or after the 25% mark
+	for _, cp := range checkpoints {
+		// Skip checkpoints before the update point
+		if cp.offsetSeconds < 25 {
+			continue
+		}
+
+		checkpointTime := time.Unix(startTime+cp.offsetSeconds, 0)
+		actual := cva.GetVestedCoins(checkpointTime)
+
+		// Hardcoded expected values based on 1400 total
+		expectedValues := map[int64]int64{
+			25:  350,  // 25% of 1400
+			50:  700,  // 50% of 1400
+			75:  1050, // 75% of 1400
+			100: 1400, // 100% of 1400
+		}
+		expected := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, expectedValues[cp.offsetPercent]))
+		require.Equal(t, expected, actual,
+			"After 25% update, vested coins at %s mismatch. Expected: %v, Got: %v",
+			cp.label, expected, actual)
+	}
+
+	// STEP 3: Second update at 50% mark (Add full 400 tokens)
+	update2Time := time.Unix(startTime+50, 0)
+	update2Amount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 400))
+	err = cva.UpdateSchedule(update2Time, update2Amount)
+	require.NoError(t, err)
+
+	// Verify total after second update: 1400 + 400 = 1800 tokens
+	expectedTotal2 := int64(1800)
+	actualTotal2 := cva.GetOriginalVesting().AmountOf(stakeDenom).Int64()
+	require.Equal(t, expectedTotal2, actualTotal2,
+		"OriginalVesting mismatch after first 50% update. Expected: %v, Got: %v",
+		expectedTotal2, actualTotal2)
+
+	// Check vested coins at all checkpoints at or after the 50% mark
+	for _, cp := range checkpoints {
+		// Skip checkpoints before the update point
+		if cp.offsetSeconds < 50 {
+			continue
+		}
+
+		checkpointTime := time.Unix(startTime+cp.offsetSeconds, 0)
+		actual := cva.GetVestedCoins(checkpointTime)
+
+		// Hardcoded expected values based on 1800 total
+		expectedValues := map[int64]int64{
+			50:  900,  // 50% of 1800
+			75:  1350, // 75% of 1800
+			100: 1800, // 100% of 1800
+		}
+		expected := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, expectedValues[cp.offsetPercent]))
+		require.Equal(t, expected, actual,
+			"After first 50% update, vested coins at %s mismatch. Expected: %v, Got: %v",
+			cp.label, expected, actual)
+	}
+
+	// STEP 4: Third update at 50% mark (Add full 200 tokens)
+	update3Time := time.Unix(startTime+50, 0) // Same timestamp as previous update
+	update3Amount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 200))
+	err = cva.UpdateSchedule(update3Time, update3Amount)
+	require.NoError(t, err)
+
+	// Verify total after third update: 1800 + 200 = 2000 tokens
+	expectedTotal3 := int64(2000)
+	actualTotal3 := cva.GetOriginalVesting().AmountOf(stakeDenom).Int64()
+	require.Equal(t, expectedTotal3, actualTotal3,
+		"OriginalVesting mismatch after second 50% update. Expected: %v, Got: %v",
+		expectedTotal3, actualTotal3)
+
+	// Check vested coins at all checkpoints at or after the 50% mark
+	for _, cp := range checkpoints {
+		// Skip checkpoints before the update point
+		if cp.offsetSeconds < 50 {
+			continue
+		}
+
+		checkpointTime := time.Unix(startTime+cp.offsetSeconds, 0)
+		actual := cva.GetVestedCoins(checkpointTime)
+
+		// Hardcoded expected values based on 2000 total
+		expectedValues := map[int64]int64{
+			50:  1000, // 50% of 2000
+			75:  1500, // 75% of 2000
+			100: 2000, // 100% of 2000
+		}
+		expected := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, expectedValues[cp.offsetPercent]))
+		require.Equal(t, expected, actual,
+			"After second 50% update, vested coins at %s mismatch. Expected: %v, Got: %v",
+			cp.label, expected, actual)
+	}
+
+	// STEP 5: Fourth update at 75% mark (Add full 800 tokens)
+	update4Time := time.Unix(startTime+75, 0)
+	update4Amount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 800))
+	err = cva.UpdateSchedule(update4Time, update4Amount)
+	require.NoError(t, err)
+
+	// Verify total after fourth update: 2000 + 800 = 2800 tokens
+	expectedTotal4 := int64(2800)
+	actualTotal4 := cva.GetOriginalVesting().AmountOf(stakeDenom).Int64()
+	require.Equal(t, expectedTotal4, actualTotal4,
+		"OriginalVesting mismatch after 75% update. Expected: %v, Got: %v",
+		expectedTotal4, actualTotal4)
+
+	// Check vested coins at all checkpoints at or after the 75% mark
+	for _, cp := range checkpoints {
+		// Skip checkpoints before the update point
+		if cp.offsetSeconds < 75 {
+			continue
+		}
+
+		checkpointTime := time.Unix(startTime+cp.offsetSeconds, 0)
+		actual := cva.GetVestedCoins(checkpointTime)
+
+		// Hardcoded expected values based on 2800 total
+		expectedValues := map[int64]int64{
+			75:  2100, // 75% of 2800
+			100: 2800, // 100% of 2800
+		}
+		expected := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, expectedValues[cp.offsetPercent]))
+		require.Equal(t, expected, actual,
+			"After 75% update, vested coins at %s mismatch. Expected: %v, Got: %v",
+			cp.label, expected, actual)
+	}
+
+	// BONUS CHECK: Verify that updates after end time have no effect
+	afterEndTime := time.Unix(endTime+10, 0)
+	afterEndAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 1000))
+	err = cva.UpdateSchedule(afterEndTime, afterEndAmount)
+	// Expect an error because the update time is after the vesting end time
+	require.Nil(t, err)
+
+	// Original vesting amount should not change after the failed update attempt
+	finalTotal := cva.GetOriginalVesting().AmountOf(stakeDenom).Int64()
+	require.Equal(t, expectedTotal4, finalTotal,
+		"OriginalVesting should not change after failed end time update. Expected: %v, Got: %v",
+		expectedTotal4, finalTotal)
 }

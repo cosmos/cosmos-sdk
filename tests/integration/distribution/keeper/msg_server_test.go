@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
@@ -122,7 +123,7 @@ func initFixture(t testing.TB) *fixture {
 			},
 			BlockIdFlag: types.BlockIDFlagCommit,
 		},
-	})
+	}).WithBlockTime(time.Now().Round(0).UTC())
 
 	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,

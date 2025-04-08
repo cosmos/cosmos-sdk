@@ -105,7 +105,7 @@ func NewIntegrationApp(
 
 	bApp.Commit()
 
-	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
+	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName, Time: sdkCtx.BlockTime()}).WithIsCheckTx(true)
 
 	return &App{
 		BaseApp:       bApp,

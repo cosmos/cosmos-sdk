@@ -3,9 +3,8 @@ package keeper_test
 import (
 	"testing"
 
-	"go.uber.org/mock/gomock"
-
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -62,7 +61,7 @@ func (s *MintFnTestSuite) SetupTest() {
 		s.bankKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		//keeper.WithMintFn(CUSTOM MINT FN HERE),
+		// keeper.WithMintFn(CUSTOM MINT FN HERE),
 	)
 
 	// Set default parameters.

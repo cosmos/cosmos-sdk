@@ -104,7 +104,6 @@ func NewAppModule(
 	_ types.InflationCalculationFn,
 	ss exported.Subspace,
 ) AppModule {
-
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,

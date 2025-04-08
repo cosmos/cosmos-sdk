@@ -43,7 +43,10 @@ func WithMintFn(mintFn MintFn) InitOption {
 	}
 }
 
-// NewKeeper creates a new mint Keeper instance
+// NewKeeper creates a new mint Keeper instance.
+//
+// The mint keeper is always initialized with the DefaultMintFn but this can be overridden with the
+// WithMintFn option.
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeService storetypes.KVStoreService,

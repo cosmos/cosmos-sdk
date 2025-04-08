@@ -4,6 +4,6 @@ module cosmossdk.io/schema
 // with all known production releases of the Cosmos SDK. This is to ensure that all historical
 // apps could be patched to support indexing if desired.
 
-go 1.12
+go 1.16
 
 retract v1.0.0

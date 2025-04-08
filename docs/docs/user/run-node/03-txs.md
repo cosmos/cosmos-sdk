@@ -188,15 +188,11 @@ By default, unordered transactions charge an extra 2240 units of gas to offset t
 The extra units of gas are customizable and therefore vary by chain, so be sure to check the chain's ante handler for the gas value set, if any.
 
 ```go
-import (
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-)
-
 func sendTx() error {
     // --snip--
-	expiration := 5 * time.Minute
-	txBuilder.SetUnordered(true)
-	txBuilder.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
+    expiration := 5 * time.Minute
+    txBuilder.SetUnordered(true)
+    txBuilder.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
 }
 ```
 
@@ -209,8 +205,8 @@ import (
 
 func sendMessages(txBuilders []client.TxBuilder) error {
     // --snip--
-	expiration := 5 * time.Minute
-	for _, txb := range txBuilders {
+    expiration := 5 * time.Minute
+    for _, txb := range txBuilders {
         txb.SetUnordered(true)
         txb.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
     }

@@ -204,6 +204,13 @@ The three methods presented above are actually higher abstractions over the Come
 
 ### Unordered Transactions
 
+:::tip
+
+Looking to enable unordered transactions on your chain? 
+Check out the [v0.53.0 Upgrade Guide](https://docs.cosmos.network/v0.53/build/migrations/upgrade-guide#enable-unordered-transactions-optional)
+
+:::
+
 Beginning with Cosmos SDK v0.53.0, chains may enable unordered transaction support. 
 Unordered transactions work by using a timestamp as the transaction's nonce value.
 The timestamp must be greater than the current block time and not exceed the chain's configured max unordered timeout timestamp duration.

@@ -179,7 +179,7 @@ func sendTx() error {
 
 At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
-### Generating an Unordered Transaction
+#### Generating an Unordered Transaction
 
 Starting with Cosmos SDK v0.53.0, users may send unordered transactions to chains that have the feature enabled.
 
@@ -194,8 +194,9 @@ import (
 
 func sendTx() error {
     // --snip--
+	expiration := 5 * time.Minute
 	txBuilder.SetUnordered(true)
-	txBuilder.SetTimeoutTimestamp(time.Now())
+	txBuilder.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
 }
 ```
 
@@ -208,9 +209,10 @@ import (
 
 func sendMessages(txBuilders []client.TxBuilder) error {
     // --snip--
+	expiration := 5 * time.Minute
 	for _, txb := range txBuilders {
         txb.SetUnordered(true)
-        txb.SetTimeoutTimestamp(time.Now() + 1 * time.Nanosecond)
+        txb.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
     }
 }
 ```

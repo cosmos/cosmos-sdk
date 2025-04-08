@@ -632,7 +632,6 @@ func (suite *KeeperTestSuite) TestSendCoinsNewAccount() {
 	require.Equal(acc1Balances, updatedAcc1Bal)
 }
 
-// nolint: staticcheck // testing deprecated code
 func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	ctx := suite.ctx
 	require := suite.Require()
@@ -662,7 +661,6 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	require.Equal(expected, acc2Balances)
 }
 
-// nolint: staticcheck // testing deprecated code
 func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
@@ -717,7 +715,6 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 	require.Equal(expected, acc3Balances)
 }
 
-// nolint: staticcheck // testing deprecated code
 func (suite *KeeperTestSuite) TestInputOutputCoins_AccountCreated() {
 	ctx := suite.ctx
 	require := suite.Require()
@@ -751,7 +748,6 @@ func (suite *KeeperTestSuite) TestInputOutputCoins_AccountCreated() {
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 }
 
-// nolint: staticcheck // testing deprecated code
 func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 	type restrictionArgs struct {
 		ctx      context.Context

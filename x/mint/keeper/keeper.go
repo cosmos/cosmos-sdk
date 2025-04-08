@@ -30,8 +30,17 @@ type Keeper struct {
 	Params collections.Item[types.Params]
 	Minter collections.Item[types.Minter]
 
-	// mintFn is the
-	mintFn types.MintFn
+	// mintFn is a function that encompasses all minting logic run in the x/mint begin blocker.
+	mintFn MintFn
+}
+
+type InitOption func(*Keeper)
+
+// WithMintFn sets a custom minting function for the x/mint keeper.
+func WithMintFn(mintFn MintFn) InitOption {
+	return func(k *Keeper) {
+		k.mintFn = mintFn
+	}
 }
 
 // NewKeeper creates a new mint Keeper instance
@@ -43,6 +52,7 @@ func NewKeeper(
 	bk types.BankKeeper,
 	feeCollectorName string,
 	authority string,
+	opts ...InitOption,
 ) Keeper {
 	// ensure mint module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -59,17 +69,19 @@ func NewKeeper(
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Minter:           collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
+		mintFn:           DefaultMintFn(types.DefaultInflationCalculationFn),
 	}
-
-	// set default minting function using self reference
-	mintFn := DefaultMintFn(types.DefaultInflationCalculationFn, &k)
-	k.mintFn = mintFn
 
 	schema, err := sb.Build()
 	if err != nil {
 		panic(err)
 	}
 	k.Schema = schema
+
+	for _, opt := range opts {
+		opt(&k)
+	}
+
 	return k
 }
 

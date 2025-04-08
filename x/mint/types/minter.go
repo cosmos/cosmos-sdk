@@ -8,9 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MintFn defines the function that needs to be implemented in order to customize the minting process.
-type MintFn func(ctx sdk.Context) error
-
 // NewMinter returns a new Minter object with the given inflation and annual
 // provisions values.
 func NewMinter(inflation, annualProvisions math.LegacyDec) Minter {

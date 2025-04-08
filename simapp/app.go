@@ -352,6 +352,7 @@ func NewSimApp(
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		mintkeeper.WithMintFn(mintkeeper.DefaultMintFn),
 	)
 
 	app.ProtocolPoolKeeper = protocolpoolkeeper.NewKeeper(

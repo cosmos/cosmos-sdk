@@ -30,13 +30,13 @@ message SendEnabled {
 }
 
 // Input models transaction input.
+//
+// Note: This type is maintained for legacy purposes for the internal InputOutputCoins method.
 message Input {
   option (cosmos.msg.v1.signer) = "address";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
-
-  option deprecated = true;
 
   string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2 [
@@ -48,11 +48,11 @@ message Input {
 }
 
 // Output models transaction outputs.
+//
+// Note: This type is maintained for legacy purposes for the internal InputOutputCoins method.
 message Output {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
-
-  option deprecated = true;
 
   string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2 [

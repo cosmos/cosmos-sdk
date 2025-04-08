@@ -52,7 +52,7 @@ If your services depend on this functionality from `x/distribution`, please upda
 
 :::
 
-### Manual Wiring
+### ProtocolPool Manual Wiring
 
 Import the following:
 
@@ -159,7 +159,7 @@ app.ModuleManager.SetOrderInitGenesis(
 )
 ```
 
-### DI Wiring
+### ProtocolPool DI Wiring
 
 First, set up the keeper for the application.
 
@@ -260,7 +260,7 @@ Lastly, add an entry for protocolpool in the ModuleConfig.
 
 ## Adding Epochs Module **OPTIONAL**
 
-### Manual Wiring
+### Epochs Manual Wiring
 
 Import the following:
 
@@ -335,7 +335,7 @@ app.ModuleManager.SetOrderInitGenesis(
 )
 ```
 
-### DI Wiring
+### Epochs DI Wiring
 
 First, set up the keeper for the application.
 

@@ -692,7 +692,6 @@ func (coins Coins) Empty() bool {
 
 // AmountOf returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) math.Int {
-	mustValidateDenom(denom)
 	return coins.AmountOfNoDenomValidation(denom)
 }
 
@@ -877,12 +876,6 @@ func ValidateDenom(denom string) error {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
 	return nil
-}
-
-func mustValidateDenom(denom string) {
-	if err := ValidateDenom(denom); err != nil {
-		panic(err)
-	}
 }
 
 // ParseCoinNormalized parses and normalize a cli input for one coin type, returning errors if invalid or on an empty string

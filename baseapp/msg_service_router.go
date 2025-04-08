@@ -27,10 +27,11 @@ type MessageRouter interface {
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
-	interfaceRegistry codectypes.InterfaceRegistry
-	routes            map[string]MsgServiceHandler
-	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
-	circuitBreaker    CircuitBreaker
+	interfaceRegistry    codectypes.InterfaceRegistry
+	routes               map[string]MsgServiceHandler
+	hybridHandlers       map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
+	circuitBreaker       CircuitBreaker
+	disableEventEmission bool
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -169,7 +170,7 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 	}
 
 	msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
+		ctx = ctx.WithEventManager(msr.newEventManager())
 		interceptor := func(goCtx context.Context, _ any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 			goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 			return handler(goCtx, msg)
@@ -213,6 +214,13 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 // SetInterfaceRegistry sets the interface registry for the router.
 func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = interfaceRegistry
+}
+
+func (msr *MsgServiceRouter) newEventManager() sdk.EventManagerI {
+	if msr.disableEventEmission {
+		return discardingEventManager{}
+	}
+	return sdk.NewEventManager()
 }
 
 func noopDecoder(_ any) error { return nil }

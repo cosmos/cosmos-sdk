@@ -711,7 +711,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
 	var events []abci.Event
 	if app.preBlocker != nil {
-		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
+		ctx := app.finalizeBlockState.Context().WithEventManager(app.msgServiceRouter.newEventManager())
 		rsp, err := app.preBlocker(ctx, req)
 		if err != nil {
 			return nil, err
@@ -910,7 +910,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
-		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
+		anteCtx = anteCtx.WithEventManager(app.msgServiceRouter.newEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 
 		if !newCtx.IsZero() {

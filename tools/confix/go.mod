@@ -6,7 +6,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
 	github.com/creachadair/atomicfile v0.3.7
 	github.com/creachadair/tomledit v0.0.27
-	github.com/pelletier/go-toml/v2 v2.2.3
+	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	gotest.tools/v3 v3.5.2
@@ -139,7 +139,7 @@ require (
 	github.com/zondax/ledger-go v0.14.3 // indirect; indirectÎ
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/mock v0.5.0 // indirect
+	go.uber.org/mock v0.5.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.37.0 // indirect

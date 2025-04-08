@@ -19,7 +19,7 @@ require (
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
-	go.uber.org/mock v0.5.0
+	go.uber.org/mock v0.5.1
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6

@@ -100,6 +100,7 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
+	// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
 	_ types.InflationCalculationFn,
 	ss exported.Subspace,
 ) AppModule {
@@ -196,11 +197,13 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleKey              depinject.OwnModuleKey
-	Config                 *modulev1.Module
-	StoreService           store.KVStoreService
-	Cdc                    codec.Codec
+	ModuleKey    depinject.OwnModuleKey
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	// Deprecated: This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
+	MintFn                 keeper.MintFn                `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -229,6 +232,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	var opts []keeper.InitOption
+	if in.MintFn != nil {
+		opts = append(opts, keeper.WithMintFn(in.MintFn))
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -237,10 +245,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		feeCollectorName,
 		authority.String(),
+		opts...,
 	)
 
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil, in.LegacySubspace)
 
 	return ModuleOutputs{MintKeeper: k, Module: m}
 }

@@ -179,6 +179,42 @@ func sendTx() error {
 
 At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
+### Generating an Unordered Transaction
+
+Starting with Cosmos SDK v0.53.0, users may send unordered transactions to chains that have the feature enabled.
+
+Using the example above, we can set the required fields to mark a transaction as unordered. 
+By default, unordered transactions charge an extra 2240 units of gas to offset the additional storage overhead that supports their functionality.
+The extra units of gas are customizable and therefore vary by chain, so be sure to check the chain's ante handler for the gas value set, if any.
+
+```go
+import (
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+)
+
+func sendTx() error {
+    // --snip--
+	txBuilder.SetUnordered(true)
+	txBuilder.SetTimeoutTimestamp(time.Now())
+}
+```
+
+Unordered transactions from the same account must use a unique timeout timestamp value. The difference between each timeout timestamp value may be as small as a nanosecond, however.
+
+```go
+import (
+	"github.com/cosmos/cosmos-sdk/client"
+)
+
+func sendMessages(txBuilders []client.TxBuilder) error {
+    // --snip--
+	for _, txb := range txBuilders {
+        txb.SetUnordered(true)
+        txb.SetTimeoutTimestamp(time.Now() + 1 * time.Nanosecond)
+    }
+}
+```
+
 ### Signing a Transaction
 
 We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:

@@ -25,19 +25,14 @@ When users want to interact with an application and make state changes (e.g. sen
 Transaction objects are Cosmos SDK types that implement the `Tx` interface
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/tx_msg.go#L51-L56
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/types/tx_msg.go#L53-L58
 ```
 
 It contains the following methods:
 
 * **GetMsgs:** unwraps the transaction and returns a list of contained `sdk.Msg`s - one transaction may have one or multiple messages, which are defined by module developers.
-* **ValidateBasic:** lightweight, [_stateless_](../beginner/01-tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./00-baseapp.md#checktx) and [`DeliverTx`](./00-baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth) module's `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. When [`runTx`](./00-baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
 
-:::note
-This function is different from the deprecated `sdk.Msg` [`ValidateBasic`](../beginner/01-tx-lifecycle.md#ValidateBasic) methods, which was performing basic validity checks on messages only.
-:::
-
-As a developer, you should rarely manipulate `Tx` directly, as `Tx` is really an intermediate type used for transaction generation. Instead, developers should prefer the `TxBuilder` interface, which you can learn more about [below](#transaction-generation).
+As a developer, you should rarely manipulate `Tx` directly, as `Tx` is an intermediate type used for transaction generation. Instead, developers should prefer the `TxBuilder` interface, which you can learn more about [below](#transaction-generation).
 
 ### Signing Transactions
 
@@ -133,10 +128,10 @@ While messages contain the information for state transition logic, a transaction
 
 ### Transaction Generation
 
-The `TxBuilder` interface contains data closely related with the generation of transactions, which an end-user can freely set to generate the desired transaction:
+The `TxBuilder` interface contains data closely related with the generation of transactions, which an end-user can set to generate the desired transaction:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L40-L53
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/client/tx_config.go#L39-L57
 ```
 
 * `Msg`s, the array of [messages](#messages) included in the transaction.
@@ -144,6 +139,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L4
 * `Memo`, a note or comment to send with the transaction.
 * `FeeAmount`, the maximum amount the user is willing to pay in fees.
 * `TimeoutHeight`, block height until which the transaction is valid.
+* `Unordered`, an option indicating this transaction may be executed in any order (requires TimeoutTimestamp to be set)
+* `TimeoutTimestamp`, the timeout timestamp (unordered nonce) of the transaction (required to be used with Unordered).
 * `Signatures`, the array of signatures from all signers of the transaction.
 
 As there are currently two sign modes for signing transactions, there are also two implementations of `TxBuilder`:
@@ -154,7 +151,7 @@ As there are currently two sign modes for signing transactions, there are also t
 However, the two implementations of `TxBuilder` should be hidden away from end-users, as they should prefer using the overarching `TxConfig` interface:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L24-L34
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/client/tx_config.go#L27-L37
 ```
 
 `TxConfig` is an app-wide configuration for managing transactions. Most importantly, it holds the information about whether to sign each transaction with `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`. By calling `txBuilder := txConfig.NewTxBuilder()`, a new `TxBuilder` will be created with the appropriate sign mode.
@@ -204,3 +201,14 @@ An example can be seen [here](../../user/run-node/03-txs.md#using-rest)
 #### CometBFT RPC
 
 The three methods presented above are actually higher abstractions over the CometBFT RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.cometbft.com/v0.37/core/rpc). This means that you can use the CometBFT RPC endpoints directly to broadcast the transaction, if you wish so.
+
+### Unordered Transactions
+
+Beginning with Cosmos SDK v0.53.0, chains may enable unordered transaction support. 
+Unordered transactions work by using a timestamp as the transaction's nonce value.
+The timestamp must be greater than the current block time and not exceed the chain's configured max unordered timeout timestamp duration.
+Senders must use a unique timestamp for each distinct transaction. The difference may be as small as a nanosecond, however.
+
+These unique timestamps serve as a one-shot nonce, and their lifespan in state is short-lived.
+Upon transaction inclusion, an entry consisting of timeout timestamp and account address will be recorded to state. 
+Once the block time is passed the timeout timestamp value, the entry will be removed. This ensures that unordered nonces do not indefinitely fill up the chain's storage.

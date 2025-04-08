@@ -107,7 +107,7 @@ Namely, the SDK provides the following mempools:
 * [Sender Nonce Mempool](#sender-nonce-mempool)
 * [Priority Nonce Mempool](#priority-nonce-mempool)
 
-The default SDK is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-di.md):
+By default, the SDK mempool is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-di.md):
 
 ```go
 nonceMempool := mempool.NewSenderNonceMempool()

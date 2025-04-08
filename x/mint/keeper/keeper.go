@@ -29,6 +29,9 @@ type Keeper struct {
 	Schema collections.Schema
 	Params collections.Item[types.Params]
 	Minter collections.Item[types.Minter]
+
+	// mintFn is the
+	mintFn types.MintFn
 }
 
 // NewKeeper creates a new mint Keeper instance
@@ -57,6 +60,10 @@ func NewKeeper(
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Minter:           collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
 	}
+
+	// set default minting function using self reference
+	mintFn := DefaultMintFn(types.DefaultInflationCalculationFn, &k)
+	k.mintFn = mintFn
 
 	schema, err := sb.Build()
 	if err != nil {

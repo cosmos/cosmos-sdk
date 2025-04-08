@@ -37,7 +37,6 @@ func GetTxCmd(ac addresscodec.Codec) *cobra.Command {
 
 	cmd.AddCommand(
 		NewCmdSubmitUpgradeProposal(ac),
-		NewCmdSubmitCancelUpgradeProposal(ac),
 	)
 
 	return cmd
@@ -133,6 +132,8 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 }
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",

@@ -68,12 +68,9 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 	}
 
 	govTxCmd.AddCommand(
-		NewCmdDeposit(),
-		NewCmdVote(),
 		NewCmdWeightedVote(),
 		NewCmdSubmitProposal(),
 		NewCmdDraftProposal(),
-		NewCmdCancelProposal(),
 
 		// Deprecated
 		cmdSubmitLegacyProp,
@@ -155,6 +152,8 @@ metadata example:
 }
 
 // NewCmdCancelProposal implements submitting a cancel proposal transaction command.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewCmdCancelProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cancel-proposal [proposal-id]",
@@ -254,6 +253,8 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewCmdDeposit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
@@ -302,6 +303,8 @@ $ %s tx gov deposit 1 10stake --from mykey
 }
 
 // NewCmdVote implements creating a new vote command.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewCmdVote() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [option]",

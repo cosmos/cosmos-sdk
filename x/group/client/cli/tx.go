@@ -38,19 +38,11 @@ func TxCmd(name string, ac address.Codec) *cobra.Command {
 
 	txCmd.AddCommand(
 		MsgCreateGroupCmd(),
-		MsgUpdateGroupAdminCmd(),
-		MsgUpdateGroupMetadataCmd(),
 		MsgUpdateGroupMembersCmd(),
 		MsgCreateGroupWithPolicyCmd(),
 		MsgCreateGroupPolicyCmd(),
-		MsgUpdateGroupPolicyAdminCmd(),
 		MsgUpdateGroupPolicyDecisionPolicyCmd(ac),
-		MsgUpdateGroupPolicyMetadataCmd(),
-		MsgWithdrawProposalCmd(),
 		MsgSubmitProposalCmd(),
-		MsgVoteCmd(),
-		MsgExecCmd(),
-		MsgLeaveGroupCmd(),
 		NewCmdDraftProposal(),
 	)
 
@@ -196,6 +188,8 @@ Set a member's weight to "0" to delete it.
 }
 
 // MsgUpdateGroupAdminCmd creates a CLI command for Msg/UpdateGroupAdmin.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func MsgUpdateGroupAdminCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-admin [admin] [group-id] [new-admin]",
@@ -240,6 +234,8 @@ func MsgUpdateGroupAdminCmd() *cobra.Command {
 }
 
 // MsgUpdateGroupMetadataCmd creates a CLI command for Msg/UpdateGroupMetadata.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func MsgUpdateGroupMetadataCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-metadata [admin] [group-id] [metadata]",
@@ -457,6 +453,8 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 }
 
 // MsgUpdateGroupPolicyAdminCmd creates a CLI command for Msg/UpdateGroupPolicyAdmin.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-policy-admin [admin] [group-policy-account] [new-admin]",
@@ -537,6 +535,8 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd(ac address.Codec) *cobra.Command {
 }
 
 // MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/UpdateGroupPolicyMetadata.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-policy-metadata [admin] [group-policy-account] [new-metadata]",
@@ -660,6 +660,8 @@ metadata example:
 }
 
 // MsgWithdrawProposalCmd creates a CLI command for Msg/WithdrawProposal.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func MsgWithdrawProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]",
@@ -706,6 +708,8 @@ Parameters:
 }
 
 // MsgVoteCmd creates a CLI command for Msg/Vote.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func MsgVoteCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [voter] [vote-option] [metadata]",
@@ -766,6 +770,8 @@ Parameters:
 }
 
 // MsgExecCmd creates a CLI command for Msg/Exec.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func MsgExecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [proposal-id]",
@@ -797,6 +803,8 @@ func MsgExecCmd() *cobra.Command {
 }
 
 // MsgLeaveGroupCmd creates a CLI command for Msg/LeaveGroup.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func MsgLeaveGroupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "leave-group [member-address] [group-id]",

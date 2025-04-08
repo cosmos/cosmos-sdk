@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 
 	"cosmossdk.io/math"
 )
@@ -873,10 +874,45 @@ func SetCoinDenomRegex(reFn func() string) {
 
 // ValidateDenom is the default validation function for Coin.Denom.
 func ValidateDenom(denom string) error {
-	if !reDnm.MatchString(denom) {
+	if reDnm == nil || reDecCoin == nil {
+		// Call the Ragel-generated function.
+		if !MatchDenom(denom) {
+			return fmt.Errorf("invalid denom: %s", denom)
+		}
+	} else if !reDnm.MatchString(denom) { // If reDnm has been initialized, use it for matching.
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
+
 	return nil
+}
+
+// isValidRune checks if a given rune is a valid character for a rune.
+// It returns true if the rune is a letter, digit, '/', ':', '.', '_', or '-'.
+func isValidRune(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '/' || r == ':' || r == '.' || r == '_' || r == '-'
+}
+
+// MatchDenom checks if the given string is a valid denomination.
+// A valid denomination must have a length between 3 and 128 characters,
+// start with a letter, and only contain valid runes.
+func MatchDenom(s string) bool {
+	length := len(s)
+	if length < 3 || length > 128 {
+		return false
+	}
+
+	firstRune := rune(s[0])
+	if !unicode.IsLetter(firstRune) {
+		return false
+	}
+
+	for _, r := range s[1:] {
+		if !isValidRune(r) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func mustValidateDenom(denom string) {

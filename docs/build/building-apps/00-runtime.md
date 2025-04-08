@@ -20,9 +20,8 @@ The runtime App struct contains several key components:
 ```go
 type App struct {
     *baseapp.BaseApp
-    ModuleManager      *module.Manager
-    UnorderedTxManager *unorderedtx.Manager
-    configurator      module.Configurator
+    ModuleManager    *module.Manager
+    configurator     module.Configurator
     config           *runtimev1alpha1.Module
     storeKeys        []storetypes.StoreKey
     // ... other fields

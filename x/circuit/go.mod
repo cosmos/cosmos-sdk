@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/store v1.1.2
 	github.com/cockroachdb/errors v1.11.3
 	github.com/cometbft/cometbft v0.38.17
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
+	github.com/cosmos/cosmos-sdk v0.53.0-rc.2
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -22,7 +22,7 @@ require (
 
 require (
 	cosmossdk.io/log v1.5.1 // indirect
-	cosmossdk.io/math v1.5.1 // indirect
+	cosmossdk.io/math v1.5.2 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
 	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

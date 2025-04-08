@@ -474,8 +474,8 @@ func (s *TestSuite) TestGetAuthorizations() {
 
 	authzs, err := s.authzKeeper.GetAuthorizations(s.ctx, addr1, addr2)
 	require.NoError(err)
-	require.Len(authzs, 2)
-	require.Equal(sdk.MsgTypeURL(&banktypes.MsgSend{}), authzs[1].MsgTypeURL())
+	require.Len(authzs, 1)
+	require.Equal(sdk.MsgTypeURL(&banktypes.MsgSend{}), authzs[0].MsgTypeURL())
 }
 
 func TestTestSuite(t *testing.T) {

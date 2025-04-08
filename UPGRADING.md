@@ -88,9 +88,31 @@ If you are still using the legacy wiring, you must enable unordered transactions
   such that when the node restarts, it can recover the state to provide replay
   protection.
 
+<<<<<<< HEAD
   ```go
   func (app *App) Close() error {
       // ...
+=======
+:::warning
+
+Using `protocolpool` will cause the following `x/distribution` handlers to return an error:
+
+
+**QueryService**
+
+- `CommunityPool`
+
+**MsgService**
+
+- `CommunityPoolSpend`
+- `FundCommunityPool`
+
+If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
+
+:::
+
+⚠️Adding this module requires a `StoreUpgrade`⚠️
+>>>>>>> 43f8fa113 (docs: explicit warnings about using external community pool with x/distribution (#24398))
 
       // close the unordered tx manager
       if e := app.UnorderedTxManager.Close(); e != nil {

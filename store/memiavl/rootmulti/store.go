@@ -36,7 +36,6 @@ type Store struct {
 	db     *memiavl.DB
 	logger log.Logger
 
-	// to keep it comptaible with cosmos-sdk 0.46, merge the memstores into commit info
 	lastCommitInfo *types.CommitInfo
 
 	storesParams map[types.StoreKey]storeParams
@@ -46,17 +45,14 @@ type Store struct {
 
 	opts memiavl.Options
 
-	// sdk46Compact defines if the root hash is compatible with cosmos-sdk 0.46 and before.
-	sdk46Compact bool
 	// it's more efficient to export snapshot versions, we can filter out the non-snapshot versions
 	supportExportNonSnapshotVersion bool
 }
 
-func NewStore(dir string, logger log.Logger, sdk46Compact bool, supportExportNonSnapshotVersion bool) *Store {
+func NewStore(dir string, logger log.Logger, supportExportNonSnapshotVersion bool) *Store {
 	return &Store{
 		dir:                             dir,
 		logger:                          logger,
-		sdk46Compact:                    sdk46Compact,
 		supportExportNonSnapshotVersion: supportExportNonSnapshotVersion,
 
 		storesParams: make(map[types.StoreKey]storeParams),
@@ -97,9 +93,7 @@ func (rs *Store) WorkingHash() []byte {
 		panic(err)
 	}
 	commitInfo := convertCommitInfo(rs.db.WorkingCommitInfo())
-	if rs.sdk46Compact {
-		commitInfo = amendCommitInfo(commitInfo, rs.storesParams)
-	}
+
 	return commitInfo.Hash()
 }
 
@@ -129,9 +123,7 @@ func (rs *Store) Commit() types.CommitID {
 	}
 
 	rs.lastCommitInfo = convertCommitInfo(rs.db.LastCommitInfo())
-	if rs.sdk46Compact {
-		rs.lastCommitInfo = amendCommitInfo(rs.lastCommitInfo, rs.storesParams)
-	}
+
 	return rs.lastCommitInfo.CommitID()
 }
 
@@ -378,12 +370,8 @@ func (rs *Store) LoadVersionAndUpgrade(version int64, upgrades *types.StoreUpgra
 
 	rs.db = db
 	rs.stores = newStores
-	// to keep the root hash compatible with cosmos-sdk 0.46
 	if db.Version() != 0 {
 		rs.lastCommitInfo = convertCommitInfo(db.LastCommitInfo())
-		if rs.sdk46Compact {
-			rs.lastCommitInfo = amendCommitInfo(rs.lastCommitInfo, rs.storesParams)
-		}
 	} else {
 		rs.lastCommitInfo = &types.CommitInfo{}
 	}
@@ -580,9 +568,6 @@ func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 	}
 
 	commitInfo := convertCommitInfo(db.LastCommitInfo())
-	if rs.sdk46Compact {
-		commitInfo = amendCommitInfo(commitInfo, rs.storesParams)
-	}
 
 	// Restore origin path and append proof op.
 	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeName))
@@ -631,21 +616,6 @@ func mergeStoreInfos(commitInfo *types.CommitInfo, storeInfos []types.StoreInfo)
 		Version:    commitInfo.Version,
 		StoreInfos: infos,
 	}
-}
-
-// amendCommitInfo add mem stores commit infos to keep it compatible with cosmos-sdk 0.46
-func amendCommitInfo(commitInfo *types.CommitInfo, storeParams map[types.StoreKey]storeParams) *types.CommitInfo {
-	var extraStoreInfos []types.StoreInfo
-	for key := range storeParams {
-		typ := storeParams[key].typ
-		if typ != types.StoreTypeIAVL && typ != types.StoreTypeTransient {
-			extraStoreInfos = append(extraStoreInfos, types.StoreInfo{
-				Name:     key.Name(),
-				CommitId: types.CommitID{},
-			})
-		}
-	}
-	return mergeStoreInfos(commitInfo, extraStoreInfos)
 }
 
 func convertCommitInfo(commitInfo *memiavl.CommitInfo) *types.CommitInfo {

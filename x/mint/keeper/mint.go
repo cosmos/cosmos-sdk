@@ -9,12 +9,13 @@ import (
 // MintFn defines the function that needs to be implemented in order to customize the minting process.
 type MintFn func(ctx sdk.Context, k *Keeper) error
 
+// MintFn runs the mintFn of the keeper.
 func (k *Keeper) MintFn(ctx sdk.Context) error {
 	return k.mintFn(ctx, k)
 }
 
-// DefaultMintFn returns a default mint function. It requires the Staking module and the mint keeper.
-// The default Mintfn has a requirement on staking as it uses bond to calculate inflation.
+// DefaultMintFn returns a default mint function.
+// The default MintFn has a requirement on staking as it uses bond to calculate inflation.
 func DefaultMintFn(ic types.InflationCalculationFn) MintFn {
 	return func(ctx sdk.Context, k *Keeper) error {
 		// fetch stored minter & params

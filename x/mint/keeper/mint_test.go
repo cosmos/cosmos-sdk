@@ -194,12 +194,7 @@ func (s *MintFnTestSuite) TestCustomMintFn() {
 
 	// Check that the custom mint event was emitted.
 	events := s.ctx.EventManager().Events()
-	foundCustomMintEvent := false
-	for _, ev := range events {
-		if ev.Type == "custom_mint" {
-			foundCustomMintEvent = true
-			break
-		}
-	}
-	s.Require().True(foundCustomMintEvent, "expected a custom mint event to be emitted")
+	s.Require().True(slices.ContainsFunc(events, func(event sdk.Event) bool {
+		return event.Type == "custom_mint"
+	}), "expected custom_mint event to be emitted")
 }

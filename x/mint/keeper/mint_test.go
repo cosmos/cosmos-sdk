@@ -83,22 +83,25 @@ func (s *MintFnTestSuite) TestDefaultMintFn_Success() {
 
 	expectedCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(20)))
 
+	minter, err := s.mintKeeper.Minter.Get(s.ctx)
+	s.Require().NoError(err)
+	expectedInflation := types.DefaultInflationCalculationFn(nil, minter, types.DefaultParams(), bondedRatio)
+
 	// Set bank keeper expectations for minting and fee collection.
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, expectedCoins).Return(nil).Times(1)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, expectedCoins).Return(nil).Times(1)
 
 	// Call the mint function.
-	err := s.mintKeeper.MintFn(s.ctx)
+	err = s.mintKeeper.MintFn(s.ctx)
 	s.Require().NoError(err)
 
 	// Retrieve the updated minter from storage.
-	storedMinter, err := s.mintKeeper.Minter.Get(s.ctx)
+	updatedMinter, err := s.mintKeeper.Minter.Get(s.ctx)
 	s.Require().NoError(err)
 
-	s.Require().Equal(math.LegacyMustNewDecFromStr("0.130000005226169707"), storedMinter.Inflation)
-
-	// The dummy minter's NextAnnualProvisions returns 100.
-	s.Require().Equal(math.LegacyMustNewDecFromStr("130000005.226169707000000000"), storedMinter.AnnualProvisions)
+	// check that minter values are updated as expected
+	s.Require().Equal(expectedInflation, updatedMinter.Inflation)
+	s.Require().Equal(expectedInflation.MulInt(stakingSupply), updatedMinter.AnnualProvisions)
 
 	// Optionally, verify that a mint event has been emitted.
 	events := s.ctx.EventManager().Events()

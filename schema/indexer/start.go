@@ -65,10 +65,6 @@ type IndexingTarget struct {
 	// It will do all processing in the background so updates should be sent synchronously.
 	Listener appdata.Listener
 
-	// ModuleFilter returns the root module filter which an app can use to exclude modules at the storage level,
-	// if such a filter is set.
-	ModuleFilter *ModuleFilterConfig
-
 	IndexerInfos map[string]IndexerInfo
 }
 
@@ -108,10 +104,6 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 		}
 
 		logger.Info("Starting indexer", "target_name", targetName, "type", targetCfg.Type)
-
-		if targetCfg.Filter != nil {
-			return IndexingTarget{}, fmt.Errorf("indexer filter options are not supported yet")
-		}
 
 		childLogger := logger
 		if scopeableLogger, ok := logger.(logutil.ScopeableLogger); ok {

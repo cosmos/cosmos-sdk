@@ -304,7 +304,7 @@ func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, path string
 func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) (fieldBinding, error) {
 	field := fields.ByName(name)
 	if field == nil {
-		return fieldBinding{}, fmt.Errorf("can't find field %s", name) // TODO: it will improve error if msg.FullName() was included.
+		return fieldBinding{}, fmt.Errorf("can't find field %s in %s", name, messageBinder.messageType.Descriptor().FullName())
 	}
 
 	_, hasValue, err := b.addFieldFlag(

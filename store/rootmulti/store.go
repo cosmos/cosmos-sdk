@@ -1056,26 +1056,24 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		return commitDBStoreAdapter{Store: dbadapter.Store{DB: db}}, nil
 
 	case types.StoreTypeTransient:
-		_, ok := key.(*types.TransientStoreKey)
-		if !ok {
-			return nil, fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
+		if _, ok := key.(*types.TransientStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a TransientStoreKey; got: %s, %T", key.String(), key)
 		}
 
 		return transient.NewStore(), nil
 
 	case types.StoreTypeMemory:
-		_, ok := key.(*types.ObjectStoreKey)
-		if !ok {
-			return nil, fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
-		}
-
 		if _, ok := key.(*types.MemoryStoreKey); !ok {
-			return nil, fmt.Errorf("unexpected key type for a MemoryStoreKey; got: %s", key.String())
+			return nil, fmt.Errorf("unexpected key type for a MemoryStoreKey; got: %s, %T", key.String(), key)
 		}
 
 		return mem.NewStore(), nil
 
 	case types.StoreTypeObject:
+		if _, ok := key.(*types.ObjectStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey; got: %s, %T", key.String(), key)
+		}
+
 		return transient.NewObjStore(), nil
 
 	default:

@@ -254,13 +254,13 @@ func NewBaseApp(
 
 	protoFiles, err := proto.MergedRegistry()
 	if err != nil {
-		logger.Warn("error creating merged proto registry", err)
+		logger.Warn("error creating merged proto registry", "error", err)
 	} else {
 		err = msgservice.ValidateProtoAnnotations(protoFiles)
 		if err != nil {
 			// Once we switch to using protoreflect-based antehandlers, we might
 			// want to panic here instead of logging a warning.
-			logger.Warn("error validating merged proto registry annotations", err)
+			logger.Warn("error validating merged proto registry annotations", "error", err)
 		}
 	}
 

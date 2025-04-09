@@ -22,11 +22,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "UpdateParams",
-<<<<<<< HEAD
 					Skip:      true, // Skipped because UpdateParams is authority gated
-=======
-					Skip:      true, // Crisis is deprecated.
->>>>>>> 73bedad9a (fix(client/v2): add fallbacks when incorrect protos (#24449))
 				},
 			},
 		},

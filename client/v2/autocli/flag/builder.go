@@ -30,21 +30,17 @@ const (
 	PubkeyScalarType                 = "cosmos.Pubkey"
 )
 
-// FileResolver specifies how protobuf file descriptors will be resolved.
-type FileResolver interface {
-	protodesc.Resolver
-	RangeFiles(func(protoreflect.FileDescriptor) bool)
-}
-
 // Builder manages options for building pflag flags for protobuf messages.
 type Builder struct {
-	// TypeResolver specifies how protobuf types will be resolved.
+	// TypeResolver specifies how protobuf types will be resolved. If it is
+	// nil protoregistry.GlobalTypes will be used.
 	TypeResolver interface {
 		protoregistry.MessageTypeResolver
 		protoregistry.ExtensionTypeResolver
 	}
 
-	// FileResolver specifies how protobuf file descriptors will be resolved.
+	// FileResolver specifies how protobuf file descriptors will be resolved. If it is
+	// nil protoregistry.GlobalFiles will be used.
 	FileResolver interface {
 		protodesc.Resolver
 		RangeFiles(func(protoreflect.FileDescriptor) bool)
@@ -277,59 +273,6 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	return messageBinder, nil
 }
 
-<<<<<<< HEAD
-=======
-// addFlattenFieldBindingToArgs recursively adds field bindings for nested message fields to the message binder.
-// It takes a slice of field names representing the path to the target field, where each element is a field name
-// in the nested message structure. For example, ["foo", "bar", "baz"] would bind the "baz" field inside the "bar"
-// message which is inside the "foo" message.
-func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, path string, s []string, msg protoreflect.MessageType, messageBinder *MessageBinder) error {
-	fields := msg.Descriptor().Fields()
-	if len(s) == 1 {
-		f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(s[0]), fields)
-		if err != nil {
-			return err
-		}
-		f.path = path
-		messageBinder.positionalArgs = append(messageBinder.positionalArgs, f)
-		return nil
-	}
-	fd := fields.ByName(protoreflect.Name(s[0]))
-	var innerMsg protoreflect.MessageType
-	if fd.IsList() {
-		innerMsg = msg.New().Get(fd).List().NewElement().Message().Type()
-	} else {
-		innerMsg = msg.New().Get(fd).Message().Type()
-	}
-	return b.addFlattenFieldBindingToArgs(ctx, path, s[1:], innerMsg, messageBinder)
-}
-
-// addFieldBindingToArgs adds a fieldBinding for a positional argument to the message binder.
-// The fieldBinding is appended to the positional arguments list in the message binder.
-func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) (fieldBinding, error) {
-	field := fields.ByName(name)
-	if field == nil {
-		return fieldBinding{}, fmt.Errorf("can't find field %s in %s", name, messageBinder.messageType.Descriptor().FullName())
-	}
-
-	_, hasValue, err := b.addFieldFlag(
-		ctx,
-		messageBinder.positionalFlagSet,
-		field,
-		&autocliv1.FlagOptions{Name: fmt.Sprintf("%d", len(messageBinder.positionalArgs))},
-		namingOptions{},
-	)
-	if err != nil {
-		return fieldBinding{}, err
-	}
-
-	return fieldBinding{
-		field:    field,
-		hasValue: hasValue,
-	}, nil
-}
-
->>>>>>> 73bedad9a (fix(client/v2): add fallbacks when incorrect protos (#24449))
 // bindPageRequest create a flag for pagination
 func (b *Builder) bindPageRequest(ctx *context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor) (HasValue, error) {
 	return b.addMessageFlags(

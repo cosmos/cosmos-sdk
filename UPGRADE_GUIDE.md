@@ -12,14 +12,14 @@ After completing this guide, applications will have:
 
 ## Table of Contents
 
-- [App Wiring Changes](#app-wiring-changes)
-- [Adding ProtocolPool Module](#adding-protocolpool-module)
-  - [Manual Wiring](#protocolpool-manual-wiring)
-  - [DI Wiring](#protocolpool-di-wiring)
-- [Adding Epochs Module](#adding-epochs-module)
-  - [Manual Wiring](#epochs-manual-wiring)
-  - [DI Wiring](#epochs-di-wiring)
-- [Enable Unordered Transactions](#enable-unordered-transactions)
+- [App Wiring Changes (REQUIRED)](#app-wiring-changes-required)
+- [Adding ProtocolPool Module (OPTIONAL)](#adding-protocolpool-module-optional)
+  - [ProtocolPool Manual Wiring](#protocolpool-manual-wiring)
+  - [ProtocolPool DI Wiring](#protocolpool-di-wiring)
+- [Adding Epochs Module (OPTIONAL)](#adding-epochs-module-optional)
+  - [Epochs Manual Wiring](#epochs-manual-wiring)
+  - [Epochs DI Wiring](#epochs-di-wiring)
+- [Enable Unordered Transactions (OPTIONAL)](#enable-unordered-transactions-optional)
 - [Upgrade Handler](#upgrade-handler)
 
 ## App Wiring Changes **REQUIRED**

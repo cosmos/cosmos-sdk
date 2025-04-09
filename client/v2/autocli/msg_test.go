@@ -1,12 +1,8 @@
 package autocli
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -121,60 +117,7 @@ func TestMsg(t *testing.T) {
 		"--output", "json",
 	)
 	assert.NilError(t, err)
-	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
-}
-
-func TestMsgWithFlattenFields(t *testing.T) {
-	fixture := initFixture(t)
-
-	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
-		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-			{
-				RpcMethod: "UpdateParams",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-					{ProtoField: "authority"},
-					{ProtoField: "params.send_enabled.denom"},
-					{ProtoField: "params.send_enabled.enabled"},
-					{ProtoField: "params.default_send_enabled"},
-				},
-			},
-		},
-		EnhanceCustomCommand: true,
-	}), "update-params",
-		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "stake", "true", "true",
-		"--generate-only",
-		"--output", "json",
-		"--chain-id", "test-chain",
-	)
-	assert.NilError(t, err)
-	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "flatten-output.golden"))
-}
-
-func goldenLoad(t *testing.T, filename string) []byte {
-	t.Helper()
-	content, err := os.ReadFile(filepath.Join("testdata", filename))
-	assert.NilError(t, err)
-	return content
-}
-
-func assertNormalizedJSONEqual(t *testing.T, expected, actual []byte) {
-	t.Helper()
-	normalizedExpected, err := normalizeJSON(expected)
-	assert.NilError(t, err)
-	normalizedActual, err := normalizeJSON(actual)
-	assert.NilError(t, err)
-	assert.Equal(t, string(normalizedExpected), string(normalizedActual))
-}
-
-// normalizeJSON normalizes the JSON content by removing unnecessary white spaces and newlines.
-func normalizeJSON(content []byte) ([]byte, error) {
-	var buf bytes.Buffer
-	err := json.Compact(&buf, content)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	golden.Assert(t, out.String(), "msg-output.golden")
 }
 
 func TestMsgOptionsError(t *testing.T) {

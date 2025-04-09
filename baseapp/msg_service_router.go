@@ -27,11 +27,11 @@ type MessageRouter interface {
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
-	interfaceRegistry    codectypes.InterfaceRegistry
-	routes               map[string]MsgServiceHandler
-	hybridHandlers       map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
-	circuitBreaker       CircuitBreaker
-	disableEventEmission bool
+	interfaceRegistry codectypes.InterfaceRegistry
+	routes            map[string]MsgServiceHandler
+	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
+	circuitBreaker    CircuitBreaker
+	discardEvents     bool
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -216,9 +216,13 @@ func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.I
 	msr.interfaceRegistry = interfaceRegistry
 }
 
+// newEventManager creates a new event manager.
+// If discardEvents is true, it
+// returns a discardEventManager which does not record any events,
+// otherwise it returns a new EventManager which does collect events.
 func (msr *MsgServiceRouter) newEventManager() sdk.EventManagerI {
-	if msr.disableEventEmission {
-		return discardingEventManager{}
+	if msr.discardEvents {
+		return discardEventManager{}
 	}
 	return sdk.NewEventManager()
 }

@@ -404,8 +404,9 @@ func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
 }
 
-// SetDisableEventEmission configures whether or not events should be discarded whenever they are collected.
-// Disabling events on validator nodes will speed up block processing.
-func (app *BaseApp) SetDisableEventEmission(disableEventEmission bool) {
-	app.msgServiceRouter.disableEventEmission = disableEventEmission
+// SetDiscardEvents configures whether events should be discarded when they are collected.
+// Enabling this on validator nodes eliminates any overhead that events processing may
+// have and can be a strategy to optimize performance and block times.
+func (app *BaseApp) SetDiscardEvents(discardEvents bool) {
+	app.msgServiceRouter.discardEvents = discardEvents
 }

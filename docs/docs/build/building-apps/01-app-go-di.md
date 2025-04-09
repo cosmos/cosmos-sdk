@@ -103,7 +103,7 @@ modules:
       "@type": cosmos.tx.module.v1.Module
 ```
 
-A more complete example of `app.yaml` can be found [here](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/example_app.yaml).
+A more complete example of `app.yaml` can be found [here](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/simapp/example_app.yaml).
 
 ## `app_di.go`
 

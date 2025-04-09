@@ -8,7 +8,11 @@ import (
 )
 
 // discardEventManager is an EventManager that discards all events.
+// This can be used as the EventMangerI implementation for sdk.Context
+// when we don't want to collect events for performance reasons.
 type discardEventManager struct{}
+
+var _ sdk.EventManagerI = discardEventManager{}
 
 func (d discardEventManager) Events() sdk.Events {
 	return sdk.EmptyEvents()
@@ -29,5 +33,3 @@ func (d discardEventManager) EmitTypedEvents(...proto.Message) error {
 func (d discardEventManager) EmitEvent(sdk.Event) {}
 
 func (d discardEventManager) EmitEvents(sdk.Events) {}
-
-var _ sdk.EventManagerI = discardEventManager{}

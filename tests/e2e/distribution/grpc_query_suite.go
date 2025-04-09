@@ -515,6 +515,8 @@ func (s *GRPCQueryTestSuite) TestQueryResponseMeta() {
 	baseURL := val.APIAddress
 	startHeight, err := s.network.LatestHeight()
 	s.Require().NoError(err)
+	// wait 1 block to ensure state is committed
+	s.Require().NoError(s.network.WaitForNextBlock())
 	// when
 	queryURL := fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, val.ValAddress.String())
 	_, headers, err := doRequest(queryURL, map[string]string{})

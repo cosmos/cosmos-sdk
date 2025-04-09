@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/suite"

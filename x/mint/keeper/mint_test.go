@@ -101,14 +101,9 @@ func (s *MintFnTestSuite) TestDefaultMintFn_Success() {
 
 	// Optionally, verify that a mint event has been emitted.
 	events := s.ctx.EventManager().Events()
-	foundMintEvent := false
-	for _, ev := range events {
-		if ev.Type == types.EventTypeMint {
-			foundMintEvent = true
-			break
-		}
-	}
-	s.Require().True(foundMintEvent, "expected a mint event to be emitted")
+	s.Require().True(slices.ContainsFunc(events, func(event sdk.Event) bool {
+		return event.Type == types.EventTypeMint
+	}), "expected a mint event to be emitted")
 }
 
 // customMintFn defines a custom minting function that overrides minter behavior.

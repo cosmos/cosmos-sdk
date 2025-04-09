@@ -167,10 +167,10 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 		return nil, fmt.Errorf("could not read summary: %w", err)
 	}
 
-	rv.Expedited, err = flagSet.GetBool(FlagExpedited)
-	if err != nil {
-		return nil, fmt.Errorf("could not read expedited: %w", err)
-	}
+	// rv.Expedited, err = flagSet.GetBool(FlagExpedited)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("could not read expedited: %w", err)
+	// }
 
 	rv.Proposer = proposer
 

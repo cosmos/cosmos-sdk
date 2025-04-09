@@ -60,7 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * x/distribution can now utilize an externally managed community pool. NOTE: this will make the message handlers for FundCommunityPool and CommunityPoolSpend error, as well as the query handler for CommunityPool.
 * (client) [#18101](https://github.com/cosmos/cosmos-sdk/pull/18101) Add a `keyring-default-keyname` in `client.toml` for specifying a default key name, and skip the need to use the `--from` flag when signing transactions.
 * (x/gov) [#24355](https://github.com/cosmos/cosmos-sdk/pull/24355) Allow users to set a custom CalculateVoteResultsAndVotingPower function to be used in govkeeper.Tally.
-* (baseapp) [#24440](https://github.com/cosmos/cosmos-sdk/pull/24440) Add a `BaseApp` option to disable event emission entirely for optimizing performance.
+* (baseapp) [#24440](https://github.com/cosmos/cosmos-sdk/pull/24440) Add a `BaseApp` option to discard all events when they are collected. This allows validator nodes to eliminate the overhead of event processing and collection for optimizing performance.
 
 ### Improvements
 

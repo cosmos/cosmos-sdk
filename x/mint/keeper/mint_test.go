@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"slices"
 	"testing"
 
@@ -84,7 +85,7 @@ func (s *MintFnTestSuite) TestDefaultMintFn_Success() {
 
 	minter, err := s.mintKeeper.Minter.Get(s.ctx)
 	s.Require().NoError(err)
-	expectedInflation := types.DefaultInflationCalculationFn(nil, minter, types.DefaultParams(), bondedRatio)
+	expectedInflation := types.DefaultInflationCalculationFn(context.TODO(), minter, types.DefaultParams(), bondedRatio)
 
 	// Set bank keeper expectations for minting and fee collection.
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, expectedCoins).Return(nil).Times(1)

@@ -65,6 +65,8 @@ type AppOptions struct {
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	mergedFiles, err := proto.MergedRegistry()
 	if err != nil {
+		// we can safely ignore this error, as this should have been called somewhere earlier
+		// in the app's lifecycle.
 		mergedFiles = protoregistry.GlobalFiles
 	}
 

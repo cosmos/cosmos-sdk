@@ -183,8 +183,7 @@ func (s *MintFnTestSuite) TestCustomMintFn() {
 	s.Require().NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 
 	// Expect bank keeper calls to be made for the custom minted coin.
-	expectedCoin := sdk.NewCoin("custom", math.NewInt(50))
-	expectedCoins := sdk.NewCoins(expectedCoin)
+	expectedCoins := sdk.NewCoins(sdk.NewCoin("custom", math.NewInt(50)))
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, expectedCoins).Return(nil).Times(1)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, expectedCoins).Return(nil).Times(1)
 

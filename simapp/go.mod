@@ -225,6 +225,7 @@ require (
 
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/store => ../store
 	cosmossdk.io/x/circuit => ../x/circuit
 )
 
@@ -242,5 +243,3 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-
-replace cosmossdk.io/store => ../store

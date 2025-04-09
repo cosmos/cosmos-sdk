@@ -32,6 +32,12 @@ const (
 	DecScalarType                    = "cosmos.Dec"
 )
 
+// FileResolver specifies how protobuf file descriptors will be resolved.
+type FileResolver interface {
+	protodesc.Resolver
+	RangeFiles(func(protoreflect.FileDescriptor) bool)
+}
+
 // Builder manages options for building pflag flags for protobuf messages.
 type Builder struct {
 	// TypeResolver specifies how protobuf types will be resolved.
@@ -298,7 +304,8 @@ func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, path string
 func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) (fieldBinding, error) {
 	field := fields.ByName(name)
 	if field == nil {
-		return fieldBinding{}, fmt.Errorf("can't find field %s", name) // TODO: it will improve error if msg.FullName() was included.`
+		// return fieldBinding{}, fmt.Errorf("can't find field %s", name) // TODO: it will improve error if msg.FullName() was included.`
+		return fieldBinding{}, nil
 	}
 
 	_, hasValue, err := b.addFieldFlag(

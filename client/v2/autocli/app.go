@@ -43,8 +43,7 @@ type AppOptions struct {
 	ConsensusAddressCodec runtime.ConsensusAddressCodec
 
 	// ClientCtx contains the necessary information needed to execute the commands.
-	// Deprecated: ClientCtx is not used by autocli anymore.
-	ClientCtx client.Context `optional:"true"`
+	ClientCtx client.Context
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -63,11 +62,16 @@ type AppOptions struct {
 //	rootCmd := initRootCmd()
 //	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
-	mergedFiles, err := proto.MergedRegistry()
+	var (
+		mergedFiles flag.FileResolver
+		err         error
+	)
+
+	mergedFiles, err = proto.MergedRegistry()
 	if err != nil {
 		// we can safely ignore this error, as this should have been called somewhere earlier
 		// in the app's lifecycle.
-		mergedFiles = protoregistry.GlobalFiles
+		mergedFiles = appOptions.ClientCtx.InterfaceRegistry
 	}
 
 	builder := &Builder{

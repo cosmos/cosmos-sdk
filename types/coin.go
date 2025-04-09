@@ -690,8 +690,12 @@ func (coins Coins) Empty() bool {
 	return len(coins) == 0
 }
 
-// AmountOf returns the amount of a denom from coins
+// AmountOf returns the amount of a denom from coins.  Will return 0 if the denom is invalid.
 func (coins Coins) AmountOf(denom string) math.Int {
+	if err := ValidateDenom(denom); err != nil {
+		return math.ZeroInt()
+	}
+
 	return coins.AmountOfNoDenomValidation(denom)
 }
 

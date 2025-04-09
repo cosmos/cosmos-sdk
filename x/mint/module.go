@@ -100,10 +100,14 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-	// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
-	_ types.InflationCalculationFn,
+// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
+	ic types.InflationCalculationFn,
 	ss exported.Subspace,
 ) AppModule {
+	if ic != nil {
+		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, use the WithMintFn option when construction the x/mint keeper as follows: mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn))")
+	}
+
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,

@@ -62,7 +62,6 @@ func (s *MintFnTestSuite) SetupTest() {
 		s.bankKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		// keeper.WithMintFn(CUSTOM MINT FN HERE),
 	)
 
 	// Set default parameters.

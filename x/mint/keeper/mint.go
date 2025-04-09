@@ -65,8 +65,7 @@ func DefaultMintFn(ic types.InflationCalculationFn) MintFn {
 			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 		}
 
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		sdkCtx.EventManager().EmitEvent(
+		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeMint,
 				sdk.NewAttribute(types.AttributeKeyBondedRatio, bondedRatio.String()),

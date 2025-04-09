@@ -68,8 +68,8 @@ github.com/cosmos/iavl v1.2.0/go.mod h1:HidWWLVAtODJqFD6Hbne2Y0q3SdxByJepHUOeoH4
 github.com/cosmos/ics23/go v0.11.0 h1:jk5skjT0TqX5e5QJbEnwXIS2yI2vnmLOgpQPeM5RtnU=
 github.com/cosmos/ics23/go v0.11.0/go.mod h1:A8OjxPE67hHST4Icw94hOxxFEJMBG031xIGF/JHNIY0=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
-github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20250314045044-c7a9e4b27e60 h1:iheWBKFToBmW2uwoMsVueRXvAJCf0dhAqRNaE+nLNd4=
-github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20250314045044-c7a9e4b27e60/go.mod h1:V5uYJTUfFmRQzo2PjqSVnEqUR2M68tJTJr8Y1GjpkdM=
+github.com/crypto-org-chain/cronos/memiavl v0.1.0 h1:bHjD9mdra/SoByljilIgIkm2Tavkswy4qT6SLvVzDic=
+github.com/crypto-org-chain/cronos/memiavl v0.1.0/go.mod h1:IyRvgFKOQPC/Qdx543PGl6WgeDOU+hWdv+xLz3stotc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

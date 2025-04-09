@@ -2,8 +2,6 @@ module cosmossdk.io/store
 
 go 1.23.0
 
-replace github.com/crypto-org-chain/cronos/memiavl => github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20250314045044-c7a9e4b27e60
-
 require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
@@ -13,7 +11,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.2.0
 	github.com/cosmos/ics23/go v0.11.0
-	github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20250314045044-c7a9e4b27e60
+	github.com/crypto-org-chain/cronos/memiavl v0.1.0
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-metrics v0.5.4

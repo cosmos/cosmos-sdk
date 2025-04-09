@@ -840,8 +840,8 @@ github.com/creachadair/tomledit v0.0.24 h1:5Xjr25R2esu1rKCbQEmjZYlrhFkDspoAbAKb6
 github.com/creachadair/tomledit v0.0.24/go.mod h1:9qHbShRWQzSCcn617cMzg4eab1vbLCOjOshAWSzWr8U=
 github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
-github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20250314045044-c7a9e4b27e60 h1:iheWBKFToBmW2uwoMsVueRXvAJCf0dhAqRNaE+nLNd4=
-github.com/crypto-org-chain/cronos/memiavl v0.0.5-0.20250314045044-c7a9e4b27e60/go.mod h1:V5uYJTUfFmRQzo2PjqSVnEqUR2M68tJTJr8Y1GjpkdM=
+github.com/crypto-org-chain/cronos/memiavl v0.1.0 h1:bHjD9mdra/SoByljilIgIkm2Tavkswy4qT6SLvVzDic=
+github.com/crypto-org-chain/cronos/memiavl v0.1.0/go.mod h1:IyRvgFKOQPC/Qdx543PGl6WgeDOU+hWdv+xLz3stotc=
 github.com/danieljoos/wincred v1.1.2 h1:QLdCxFs1/Yl4zduvBdcHB8goaYk9RARS2SgLLRuAyr0=
 github.com/danieljoos/wincred v1.1.2/go.mod h1:GijpziifJoIBfYh+S7BbkdUTU4LfM+QnGqR5Vl2tAx0=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

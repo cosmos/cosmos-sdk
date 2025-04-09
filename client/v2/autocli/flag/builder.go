@@ -34,15 +34,13 @@ const (
 
 // Builder manages options for building pflag flags for protobuf messages.
 type Builder struct {
-	// TypeResolver specifies how protobuf types will be resolved. If it is
-	// nil protoregistry.GlobalTypes will be used.
+	// TypeResolver specifies how protobuf types will be resolved.
 	TypeResolver interface {
 		protoregistry.MessageTypeResolver
 		protoregistry.ExtensionTypeResolver
 	}
 
-	// FileResolver specifies how protobuf file descriptors will be resolved. If it is
-	// nil protoregistry.GlobalFiles will be used.
+	// FileResolver specifies how protobuf file descriptors will be resolved.
 	FileResolver interface {
 		protodesc.Resolver
 		RangeFiles(func(protoreflect.FileDescriptor) bool)

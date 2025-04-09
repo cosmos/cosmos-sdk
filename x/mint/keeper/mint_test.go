@@ -80,8 +80,7 @@ func (s *MintFnTestSuite) TestDefaultMintFn_Success() {
 	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingSupply, nil).Times(1)
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil).Times(1)
 
-	expectedCoin := sdk.NewCoin("stake", math.NewInt(20))
-	expectedCoins := sdk.NewCoins(expectedCoin)
+	expectedCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(20)))
 
 	// Set bank keeper expectations for minting and fee collection.
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, expectedCoins).Return(nil).Times(1)

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -61,8 +62,6 @@ type AppOptions struct {
 //	rootCmd := initRootCmd()
 //	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
-<<<<<<< HEAD
-=======
 	var (
 		mergedFiles flag.FileResolver
 		err         error
@@ -75,11 +74,10 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		mergedFiles = appOptions.ClientCtx.InterfaceRegistry
 	}
 
->>>>>>> 73bedad9a (fix(client/v2): add fallbacks when incorrect protos (#24449))
 	builder := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
-			FileResolver:          appOptions.ClientCtx.InterfaceRegistry,
+			FileResolver:          mergedFiles,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,

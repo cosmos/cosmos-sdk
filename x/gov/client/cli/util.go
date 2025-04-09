@@ -131,7 +131,7 @@ func AddGovPropFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagMetadata, "", "The metadata to include with the governance proposal")
 	cmd.Flags().String(FlagTitle, "", "The title to put on the governance proposal")
 	cmd.Flags().String(FlagSummary, "", "The summary to include with the governance proposal")
-	cmd.Flags().Bool(FlagExpedited, false, "Whether to expedite the governance proposal")
+	// cmd.Flags().Bool(FlagExpedited, false, "Whether to expedite the governance proposal") // cannot be enabled because of IBC redefining this flag in `upgrade-channels` command.
 }
 
 // ReadGovPropCmdFlags parses a MsgSubmitProposal from the provided context and flags.
@@ -167,10 +167,10 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 		return nil, fmt.Errorf("could not read summary: %w", err)
 	}
 
-	rv.Expedited, err = flagSet.GetBool(FlagExpedited)
-	if err != nil {
-		return nil, fmt.Errorf("could not read expedited: %w", err)
-	}
+	// rv.Expedited, err = flagSet.GetBool(FlagExpedited)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("could not read expedited: %w", err)
+	// }
 
 	rv.Proposer = proposer
 

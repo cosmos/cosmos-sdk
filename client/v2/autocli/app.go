@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"fmt"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -64,7 +65,7 @@ type AppOptions struct {
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	mergedFiles, err := proto.MergedRegistry()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get merged files: %w", err)
 	}
 	builder := &Builder{
 		Builder: flag.Builder{

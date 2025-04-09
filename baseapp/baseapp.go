@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"maps"
 	"math"
 	"slices"
@@ -250,6 +251,19 @@ func NewBaseApp(
 	// Initialize with an empty interface registry to avoid nil pointer dereference.
 	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs baseapp will panic.
 	app.cdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+
+	protoFiles, err := proto.MergedRegistry()
+	if err != nil {
+		logger.Warn("error creating merged proto registry", err)
+
+	} else {
+		err = msgservice.ValidateProtoAnnotations(protoFiles)
+		if err != nil {
+			// Once we switch to using protoreflect-based antehandlers, we might
+			// want to panic here instead of logging a warning.
+			logger.Warn("error validating merged proto registry annotations", err)
+		}
+	}
 
 	return app
 }

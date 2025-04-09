@@ -29,13 +29,13 @@ The `app_config.go` file is the single place to configure all modules parameters
 1. Create the `AppConfig` variable:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_di.go#L113-L161
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L289-L303
     ```
 
-    Where the `appConfig`, combine the [runtime](./00-runtime.md) and the modules configuration.
+    Where the `appConfig` combines the [runtime](./00-runtime.md) configuration and the (extra) modules configuration.
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L102-L106
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_di.go#L113-L161
     ```
 
 2. Configure the `runtime` module:
@@ -52,13 +52,13 @@ The `app_config.go` file is the single place to configure all modules parameters
     Next to runtime, the other (depinject-enabled) modules are wired in the `AppConfig`:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L222-L227
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L103-L286
     ```
 
     Note: the `tx` isn't a module, but a configuration. It should be wired in the `AppConfig` as well.
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L103-L286
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L222-L227
     ```
 
 See the complete `app_config.go` file for `SimApp` [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go).
@@ -103,7 +103,7 @@ modules:
       "@type": cosmos.tx.module.v1.Module
 ```
 
-A more complete example of `app.yaml` can be found [here](https://github.com/cosmosregistry/chain-minimal/blob/mini-v050.2/app/app.yaml).
+A more complete example of `app.yaml` can be found [here](https://github.com/cosmonity/chain-minimal/blob/mini-v050.3/app/app.yaml).
 
 ## `app_di.go`
 

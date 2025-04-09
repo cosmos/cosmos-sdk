@@ -171,7 +171,7 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 
 		s := strings.Split(arg.ProtoField, ".")
 		if len(s) == 1 {
-			f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(arg.ProtoField), fields)
+			f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(arg.ProtoField), fields, true)
 			if err != nil {
 				return nil, err
 			}
@@ -281,7 +281,7 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, path string, s []string, msg protoreflect.MessageType, messageBinder *MessageBinder) error {
 	fields := msg.Descriptor().Fields()
 	if len(s) == 1 {
-		f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(s[0]), fields)
+		f, err := b.addFieldBindingToArgs(ctx, messageBinder, protoreflect.Name(s[0]), fields, false)
 		if err != nil {
 			return err
 		}
@@ -301,14 +301,18 @@ func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, path string
 
 // addFieldBindingToArgs adds a fieldBinding for a positional argument to the message binder.
 // The fieldBinding is appended to the positional arguments list in the message binder.
-func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) (fieldBinding, error) {
+func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors, mustFieldExist bool) (fieldBinding, error) {
 	field := fields.ByName(name)
 	if field == nil {
-		// This should only happen when the proto descriptors aren't fully loaded.
-		// This can be because the proto descriptors are not registered in the registry.
-		// We should not return an error here, but rather just skip the field, as it is only
-		// a problem when the user defines an inner message and the field is not registered.
-		return fieldBinding{}, nil
+		if mustFieldExist {
+			return fieldBinding{}, fmt.Errorf("can't find field %s", name)
+		} else {
+			// This should only happen when the proto descriptors aren't fully loaded (inner proto wrong)
+			// This can be because the proto descriptors are not registered in the registry.
+			// We should not return an error here, but rather just skip the field, as it is only
+			// a problem when the user defines an inner message and the field is not registered.
+			return fieldBinding{}, nil
+		}
 	}
 
 	_, hasValue, err := b.addFieldFlag(

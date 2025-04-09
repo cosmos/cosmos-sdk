@@ -18,7 +18,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/baseapp/abci_utils.go#L21
 ```
 
 Like `PrepareProposal`, this implementation is the default and can be modified by
-the application developer in [`app_di.go`](../building-apps/01-app-go-v2.md). If you decide to implement
+the application developer in [`app_di.go`](../building-apps/01-app-go-di.md). If you decide to implement
 your own `ProcessProposal` handler, you must ensure that the transactions
 provided in the proposal DO NOT exceed the maximum block gas and `maxtxbytes` (if set).
 

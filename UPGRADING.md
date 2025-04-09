@@ -139,6 +139,38 @@ Required wiring:
 - entry in SetGenesisModuleOrder
 - entry in SetExportModuleOrder **before `x/bank`**
 
+## Custom Minting Function in `x/mint`
+
+This release refactors the minting process to support a configurable mint function. The minting logic is now abstracted as a `MintFn` with a default implementation that can be overridden.
+
+### What’s New
+
+- **Configurable Mint Function:**  
+  A new `MintFn` abstraction is introduced. By default, the module uses `DefaultMintFn`, but you can supply your own implementation.
+
+- **Deprecated InflationCalculationFn Parameter:**  
+  The `InflationCalculationFn` argument previously provided to `mint.NewAppModule()` is now ignored and must be `nil`. To customize the default minter’s inflation behavior, wrap your custom function with `mintkeeper.DefaultMintFn` and pass it via the `WithMintFn` option:
+  ```go
+  mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))
+  
+### How to Upgrade
+
+1. **Using the Default Minting Function**
+
+   No action is needed if you’re happy with the default behavior. Make sure your application wiring initializes the MintKeeper like this:
+
+   ```go
+   mintKeeper := mintkeeper.NewKeeper(
+       appCodec,
+       storeService,
+       stakingKeeper,
+       accountKeeper,
+       bankKeeper,
+       authtypes.FeeCollectorName,
+       authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+       // mintkeeper.WithMintFn(customMintFn), // Use custom minting function
+   )
+
 ### Misc Changes
 
 #### Testnet's init-files Command

@@ -1195,7 +1195,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptotypes.PubKey, signatures [][]byte) {
 	pubkeys = make([]cryptotypes.PubKey, n)
 	signatures = make([][]byte, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		var privkey cryptotypes.PrivKey = secp256k1.GenPrivKey()
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
@@ -1232,7 +1232,7 @@ func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
 func TestCountSubkeys(t *testing.T) {
 	genPubKeys := func(n int) []cryptotypes.PubKey {
 		var ret []cryptotypes.PubKey
-		for i := 0; i < n; i++ {
+		for range n {
 			ret = append(ret, secp256k1.GenPrivKey().PubKey())
 		}
 		return ret
@@ -1274,7 +1274,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 					addrs []sdk.AccAddress
 					privs []cryptotypes.PrivKey
 				)
-				for i := 0; i < 8; i++ {
+				for i := range 8 {
 					addrs = append(addrs, accs[i].acc.GetAddress())
 					privs = append(privs, accs[i].priv)
 				}

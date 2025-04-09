@@ -831,14 +831,12 @@ func parsePath(path string) (storeName, subpath string, err error) {
 		return storeName, subpath, errorsmod.Wrapf(types.ErrUnknownRequest, "invalid path: %s", path)
 	}
 
-	paths := strings.SplitN(path[1:], "/", 2)
-	storeName = paths[0]
-
-	if len(paths) == 2 {
-		subpath = "/" + paths[1]
+	storeName, subpath, found := strings.Cut(path[1:], "/")
+	if !found {
+		return storeName, subpath, nil
 	}
 
-	return storeName, subpath, nil
+	return storeName, "/" + subpath, nil
 }
 
 //---------------------- Snapshotting ------------------

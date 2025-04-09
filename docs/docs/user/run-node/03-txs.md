@@ -179,6 +179,40 @@ func sendTx() error {
 
 At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
+#### Generating an Unordered Transaction
+
+Starting with Cosmos SDK v0.53.0, users may send unordered transactions to chains that have the feature enabled.
+
+Using the example above, we can set the required fields to mark a transaction as unordered. 
+By default, unordered transactions charge an extra 2240 units of gas to offset the additional storage overhead that supports their functionality.
+The extra units of gas are customizable and therefore vary by chain, so be sure to check the chain's ante handler for the gas value set, if any.
+
+```go
+func sendTx() error {
+    // --snip--
+    expiration := 5 * time.Minute
+    txBuilder.SetUnordered(true)
+    txBuilder.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
+}
+```
+
+Unordered transactions from the same account must use a unique timeout timestamp value. The difference between each timeout timestamp value may be as small as a nanosecond, however.
+
+```go
+import (
+	"github.com/cosmos/cosmos-sdk/client"
+)
+
+func sendMessages(txBuilders []client.TxBuilder) error {
+    // --snip--
+    expiration := 5 * time.Minute
+    for _, txb := range txBuilders {
+        txb.SetUnordered(true)
+        txb.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
+    }
+}
+```
+
 ### Signing a Transaction
 
 We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
@@ -269,7 +303,7 @@ func sendTx() error {
 
 ### Broadcasting a Transaction
 
-The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the CometBFT RPC is also posible. An overview of the differences between these methods is exposed [here](../../learn/advanced/06-grpc_rest.md). For this tutorial, we will only describe the gRPC method.
+The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the CometBFT RPC is also possible. An overview of the differences between these methods is exposed [here](../../learn/advanced/06-grpc_rest.md). For this tutorial, we will only describe the gRPC method.
 
 ```go
 import (

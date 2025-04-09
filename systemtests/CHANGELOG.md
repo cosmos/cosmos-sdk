@@ -36,6 +36,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+## [v1.1.0] -  2025-04-24
+
+* SDK v0.53.x support.
+
 ## [v1.1.0] - 2025-01-05
 
 * [#23359](https://github.com/cosmos/cosmos-sdk/pull/23359) Add `RunCommandWithInputAndArgs` on CLIWrapper.

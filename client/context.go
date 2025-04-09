@@ -27,37 +27,38 @@ type PreprocessTxFn func(chainID string, key keyring.KeyType, tx TxBuilder) erro
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
-	FromAddress       sdk.AccAddress
-	Client            CometRPC
-	GRPCClient        *grpc.ClientConn
-	ChainID           string
-	Codec             codec.Codec
-	InterfaceRegistry codectypes.InterfaceRegistry
-	Input             io.Reader
-	Keyring           keyring.Keyring
-	KeyringOptions    []keyring.Option
-	Output            io.Writer
-	OutputFormat      string
-	Height            int64
-	HomeDir           string
-	KeyringDir        string
-	From              string
-	BroadcastMode     string
-	FromName          string
-	SignModeStr       string
-	UseLedger         bool
-	Simulate          bool
-	GenerateOnly      bool
-	Offline           bool
-	SkipConfirm       bool
-	TxConfig          TxConfig
-	AccountRetriever  AccountRetriever
-	NodeURI           string
-	FeePayer          sdk.AccAddress
-	FeeGranter        sdk.AccAddress
-	Viper             *viper.Viper
-	LedgerHasProtobuf bool
-	PreprocessTxHook  PreprocessTxFn
+	FromAddress           sdk.AccAddress
+	Client                CometRPC
+	GRPCClient            *grpc.ClientConn
+	ChainID               string
+	Codec                 codec.Codec
+	InterfaceRegistry     codectypes.InterfaceRegistry
+	Input                 io.Reader
+	Keyring               keyring.Keyring
+	KeyringOptions        []keyring.Option
+	KeyringDir            string
+	KeyringDefaultKeyName string
+	Output                io.Writer
+	OutputFormat          string
+	Height                int64
+	HomeDir               string
+	From                  string
+	BroadcastMode         string
+	FromName              string
+	SignModeStr           string
+	UseLedger             bool
+	Simulate              bool
+	GenerateOnly          bool
+	Offline               bool
+	SkipConfirm           bool
+	TxConfig              TxConfig
+	AccountRetriever      AccountRetriever
+	NodeURI               string
+	FeePayer              sdk.AccAddress
+	FeeGranter            sdk.AccAddress
+	Viper                 *viper.Viper
+	LedgerHasProtobuf     bool
+	PreprocessTxHook      PreprocessTxFn
 
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
 	IsAux bool
@@ -177,6 +178,12 @@ func (ctx Context) WithHomeDir(dir string) Context {
 // WithKeyringDir returns a copy of the Context with KeyringDir set.
 func (ctx Context) WithKeyringDir(dir string) Context {
 	ctx.KeyringDir = dir
+	return ctx
+}
+
+// WithKeyringDefaultKeyName returns a copy of the Context with KeyringDefaultKeyName set.
+func (ctx Context) WithKeyringDefaultKeyName(keyName string) Context {
+	ctx.KeyringDefaultKeyName = keyName
 	return ctx
 }
 
@@ -333,7 +340,7 @@ func (ctx Context) PrintProto(toPrint proto.Message) error {
 // PrintObjectLegacy is a variant of PrintProto that doesn't require a proto.Message type
 // and uses amino JSON encoding.
 // Deprecated: It will be removed in the near future!
-func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
+func (ctx Context) PrintObjectLegacy(toPrint any) error {
 	out, err := ctx.LegacyAmino.MarshalJSON(toPrint)
 	if err != nil {
 		return err
@@ -380,7 +387,13 @@ func (ctx Context) printOutput(out []byte) error {
 // GetFromFields returns a from account address, account name and keyring type, given either an address or key name.
 // If clientCtx.Simulate is true the keystore is not accessed and a valid address must be provided
 // If clientCtx.GenerateOnly is true the keystore is only accessed if a key name is provided
+// If from is empty, the default key if specified in the context will be used
 func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccAddress, string, keyring.KeyType, error) {
+	if from == "" && clientCtx.KeyringDefaultKeyName != "" {
+		from = clientCtx.KeyringDefaultKeyName
+		_ = clientCtx.PrintString(fmt.Sprintf("No key name or address provided; using the default key: %s\n", clientCtx.KeyringDefaultKeyName))
+	}
+
 	if from == "" {
 		return nil, "", 0, nil
 	}

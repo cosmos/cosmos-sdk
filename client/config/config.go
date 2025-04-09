@@ -8,22 +8,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
+// DefaultConfig returns default config for the client.toml
 func DefaultConfig() *ClientConfig {
 	return &ClientConfig{
-		ChainID:        "",
-		KeyringBackend: "os",
-		Output:         "text",
-		Node:           "tcp://localhost:26657",
-		BroadcastMode:  "sync",
+		ChainID:               "",
+		KeyringBackend:        "os",
+		KeyringDefaultKeyName: "",
+		Output:                "text",
+		Node:                  "tcp://localhost:26657",
+		BroadcastMode:         "sync",
 	}
 }
 
 type ClientConfig struct {
-	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
-	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
-	Output         string `mapstructure:"output" json:"output"`
-	Node           string `mapstructure:"node" json:"node"`
-	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
+	ChainID               string `mapstructure:"chain-id" json:"chain-id"`
+	KeyringBackend        string `mapstructure:"keyring-backend" json:"keyring-backend"`
+	KeyringDefaultKeyName string `mapstructure:"keyring-default-keyname" json:"keyring-default-keyname"`
+	Output                string `mapstructure:"output" json:"output"`
+	Node                  string `mapstructure:"node" json:"node"`
+	BroadcastMode         string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
 func (c *ClientConfig) SetChainID(chainID string) {
@@ -94,7 +97,8 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
 	ctx = ctx.WithOutputFormat(conf.Output).
 		WithChainID(conf.ChainID).
-		WithKeyringDir(ctx.HomeDir)
+		WithKeyringDir(ctx.HomeDir).
+		WithKeyringDefaultKeyName(conf.KeyringDefaultKeyName)
 
 	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
 	if err != nil {

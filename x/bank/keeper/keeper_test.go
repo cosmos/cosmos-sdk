@@ -2010,7 +2010,6 @@ func (suite *KeeperTestSuite) TestMintCoinDenomGuard() {
 		},
 	}
 	for name, spec := range specs {
-
 		suite.T().Run(name, func(t *testing.T) {
 			suite.mockMintCoins(multiPermAcc)
 			gotErr := suite.bankKeeper.MintCoins(suite.ctx, multiPermAcc.Name, spec.amounts)

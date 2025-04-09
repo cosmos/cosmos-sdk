@@ -28,7 +28,7 @@ type App struct {
 }
 ```
 
-It is the struct that any Cosmos SDK application should embed to leverage the runtime module.
+Cosmos SDK applications should embed the `*runtime.App` struct to leverage the runtime module.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_di.go#L60-L61
@@ -67,7 +67,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L133
 
 The runtime module integrates with the `BaseApp` and other core SDK components to provide a seamless experience for developers.
 
-The developer only needs to embed the `App` struct in their application to leverage the runtime module.
+The developer only needs to embed the `runtime.App` struct in their application to leverage the runtime module.
 The configuration of the module manager and other core components is handled internally via the [`AppBuilder`](#4-application-building).
 
 ### 2. Module Registration
@@ -94,14 +94,14 @@ The SDK recommends using the declarative approach with `depinject` for module re
 ### 3. Service Registration
 
 Runtime registers all [core services](https://pkg.go.dev/cosmossdk.io/core) required by modules.
-These services include the `store`, the `event manager`, the `context`, and the `logger`.
-As runtime is doing the wiring of modules, it can ensure that the services are scoped to their respective modules.
+These services include `store`, `event manager`, `context`, and `logger`.
+Runtime ensures that services are scoped to their respective modules during the wiring process.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/runtime/module.go#L201-L235
 ```
 
-Additionally, runtime provides automatic registration of other essential (f.e gRPC routes) services, available to the App:
+Additionally, runtime provides automatic registration of other essential (i.e., gRPC routes) services available to the App:
 
 * AutoCLI Query Service
 * Reflection Service
@@ -137,7 +137,7 @@ More information on building applications can be found in the [next section](./0
 
 ## Best Practices
 
-1. **Module Order**: Carefully consider the order of modules in begin_blockers and end_blockers
+1. **Module Order**: Carefully consider the order of modules in begin_blockers, end_blockers, and pre_blockers.
 2. **Store Keys**: Use override_store_keys only when necessary to maintain clarity
 3. **Genesis Order**: Maintain correct initialization order in init_genesis
 4. **Migration Management**: Use order_migrations to control upgrade paths

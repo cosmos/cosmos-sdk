@@ -31,6 +31,7 @@ type MsgServiceRouter struct {
 	routes            map[string]MsgServiceHandler
 	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
 	circuitBreaker    CircuitBreaker
+	discardEvents     bool
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -169,7 +170,7 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 	}
 
 	msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
+		ctx = ctx.WithEventManager(msr.newEventManager())
 		interceptor := func(goCtx context.Context, _ any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 			goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 			return handler(goCtx, msg)
@@ -213,6 +214,17 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 // SetInterfaceRegistry sets the interface registry for the router.
 func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = interfaceRegistry
+}
+
+// newEventManager creates a new event manager.
+// If discardEvents is true, it
+// returns a discardEventManager which does not record any events,
+// otherwise it returns a new EventManager which does collect events.
+func (msr *MsgServiceRouter) newEventManager() sdk.EventManagerI {
+	if msr.discardEvents {
+		return discardEventManager{}
+	}
+	return sdk.NewEventManager()
 }
 
 func noopDecoder(_ any) error { return nil }

@@ -724,7 +724,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
 	var events []abci.Event
 	if app.preBlocker != nil {
-		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
+		ctx := app.finalizeBlockState.Context().WithEventManager(app.msgServiceRouter.newEventManager())
 		rsp, err := app.preBlocker(ctx, req)
 		if err != nil {
 			return nil, err
@@ -923,7 +923,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
-		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
+		anteCtx = anteCtx.WithEventManager(app.msgServiceRouter.newEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 
 		if !newCtx.IsZero() {
@@ -989,7 +989,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 		// The runMsgCtx context currently contains events emitted by the ante handler.
 		// We clear this to correctly order events without duplicates.
 		// Note that the state is still preserved.
-		postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
+		postCtx := runMsgCtx.WithEventManager(app.msgServiceRouter.newEventManager())
 
 		newCtx, errPostHandler := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
 		if errPostHandler != nil {
@@ -1051,22 +1051,24 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
-		// create message events
-		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
-		if err != nil {
-			return nil, errorsmod.Wrapf(err, "failed to create message events; message index: %d", i)
-		}
+		if !app.msgServiceRouter.discardEvents {
+			// create message events
+			msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])
+			if err != nil {
+				return nil, errorsmod.Wrapf(err, "failed to create message events; message index: %d", i)
+			}
 
-		// append message events and data
-		//
-		// Note: Each message result's data must be length-prefixed in order to
-		// separate each result.
-		for j, event := range msgEvents {
-			// append message index to all events
-			msgEvents[j] = event.AppendAttributes(sdk.NewAttribute("msg_index", strconv.Itoa(i)))
-		}
+			// append message events and data
+			//
+			// Note: Each message result's data must be length-prefixed in order to
+			// separate each result.
+			for j, event := range msgEvents {
+				// append message index to all events
+				msgEvents[j] = event.AppendAttributes(sdk.NewAttribute("msg_index", strconv.Itoa(i)))
+			}
 
-		events = events.AppendEvents(msgEvents)
+			events = events.AppendEvents(msgEvents)
+		}
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
 		// (which should represent 99% of the Msgs now, since everyone should

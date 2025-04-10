@@ -620,9 +620,18 @@ func TestABCI_CheckTx(t *testing.T) {
 }
 
 func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
+	testABCI_FinalizeBlock_DeliverTx(t, false)
+}
+
+func TestABCI_FinalizeBlock_DeliverTx_DiscardEvents(t *testing.T) {
+	testABCI_FinalizeBlock_DeliverTx(t, true)
+}
+
+func testABCI_FinalizeBlock_DeliverTx(t *testing.T, discardEvents bool) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
-	suite := NewBaseAppSuite(t, anteOpt)
+	discardEventOpt := func(bapp *baseapp.BaseApp) { bapp.SetDiscardEvents(discardEvents) }
+	suite := NewBaseAppSuite(t, anteOpt, discardEventOpt)
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
@@ -659,9 +668,13 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 			require.True(t, res.TxResults[i].IsOK(), fmt.Sprintf("%v", res))
 
 			events := res.TxResults[i].GetEvents()
-			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
-			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
-			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0].Attributes[0], events[2].Attributes[0], "msg handler update counter event")
+			if discardEvents {
+				require.Empty(t, events)
+			} else {
+				require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
+				require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+				require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0].Attributes[0], events[2].Attributes[0], "msg handler update counter event")
+			}
 		}
 
 		_, err = suite.baseApp.Commit()

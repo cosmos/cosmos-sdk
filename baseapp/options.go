@@ -403,3 +403,10 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
 }
+
+// SetDiscardEvents configures whether events should be discarded when they are collected.
+// Enabling this on validator nodes eliminates any overhead that events processing may
+// have and can be a strategy to optimize performance and block times.
+func (app *BaseApp) SetDiscardEvents(discardEvents bool) {
+	app.msgServiceRouter.discardEvents = discardEvents
+}

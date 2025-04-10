@@ -90,13 +90,10 @@ func NewTxBenchmarkSuite(tb testing.TB) *TxBenchmarkSuite {
 	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	assert.Equal(tb, uint32(0), txRes.Code)
 
+	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, txRes.TxHash)
 	assert.NilError(tb, err)
+	s.txHeight = resp.Height
 
-	var tr sdk.TxResponse
-	assert.NilError(tb, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
-	assert.Equal(tb, uint32(0), tr.Code)
-
-	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	assert.NilError(tb, err)
 	s.txHeight = resp.Height
 

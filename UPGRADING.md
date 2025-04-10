@@ -150,16 +150,18 @@ This release introduces the ability to configure a custom mint function in `x/mi
 
 - **Deprecated InflationCalculationFn Parameter:**  
   The `InflationCalculationFn` argument previously provided to `mint.NewAppModule()` is now ignored and must be `nil`. To customize the default minter’s inflation behavior, wrap your custom function with `mintkeeper.DefaultMintFn` and pass it via the `WithMintFn` option:
-  ```go
-  mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))
   
+```go
+  mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))
+```  
+
 ### How to Upgrade
 
 1. **Using the Default Minting Function**
 
    No action is needed if you’re happy with the default behavior. Make sure your application wiring initializes the MintKeeper like this:
 
-   ```go
+```go
    mintKeeper := mintkeeper.NewKeeper(
        appCodec,
        storeService,
@@ -168,8 +170,30 @@ This release introduces the ability to configure a custom mint function in `x/mi
        bankKeeper,
        authtypes.FeeCollectorName,
        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-       // mintkeeper.WithMintFn(customMintFn), // Use custom minting function
    )
+```
+
+2. **Using a Custom Minting Function**
+    
+    To use a custom minting function, define it as follows and pass it you your mintKeeper when constructing it:
+
+```go
+func myCustomMintFunc(ctx sdk.Context, k *mintkeeper.Keeper) {
+   // do minting...
+}
+
+// ...
+   mintKeeper := mintkeeper.NewKeeper(
+       appCodec,
+       storeService,
+       stakingKeeper,
+       accountKeeper,
+       bankKeeper,
+       authtypes.FeeCollectorName,
+       authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+       mintkeeper.WithMintFn(myCustomMintFunc), // Use custom minting function
+   )
+```
 
 ### Misc Changes
 

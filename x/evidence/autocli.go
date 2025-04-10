@@ -17,7 +17,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "Evidence",
-					Use:            "evidence <hash>",
+					Use:            "evidence [hash]",
 					Short:          "Query for evidence by hash",
 					Example:        fmt.Sprintf("%s query evidence evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "hash"}},

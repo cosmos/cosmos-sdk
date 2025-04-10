@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// log writer
+// log writter
 type LogWriter interface {
 	AddEntry(OperationEntry)
 	PrintLogs()
@@ -23,7 +23,7 @@ func NewLogWriter(testingmode bool) LogWriter {
 	return &StandardLogWriter{}
 }
 
-// log writer
+// log writter
 type StandardLogWriter struct {
 	Seed int64
 
@@ -32,7 +32,7 @@ type StandardLogWriter struct {
 	written   bool
 }
 
-// add an entry to the log writer
+// add an entry to the log writter
 func (lw *StandardLogWriter) AddEntry(opEntry OperationEntry) {
 	lw.OpEntries = append(lw.OpEntries, opEntry)
 }
@@ -47,7 +47,7 @@ func (lw *StandardLogWriter) PrintLogs() {
 	f := createLogFile(lw.Seed)
 	defer f.Close()
 
-	for i := 0; i < len(lw.OpEntries); i++ {
+	for i := range lw.OpEntries {
 		writeEntry := fmt.Sprintf("%s\n", (lw.OpEntries[i]).MustMarshal())
 		_, err := f.WriteString(writeEntry)
 		if err != nil {
@@ -76,12 +76,12 @@ func createLogFile(seed int64) *os.File {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Logs to writing to %q\n", filePath)
+	fmt.Printf("Logs to writing to %s\n", filePath)
 
 	return f
 }
 
-// dummy log writer
+// dummy log writter
 type DummyLogWriter struct{}
 
 // do nothing

@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule"
+	appmodule "cosmossdk.io/collections/corecompat"
 )
 
 func TestDefaultGenesis(t *testing.T) {
@@ -20,10 +20,10 @@ func TestDefaultGenesis(t *testing.T) {
 		return w, nil
 	}))
 	require.Len(t, writers, 4)
-	require.Equal(t, `[]`, writers[0].Buffer.String())
-	require.Equal(t, `[]`, writers[1].Buffer.String())
-	require.Equal(t, `[]`, writers[2].Buffer.String())
-	require.Equal(t, `[]`, writers[3].Buffer.String())
+	require.Equal(t, `[]`, writers[0].String())
+	require.Equal(t, `[]`, writers[1].String())
+	require.Equal(t, `[]`, writers[2].String())
+	require.Equal(t, `[]`, writers[3].String())
 }
 
 func TestValidateGenesis(t *testing.T) {
@@ -75,10 +75,10 @@ func TestExportGenesis(t *testing.T) {
 		return w, nil
 	}))
 	require.Len(t, writers, 4)
-	require.Equal(t, expectedItemGenesis, writers[0].Buffer.String())
-	require.Equal(t, expectedKeySetGenesis, writers[1].Buffer.String())
-	require.Equal(t, expectedMapGenesis, writers[2].Buffer.String())
-	require.Equal(t, expectedSequenceGenesis, writers[3].Buffer.String())
+	require.Equal(t, expectedItemGenesis, writers[0].String())
+	require.Equal(t, expectedKeySetGenesis, writers[1].String())
+	require.Equal(t, expectedMapGenesis, writers[2].String())
+	require.Equal(t, expectedSequenceGenesis, writers[3].String())
 }
 
 type testFixture struct {

@@ -51,6 +51,17 @@ func (s ReporterStatus) String() string {
 	}
 }
 
+func reporterStatusFrom(s uint32) ReporterStatus {
+	switch s {
+	case uint32(skipped):
+		return skipped
+	case uint32(completed):
+		return completed
+	default:
+		return undefined
+	}
+}
+
 // SkipHook is an interface that represents a callback hook used triggered on skip operations.
 // It provides a single method `Skip` that accepts variadic arguments. This interface is implemented
 // by Go stdlib testing.T and testing.B
@@ -89,7 +100,7 @@ func NewBasicSimulationReporter(optionalSkipHook ...SkipHook) *BasicSimulationRe
 		summary:       NewExecutionSummary(),
 	}
 	r.completedCallback = func(child *BasicSimulationReporter) {
-		r.summary.Add(child.module, child.msgTypeURL, ReporterStatus(child.status.Load()), child.Comment())
+		r.summary.Add(child.module, child.msgTypeURL, reporterStatusFrom(child.status.Load()), child.Comment())
 	}
 	return r
 }
@@ -127,11 +138,11 @@ func (x *BasicSimulationReporter) Skipf(comment string, args ...any) {
 }
 
 func (x *BasicSimulationReporter) IsSkipped() bool {
-	return ReporterStatus(x.status.Load()) > undefined
+	return reporterStatusFrom(x.status.Load()) > undefined
 }
 
 func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {
-	switch ReporterStatus(x.status.Load()) {
+	switch reporterStatusFrom(x.status.Load()) {
 	case skipped:
 		return simtypes.NoOpMsg(x.module, x.msgTypeURL, x.Comment())
 	case completed:
@@ -139,9 +150,9 @@ func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {
 		err := x.error
 		x.cMX.RUnlock()
 		if err == nil {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), true)
+			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), true, []byte{})
 		} else {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), false)
+			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), false, []byte{})
 		}
 	default:
 		x.Fail(errors.New("operation aborted before msg was executed"))
@@ -175,7 +186,7 @@ func (x *BasicSimulationReporter) Close() error {
 }
 
 func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...string) bool {
-	oldStatus := ReporterStatus(x.status.Load())
+	oldStatus := reporterStatusFrom(x.status.Load())
 	if oldStatus > next {
 		panic(fmt.Sprintf("can not switch from status %s to %s", oldStatus, next))
 	}

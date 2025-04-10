@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
@@ -29,8 +30,8 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *types.Module
-	Environment appmodule.Environment
+	Config       *types.Module
+	StoreService store.KVStoreService
 }
 
 type ModuleOutputs struct {
@@ -41,7 +42,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Environment)
+	k := keeper.NewKeeper(in.StoreService)
 	m := NewAppModule(k)
 
 	return ModuleOutputs{

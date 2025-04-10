@@ -7,20 +7,19 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/mint"
-	"cosmossdk.io/x/mint/keeper"
-	minttestutil "cosmossdk.io/x/mint/testutil"
-	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type MintTestSuite struct {
@@ -28,13 +27,13 @@ type MintTestSuite struct {
 
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	mintKeeper  *keeper.Keeper
+	mintKeeper  keeper.Keeper
 }
 
 func (suite *MintTestSuite) SetupTest() {
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx
 
@@ -42,21 +41,24 @@ func (suite *MintTestSuite) SetupTest() {
 	ctrl := gomock.NewController(suite.T())
 	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("mint").Return(sdk.AccAddress{})
 
 	suite.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
-		env,
+		storeService,
+		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
-		govModuleNameStr,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	err := suite.mintKeeper.Params.Set(suite.ctx, types.DefaultParams())
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, types.DefaultInitialMinter()))
+
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServerImpl(suite.mintKeeper))
 

@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 func (s *KeeperTestSuite) TestQueryEpochInfos() {
@@ -9,7 +9,7 @@ func (s *KeeperTestSuite) TestQueryEpochInfos() {
 	queryClient := s.queryClient
 
 	// Check that querying epoch infos on default genesis returns the default genesis epoch infos
-	epochInfosResponse, err := queryClient.EpochInfos(s.Ctx, &types.QueryEpochsInfoRequest{})
+	epochInfosResponse, err := queryClient.EpochInfos(s.Ctx, &types.QueryEpochInfosRequest{})
 	s.Require().NoError(err)
 	s.Require().Len(epochInfosResponse.Epochs, 4)
 	expectedEpochs := types.DefaultGenesis().Epochs

@@ -10,29 +10,27 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group"
-	groupkeeper "cosmossdk.io/x/group/keeper"
-	"cosmossdk.io/x/group/module"
-	grouptestutil "cosmossdk.io/x/group/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/module"
+	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
 type fixture struct {
 	ctx          types.Context
 	keeper       groupkeeper.Keeper
 	queryClient  group.QueryClient
-	addrs        []string
+	addrs        []types.AccAddress
 	defaultGroup *group.MsgCreateGroupWithPolicyResponse
 }
 
@@ -45,7 +43,7 @@ func initKeeper(t *testing.T) *fixture {
 
 	key := storetypes.NewKVStoreKey(group.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	ctx := testCtx.Ctx
 
@@ -56,40 +54,32 @@ func initKeeper(t *testing.T) *fixture {
 		encCfg.TxConfig.TxDecoder(),
 	)
 
-	addressCodec := address.NewBech32Codec("cosmos")
-	accAddrs := simtestutil.CreateIncrementalAccounts(6)
-	addrs := make([]string, len(accAddrs))
-
+	addrs := simtestutil.CreateIncrementalAccounts(6)
 	ctrl := gomock.NewController(t)
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
-	var err error
-	for i, addr := range accAddrs {
+	for _, addr := range addrs {
 		accountKeeper.EXPECT().GetAccount(gomock.Any(), addr).Return(authtypes.NewBaseAccountWithAddress(addr)).AnyTimes()
-		addrs[i], err = addressCodec.BytesToString(addr)
-		require.NoError(t, err)
 	}
-	accountKeeper.EXPECT().AddressCodec().Return(addressCodec).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// group policy expected calls
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	accountKeeper.EXPECT().NewAccount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	accountKeeper.EXPECT().SetAccount(gomock.Any(), gomock.Any()).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
-
-	groupKeeper = groupkeeper.NewKeeper(env, encCfg.Codec, accountKeeper, group.DefaultConfig())
+	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
 	group.RegisterQueryServer(queryHelper, groupKeeper)
 	queryClient := group.NewQueryClient(queryHelper)
 
 	msgGroupAndPolicy := &group.MsgCreateGroupWithPolicy{
-		Admin: addrs[0],
+		Admin: addrs[0].String(),
 		Members: []group.MemberRequest{
-			{Address: addrs[1], Weight: "1"},
-			{Address: addrs[3], Weight: "2"},
+			{Address: addrs[1].String(), Weight: "1"},
+			{Address: addrs[3].String(), Weight: "2"},
 		},
 	}
-	err = msgGroupAndPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("2", time.Second, 20))
+	err := msgGroupAndPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("2", time.Second, 20))
 	require.NoError(t, err)
 
 	resp, err := groupKeeper.CreateGroupWithPolicy(ctx, msgGroupAndPolicy)
@@ -156,7 +146,7 @@ func TestQueryGroupPolicyInfo(t *testing.T) {
 		},
 		{
 			name:      "unexisting address",
-			req:       group.QueryGroupPolicyInfoRequest{Address: fixture.addrs[5]},
+			req:       group.QueryGroupPolicyInfoRequest{Address: fixture.addrs[5].String()},
 			expErrMsg: "group policy: not found",
 		},
 		{
@@ -234,13 +224,13 @@ func TestQueryGroupsByAdmin(t *testing.T) {
 	}{
 		{
 			name:      "valid admin",
-			req:       group.QueryGroupsByAdminRequest{Admin: fixture.addrs[0]},
+			req:       group.QueryGroupsByAdminRequest{Admin: fixture.addrs[0].String()},
 			postRun:   func(resp *group.QueryGroupsByAdminResponse) { require.Len(t, resp.Groups, 1) },
 			expErrMsg: "",
 		},
 		{
 			name:      "unexisting address",
-			req:       group.QueryGroupsByAdminRequest{Admin: fixture.addrs[5]},
+			req:       group.QueryGroupsByAdminRequest{Admin: fixture.addrs[5].String()},
 			postRun:   func(resp *group.QueryGroupsByAdminResponse) { require.Len(t, resp.Groups, 0) },
 			expErrMsg: "",
 		},
@@ -319,13 +309,13 @@ func TestQueryGroupPoliciesByAdmin(t *testing.T) {
 	}{
 		{
 			name:      "valid admin",
-			req:       group.QueryGroupPoliciesByAdminRequest{Admin: fixture.addrs[0]},
+			req:       group.QueryGroupPoliciesByAdminRequest{Admin: fixture.addrs[0].String()},
 			postRun:   func(resp *group.QueryGroupPoliciesByAdminResponse) { require.Len(t, resp.GroupPolicies, 1) },
 			expErrMsg: "",
 		},
 		{
 			name:      "unexisting address",
-			req:       group.QueryGroupPoliciesByAdminRequest{Admin: fixture.addrs[5]},
+			req:       group.QueryGroupPoliciesByAdminRequest{Admin: fixture.addrs[5].String()},
 			postRun:   func(resp *group.QueryGroupPoliciesByAdminResponse) { require.Len(t, resp.GroupPolicies, 0) },
 			expErrMsg: "",
 		},
@@ -357,31 +347,31 @@ func TestQueryGroupsByMember(t *testing.T) {
 	fixture := initKeeper(t)
 
 	members := []group.MemberRequest{
-		{Address: fixture.addrs[3], Weight: "1"}, {Address: fixture.addrs[4], Weight: "2"},
+		{Address: fixture.addrs[3].String(), Weight: "1"}, {Address: fixture.addrs[4].String(), Weight: "2"},
 	}
 	_, err := fixture.keeper.CreateGroup(fixture.ctx, &group.MsgCreateGroup{
-		Admin:   fixture.addrs[1],
+		Admin:   fixture.addrs[1].String(),
 		Members: members,
 	})
 	require.NoError(t, err)
 
 	// not part of any group
 	resp, err := fixture.queryClient.GroupsByMember(context.Background(), &group.QueryGroupsByMemberRequest{
-		Address: fixture.addrs[5],
+		Address: fixture.addrs[5].String(),
 	})
 	require.NoError(t, err)
 	require.Len(t, resp.Groups, 0)
 
 	// expect one group
 	resp, err = fixture.queryClient.GroupsByMember(context.Background(), &group.QueryGroupsByMemberRequest{
-		Address: fixture.addrs[4],
+		Address: fixture.addrs[4].String(),
 	})
 	require.NoError(t, err)
 	require.Len(t, resp.Groups, 1)
 
 	// expect two groups
 	resp, err = fixture.queryClient.GroupsByMember(context.Background(), &group.QueryGroupsByMemberRequest{
-		Address: fixture.addrs[3],
+		Address: fixture.addrs[3].String(),
 	})
 	require.NoError(t, err)
 	require.Len(t, resp.Groups, 2)
@@ -391,10 +381,10 @@ func TestQueryGroups(t *testing.T) {
 	fixture := initKeeper(t)
 
 	members := []group.MemberRequest{
-		{Address: fixture.addrs[3], Weight: "1"},
+		{Address: fixture.addrs[3].String(), Weight: "1"},
 	}
 	_, err := fixture.keeper.CreateGroup(fixture.ctx, &group.MsgCreateGroup{
-		Admin:   fixture.addrs[2],
+		Admin:   fixture.addrs[2].String(),
 		Members: members,
 	})
 	require.NoError(t, err)

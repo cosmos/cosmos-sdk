@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -36,7 +37,7 @@ type Manager struct {
 	opts  types.SnapshotOptions
 	// multistore is the store from which snapshots are taken.
 	multistore types.Snapshotter
-	logger     storetypes.Logger
+	logger     log.Logger
 
 	mtx               sync.Mutex
 	operation         operation
@@ -67,10 +68,10 @@ const (
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
 
-var ErrOptsZeroSnapshotInterval = errors.New("snapshot-interval must not be 0")
+var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger storetypes.Logger) *Manager {
+func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
 	if extensions == nil {
 		extensions = map[string]types.ExtensionSnapshotter{}
 	}
@@ -367,11 +368,8 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		return errorsmod.Wrap(err, "multistore restore")
 	}
 
-	for {
-		if nextItem.Item == nil {
-			// end of stream
-			break
-		}
+	for nextItem.Item != nil {
+
 		metadata := nextItem.GetExtension()
 		if metadata == nil {
 			return errorsmod.Wrapf(storetypes.ErrLogic, "unknown snapshot item %T", nextItem.Item)
@@ -388,11 +386,8 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 			return errorsmod.Wrapf(err, "extension %s restore", metadata.Name)
 		}
 
-		payload := nextItem.GetExtensionPayload()
-		if payload != nil && len(payload.Payload) != 0 {
-			return fmt.Errorf("extension %s don't exhausted payload stream", metadata.Name)
-		} else {
-			break
+		if nextItem.GetExtensionPayload() != nil {
+			return errorsmod.Wrapf(err, "extension %s don't exhausted payload stream", metadata.Name)
 		}
 	}
 	return nil

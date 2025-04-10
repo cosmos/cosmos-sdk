@@ -22,7 +22,6 @@ import (
 	client "github.com/cometbft/cometbft/rpc/client/http"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/creachadair/tomledit"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
 
@@ -87,9 +86,8 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	nameTokens := ExecBinaryUnversionedRegExp.FindAllString(execBinary, 1)
 	if len(nameTokens) == 0 || nameTokens[0] == "" {
-		panic("failed to parse project name from binary")
+		panic("failed to parse project name from binary: " + execBinary)
 	}
-
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
 		chainID:           "testing",
@@ -193,7 +191,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 			return true
 		}),
 	)
-	s.AwaitNextBlock(t, 4e9)
+	s.AwaitNextBlock(t, 10e9)
 }
 
 // MarkDirty whole chain will be reset when marked dirty
@@ -398,7 +396,7 @@ func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, tim
 	if len(timeout) != 0 {
 		maxWaitTime = timeout[0]
 	} else {
-		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+3) * s.blockTime
+		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+4) * s.blockTime
 	}
 	abort := time.NewTimer(maxWaitTime).C
 	for {
@@ -418,7 +416,7 @@ func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, tim
 // Returns the new height
 func (s *SystemUnderTest) AwaitNextBlock(t *testing.T, timeout ...time.Duration) int64 {
 	t.Helper()
-	maxWaitTime := s.blockTime * 3
+	maxWaitTime := s.blockTime * 6
 	if len(timeout) != 0 { // optional argument to overwrite default timeout
 		maxWaitTime = timeout[0]
 	}
@@ -570,7 +568,7 @@ func (s *SystemUnderTest) ForEachNodeExecAndWait(t *testing.T, cmds ...[]string)
 func MustRunShellCmd(t *testing.T, cmd string, args ...string) string {
 	t.Helper()
 	out, err := RunShellCmd(cmd, args...)
-	require.NoError(t, err)
+	require.NoError(t, err, out)
 	return out
 }
 
@@ -580,7 +578,7 @@ func RunShellCmd(cmd string, args ...string) (string, error) {
 		args...,
 	)
 	c.Dir = WorkDir
-	out, err := c.Output()
+	out, err := c.CombinedOutput()
 	if err != nil {
 		return string(out), fmt.Errorf("run `%s %s`: out: %s: %w", cmd, strings.Join(args, " "), string(out), err)
 	}
@@ -733,14 +731,6 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		configFile := filepath.Join(configPath, tomlFile)
 		_ = os.Remove(configFile)
 		_ = MustCopyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
-		if tomlFile == "app.toml" && IsV2() {
-			file := filepath.Join(WorkDir, s.nodePath(nodeNumber), "config", tomlFile)
-			EditToml(file, func(doc *tomledit.Document) {
-				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultApiPort+nodeNumber), "grpc-gateway", "address")
-				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultRestPort+nodeNumber), "rest", "address")
-				SetValue(doc, fmt.Sprintf("%s:%d", node.IP, DefaultTelemetryPort+nodeNumber), "telemetry", "address")
-			})
-		}
 	}
 	peers := make([]string, len(allNodes)-1)
 	for i, n := range allNodes[0 : len(allNodes)-1] {
@@ -856,11 +846,11 @@ type (
 func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 	ctx, done := context.WithCancel(context.Background())
 	l.t.Cleanup(done)
-	eventsChan, err := l.client.WSEvents.Subscribe(ctx, "testing", query)
+	eventsChan, err := l.client.Subscribe(ctx, "testing", query)
 	require.NoError(l.t, err)
 	cleanup := func() {
-		ctx, _ := context.WithTimeout(ctx, DefaultWaitTime)     //nolint:govet // used in cleanup only
-		go l.client.WSEvents.Unsubscribe(ctx, "testing", query) //nolint:errcheck // used by tests only
+		ctx, _ := context.WithTimeout(ctx, DefaultWaitTime) //nolint:govet // used in cleanup only
+		go l.client.Unsubscribe(ctx, "testing", query)      //nolint:errcheck // used by tests only
 		done()
 	}
 	go func() {

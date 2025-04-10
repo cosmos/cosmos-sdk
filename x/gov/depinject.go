@@ -4,46 +4,51 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"sort"
 	"strings"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appconfig"
-	govclient "cosmossdk.io/x/gov/client"
-	"cosmossdk.io/x/gov/keeper"
-	govtypes "cosmossdk.io/x/gov/types"
-	"cosmossdk.io/x/gov/types/v1beta1"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-var _ depinject.OnePerModuleType = AppModule{}
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 func init() {
-	appconfig.RegisterModule(
+	appmodule.Register(
 		&modulev1.Module{},
-		appconfig.Invoke(InvokeAddRoutes, InvokeSetHooks),
-		appconfig.Provide(ProvideModule))
+		appmodule.Provide(ProvideModule, ProvideKeyTable),
+		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
 type ModuleInputs struct {
 	depinject.In
 
-	Config                *modulev1.Module
-	Cdc                   codec.Codec
-	Environment           appmodule.Environment
-	ModuleKey             depinject.OwnModuleKey
-	LegacyProposalHandler []govclient.ProposalHandler `optional:"true"`
+	Config           *modulev1.Module
+	Cdc              codec.Codec
+	StoreService     store.KVStoreService
+	ModuleKey        depinject.OwnModuleKey
+	MsgServiceRouter baseapp.MessageRouter
 
-	AccountKeeper govtypes.AccountKeeper
-	BankKeeper    govtypes.BankKeeper
-	StakingKeeper govtypes.StakingKeeper
-	PoolKeeper    govtypes.PoolKeeper
+	AccountKeeper      govtypes.AccountKeeper
+	BankKeeper         govtypes.BankKeeper
+	StakingKeeper      govtypes.StakingKeeper
+	DistributionKeeper govtypes.DistributionKeeper
+
+	// CustomCalculateVoteResultsAndVotingPowerFn is an optional input to set a custom CalculateVoteResultsAndVotingPowerFn.
+	// If this function is not provided, the default function is used.
+	CustomCalculateVoteResultsAndVotingPowerFn keeper.CalculateVoteResultsAndVotingPowerFn `optional:"true"`
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace govtypes.ParamSubspace `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -55,18 +60,9 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	defaultConfig := keeper.DefaultConfig()
-	if in.Config.MaxTitleLen != 0 {
-		defaultConfig.MaxTitleLen = in.Config.MaxTitleLen
-	}
+	defaultConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
 		defaultConfig.MaxMetadataLen = in.Config.MaxMetadataLen
-	}
-	if in.Config.MaxSummaryLen != 0 {
-		defaultConfig.MaxSummaryLen = in.Config.MaxSummaryLen
-	}
-	if in.LegacyProposalHandler == nil {
-		in.LegacyProposalHandler = []govclient.ProposalHandler{}
 	}
 
 	// default to governance authority if not provided
@@ -74,25 +70,32 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
-	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(err)
+
+	var opts []keeper.InitOption
+	if in.CustomCalculateVoteResultsAndVotingPowerFn != nil {
+		opts = append(opts, keeper.WithCustomCalculateVoteResultsAndVotingPowerFn(in.CustomCalculateVoteResultsAndVotingPowerFn))
 	}
 
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.Environment,
+		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
-		in.PoolKeeper,
+		in.DistributionKeeper,
+		in.MsgServiceRouter,
 		defaultConfig,
-		authorityAddr,
+		authority.String(),
+		opts...,
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.PoolKeeper, in.LegacyProposalHandler...)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
 	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}
+}
+
+func ProvideKeyTable() paramtypes.KeyTable {
+	return v1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 }
 
 func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
@@ -121,8 +124,11 @@ func InvokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooks
 	// Default ordering is lexical by module name.
 	// Explicit ordering can be added to the module config if required.
 	modNames := slices.Sorted(maps.Keys(govHooks))
+	order := modNames
+	sort.Strings(order)
+
 	var multiHooks govtypes.MultiGovHooks
-	for _, modName := range modNames {
+	for _, modName := range order {
 		hook, ok := govHooks[modName]
 		if !ok {
 			return fmt.Errorf("can't find staking hooks for module %s", modName)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -11,12 +13,13 @@ import (
 	cbtypes "cosmossdk.io/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 type fixture struct {
@@ -31,19 +34,21 @@ type MockCircuitBreaker struct {
 	isAllowed bool
 }
 
-func (m MockCircuitBreaker) IsAllowed(_ context.Context, typeURL string) (bool, error) {
+func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
 	return typeURL == "/cosmos.circuit.v1.MsgAuthorizeCircuitBreaker", nil
 }
 
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
+
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 	mockclientCtx := client.Context{}.
-		WithTxConfig(encCfg.TxConfig)
+		WithTxConfig(encCfg.TxConfig).
+		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
 
 	return &fixture{
-		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx,
+		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),
 		mockStoreKey:  mockStoreKey,
 		mockMsgURL:    "test",
 		mockclientCtx: mockclientCtx,
@@ -62,8 +67,8 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		allowed bool
 	}{
 		{msg: &cbtypes.MsgAuthorizeCircuitBreaker{
-			Grantee: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-			Granter: "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc",
+			Grantee: "cosmos1fghij",
+			Granter: "cosmos1abcde",
 		}, allowed: true},
 		{msg: testdata.NewTestMsg(addr1), allowed: false},
 	}
@@ -74,19 +79,18 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 		// CircuitBreakerDecorator AnteHandler should always return success
 		decorator := ante.NewCircuitBreakerDecorator(circuitBreaker)
 
-		err := f.txBuilder.SetMsgs(tc.msg)
-		require.NoError(t, err)
-
+		require.NoError(t, f.txBuilder.SetMsgs(tc.msg))
 		tx := f.txBuilder.GetTx()
 
 		sdkCtx := sdk.UnwrapSDKContext(f.ctx)
-		_, err = decorator.AnteHandle(sdkCtx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		_, err := decorator.AnteHandle(sdkCtx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			return ctx, nil
 		})
 
 		if tc.allowed {
 			require.NoError(t, err)
 		} else {
+			require.Error(t, err)
 			require.Equal(t, "tx type not allowed", err.Error())
 		}
 	}

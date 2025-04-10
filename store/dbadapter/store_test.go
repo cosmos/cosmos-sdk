@@ -20,7 +20,7 @@ func TestAccessors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockDB := mock.NewMockKVStoreWithBatch(mockCtrl)
+	mockDB := mock.NewMockDB(mockCtrl)
 	store := dbadapter.Store{mockDB}
 	key := []byte("test")
 	value := []byte("testvalue")
@@ -75,7 +75,7 @@ func TestAccessors(t *testing.T) {
 
 func TestCacheWraps(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockDB := mock.NewMockKVStoreWithBatch(mockCtrl)
+	mockDB := mock.NewMockDB(mockCtrl)
 	store := dbadapter.Store{mockDB}
 
 	cacheWrapper := store.CacheWrap()

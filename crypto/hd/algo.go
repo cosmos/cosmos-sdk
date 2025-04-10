@@ -2,7 +2,6 @@ package hd
 
 import (
 	"github.com/cosmos/go-bip39"
-	"gitlab.com/yawning/secp256k1-voi/secec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -19,9 +18,6 @@ const (
 	// Ed25519Type represents the Ed25519Type signature system.
 	// It is currently not supported for end-user keys (wallets/ledgers).
 	Ed25519Type = PubKeyType("ed25519")
-	// Bls12_381Type represents the Bls12_381Type signature system.
-	// It is currently not supported for end-user keys (wallets/ledgers).
-	Bls12_381Type = PubKeyType("bls12_381")
 	// Sr25519Type represents the Sr25519Type signature system.
 	Sr25519Type = PubKeyType("sr25519")
 )
@@ -69,11 +65,6 @@ func (s secp256k1Algo) Generate() GenerateFn {
 		bzArr := make([]byte, secp256k1.PrivKeySize)
 		copy(bzArr, bz)
 
-		privKeyObj, err := secec.NewPrivateKey(bz)
-		if err != nil {
-			panic(err)
-		}
-
-		return &secp256k1.PrivKey{Key: privKeyObj.Bytes()}
+		return &secp256k1.PrivKey{Key: bzArr}
 	}
 }

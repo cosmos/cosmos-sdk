@@ -6,10 +6,10 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/slashing/keeper"
-	"cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
+	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func MsgUnjailFactory(k keeper.Keeper, sk types.StakingKeeper) simsx.SimMsgFactoryX {
@@ -29,7 +29,7 @@ func MsgUnjailFactory(k keeper.Keeper, sk types.StakingKeeper) simsx.SimMsgFacto
 			return nil, nil, nil
 		}
 
-		info, err := k.ValidatorSigningInfo.Get(ctx, must(validator.GetConsAddr()))
+		info, err := k.GetValidatorSigningInfo(ctx, must(validator.GetConsAddr()))
 		if err != nil {
 			reporter.Skip(err.Error())
 			return nil, nil, nil

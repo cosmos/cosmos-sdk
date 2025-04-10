@@ -2,10 +2,8 @@ package keys
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -29,8 +27,8 @@ func ImportKeyCommand() *cobra.Command {
 				return err
 			}
 			name := args[0]
-			if strings.TrimSpace(name) == "" {
-				return errors.New("the provided name is invalid or empty after trimming whitespace")
+			if err := checkName(name); err != nil {
+				return err
 			}
 			buf := bufio.NewReader(clientCtx.Input)
 
@@ -61,9 +59,10 @@ func ImportKeyHexCommand() *cobra.Command {
 				return err
 			}
 			name := args[0]
-			if strings.TrimSpace(name) == "" {
-				return errors.New("the provided name is invalid or empty after trimming whitespace")
+			if err := checkName(name); err != nil {
+				return err
 			}
+
 			keyType, _ := cmd.Flags().GetString(flags.FlagKeyType)
 			var hexKey string
 			if len(args) == 2 {

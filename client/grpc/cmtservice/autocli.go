@@ -25,7 +25,7 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 		},
 		{
 			RpcMethod:      "GetBlockByHeight",
-			Use:            "block-by-height <height>",
+			Use:            "block-by-height [height]",
 			Short:          "Query for a committed block by height",
 			Long:           "Query for a specific committed block using the CometBFT RPC `block_by_height` method",
 			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
@@ -38,7 +38,7 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 		},
 		{
 			RpcMethod:      "GetValidatorSetByHeight",
-			Use:            "validator-set-by-height <height>",
+			Use:            "validator-set-by-height [height]",
 			Short:          "Query for a validator set by height",
 			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
 		},

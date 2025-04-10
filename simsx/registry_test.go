@@ -81,9 +81,9 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 			// when
 			reg.Add(100, spec.factory)
 			// then
-			gotOps := reg.ToLegacyObjects()
+			gotOps := reg.items
 			require.Len(t, gotOps, 1)
-			assert.Equal(t, 100, gotOps[0].Weight())
+			assert.Equal(t, uint32(100), gotOps[0].weight)
 
 			// and when ops executed
 			var capturedTXs []sdk.Tx
@@ -91,7 +91,7 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 				capturedTXs = append(capturedTXs, tx)
 				return sdk.GasInfo{}, &sdk.Result{}, spec.expDeliveryErr
 			})
-			fn := gotOps[0].Op()
+			fn := gotOps[0].op
 			gotOpsResult, gotFOps, gotErr := fn(rand.New(rand.NewSource(1)), captureTXApp, ctx, accs, "testchain")
 			// then
 			if spec.expFactoryErr != nil {

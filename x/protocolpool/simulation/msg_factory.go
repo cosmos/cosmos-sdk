@@ -3,10 +3,9 @@ package simulation
 import (
 	"context"
 
-	"cosmossdk.io/x/protocolpool/types"
-
 	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 func MsgFundCommunityPoolFactory() simsx.SimMsgFactoryFn[*types.MsgFundCommunityPool] {

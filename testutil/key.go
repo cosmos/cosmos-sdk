@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -14,7 +14,7 @@ func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddres
 	info, secret, err := keyring.NewInMemory(cdc).NewMnemonic(
 		"name",
 		keyring.English,
-		sdk.GetFullBIP44Path(),
+		sdk.GetConfig().GetFullBIP44Path(),
 		keyring.DefaultBIP39Passphrase,
 		algo,
 	)
@@ -37,7 +37,6 @@ func GenerateSaveCoinKey(
 	keyName, mnemonic string,
 	overwrite bool,
 	algo keyring.SignatureAlgo,
-	hdPath string,
 ) (sdk.AccAddress, string, error) {
 	exists := false
 	_, err := keybase.Key(keyName)
@@ -47,12 +46,12 @@ func GenerateSaveCoinKey(
 
 	// ensure no overwrite
 	if !overwrite && exists {
-		return sdk.AccAddress{}, "", errors.New("key already exists, overwrite is disabled")
+		return sdk.AccAddress{}, "", fmt.Errorf("key already exists, overwrite is disabled")
 	}
 
 	if exists {
 		if err := keybase.Delete(keyName); err != nil {
-			return sdk.AccAddress{}, "", errors.New("failed to overwrite key")
+			return sdk.AccAddress{}, "", fmt.Errorf("failed to overwrite key")
 		}
 	}
 
@@ -64,9 +63,9 @@ func GenerateSaveCoinKey(
 	// generate or recover a new account
 	if mnemonic != "" {
 		secret = mnemonic
-		record, err = keybase.NewAccount(keyName, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, algo)
+		record, err = keybase.NewAccount(keyName, mnemonic, keyring.DefaultBIP39Passphrase, sdk.GetConfig().GetFullBIP44Path(), algo)
 	} else {
-		record, secret, err = keybase.NewMnemonic(keyName, keyring.English, hdPath, keyring.DefaultBIP39Passphrase, algo)
+		record, secret, err = keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
 	}
 	if err != nil {
 		return sdk.AccAddress{}, "", err

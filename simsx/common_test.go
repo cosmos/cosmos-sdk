@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -55,10 +54,9 @@ func txConfig() client.TxConfig {
 		},
 	}))
 	std.RegisterInterfaces(ir)
-	ir.RegisterImplementations((*coretransaction.Msg)(nil), &testdata.TestMsg{})
+	ir.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	protoCodec := codec.NewProtoCodec(ir)
-	signingCtx := protoCodec.InterfaceRegistry().SigningContext()
-	return tx.NewTxConfig(protoCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
+	return tx.NewTxConfig(protoCodec, tx.DefaultSignModes)
 }
 
 var _ AppEntrypoint = SimDeliverFn(nil)

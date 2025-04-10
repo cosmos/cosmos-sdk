@@ -4,12 +4,11 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/x/authz"
-	"cosmossdk.io/x/authz/keeper"
-	banktype "cosmossdk.io/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func MsgGrantFactory() simsx.SimMsgFactoryFn[*authz.MsgGrant] {
@@ -25,12 +24,12 @@ func MsgGrantFactory() simsx.SimMsgFactoryFn[*authz.MsgGrant] {
 		}
 		// pick random authorization
 		authorizations := []authz.Authorization{
-			banktype.NewSendAuthorization(spendLimit, nil, testData.AddressCodec()),
+			banktype.NewSendAuthorization(spendLimit, nil),
 			authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{})),
 		}
 		randomAuthz := simsx.OneOf(r, authorizations)
 
-		msg, err := authz.NewMsgGrant(granter.AddressBech32, grantee.AddressBech32, randomAuthz, expiration)
+		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, randomAuthz, expiration)
 		if err != nil {
 			reporter.Skip(err.Error())
 			return nil, nil
@@ -53,9 +52,12 @@ func MsgExecFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*authz.MsgExec] {
 		}
 		amount := granter.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
 		amount = amount.Min(gAuthz.(*banktype.SendAuthorization).SpendLimit)
-
-		payloadMsg := []sdk.Msg{banktype.NewMsgSend(granter.AddressBech32, grantee.AddressBech32, amount)}
-		msgExec := authz.NewMsgExec(grantee.AddressBech32, payloadMsg)
+		if !amount.IsAllPositive() {
+			reporter.Skip("amount is not positive")
+			return nil, nil
+		}
+		payloadMsg := []sdk.Msg{banktype.NewMsgSend(granter.Address, grantee.Address, amount)}
+		msgExec := authz.NewMsgExec(grantee.Address, payloadMsg)
 		return []simsx.SimAccount{grantee}, &msgExec
 	}
 }
@@ -68,7 +70,7 @@ func MsgRevokeFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*authz.MsgRevoke] {
 		if reporter.IsSkipped() {
 			return nil, nil
 		}
-		msgExec := authz.NewMsgRevoke(granter.AddressBech32, grantee.AddressBech32, auth.MsgTypeURL())
+		msgExec := authz.NewMsgRevoke(granter.Address, grantee.Address, auth.MsgTypeURL())
 		return []simsx.SimAccount{granter}, &msgExec
 	}
 }
@@ -79,21 +81,23 @@ func findGrant(
 	reporter simsx.SimulationReporter,
 	acceptFilter ...func(a authz.Authorization) bool,
 ) (granterAddr, granteeAddr sdk.AccAddress, auth authz.Authorization) {
-	err := k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
+	var innerErr error
+	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		a, err2 := grant.GetAuthorization()
 		if err2 != nil {
-			return true, err2
+			innerErr = err2
+			return true
 		}
 		for _, filter := range acceptFilter {
 			if !filter(a) {
-				return false, nil
+				return false
 			}
 		}
 		granterAddr, granteeAddr, auth = granter, grantee, a
-		return true, nil
+		return true
 	})
-	if err != nil {
-		reporter.Skip(err.Error())
+	if innerErr != nil {
+		reporter.Skip(innerErr.Error())
 		return
 	}
 	if auth == nil {

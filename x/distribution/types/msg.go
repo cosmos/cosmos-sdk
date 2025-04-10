@@ -11,14 +11,13 @@ var (
 	_ sdk.Msg = (*MsgWithdrawValidatorCommission)(nil)
 	_ sdk.Msg = (*MsgUpdateParams)(nil)
 	_ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
-	_ sdk.Msg = (*MsgFundCommunityPool)(nil)
 	_ sdk.Msg = (*MsgDepositValidatorRewardsPool)(nil)
 )
 
-func NewMsgSetWithdrawAddress(delAddr, withdrawAddr string) *MsgSetWithdrawAddress {
+func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
 	return &MsgSetWithdrawAddress{
-		DelegatorAddress: delAddr,
-		WithdrawAddress:  withdrawAddr,
+		DelegatorAddress: delAddr.String(),
+		WithdrawAddress:  withdrawAddr.String(),
 	}
 }
 

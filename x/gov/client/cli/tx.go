@@ -7,16 +7,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	govutils "cosmossdk.io/x/gov/client/utils"
-	"cosmossdk.io/x/gov/types"
-	v1 "cosmossdk.io/x/gov/types/v1"
-	"cosmossdk.io/x/gov/types/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Proposal flags
@@ -69,9 +68,12 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 	}
 
 	govTxCmd.AddCommand(
+		NewCmdDeposit(),
+		NewCmdVote(),
 		NewCmdWeightedVote(),
 		NewCmdSubmitProposal(),
 		NewCmdDraftProposal(),
+		NewCmdCancelProposal(),
 
 		// Deprecated
 		cmdSubmitLegacyProp,
@@ -83,7 +85,7 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal <path/to/proposal.json>",
+		Use:   "submit-proposal [path/to/proposal.json]",
 		Short: "Submit a proposal along with some messages, metadata and deposit",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
@@ -111,7 +113,7 @@ Where proposal.json contains:
   "deposit": "10stake",
   "title": "My proposal",
   "summary": "A short summary of my proposal",
-  "proposal_type": "standard",
+  "expedited": false
 }
 
 metadata example: 
@@ -138,12 +140,7 @@ metadata example:
 				return err
 			}
 
-			addr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, addr, proposal.Metadata, proposal.Title, proposal.Summary, proposal.proposalType)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.Expedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -157,13 +154,42 @@ metadata example:
 	return cmd
 }
 
+// NewCmdCancelProposal implements submitting a cancel proposal transaction command.
+func NewCmdCancelProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "cancel-proposal [proposal-id]",
+		Short:   "Cancel governance proposal before the voting period ends. Must be signed by the proposal creator.",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`$ %s tx gov cancel-proposal 1 --from mykey`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
+			}
+
+			// Get proposer address
+			from := clientCtx.GetFromAddress()
+			msg := v1.NewMsgCancelProposal(proposalID, from.String())
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 // NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
 // Deprecated: please use NewCmdSubmitProposal instead.
 func NewCmdSubmitLegacyProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "submit-legacy-proposal",
-		Aliases: []string{"exec-legacy-content"},
-		Short:   "Submit a legacy proposal along with an initial deposit",
+		Use:   "submit-legacy-proposal",
+		Short: "Submit a legacy proposal along with an initial deposit",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a legacy proposal along with an initial deposit.
 Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
@@ -208,12 +234,7 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
 			}
 
-			proposer, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-
-			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, proposer)
+			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -232,20 +253,120 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 	return cmd
 }
 
-// NewCmdWeightedVote implements creating a new weighted vote command.
-// TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
-func NewCmdWeightedVote() *cobra.Command {
+// NewCmdDeposit implements depositing tokens for an active proposal.
+func NewCmdDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "weighted-vote <proposal-id> <weighted-options>",
-		Aliases: []string{"vote-weighted"},
-		Args:    cobra.ExactArgs(2),
-		Short:   "Vote for an active proposal, options: yes/no/no-with-veto/abstain",
+		Use:   "deposit [proposal-id] [deposit]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Deposit tokens for an active proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a deposit for an active proposal. You can
+find the proposal-id by running "%s query gov proposals".
+
+Example:
+$ %s tx gov deposit 1 10stake --from mykey
+`,
+				version.AppName, version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
+			}
+
+			// Get depositor address
+			from := clientCtx.GetFromAddress()
+
+			// Get amount of coins
+			amount, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := v1.NewMsgDeposit(from, proposalID, amount)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdVote implements creating a new vote command.
+func NewCmdVote() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "vote [proposal-id] [option]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a vote for an active proposal. You can
 find the proposal-id by running "%s query gov proposals".
 
 Example:
-$ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no-with-veto=0.05 --from mykey
+$ %s tx gov vote 1 yes --from mykey
+`,
+				version.AppName, version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			// Get voting address
+			from := clientCtx.GetFromAddress()
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
+			}
+
+			// Find out which vote option user chose
+			byteVoteOption, err := v1.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
+			if err != nil {
+				return err
+			}
+
+			metadata, err := cmd.Flags().GetString(FlagMetadata)
+			if err != nil {
+				return err
+			}
+
+			// Build vote message and run basic validation
+			msg := v1.NewMsgVote(from, proposalID, byteVoteOption, metadata)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the vote")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdWeightedVote implements creating a new weighted vote command.
+func NewCmdWeightedVote() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "weighted-vote [proposal-id] [weighted-options]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a vote for an active proposal. You can
+find the proposal-id by running "%s query gov proposals".
+
+Example:
+$ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from mykey
 `,
 				version.AppName, version.AppName,
 			),
@@ -257,10 +378,7 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no-with-veto=0.05 --from
 			}
 
 			// Get voter address
-			from, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
+			from := clientCtx.GetFromAddress()
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)

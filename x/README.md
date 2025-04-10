@@ -28,7 +28,7 @@ proof-of-stake capabilities and governance.
 ## Supplementary Modules
 
 Supplementary modules are modules that are maintained in the Cosmos SDK but are not necessary for
-the core functionality of your blockchain.  They can be thought of as ways to extend the
+the core functionality of your blockchain.  They can be thought of as ways to extend the 
 capabilities of your blockchain or further specialize it.
 
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
@@ -41,7 +41,7 @@ capabilities of your blockchain or further specialize it.
 ## Deprecated Modules
 
 The following modules are deprecated.  They will no longer be maintained and eventually will be removed
-in an upcoming release of the Cosmos SDK per our [release process](../RELEASE_PROCESS.md).
+in an upcoming release of the Cosmos SDK per our [release process](https://github.com/cosmos/cosmos-sdk/blob/main/RELEASE_PROCESS.md).
 
 * [Crisis](./crisis/README.md) - *Deprecated* halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 * [Params](./params/README.md) - *Deprecated* Globally available parameter store.

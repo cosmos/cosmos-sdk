@@ -1,13 +1,13 @@
 package types
 
 import (
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/cosmos/gogoproto/proto"
+	abci "github.com/cometbft/cometbft/abci/types"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/errors"
 )
 
-// SnapshotFromABCI converts an ABCI snapshot to a snapshot. Mainly to decode the SDK metadata.
+// Converts an ABCI snapshot to a snapshot. Mainly to decode the SDK metadata.
 func SnapshotFromABCI(in *abci.Snapshot) (Snapshot, error) {
 	snapshot := Snapshot{
 		Height: in.Height,
@@ -22,7 +22,7 @@ func SnapshotFromABCI(in *abci.Snapshot) (Snapshot, error) {
 	return snapshot, nil
 }
 
-// ToABCI converts a Snapshot to its ABCI representation. Mainly to encode the SDK metadata.
+// Converts a Snapshot to its ABCI representation. Mainly to encode the SDK metadata.
 func (s Snapshot) ToABCI() (abci.Snapshot, error) {
 	out := abci.Snapshot{
 		Height: s.Height,

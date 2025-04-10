@@ -1,9 +1,7 @@
 package orm
 
 import (
-	"cosmossdk.io/core/codec"
-
-	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
@@ -29,37 +27,36 @@ var (
 func NewTestKeeper(cdc codec.Codec) TestKeeper {
 	k := TestKeeper{}
 	var err error
-	ac := address.NewBech32Codec("cosmos")
 
-	k.autoUInt64Table, err = NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, ac)
+	k.autoUInt64Table, err = NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.autoUInt64TableModelByMetadataIndex, err = NewIndex(k.autoUInt64Table, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
+	k.autoUInt64TableModelByMetadataIndex, err = NewIndex(k.autoUInt64Table, AutoUInt64TableModelByMetadataPrefix, func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Metadata}, nil
 	}, testdata.TableModel{}.Metadata)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	k.primaryKeyTable, err = NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc, ac)
+	k.primaryKeyTable, err = NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.primaryKeyTableModelByNameIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByNamePrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Name}, nil
+	k.primaryKeyTableModelByNameIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByNamePrefix, func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Name}, nil
 	}, testdata.TableModel{}.Name)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.primaryKeyTableModelByNumberIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByNumberPrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Number}, nil
+	k.primaryKeyTableModelByNumberIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByNumberPrefix, func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Number}, nil
 	}, testdata.TableModel{}.Number)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.primaryKeyTableModelByMetadataIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
+	k.primaryKeyTableModelByMetadataIndex, err = NewIndex(k.primaryKeyTable, PrimaryKeyTableModelByMetadataPrefix, func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Metadata}, nil
 	}, testdata.TableModel{}.Metadata)
 	if err != nil {
 		panic(err.Error())

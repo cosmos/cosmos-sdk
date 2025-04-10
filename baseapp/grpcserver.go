@@ -23,9 +23,22 @@ import (
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
+	app.RegisterGRPCServerWithSkipCheckHeader(server, false)
+}
+
+// RegisterGRPCServerWithSkipCheckHeader registers gRPC services with the specified gRPC server
+// and bypass check header flag. During the commit phase, gRPC queries may be processed before the block header
+// is fully updated, causing header checks to fail erroneously. Skipping the header check in these cases prevents
+// false negatives and ensures more robust query handling.  While bypassing the header check is generally preferred to avoid false
+// negatives during the commit phase, there are niche scenarios where someone might want to enable it.
+// For instance, if an application requires strict validation to ensure that the query context exactly
+// reflects the expected block header (for consistency or security reasons), then enabling header checks
+// could be beneficial. However, this strictness comes at the cost of potentially more frequent errors
+// when queries occur during the commit phase.
+func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server, skipCheckHeader bool) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
-	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	interceptor := func(grpcCtx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		// If there's some metadata in the context, retrieve it.
 		md, ok := metadata.FromIncomingContext(grpcCtx)
 		if !ok {
@@ -48,7 +61,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Create the sdk.Context. Passing false as 2nd arg, as we can't
 		// actually support proofs with gRPC right now.
-		sdkCtx, err := app.CreateQueryContext(height, false)
+		sdkCtx, err := app.CreateQueryContextWithCheckHeader(height, false, !skipCheckHeader)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +79,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			app.logger.Error("failed to set gRPC header", "err", err)
 		}
 
-		app.logger.Debug("gRPC query received of type: " + fmt.Sprintf("%#v", req))
+		app.logger.Debug("gRPC query received", "type", fmt.Sprintf("%#v", req))
 
 		// Catch an OutOfGasPanic caused in the query handlers
 		defer func() {
@@ -93,7 +106,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			methodHandler := method.Handler
 			newMethods[i] = grpc.MethodDesc{
 				MethodName: method.MethodName,
-				Handler: func(srv interface{}, ctx context.Context, dec func(interface{}) error, _ grpc.UnaryServerInterceptor) (interface{}, error) {
+				Handler: func(srv any, ctx context.Context, dec func(any) error, _ grpc.UnaryServerInterceptor) (any, error) {
 					return methodHandler(srv, ctx, dec, grpcmiddleware.ChainUnaryServer(
 						grpcrecovery.UnaryServerInterceptor(),
 						interceptor,

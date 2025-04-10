@@ -8,9 +8,9 @@ import (
 	"slices"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/cosmos/gogoproto/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -101,6 +101,7 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 
 	// sort the keys to ensure the order is always the same
 	keys := slices.Sorted(maps.Keys(attrMap))
+
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
 	for _, k := range keys {
 		v := attrMap[k]

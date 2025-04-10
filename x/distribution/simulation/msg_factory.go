@@ -6,10 +6,10 @@ import (
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/keeper"
-	"cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func MsgSetWithdrawAddressFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgSetWithdrawAddress] {
@@ -24,7 +24,7 @@ func MsgSetWithdrawAddressFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*types.
 		}
 		delegator := testData.AnyAccount(reporter)
 		withdrawer := testData.AnyAccount(reporter, simsx.ExcludeAccounts(delegator))
-		msg := types.NewMsgSetWithdrawAddress(delegator.AddressBech32, withdrawer.AddressBech32)
+		msg := types.NewMsgSetWithdrawAddress(delegator.Address, withdrawer.Address)
 		return []simsx.SimAccount{delegator}, msg
 	}
 }
@@ -94,7 +94,7 @@ func MsgWithdrawValidatorCommissionFactory(k keeper.Keeper, sk types.StakingKeep
 			return nil, nil
 		}
 
-		commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAddrBz)
+		commission, err := k.GetValidatorAccumulatedCommission(ctx, valAddrBz)
 		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			reporter.Skip(err.Error())
 			return nil, nil

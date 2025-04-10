@@ -20,7 +20,7 @@ service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) a
 
 ## Context
 
-In the current Cosmos SDK documentation on the [Object-Capability Model](https://docs.cosmos.network/main/learn/advanced/ocap#ocaps-in-practice), it is stated that:
+In the current Cosmos SDK documentation on the [Object-Capability Model](../../learn/advanced/10-ocap.md), it is stated that:
 
 > We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
@@ -43,7 +43,7 @@ own account. These permissions are actually stored as a `[]string` array on the 
 However, these permissions don’t really do much. They control what modules can be referenced in the `MintCoins`,
 `BurnCoins` and `DelegateCoins***` methods, but for one there is no unique object capability token that controls access —
 just a simple string. So the `x/upgrade` module could mint tokens for the `x/staking` module simple by calling
-`MintCoins("staking")`. Furthermore, all modules which have access to these keeper methods, also have access to
+`MintCoins(“staking”)`. Furthermore, all modules which have access to these keeper methods, also have access to
 `SetBalance` negating any other attempt at OCAPs and breaking even basic object-oriented encapsulation.
 
 ## Decision
@@ -154,7 +154,7 @@ func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarRe
 }
 ```
 
-This design is also intended to be extensible to cover use cases of more fine-grained permissioning like minting by
+This design is also intended to be extensible to cover use cases of more fine grained permissioning like minting by
 denom prefix being restricted to certain modules (as discussed in
 [#7459](https://github.com/cosmos/cosmos-sdk/pull/7459#discussion_r529545528)).
 
@@ -264,7 +264,7 @@ type Configurator interface {
 
 The `ModuleKey` is passed to modules in the `RegisterService` method itself so that `RegisterServices` serves as a single
 entry point for configuring module services. This is intended to also have the side-effect of greatly reducing boilerplate in
-`app.go`. For now, `ModuleKey`s will be created based on `AppModule.Name()`, but a more flexible system may be
+`app.go`. For now, `ModuleKey`s will be created based on `AppModuleBasic.Name()`, but a more flexible system may be
 introduced in the future. The `ModuleManager` will handle creation of module accounts behind the scenes.
 
 Because modules do not get direct access to each other anymore, modules may have unfulfilled dependencies. To make sure
@@ -344,7 +344,7 @@ Other future improvements may include:
     * optimizes inter-module calls - for instance caching resolved methods after first invocation
 * combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
 * code generation which makes inter-module communication more performant
-* decoupling `ModuleKey` creation from `AppModule.Name()` so that app's can override root module account names
+* decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
 * inter-module hooks and plugins
 
 ## Alternatives
@@ -378,7 +378,7 @@ replacing `Keeper` interfaces altogether.
 
 * an alternative to keepers which can more easily lead to stable inter-module interfaces
 * proper inter-module OCAPs
-* improved module developer DevX, as commented on by several participants on
+* improved module developer DevX, as commented on by several particpants on
     [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
 * lays the groundwork for what can be a greatly simplified `app.go`
 * router can be setup to enforce atomic transactions for module-to-module calls
@@ -397,4 +397,4 @@ replacing `Keeper` interfaces altogether.
 * [ADR 031](./adr-031-msg-service.md)
 * [ADR 028](./adr-028-public-key-addresses.md)
 * [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
-* [Object-Capability Model](https://docs.cosmos.network/main/learn/advanced/ocap#ocaps-in-practice)
+* [Object-Capability Model](https://docs.network.com/main/core/ocap)

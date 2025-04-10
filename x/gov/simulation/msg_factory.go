@@ -8,19 +8,19 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/gov/keeper"
-	v1 "cosmossdk.io/x/gov/types/v1"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 func MsgDepositFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFactoryFn[*v1.MsgDeposit] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgDeposit) {
 		r := testData.Rand()
-		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusDepositPeriod, sharedState)
+		proposalID, ok := randomProposalID(r.Rand, k, sdk.UnwrapSDKContext(ctx), v1.StatusDepositPeriod, sharedState)
 		if !ok {
 			reporter.Skip("no proposal in deposit state")
 			return nil, nil
@@ -36,20 +36,20 @@ func MsgDepositFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgF
 			return nil, nil
 		}
 		from := testData.AnyAccount(reporter, simsx.WithLiquidBalanceGTE(deposit))
-		return []simsx.SimAccount{from}, v1.NewMsgDeposit(from.AddressBech32, proposalID, sdk.NewCoins(deposit))
+		return []simsx.SimAccount{from}, v1.NewMsgDeposit(from.Address, proposalID, sdk.NewCoins(deposit))
 	}
 }
 
 func MsgVoteFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFactoryFn[*v1.MsgVote] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVote) {
 		r := testData.Rand()
-		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusVotingPeriod, sharedState)
+		proposalID, ok := randomProposalID(r.Rand, k, sdk.UnwrapSDKContext(ctx), v1.StatusVotingPeriod, sharedState)
 		if !ok {
-			reporter.Skip("no proposal in deposit state")
+			reporter.Skip("no proposal in voting state")
 			return nil, nil
 		}
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
-		msg := v1.NewMsgVote(from.AddressBech32, proposalID, randomVotingOption(r.Rand), "")
+		msg := v1.NewMsgVote(from.Address, proposalID, randomVotingOption(r.Rand), "")
 		return []simsx.SimAccount{from}, msg
 	}
 }
@@ -57,13 +57,13 @@ func MsgVoteFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFact
 func MsgWeightedVoteFactory(k *keeper.Keeper, sharedState *SharedState) simsx.SimMsgFactoryFn[*v1.MsgVoteWeighted] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVoteWeighted) {
 		r := testData.Rand()
-		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusVotingPeriod, sharedState)
+		proposalID, ok := randomProposalID(r.Rand, k, sdk.UnwrapSDKContext(ctx), v1.StatusVotingPeriod, sharedState)
 		if !ok {
 			reporter.Skip("no proposal in deposit state")
 			return nil, nil
 		}
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
-		msg := v1.NewMsgVoteWeighted(from.AddressBech32, proposalID, randomWeightedVotingOptions(r.Rand), "")
+		msg := v1.NewMsgVoteWeighted(from.Address, proposalID, randomWeightedVotingOptions(r.Rand), "")
 		return []simsx.SimAccount{from}, msg
 	}
 }
@@ -72,7 +72,7 @@ func MsgCancelProposalFactory(k *keeper.Keeper, sharedState *SharedState) simsx.
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgCancelProposal) {
 		r := testData.Rand()
 		status := simsx.OneOf(r, []v1.ProposalStatus{v1.StatusDepositPeriod, v1.StatusVotingPeriod})
-		proposalID, ok := randomProposalID(r, k, ctx, status, sharedState)
+		proposalID, ok := randomProposalID(r.Rand, k, sdk.UnwrapSDKContext(ctx), status, sharedState)
 		if !ok {
 			reporter.Skip("no proposal in deposit state")
 			return nil, nil
@@ -83,9 +83,7 @@ func MsgCancelProposalFactory(k *keeper.Keeper, sharedState *SharedState) simsx.
 			return nil, nil
 		}
 		// is cancellable? copied from keeper
-		maxCancelPeriodRate := sdkmath.LegacyMustNewDecFromStr(must(k.Params.Get(ctx)).ProposalCancelMaxPeriod)
-		maxCancelPeriod := time.Duration(float64(proposal.VotingEndTime.Sub(*proposal.VotingStartTime)) * maxCancelPeriodRate.MustFloat64()).Round(time.Second)
-		if proposal.VotingEndTime.Add(-maxCancelPeriod).Before(simsx.BlockTime(ctx)) {
+		if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 			reporter.Skip("not cancellable anymore")
 			return nil, nil
 		}
@@ -104,7 +102,7 @@ func MsgSubmitLegacyProposalFactory(k *keeper.Keeper, contentSimFn simtypes.Cont
 	return simsx.NewSimMsgFactoryWithFutureOps[*v1.MsgSubmitProposal](func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, fOpsReg simsx.FutureOpsRegistry) ([]simsx.SimAccount, *v1.MsgSubmitProposal) {
 		// 1) submit proposal now
 		accs := testData.AllAccounts()
-		content := contentSimFn(testData.Rand().Rand, ctx, accs)
+		content := contentSimFn(testData.Rand().Rand, sdk.UnwrapSDKContext(ctx), accs)
 		if content == nil {
 			reporter.Skip("content is nil")
 			return nil, nil
@@ -160,10 +158,6 @@ func submitProposalWithVotesScheduled(
 	if reporter.IsSkipped() || !proposer.LiquidBalance().BlockAmount(deposit) {
 		return nil, nil
 	}
-	proposalType := v1.ProposalType_PROPOSAL_TYPE_STANDARD
-	if expedited {
-		proposalType = v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
-	}
 	msg, err := v1.NewMsgSubmitProposal(
 		proposalMsgs,
 		sdk.Coins{deposit},
@@ -171,7 +165,7 @@ func submitProposalWithVotesScheduled(
 		r.StringN(100),
 		r.StringN(100),
 		r.StringN(100),
-		proposalType,
+		expedited,
 	)
 	if err != nil {
 		reporter.Skip("unable to generate a submit proposal msg")
@@ -217,7 +211,7 @@ func submitProposalWithVotesScheduled(
 	// future ops so that votes do not flood the sims.
 	if r.Intn(100) == 1 { // 1% chance
 		now := simsx.BlockTime(ctx)
-		for i := 0; i < numVotes; i++ {
+		for i := range numVotes {
 			var vF simsx.SimMsgFactoryFn[*v1.MsgVote] = func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVote) {
 				switch p, err := k.Proposals.Get(ctx, proposalID); {
 				case err != nil:
@@ -228,7 +222,7 @@ func submitProposalWithVotesScheduled(
 					return nil, nil
 				}
 				voter := testData.AccountAt(reporter, whoVotes[i])
-				msg := v1.NewMsgVote(voter.AddressBech32, proposalID, randomVotingOption(r.Rand), "")
+				msg := v1.NewMsgVote(voter.Address, proposalID, randomVotingOption(r.Rand), "")
 				return []simsx.SimAccount{voter}, msg
 			}
 			whenVote := now.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
@@ -246,14 +240,20 @@ func TextProposalFactory() simsx.SimMsgFactoryFn[sdk.Msg] {
 	}
 }
 
-func randDeposit(ctx context.Context, proposal v1.Proposal, k *keeper.Keeper, r *simsx.XRand, reporter simsx.SimulationReporter) sdk.Coin {
+func randDeposit(
+	ctx context.Context,
+	proposal v1.Proposal,
+	k *keeper.Keeper,
+	r *simsx.XRand,
+	reporter simsx.SimulationReporter,
+) sdk.Coin {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		reporter.Skipf("gov params: %s", err)
 		return sdk.Coin{}
 	}
 	minDeposits := params.MinDeposit
-	if proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED {
+	if proposal.Expedited {
 		minDeposits = params.ExpeditedMinDeposit
 	}
 	minDeposit := simsx.OneOf(r, minDeposits)
@@ -276,12 +276,12 @@ func randDeposit(ctx context.Context, proposal v1.Proposal, k *keeper.Keeper, r 
 // (defined in gov GenesisState) and the latest proposal ID
 // that matches a given Status.
 // It does not provide a default ID.
-func randomProposalID(r *simsx.XRand, k *keeper.Keeper, ctx context.Context, status v1.ProposalStatus, s *SharedState) (proposalID uint64, found bool) {
+func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus, s *SharedState) (proposalID uint64, found bool) {
 	proposalID, _ = k.ProposalID.Peek(ctx)
 	if initialProposalID := s.getMinProposalID(); initialProposalID == unsetProposalID {
 		s.setMinProposalID(proposalID)
 	} else if initialProposalID < proposalID {
-		proposalID = r.Uint64InRange(initialProposalID, proposalID)
+		proposalID = uint64(simtypes.RandIntBetween(r, int(initialProposalID), int(proposalID)))
 	}
 	proposal, err := k.Proposals.Get(ctx, proposalID)
 	if err != nil || proposal.Status != status {

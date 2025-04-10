@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -20,7 +19,7 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	testCases := []struct {
 		name                  string
 		keyringBackend        string
@@ -28,7 +27,7 @@ func Test_runExportCmd(t *testing.T) {
 		userInput             string
 		mustFail              bool
 		expectedOutput        string
-		expectedOutputContain string // only valid when expectedOutput is empty
+		expectedOutputContain string
 	}{
 		{
 			name:           "--unsafe only must fail",
@@ -67,17 +66,9 @@ func Test_runExportCmd(t *testing.T) {
 			expectedOutputContain: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
 		},
 		{
-			name:           "--unsafe --unarmored-hex --indiscreet success",
-			keyringBackend: keyring.BackendTest,
-			extraArgs:      []string{"--unsafe", "--unarmored-hex", "--indiscreet"},
-			userInput:      "y\n",
-			mustFail:       false,
-			expectedOutput: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
-		},
-		{
 			name:           "file keyring backend properly read password and user confirmation",
 			keyringBackend: keyring.BackendFile,
-			extraArgs:      []string{"--unsafe", "--unarmored-hex", "--indiscreet"},
+			extraArgs:      []string{"--unsafe", "--unarmored-hex"},
 			// first 2 pass for creating the key, then unsafe export confirmation, then unlock keyring pass
 			userInput:      "12345678\n12345678\ny\n12345678\n",
 			mustFail:       false,
@@ -108,7 +99,7 @@ func Test_runExportCmd(t *testing.T) {
 			require.NoError(t, err)
 			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
 
-			path := sdk.GetFullBIP44Path()
+			path := sdk.GetConfig().GetFullBIP44Path()
 			_, err = kb.NewAccount("keyname1", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 

@@ -1,15 +1,12 @@
 package types
 
 import (
-	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/math"
-	"cosmossdk.io/schema"
 )
 
 var (
@@ -45,25 +42,16 @@ var (
 	// Deprecated: exists only for state compatibility reasons, should not
 	// be used for new storage keys using time. Please use the time KeyCodec
 	// provided in the collections package.
-	TimeKey collcodec.NameableKeyCodec[time.Time] = timeKeyCodec{}
-
-	// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
-	// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
-	// state backwards compatibility.
-	// Deprecated: use collections.Uint64Key instead.
-	LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
-
-	// LengthPrefixedBytesKey is a collections KeyCodec to work with []byte.
-	// Deprecated: exists only for state compatibility reasons, should not be
-	// used for new storage keys using []byte. Please use the BytesKey provided
-	// in the collections package.
-	LengthPrefixedBytesKey collcodec.NameableKeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
+	TimeKey collcodec.KeyCodec[time.Time] = timeKeyCodec{}
 )
 
 const (
-	Int       string = "math.Int"
-	Uint      string = "math.Uint"
 	LegacyDec string = "math.LegacyDec"
+)
+
+const (
+	Int  string = "math.Int"
+	Uint string = "math.Uint"
 )
 
 type addressUnion interface {
@@ -121,28 +109,6 @@ func (a genericAddressKey[T]) SizeNonTerminal(key T) int {
 	return collections.BytesKey.SizeNonTerminal(key)
 }
 
-func (a genericAddressKey[T]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
-	return collcodec.SchemaCodec[T]{
-		Fields: []schema.Field{{Kind: schema.AddressKind}},
-		ToSchemaType: func(t T) (any, error) {
-			if len(t) == 0 {
-				return nil, fmt.Errorf("invalid empty address")
-			}
-			return t, nil
-		},
-		FromSchemaType: func(s any) (T, error) {
-			addr, ok := s.([]byte)
-			if !ok {
-				return nil, fmt.Errorf("expected []byte, got %T", s)
-			}
-			if len(addr) == 0 {
-				return nil, fmt.Errorf("invalid empty address")
-			}
-			return T(addr), nil
-		},
-	}, nil
-}
-
 // Deprecated: lengthPrefixedAddressKey is a special key codec used to retain state backwards compatibility
 // when a generic address key (be: AccAddress, ValAddress, ConsAddress), is used as an index key.
 // More docs can be found in the LengthPrefixedAddressKey function.
@@ -162,10 +128,6 @@ func (g lengthPrefixedAddressKey[T]) Size(key T) int { return g.SizeNonTerminal(
 
 func (g lengthPrefixedAddressKey[T]) KeyType() string { return "index_key/" + g.KeyCodec.KeyType() }
 
-func (g lengthPrefixedAddressKey[T]) WithName(name string) collcodec.KeyCodec[T] {
-	return collcodec.NamedKeyCodec[T]{KeyCodec: g, Name: name}
-}
-
 // Deprecated: LengthPrefixedAddressKey implements an SDK backwards compatible indexing key encoder
 // for addresses.
 // The status quo in the SDK is that address keys are length prefixed even when they're the
@@ -175,36 +137,10 @@ func (g lengthPrefixedAddressKey[T]) WithName(name string) collcodec.KeyCodec[T]
 // byte to the string, then when you know when the string part finishes, it's logical that the
 // part which remains is the address key. In the SDK instead we prepend to the address key its
 // length too.
-func LengthPrefixedAddressKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) collcodec.NameableKeyCodec[T] {
+func LengthPrefixedAddressKey[T addressUnion](keyCodec collcodec.KeyCodec[T]) collcodec.KeyCodec[T] {
 	return lengthPrefixedAddressKey[T]{
 		keyCodec,
 	}
-}
-
-// Deprecated: lengthPrefixedBytesKey is a special key codec used to retain state backwards compatibility
-// when a bytes key is used as an index key.
-type lengthPrefixedBytesKey struct {
-	collcodec.KeyCodec[[]byte]
-}
-
-func (g lengthPrefixedBytesKey) Encode(buffer, key []byte) (int, error) {
-	return g.EncodeNonTerminal(buffer, key)
-}
-
-func (g lengthPrefixedBytesKey) Decode(buffer []byte) (int, []byte, error) {
-	return g.DecodeNonTerminal(buffer)
-}
-
-func (g lengthPrefixedBytesKey) Size(key []byte) int {
-	return g.SizeNonTerminal(key)
-}
-
-func (g lengthPrefixedBytesKey) KeyType() string {
-	return "index_key/" + g.KeyCodec.KeyType()
-}
-
-func (g lengthPrefixedBytesKey) WithName(name string) collcodec.KeyCodec[[]byte] {
-	return collcodec.NamedKeyCodec[[]byte]{KeyCodec: g, Name: name}
 }
 
 // Collection Codecs
@@ -243,26 +179,6 @@ func (i intValueCodec) Stringify(value math.Int) string {
 
 func (i intValueCodec) ValueType() string {
 	return Int
-}
-
-func (i intValueCodec) SchemaCodec() (collcodec.SchemaCodec[math.Int], error) {
-	return collcodec.SchemaCodec[math.Int]{
-		Fields: []schema.Field{{Kind: schema.IntegerKind}},
-		ToSchemaType: func(t math.Int) (any, error) {
-			return t.String(), nil
-		},
-		FromSchemaType: func(s any) (math.Int, error) {
-			sz, ok := s.(string)
-			if !ok {
-				return math.Int{}, fmt.Errorf("expected string, got %T", s)
-			}
-			t, ok := math.NewIntFromString(sz)
-			if !ok {
-				return math.Int{}, fmt.Errorf("failed to parse Int from string: %s", sz)
-			}
-			return t, nil
-		},
-	}, nil
 }
 
 type uintValueCodec struct{}
@@ -347,7 +263,7 @@ var timeSize = len(FormatTimeBytes(time.Time{}))
 
 func (timeKeyCodec) Decode(buffer []byte) (int, time.Time, error) {
 	if len(buffer) != timeSize {
-		return 0, time.Time{}, errors.New("invalid time buffer size")
+		return 0, time.Time{}, fmt.Errorf("invalid time buffer buffer size")
 	}
 	t, err := ParseTimeBytes(buffer)
 	if err != nil {
@@ -379,41 +295,3 @@ func (t timeKeyCodec) DecodeNonTerminal(buffer []byte) (int, time.Time, error) {
 	return t.Decode(buffer[:timeSize])
 }
 func (t timeKeyCodec) SizeNonTerminal(key time.Time) int { return t.Size(key) }
-
-func (t timeKeyCodec) WithName(name string) collcodec.KeyCodec[time.Time] {
-	return collcodec.NamedKeyCodec[time.Time]{KeyCodec: t, Name: name}
-}
-
-type leUint64Key struct{}
-
-func (l leUint64Key) Encode(buffer []byte, key uint64) (int, error) {
-	binary.LittleEndian.PutUint64(buffer, key)
-	return 8, nil
-}
-
-func (l leUint64Key) Decode(buffer []byte) (int, uint64, error) {
-	if size := len(buffer); size < 8 {
-		return 0, 0, fmt.Errorf("invalid buffer size, wanted 8 at least got %d", size)
-	}
-	return 8, binary.LittleEndian.Uint64(buffer), nil
-}
-
-func (l leUint64Key) Size(_ uint64) int { return 8 }
-
-func (l leUint64Key) EncodeJSON(value uint64) ([]byte, error) {
-	return collections.Uint64Key.EncodeJSON(value)
-}
-
-func (l leUint64Key) DecodeJSON(b []byte) (uint64, error) { return collections.Uint64Key.DecodeJSON(b) }
-
-func (l leUint64Key) Stringify(key uint64) string { return collections.Uint64Key.Stringify(key) }
-
-func (l leUint64Key) KeyType() string { return "little-endian-uint64" }
-
-func (l leUint64Key) EncodeNonTerminal(buffer []byte, key uint64) (int, error) {
-	return l.Encode(buffer, key)
-}
-
-func (l leUint64Key) DecodeNonTerminal(buffer []byte) (int, uint64, error) { return l.Decode(buffer) }
-
-func (l leUint64Key) SizeNonTerminal(_ uint64) int { return 8 }

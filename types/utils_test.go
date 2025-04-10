@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"bytes"
+	"slices"
 	"testing"
 	"time"
 
@@ -33,7 +34,6 @@ func (s *utilsTestSuite) TestTimeFormatAndParse() {
 		{"2011-01-10T23:10:05.758230235Z", "2011-01-10T23:10:05.758230235", true},
 	}
 	for _, tc := range cases {
-
 		timeFromRFC, err := time.Parse(time.RFC3339Nano, tc.RFC3339NanoStr)
 		s.Require().Nil(err)
 		timeFromSDKFormat, err := time.Parse(sdk.SortableTimeFormat, tc.SDKSortableTimeStr)
@@ -135,7 +135,7 @@ func (s *utilsTestSuite) TestAppendParseBytes() {
 	testByte2 := []byte(test2)
 
 	combinedBytes := sdk.AppendLengthPrefixedBytes(address.MustLengthPrefix(testByte1), address.MustLengthPrefix(testByte2))
-	testCombineBytes := append([]byte{}, address.MustLengthPrefix(testByte1)...)
+	testCombineBytes := slices.Clone(address.MustLengthPrefix(testByte1))
 	testCombineBytes = append(testCombineBytes, address.MustLengthPrefix(testByte2)...)
 	s.Require().Equal(combinedBytes, testCombineBytes)
 

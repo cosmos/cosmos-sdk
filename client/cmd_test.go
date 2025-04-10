@@ -1,7 +1,6 @@
 package client_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"testing"
@@ -137,29 +136,4 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 			require.Equal(t, tc.expectedContext, clientCtx)
 		})
 	}
-}
-
-func TestContext_usesCobraCommandOutput(t *testing.T) {
-	var initCtx client.Context
-
-	cmd := &cobra.Command{
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return client.SetCmdClientContextHandler(initCtx, cmd)
-		},
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			cctx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			return cctx.PrintString("hello")
-		},
-	}
-
-	var outBuf bytes.Buffer
-	cmd.SetOutput(&outBuf)
-
-	require.NoError(t, cmd.Execute())
-
-	require.Equal(t, "hello", outBuf.String())
 }

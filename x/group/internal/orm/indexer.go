@@ -1,21 +1,22 @@
 package orm
 
 import (
-	storetypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/group/errors"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // IndexerFunc creates one or multiple index keys for the source object.
-type IndexerFunc func(value interface{}) ([]interface{}, error)
+type IndexerFunc func(value any) ([]any, error)
 
 // IndexerFunc creates exactly one index key for the source object.
-type UniqueIndexerFunc func(value interface{}) (interface{}, error)
+type UniqueIndexerFunc func(value any) (any, error)
 
 // Indexer manages the persistence of an Index based on searchable keys and operations.
 type Indexer struct {
 	indexerFunc IndexerFunc
-	addFunc     func(store storetypes.KVStore, secondaryIndexKey interface{}, rowID RowID) error
+	addFunc     func(store storetypes.KVStore, secondaryIndexKey any, rowID RowID) error
 }
 
 // NewIndexer returns an indexer that supports multiple reference keys for an entity.
@@ -35,9 +36,9 @@ func NewUniqueIndexer(f UniqueIndexerFunc) (*Indexer, error) {
 		return nil, errors.ErrORMInvalidArgument.Wrap("Indexer func must not be nil")
 	}
 	adaptor := func(indexerFunc UniqueIndexerFunc) IndexerFunc {
-		return func(v interface{}) ([]interface{}, error) {
+		return func(v any) ([]any, error) {
 			k, err := indexerFunc(v)
-			return []interface{}{k}, err
+			return []any{k}, err
 		}
 	}
 	idx, err := NewIndexer(adaptor(f))
@@ -55,7 +56,7 @@ func (i Indexer) IndexerFunc() IndexerFunc {
 }
 
 // OnCreate persists the secondary index entries for the new object.
-func (i Indexer) OnCreate(store storetypes.KVStore, rowID RowID, value interface{}) error {
+func (i Indexer) OnCreate(store storetypes.KVStore, rowID RowID, value any) error {
 	secondaryIndexKeys, err := i.indexerFunc(value)
 	if err != nil {
 		return err
@@ -70,26 +71,24 @@ func (i Indexer) OnCreate(store storetypes.KVStore, rowID RowID, value interface
 }
 
 // OnDelete removes the secondary index entries for the deleted object.
-func (i Indexer) OnDelete(store storetypes.KVStore, rowID RowID, value interface{}) error {
+func (i Indexer) OnDelete(store storetypes.KVStore, rowID RowID, value any) error {
 	secondaryIndexKeys, err := i.indexerFunc(value)
 	if err != nil {
 		return err
 	}
 
 	for _, secondaryIndexKey := range secondaryIndexKeys {
-		indexKey, err := buildKeyFromParts([]interface{}{secondaryIndexKey, []byte(rowID)})
+		indexKey, err := buildKeyFromParts([]any{secondaryIndexKey, []byte(rowID)})
 		if err != nil {
 			return err
 		}
-		if err := store.Delete(indexKey); err != nil {
-			return err
-		}
+		store.Delete(indexKey)
 	}
 	return nil
 }
 
 // OnUpdate rebuilds the secondary index entries for the updated object.
-func (i Indexer) OnUpdate(store storetypes.KVStore, rowID RowID, newValue, oldValue interface{}) error {
+func (i Indexer) OnUpdate(store storetypes.KVStore, rowID RowID, newValue, oldValue any) error {
 	oldSecIdxKeys, err := i.indexerFunc(oldValue)
 	if err != nil {
 		return err
@@ -103,13 +102,11 @@ func (i Indexer) OnUpdate(store storetypes.KVStore, rowID RowID, newValue, oldVa
 		return err
 	}
 	for _, oldIdxKey := range oldKeys {
-		indexKey, err := buildKeyFromParts([]interface{}{oldIdxKey, []byte(rowID)})
+		indexKey, err := buildKeyFromParts([]any{oldIdxKey, []byte(rowID)})
 		if err != nil {
 			return err
 		}
-		if err := store.Delete(indexKey); err != nil {
-			return err
-		}
+		store.Delete(indexKey)
 	}
 	newKeys, err := difference(newSecIdxKeys, oldSecIdxKeys)
 	if err != nil {
@@ -124,7 +121,7 @@ func (i Indexer) OnUpdate(store storetypes.KVStore, rowID RowID, newValue, oldVa
 }
 
 // uniqueKeysAddFunc enforces keys to be unique
-func uniqueKeysAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
+func uniqueKeysAddFunc(store storetypes.KVStore, secondaryIndexKey any, rowID RowID) error {
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)
 	if err != nil {
 		return err
@@ -137,20 +134,18 @@ func uniqueKeysAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, 
 		return err
 	}
 
-	indexKey, err := buildKeyFromParts([]interface{}{secondaryIndexKey, []byte(rowID)})
+	indexKey, err := buildKeyFromParts([]any{secondaryIndexKey, []byte(rowID)})
 	if err != nil {
 		return err
 	}
 
-	return store.Set(indexKey, []byte{})
+	store.Set(indexKey, []byte{})
+	return nil
 }
 
 // checkUniqueIndexKey checks that the given secondary index key is unique
 func checkUniqueIndexKey(store storetypes.KVStore, secondaryIndexKeyBytes []byte) error {
-	it, err := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
-	if err != nil {
-		return err
-	}
+	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
 	defer it.Close()
 	if it.Valid() {
 		return errors.ErrORMUniqueConstraint
@@ -159,7 +154,7 @@ func checkUniqueIndexKey(store storetypes.KVStore, secondaryIndexKeyBytes []byte
 }
 
 // multiKeyAddFunc allows multiple entries for a key
-func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
+func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey any, rowID RowID) error {
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)
 	if err != nil {
 		return err
@@ -168,7 +163,7 @@ func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, ro
 		return errorsmod.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
-	encodedKey, err := buildKeyFromParts([]interface{}{secondaryIndexKey, []byte(rowID)})
+	encodedKey, err := buildKeyFromParts([]any{secondaryIndexKey, []byte(rowID)})
 	if err != nil {
 		return err
 	}
@@ -176,12 +171,13 @@ func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, ro
 		return errorsmod.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
-	return store.Set(encodedKey, []byte{})
+	store.Set(encodedKey, []byte{})
+	return nil
 }
 
 // difference returns the list of elements that are in a but not in b.
-func difference(a, b []interface{}) ([]interface{}, error) {
-	set := make(map[string]struct{}, len(b))
+func difference(a, b []any) ([]any, error) {
+	set := make(map[any]struct{}, len(b))
 	for _, v := range b {
 		bt, err := keyPartBytes(v, true)
 		if err != nil {
@@ -189,7 +185,7 @@ func difference(a, b []interface{}) ([]interface{}, error) {
 		}
 		set[string(bt)] = struct{}{}
 	}
-	var result []interface{}
+	var result []any
 	for _, v := range a {
 		bt, err := keyPartBytes(v, true)
 		if err != nil {
@@ -204,12 +200,12 @@ func difference(a, b []interface{}) ([]interface{}, error) {
 
 // pruneEmptyKeys drops any empty key from IndexerFunc f returned
 func pruneEmptyKeys(f IndexerFunc) IndexerFunc {
-	return func(v interface{}) ([]interface{}, error) {
+	return func(v any) ([]any, error) {
 		keys, err := f(v)
 		if err != nil || keys == nil {
 			return keys, err
 		}
-		r := make([]interface{}, 0, len(keys))
+		r := make([]any, 0, len(keys))
 		for i := range keys {
 			key, err := keyPartBytes(keys[i], true)
 			if err != nil {

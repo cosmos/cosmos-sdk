@@ -16,26 +16,21 @@ import (
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/testpb"
-	"cosmossdk.io/x/bank"
-	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type fixture struct {
 	conn      *testClientConn
 	b         *Builder
 	clientCtx client.Context
-
-	home     string
-	chainID  string
-	kBackend string
 }
 
 func initFixture(t *testing.T) *fixture {
@@ -56,7 +51,7 @@ func initFixture(t *testing.T) *fixture {
 	clientConn, err := grpc.NewClient(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, bank.AppModule{})
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(bank.AppModuleBasic{})
 	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
 
@@ -64,9 +59,6 @@ func initFixture(t *testing.T) *fixture {
 	banktypes.RegisterInterfaces(interfaceRegistry)
 
 	clientCtx := client.Context{}.
-		WithAddressCodec(interfaceRegistry.SigningContext().AddressCodec()).
-		WithValidatorAddressCodec(interfaceRegistry.SigningContext().ValidatorAddressCodec()).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons")).
 		WithKeyring(kr).
 		WithKeyringDir(home).
 		WithHomeDir(home).
@@ -81,16 +73,15 @@ func initFixture(t *testing.T) *fixture {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          protoregistry.GlobalFiles,
-			AddressCodec:          clientCtx.AddressCodec,
-			ValidatorAddressCodec: clientCtx.ValidatorAddressCodec,
-			ConsensusAddressCodec: clientCtx.ConsensusAddressCodec,
+			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
+			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
+			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil
 		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    addTxAndGlobalFlagsToCmd,
-		Cdc:               encodingConfig.Codec,
+		AddTxConnFlags:    flags.AddTxFlagsToCmd,
 	}
 	assert.NilError(t, b.ValidateAndComplete())
 
@@ -98,17 +89,7 @@ func initFixture(t *testing.T) *fixture {
 		conn:      conn,
 		b:         b,
 		clientCtx: clientCtx,
-
-		home:     home,
-		chainID:  "autocli-test",
-		kBackend: sdkkeyring.BackendMemory,
 	}
-}
-
-func addTxAndGlobalFlagsToCmd(cmd *cobra.Command) {
-	f := cmd.Flags()
-	f.String("home", "", "home directory")
-	flags.AddTxFlagsToCmd(cmd)
 }
 
 func runCmd(fixture *fixture, command func(moduleName string, f *fixture) (*cobra.Command, error), args ...string) (*bytes.Buffer, error) {

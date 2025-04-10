@@ -2,10 +2,11 @@ package keeper_test
 
 import (
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) TestExportGenesis() {
@@ -21,7 +22,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 
 	for i := range []int{1, 2} {
 		suite.bankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
-		accAddr, err1 := suite.addrCdc.StringToBytes(expectedBalances[i].Address)
+		accAddr, err1 := sdk.AccAddressFromBech32(expectedBalances[i].Address)
 		if err1 != nil {
 			panic(err1)
 		}
@@ -29,19 +30,18 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 		suite.mockMintCoins(mintAcc)
 		suite.
 			Require().
-			NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedBalances[i].Coins))
+			NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedBalances[i].Coins))
 		suite.mockSendCoinsFromModuleToAccount(mintAcc, accAddr)
 		suite.
 			Require().
-			NoError(suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.MintModuleName, accAddr, expectedBalances[i].Coins))
+			NoError(suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, accAddr, expectedBalances[i].Coins))
 	}
 
 	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, types.DefaultParams()))
 
-	exportGenesis, err := suite.bankKeeper.ExportGenesis(ctx)
-	suite.Require().NoError(err)
+	exportGenesis := suite.bankKeeper.ExportGenesis(ctx)
 
-	suite.Require().Len(exportGenesis.Params.SendEnabled, 0) //nolint:staticcheck // we're testing the old way here
+	suite.Require().Len(exportGenesis.Params.SendEnabled, 0) //nolint:staticcheck // SA1019: types.DefaultParams().SendEnabled is deprecated: Use DefaultSendEnabled instead.  (staticcheck)
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
 	suite.Require().Equal(expTotalSupply, exportGenesis.Supply)
 	suite.Require().Subset(exportGenesis.Balances, expectedBalances)
@@ -49,14 +49,17 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 }
 
 func (suite *KeeperTestSuite) getTestBalancesAndSupply() ([]types.Balance, sdk.Coins) {
+	addr2, _ := sdk.AccAddressFromBech32("cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0")
+	addr1, _ := sdk.AccAddressFromBech32("cosmos1t5u0jfg3ljsjrh2m9e47d4ny2hea7eehxrzdgd")
 	addr1Balance := sdk.Coins{sdk.NewInt64Coin("testcoin3", 10)}
 	addr2Balance := sdk.Coins{sdk.NewInt64Coin("testcoin1", 32), sdk.NewInt64Coin("testcoin2", 34)}
 
-	totalSupply := addr1Balance.Add(addr2Balance...)
+	totalSupply := addr1Balance
+	totalSupply = totalSupply.Add(addr2Balance...)
 
 	return []types.Balance{
-		{Address: "cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0", Coins: addr2Balance},
-		{Address: "cosmos1t5u0jfg3ljsjrh2m9e47d4ny2hea7eehxrzdgd", Coins: addr1Balance},
+		{Address: addr2.String(), Coins: addr2Balance},
+		{Address: addr1.String(), Coins: addr1Balance},
 	}, totalSupply
 }
 
@@ -65,7 +68,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	g := types.DefaultGenesisState()
 	g.DenomMetadata = []types.Metadata{m}
 	bk := suite.bankKeeper
-	suite.Require().NoError(bk.InitGenesis(suite.ctx, g))
+	bk.InitGenesis(suite.ctx, g)
 
 	m2, found := bk.GetDenomMetaData(suite.ctx, m.Base)
 	suite.Require().True(found)
@@ -86,34 +89,35 @@ func (suite *KeeperTestSuite) TestTotalSupply() {
 	suite.Require().NoError(err)
 
 	testcases := []struct {
-		name      string
-		genesis   *types.GenesisState
-		expSupply sdk.Coins
-		expErrMsg string
+		name        string
+		genesis     *types.GenesisState
+		expSupply   sdk.Coins
+		expPanic    bool
+		expPanicMsg string
 	}{
 		{
 			"calculation NOT matching genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, sdk.NewCoins(sdk.NewCoin("wrongcoin", sdkmath.NewInt(1))), defaultGenesis.DenomMetadata, defaultGenesis.SendEnabled),
-			nil, "genesis supply is incorrect, expected 1wrongcoin, got 21barcoin,11foocoin",
+			nil, true, "genesis supply is incorrect, expected 1wrongcoin, got 21barcoin,11foocoin",
 		},
 		{
 			"calculation matches genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, totalSupply, defaultGenesis.DenomMetadata, defaultGenesis.SendEnabled),
-			totalSupply, "",
+			totalSupply, false, "",
 		},
 		{
 			"calculation is correct, empty genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, nil, defaultGenesis.DenomMetadata, defaultGenesis.SendEnabled),
-			totalSupply, "",
+			totalSupply, false, "",
 		},
 	}
 
 	for _, tc := range testcases {
 		suite.Run(tc.name, func() {
-			if tc.expErrMsg != "" {
-				suite.Require().ErrorContains(suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis), tc.expErrMsg)
+			if tc.expPanic {
+				suite.PanicsWithError(tc.expPanicMsg, func() { suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis) })
 			} else {
-				suite.Require().NoError(suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis))
+				suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis)
 				totalSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
 				suite.Require().NoError(err)
 

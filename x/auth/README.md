@@ -138,12 +138,6 @@ message BaseAccount {
 
 ### Vesting Account
 
-:::warning
-Vesting accounts are deprecated in favor of `x/accounts`.
-The creation of vesting account, using `x/auth/vesting`, is not possible since v0.52.
-For existing chains, importing the `x/auth/vesting module` is still required for backward compatibility purposes.
-:::
-
 See [Vesting](https://docs.cosmos.network/main/modules/auth/vesting/).
 
 ## AnteHandlers
@@ -165,7 +159,7 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 * `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
 
-* `TxTimeoutHeightDecorator`: Check for a `tx` height or time-based timeout.
+* `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
 
 * `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
 
@@ -448,7 +442,7 @@ More information about the `sign-batch` command can be found running `simd tx si
 The `multi-sign` command allows users to sign transactions that was generated offline by a multisig account.
 
 ```bash
-simd tx multi-sign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
+simd tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 ```
 
 Where `k1k2k3` is the multisig account address, `k1sig.json` is the signature of the first signer, `k2sig.json` is the signature of the second signer, and `k3sig.json` is the signature of the third signer.

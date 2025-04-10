@@ -43,11 +43,10 @@ type MsgClient interface {
 	// WithdrawValidatorCommission defines a method to withdraw the
 	// full commission to the validator address.
 	WithdrawValidatorCommission(ctx context.Context, in *MsgWithdrawValidatorCommission, opts ...grpc.CallOption) (*MsgWithdrawValidatorCommissionResponse, error)
-	// Deprecated: Do not use.
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	//
-	// Deprecated: Use x/protocolpool module's FundCommunityPool instead.
+	// WARNING: This method will fail if an external community pool is used.
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
@@ -57,7 +56,7 @@ type MsgClient interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
-	// Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
+	// WARNING: This method will fail if an external community pool is used.
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.
@@ -102,7 +101,6 @@ func (c *msgClient) WithdrawValidatorCommission(ctx context.Context, in *MsgWith
 	return out, nil
 }
 
-// Deprecated: Do not use.
 func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgFundCommunityPoolResponse)
@@ -158,11 +156,10 @@ type MsgServer interface {
 	// WithdrawValidatorCommission defines a method to withdraw the
 	// full commission to the validator address.
 	WithdrawValidatorCommission(context.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error)
-	// Deprecated: Do not use.
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	//
-	// Deprecated: Use x/protocolpool module's FundCommunityPool instead.
+	// WARNING: This method will fail if an external community pool is used.
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution
 	// module parameters. The authority is defined in the keeper.
@@ -172,7 +169,7 @@ type MsgServer interface {
 	// could be the governance module itself. The authority is defined in the
 	// keeper.
 	//
-	// Deprecated: Use x/protocolpool module's CommunityPoolSpend instead.
+	// WARNING: This method will fail if an external community pool is used.
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
 	// DepositValidatorRewardsPool defines a method to provide additional rewards
 	// to delegators to a specific validator.

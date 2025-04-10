@@ -2,11 +2,13 @@ package simulation
 
 import (
 	"context"
+	"time"
 
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func MsgGrantAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.MsgGrantAllowance] {
@@ -22,11 +24,11 @@ func MsgGrantAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.M
 		}
 
 		coins := granter.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
-		oneYear := simsx.BlockTime(ctx).AddDate(1, 0, 0)
+		oneYear := blockTime(ctx).AddDate(1, 0, 0)
 		msg, err := feegrant.NewMsgGrantAllowance(
 			&feegrant.BasicAllowance{SpendLimit: coins, Expiration: &oneYear},
-			granter.AddressBech32,
-			grantee.AddressBech32,
+			granter.Address,
+			grantee.Address,
 		)
 		if err != nil {
 			reporter.Skip(err.Error())
@@ -52,7 +54,12 @@ func MsgRevokeAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.
 		}
 		granter := testData.GetAccount(reporter, gotGrant.Granter)
 		grantee := testData.GetAccount(reporter, gotGrant.Grantee)
-		msg := feegrant.NewMsgRevokeAllowance(granter.AddressBech32, grantee.AddressBech32)
+		msg := feegrant.NewMsgRevokeAllowance(granter.Address, grantee.Address)
 		return []simsx.SimAccount{granter}, &msg
 	}
+}
+
+// temporary solution. use simsx.BlockTime when available
+func blockTime(ctx context.Context) time.Time {
+	return sdk.UnwrapSDKContext(ctx).BlockTime()
 }

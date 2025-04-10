@@ -95,13 +95,13 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			chain_id, err := types.ParseChainIDFromGenesis(strings.NewReader(tc.json))
+			chainID, err := types.ParseChainIDFromGenesis(strings.NewReader(tc.json))
 			if tc.expChainID == "" {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expError)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.expChainID, chain_id)
+				require.Equal(t, tc.expChainID, chainID)
 			}
 		})
 	}
@@ -113,9 +113,9 @@ func BenchmarkParseChainID(b *testing.B) {
 	b.Run("new", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			chainId, err := types.ParseChainIDFromGenesis(strings.NewReader(BenchmarkGenesis))
+			chainID, err := types.ParseChainIDFromGenesis(strings.NewReader(BenchmarkGenesis))
 			require.NoError(b, err)
-			require.Equal(b, expChainID, chainId)
+			require.Equal(b, expChainID, chainID)
 		}
 	})
 

@@ -4,28 +4,24 @@ import (
 	"context"
 
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/x/slashing/keeper"
-	"cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // BeginBlocker check for infraction evidence or downtime of validators
 // on every begin block
-func BeginBlocker(ctx context.Context, k keeper.Keeper, cometService comet.Service) error {
-	start := telemetry.Now()
-	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
+func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
-	// Retrieve CometBFT info, then iterate through all validator votes
-	// from the last commit. For each vote, handle the validator's signature, potentially
-	// slashing or unbonding validators who have missed too many blocks.
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		return err
-	}
-	ci := cometService.CometInfo(ctx)
-	for _, vote := range ci.LastCommit.Votes {
-		err := k.HandleValidatorSignatureWithParams(ctx, params, vote.Validator.Address, vote.Validator.Power, vote.BlockIDFlag)
+	// Iterate over all the validators which *should* have signed this block
+	// store whether or not they have actually signed it and slash/unbond any
+	// which have missed too many blocks in a row (downtime slashing)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	for _, voteInfo := range sdkCtx.VoteInfos() {
+		err := k.HandleValidatorSignature(ctx, voteInfo.Validator.Address, voteInfo.Validator.Power, comet.BlockIDFlag(voteInfo.BlockIdFlag))
 		if err != nil {
 			return err
 		}

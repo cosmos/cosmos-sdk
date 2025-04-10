@@ -2,81 +2,126 @@ package rpc_test
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/stretchr/testify/require"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func TestCLIQueryConn(t *testing.T) {
-	t.Skip("data race in comet is causing this to fail")
+type IntegrationTestSuite struct {
+	suite.Suite
 
+	network *network.Network
+}
+
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
+
+	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+
+	s.NoError(err)
+
+	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+}
+
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) TestCLIQueryConn() {
+	s.T().Skip("data race in comet is causing this to fail")
 	var header metadata.MD
 
-	testClient := testdata.NewQueryClient(client.Context{})
+	testClient := testdata.NewQueryClient(s.network.Validators[0].ClientCtx)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"}, grpc.Header(&header))
-	require.NoError(t, err)
+	s.NoError(err)
 
 	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
 	height, err := strconv.Atoi(blockHeight[0])
-	require.NoError(t, err)
-	require.GreaterOrEqual(t, height, 1) // at least the 1st block
-	require.Equal(t, "hello", res.Message)
+	s.Require().NoError(err)
+	s.Require().GreaterOrEqual(height, 1) // at least the 1st block
+
+	s.Equal("hello", res.Message)
 }
 
-func TestQueryABCIHeight(t *testing.T) {
+func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 	testCases := []struct {
-		name      string
-		reqHeight int64
-		ctxHeight int64
-		expHeight int64
+		name                string
+		reqHeight           int64
+		ctxHeight           int64
+		awaitMinChainHeight int64
+		assertFn            func(t *testing.T, latestHeightAtQuery int64, resp abci.ResponseQuery)
 	}{
 		{
-			name:      "non zero request height",
-			reqHeight: 3,
-			ctxHeight: 1, // query at height 1 or 2 would cause an error
-			expHeight: 3,
+			name:                "request height set",
+			reqHeight:           2, // no proof when < 2
+			ctxHeight:           1,
+			awaitMinChainHeight: 3, // wait +1 block to be on the safe side
+			assertFn: func(t *testing.T, _ int64, resp abci.ResponseQuery) {
+				t.Helper()
+				assert.Equal(t, int64(2), resp.Height)
+			},
 		},
 		{
-			name:      "empty request height - use context height",
-			reqHeight: 0,
-			ctxHeight: 3,
-			expHeight: 3,
+			name:                "fallback to context height when request height is not set",
+			reqHeight:           0,
+			ctxHeight:           3,
+			awaitMinChainHeight: 4, // wait +1 block to be on the safe side
+			assertFn: func(t *testing.T, _ int64, resp abci.ResponseQuery) {
+				t.Helper()
+				assert.Equal(t, int64(3), resp.Height)
+			},
 		},
 		{
-			name:      "empty request height and context height - use latest height",
-			reqHeight: 0,
-			ctxHeight: 0,
-			expHeight: 4,
+			name:                "with empty values, use latest height",
+			reqHeight:           0,
+			ctxHeight:           0,
+			awaitMinChainHeight: 2, // no proof when < 2
+			assertFn: func(t *testing.T, latestHeightAtQuery int64, resp abci.ResponseQuery) {
+				t.Helper()
+				anyOf := []int64{latestHeightAtQuery, latestHeightAtQuery - 1}
+				assert.Contains(t, anyOf, resp.Height)
+			},
 		},
 	}
-
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			req := abci.QueryRequest{
-				Path:   "store/bank/key",
+		s.Run(tc.name, func() {
+			currentHeight, err := s.network.WaitForHeight(tc.awaitMinChainHeight)
+			s.Require().NoError(err)
+
+			val := s.network.Validators[0]
+			clientCtx := val.ClientCtx
+			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
+
+			req := abci.RequestQuery{
+				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
 				Height: tc.reqHeight,
-				Data:   address.MustLengthPrefix([]byte{}),
+				Data:   address.MustLengthPrefix(val.Address),
 				Prove:  true,
 			}
 
-			clientCtx := client.Context{}.WithHeight(tc.ctxHeight).
-				WithClient(clitestutil.NewMockCometRPC(abci.QueryResponse{
-					Height: tc.expHeight,
-				}))
-
 			res, err := clientCtx.QueryABCI(req)
-			require.NoError(t, err)
-			require.Equal(t, tc.expHeight, res.Height)
+			s.Require().NoError(err)
+			tc.assertFn(s.T(), currentHeight, res)
 		})
 	}
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

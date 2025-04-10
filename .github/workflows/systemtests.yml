@@ -1,0 +1,63 @@
+name: System Tests
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+      - release/v0.53.x
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-system-tests
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    runs-on: depot-ubuntu-22.04-4
+    outputs:
+      git_diff: ${{ steps.git_diff.outputs.diff }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+          cache: true
+          cache-dependency-path: |
+            ./go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
+
+  test-system:
+    needs: setup
+    if: needs.setup.outputs.git_diff
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run system tests
+        run: |
+          make test-system
+
+  test-system-legacy:
+    needs: setup
+    if: needs.setup.outputs.git_diff
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run legacy system tests
+        run: |
+          COSMOS_BUILD_OPTIONS=legacy make test-system

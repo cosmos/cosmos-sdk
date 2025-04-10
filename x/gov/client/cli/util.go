@@ -2,21 +2,17 @@ package cli
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	govutils "cosmossdk.io/x/gov/client/utils"
-	govv1 "cosmossdk.io/x/gov/types/v1"
-	"cosmossdk.io/x/gov/types/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type legacyProposal struct {
@@ -29,15 +25,15 @@ type legacyProposal struct {
 // validate the legacyProposal
 func (p legacyProposal) validate() error {
 	if p.Type == "" {
-		return errors.New("proposal type is required")
+		return fmt.Errorf("proposal type is required")
 	}
 
 	if p.Title == "" {
-		return errors.New("proposal title is required")
+		return fmt.Errorf("proposal title is required")
 	}
 
 	if p.Description == "" {
-		return errors.New("proposal description is required")
+		return fmt.Errorf("proposal description is required")
 	}
 	return nil
 }
@@ -51,10 +47,7 @@ func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 		proposalType, _ := fs.GetString(FlagProposalType)
 		proposal.Title, _ = fs.GetString(FlagTitle)
 		proposal.Description, _ = fs.GetString(FlagDescription)
-
-		if strings.EqualFold(proposalType, "text") {
-			proposal.Type = v1beta1.ProposalTypeText
-		}
+		proposal.Type = govutils.NormalizeProposalType(proposalType)
 		proposal.Deposit, _ = fs.GetString(FlagDeposit)
 		if err := proposal.validate(); err != nil {
 			return nil, err
@@ -89,14 +82,12 @@ func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 // proposal defines the new Msg-based proposal.
 type proposal struct {
 	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages        []json.RawMessage `json:"messages,omitempty"`
-	Metadata        string            `json:"metadata"`
-	Deposit         string            `json:"deposit"`
-	Title           string            `json:"title"`
-	Summary         string            `json:"summary"`
-	ProposalTypeStr string            `json:"proposal_type,omitempty"`
-
-	proposalType govv1.ProposalType
+	Messages  []json.RawMessage `json:"messages,omitempty"`
+	Metadata  string            `json:"metadata"`
+	Deposit   string            `json:"deposit"`
+	Title     string            `json:"title"`
+	Summary   string            `json:"summary"`
+	Expedited bool              `json:"expedited"`
 }
 
 // parseSubmitProposal reads and parses the proposal.
@@ -112,12 +103,6 @@ func parseSubmitProposal(cdc codec.Codec, path string) (proposal, []sdk.Msg, sdk
 	if err != nil {
 		return proposal, nil, nil, err
 	}
-
-	proposalType := govv1.ProposalType_PROPOSAL_TYPE_STANDARD
-	if proposal.ProposalTypeStr != "" {
-		proposalType = govutils.NormalizeProposalType(proposal.ProposalTypeStr)
-	}
-	proposal.proposalType = proposalType
 
 	msgs := make([]sdk.Msg, len(proposal.Messages))
 	for i, anyJSON := range proposal.Messages {
@@ -146,7 +131,7 @@ func AddGovPropFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagMetadata, "", "The metadata to include with the governance proposal")
 	cmd.Flags().String(FlagTitle, "", "The title to put on the governance proposal")
 	cmd.Flags().String(FlagSummary, "", "The summary to include with the governance proposal")
-	cmd.Flags().Bool(FlagExpedited, false, "Whether to expedite the governance proposal")
+	// cmd.Flags().Bool(FlagExpedited, false, "Whether to expedite the governance proposal") // cannot be enabled because of IBC redefining this flag in `upgrade-channels` command.
 }
 
 // ReadGovPropCmdFlags parses a MsgSubmitProposal from the provided context and flags.
@@ -182,14 +167,10 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 		return nil, fmt.Errorf("could not read summary: %w", err)
 	}
 
-	expedited, err := flagSet.GetBool(FlagExpedited)
-	if err != nil {
-		return nil, fmt.Errorf("could not read expedited: %w", err)
-	}
-	if expedited {
-		rv.Expedited = true
-		rv.ProposalType = govv1.ProposalType_PROPOSAL_TYPE_EXPEDITED
-	}
+	// rv.Expedited, err = flagSet.GetBool(FlagExpedited)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("could not read expedited: %w", err)
+	// }
 
 	rv.Proposer = proposer
 
@@ -202,28 +183,5 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 // See also AddGovPropFlagsToCmd.
 // Deprecated: use ReadPropCmdFlags instead, as this depends on global bech32 prefixes.
 func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
-	addr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
-	if err != nil {
-		return nil, err
-	}
-
-	return ReadGovPropCmdFlags(addr, flagSet)
-}
-
-// ValidatePromptCoins validates that the input contains valid sdk.Coins
-func ValidatePromptCoins(input string) error {
-	if _, err := sdk.ParseCoinsNormalized(input); err != nil {
-		return fmt.Errorf("invalid coins: %w", err)
-	}
-
-	return nil
-}
-
-// ValidatePromptNotEmpty validates that the input is not empty.
-func ValidatePromptNotEmpty(input string) error {
-	if input == "" {
-		return errors.New("input cannot be empty")
-	}
-
-	return nil
+	return ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
 }

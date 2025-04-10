@@ -13,17 +13,12 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/core/address"
 )
 
 type TypeResolver interface {
 	protoregistry.MessageTypeResolver
 	protoregistry.ExtensionTypeResolver
-}
-
-// AddressCodec is the cosmossdk.io/core/address codec interface used by the context.
-type AddressCodec interface {
-	StringToBytes(string) ([]byte, error)
-	BytesToString([]byte) (string, error)
 }
 
 // Context is a context for retrieving the list of signers from a
@@ -33,8 +28,8 @@ type AddressCodec interface {
 type Context struct {
 	fileResolver          ProtoFileResolver
 	typeResolver          protoregistry.MessageTypeResolver
-	addressCodec          AddressCodec
-	validatorAddressCodec AddressCodec
+	addressCodec          address.Codec
+	validatorAddressCodec address.Codec
 	getSignersFuncs       sync.Map
 	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
 	maxRecursionDepth     int
@@ -50,10 +45,10 @@ type Options struct {
 	TypeResolver TypeResolver
 
 	// AddressCodec is the codec for converting addresses between strings and bytes.
-	AddressCodec AddressCodec
+	AddressCodec address.Codec
 
 	// ValidatorAddressCodec is the codec for converting validator addresses between strings and bytes.
-	ValidatorAddressCodec AddressCodec
+	ValidatorAddressCodec address.Codec
 
 	// CustomGetSigners is a map of message types to custom GetSignersFuncs.
 	CustomGetSigners map[protoreflect.FullName]GetSignersFunc
@@ -253,9 +248,9 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 							arr = append(arr, res...)
 						}
 						return arr, nil
-					} else {
-						return fieldGetter(msg.Get(childField).Message(), depth+1)
 					}
+
+					return fieldGetter(msg.Get(childField).Message(), depth+1)
 				case childField.IsMap() || childField.HasOptionalKeyword():
 					return nil, fmt.Errorf("cosmos.msg.v1.signer field %s in message %s must not be a map or optional", signerFieldName, desc.FullName())
 				case childField.Kind() == protoreflect.StringKind:
@@ -273,14 +268,14 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 							res = append(res, addrBz)
 						}
 						return res, nil
-					} else {
-						addrStr := msg.Get(childField).String()
-						addrBz, err := addrCdc.StringToBytes(addrStr)
-						if err != nil {
-							return nil, err
-						}
-						return [][]byte{addrBz}, nil
 					}
+
+					addrStr := msg.Get(childField).String()
+					addrBz, err := addrCdc.StringToBytes(addrStr)
+					if err != nil {
+						return nil, err
+					}
+					return [][]byte{addrBz}, nil
 				}
 				return nil, fmt.Errorf("unexpected field type %s for field %s in message %s, only string and message type are supported",
 					childField.Kind(), signerFieldName, desc.FullName())
@@ -306,18 +301,16 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 				}
 				return arr, nil
 			}
-		case protoreflect.BytesKind:
-			fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
-				addrBz := msg.ProtoReflect().Get(field).Bytes()
-				return append(arr, addrBz), nil
-			}
 		default:
 			return nil, fmt.Errorf("unexpected field type %s for field %s in message %s", field.Kind(), fieldName, descriptor.FullName())
 		}
 	}
 
 	return func(message proto.Message) ([][]byte, error) {
-		var signers [][]byte
+		var (
+			signers [][]byte
+			err     error
+		)
 		for _, getter := range fieldGetters {
 			signers, err = getter(message, signers)
 			if err != nil {
@@ -328,7 +321,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 	}, nil
 }
 
-func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) AddressCodec {
+func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Codec {
 	scalarOpt := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
 	addrCdc := c.addressCodec
 	if scalarOpt != nil {
@@ -372,12 +365,12 @@ func (c *Context) GetSigners(msg proto.Message) ([][]byte, error) {
 }
 
 // AddressCodec returns the address codec used by the context.
-func (c *Context) AddressCodec() AddressCodec {
+func (c *Context) AddressCodec() address.Codec {
 	return c.addressCodec
 }
 
 // ValidatorAddressCodec returns the validator address codec used by the context.
-func (c *Context) ValidatorAddressCodec() AddressCodec {
+func (c *Context) ValidatorAddressCodec() address.Codec {
 	return c.validatorAddressCodec
 }
 

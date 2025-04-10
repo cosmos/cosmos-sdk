@@ -1,12 +1,12 @@
 package cachekv_test
 
 import (
-	"fmt"
+	fmt "fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/types"
@@ -14,7 +14,7 @@ import (
 
 func DoBenchmarkDeepCacheStack(b *testing.B, depth int) {
 	b.Helper()
-	db := coretesting.NewMemDB()
+	db := dbm.NewMemDB()
 	initialStore := cachekv.NewStore(dbadapter.Store{DB: db})
 
 	nItems := 20
@@ -72,7 +72,7 @@ type CacheStack struct {
 	cacheStores []types.CacheKVStore
 }
 
-// CurrentStore returns the top context of cached stack,
+// CurrentContext returns the top context of cached stack,
 // if the stack is empty, returns the initial context.
 func (cs *CacheStack) CurrentStore() types.CacheKVStore {
 	l := len(cs.cacheStores)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -41,7 +42,7 @@ and export your keys in ASCII-armored encrypted format.`,
 			unsafe, _ := cmd.Flags().GetBool(flagUnsafe)
 
 			if unarmored && unsafe {
-				return exportUnsafeUnarmored(clientCtx, cmd, args[0], buf)
+				return exportUnsafeUnarmored(cmd, args[0], buf, clientCtx.Keyring)
 			} else if unarmored || unsafe {
 				return fmt.Errorf("the flags %s and %s must be used together", flagUnsafe, flagUnarmoredHex)
 			}
@@ -64,13 +65,12 @@ and export your keys in ASCII-armored encrypted format.`,
 
 	cmd.Flags().Bool(flagUnarmoredHex, false, "Export unarmored hex privkey. Requires --unsafe.")
 	cmd.Flags().Bool(flagUnsafe, false, "Enable unsafe operations. This flag must be switched on along with all unsafe operation-specific options.")
-	cmd.Flags().Bool(flagIndiscreet, false, "Print unarmored hex privkey directly on current terminal (only valid when --unarmored-hex is true)")
 	cmd.Flags().BoolP(flagYes, "y", false, "Skip confirmation prompt when export unarmored hex privkey")
 
 	return cmd
 }
 
-func exportUnsafeUnarmored(ctx client.Context, cmd *cobra.Command, uid string, buf *bufio.Reader) error {
+func exportUnsafeUnarmored(cmd *cobra.Command, uid string, buf *bufio.Reader, kr keyring.Keyring) error {
 	// confirm export unarmored hex privkey, unless -y is passed
 	if skip, _ := cmd.Flags().GetBool(flagYes); !skip {
 		if yes, err := input.GetConfirmation("WARNING: The private key will be exported as an unarmored hexadecimal string. USE AT YOUR OWN RISK. Continue?", buf, cmd.ErrOrStderr()); err != nil {
@@ -80,19 +80,13 @@ func exportUnsafeUnarmored(ctx client.Context, cmd *cobra.Command, uid string, b
 		}
 	}
 
-	hexPrivKey, err := unsafeExportPrivKeyHex(ctx.Keyring.(unsafeExporter), uid)
+	hexPrivKey, err := unsafeExportPrivKeyHex(kr.(unsafeExporter), uid)
 	if err != nil {
 		return err
 	}
-	indiscreet, _ := cmd.Flags().GetBool(flagIndiscreet)
-	if indiscreet {
-		cmd.Println(hexPrivKey)
-		return nil
-	}
-	if err = printDiscreetly(cmd.ErrOrStderr(), "**Important** Do not share this private key.", hexPrivKey); err != nil {
-		return fmt.Errorf("failed to print private key: %w", err)
-	}
-	cmd.Println("Export private key successfully")
+
+	cmd.Println(hexPrivKey)
+
 	return nil
 }
 

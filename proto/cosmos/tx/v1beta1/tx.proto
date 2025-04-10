@@ -1,13 +1,13 @@
 syntax = "proto3";
 package cosmos.tx.v1beta1;
 
-import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/signing/v1beta1/signing.proto";
 import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
@@ -88,7 +88,7 @@ message SignDocDirectAux {
   // sequence is the sequence number of the signing account.
   uint64 sequence = 5;
 
-  // tips have been deprecated and should not be used
+  // tips have been depreacted and should not be used
   Tip tip = 6 [deprecated = true];
 }
 
@@ -119,10 +119,10 @@ message TxBody {
   // incremented, which allows for fire-and-forget as well as concurrent
   // transaction execution.
   //
-  // Note, when set to true, the existing 'timeout_height' value must
-  // be set and will be used to correspond to a time_stamp in which the transaction is deemed
+  // Note, when set to true, the existing 'timeout_timestamp' value must
+  // be set and will be used to correspond to a timestamp in which the transaction is deemed
   // valid.
-  bool unordered = 4;
+  bool unordered = 4 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.53"];
 
   // timeout_timestamp is the block time after which this transaction will not
   // be processed by the chain.
@@ -130,42 +130,8 @@ message TxBody {
   // Note, if unordered=true this value MUST be set
   // and will act as a short-lived TTL in which the transaction is deemed valid
   // and kept in memory to prevent duplicates.
-  google.protobuf.Timestamp timeout_timestamp = 5 [(gogoproto.nullable) = true, (gogoproto.stdtime) = true];
-
-  // extension_options are arbitrary options that can be added by chains
-  // when the default options are not sufficient. If any of these are present
-  // and can't be handled, the transaction will be rejected
-  repeated google.protobuf.Any extension_options = 1023;
-
-  // extension_options are arbitrary options that can be added by chains
-  // when the default options are not sufficient. If any of these are present
-  // and can't be handled, they will be ignored
-  repeated google.protobuf.Any non_critical_extension_options = 2047;
-}
-
-// TxBodyCompat is the body of a transaction that all signers sign over.
-// This message is used to represent the transaction body before the unordered
-// features was added. It is used to support backwards compatibility when user a newer
-// client with an older chain.
-message TxBodyCompat {
-  // messages is a list of messages to be executed. The required signers of
-  // those messages define the number and order of elements in AuthInfo's
-  // signer_infos and Tx's signatures. Each required signer address is added to
-  // the list only the first time it occurs.
-  // By convention, the first required signer (usually from the first message)
-  // is referred to as the primary signer and pays the fee for the whole
-  // transaction.
-  repeated google.protobuf.Any messages = 1;
-
-  // memo is any arbitrary note/comment to be added to the transaction.
-  // WARNING: in clients, any publicly exposed text should not be called memo,
-  // but should be called `note` instead (see
-  // https://github.com/cosmos/cosmos-sdk/issues/9122).
-  string memo = 2;
-
-  // timeout_height is the block height after which this transaction will not
-  // be processed by the chain.
-  uint64 timeout_height = 3;
+  google.protobuf.Timestamp timeout_timestamp = 5
+      [(gogoproto.nullable) = true, (gogoproto.stdtime) = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.53"];
 
   // extension_options are arbitrary options that can be added by chains
   // when the default options are not sufficient. If any of these are present
@@ -250,7 +216,7 @@ message ModeInfo {
 
 // Fee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some minimum to be accepted into the mempool.
+// which must be above some miminum to be accepted into the mempool.
 message Fee {
   // amount is the amount of coins to be paid as a fee
   repeated cosmos.base.v1beta1.Coin amount = 1 [
@@ -279,8 +245,8 @@ message Fee {
 
 // Tip is the tip used for meta-transactions.
 message Tip {
-  option deprecated                      = true;
   option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
+  option deprecated                      = true;
   // amount is the amount of the tip
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
@@ -298,7 +264,6 @@ message Tip {
 // by the node if sent directly as-is.
 message AuxSignerData {
   option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
-
   // address is the bech32-encoded address of the auxiliary signer. If using
   // AuxSignerData across different chains, the bech32 prefix of the target
   // chain (where the final transaction is broadcasted) should be used.

@@ -5,7 +5,7 @@ go 1.23.2
 require (
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v0.38.17
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
+	github.com/cosmos/cosmos-sdk v0.53.0-rc.3
 	github.com/creachadair/tomledit v0.0.27
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
@@ -115,7 +115,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.21.1 // indirect
+	github.com/prometheus/client_golang v1.22.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.63.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

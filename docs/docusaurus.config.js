@@ -5,7 +5,7 @@ const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
 const lastVersion = "current";
-// const lastVersion = "v0.50";
+// const lastVersion = "v0.53";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -46,9 +46,9 @@ const config = {
               path: "main",
               // banner: "unreleased",
             },
-            // "v0.50": {
-            //   path: "v0.50",
-            //   label: "v0.50",
+            // "v0.53": {
+            //   path: "v0.53",
+            //   label: "v0.53",
             // },
           },
         },

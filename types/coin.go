@@ -690,22 +690,19 @@ func (coins Coins) Empty() bool {
 	return len(coins) == 0
 }
 
-// AmountOf returns the amount of a denom from coins.  Will return 0 if the denom is invalid.
+// AmountOf returns the amount of a denom from coins. The denom is not validated.
 func (coins Coins) AmountOf(denom string) math.Int {
-	if err := ValidateDenom(denom); err != nil {
-		return math.ZeroInt()
-	}
-
-	return coins.AmountOfNoDenomValidation(denom)
-}
-
-// AmountOfNoDenomValidation returns the amount of a denom from coins
-// without validating the denomination.
-func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
 	if ok, c := coins.Find(denom); ok {
 		return c.Amount
 	}
 	return math.ZeroInt()
+}
+
+// AmountOfNoDenomValidation returns the amount of a denom from coins
+// without validating the denomination.
+// Deprecated: use AmountOf
+func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
+	return coins.AmountOf(denom)
 }
 
 // Find returns true and coin if the denom exists in coins. Otherwise it returns false

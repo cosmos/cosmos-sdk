@@ -22,9 +22,9 @@ require (
 
 require (
 	cosmossdk.io/log v1.5.1 // indirect
-	cosmossdk.io/math v1.5.1 // indirect
+	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
+	cosmossdk.io/x/tx v0.14.0-rc.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -37,7 +37,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
-	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.1.2 // indirect

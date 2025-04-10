@@ -65,7 +65,7 @@ func AppStateFnWithExtendedCbs(
 	cdc codec.JSONCodec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
-	moduleStateCb func(moduleName string, genesisState interface{}),
+	moduleStateCb func(moduleName string, genesisState any),
 	rawStateCb func(rawState map[string]json.RawMessage),
 ) simtypes.AppStateFn {
 	return func(

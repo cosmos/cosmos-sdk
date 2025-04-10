@@ -165,7 +165,7 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 // NewBankKeeperCoinMetadataQueryFn creates a new Textual struct using the given
 // BankKeeper to retrieve coin metadata.
 //
-// This function should be used in the server (app.go) and is already injected thanks to app wiring for app_v2.
+// This function should be used in the server (app.go) and is already injected thanks to app wiring for app_di.
 func NewBankKeeperCoinMetadataQueryFn(bk BankKeeper) textual.CoinMetadataQueryFn {
 	return func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})

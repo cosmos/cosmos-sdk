@@ -64,7 +64,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		}
 	}
 
-	for i := 0; i < v.NumField(); i++ {
+	for i := range v.NumField() {
 		// if the field is a struct skip or not slice of string or int then skip
 		switch v.Field(i).Kind() {
 		case reflect.Struct:

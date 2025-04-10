@@ -64,7 +64,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	nBlocks := 3
 	txPerHeight := 5
 
-	for blockN := 0; blockN < nBlocks; blockN++ {
+	for blockN := range nBlocks {
 		txs := [][]byte{}
 
 		var expectedChangeSet []*storetypes.StoreKVPair
@@ -73,15 +73,15 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1, Txs: txs})
 		require.NoError(t, err)
 
-		for i := 0; i < txPerHeight; i++ {
+		for i := range txPerHeight {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(t, suite.txConfig, counter, counter)
 
 			txBytes, err := suite.txConfig.TxEncoder()(tx)
 			require.NoError(t, err)
 
-			sKey := []byte(fmt.Sprintf("distKey%d", i))
-			sVal := []byte(fmt.Sprintf("distVal%d", i))
+			sKey := fmt.Appendf(nil, "distKey%d", i)
+			sVal := fmt.Appendf(nil, "distVal%d", i)
 			store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(distKey1)
 			store.Set(sKey, sVal)
 
@@ -134,7 +134,7 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 
 	nBlocks := 2
 
-	for blockN := 0; blockN < nBlocks; blockN++ {
+	for blockN := range nBlocks {
 
 		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
 		require.NoError(t, err)

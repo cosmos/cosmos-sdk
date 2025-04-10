@@ -6,16 +6,17 @@ sidebar_position: 1
 
 :::note Synopsis
 
-The Cosmos SDK allows much easier wiring of an `app.go` thanks to App Wiring and [`depinject`](../packages/01-depinject.md).
+The Cosmos SDK allows much easier wiring of an `app.go` thanks to [runtime](./00-runtime.md) and app wiring.
 Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-057-app-wiring.md).
 
 :::
 
 :::note Pre-requisite Readings
 
-* [ADR 057: App Wiring](../architecture/adr-057-app-wiring.md)
-* [Depinject Documentation](../packages/01-depinject.md)
+* [What is `runtime`?](./00-runtime.md)
+* [Depinject documentation](../packages/01-depinject.md)
 * [Modules depinject-ready](../building-modules/15-depinject.md)
+* [ADR 057: App Wiring](../architecture/adr-057-app-wiring.md)
 
 :::
 
@@ -28,30 +29,39 @@ The `app_config.go` file is the single place to configure all modules parameters
 1. Create the `AppConfig` variable:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L290
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L289-L303
+    ```
+
+    Where the `appConfig` combines the [runtime](./00-runtime.md) configuration and the (extra) modules configuration.
+
+    ```go reference
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_di.go#L113-L161
     ```
 
 2. Configure the `runtime` module:
 
-    ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L289-L302
-    ```
-
-3. Configure the modules defined in the `PreBlocker`, `BeginBlocker` and `EndBlocker` and the `tx` module:
+    In this configuration, the order at which the modules are defined in PreBlockers, BeginBlocks, and EndBlockers is important.
+    They are named in the order they should be executed by the module manager.
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L108-L132
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L103-L188
     ```
+
+3. Wire the other modules:
+
+    Next to runtime, the other (depinject-enabled) modules are wired in the `AppConfig`:
+
+    ```go reference
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L103-L286
+    ```
+
+    Note: the `tx` isn't a module, but a configuration. It should be wired in the `AppConfig` as well.
 
     ```go reference
     https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L222-L227
     ```
 
-### Complete `app_config.go`
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go
-```
+See the complete `app_config.go` file for `SimApp` [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go).
 
 ### Alternative formats
 
@@ -93,12 +103,12 @@ modules:
       "@type": cosmos.tx.module.v1.Module
 ```
 
-A more complete example of `app.yaml` can be found [here](https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml).
+A more complete example of `app.yaml` can be found [here](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/simapp/example_app.yaml).
 
 ## `app_di.go`
 
-`app_di.go` is the place where `SimApp` is constructed. `depinject.Inject` facilitates this by automatically wiring the app modules and keepers, with the provided application configuration `AppConfig`. `SimApp` is constructed upon calling the `Build` method on the injected `*runtime.AppBuilder`.  
-In short, `depinject` and the [`runtime` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) abstract the wiring of the app, and the `AppBuilder` takes care of constructing the application. [`runtime`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) handles registering the codecs, KV store, subspaces, and instantiating `baseapp`.
+`app_di.go` is the place where `SimApp` is constructed. `depinject.Inject` automatically wires the app modules and keepers when provided with an application configuration (`AppConfig`). `SimApp` is constructed upon calling the injected `*runtime.AppBuilder` with `appBuilder.Build(...)`.    
+In short `depinject` and the [`runtime` package](./00-runtime.md) abstract the wiring of the app, and the `AppBuilder` is the place where the app is constructed. [`runtime`](./00-runtime.md) takes care of registering the codecs, KV store, subspaces and instantiating `baseapp`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_di.go#L100-L270

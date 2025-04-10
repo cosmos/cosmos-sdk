@@ -490,7 +490,7 @@ func (coins DecCoins) Equal(coinsB DecCoins) bool {
 	coins = coins.Sort()
 	coinsB = coinsB.Sort()
 
-	for i := 0; i < len(coins); i++ {
+	for i := range coins {
 		if !coins[i].Equal(coinsB[i]) {
 			return false
 		}

@@ -17,6 +17,7 @@ import (
 )
 
 // Simulation operation weights constants
+// will be removed in the future
 const (
 	OpWeightMsgSend           = "op_weight_msg_send"
 	OpWeightMsgMultiSend      = "op_weight_msg_multisend"
@@ -351,7 +352,7 @@ func sendMsgMultiSend(
 ) error {
 	accountNumbers := make([]uint64, len(msg.Inputs))
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
-	for i := 0; i < len(msg.Inputs); i++ {
+	for i := range msg.Inputs {
 		addr, err := ak.AddressCodec().StringToBytes(msg.Inputs[i].Address)
 		if err != nil {
 			panic(err)
@@ -432,7 +433,7 @@ func randomSendFields(
 func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount int) []simtypes.Account {
 	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
-	for i := 0; i < moduleAccCount; i++ {
+	for i := range moduleAccCount {
 		acc := ak.GetModuleAccount(ctx, disttypes.ModuleName)
 		mAcc := simtypes.Account{
 			Address: acc.GetAddress(),

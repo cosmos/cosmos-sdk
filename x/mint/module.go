@@ -105,7 +105,7 @@ func NewAppModule(
 	ss exported.Subspace,
 ) AppModule {
 	if ic != nil {
-		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, use the WithMintFn option when construction the x/mint keeper as follows: mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn))")
+		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, use the WithMintFn option when constructing the x/mint keeper as follows: mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn))")
 	}
 
 	return AppModule{

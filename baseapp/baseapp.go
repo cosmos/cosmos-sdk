@@ -118,10 +118,15 @@ type BaseApp struct {
 	//
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
 	// previous block's state. This state is committed.
+	//
+	// NOTE: The states should be accessed via getter and setter to avoid race conditions.
+	// - getter: getState
+	// - setter: setState and clearState
 	checkState           *state
 	prepareProposalState *state
 	processProposalState *state
 	finalizeBlockState   *state
+	stateMut             sync.RWMutex
 
 	// An inter-block write-through cache provided to the context during the ABCI
 	// FinalizeBlock call.
@@ -493,6 +498,9 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 			WithHeaderInfo(headerInfo),
 	}
 
+	app.stateMut.Lock()
+	defer app.stateMut.Unlock()
+
 	switch mode {
 	case execModeCheck:
 		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
@@ -509,6 +517,28 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
+	}
+}
+
+func (app *BaseApp) clearState(mode execMode) {
+	app.stateMut.Lock()
+	defer app.stateMut.Unlock()
+
+	switch mode {
+	case execModeCheck:
+		app.checkState = nil
+
+	case execModePrepareProposal:
+		app.prepareProposalState = nil
+
+	case execModeProcessProposal:
+		app.processProposalState = nil
+
+	case execModeFinalize:
+		app.finalizeBlockState = nil
+
+	default:
+		panic(fmt.Sprintf("invalid runTxMode for clearState: %d", mode))
 	}
 }
 
@@ -633,6 +663,9 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 }
 
 func (app *BaseApp) getState(mode execMode) *state {
+	app.stateMut.RLock()
+	defer app.stateMut.RUnlock()
+
 	switch mode {
 	case execModeFinalize:
 		return app.finalizeBlockState
@@ -711,7 +744,8 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
 	var events []abci.Event
 	if app.preBlocker != nil {
-		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
+		finalizeState := app.getState(execModeFinalize)
+		ctx := finalizeState.Context().WithEventManager(sdk.NewEventManager())
 		rsp, err := app.preBlocker(ctx, req)
 		if err != nil {
 			return nil, err
@@ -723,7 +757,7 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, erro
 			// GasMeter must be set after we get a context with updated consensus params.
 			gasMeter := app.getBlockGasMeter(ctx)
 			ctx = ctx.WithBlockGasMeter(gasMeter)
-			app.finalizeBlockState.SetContext(ctx)
+			finalizeState.SetContext(ctx)
 		}
 		events = ctx.EventManager().ABCIEvents()
 	}
@@ -737,7 +771,7 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.Context())
+		resp, err = app.beginBlocker(app.getState(execModeFinalize).Context())
 		if err != nil {
 			return resp, err
 		}
@@ -799,7 +833,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
 
 	if app.endBlocker != nil {
-		eb, err := app.endBlocker(app.finalizeBlockState.Context())
+		eb, err := app.endBlocker(app.getState(execModeFinalize).Context())
 		if err != nil {
 			return endblock, err
 		}

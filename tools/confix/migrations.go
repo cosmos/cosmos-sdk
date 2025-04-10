@@ -31,7 +31,6 @@ var Migrations = MigrationMap{
 	"v0.47": defaultPlanBuilder,
 	"v0.50": defaultPlanBuilder,
 	"v0.52": defaultPlanBuilder,
-	"v0.53": defaultPlanBuilder,
 	"v2":    V2PlanBuilder,
 	// "v0.xx.x": defaultPlanBuilder, // add specific migration in case of configuration changes in minor versions
 }

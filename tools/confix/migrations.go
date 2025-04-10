@@ -33,8 +33,6 @@ var Migrations = MigrationMap{
 	"v0.53": defaultPlanBuilder,
 }
 
-type v2KeyChangesMap map[string][]string
-
 func defaultPlanBuilder(from *tomledit.Document, to, planType string) (transform.Plan, *tomledit.Document) {
 	return PlanBuilder(from, to, planType, LoadLocalConfig)
 }

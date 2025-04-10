@@ -100,7 +100,7 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
+	// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
 	ic types.InflationCalculationFn,
 	ss exported.Subspace,
 ) AppModule {

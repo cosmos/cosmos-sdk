@@ -12,7 +12,6 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 	"github.com/crypto-org-chain/cronos/memiavl"
 
-	"cosmossdk.io/store"
 	"cosmossdk.io/store/cachekv"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/types"
@@ -174,7 +173,7 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 
 		res.Value = bz
 	default:
-		return nil, errors.Wrapf(store.ErrUnknownRequest, "unexpected query path: %v", req.Path)
+		return nil, errors.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path)
 	}
 
 	return res, nil

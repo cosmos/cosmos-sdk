@@ -96,7 +96,7 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 func customGRPCResponseHeaders(ctx context.Context, w http.ResponseWriter, _ proto.Message) error {
 	if meta, ok := runtime.ServerMetadataFromContext(ctx); ok {
 		if values := meta.HeaderMD.Get(grpctypes.GRPCBlockHeightHeader); len(values) == 1 {
-			w.Header().Set("X-Cosmos-Block-Height", values[0])
+			w.Header().Set(grpctypes.GRPCBlockHeightHeader, values[0])
 		}
 	}
 	return nil

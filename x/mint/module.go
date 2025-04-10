@@ -100,7 +100,7 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-	// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
+// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
 	ic types.InflationCalculationFn,
 	ss exported.Subspace,
 ) AppModule {
@@ -223,10 +223,18 @@ type ModuleOutputs struct {
 	Module     appmodule.AppModule
 }
 
+func ProvideMintFn(fn keeper.MintFn) keeper.MintFn {
+	return fn
+}
+
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	if in.InflationCalculationFn != nil {
+		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, while using depinject ")
 	}
 
 	// default to governance authority if not provided

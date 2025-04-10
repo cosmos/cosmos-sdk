@@ -5,12 +5,13 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"maps"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
-	"io"
-	"maps"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -123,7 +124,8 @@ var (
 		govtypes.ModuleName:                         {authtypes.Burner},
 		nft.ModuleName:                              nil,
 		protocolpooltypes.ModuleName:                nil,
-		protocolpooltypes.ProtocolPoolEscrowAccount: nil}
+		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
+	}
 )
 
 var (
@@ -466,7 +468,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -496,7 +498,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 

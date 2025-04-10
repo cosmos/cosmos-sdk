@@ -198,6 +198,9 @@ type BaseApp struct {
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
+
+	// Optional alternative tx executor, used for block-stm parallel transaction execution. If nil, default executor is used.
+	txExecutor TxExecutor
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -770,6 +773,10 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 }
 
 func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
+	return app.deliverTxWithMultiStore(tx, nil, nil)
+}
+
+func (app *BaseApp) deliverTxWithMultiStore(tx []byte, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -782,7 +789,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx, nil)
+	gInfo, result, anteEvents, err := app.runTxWithMultiStore(execModeFinalize, tx, nil, txMultiStore, incarnationCache)
 	if err != nil {
 		resultStr = "failed"
 		resp = sdkerrors.ResponseExecTxResultWithEvents(
@@ -842,12 +849,22 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 // both txbytes and the decoded tx are passed to runTx to avoid the state machine encoding the tx and decoding the transaction twice
 // passing the decoded tx to runTX is optional, it will be decoded if the tx is nil
 func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+	return app.runTxWithMultiStore(mode, txBytes, tx, nil, nil)
+}
+
+func (app *BaseApp) runTxWithMultiStore(mode execMode, txBytes []byte, tx sdk.Tx, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
 	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes)
+	if incarnationCache != nil {
+		ctx = ctx.WithIncarnationCache(incarnationCache)
+	}
+	if txMultiStore != nil {
+		ctx = ctx.WithMultiStore(txMultiStore)
+	}
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining

@@ -1,11 +1,8 @@
 package crisis
 
 import (
-	"fmt"
-
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	crisisv1beta1 "cosmossdk.io/api/cosmos/crisis/v1beta1"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

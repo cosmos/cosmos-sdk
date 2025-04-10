@@ -114,7 +114,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
-			_, err = bapp.InitChain(&abci.RequestInitChain{
+			_, err = bapp.InitChain(&abci.InitChainRequest{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
@@ -155,7 +155,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
-			rsp, err := bapp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			rsp, err := bapp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 			require.NoError(t, err)
 
 			// check result
@@ -175,7 +175,11 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			}
 			// check block gas is always consumed
 			baseGas := uint64(57504) // baseGas is the gas consumed before tx msg
-			expGasConsumed := min(addUint64Saturating(tc.gasToConsume, baseGas), uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
+			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
+			if expGasConsumed > uint64(simtestutil.DefaultConsensusParams.Block.MaxGas) {
+				// capped by gasLimit
+				expGasConsumed = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
+			}
 			require.Equal(t, int(expGasConsumed), int(ctx.BlockGasMeter().GasConsumed()))
 			// tx fee is always deducted
 			require.Equal(t, int64(0), bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())

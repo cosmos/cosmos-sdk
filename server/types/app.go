@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
@@ -39,9 +40,9 @@ type (
 
 		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
-		// RegisterGRPCServerWithSkipCheckHeader registers gRPC services directly with the gRPC
-		// server and bypass check header flag.
-		RegisterGRPCServerWithSkipCheckHeader(grpc.Server, bool)
+		// RegisterGRPCServer registers gRPC services directly with the gRPC
+		// server.
+		RegisterGRPCServer(grpc.Server)
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).
@@ -58,6 +59,9 @@ type (
 
 		// Return the snapshot manager
 		SnapshotManager() *snapshots.Manager
+
+		// ValidatorKeyProvider returns a function that generates a validator key
+		ValidatorKeyProvider() func() (cmtcrypto.PrivKey, error)
 
 		// Close is called in start cmd to gracefully cleanup resources.
 		// Must be safe to be called multiple times.

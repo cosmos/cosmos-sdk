@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 
@@ -58,7 +58,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
-	ctx := app.NewContext(false)
+	ctx := app.BaseApp.NewContext(false)
 
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 

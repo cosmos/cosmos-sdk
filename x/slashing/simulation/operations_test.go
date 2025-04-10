@@ -99,7 +99,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.NewContext(false)
+	suite.ctx = app.BaseApp.NewContext(false)
 
 	// remove genesis validator account
 	suite.accounts = accounts[1:]
@@ -181,7 +181,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(suite.distrKeeper.SetDelegatorStartingInfo(ctx, val0AccAddress, val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	// begin a new block
-	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
+	_, err = suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
 	suite.Require().NoError(err)
 
 	// execute operation

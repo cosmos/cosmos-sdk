@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
@@ -73,7 +73,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
 	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
-	ctx = app.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
+	ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
 	require.NoError(t, stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams()))
 	lastAccNum := uint64(1000)
 	createBaseAccount := func(addr sdk.AccAddress) *authtypes.BaseAccount {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/depinject"
@@ -81,7 +81,7 @@ func (s *paginationTestSuite) SetupTest() {
 
 	s.NoError(err)
 
-	ctx := app.NewContextLegacy(false, cmtproto.Header{Height: 1})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1})
 
 	s.ctx, s.bankKeeper, s.accountKeeper, s.cdc, s.app, s.interfaceReg = ctx, bankKeeper, accountKeeper, cdc, app, reg
 }

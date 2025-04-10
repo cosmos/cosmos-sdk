@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -61,54 +60,44 @@ func (s *IntegrationTestSuite) TestCLIQueryConn() {
 
 func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 	testCases := []struct {
-		name                string
-		reqHeight           int64
-		ctxHeight           int64
-		awaitMinChainHeight int64
-		assertFn            func(t *testing.T, latestHeightAtQuery int64, resp abci.ResponseQuery)
+		name      string
+		reqHeight int64
+		ctxHeight int64
+		expHeight int64
 	}{
 		{
-			name:                "request height set",
-			reqHeight:           2, // no proof when < 2
-			ctxHeight:           1,
-			awaitMinChainHeight: 3, // wait +1 block to be on the safe side
-			assertFn: func(t *testing.T, _ int64, resp abci.ResponseQuery) {
-				t.Helper()
-				assert.Equal(t, int64(2), resp.Height)
-			},
+			name:      "non zero request height",
+			reqHeight: 3,
+			ctxHeight: 1, // query at height 1 or 2 would cause an error
+			expHeight: 3,
 		},
 		{
-			name:                "fallback to context height when request height is not set",
-			reqHeight:           0,
-			ctxHeight:           3,
-			awaitMinChainHeight: 4, // wait +1 block to be on the safe side
-			assertFn: func(t *testing.T, _ int64, resp abci.ResponseQuery) {
-				t.Helper()
-				assert.Equal(t, int64(3), resp.Height)
-			},
+			name:      "empty request height - use context height",
+			reqHeight: 0,
+			ctxHeight: 3,
+			expHeight: 3,
 		},
 		{
-			name:                "with empty values, use latest height",
-			reqHeight:           0,
-			ctxHeight:           0,
-			awaitMinChainHeight: 2, // no proof when < 2
-			assertFn: func(t *testing.T, latestHeightAtQuery int64, resp abci.ResponseQuery) {
-				t.Helper()
-				anyOf := []int64{latestHeightAtQuery, latestHeightAtQuery - 1}
-				assert.Contains(t, anyOf, resp.Height)
-			},
+			name:      "empty request height and context height - use latest height",
+			reqHeight: 0,
+			ctxHeight: 0,
+			expHeight: 4,
 		},
 	}
+
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			currentHeight, err := s.network.WaitForHeight(tc.awaitMinChainHeight)
-			s.Require().NoError(err)
+			gotHeight, err := s.network.WaitForHeight(tc.expHeight)
+			if gotHeight != tc.expHeight {
+				s.Fail(err.Error())
+			}
 
 			val := s.network.Validators[0]
+
 			clientCtx := val.ClientCtx
 			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
 
-			req := abci.RequestQuery{
+			req := abci.QueryRequest{
 				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
 				Height: tc.reqHeight,
 				Data:   address.MustLengthPrefix(val.Address),
@@ -117,7 +106,8 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 
 			res, err := clientCtx.QueryABCI(req)
 			s.Require().NoError(err)
-			tc.assertFn(s.T(), currentHeight, res)
+
+			s.Require().Equal(tc.expHeight, res.Height)
 		})
 	}
 }

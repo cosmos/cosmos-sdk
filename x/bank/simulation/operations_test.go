@@ -61,7 +61,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.NoError(err)
 
-	suite.ctx = suite.app.NewContext(false)
+	suite.ctx = suite.app.BaseApp.NewContext(false)
 }
 
 // TestWeightedOperations tests the weights of the operations.
@@ -106,7 +106,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -136,7 +136,7 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -172,7 +172,7 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, accCount)
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -206,7 +206,7 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, accCount)
 
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})

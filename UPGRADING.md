@@ -141,7 +141,7 @@ Required wiring:
 
 ## Custom Minting Function in `x/mint`
 
-This release refactors the minting process to support a configurable mint function. The minting logic is now abstracted as a `MintFn` with a default implementation that can be overridden.
+This release introduces the ability to configure a custom mint function in `x/mint`. The minting logic is now abstracted as a `MintFn` with a default implementation that can be overridden.
 
 ### What’s New
 

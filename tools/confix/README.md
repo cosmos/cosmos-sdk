@@ -101,13 +101,13 @@ confix set ~/.simapp/config/client.toml chain-id "foo-1" # sets the value chain-
 Migrate a configuration file to a new version, config type defaults to `app.toml`, if you want to change it to `client.toml`, please indicate it by adding the optional parameter, e.g.:
 
 ```shell
-simd config migrate v0.53 # migrates defaultHome/config/app.toml to the latest v0.53 config
-simd config migrate v0.53 --client # migrates defaultHome/config/client.toml to the latest v0.53 config
+simd config migrate v0.50 # migrates defaultHome/config/app.toml to the latest v0.50 config
+simd config migrate v0.50 --client # migrates defaultHome/config/client.toml to the latest v0.50 config
 ```
 
 ```shell
-confix migrate v0.53 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.53 config
-confix migrate v0.53 ~/.simapp/config/client.toml --client # migrate ~/.simapp/config/client.toml to the latest v0.53 config
+confix migrate v0.50 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.50 config
+confix migrate v0.50 ~/.simapp/config/client.toml --client # migrate ~/.simapp/config/client.toml to the latest v0.50 config
 ```
 
 ### Diff
@@ -147,7 +147,7 @@ The recommended standalone version is `latest`, which is using the latest develo
 
 | SDK Version | Confix Version |
 | ----------- | -------------- |
-| v0.53       | v0.1.x         |
+| v0.50       | v0.1.x         |
 | v0.52       | v0.2.x         |
 | v2          | v0.2.x         |
 

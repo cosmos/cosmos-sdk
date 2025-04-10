@@ -63,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/feegrant) [24461](https://github.com/cosmos/cosmos-sdk/pull/24461) Use collections for `FeeAllowance`, `FeeAllowanceQueue`.
 * (x/staking) [#24391](https://github.com/cosmos/cosmos-sdk/pull/24391) Replace panics with error results; more verbose error messages
 * (x/staking) [#24354](https://github.com/cosmos/cosmos-sdk/pull/24354) Optimize validator endblock by reducing bech32 conversions, resulting in significant performance improvement
 * (client/keys) [#18950](https://github.com/cosmos/cosmos-sdk/pull/18950) Improve `<appd> keys add`, `<appd> keys import` and `<appd> keys rename` by checking name validation.

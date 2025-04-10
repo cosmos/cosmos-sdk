@@ -1,18 +1,16 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/collections"
 	"cosmossdk.io/x/feegrant"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -72,23 +70,16 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-
 	var grants []*feegrant.Grant
 
-	store := q.storeService.OpenKVStore(ctx)
-	grantsStore := prefix.NewStore(runtime.KVStoreAdapter(store), feegrant.FeeAllowancePrefixByGrantee(granteeAddr))
-
-	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key, value []byte) error {
-		var grant feegrant.Grant
-
-		if err := q.cdc.Unmarshal(value, &grant); err != nil {
-			return err
-		}
-
-		grants = append(grants, &grant)
-		return nil
-	})
+	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
+			grants = append(grants, &grant)
+			return true, nil
+		}, func(_ collections.Pair[sdk.AccAddress, sdk.AccAddress], value feegrant.Grant) (*feegrant.Grant, error) {
+			return &value, nil
+		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.AccAddress](granteeAddr),
+	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -107,21 +98,20 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	var grants []*feegrant.Grant
+	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
+			if !sdk.AccAddress(granterAddr).Equals(key.K2()) {
+				return false, nil
+			}
 
-	store := q.storeService.OpenKVStore(ctx)
-	prefixStore := prefix.NewStore(runtime.KVStoreAdapter(store), feegrant.FeeAllowanceKeyPrefix)
-	grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
-		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
-		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
-		if !bytes.Equal(granter, granterAddr) {
-			return nil, nil
-		}
-
-		return grant, nil
-	}, func() *feegrant.Grant {
-		return &feegrant.Grant{}
-	})
+			grants = append(grants, &grant)
+			return true, nil
+		},
+		func(_ collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (*feegrant.Grant, error) {
+			return &grant, nil
+		},
+	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

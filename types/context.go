@@ -64,6 +64,9 @@ type Context struct {
 	streamingManager     storetypes.StreamingManager
 	cometInfo            comet.BlockInfo
 	headerInfo           header.Info
+
+	// For block-stm
+	incarnationCache map[string]any // incarnationCache is shared between multiple incarnations of the same transaction, it must only cache stateless computation results that only depends on tx body and block level information that don't change during block execution, like the result of tx signature verification.
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -92,6 +95,7 @@ func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.trans
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
 func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
+func (c Context) IncarnationCache() map[string]any              { return c.incarnationCache }
 
 // BlockHeader returns the header by value.
 func (c Context) BlockHeader() cmtproto.Header {
@@ -363,6 +367,27 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	}
 
 	return cc, writeCache
+}
+
+func (c Context) GetIncarnationCache(key string) (any, bool) {
+	if c.incarnationCache == nil {
+		return nil, false
+	}
+	val, ok := c.incarnationCache[key]
+	return val, ok
+}
+
+func (c Context) SetIncarnationCache(key string, value any) {
+	if c.incarnationCache == nil {
+		// noop if cache is not initialized
+		return
+	}
+	c.incarnationCache[key] = value
+}
+
+func (c Context) WithIncarnationCache(cache map[string]any) Context {
+	c.incarnationCache = cache
+	return c
 }
 
 var (

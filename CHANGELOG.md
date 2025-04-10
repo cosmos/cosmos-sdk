@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [#18101](https://github.com/cosmos/cosmos-sdk/pull/18101) Add a `keyring-default-keyname` in `client.toml` for specifying a default key name, and skip the need to use the `--from` flag when signing transactions.
 * (x/gov) [#24355](https://github.com/cosmos/cosmos-sdk/pull/24355) Allow users to set a custom CalculateVoteResultsAndVotingPower function to be used in govkeeper.Tally.
 * (api) [#24428](https://github.com/cosmos/cosmos-sdk/pull/24428) Add block height to response headers
+* (baseapp) [#24458](https://github.com/cosmos/cosmos-sdk/pull/24458) Add `TxExecutor` to support custom execution logic and incarnation cache for performance optimisation
 
 ### Improvements
 

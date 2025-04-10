@@ -40,7 +40,7 @@ require (
 	github.com/huandu/skiplist v1.2.1
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/jhump/protoreflect v1.17.0
-	github.com/magiconair/properties v1.8.9
+	github.com/magiconair/properties v1.8.10
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mdp/qrterminal/v3 v3.2.1
@@ -96,7 +96,7 @@ require (
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.8.0 // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect

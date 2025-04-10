@@ -19,9 +19,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/crypto-org-chain/cronos/memiavl"
 
-	st "cosmossdk.io/store"
 	"cosmossdk.io/store/memiavl/cachemulti"
 	memiavlstore "cosmossdk.io/store/memiavl/store"
+	st "cosmossdk.io/store/types"
 )
 
 const CommitInfoFileName = "commit_infos"

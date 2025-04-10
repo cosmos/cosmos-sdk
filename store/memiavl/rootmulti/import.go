@@ -6,8 +6,8 @@ import (
 	"math"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots/types"
+	st "cosmossdk.io/store/types"
 	protoio "github.com/cosmos/gogoproto/io"
 
 	"github.com/crypto-org-chain/cronos/memiavl"
@@ -59,7 +59,7 @@ loop:
 			}
 		case *types.SnapshotItem_IAVL:
 			if item.IAVL.Height > math.MaxInt8 {
-				return types.SnapshotItem{}, errors.Wrapf(store.ErrLogic, "node height %v cannot exceed %v",
+				return types.SnapshotItem{}, errors.Wrapf(st.ErrLogic, "node height %v cannot exceed %v",
 					item.IAVL.Height, math.MaxInt8)
 			}
 			node := &memiavl.ExportNode{

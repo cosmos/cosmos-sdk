@@ -8,7 +8,7 @@ require (
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.2
-	github.com/fsnotify/fsnotify v1.8.0
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.9.1
@@ -32,7 +32,7 @@ require (
 	cosmossdk.io/depinject v1.2.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
-	cosmossdk.io/schema v1.0.0 // indirect
+	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
 	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

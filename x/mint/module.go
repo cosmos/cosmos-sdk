@@ -156,7 +156,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper, nil)
+	return BeginBlocker(ctx, am.keeper)
 }
 
 // AppModuleSimulation functions
@@ -223,24 +223,20 @@ type ModuleOutputs struct {
 	Module     appmodule.AppModule
 }
 
-func ProvideMintFn(fn keeper.MintFn) keeper.MintFn {
-	return fn
-}
-
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	if in.InflationCalculationFn != nil {
-		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, while using depinject ")
-	}
-
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
+	if in.InflationCalculationFn != nil {
+		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, while using depinject ")
 	}
 
 	var opts []keeper.InitOption

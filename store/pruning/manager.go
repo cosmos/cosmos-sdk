@@ -3,7 +3,6 @@ package pruning
 import (
 	"encoding/binary"
 	"fmt"
-	"sort"
 	"sync"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -78,15 +77,15 @@ func (m *Manager) HandleSnapshotHeight(height int64) {
 	defer m.pruneSnapshotHeightsMx.Unlock()
 
 	m.logger.Debug("HandleSnapshotHeight", "height", height)
-	m.pruneSnapshotHeights = append(m.pruneSnapshotHeights, height)
-	sort.Slice(m.pruneSnapshotHeights, func(i, j int) bool { return m.pruneSnapshotHeights[i] < m.pruneSnapshotHeights[j] })
-	k := 1
-	for ; k < len(m.pruneSnapshotHeights); k++ {
-		if m.pruneSnapshotHeights[k] != m.pruneSnapshotHeights[k-1]+int64(m.snapshotInterval) {
-			break
-		}
+
+	if len(m.pruneSnapshotHeights) == 0 {
+		// If there are no snapshot heights, add the current height.
+		m.pruneSnapshotHeights = append(m.pruneSnapshotHeights, height)
+	} else if height > m.pruneSnapshotHeights[0] {
+		// If the current height is greater than the first snapshot height, update it.
+		// since we only want to to know latest snapshot height.
+		m.pruneSnapshotHeights[0] = height
 	}
-	m.pruneSnapshotHeights = m.pruneSnapshotHeights[k-1:]
 
 	// flush the updates to disk so that they are not lost if crash happens.
 	if err := m.db.SetSync(pruneSnapshotHeightsKey, int64SliceToBytes(m.pruneSnapshotHeights)); err != nil {
@@ -128,8 +127,8 @@ func (m *Manager) GetPruningHeight(height int64) int64 {
 	}
 
 	// the snapshot `m.pruneSnapshotHeights[0]` is already operated,
-	// so we can prune upto `m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1`
-	snHeight := m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1
+	// so we can prune up to the next upcoming snapshot - 1.
+	snHeight := (m.pruneSnapshotHeights[0]/int64(m.snapshotInterval)+1)*int64(m.snapshotInterval) - 1
 	return min(snHeight, pruneHeight)
 }
 

@@ -169,6 +169,7 @@ func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
 }
 
 // Copy creates a deep copy of the Store object
+// This could incur significant storage overhead so use with caution!
 func (cms Store) Copy() types.CacheMultiStore {
 	// Deep copy the db field
 	newDB := cms.db.Copy()

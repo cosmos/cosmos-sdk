@@ -101,6 +101,31 @@ func TestCacheKVStoreNested(t *testing.T) {
 	require.Equal(t, valFmt(3), mem.Get(keyFmt(1)))
 }
 
+func TestCacheKVStoreCopy(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	st := cachekv.NewStore(mem)
+
+	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
+
+	// set some values in cache
+	for i := range 10 {
+		st.Set(keyFmt(i), valFmt(i))
+		require.Equal(t, valFmt(i), st.Get(keyFmt(i)))
+	}
+
+	// copy to st2
+	st2 := st.Copy()
+	// delete the values
+	for i := range 10 {
+
+		st2.Delete(keyFmt(i))
+		// check they are deleted in the copy
+		require.Empty(t, st2.Get(keyFmt(i)))
+		// but not in the original
+		require.Equal(t, st.Get(keyFmt(i)), valFmt(i))
+	}
+}
+
 func TestCacheKVIteratorBounds(t *testing.T) {
 	st := newCacheKVStore()
 

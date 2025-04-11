@@ -428,11 +428,6 @@ func (app *BaseApp) Mempool() mempool.Mempool {
 	return app.mempool
 }
 
-// StreamingManager returns the StreamingManager of the app.
-func (app *BaseApp) StreamingManager() storetypes.StreamingManager {
-	return app.streamingManager
-}
-
 // Init initializes the app. It seals the app, preventing any
 // further modifications. In addition, it validates the app against
 // the earlier provided settings. Returns an error if validation fails.

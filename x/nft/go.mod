@@ -2,6 +2,8 @@ module cosmossdk.io/x/nft
 
 go 1.23.2
 
+replace github.com/cosmos/cosmos-sdk => ../..
+
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.3
@@ -24,8 +26,8 @@ require (
 
 require (
 	cosmossdk.io/collections v1.2.0 // indirect
-	cosmossdk.io/schema v1.0.0 // indirect
-	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
+	cosmossdk.io/schema v1.1.0 // indirect
+	cosmossdk.io/x/tx v0.14.0-rc.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect

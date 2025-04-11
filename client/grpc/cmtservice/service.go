@@ -2,6 +2,7 @@ package cmtservice
 
 import (
 	"context"
+	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -34,7 +35,6 @@ type (
 	}
 )
 
-// NewQueryServer creates a new CometBFT query server.
 func NewQueryServer(
 	clientCtx client.Context,
 	interfaceRegistry codectypes.InterfaceRegistry,
@@ -51,9 +51,8 @@ func NewQueryServer(
 func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*GetSyncingResponse, error) {
 	status, err := GetNodeStatus(ctx, s.clientCtx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get node status: %w", err)
 	}
-
 	return &GetSyncingResponse{
 		Syncing: status.SyncInfo.CatchingUp,
 	}, nil
@@ -61,38 +60,33 @@ func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*Get
 
 // GetLatestBlock implements ServiceServer.GetLatestBlock
 func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockRequest) (*GetLatestBlockResponse, error) {
-	status, err := getBlock(ctx, s.clientCtx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	protoBlockID := status.BlockID.ToProto()
-	protoBlock, err := status.Block.ToProto()
-	if err != nil {
-		return nil, err
-	}
-
-	return &GetLatestBlockResponse{
-		BlockId:  &protoBlockID,
-		Block:    protoBlock,
-		SdkBlock: convertBlock(protoBlock),
-	}, nil
+	return s.getBlockByHeight(ctx, nil)
 }
 
 // GetBlockByHeight implements ServiceServer.GetBlockByHeight
 func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error) {
 	blockHeight, err := getBlockHeight(ctx, s.clientCtx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get block height: %w", err)
 	}
 
 	if req.Height > blockHeight {
-		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
+		return nil, status.Error(codes.InvalidArgument, "requested block height is greater than the chain length")
 	}
 
-	protoBlockID, protoBlock, err := GetProtoBlock(ctx, s.clientCtx, &req.Height)
+	return s.getBlockByHeight(ctx, &req.Height)
+}
+
+func (s queryServer) getBlockByHeight(ctx context.Context, height *int64) (*GetBlockByHeightResponse, error) {
+	status, err := getBlock(ctx, s.clientCtx, height)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get block: %w", err)
+	}
+
+	protoBlockID := status.BlockID.ToProto()
+	protoBlock, err := status.Block.ToProto()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert block to proto: %w", err)
 	}
 
 	return &GetBlockByHeightResponse{
@@ -106,41 +100,29 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestValidatorSetRequest) (*GetLatestValidatorSetResponse, error) {
 	page, limit, err := qtypes.ParsePagination(req.Pagination)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse pagination: %w", err)
 	}
 
-	return ValidatorsOutput(ctx, s.clientCtx, nil, page, limit)
-}
-
-func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey cryptotypes.PubKey
-	for _, val := range m.Validators {
-		err := unpacker.UnpackAny(val.PubKey, &pubKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return s.getValidators(ctx, nil, page, limit)
 }
 
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error) {
 	page, limit, err := qtypes.ParsePagination(req.Pagination)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse pagination: %w", err)
 	}
 
 	blockHeight, err := getBlockHeight(ctx, s.clientCtx)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to parse chain height")
+		return nil, fmt.Errorf("failed to get block height: %w", err)
 	}
 
 	if req.Height > blockHeight {
-		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
+		return nil, status.Error(codes.InvalidArgument, "requested block height is greater than the chain length")
 	}
 
-	r, err := ValidatorsOutput(ctx, s.clientCtx, &req.Height, page, limit)
+	r, err := s.getValidators(ctx, &req.Height, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -152,13 +134,13 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 	}, nil
 }
 
-func ValidatorsOutput(ctx context.Context, clientCtx client.Context, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
-	vs, err := getValidators(ctx, clientCtx, height, page, limit)
+func (s queryServer) getValidators(ctx context.Context, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
+	vs, err := getValidators(ctx, s.clientCtx, height, page, limit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get validators: %w", err)
 	}
 
-	resp := GetLatestValidatorSetResponse{
+	resp := &GetLatestValidatorSetResponse{
 		BlockHeight: vs.BlockHeight,
 		Validators:  make([]*Validator, len(vs.Validators)),
 		Pagination: &qtypes.PageResponse{
@@ -169,11 +151,11 @@ func ValidatorsOutput(ctx context.Context, clientCtx client.Context, height *int
 	for i, v := range vs.Validators {
 		pk, err := cryptocodec.FromCmtPubKeyInterface(v.PubKey)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to decode public key: %w", err)
 		}
 		anyPub, err := codectypes.NewAnyWithValue(pk)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create Any type with public key: %w", err)
 		}
 
 		resp.Validators[i] = &Validator{
@@ -184,21 +166,20 @@ func ValidatorsOutput(ctx context.Context, clientCtx client.Context, height *int
 		}
 	}
 
-	return &resp, nil
+	return resp, nil
 }
 
 // GetNodeInfo implements ServiceServer.GetNodeInfo
 func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
 	status, err := GetNodeStatus(ctx, s.clientCtx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get node status: %w", err)
 	}
 
 	protoNodeInfo := status.NodeInfo.ToProto()
 	nodeInfo := version.NewInfo()
 
 	deps := make([]*Module, len(nodeInfo.BuildDeps))
-
 	for i, dep := range nodeInfo.BuildDeps {
 		deps[i] = &Module{
 			Path:    dep.Path,
@@ -207,7 +188,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*G
 		}
 	}
 
-	resp := GetNodeInfoResponse{
+	resp := &GetNodeInfoResponse{
 		DefaultNodeInfo: protoNodeInfo,
 		ApplicationVersion: &VersionInfo{
 			AppName:          nodeInfo.AppName,
@@ -220,40 +201,33 @@ func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*G
 			CosmosSdkVersion: nodeInfo.CosmosSdkVersion,
 		},
 	}
-	return &resp, nil
+	return resp, nil
 }
 
+// ABCIQuery implements ServiceServer.ABCIQuery
 func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABCIQueryResponse, error) {
 	if s.queryFn == nil {
 		return nil, status.Error(codes.Internal, "ABCI Query handler undefined")
 	}
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	if len(req.Path) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "empty query path")
+	if req == nil || len(req.Path) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid request path")
 	}
 
 	if path := baseapp.SplitABCIQueryPath(req.Path); len(path) > 0 {
 		switch path[0] {
 		case baseapp.QueryPathApp, baseapp.QueryPathStore, baseapp.QueryPathP2P, baseapp.QueryPathCustom:
-			// valid path
-
 		default:
-			// Otherwise, error as to prevent either valid gRPC service requests or
-			// bogus ABCI queries.
 			return nil, status.Errorf(codes.InvalidArgument, "unsupported ABCI query path: %s", req.Path)
 		}
 	}
 
 	res, err := s.queryFn(ctx, req.ToABCIRequestQuery())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ABCI query failed: %w", err)
 	}
 	return FromABCIResponseQuery(res), nil
 }
 
-// RegisterTendermintService registers the CometBFT queries on the gRPC router.
 func RegisterTendermintService(
 	clientCtx client.Context,
 	server gogogrpc.Server,
@@ -263,8 +237,6 @@ func RegisterTendermintService(
 	RegisterServiceServer(server, NewQueryServer(clientCtx, iRegistry, queryFn))
 }
 
-// RegisterGRPCGatewayRoutes mounts the CometBFT service's GRPC-gateway routes on the
-// given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
 	_ = RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))
 }

@@ -18,6 +18,7 @@ FROM golang:1.23-alpine AS build-env
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev
 RUN apk add --no-cache $PACKAGES
 
+
 # Set working directory for the build
 WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 

@@ -16,12 +16,12 @@ require (
 	cosmossdk.io/x/evidence v0.2.0-rc.2
 	cosmossdk.io/x/feegrant v0.2.0-rc.2
 	cosmossdk.io/x/nft v0.2.0-rc.2
-	cosmossdk.io/x/tx v0.14.0-rc.1
+	cosmossdk.io/x/tx v0.14.0-rc.2
 	cosmossdk.io/x/upgrade v0.2.0-rc.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.2
+	github.com/cosmos/cosmos-sdk v0.53.0-rc.3
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.9.1

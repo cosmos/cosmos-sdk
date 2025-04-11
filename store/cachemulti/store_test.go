@@ -44,11 +44,12 @@ func TestRunAtomic(t *testing.T) {
 	}}
 
 	s := Store{stores: map[types.StoreKey]types.CacheWrap{}, parentStore: parent.getCacheWrapper}
-	s.RunAtomic(func(ms types.CacheMultiStore) error {
+	err := s.RunAtomic(func(ms types.CacheMultiStore) error {
 		ms.GetKVStore(keys["abc"]).Set([]byte("key"), []byte("value"))
 		ms.GetObjKVStore(keys["obj"]).Set([]byte("key"), "value")
 		return nil
 	})
+	require.NoError(t, err)
 	require.Equal(t, []byte("value"), s.GetKVStore(keys["abc"]).Get([]byte("key")))
 	require.Equal(t, []byte(nil), s.GetKVStore(keys["abc"]).Get([]byte("key-non-exist")))
 	require.Equal(t, "value", s.GetObjKVStore(keys["obj"]).Get([]byte("key")).(string))

@@ -1,6 +1,6 @@
-# Upgrading Cosmos SDK [v0.53.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0)
+# Upgrade Reference
 
-This guide provides instructions for upgrading from `v0.50.x` to `v0.53.x` of Cosmos SDK.
+This document provides a quick reference for the upgrades from `v0.50.x` to `v0.53.x` of Cosmos SDK.
 
 Note, always read the **App Wiring Changes** section for more information on application wiring updates.
 
@@ -102,6 +102,24 @@ Required wiring:
 - entry in SetExportModuleOrder
 
 #### ProtocolPool
+
+:::warning
+
+Using `protocolpool` will cause the following `x/distribution` handlers to return an error:
+
+
+**QueryService**
+
+- `CommunityPool`
+
+**MsgService**
+
+- `CommunityPoolSpend`
+- `FundCommunityPool`
+
+If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
+
+:::
 
 ⚠️Adding this module requires a `StoreUpgrade`⚠️
 

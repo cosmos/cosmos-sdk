@@ -15,8 +15,9 @@ import (
 // Staking params default values
 const (
 	// DefaultUnbondingTime reflects three weeks in seconds as the default
-	// unbonding time.
-	// TODO: Justify our choice of default here.
+	// unbonding time. This aligns with the original Cosmos Hub configuration
+	// and is considered a reasonable balance between user withdrawal flexibility
+	// and network security (e.g. unbonding period gives time to detect validator misbehavior).
 	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
 	// Default maximum number of bonded validators

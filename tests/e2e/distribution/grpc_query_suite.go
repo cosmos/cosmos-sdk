@@ -3,6 +3,9 @@ package distribution
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"strconv"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
@@ -505,4 +508,61 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 			}
 		})
 	}
+}
+
+func (s *GRPCQueryTestSuite) TestQueryResponseMeta() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+	startHeight, err := s.network.LatestHeight()
+	s.Require().NoError(err)
+	// wait 1 block to ensure state is committed
+	s.Require().NoError(s.network.WaitForNextBlock())
+	// when
+	queryURL := fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, val.ValAddress.String())
+	_, headers, err := doRequest(queryURL, map[string]string{})
+	// then latest height is used
+	s.Require().NoError(err)
+	const heightRespHeaderKey = "X-Cosmos-Block-Height"
+	s.Require().Contains(headers, heightRespHeaderKey)
+	gotHeight, err := strconv.Atoi(headers[heightRespHeaderKey][0])
+	s.Require().NoError(err)
+	s.Assert().GreaterOrEqual(gotHeight, int(startHeight))
+
+	// and when called with height header
+	_, headers, err = doRequest(queryURL, map[string]string{"X-Cosmos-Block-Height": strconv.Itoa(int(startHeight))})
+	// then
+	s.Require().NoError(err)
+	s.Require().Contains(headers, heightRespHeaderKey)
+	gotHeight, err = strconv.Atoi(headers[heightRespHeaderKey][0])
+	s.Require().NoError(err)
+	s.Assert().Equal(int(startHeight), gotHeight)
+}
+
+func doRequest(url string, headers map[string]string) ([]byte, http.Header, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client := &http.Client{}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, nil, err
+	}
+	fmt.Printf("headers: %v\n", res.Header)
+	return body, res.Header, nil
 }

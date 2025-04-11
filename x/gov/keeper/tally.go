@@ -92,7 +92,7 @@ func defaultCalculateVoteResultsAndVotingPower(
 	// remove all votes from store
 	for _, key := range votesToRemove {
 		if err := k.Votes.Remove(ctx, key); err != nil {
-			return math.LegacyDec{}, nil, err
+			return math.LegacyDec{}, nil, fmt.Errorf("error while removing vote (%d/%s): %w", key.K1(), key.K2(), err)
 		}
 	}
 

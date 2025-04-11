@@ -11,6 +11,7 @@ import (
 
 	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -84,9 +85,21 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 			// Custom header matcher for mapping request headers to
 			// GRPC metadata
 			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
+
+			// extension to set custom response headers
+			runtime.WithForwardResponseOption(customGRPCResponseHeaders),
 		),
 		GRPCSrv: grpcSrv,
 	}
+}
+
+func customGRPCResponseHeaders(ctx context.Context, w http.ResponseWriter, _ proto.Message) error {
+	if meta, ok := runtime.ServerMetadataFromContext(ctx); ok {
+		if values := meta.HeaderMD.Get(grpctypes.GRPCBlockHeightHeader); len(values) == 1 {
+			w.Header().Set(grpctypes.GRPCBlockHeightHeader, values[0])
+		}
+	}
+	return nil
 }
 
 // Start starts the API server. Internally, the API server leverages CometBFT's

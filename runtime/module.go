@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -200,6 +201,10 @@ func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtim
 }
 
 func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return nil
+	}
+
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
@@ -214,13 +219,21 @@ func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, 
 	return storeKey
 }
 
-func ProvideTransientStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.TransientStoreKey {
+func ProvideTransientStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.TransientStoreKey {
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return nil
+	}
+
 	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
+func ProvideMemoryStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return nil
+	}
+
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
@@ -241,13 +254,13 @@ func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleK
 	return kvStoreService{key: storeKey}
 }
 
-func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {
-	storeKey := ProvideMemoryStoreKey(key, app)
+func ProvideMemoryStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {
+	storeKey := ProvideMemoryStoreKey(config, key, app)
 	return memStoreService{key: storeKey}
 }
 
-func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
-	storeKey := ProvideTransientStoreKey(key, app)
+func ProvideTransientStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
+	storeKey := ProvideTransientStoreKey(config, key, app)
 	return transientStoreService{key: storeKey}
 }
 

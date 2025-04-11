@@ -136,6 +136,9 @@ var (
 						KvStoreKey: "acc",
 					},
 				},
+				SkipStoreKeys: []string{
+					"tx",
+				},
 				// NOTE: The genutils module must occur after staking so that pools are
 				// properly initialized with tokens from genesis accounts.
 				// NOTE: The genutils module must also occur after auth so that it can access the params from auth.

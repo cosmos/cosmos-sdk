@@ -198,33 +198,6 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/x/protocolpool"
-    schedule:
-      interval: weekly
-      day: wednesday
-      time: "03:00"
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/x/auth"
-    schedule:
-      interval: weekly
-      day: wednesday
-      time: "03:10"
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/x/epochs"
-    schedule:
-      interval: weekly
-      day: wednesday
-      time: "03:15"
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
     directory: "/tools/benchmark"
     schedule:
       interval: weekly

@@ -59,9 +59,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/protocolpool) [#23933](https://github.com/cosmos/cosmos-sdk/pull/23933) Add x/protocolpool module.
     * x/distribution can now utilize an externally managed community pool. NOTE: this will make the message handlers for FundCommunityPool and CommunityPoolSpend error, as well as the query handler for CommunityPool.
 * (client) [#18101](https://github.com/cosmos/cosmos-sdk/pull/18101) Add a `keyring-default-keyname` in `client.toml` for specifying a default key name, and skip the need to use the `--from` flag when signing transactions.
+* (x/gov) [#24355](https://github.com/cosmos/cosmos-sdk/pull/24355) Allow users to set a custom CalculateVoteResultsAndVotingPower function to be used in govkeeper.Tally.
+* (api) [#24428](https://github.com/cosmos/cosmos-sdk/pull/24428) Add block height to response headers
 
 ### Improvements
 
+* (x/staking) [#24391](https://github.com/cosmos/cosmos-sdk/pull/24391) Replace panics with error results; more verbose error messages
 * (x/staking) [#24354](https://github.com/cosmos/cosmos-sdk/pull/24354) Optimize validator endblock by reducing bech32 conversions, resulting in significant performance improvement
 * (client/keys) [#18950](https://github.com/cosmos/cosmos-sdk/pull/18950) Improve `<appd> keys add`, `<appd> keys import` and `<appd> keys rename` by checking name validation.
 * (client/keys) [#18703](https://github.com/cosmos/cosmos-sdk/pull/18703) Improve `<appd> keys add` and `<appd> keys show` by checking whether there are duplicate keys in the multisig case.

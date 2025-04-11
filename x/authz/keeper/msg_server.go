@@ -38,7 +38,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
-		if k.bankKeeper.BlockedAddr(grantee) {
+		if k.bankKeeper != nil && k.bankKeeper.BlockedAddr(grantee) {
 			return nil, sdkerrors.ErrUnauthorized.Wrapf("%s is not allowed to receive funds", grantee)
 		}
 

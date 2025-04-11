@@ -86,5 +86,4 @@ func TestStoreCopy(t *testing.T) {
 		}
 
 	}
-
 }

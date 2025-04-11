@@ -169,11 +169,15 @@ require (
 	rsc.io/qr v0.2.0 // indirect
 )
 
-// Here are the short-lived replace from the Cosmos SDK
+// Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 // replace (
 // 	<temporary replace>
 // )
+
+replace (
+    cosmossdk.io/store => ./store
+)
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

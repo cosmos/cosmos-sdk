@@ -31,6 +31,9 @@ var (
 	key                = make([]byte, secp256k1.PubKeySize)
 	simSecp256k1Pubkey = &secp256k1.PubKey{Key: key}
 	simSecp256k1Sig    [64]byte
+
+	// SigVerificationResultCacheKey default key for incarnation cache
+	SigVerificationResultCacheKey = "ante:SigVerificationResult"
 )
 
 func init() {
@@ -251,9 +254,26 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if v, ok := ctx.GetIncarnationCache(SigVerificationResultCacheKey); ok {
+		// can't convert `nil` to interface
+		if v != nil {
+			err = v.(error)
+		}
+	} else {
+		err = svd.verify(ctx, tx, simulate)
+		// if enabled, use incarnation cache to store the result to improve performance for block-stm
+		ctx.SetIncarnationCache(SigVerificationResultCacheKey, err)
+	}
+	if err != nil {
+		return ctx, err
+	}
+	return next(ctx, tx, simulate)
+}
+
+func (svd SigVerificationDecorator) verify(ctx sdk.Context, tx sdk.Tx, simulate bool) error {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	utx, ok := tx.(sdk.TxWithUnordered)
@@ -263,35 +283,35 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	// When simulating, this would just be a 0-length slice.
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	signers, err := sigTx.GetSigners()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signers) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
 	}
 
 	for i, sig := range sigs {
 		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
-			return ctx, err
+			return err
 		}
 
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
 		if !simulate && pubKey == nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
 		// Check account sequence number.
 		if !isUnordered {
 			if sig.Sequence != acc.GetSequence() {
-				return ctx, errorsmod.Wrapf(
+				return errorsmod.Wrapf(
 					sdkerrors.ErrWrongSequence,
 					"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 				)
@@ -322,7 +342,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			}
 			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
 			if !ok {
-				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
+				return fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
 			}
 			txData := adaptableTx.GetSigningTxData()
 			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
@@ -335,13 +355,13 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 				} else {
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
 				}
-				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 
 			}
 		}
 	}
 
-	return next(ctx, tx, simulate)
+	return nil
 }
 
 // IncrementSequenceDecorator handles incrementing sequences of all signers.

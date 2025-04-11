@@ -2,14 +2,14 @@ module cosmossdk.io/store
 
 go 1.23.5
 
-toolchain go1.23.7
-
 require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v1.0.1
+	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-db v1.1.1
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.2.0
 	github.com/cosmos/ics23/go v0.11.0
@@ -26,11 +26,6 @@ require (
 	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 	gotest.tools/v3 v3.5.2
-)
-
-require (
-	github.com/cometbft/cometbft/api v1.0.0
-	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 )
 
 require (

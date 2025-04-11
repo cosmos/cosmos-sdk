@@ -1036,7 +1036,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
-		if mode != execModeFinalize && mode != execModeSimulate {
+		if mode == execModeFinalize || mode == execModeSimulate {
+		} else {
 			break
 		}
 

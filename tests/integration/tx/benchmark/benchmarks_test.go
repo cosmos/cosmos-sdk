@@ -9,7 +9,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -20,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type TxBenchmarkSuite struct {
@@ -188,7 +188,6 @@ func BroadcastTx(clientCtx client.Context, tx sdk.Tx) (*bytes.Buffer, error) {
 		return nil, err
 	}
 
-	// 🔥 FIX: Set broadcast mode
 	clientCtx = clientCtx.WithBroadcastMode("sync")
 
 	res, err := clientCtx.BroadcastTx(txBytes)

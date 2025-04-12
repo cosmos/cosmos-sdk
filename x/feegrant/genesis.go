@@ -1,12 +1,10 @@
 package feegrant
 
 import (
-fix(x/feegrant)-prevent-duplicate-grants-in-genesis-state
 	"fmt"
 
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
-main
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 

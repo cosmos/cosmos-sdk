@@ -5,7 +5,7 @@ go 1.23.2
 require (
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v0.38.17
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.1
+	github.com/cosmos/cosmos-sdk v0.53.0-rc.3
 	github.com/creachadair/tomledit v0.0.27
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
@@ -22,7 +22,7 @@ require (
 	cosmossdk.io/log v1.5.1 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
-	cosmossdk.io/x/tx v0.14.0-rc.1 // indirect
+	cosmossdk.io/x/tx v0.14.0-rc.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect

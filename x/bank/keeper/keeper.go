@@ -364,6 +364,10 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		panic(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
+	if !amounts.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
+	}
+
 	err = k.addCoins(ctx, acc.GetAddress(), amounts)
 	if err != nil {
 		return err
@@ -395,6 +399,9 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sd
 
 	if !acc.HasPermission(authtypes.Burner) {
 		panic(errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
+	}
+	if !amounts.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}
 
 	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amounts)

@@ -1096,6 +1096,11 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
 	require.Error(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
 
+	// invalid denom rejected
+	invalidDenomAmounts := []sdk.Coin{newFooCoin(50), {Denom: "123fox", Amount: math.OneInt()}}
+	gotErr := suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], invalidDenomAmounts)
+	require.ErrorIs(gotErr, sdkerrors.ErrInvalidCoins)
+
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
 	suite.mockSendCoins(ctx, acc0, accAddrs[1])
@@ -2032,6 +2037,36 @@ func (suite *KeeperTestSuite) getTestMetadata() []banktypes.Metadata {
 	}
 }
 
+func (suite *KeeperTestSuite) TestMintCoinDenomGuard() {
+	specs := map[string]struct {
+		amounts sdk.Coins
+		expErr  error
+	}{
+		"valid": {
+			amounts: sdk.NewCoins(sdk.Coin{Denom: "stake", Amount: math.OneInt()}),
+		},
+		"invalid denom": {
+			amounts: []sdk.Coin{{Denom: "11stake", Amount: math.OneInt()}},
+			expErr:  sdkerrors.ErrInvalidCoins,
+		},
+		"invalid denom - multiple": {
+			amounts: []sdk.Coin{newFooCoin(50), {Denom: "11stake", Amount: math.OneInt()}},
+			expErr:  sdkerrors.ErrInvalidCoins,
+		},
+	}
+	for name, spec := range specs {
+		suite.T().Run(name, func(t *testing.T) {
+			suite.mockMintCoins(multiPermAcc)
+			gotErr := suite.bankKeeper.MintCoins(suite.ctx, multiPermAcc.Name, spec.amounts)
+			if spec.expErr != nil {
+				suite.Require().ErrorIs(gotErr, spec.expErr)
+				return
+			}
+			suite.Require().NoError(gotErr)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 	type BankMintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
 	require := suite.Require()
@@ -2091,6 +2126,44 @@ func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 				)
 			}
 		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestBurnCoinDenomGuard() {
+	suite.mockMintCoins(multiPermAcc)
+	myCoins := sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
+	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, multiPermAcc.Name, myCoins))
+
+	specs := map[string]struct {
+		amounts sdk.Coins
+		expErr  error
+	}{
+		"valid": {
+			amounts: sdk.NewCoins(sdk.Coin{Denom: "stake", Amount: math.OneInt()}),
+		},
+		"invalid denom": {
+			amounts: []sdk.Coin{{Denom: "11stake", Amount: math.OneInt()}},
+			expErr:  sdkerrors.ErrInvalidCoins,
+		},
+		"invalid denom - multiple": {
+			amounts: []sdk.Coin{newFooCoin(50), {Denom: "11stake", Amount: math.OneInt()}},
+			expErr:  sdkerrors.ErrInvalidCoins,
+		},
+	}
+	for name, spec := range specs {
+		suite.T().Run(name, func(t *testing.T) {
+			suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, multiPermAcc.Name).Return(multiPermAcc)
+			if spec.expErr == nil {
+				suite.authKeeper.EXPECT().GetAccount(suite.ctx, multiPermAcc.GetAddress()).Return(multiPermAcc)
+			}
+			// when
+			gotErr := suite.bankKeeper.BurnCoins(suite.ctx, multiPermAcc.Name, spec.amounts)
+			if spec.expErr != nil {
+				suite.Require().ErrorIs(gotErr, spec.expErr)
+				return
+			}
+			suite.Require().NoError(gotErr)
+		})
 	}
 }
 

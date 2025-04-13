@@ -599,247 +599,7 @@ func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	}
 }
 
-func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) error {
-	if req.Height < 1 {
-		return fmt.Errorf("invalid height: %d", req.Height)
-	}
-
-	lastBlockHeight := app.LastBlockHeight()
-
-	// expectedHeight holds the expected height to validate
-	var expectedHeight int64
-	if lastBlockHeight == 0 && app.initialHeight > 1 {
-		// In this case, we're validating the first block of the chain, i.e no
-		// previous commit. The height we're expecting is the initial height.
-		expectedHeight = app.initialHeight
-	} else {
-		// This case can mean two things:
-		//
-		// - Either there was already a previous commit in the store, in which
-		// case we increment the version from there.
-		// - Or there was no previous commit, in which case we start at version 1.
-		expectedHeight = lastBlockHeight + 1
-	}
-
-	if req.Height != expectedHeight {
-		return fmt.Errorf("invalid height: %d; expected: %d", req.Height, expectedHeight)
-	}
-
-	return nil
-}
-
-// validateBasicTxMsgs executes basic validator calls for messages.
-func validateBasicTxMsgs(msgs []sdk.Msg) error {
-	if len(msgs) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
-	}
-
-	for _, msg := range msgs {
-		m, ok := msg.(sdk.HasValidateBasic)
-		if !ok {
-			continue
-		}
-
-		if err := m.ValidateBasic(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (app *BaseApp) getState(mode execMode) *state {
-	switch mode {
-	case execModeFinalize:
-		return app.finalizeBlockState
-
-	case execModePrepareProposal:
-		return app.prepareProposalState
-
-	case execModeProcessProposal:
-		return app.processProposalState
-
-	default:
-		return app.checkState
-	}
-}
-
-func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
-	if app.disableBlockGasMeter {
-		return noopGasMeter{}
-	}
-
-	if maxGas := app.GetMaximumBlockGas(ctx); maxGas > 0 {
-		return storetypes.NewGasMeter(maxGas)
-	}
-
-	return storetypes.NewInfiniteGasMeter()
-}
-
-// retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
-	app.mu.Lock()
-	defer app.mu.Unlock()
-
-	modeState := app.getState(mode)
-	if modeState == nil {
-		panic(fmt.Sprintf("state is nil for mode %v", mode))
-	}
-	ctx := modeState.Context().
-		WithTxBytes(txBytes).
-		WithGasMeter(storetypes.NewInfiniteGasMeter())
-	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
-
-	ctx = ctx.WithIsSigverifyTx(app.sigverifyTx)
-
-	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
-
-	if mode == execModeReCheck {
-		ctx = ctx.WithIsReCheckTx(true)
-	}
-
-	if mode == execModeSimulate {
-		ctx, _ = ctx.CacheContext()
-		ctx = ctx.WithExecMode(sdk.ExecMode(execModeSimulate))
-	}
-
-	return ctx
-}
-
-// cacheTxContext returns a new context based off of the provided context with
-// a branched multi-store.
-func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
-	ms := ctx.MultiStore()
-	msCache := ms.CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.SetTracingContext(
-			storetypes.TraceContext(
-				map[string]any{
-					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
-				},
-			),
-		).(storetypes.CacheMultiStore)
-	}
-
-	return ctx.WithMultiStore(msCache), msCache
-}
-
-func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
-	var events []abci.Event
-	if app.preBlocker != nil {
-		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
-		rsp, err := app.preBlocker(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed
-		// write the consensus parameters in store to context
-		if rsp.ConsensusParamsChanged {
-			ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
-			// GasMeter must be set after we get a context with updated consensus params.
-			gasMeter := app.getBlockGasMeter(ctx)
-			ctx = ctx.WithBlockGasMeter(gasMeter)
-			app.finalizeBlockState.SetContext(ctx)
-		}
-		events = ctx.EventManager().ABCIEvents()
-	}
-	return events, nil
-}
-
-func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
-	var (
-		resp sdk.BeginBlock
-		err  error
-	)
-
-	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.Context())
-		if err != nil {
-			return resp, err
-		}
-
-		// append BeginBlock attributes to all events in the EndBlock response
-		for i, event := range resp.Events {
-			resp.Events[i].Attributes = append(
-				event.Attributes,
-				abci.EventAttribute{Key: "mode", Value: "BeginBlock"},
-			)
-		}
-
-		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
-	}
-
-	return resp, nil
-}
-
-func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
-	return app.deliverTxWithMultiStore(tx, nil, nil)
-}
-
-func (app *BaseApp) deliverTxWithMultiStore(tx []byte, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult {
-	gInfo := sdk.GasInfo{}
-	resultStr := "successful"
-
-	var resp *abci.ExecTxResult
-
-	defer func() {
-		telemetry.IncrCounter(1, "tx", "count")
-		telemetry.IncrCounter(1, "tx", resultStr)
-		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
-		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
-	}()
-
-	gInfo, result, anteEvents, err := app.runTxWithMultiStore(execModeFinalize, tx, nil, txMultiStore, incarnationCache)
-	if err != nil {
-		resultStr = "failed"
-		resp = sdkerrors.ResponseExecTxResultWithEvents(
-			err,
-			gInfo.GasWanted,
-			gInfo.GasUsed,
-			sdk.MarkEventsToIndex(anteEvents, app.indexEvents),
-			app.trace,
-		)
-		return resp
-	}
-
-	resp = &abci.ExecTxResult{
-		GasWanted: int64(gInfo.GasWanted),
-		GasUsed:   int64(gInfo.GasUsed),
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}
-
-	return resp
-}
-
-// endBlock is an application-defined function that is called after transactions
-// have been processed in FinalizeBlock.
-func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
-	var endblock sdk.EndBlock
-
-	if app.endBlocker != nil {
-		eb, err := app.endBlocker(app.finalizeBlockState.Context())
-		if err != nil {
-			return endblock, err
-		}
-
-		// append EndBlock attributes to all events in the EndBlock response
-		for i, event := range eb.Events {
-			eb.Events[i].Attributes = append(
-				event.Attributes,
-				abci.EventAttribute{Key: "mode", Value: "EndBlock"},
-			)
-		}
-
-		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
-		endblock = eb
-	}
-
-	return endblock, nil
-}
-
-// runTx processes a transaction within a given execution mode, encoded transaction
+// RunTx processes a transaction within a given execution mode, encoded transaction
 // bytes, and the decoded transaction itself. All state transitions occur through
 // a cached Context depending on the mode provided. State only gets persisted
 // if all messages get executed successfully and the execution mode is DeliverTx.
@@ -848,11 +608,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 // and execute successfully. An error is returned otherwise.
 // both txbytes and the decoded tx are passed to runTx to avoid the state machine encoding the tx and decoding the transaction twice
 // passing the decoded tx to runTX is optional, it will be decoded if the tx is nil
-func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
-	return app.runTxWithMultiStore(mode, txBytes, tx, nil, nil)
-}
-
-func (app *BaseApp) runTxWithMultiStore(mode execMode, txBytes []byte, tx sdk.Tx, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+func (app *BaseApp) RunTx(mode execMode, txBytes []byte, tx sdk.Tx, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
@@ -1042,6 +798,242 @@ func (app *BaseApp) runTxWithMultiStore(mode execMode, txBytes []byte, tx sdk.Tx
 	return gInfo, result, anteEvents, err
 }
 
+func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) error {
+	if req.Height < 1 {
+		return fmt.Errorf("invalid height: %d", req.Height)
+	}
+
+	lastBlockHeight := app.LastBlockHeight()
+
+	// expectedHeight holds the expected height to validate
+	var expectedHeight int64
+	if lastBlockHeight == 0 && app.initialHeight > 1 {
+		// In this case, we're validating the first block of the chain, i.e no
+		// previous commit. The height we're expecting is the initial height.
+		expectedHeight = app.initialHeight
+	} else {
+		// This case can mean two things:
+		//
+		// - Either there was already a previous commit in the store, in which
+		// case we increment the version from there.
+		// - Or there was no previous commit, in which case we start at version 1.
+		expectedHeight = lastBlockHeight + 1
+	}
+
+	if req.Height != expectedHeight {
+		return fmt.Errorf("invalid height: %d; expected: %d", req.Height, expectedHeight)
+	}
+
+	return nil
+}
+
+// validateBasicTxMsgs executes basic validator calls for messages.
+func validateBasicTxMsgs(msgs []sdk.Msg) error {
+	if len(msgs) == 0 {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
+	}
+
+	for _, msg := range msgs {
+		m, ok := msg.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (app *BaseApp) getState(mode execMode) *state {
+	switch mode {
+	case execModeFinalize:
+		return app.finalizeBlockState
+
+	case execModePrepareProposal:
+		return app.prepareProposalState
+
+	case execModeProcessProposal:
+		return app.processProposalState
+
+	default:
+		return app.checkState
+	}
+}
+
+func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
+	if app.disableBlockGasMeter {
+		return noopGasMeter{}
+	}
+
+	if maxGas := app.GetMaximumBlockGas(ctx); maxGas > 0 {
+		return storetypes.NewGasMeter(maxGas)
+	}
+
+	return storetypes.NewInfiniteGasMeter()
+}
+
+// retrieve the context for the tx w/ txBytes and other memoized values.
+func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
+	modeState := app.getState(mode)
+	if modeState == nil {
+		panic(fmt.Sprintf("state is nil for mode %v", mode))
+	}
+	ctx := modeState.Context().
+		WithTxBytes(txBytes).
+		WithGasMeter(storetypes.NewInfiniteGasMeter())
+	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
+
+	ctx = ctx.WithIsSigverifyTx(app.sigverifyTx)
+
+	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+
+	if mode == execModeReCheck {
+		ctx = ctx.WithIsReCheckTx(true)
+	}
+
+	if mode == execModeSimulate {
+		ctx, _ = ctx.CacheContext()
+		ctx = ctx.WithExecMode(sdk.ExecMode(execModeSimulate))
+	}
+
+	return ctx
+}
+
+// cacheTxContext returns a new context based off of the provided context with
+// a branched multi-store.
+func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
+	ms := ctx.MultiStore()
+	msCache := ms.CacheMultiStore()
+	if msCache.TracingEnabled() {
+		msCache = msCache.SetTracingContext(
+			storetypes.TraceContext(
+				map[string]any{
+					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
+				},
+			),
+		).(storetypes.CacheMultiStore)
+	}
+
+	return ctx.WithMultiStore(msCache), msCache
+}
+
+func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
+	var events []abci.Event
+	if app.preBlocker != nil {
+		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
+		rsp, err := app.preBlocker(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed
+		// write the consensus parameters in store to context
+		if rsp.ConsensusParamsChanged {
+			ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+			// GasMeter must be set after we get a context with updated consensus params.
+			gasMeter := app.getBlockGasMeter(ctx)
+			ctx = ctx.WithBlockGasMeter(gasMeter)
+			app.finalizeBlockState.SetContext(ctx)
+		}
+		events = ctx.EventManager().ABCIEvents()
+	}
+	return events, nil
+}
+
+func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
+	var (
+		resp sdk.BeginBlock
+		err  error
+	)
+
+	if app.beginBlocker != nil {
+		resp, err = app.beginBlocker(app.finalizeBlockState.Context())
+		if err != nil {
+			return resp, err
+		}
+
+		// append BeginBlock attributes to all events in the EndBlock response
+		for i, event := range resp.Events {
+			resp.Events[i].Attributes = append(
+				event.Attributes,
+				abci.EventAttribute{Key: "mode", Value: "BeginBlock"},
+			)
+		}
+
+		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
+	}
+
+	return resp, nil
+}
+
+func (app *BaseApp) deliverTx(tx []byte, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult {
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
+
+	var resp *abci.ExecTxResult
+
+	defer func() {
+		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
+	}()
+
+	gInfo, result, anteEvents, err := app.RunTx(execModeFinalize, tx, nil, txMultiStore, incarnationCache)
+	if err != nil {
+		resultStr = "failed"
+		resp = sdkerrors.ResponseExecTxResultWithEvents(
+			err,
+			gInfo.GasWanted,
+			gInfo.GasUsed,
+			sdk.MarkEventsToIndex(anteEvents, app.indexEvents),
+			app.trace,
+		)
+		return resp
+	}
+
+	resp = &abci.ExecTxResult{
+		GasWanted: int64(gInfo.GasWanted),
+		GasUsed:   int64(gInfo.GasUsed),
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	}
+
+	return resp
+}
+
+// endBlock is an application-defined function that is called after transactions
+// have been processed in FinalizeBlock.
+func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
+	var endblock sdk.EndBlock
+
+	if app.endBlocker != nil {
+		eb, err := app.endBlocker(app.finalizeBlockState.Context())
+		if err != nil {
+			return endblock, err
+		}
+
+		// append EndBlock attributes to all events in the EndBlock response
+		for i, event := range eb.Events {
+			eb.Events[i].Attributes = append(
+				event.Attributes,
+				abci.EventAttribute{Key: "mode", Value: "EndBlock"},
+			)
+		}
+
+		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)
+		endblock = eb
+	}
+
+	return endblock, nil
+}
+
 // runMsgs iterates through a list of messages and executes them with the provided
 // Context and execution mode. Messages will only be executed during simulation
 // and DeliverTx. An error is returned if any single message fails or if a
@@ -1155,7 +1147,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 		return nil, err
 	}
 
-	_, _, _, err = app.runTx(execModePrepareProposal, bz, tx)
+	_, _, _, err = app.RunTx(execModePrepareProposal, bz, tx, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1174,7 +1166,7 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 
-	_, _, _, err = app.runTx(execModeProcessProposal, txBz, tx)
+	_, _, _, err = app.RunTx(execModeProcessProposal, txBz, tx, nil, nil)
 	if err != nil {
 		return nil, err
 	}

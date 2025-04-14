@@ -2,7 +2,7 @@
 
 Go black box tests that setup and interact with a local blockchain. The system test [framework](../../systemtests) 
 works with the compiled binary of the chain artifact only.
-To get up to speed, checkout the [getting started guide](../../systemtests/getting_started.md).
+To get up to speed, checkout the [getting started guide](../../systemtests/GETTING_STARTED).
 
 Beside the Go tests and testdata files, this directory can contain the following directories:  
 

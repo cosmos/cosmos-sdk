@@ -200,7 +200,7 @@ type BaseApp struct {
 	disableBlockGasMeter bool
 
 	// Optional alternative tx executor, used for block-stm parallel transaction execution. If nil, default executor is used.
-	txExecutor TxExecutor
+	executor Executor
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

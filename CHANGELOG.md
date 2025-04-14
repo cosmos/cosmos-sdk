@@ -86,7 +86,7 @@ This patch update also includes minor dependency bumps.
 * (x/mint) [#24436](https://github.com/cosmos/cosmos-sdk/pull/24436) Allow users to set a custom minting function used in the `x/mint` begin blocker.
   * The `InflationCalculationFn` argument to `mint.NewAppModule()` is now ignored and must be nil.  To set a custom `InflationCalculationFn` on the default minter, use `mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))`.
 * (api) [#24428](https://github.com/cosmos/cosmos-sdk/pull/24428) Add block height to response headers
-* (baseapp) [#24458](https://github.com/cosmos/cosmos-sdk/pull/24458) Add `TxExecutor` to support custom execution logic and incarnation cache for performance optimisation
+* (baseapp) [#24458](https://github.com/cosmos/cosmos-sdk/pull/24458) Add `Executor` to support custom execution logic and incarnation cache for performance optimisation
 
 ### Improvements
 

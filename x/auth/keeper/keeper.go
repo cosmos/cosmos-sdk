@@ -81,10 +81,6 @@ func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.A
 	}
 }
 
-type AccountID = []byte
-type AddressType = uint8
-type Address = []byte
-
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
@@ -107,18 +103,15 @@ type AccountKeeper struct {
 	Params        collections.Item[types.Params]
 	AccountNumber collections.Sequence
 
-	// legacy accounts contains unmigrated account data which should now implement the LegacyAccountI interface
-	// when an unmigrated account is transacted, its Migrate method is called which breaks apart
-	// the account data into address, account id, sequence, pubkey, account data, etc.
-	// and then this data is stored in the new storage formats
-	LegacyAccounts     *collections.IndexedMap[sdk.AccAddress, sdk.LegacyAccountI, AccountsIndexes]
-	AccountData        collections.Map[AccountID, sdk.AccountData]
+	Accounts           *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 	AddressByAccountID collections.Map[collections.Pair[AccountID, AddressType], Address]
 	AccountIDByAddress collections.Map[collections.Pair[AddressType, Address], AccountID]
-
-	Sequences       collections.Map[AccountID, uint64]
-	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
+	UnorderedNonces    collections.KeySet[collections.Pair[int64, []byte]]
 }
+
+type AccountID = []byte
+type AddressType = uint8
+type Address = []byte
 
 var _ AccountKeeperI = &AccountKeeper{}
 

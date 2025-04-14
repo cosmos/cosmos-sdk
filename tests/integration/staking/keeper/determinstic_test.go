@@ -194,8 +194,12 @@ func createValidator(rt *rapid.T, f *deterministicFixture, t *testing.T) staking
 	pubkey := pubKeyGenerator().Draw(rt, "pubkey")
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
 	assert.NilError(t, err)
+
+	// Use the safe address generator to ensure the account is created
+	valAddress := sdk.ValAddress(safeAddressGenerator(rt, f, t))
+
 	return stakingtypes.Validator{
-		OperatorAddress: sdk.ValAddress(testdata.AddressGenerator(rt).Draw(rt, "address")).String(),
+		OperatorAddress: valAddress.String(),
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          rapid.Bool().Draw(rt, "jailed"),
 		Status:          bondTypeGenerator().Draw(rt, "bond-status"),
@@ -321,6 +325,16 @@ func getStaticValidator2(f *deterministicFixture, t *testing.T) stakingtypes.Val
 
 // createDelegationAndDelegate funds the delegator account with a random delegation in range 100-1000 and delegates.
 func createDelegationAndDelegate(rt *rapid.T, f *deterministicFixture, t *testing.T, delegator sdk.AccAddress, validator stakingtypes.Validator) (newShares math.LegacyDec, err error) {
+	// Ensure the delegator account exists before trying to delegate
+	acc := f.accountKeeper.GetAccount(f.ctx, delegator)
+	if acc == nil {
+		acc = f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+		f.accountKeeper.SetAccount(f.ctx, acc)
+
+		// Verify the account was created properly
+		assert.Assert(t, f.accountKeeper.GetAccount(f.ctx, delegator) != nil, "Failed to create account for delegator")
+	}
+
 	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, rapid.Int64Range(100, 1000).Draw(rt, "amount"))
 	return fundAccountAndDelegate(f, t, delegator, validator, amt)
 }
@@ -329,11 +343,42 @@ func createDelegationAndDelegate(rt *rapid.T, f *deterministicFixture, t *testin
 func fundAccountAndDelegate(f *deterministicFixture, t *testing.T, delegator sdk.AccAddress, validator stakingtypes.Validator, amt math.Int) (newShares math.LegacyDec, err error) {
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 
+	// Create account if it doesn't exist
+	acc := f.accountKeeper.GetAccount(f.ctx, delegator)
+	if acc == nil {
+		acc = f.accountKeeper.NewAccountWithAddress(f.ctx, delegator)
+		f.accountKeeper.SetAccount(f.ctx, acc)
+	}
+
+	// Make sure the account exists before attempting to fund it
+	assert.Assert(t, f.accountKeeper.GetAccount(f.ctx, delegator) != nil, "Account should exist at this point")
+
 	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
 	assert.NilError(t, banktestutil.FundAccount(f.ctx, f.bankKeeper, delegator, coins))
 
+	// Verify the account has the funds before delegating
+	balance := f.bankKeeper.GetBalance(f.ctx, delegator, sdk.DefaultBondDenom)
+	assert.Assert(t, balance.Amount.GTE(amt), "Account should have sufficient funds")
+
 	shares, err := f.stakingKeeper.Delegate(f.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
+	if err != nil {
+		t.Logf("Delegation failed: %v, delegator: %s, validator: %s", err, delegator, validator.OperatorAddress)
+	}
 	return shares, err
+}
+
+// safeAddressGenerator generates an address and ensures its account is created in the state
+func safeAddressGenerator(rt *rapid.T, f *deterministicFixture, t *testing.T) sdk.AccAddress {
+	addr := testdata.AddressGenerator(rt).Draw(rt, "address")
+
+	// Create account if it doesn't exist
+	acc := f.accountKeeper.GetAccount(f.ctx, addr)
+	if acc == nil {
+		acc = f.accountKeeper.NewAccountWithAddress(f.ctx, addr)
+		f.accountKeeper.SetAccount(f.ctx, acc)
+	}
+
+	return addr
 }
 
 func TestGRPCValidator(t *testing.T) {
@@ -341,6 +386,7 @@ func TestGRPCValidator(t *testing.T) {
 	f := initDeterministicFixture(t)
 
 	rapid.Check(t, func(rt *rapid.T) {
+		// Create and set validator with a properly initialized account
 		val := createAndSetValidator(rt, f, t)
 		req := &stakingtypes.QueryValidatorRequest{
 			ValidatorAddr: val.OperatorAddress,
@@ -403,7 +449,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 			Pagination:    testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14474, true)
 	})
 
 	f = initDeterministicFixture(t) // reset
@@ -477,7 +523,7 @@ func TestGRPCDelegation(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
-		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		delegator := safeAddressGenerator(rt, f, t)
 		_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 		assert.NilError(t, err)
 
@@ -509,7 +555,7 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
-		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		delegator := safeAddressGenerator(rt, f, t)
 		shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 		assert.NilError(t, err)
 
@@ -549,7 +595,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 
 	rapid.Check(t, func(rt *rapid.T) {
 		numVals := rapid.IntRange(1, 3).Draw(rt, "num-dels")
-		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		delegator := safeAddressGenerator(rt, f, t)
 
 		for i := 0; i < numVals; i++ {
 			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)

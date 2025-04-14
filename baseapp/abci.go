@@ -833,15 +833,15 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 }
 
 func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
-	if app.txExecutor == nil {
-		app.txExecutor = DefaultExecutor{
+	if app.executor == nil {
+		app.executor = DefaultExecutor{
 			ctx:       ctx,
 			txDecoder: app.txDecoder,
 			deliverTx: func(txs []byte) *abci.ExecTxResult { return app.deliverTx(txs, nil, nil) },
 		}
 	}
 
-	return app.txExecutor.run(txs)
+	return app.executor.run(txs)
 }
 
 // FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.

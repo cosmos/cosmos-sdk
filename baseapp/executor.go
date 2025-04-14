@@ -19,8 +19,8 @@ import (
 	blockstm "github.com/crypto-org-chain/go-block-stm"
 )
 
-// TxExecutor the interface for implementing custom execution logic, such as block-stm
-type TxExecutor interface {
+// Executor the interface for implementing custom execution logic, such as block-stm
+type Executor interface {
 	run(txs [][]byte) ([]*abci.ExecTxResult, error)
 }
 

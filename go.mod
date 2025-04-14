@@ -200,7 +200,11 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	cosmossdk.io => ./.
+	cosmossdk.io/store => ./store
+	cosmossdk.io/x/evidence => ./x/evidence
+	cosmossdk.io/x/feegrant => ./x/feegrant
+	cosmossdk.io/x/tx => ./x/tx
+	cosmossdk.io/x/upgrade => ./x/upgrade
 
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

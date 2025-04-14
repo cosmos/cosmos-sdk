@@ -225,10 +225,14 @@ require (
 
 // Below are the long-lived replace for tests.
 replace (
-	cosmossdk.io => ../.
 
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
+	cosmossdk.io/store => ../store
+	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/tx => ../x/tx
+	cosmossdk.io/x/upgrade => ../x/upgrade
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	github.com/cometbft/cometbft => github.com/InjectiveLabs/cometbft v0.38.17-inj.3

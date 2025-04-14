@@ -16,6 +16,13 @@ type AddressSpaceManager interface {
 	Name() string
 
 	// DeriveAddress derives an address from the given account ID and public key.
+	// Implementations should attempt to follow the rules for their address space
+	// when the public key is of a known type (ex. secp256k1) and should perform
+	// a suitable derivation for other key types when the public key is unknown or nil.
+	// The account ID passed to this method will always be non-nil, but the
+	// public key may be nil.
+	// Implementations should not panic if the public key is nil and should instead
+	// perform derivation simply based on the account ID.
 	DeriveAddress(id AccountID, pubKey cryptotypes.PubKey) Address
 }
 

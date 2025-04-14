@@ -98,19 +98,21 @@ type AccountKeeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	// State
-	Schema        collections.Schema
-	Params        collections.Item[types.Params]
-	AccountNumber collections.Sequence
+	addressSpaceManagers map[AddressSpacePrefix]AddressSpaceManager
+	addressPrefixByName  map[string]AddressSpacePrefix
 
+	// State
+	Schema             collections.Schema
+	Params             collections.Item[types.Params]
+	AccountNumber      collections.Sequence
 	Accounts           *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
-	AddressByAccountID collections.Map[collections.Pair[AccountID, AddressType], Address]
-	AccountIDByAddress collections.Map[collections.Pair[AddressType, Address], AccountID]
+	AddressByAccountID collections.Map[collections.Pair[AccountID, AddressSpacePrefix], Address]
+	AccountIDByAddress collections.Map[collections.Pair[AddressSpacePrefix, Address], AccountID]
 	UnorderedNonces    collections.KeySet[collections.Pair[int64, []byte]]
 }
 
 type AccountID = []byte
-type AddressType = uint8
+type AddressSpacePrefix = uint16
 type Address = []byte
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -133,17 +135,21 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
-		addressCodec:    ac,
-		bech32Prefix:    bech32Prefix,
-		storeService:    storeService,
-		proto:           proto,
-		cdc:             cdc,
-		permAddrs:       permAddrs,
-		authority:       authority,
-		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
-		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
-		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
+		addressCodec:         ac,
+		bech32Prefix:         bech32Prefix,
+		storeService:         storeService,
+		proto:                proto,
+		cdc:                  cdc,
+		permAddrs:            permAddrs,
+		authority:            authority,
+		Params:               collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:        collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		Accounts:             collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		AccountIDByAddress:   collections.NewMap(sb, types.AccountIDByAddressPrefix, "account_id_by_address", collections.PairKeyCodec(collections.Uint16Key, collections.BytesKey), collections.BytesValue),
+		AddressByAccountID:   collections.NewMap(sb, types.AddressByAccountIDPrefix, "address_by_account_id", collections.PairKeyCodec(collections.BytesKey, collections.Uint16Key), collections.BytesValue),
+		UnorderedNonces:      collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
+		addressSpaceManagers: map[AddressSpacePrefix]AddressSpaceManager{},
+		addressPrefixByName:  map[string]AddressSpacePrefix{},
 	}
 	schema, err := sb.Build()
 	if err != nil {

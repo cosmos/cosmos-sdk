@@ -26,6 +26,12 @@ var (
 	// account number is stored.
 	GlobalAccountNumberKey = collections.NewPrefix(2)
 
+	// AddressByAccountIDPrefix prefix for the AddressByAccount map.
+	AddressByAccountIDPrefix = collections.NewPrefix(3)
+
+	// AccountIDByAddressPrefix prefix for AccountIDByAddress map.
+	AccountIDByAddressPrefix = collections.NewPrefix(4)
+
 	// AccountNumberStoreKeyPrefix prefix for account-by-id store
 	AccountNumberStoreKeyPrefix = collections.NewPrefix("accountNumber")
 

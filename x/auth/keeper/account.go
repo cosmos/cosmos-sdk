@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 	"errors"
+	"maps"
+	"slices"
 
 	"cosmossdk.io/collections"
 
@@ -59,6 +61,26 @@ func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
 	err := ak.Accounts.Set(ctx, acc.GetAddress(), acc)
 	if err != nil {
 		panic(err)
+	}
+
+	num := acc.GetAccountNumber()
+	id := accountNumToId(num)
+	pk := acc.GetPubKey()
+
+	for _, prefix := range slices.Sorted(maps.Keys(ak.addressSpaceManagers)) {
+		mgr := ak.addressSpaceManagers[prefix]
+		addr := mgr.DeriveAddress(id, pk)
+		if addr == nil {
+			panic("failed to derive address for account")
+		}
+		err = ak.AddressByAccountID.Set(ctx, collections.Join(id, prefix), addr)
+		if err != nil {
+			panic(err)
+		}
+		err = ak.AccountIDByAddress.Set(ctx, collections.Join(prefix, addr), id)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

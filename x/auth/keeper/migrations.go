@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+
+	"cosmossdk.io/collections"
 	"github.com/cosmos/gogoproto/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -87,4 +90,50 @@ func (m Migrator) V45SetAccount(ctx sdk.Context, acc sdk.AccountI) error {
 // NOTE(tip): exists for legacy compatibility
 func addressStoreKey(addr sdk.AccAddress) []byte {
 	return append(types.AddressStoreKeyPrefix, addr.Bytes()...)
+}
+
+// AddAddressSpace adds all the address mappings for a newly defined address space.
+// This migration must be run whenever a new address space is defined with AccountKeeper.DefineAddressSpace.
+func (m Migrator) AddAddressSpace(ctx sdk.Context, addressSpace string) error {
+	// iterate over all existing accounts and add their address space mappings
+	acctIt, err := m.keeper.Accounts.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	addrPrefix, ok := m.keeper.addressPrefixByName[addressSpace]
+	if !ok {
+		return fmt.Errorf("address space %s not found", addressSpace)
+	}
+
+	addrMgr, ok := m.keeper.addressSpaceManagers[addrPrefix]
+	if !ok {
+		return fmt.Errorf("address space manager %s not found", addrPrefix)
+	}
+
+	for acctIt.Valid() {
+		acct, err := acctIt.Value()
+		if err != nil {
+			return err
+		}
+		num := acct.GetAccountNumber()
+		id := accountNumToId(num)
+		pk := acct.GetPubKey()
+		newAddr := addrMgr.DeriveAddress(id, pk)
+		if newAddr == nil {
+			return fmt.Errorf("failed to derive address for account %s", acct.GetAddress())
+		}
+
+		err = m.keeper.AddressByAccountID.Set(ctx, collections.Join(id, addrPrefix), newAddr)
+		if err != nil {
+			return err
+		}
+		err = m.keeper.AccountIDByAddress.Set(ctx, collections.Join(addrPrefix, newAddr), id)
+		if err != nil {
+			return err
+		}
+
+		acctIt.Next()
+	}
+	panic("TODO")
 }

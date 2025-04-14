@@ -36,4 +36,5 @@ require (
 // Until https://github.com/cosmos/cosmos-sdk/issues/19228 is resolved
 // We are tagging x/tx v0.14+ from main and v0.13 from release/v0.50.x and must keep using released versions of x/tx dependencies
 
+// retracting released version from unreleased sdk v0.52
 retract [v1.0.0, v1.1.0]

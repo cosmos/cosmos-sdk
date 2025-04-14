@@ -328,14 +328,15 @@ func TestManager_EndBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
 	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1)
-	ret, err := mm.EndBlock(sdk.Context{})
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	ret, err := mm.EndBlock(ctx)
 	require.NoError(t, err)
 	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
 	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
-	_, err = mm.EndBlock(sdk.Context{})
+	_, err = mm.EndBlock(ctx)
 	require.Error(t, err)
 }
 
@@ -481,7 +482,8 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
 		ConsensusParamsChanged: true,
 	}, nil)
-	res, err := mm.PreBlock(sdk.Context{})
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	res, err := mm.PreBlock(ctx)
 	require.NoError(t, err)
 	require.True(t, res.ConsensusParamsChanged)
 
@@ -489,13 +491,13 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
 		ConsensusParamsChanged: false,
 	}, nil)
-	res, err = mm.PreBlock(sdk.Context{})
+	res, err = mm.PreBlock(ctx)
 	require.NoError(t, err)
 	require.False(t, res.ConsensusParamsChanged)
 
 	// test error
 	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(nil, errors.New("some error"))
-	_, err = mm.PreBlock(sdk.Context{})
+	_, err = mm.PreBlock(ctx)
 	require.EqualError(t, err, "some error")
 }
 

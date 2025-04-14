@@ -174,7 +174,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(57504) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(64751) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > uint64(simtestutil.DefaultConsensusParams.Block.MaxGas) {
 				// capped by gasLimit

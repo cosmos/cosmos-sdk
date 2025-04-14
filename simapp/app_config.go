@@ -125,6 +125,7 @@ var (
 						crisistypes.ModuleName,
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
+						banktypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
 					},

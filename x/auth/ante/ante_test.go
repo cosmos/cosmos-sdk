@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -773,8 +774,19 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
 				require.NoError(t, err)
 
+				// In the first transaction, all accounts signed, but the fee payer's sequence was not incremented
+				// So we need to adjust the expected sequence numbers accordingly
 				msgs = []sdk.Msg{msg1}
-				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[0].priv, accs[1].priv}, []uint64{accs[0].acc.GetAccountNumber(), accs[1].acc.GetAccountNumber()}, []uint64{accs[0].acc.GetSequence() + 1, accs[1].acc.GetSequence() + 1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[0].priv, accs[1].priv},
+					[]uint64{accs[0].acc.GetAccountNumber(), accs[1].acc.GetAccountNumber()},
+					[]uint64{accs[0].acc.GetSequence() + 1, accs[1].acc.GetSequence() + 1}
+
+				// Get the signers from the message
+				signers := msg1.GetSigners()
+				// If accs[0] was the fee payer in the first transaction, its sequence wasn't incremented
+				if len(signers) > 0 && bytes.Equal(accs[0].acc.GetAddress(), signers[0]) {
+					accSeqs[0] = accs[0].acc.GetSequence()
+				}
 
 				return TestCaseArgs{
 					accNums: accNums,
@@ -837,13 +849,31 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 				suite.ctx, err = suite.DeliverMsgs(t, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), false)
 				require.NoError(t, err)
 
-				for _, acc := range accs {
-					require.NoError(t, acc.acc.SetSequence(acc.acc.GetSequence()+1))
+				// In the second transaction, we need to handle the fee payer's sequence differently
+				msgs = []sdk.Msg{msg1, msg2, msg3}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv},
+					[]uint64{accs[0].acc.GetAccountNumber(), accs[1].acc.GetAccountNumber(), accs[2].acc.GetAccountNumber()},
+					[]uint64{accs[0].acc.GetSequence(), accs[1].acc.GetSequence() + 1, accs[2].acc.GetSequence() + 1}
+
+				// Get the fee payer from the first transaction
+				feePayer := suite.txBuilder.GetTx().(sdk.FeeTx).FeePayer()
+				if bytes.Equal(feePayer, accs[0].acc.GetAddress()) {
+					// If accs[0] was the fee payer, its sequence wasn't incremented
+					accSeqs[0] = accs[0].acc.GetSequence()
+				} else if bytes.Equal(feePayer, accs[1].acc.GetAddress()) {
+					// If accs[1] was the fee payer, its sequence wasn't incremented
+					accSeqs[1] = accs[1].acc.GetSequence()
+				} else if bytes.Equal(feePayer, accs[2].acc.GetAddress()) {
+					// If accs[2] was the fee payer, its sequence wasn't incremented
+					accSeqs[2] = accs[2].acc.GetSequence()
 				}
 
 				return TestCaseArgs{
-					msgs: msgs,
-				}.WithAccountsInfo(accs)
+					accNums: accNums,
+					accSeqs: accSeqs,
+					msgs:    msgs,
+					privs:   privs,
+				}
 			},
 			false,
 			true,

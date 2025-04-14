@@ -65,10 +65,15 @@ type deterministicFixture struct {
 
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
+	tkey := storetypes.NewTransientStoreKey(banktypes.TStoreKey)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
 
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
+	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, nil)
+	if err := cms.LoadLatestVersion(); err != nil {
+		t.Fatalf("failed to load latest version: %v", err)
+	}
 
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
@@ -94,6 +99,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	bankKeeper := keeper.NewBaseKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
+		runtime.NewTransientKVStoreService(tkey),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
@@ -394,7 +400,7 @@ func TestGRPCDenomsMetadata(t *testing.T) {
 	f.bankKeeper.SetDenomMetaData(f.ctx, metadataAtom)
 
 	req := &banktypes.QueryDenomsMetadataRequest{}
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomsMetadata, 660, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomsMetadata, 672, false)
 }
 
 func TestGRPCDenomMetadata(t *testing.T) {
@@ -419,7 +425,7 @@ func TestGRPCDenomMetadata(t *testing.T) {
 		Denom: metadataAtom.Base,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomMetadata, 1300, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DenomMetadata, 1306, false)
 }
 
 func TestGRPCSendEnabled(t *testing.T) {

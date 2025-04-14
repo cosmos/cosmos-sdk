@@ -309,7 +309,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 }
 
 func (s *CLITestSuite) TestNewEditValidatorCmd() {
-	cmd := cli.NewEditValidatorCmd(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewEditValidatorCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
 
 	moniker := "testing"
 	details := "bio"

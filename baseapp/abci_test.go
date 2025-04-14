@@ -2032,8 +2032,10 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		wasHookCalled = true
 
-		ctx.EventManager().EmitEvent(sdk.NewEvent("preblockertest", sdk.NewAttribute("height", fmt.Sprintf("%d", req.Height))))
-		return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
+		event := sdk.NewEvent("preblockertest", sdk.NewAttribute("height", fmt.Sprintf("%d", req.Height)))
+		ctx.EventManager().EmitEvent(event)
+		abciEvent := abci.Event{Type: event.Type, Attributes: event.Attributes}
+		return &sdk.ResponsePreBlock{ConsensusParamsChanged: false, Events: []abci.Event{abciEvent}}, nil
 	})
 	app.Seal()
 

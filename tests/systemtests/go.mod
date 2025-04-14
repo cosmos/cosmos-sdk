@@ -3,13 +3,14 @@ module cosmossdk.io/tests/systemtests
 go 1.23.2
 
 replace (
+	// always use latest versions in tests
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
 )
 
 require (
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/systemtests v0.0.0-00010101000000-000000000000
+	cosmossdk.io/systemtests v1.2.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/cosmos-sdk v0.53.0-rc.3
 	github.com/cosmos/gogogateway v1.2.0 // indirect

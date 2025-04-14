@@ -46,6 +46,7 @@ func (ak AccountKeeper) DefineAddressSpace(prefix AddressSpacePrefix, manager Ad
 }
 
 // ResolveAddress resolves an address from the given account ID and address space.
+// If the empty string is passed in for address space, the default Cosmos address space will be selected.
 func (ak AccountKeeper) ResolveAddress(ctx context.Context, addressSpace string, id AccountID) (Address, error) {
 	if addressSpace == "" {
 		val, err := ak.Accounts.Indexes.Number.MatchExact(ctx, accountIdToNum(id))
@@ -64,6 +65,7 @@ func (ak AccountKeeper) ResolveAddress(ctx context.Context, addressSpace string,
 }
 
 // ResolveAccountID resolves an account ID from the given address and address space.
+// If the empty string is passed in for address space, the default Cosmos address space will be selected.
 func (ak AccountKeeper) ResolveAccountID(ctx context.Context, addressSpace string, address Address) (AccountID, error) {
 	if addressSpace == "" {
 		val, err := ak.Accounts.Get(ctx, address)

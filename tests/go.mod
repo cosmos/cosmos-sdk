@@ -14,13 +14,13 @@ require (
 	cosmossdk.io/x/evidence v0.2.0-rc.2
 	cosmossdk.io/x/feegrant v0.2.0-rc.2
 	cosmossdk.io/x/nft v0.2.0-rc.2 // indirect
-	cosmossdk.io/x/tx v0.14.0-rc.1
+	cosmossdk.io/x/tx v0.14.0-rc.2
 	cosmossdk.io/x/upgrade v0.2.0-rc.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.2
+	github.com/cosmos/cosmos-sdk v0.53.0-rc.3
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.9.1
@@ -44,7 +44,7 @@ require (
 	cloud.google.com/go/storage v1.49.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e // indirect
 	cosmossdk.io/collections v1.2.0 // indirect
-	cosmossdk.io/schema v1.0.0 // indirect
+	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/x/circuit v0.2.0-rc.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -92,7 +92,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.8.0 // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect

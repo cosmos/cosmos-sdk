@@ -17,12 +17,8 @@
   - store/**/*
 "C:collections":
   - collections/**/*
-"C:core/testing":
-  - core/testing/**/*
 "C:log":
   - log/*
-"C:schema":
-  - schema/**/*
 "C:x/auth":
   - x/auth/**/*
 "C:x/authz":
@@ -61,8 +57,6 @@
   - x/upgrade/**/*
 "C:x/epochs":
   - x/epochs/**/*
-"C:x/validate":
-  - x/validate/**/*
 "Type: ADR":
   - docs/architecture/**/*
 "Type: Build":

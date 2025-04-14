@@ -10,6 +10,21 @@ sidebar_position: 1
 
 This module is `supplemental`; it is not required to run a Cosmos SDK chain. `x/protocolpool` enhances the community pool functionality provided by `x/distribution` and enables custom modules to further extend the community pool.
 
+## Usage Limitations
+
+The following `x/distribution` handlers will now return an error when the `protocolpool` module is used with `x/distribution`:
+
+**QueryService**
+
+- `CommunityPool`
+
+**MsgService**
+
+- `CommunityPoolSpend`
+- `FundCommunityPool`
+
+If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
+
 ## State Transitions
 
 ### FundCommunityPool

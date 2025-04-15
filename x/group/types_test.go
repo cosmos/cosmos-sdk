@@ -11,7 +11,10 @@ import (
 
 func TestThresholdDecisionPolicyValidate(t *testing.T) {
 	g := group.GroupInfo{
-		TotalWeight: "10",
+	    Id:          1,
+	    Admin:       "cosmos1qql8lcz4qxzqsj9dp6gkax3v7v7ecgwrvy0quk",
+	    TotalWeight: "10",
+	    Version:     1,
 	}
 	config := group.DefaultConfig()
 	testCases := []struct {

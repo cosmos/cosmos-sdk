@@ -293,7 +293,7 @@ func (s *StoreTestSuite) TestQuery() {
 	require.Nil(res.ProofOps) // No proof requested
 
 	// Query non-existent key at height 1
-	req.Path = "/store1/key"
+	req.Path = queryPath
 	req.Data = []byte("nonexistent")
 	res, err = s.store.Query(&req)
 	require.NoError(err)
@@ -303,7 +303,7 @@ func (s *StoreTestSuite) TestQuery() {
 	require.Nil(res.Value) // Value should be nil for non-existent key
 
 	// Query key added in v2 at height 1 (should not exist)
-	req.Path = "/store1/key"
+	req.Path = queryPath
 	req.Data = []byte("querykey2")
 	res, err = s.store.Query(&req)
 	require.NoError(err)
@@ -456,5 +456,4 @@ func (s *StoreTestSuite) TestErrorConditions() {
 	err = s.store.LoadVersionAndUpgrade(int64(1)+int64(uint32(0xFFFFFFFF)), nil)
 	require.Error(err)
 	require.Contains(err.Error(), "version overflows uint32")
-
 }

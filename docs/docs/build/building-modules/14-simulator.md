@@ -7,6 +7,7 @@ sidebar_position: 1
 :::note Pre-requisite Readings
 
 * [Cosmos Blockchain Simulator](../../learn/advanced/12-simulation.md)
+
 :::
 
 ## Synopsis
@@ -24,6 +25,8 @@ Simulations are useful for testing edge cases in module implementations.
   * [Using Simsx](#using-simsx)
 * [App Simulator manager](#app-simulator-manager)
 * [Running Simulations](#running-simulations)
+
+
 
 ## Simulation Package
 
@@ -66,16 +69,16 @@ If the module does **not** have message handlers or governance proposal handlers
 ## Store decoders
 
 Registering the store decoders is required for the `AppImportExport` simulation. This allows
-for the key-value pairs from the stores to be decoded to their corresponding types. 
+for the key-value pairs from the stores to be decoded to their corresponding types.
 In particular, it matches the key to a concrete type and then unmarshalls the value from the `KVPair` to the type provided.
- 
+
 Modules using [collections](https://github.com/cosmos/cosmos-sdk/blob/main/collections/README.md) can use the `NewStoreDecoderFuncFromCollectionsSchema` function that builds the decoder for you:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/module.go#L181-L184
 ```
 
-Modules not using collections must manually build the store decoder. 
+Modules not using collections must manually build the store decoder.
 See the implementation [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/simulation/decoder.go) from the distribution module for an example.
 
 ## Randomized genesis
@@ -93,7 +96,7 @@ Once the module's genesis parameters are generated randomly (or with the key and
 values defined in a `params` file), they are marshaled to JSON format and added
 to the app genesis JSON for the simulation.
 
-### Random weighted operations
+## Random weighted operations
 
 Operations are one of the crucial parts of the Cosmos SDK simulation. They are the transactions
 (`Msg`) that are simulated with random field values. The sender of the operation
@@ -102,7 +105,7 @@ is also assigned randomly.
 Operations on the simulation are simulated using the full [transaction cycle](../../learn/advanced/01-transactions.md) of a
 `ABCI` application that exposes the `BaseApp`.
 
-#### Using Simsx
+### Using Simsx
 
 Simsx introduces the ability to define a `MsgFactory` for each of a module's messages.
 
@@ -125,8 +128,8 @@ is required for the simulation test files in the next step.
 
 ```go
 type CoolApp struct {
-  ...
-  sm *module.SimulationManager
+...
+sm *module.SimulationManager
 }
 ```
 
@@ -144,7 +147,7 @@ Finally, the application should expose the `SimulationManager` via the following
 ```go
 // SimulationManager implements the SimulationApp interface
 func (app *SimApp) SimulationManager() *module.SimulationManager {
-	return app.sm
+return app.sm
 }
 ```
 

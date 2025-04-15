@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/store"
 	"cosmossdk.io/store/listenkv"
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/memiavl/cachemulti"
@@ -28,6 +29,7 @@ const CommitInfoFileName = "commit_infos"
 var (
 	_ types.CommitMultiStore = (*Store)(nil)
 	_ types.Queryable        = (*Store)(nil)
+	_ store.Store            = (*Store)(nil)
 )
 
 type Store struct {
@@ -284,7 +286,11 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, _ dbm
 
 // Implements interface CommitMultiStore
 func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
-	return rs.stores[key]
+	cs := rs.stores[key]
+	if cs == nil {
+		panic(fmt.Sprintf("store with key %v not found", key))
+	}
+	return cs
 }
 
 // Implements interface CommitMultiStore
@@ -619,4 +625,9 @@ func convertCommitInfo(commitInfo *memiavl.CommitInfo) *types.CommitInfo {
 		Version:    commitInfo.Version,
 		StoreInfos: storeInfos,
 	}
+}
+
+// StoreKeysByName returns mapping storeNames -> StoreKeys
+func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
+	return rs.keysByName
 }

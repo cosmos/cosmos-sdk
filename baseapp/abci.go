@@ -201,8 +201,8 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 }
 
 // ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) ListSnapshots(req *abci.RequestListSnapshots) (*abci.ResponseListSnapshots, error) {
-	resp := &abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}
+func (app *BaseApp) ListSnapshots(req *abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error) {
+	resp := &abci.ListSnapshotsResponse{Snapshots: []*abci.Snapshot{}}
 	if app.snapshotManager == nil {
 		return resp, nil
 	}
@@ -227,9 +227,9 @@ func (app *BaseApp) ListSnapshots(req *abci.RequestListSnapshots) (*abci.Respons
 }
 
 // LoadSnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) LoadSnapshotChunk(req *abci.RequestLoadSnapshotChunk) (*abci.ResponseLoadSnapshotChunk, error) {
+func (app *BaseApp) LoadSnapshotChunk(req *abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error) {
 	if app.snapshotManager == nil {
-		return &abci.ResponseLoadSnapshotChunk{}, nil
+		return &abci.LoadSnapshotChunkResponse{}, nil
 	}
 
 	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
@@ -244,34 +244,34 @@ func (app *BaseApp) LoadSnapshotChunk(req *abci.RequestLoadSnapshotChunk) (*abci
 		return nil, err
 	}
 
-	return &abci.ResponseLoadSnapshotChunk{Chunk: chunk}, nil
+	return &abci.LoadSnapshotChunkResponse{Chunk: chunk}, nil
 }
 
 // OfferSnapshot implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) OfferSnapshot(req *abci.RequestOfferSnapshot) (*abci.ResponseOfferSnapshot, error) {
+func (app *BaseApp) OfferSnapshot(req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
 	if app.snapshotManager == nil {
 		app.logger.Error("snapshot manager not configured")
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
+		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
 	}
 
 	if req.Snapshot == nil {
 		app.logger.Error("received nil snapshot")
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
+		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 	}
 
 	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
 	if err != nil {
 		app.logger.Error("failed to decode snapshot metadata", "err", err)
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
+		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 	}
 
 	err = app.snapshotManager.Restore(snapshot)
 	switch {
 	case err == nil:
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, nil
+		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ACCEPT}, nil
 
 	case errors.Is(err, snapshottypes.ErrUnknownFormat):
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}, nil
+		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT_FORMAT}, nil
 
 	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
 		app.logger.Error(
@@ -280,7 +280,7 @@ func (app *BaseApp) OfferSnapshot(req *abci.RequestOfferSnapshot) (*abci.Respons
 			"format", req.Snapshot.Format,
 			"err", err,
 		)
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}, nil
+		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 
 	default:
 		// CometBFT errors are defined here: https://github.com/cometbft/cometbft/blob/main/statesync/syncer.go
@@ -296,21 +296,21 @@ func (app *BaseApp) OfferSnapshot(req *abci.RequestOfferSnapshot) (*abci.Respons
 
 		// We currently don't support resetting the IAVL stores and retrying a
 		// different snapshot, so we ask CometBFT to abort all snapshot restoration.
-		return &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, nil
+		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
 	}
 }
 
 // ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
-func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) {
+func (app *BaseApp) ApplySnapshotChunk(req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
 	if app.snapshotManager == nil {
 		app.logger.Error("snapshot manager not configured")
-		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
+		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
 	}
 
 	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
 	switch {
 	case err == nil:
-		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}, nil
+		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ACCEPT}, nil
 
 	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
 		app.logger.Error(
@@ -319,15 +319,15 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*ab
 			"sender", req.Sender,
 			"err", err,
 		)
-		return &abci.ResponseApplySnapshotChunk{
-			Result:        abci.ResponseApplySnapshotChunk_RETRY,
+		return &abci.ApplySnapshotChunkResponse{
+			Result:        abci.APPLY_SNAPSHOT_CHUNK_RESULT_RETRY,
 			RefetchChunks: []uint32{req.Index},
 			RejectSenders: []string{req.Sender},
 		}, nil
 
 	default:
 		app.logger.Error("failed to restore snapshot", "err", err)
-		return &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}, nil
+		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
 	}
 }
 
@@ -341,10 +341,10 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 	var mode execMode
 
 	switch req.Type {
-	case abci.CheckTxType_New:
+	case abci.CHECK_TX_TYPE_CHECK:
 		mode = execModeCheck
 
-	case abci.CheckTxType_Recheck:
+	case abci.CHECK_TX_TYPE_RECHECK:
 		mode = execModeReCheck
 
 	default:
@@ -526,14 +526,14 @@ func (app *BaseApp) ProcessProposal(req *abci.ProcessProposalRequest) (resp *abc
 				"hash", fmt.Sprintf("%X", req.Hash),
 				"panic", err,
 			)
-			resp = &abci.ProcessProposalResponse{Status: abci.ResponseProcessProposal_REJECT}
+			resp = &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_REJECT}
 		}
 	}()
 
 	resp, err = app.processProposal(app.processProposalState.Context(), req)
 	if err != nil {
 		app.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
-		return &abci.ProcessProposalResponse{Status: abci.ResponseProcessProposal_REJECT}, nil
+		return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_REJECT}, nil
 	}
 
 	// Only execute optimistic execution if the proposal is accepted, OE is
@@ -543,7 +543,7 @@ func (app *BaseApp) ProcessProposal(req *abci.ProcessProposalRequest) (resp *abc
 	// After the first block has been processed, the next blocks will get executed
 	// optimistically, so that when the ABCI client calls `FinalizeBlock` the app
 	// can have a response ready.
-	if resp.Status == abci.ResponseProcessProposal_ACCEPT &&
+	if resp.Status == abci.PROCESS_PROPOSAL_STATUS_ACCEPT &&
 		app.optimisticExec.Enabled() &&
 		req.Height > app.initialHeight {
 		app.optimisticExec.Execute(req)
@@ -634,7 +634,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 // logic in verifying a vote extension from another validator during the pre-commit
 // phase. The response MUST be deterministic. An error is returned if vote
 // extensions are not enabled or if verifyVoteExt fails or panics.
-func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
+func (app *BaseApp) VerifyVoteExtension(req *abci.VerifyVoteExtensionRequest) (resp *abci.VerifyVoteExtensionResponse, err error) {
 	if app.verifyVoteExt == nil {
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
@@ -692,7 +692,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	resp, err = app.verifyVoteExt(ctx, req)
 	if err != nil {
 		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 	}
 
 	return resp, err
@@ -1064,7 +1064,7 @@ func handleQueryStore(app *BaseApp, path []string, req abci.QueryRequest) *abci.
 			), app.trace)
 	}
 
-	sdkReq := storetypes.QueryRequest(req)
+	sdkReq := storetypes.RequestQuery(req)
 	resp, err := queryable.Query(&sdkReq)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)

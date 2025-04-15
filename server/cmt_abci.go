@@ -48,7 +48,7 @@ func (w cometABCIWrapper) ExtendVote(ctx context.Context, req *abci.ExtendVoteRe
 	return w.app.ExtendVote(ctx, req)
 }
 
-func (w cometABCIWrapper) VerifyVoteExtension(_ context.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+func (w cometABCIWrapper) VerifyVoteExtension(_ context.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 	return w.app.VerifyVoteExtension(req)
 }
 
@@ -56,18 +56,18 @@ func (w cometABCIWrapper) Commit(_ context.Context, _ *abci.CommitRequest) (*abc
 	return w.app.Commit()
 }
 
-func (w cometABCIWrapper) ListSnapshots(_ context.Context, req *abci.RequestListSnapshots) (*abci.ResponseListSnapshots, error) {
+func (w cometABCIWrapper) ListSnapshots(_ context.Context, req *abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error) {
 	return w.app.ListSnapshots(req)
 }
 
-func (w cometABCIWrapper) OfferSnapshot(_ context.Context, req *abci.RequestOfferSnapshot) (*abci.ResponseOfferSnapshot, error) {
+func (w cometABCIWrapper) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
 	return w.app.OfferSnapshot(req)
 }
 
-func (w cometABCIWrapper) LoadSnapshotChunk(_ context.Context, req *abci.RequestLoadSnapshotChunk) (*abci.ResponseLoadSnapshotChunk, error) {
+func (w cometABCIWrapper) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error) {
 	return w.app.LoadSnapshotChunk(req)
 }
 
-func (w cometABCIWrapper) ApplySnapshotChunk(_ context.Context, req *abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) {
+func (w cometABCIWrapper) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
 	return w.app.ApplySnapshotChunk(req)
 }

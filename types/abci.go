@@ -33,7 +33,7 @@ type ExtendVoteHandler func(Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteR
 
 // VerifyVoteExtensionHandler defines a function type alias for verifying a
 // pre-commit vote extension.
-type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+type VerifyVoteExtensionHandler func(Context, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
 
 // PreBlocker runs code before the `BeginBlocker` and defines a function type alias for executing logic right
 // before FinalizeBlock is called (but after its context has been set up). It is

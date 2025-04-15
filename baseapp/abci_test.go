@@ -304,14 +304,14 @@ func TestABCI_ExtendVote(t *testing.T) {
 		return &abci.ExtendVoteResponse{VoteExtension: []byte(voteExt)}, nil
 	})
 
-	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		// do some kind of verification here
 		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
 
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	})
 
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
@@ -349,28 +349,28 @@ func TestABCI_ExtendVote(t *testing.T) {
 	require.Len(t, res.VoteExtension, 0)
 
 	// Verify Vote Extensions
-	_, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 123, VoteExtension: []byte("1234567")})
+	_, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 123, VoteExtension: []byte("1234567")})
 	require.ErrorContains(t, err, "vote extensions are not enabled")
 
 	// First vote on the first enabled height
-	vres, err := app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
+	vres, err := app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
 
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
 
 	// Reject because it's just some random bytes
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 
 	// Reject because the verification failed (no error)
-	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		return nil, errors.New("some error")
 	})
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 }
@@ -382,14 +382,14 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		// do some kind of verification here
 		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
 
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	})
 
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
@@ -406,28 +406,28 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify Vote Extensions
-	_, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 123, VoteExtension: []byte("1234567")})
+	_, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 123, VoteExtension: []byte("1234567")})
 	require.ErrorContains(t, err, "vote extensions are not enabled")
 
 	// First vote on the first enabled height
-	vres, err := app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
+	vres, err := app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
 
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
 
 	// Reject because it's just some random bytes
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 
 	// Reject because the verification failed (no error)
-	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		return nil, errors.New("some error")
 	})
-	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
+	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 }
@@ -2105,15 +2105,15 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			return &abci.ExtendVoteResponse{VoteExtension: ve}, nil
 		})
 
-		app.SetVerifyVoteExtensionHandler(func(_ sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		app.SetVerifyVoteExtensionHandler(func(_ sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 			vePrice := binary.BigEndian.Uint64(req.VoteExtension)
 			// here we would do some price validation, must not be 0 and not too high
 			if vePrice > 11000000 || vePrice == 0 {
 				// usually application should always return ACCEPT unless they really want to discard the entire vote
-				return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+				return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 			}
 
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 		})
 
 		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
@@ -2210,7 +2210,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	// verify all votes, only 10 should be accepted
 	successful := 0
 	for _, v := range allVEs {
-		res, err := suite.baseApp.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{
+		res, err := suite.baseApp.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{
 			Height:        1,
 			VoteExtension: v,
 		})

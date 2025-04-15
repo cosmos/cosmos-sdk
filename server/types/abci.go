@@ -25,13 +25,13 @@ type ABCI interface {
 	// Create application specific vote extension
 	ExtendVote(context.Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
 	// Verify application's vote extension data
-	VerifyVoteExtension(*abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+	VerifyVoteExtension(*abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
 	// Commit the state and return the application Merkle root hash
 	Commit() (*abci.CommitResponse, error)
 
 	// State Sync Connection
-	ListSnapshots(*abci.RequestListSnapshots) (*abci.ResponseListSnapshots, error)                // List available snapshots
-	OfferSnapshot(*abci.RequestOfferSnapshot) (*abci.ResponseOfferSnapshot, error)                // Offer a snapshot to the application
-	LoadSnapshotChunk(*abci.RequestLoadSnapshotChunk) (*abci.ResponseLoadSnapshotChunk, error)    // Load a snapshot chunk
-	ApplySnapshotChunk(*abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) // Apply a shapshot chunk
+	ListSnapshots(*abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error)                // List available snapshots
+	OfferSnapshot(*abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error)                // Offer a snapshot to the application
+	LoadSnapshotChunk(*abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error)    // Load a snapshot chunk
+	ApplySnapshotChunk(*abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) // Apply a shapshot chunk
 }

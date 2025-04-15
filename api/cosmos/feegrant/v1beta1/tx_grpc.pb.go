@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Msg_GrantAllowance_FullMethodName  = "/cosmos.feegrant.v1beta1.Msg/GrantAllowance"
 	Msg_RevokeAllowance_FullMethodName = "/cosmos.feegrant.v1beta1.Msg/RevokeAllowance"
+	Msg_PruneAllowances_FullMethodName = "/cosmos.feegrant.v1beta1.Msg/PruneAllowances"
 )
 
 // MsgClient is the client API for Msg service.
@@ -35,6 +36,10 @@ type MsgClient interface {
 	// RevokeAllowance revokes any fee allowance of granter's account that
 	// has been granted to the grantee.
 	RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance, opts ...grpc.CallOption) (*MsgRevokeAllowanceResponse, error)
+	// PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
+	//
+	// Since cosmos-sdk 0.50
+	PruneAllowances(ctx context.Context, in *MsgPruneAllowances, opts ...grpc.CallOption) (*MsgPruneAllowancesResponse, error)
 }
 
 type msgClient struct {
@@ -63,6 +68,15 @@ func (c *msgClient) RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance,
 	return out, nil
 }
 
+func (c *msgClient) PruneAllowances(ctx context.Context, in *MsgPruneAllowances, opts ...grpc.CallOption) (*MsgPruneAllowancesResponse, error) {
+	out := new(MsgPruneAllowancesResponse)
+	err := c.cc.Invoke(ctx, Msg_PruneAllowances_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -73,6 +87,10 @@ type MsgServer interface {
 	// RevokeAllowance revokes any fee allowance of granter's account that
 	// has been granted to the grantee.
 	RevokeAllowance(context.Context, *MsgRevokeAllowance) (*MsgRevokeAllowanceResponse, error)
+	// PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
+	//
+	// Since cosmos-sdk 0.50
+	PruneAllowances(context.Context, *MsgPruneAllowances) (*MsgPruneAllowancesResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -85,6 +103,9 @@ func (UnimplementedMsgServer) GrantAllowance(context.Context, *MsgGrantAllowance
 }
 func (UnimplementedMsgServer) RevokeAllowance(context.Context, *MsgRevokeAllowance) (*MsgRevokeAllowanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RevokeAllowance not implemented")
+}
+func (UnimplementedMsgServer) PruneAllowances(context.Context, *MsgPruneAllowances) (*MsgPruneAllowancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PruneAllowances not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -135,6 +156,24 @@ func _Msg_RevokeAllowance_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_PruneAllowances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgPruneAllowances)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).PruneAllowances(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_PruneAllowances_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).PruneAllowances(ctx, req.(*MsgPruneAllowances))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -149,6 +188,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RevokeAllowance",
 			Handler:    _Msg_RevokeAllowance_Handler,
+		},
+		{
+			MethodName: "PruneAllowances",
+			Handler:    _Msg_PruneAllowances_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

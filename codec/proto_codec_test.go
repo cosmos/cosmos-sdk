@@ -1,8 +1,6 @@
 package codec_test
 
 import (
-	"errors"
-	"fmt"
 	"math"
 	"reflect"
 	"testing"
@@ -12,10 +10,18 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/status"
+	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -41,15 +47,6 @@ func TestProtoMarsharlInterface(t *testing.T) {
 func TestProtoCodec(t *testing.T) {
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
 	testMarshaling(t, cdc)
-}
-
-type lyingProtoMarshaler struct {
-	codec.ProtoMarshaler
-	falseSize int
-}
-
-func (lpm *lyingProtoMarshaler) Size() int {
-	return lpm.falseSize
 }
 
 func TestEnsureRegistered(t *testing.T) {
@@ -103,7 +100,7 @@ func TestProtoCodecMarshal(t *testing.T) {
 	err = cdc.UnmarshalInterface(bz, &animal)
 	require.NoError(t, err)
 
-	bz, err = cdc.MarshalInterface(bird)
+	_, err = cdc.MarshalInterface(bird)
 	require.ErrorContains(t, err, "does not have a registered interface")
 
 	bz, err = cartoonCdc.MarshalInterface(bird)
@@ -136,50 +133,6 @@ func grpcServerEncode(c encoding.Codec, msg interface{}) ([]byte, error) {
 		return nil, status.Errorf(codes.ResourceExhausted, "grpc: message too large (%d bytes)", len(b))
 	}
 	return b, nil
-}
-
-func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {
-	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
-
-	truth := &testdata.Cat{Lives: 9, Moniker: "glowing"}
-	realSize := len(cdc.MustMarshal(truth))
-
-	falseSizes := []int{
-		100,
-		5,
-	}
-
-	for _, falseSize := range falseSizes {
-		falseSize := falseSize
-
-		t.Run(fmt.Sprintf("ByMarshaling falseSize=%d", falseSize), func(t *testing.T) {
-			lpm := &lyingProtoMarshaler{
-				ProtoMarshaler: &testdata.Cat{Lives: 9, Moniker: "glowing"},
-				falseSize:      falseSize,
-			}
-			var serialized []byte
-			require.NotPanics(t, func() { serialized = cdc.MustMarshalLengthPrefixed(lpm) })
-
-			recv := new(testdata.Cat)
-			gotErr := cdc.UnmarshalLengthPrefixed(serialized, recv)
-			var wantErr error
-			if falseSize > realSize {
-				wantErr = fmt.Errorf("not enough bytes to read; want: %d, got: %d", falseSize, realSize)
-			} else {
-				wantErr = fmt.Errorf("too many bytes to read; want: %d, got: %d", falseSize, realSize)
-			}
-			require.Equal(t, gotErr, wantErr)
-		})
-	}
-
-	t.Run("Crafted bad uvarint size", func(t *testing.T) {
-		crafted := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f}
-		recv := new(testdata.Cat)
-		gotErr := cdc.UnmarshalLengthPrefixed(crafted, recv)
-		require.Equal(t, gotErr, errors.New("invalid number of bytes read from length-prefixed encoding: -10"))
-
-		require.Panics(t, func() { cdc.MustUnmarshalLengthPrefixed(crafted, recv) })
-	})
 }
 
 func mustAny(msg proto.Message) *types.Any {
@@ -222,4 +175,53 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 		}
 		b.SetBytes(int64(len(blob)))
 	}
+}
+
+func TestGetSigners(t *testing.T) {
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		SigningOptions: signing.Options{
+			AddressCodec:          testAddressCodec{},
+			ValidatorAddressCodec: testAddressCodec{},
+		},
+		ProtoFiles: protoregistry.GlobalFiles,
+	})
+	require.NoError(t, err)
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	testAddr := sdk.AccAddress("test")
+	testAddrStr := testAddr.String()
+	testAddr2 := sdk.AccAddress("test2")
+	testAddrStr2 := testAddr2.String()
+
+	msgSendV1 := banktypes.NewMsgSend(testAddr, testAddr2, sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(1))))
+	msgSendV2 := &bankv1beta1.MsgSend{
+		FromAddress: testAddrStr,
+		ToAddress:   testAddrStr2,
+		Amount:      []*basev1beta1.Coin{{Denom: "foo", Amount: "1"}},
+	}
+
+	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
+	require.NoError(t, err)
+	require.Equal(t, [][]byte{testAddr}, signers)
+	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
+
+	signers, err = cdc.GetMsgV2Signers(msgSendV2)
+	require.NoError(t, err)
+	require.Equal(t, [][]byte{testAddr}, signers)
+
+	msgSendAny, err := types.NewAnyWithValue(msgSendV1)
+	require.NoError(t, err)
+	signers, msgSendV2Copy, err = cdc.GetMsgAnySigners(msgSendAny)
+	require.NoError(t, err)
+	require.Equal(t, [][]byte{testAddr}, signers)
+	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
+}
+
+type testAddressCodec struct{}
+
+func (t testAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return sdk.AccAddressFromBech32(text)
+}
+
+func (t testAddressCodec) BytesToString(bz []byte) (string, error) {
+	return sdk.AccAddress(bz).String(), nil
 }

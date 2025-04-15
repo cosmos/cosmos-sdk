@@ -4,6 +4,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -11,7 +15,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/stretchr/testify/require"
 )
 
 func TestValidateBasic(t *testing.T) {
@@ -30,7 +33,7 @@ func TestValidateBasic(t *testing.T) {
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
-	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	invalidTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	vbd := ante.NewValidateBasicDecorator()
@@ -40,7 +43,7 @@ func TestValidateBasic(t *testing.T) {
 	require.ErrorIs(t, err, sdkerrors.ErrNoSignatures, "Did not error on invalid tx")
 
 	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	validTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	validTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	_, err = antehandler(suite.ctx, validTx, false)
@@ -72,7 +75,7 @@ func TestValidateMemo(t *testing.T) {
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
-	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	invalidTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// require that long memos get rejected
@@ -83,7 +86,7 @@ func TestValidateMemo(t *testing.T) {
 	require.ErrorIs(t, err, sdkerrors.ErrMemoTooLarge, "Did not error on tx with high memo")
 
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-	validTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	validTx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// require small memos pass ValidateMemo Decorator
@@ -122,14 +125,14 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
 			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
 			require.Nil(t, err, "Cannot marshal tx: %v", err)
 
 			params := suite.accountKeeper.GetParams(suite.ctx)
-			expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
+			expectedGas := storetypes.Gas(len(txBytes)) * params.TxSizeCostPerByte
 
 			// Set suite.ctx with TxBytes manually
 			suite.ctx = suite.ctx.WithTxBytes(txBytes)
@@ -214,7 +217,7 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 			suite.txBuilder.SetTimeoutHeight(tc.timeout)
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
 			ctx := suite.ctx.WithBlockHeight(tc.height)

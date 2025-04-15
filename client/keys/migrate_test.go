@@ -11,13 +11,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 type setter interface {
@@ -36,7 +36,7 @@ type MigrateTestSuite struct {
 
 func (s *MigrateTestSuite) SetupSuite() {
 	s.dir = s.T().TempDir()
-	s.cdc = clienttestutil.MakeTestCodec(s.T())
+	s.cdc = moduletestutil.MakeTestEncodingConfig().Codec
 	s.appName = "cosmos"
 	s.priv = cryptotypes.PrivKey(secp256k1.GenPrivKey())
 	s.pub = s.priv.PubKey()
@@ -61,7 +61,7 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 
 	// run test simd keys list - to see that the migrated key is there
 	cmd := ListKeysCmd()
-	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kb, err := keyring.New(s.appName, keyring.BackendTest, s.dir, mockIn, s.cdc)
@@ -75,7 +75,7 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=%s", flags.FlagHome, s.dir),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, s.dir),
 		fmt.Sprintf("--%s=false", flagListNames),
 	})
 

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -116,7 +118,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 					fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
 					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10))).String()),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 				})
 				s.Require().NoError(err)
@@ -197,7 +199,7 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			8,
+			6,
 		},
 	}
 	for _, tc := range testCases {
@@ -211,7 +213,6 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 				var authorizations authz.QueryGranterGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
-				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 		})
@@ -263,7 +264,6 @@ func (s *E2ETestSuite) TestQueryGranteeGrantsGRPC() {
 				var authorizations authz.QueryGranteeGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
-				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 		})

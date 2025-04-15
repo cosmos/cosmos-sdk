@@ -4,8 +4,8 @@
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
-// const lastVersion = "v0.47";
 const lastVersion = "current";
+// const lastVersion = "v0.50";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -46,10 +46,9 @@ const config = {
               path: "main",
               // banner: "unreleased",
             },
-            // "v0.47": {
-            //   label: "v0.47",
-            //   path: "v0.47",
-            //   banner: "none",
+            // "v0.50": {
+            //   path: "v0.50",
+            //   label: "v0.50",
             // },
           },
         },
@@ -216,6 +215,24 @@ const config = {
       {
         fromExtensions: ["html"],
         toExtensions: ["html"],
+        createRedirects(existingPath) {
+          return [
+            existingPath.replace('/core', '/learn/advanced'),
+            existingPath.replace('/basics', '/learn/beginner'),
+            existingPath.replace('/intro', '/learn/intro'),
+            existingPath.replace('/architecture', '/build/architecture/'),
+            existingPath.replace('/building-apps', '/build/building-apps'),
+            existingPath.replace('/building-modules', '/build/building-modules'),
+            existingPath.replace('/tooling', '/build/tooling'),
+            existingPath.replace('/migrations', '/build/migrations'),
+            existingPath.replace('/modules', '/build/modules'),
+            existingPath.replace('/rfc', '/build/rfc'),
+            existingPath.replace('/spec', '/build/spec'),
+            existingPath.replace('/tooling', '/build/tooling'),
+            existingPath.replace('/run-node', '/user/run-node'),
+            existingPath.replace('/validate', '/user/validate')
+          ];
+        },
         redirects: [
           {
             from: ["/", "/master", "/v0.43", "/v0.44"],
@@ -230,11 +247,11 @@ const config = {
               "/main/modules/auth/06_params",
               "/main/modules/auth/07_client",
             ],
-            to: "/main/modules/auth",
+            to: "/main/build/modules/auth",
           },
           {
             from: "/main/modules/auth/05_vesting",
-            to: "/main/modules/auth/vesting",
+            to: "/main/build/modules/auth/vesting",
           },
           {
             from: [
@@ -244,7 +261,7 @@ const config = {
               "/main/modules/authz/04_events",
               "/main/modules/authz/05_client",
             ],
-            to: "/main/modules/authz",
+            to: "/main/build/modules/authz",
           },
           {
             from: [
@@ -254,14 +271,7 @@ const config = {
               "/main/modules/bank/05_params",
               "/main/modules/bank/06_client",
             ],
-            to: "/main/modules/bank",
-          },
-          {
-            from: [
-              "/main/modules/capability/01_concepts",
-              "/main/modules/capability/02_state",
-            ],
-            to: "/main/modules/capability",
+            to: "/main/build/modules/bank",
           },
           {
             from: [
@@ -271,7 +281,7 @@ const config = {
               "/main/modules/crisis/04_params",
               "/main/modules/crisis/05_client",
             ],
-            to: "/main/modules/crisis",
+            to: "/main/build/modules/crisis",
           },
           {
             from: [
@@ -284,7 +294,7 @@ const config = {
               "/main/modules/distribution/07_params",
               "/main/modules/distribution/08_client",
             ],
-            to: "/main/modules/distribution",
+            to: "/main/build/modules/distribution",
           },
           {
             from: [
@@ -296,7 +306,7 @@ const config = {
               "/main/modules/evidence/06_begin_block",
               "/main/modules/evidence/07_client",
             ],
-            to: "/main/modules/evidence",
+            to: "/main/build/modules/evidence",
           },
           {
             from: [
@@ -306,7 +316,7 @@ const config = {
               "/main/modules/feegrant/04_events",
               "/main/modules/feegrant/05_client",
             ],
-            to: "/main/modules/feegrant",
+            to: "/main/build/modules/feegrant",
           },
           {
             from: [
@@ -319,7 +329,7 @@ const config = {
               "/main/modules/gov/07_client",
               "/main/modules/gov/08_metadata",
             ],
-            to: "/main/modules/gov",
+            to: "/main/build/modules/gov",
           },
           {
             from: [
@@ -330,7 +340,7 @@ const config = {
               "/main/modules/group/05_client",
               "/main/modules/group/06_metadata",
             ],
-            to: "/main/modules/group/",
+            to: "/main/build/modules/group/",
           },
           {
             from: [
@@ -341,7 +351,7 @@ const config = {
               "/main/modules/mint/05_events",
               "/main/modules/mint/06_client",
             ],
-            to: "/main/modules/mint/",
+            to: "/main/build/modules/mint/",
           },
           {
             from: [
@@ -350,14 +360,14 @@ const config = {
               "/main/modules/nft/03_messages",
               "/main/modules/nft/04_events",
             ],
-            to: "/main/modules/nft/",
+            to: "/main/build/modules/nft/",
           },
           {
             from: [
               "/main/modules/params/01_keeper",
               "/main/modules/params/02_subspace",
             ],
-            to: "/main/modules/params/",
+            to: "/main/build/modules/params/",
           },
           {
             from: [
@@ -371,7 +381,7 @@ const config = {
               "/main/modules/slashing/08_params",
               "/main/modules/slashing/09_client",
             ],
-            to: "/main/modules/slashing/",
+            to: "/main/build/modules/slashing/",
           },
           {
             from: [
@@ -385,7 +395,7 @@ const config = {
               "/main/modules/staking/08_params",
               "/main/modules/staking/09_client",
             ],
-            to: "/main/modules/staking/",
+            to: "/main/build/modules/staking/",
           },
           {
             from: [
@@ -394,15 +404,35 @@ const config = {
               "/main/modules/upgrade/03_events",
               "/main/modules/upgrade/04_client",
             ],
-            to: "/main/modules/upgrade/",
+            to: "/main/build/modules/upgrade/",
+          },
+          {
+            from: ["/main/modules/capability", "/main/ecosystem"],
+            to: "/main/build/modules/auth",
+          },
+          {
+            from: ["/main/spec/circuit-breaker"],
+            to: "/main/build/modules/circuit",
+          },
+          {
+            from: ["/main/spec/reserve-pool"],
+            to: "/main/build/modules/distribution",
           },
           {
             from: ["/main/run-node/cosmovisor"],
-            to: "/main/tooling/cosmovisor",
+            to: "/main/build/tooling/cosmovisor",
           },
           {
             from: ["/main/migrations/pre-upgrade"],
-            to: "/main/building-apps/app-upgrade",
+            to: "/main/build/building-apps/app-upgrade",
+          },
+          {
+            from: ["/main/tooling/depinject"],
+            to: "/main/build/packages/depinject",
+          },
+          {
+            from: ["/main/building-modules/autocli"],
+            to: "/main/learn/advanced/autocli",
           },
         ],
       },

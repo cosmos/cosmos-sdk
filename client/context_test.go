@@ -32,10 +32,10 @@ func TestContext_PrintProto(t *testing.T) {
 		Size_: "big",
 		Name:  "Spot",
 	}
-	any, err := types.NewAnyWithValue(animal)
+	anyAnimal, err := types.NewAnyWithValue(animal)
 	require.NoError(t, err)
 	hasAnimal := &testdata.HasAnimal{
-		Animal: any,
+		Animal: anyAnimal,
 		X:      10,
 	}
 
@@ -46,7 +46,7 @@ func TestContext_PrintProto(t *testing.T) {
 	// json
 	buf := &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "json"
+	ctx.OutputFormat = flags.OutputFormatJSON
 	err = ctx.PrintProto(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
@@ -56,7 +56,7 @@ func TestContext_PrintProto(t *testing.T) {
 	// yaml
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "text"
+	ctx.OutputFormat = flags.OutputFormatText
 	err = ctx.PrintProto(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
@@ -75,10 +75,10 @@ func TestContext_PrintObjectLegacy(t *testing.T) {
 		Size_: "big",
 		Name:  "Spot",
 	}
-	any, err := types.NewAnyWithValue(animal)
+	anyAnimal, err := types.NewAnyWithValue(animal)
 	require.NoError(t, err)
 	hasAnimal := &testdata.HasAnimal{
-		Animal: any,
+		Animal: anyAnimal,
 		X:      10,
 	}
 
@@ -89,7 +89,7 @@ func TestContext_PrintObjectLegacy(t *testing.T) {
 	// json
 	buf := &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "json"
+	ctx.OutputFormat = flags.OutputFormatJSON
 	err = ctx.PrintObjectLegacy(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
@@ -99,7 +99,7 @@ func TestContext_PrintObjectLegacy(t *testing.T) {
 	// yaml
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "text"
+	ctx.OutputFormat = flags.OutputFormatText
 	err = ctx.PrintObjectLegacy(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
@@ -121,7 +121,7 @@ func TestContext_PrintRaw(t *testing.T) {
 	// json
 	buf := &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "json"
+	ctx.OutputFormat = flags.OutputFormatJSON
 	err := ctx.PrintRaw(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
@@ -131,7 +131,7 @@ func TestContext_PrintRaw(t *testing.T) {
 	// yaml
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "text"
+	ctx.OutputFormat = flags.OutputFormatText
 	err = ctx.PrintRaw(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,

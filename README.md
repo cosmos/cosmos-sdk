@@ -14,8 +14,11 @@
   <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
-  <a href="https://codecov.io/gh/cosmos/cosmos-sdk">
-    <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/main/graph/badge.svg" />
+  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
+    <img alt="Code Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=coverage" />
+  </a>
+  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
+    <img alt="SonarCloud Analysis" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=alert_status">
   </a>
 </div>
 <div align="center">
@@ -29,11 +32,11 @@
     <img alt="Lint Satus" src="https://github.com/cosmos/cosmos-sdk/workflows/Lint/badge.svg" />
 </div>
 
-The Cosmos SDK is a framework for building blockchain applications. [Tendermint Core (BFT Consensus)](https://github.com/tendermint/tendermint) and the Cosmos SDK are written in the Go programming language. Cosmos SDK is used to build [Gaia](https://github.com/cosmos/gaia), the implementation of the Cosmos Hub.
+The Cosmos SDK is a framework for building blockchain applications. [CometBFT (BFT Consensus)](https://github.com/cometbft/cometbft) and the Cosmos SDK are written in the Go programming language. Cosmos SDK is used to build [Gaia](https://github.com/cosmos/gaia), the implementation of the Cosmos Hub.
 
 **WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some breaking changes.
 
-**Note**: Requires [Go 1.19+](https://go.dev/dl)
+**Note**: We advise to always use the latest maintained [Go](https://go.dev/dl) version for building Cosmos SDK applications.
 
 ## Quick Start
 

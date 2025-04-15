@@ -362,7 +362,7 @@ message MsgVoteResponse {}
 
 // MsgExec is the Msg/Exec request type.
 message MsgExec {
-  option (cosmos.msg.v1.signer) = "signer";
+  option (cosmos.msg.v1.signer) = "executor";
   option (amino.name)           = "cosmos-sdk/group/MsgExec";
 
   // proposal is the unique ID of the proposal.

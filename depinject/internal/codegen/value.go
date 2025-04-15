@@ -111,16 +111,16 @@ func (g *FileGen) ValueExpr(value reflect.Value) (ast.Expr, error) {
 			return ast.NewIdent("nil"), nil
 		}
 
-		if typ.Elem().Kind() == reflect.Struct {
-			v, err := g.ValueExpr(value.Elem())
-			if err != nil {
-				return nil, err
-			}
-
-			return &ast.UnaryExpr{Op: token.AND, X: v}, nil
-		} else {
+		if typ.Elem().Kind() != reflect.Struct {
 			return nil, fmt.Errorf("invalid type %s", typ)
 		}
+
+		v, err := g.ValueExpr(value.Elem())
+		if err != nil {
+			return nil, err
+		}
+
+		return &ast.UnaryExpr{Op: token.AND, X: v}, nil
 	case reflect.Invalid, reflect.Uintptr, reflect.Chan, reflect.Func, reflect.Interface, reflect.UnsafePointer:
 		return nil, fmt.Errorf("invalid type %s", typ)
 

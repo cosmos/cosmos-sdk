@@ -206,6 +206,14 @@ The feegrant module emits the following events:
 | message | granter       | {granterAddress} |
 | message | grantee       | {granteeAddress} |
 
+### Prune fee allowances
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        |  prune_feegrant  |
+| message | pruner        | {prunerAddress}  |
+
+
 ## Client
 
 ### CLI

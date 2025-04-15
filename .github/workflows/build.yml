@@ -2,6 +2,7 @@ name: Build SimApp
 #  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
@@ -21,11 +22,11 @@ jobs:
         go-arch: ["amd64", "arm", "arm64"]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: "1.19"
+          go-version: "1.21"
           check-latest: true
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -36,9 +37,24 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
+        ###################
+        #### Build App ####
+        ###################
       - name: Build
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} make build
       - name: Build Legacy
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
+        ###################
+        ## Build Tooling ##
+        ###################
+      - name: Build Cosmovisor
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make cosmovisor
+      - name: Build Confix
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make confix
+      - name: Build Hubl
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make hubl

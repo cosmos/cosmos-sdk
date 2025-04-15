@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // UniqueKeyCodec is the codec for unique indexes.
@@ -107,12 +107,12 @@ func (u UniqueKeyCodec) DecodeIndexKey(k, v []byte) (indexFields, primaryKey []p
 	return ks, pk, nil
 }
 
-func (cdc UniqueKeyCodec) extractPrimaryKey(keyValues, valueValues []protoreflect.Value) []protoreflect.Value {
-	numPkFields := len(cdc.pkFieldOrder)
+func (u UniqueKeyCodec) extractPrimaryKey(keyValues, valueValues []protoreflect.Value) []protoreflect.Value {
+	numPkFields := len(u.pkFieldOrder)
 	pkValues := make([]protoreflect.Value, numPkFields)
 
 	for i := 0; i < numPkFields; i++ {
-		fo := cdc.pkFieldOrder[i]
+		fo := u.pkFieldOrder[i]
 		if fo.inKey {
 			pkValues[i] = keyValues[fo.i]
 		} else {
@@ -160,11 +160,9 @@ func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		if !fieldOrder.inKey {
 			// goes in values because it is not present in the index key otherwise
 			values = append(values, value)
-		} else {
+		} else if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
 			// does not go in values, but we need to verify that the value in index values matches the primary key value
-			if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
-				return nil, nil, ormerrors.BadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
-			}
+			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
 		}
 	}
 

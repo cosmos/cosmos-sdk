@@ -453,12 +453,16 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		input    math.LegacyDec
 		expected math.LegacyDec
 	}{
-		{math.LegacyOneDec(), math.LegacyOneDec()},                                                     // 1.0 => 1.0
-		{math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1)},                            // 0.25 => 0.5
-		{math.LegacyNewDecWithPrec(4, 2), math.LegacyNewDecWithPrec(2, 1)},                             // 0.09 => 0.3
-		{math.LegacyNewDecFromInt(math.NewInt(9)), math.LegacyNewDecFromInt(math.NewInt(3))},           // 9 => 3
-		{math.LegacyNewDecFromInt(math.NewInt(-9)), math.LegacyNewDecFromInt(math.NewInt(-3))},         // -9 => -3
-		{math.LegacyNewDecFromInt(math.NewInt(2)), math.LegacyNewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{math.LegacyOneDec(), math.LegacyOneDec()},                                 // 1.0 => 1.0
+		{math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1)},        // 0.25 => 0.5
+		{math.LegacyNewDecWithPrec(4, 2), math.LegacyNewDecWithPrec(2, 1)},         // 0.09 => 0.3
+		{math.LegacyNewDec(9), math.LegacyNewDecFromInt(math.NewInt(3))},           // 9 => 3
+		{math.LegacyNewDec(-9), math.LegacyNewDecFromInt(math.NewInt(-3))},         // -9 => -3
+		{math.LegacyNewDec(2), math.LegacyNewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{ // 2^127 - 1 => 13043817825332782212.3495718062525083688 which rounds to 13043817825332782212.3495718062525083689
+			math.LegacyNewDec(2).Power(127).Sub(math.LegacyOneDec()),
+			math.LegacyMustNewDecFromStr("13043817825332782212.349571806252508369"),
+		},
 	}
 
 	for i, tc := range testCases {
@@ -612,10 +616,8 @@ func BenchmarkMarshalTo(b *testing.B) {
 		for _, bi := range bis {
 			if n, err := bi.in.MarshalTo(data); err != nil {
 				b.Fatal(err)
-			} else {
-				if !bytes.Equal(data[:n], bi.want) {
-					b.Fatalf("Mismatch\nGot:  % x\nWant: % x\n", data[:n], bi.want)
-				}
+			} else if !bytes.Equal(data[:n], bi.want) {
+				b.Fatalf("Mismatch\nGot:  % x\nWant: % x\n", data[:n], bi.want)
 			}
 		}
 	}
@@ -653,6 +655,20 @@ func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
 	sink = (interface{})(nil)
 }
 
+func BenchmarkLegacySqrtOnMersennePrime(b *testing.B) {
+	b1 := math.LegacyNewDec(2).Power(127).Sub(math.LegacyOneDec())
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sink, _ = b1.ApproxSqrt()
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = (interface{})(nil)
+}
+
 func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
 	b2 := math.LegacyNewDec(4371)
@@ -671,7 +687,7 @@ func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 func TestFormatDec(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
-	raw, err := os.ReadFile("../tx/textual/internal/testdata/decimals.json")
+	raw, err := os.ReadFile("./testdata/decimals.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -713,4 +729,10 @@ func TestFormatDecNonDigits(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNegativePrecisionPanic(t *testing.T) {
+	require.Panics(t, func() {
+		math.LegacyNewDecWithPrec(10, -1)
+	})
 }

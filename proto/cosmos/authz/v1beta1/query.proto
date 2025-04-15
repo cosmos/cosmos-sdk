@@ -65,7 +65,7 @@ message QueryGranterGrantsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryGranteeGrantsRequest is the request type for the Query/IssuedGrants RPC method.
+// QueryGranteeGrantsRequest is the request type for the Query/GranteeGrants RPC method.
 message QueryGranteeGrantsRequest {
   string grantee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 

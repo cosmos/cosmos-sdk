@@ -13,7 +13,7 @@ const (
 
 // ProposalContents defines the module weighted proposals' contents
 //
-//nolint:staticcheck
+//nolint:staticcheck // used for legacy testing
 func ProposalContents(paramChanges []simtypes.LegacyParamChange) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(

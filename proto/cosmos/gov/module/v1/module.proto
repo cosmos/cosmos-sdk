@@ -10,7 +10,7 @@ message Module {
     go_import: "github.com/cosmos/cosmos-sdk/x/gov"
   };
 
-  // max_metadata_len defines the maximum proposal metadata length. 
+  // max_metadata_len defines the maximum proposal metadata length.
   // Defaults to 255 if not explicitly set.
   uint64 max_metadata_len = 1;
 

@@ -7,9 +7,10 @@ import (
 	"github.com/99designs/keyring"
 	"github.com/stretchr/testify/suite"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -134,6 +135,7 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 	s.Require().NoError(s.ks.SetItem(item))
 
 	k2, err := s.ks.migrate(n1)
+	s.Require().NoError(err)
 	s.Require().Equal(k2.Name, k1.Name)
 
 	pub, err := k2.GetPubKey()
@@ -214,7 +216,7 @@ func (s *MigrationTestSuite) TestMigrateErrUnknownItemKey() {
 
 	incorrectItemKey := n1 + "1"
 	_, err := s.ks.migrate(incorrectItemKey)
-	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey(incorrectItemKey)).Error())
+	s.Require().EqualError(err, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, infoKey(incorrectItemKey)).Error())
 }
 
 func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
@@ -227,7 +229,7 @@ func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
 	s.Require().NoError(s.ks.SetItem(item))
 
 	_, err := s.ks.migrate(n1)
-	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
+	s.Require().EqualError(err, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
 }
 
 func TestMigrationTestSuite(t *testing.T) {

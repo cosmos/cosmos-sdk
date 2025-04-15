@@ -185,7 +185,7 @@ func TestDeriveHDPathRange(t *testing.T) {
 	}
 }
 
-func ExampleStringifyPathParams() {
+func ExampleStringifyPathParams() { //nolint:govet // ignore naming convention
 	path := hd.NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
 	path = hd.NewParams(44, 33, 7, true, 9)
@@ -195,7 +195,7 @@ func ExampleStringifyPathParams() {
 	// m/44'/33'/7'/1/9
 }
 
-func ExampleSomeBIP32TestVecs() {
+func ExampleSomeBIP32TestVecs() { //nolint:govet // ignore naming convention
 	seed := mnemonicToSeed("barrel original fuel morning among eternal " +
 		"filter ball stove pluck matrix mechanic")
 	master, ch := hd.ComputeMastersFromSeed(seed)
@@ -206,34 +206,34 @@ func ExampleSomeBIP32TestVecs() {
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 	// bitcoin
 	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 	// ether
 	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 	// INVALID
 	priv, err = hd.DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 	priv, err = hd.DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
+		fmt.Println(hex.EncodeToString(priv))
 	}
 
 	fmt.Println()
@@ -245,13 +245,13 @@ func ExampleSomeBIP32TestVecs() {
 			"gorilla ranch hour rival razor call lunar mention taste vacant woman sister")
 	master, ch = hd.ComputeMastersFromSeed(seed)
 	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
-	fmt.Println(hex.EncodeToString(priv[:]))
+	fmt.Println(hex.EncodeToString(priv))
 
 	seed = mnemonicToSeed("idea naive region square margin day captain habit " +
 		"gun second farm pact pulse someone armed")
 	master, ch = hd.ComputeMastersFromSeed(seed)
 	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
-	fmt.Println(hex.EncodeToString(priv[:]))
+	fmt.Println(hex.EncodeToString(priv))
 
 	fmt.Println()
 	fmt.Println("BIP 32 example")
@@ -261,7 +261,7 @@ func ExampleSomeBIP32TestVecs() {
 	seed = mnemonicToSeed("monitor flock loyal sick object grunt duty ride develop assault harsh history")
 	master, ch = hd.ComputeMastersFromSeed(seed)
 	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "0/7")
-	fmt.Println(hex.EncodeToString(priv[:]))
+	fmt.Println(hex.EncodeToString(priv))
 
 	// Output: keys from fundraiser test-vector (cosmos, bitcoin, ether)
 	//

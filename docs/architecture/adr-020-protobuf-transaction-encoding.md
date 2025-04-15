@@ -277,7 +277,7 @@ We propose that field numbers with bit 11 set (for most use cases this is
 the range of 1024-2047) be considered non-critical fields that can safely be
 ignored if unknown.
 
-To handle this we will need a unknown field filter that:
+To handle this we will need an unknown field filter that:
 
 * always rejects unknown fields in unsigned content (i.e. top-level `Tx` and
   unsigned parts of `AuthInfo` if present based on the signing mode)

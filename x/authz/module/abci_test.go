@@ -4,8 +4,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,15 +24,12 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
-
-	"github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func TestExpiredGrantsQueue(t *testing.T) {
-	key := sdk.NewKVStoreKey(keeper.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(keeper.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(types.Header{})
 
@@ -58,7 +63,9 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee3).Return(authtypes.NewBaseAccountWithAddress(grantee3)).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee4).Return(authtypes.NewBaseAccountWithAddress(grantee4)).AnyTimes()
 
-	authzKeeper := keeper.NewKeeper(key, encCfg.Codec, baseApp.MsgServiceRouter(), accountKeeper)
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	authzKeeper := keeper.NewKeeper(storeService, encCfg.Codec, baseApp.MsgServiceRouter(), accountKeeper)
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {
 		err := authzKeeper.SaveGrant(ctx, grantee, granter, sendAuthz, exp)

@@ -12,7 +12,7 @@
 #
 # This image is pushed to the GHCR as https://ghcr.io/cosmos/simapp
 
-FROM --platform=$BUILDPLATFORM golang:1.19-alpine AS build-env
+FROM golang:1.21-alpine AS build-env
 
 # Install minimum necessary dependencies
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev
@@ -23,6 +23,10 @@ WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 
 # optimization: if go.sum didn't change, docker will use cached image
 COPY go.mod go.sum ./
+COPY collections/go.mod collections/go.sum ./collections/
+COPY store/go.mod store/go.sum ./store/
+COPY log/go.mod log/go.sum ./log/
+
 RUN go mod download
 
 # Add source files

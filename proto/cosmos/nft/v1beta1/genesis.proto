@@ -3,7 +3,7 @@ package cosmos.nft.v1beta1;
 
 import "cosmos/nft/v1beta1/nft.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
+option go_package = "cosmossdk.io/x/nft";
 
 // GenesisState defines the nft module's genesis state.
 message GenesisState {

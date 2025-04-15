@@ -3,13 +3,13 @@ package mem
 import (
 	"io"
 
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/dbadapter"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/types"
 )
 
 var (
@@ -27,7 +27,7 @@ func NewStore() *Store {
 	return NewStoreWithDB(dbm.NewMemDB())
 }
 
-func NewStoreWithDB(db *dbm.MemDB) *Store { //nolint: interfacer
+func NewStoreWithDB(db *dbm.MemDB) *Store { //nolint: interfacer // Concrete return type is fine here.
 	return &Store{Store: dbadapter.Store{DB: db}}
 }
 
@@ -58,3 +58,5 @@ func (s *Store) GetPruning() pruningtypes.PruningOptions {
 }
 
 func (s Store) LastCommitID() (id types.CommitID) { return }
+
+func (s Store) WorkingHash() (hash []byte) { return }

@@ -30,7 +30,7 @@ message LightClientAttackEvidence {
   int64                       common_height                = 2;
   repeated tendermint.types.Validator byzantine_validators = 3;
   int64                               total_voting_power   = 4;
-  google.protobuf.Timestamp           timestamp            = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp           timestamp = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 message EvidenceList {

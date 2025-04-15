@@ -131,6 +131,7 @@ message GroupInfo {
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // metadata is any arbitrary metadata to attached to the group.
+  // the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/group#group-1
   string metadata = 3;
 
   // version is used to track changes to a group's membership structure that
@@ -317,7 +318,7 @@ message TallyResult {
   string no_with_veto_count = 4;
 }
 
-// Vote represents a vote for a proposal.
+// Vote represents a vote for a proposal.string metadata
 message Vote {
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
@@ -329,6 +330,7 @@ message Vote {
   VoteOption option = 3;
 
   // metadata is any arbitrary metadata attached to the vote.
+  // the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/group#vote-2
   string metadata = 4;
 
   // submit_time is the timestamp when the vote was submitted.

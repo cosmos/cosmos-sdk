@@ -47,7 +47,7 @@ type QueryClient interface {
 	ValidatorSlashes(ctx context.Context, in *QueryValidatorSlashesRequest, opts ...grpc.CallOption) (*QueryValidatorSlashesResponse, error)
 	// DelegationRewards queries the total rewards accrued by a delegation.
 	DelegationRewards(ctx context.Context, in *QueryDelegationRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationRewardsResponse, error)
-	// DelegationTotalRewards queries the total rewards accrued by a each
+	// DelegationTotalRewards queries the total rewards accrued by each
 	// validator.
 	DelegationTotalRewards(ctx context.Context, in *QueryDelegationTotalRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationTotalRewardsResponse, error)
 	// DelegatorValidators queries the validators of a delegator.
@@ -172,7 +172,7 @@ type QueryServer interface {
 	ValidatorSlashes(context.Context, *QueryValidatorSlashesRequest) (*QueryValidatorSlashesResponse, error)
 	// DelegationRewards queries the total rewards accrued by a delegation.
 	DelegationRewards(context.Context, *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error)
-	// DelegationTotalRewards queries the total rewards accrued by a each
+	// DelegationTotalRewards queries the total rewards accrued by each
 	// validator.
 	DelegationTotalRewards(context.Context, *QueryDelegationTotalRewardsRequest) (*QueryDelegationTotalRewardsResponse, error)
 	// DelegatorValidators queries the validators of a delegator.

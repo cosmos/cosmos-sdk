@@ -40,7 +40,7 @@ message QueryParamsResponse {
 // method
 message QuerySigningInfoRequest {
   // cons_address is the address to query signing info of
-  string cons_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string cons_address = 1 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
 }
 
 // QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC

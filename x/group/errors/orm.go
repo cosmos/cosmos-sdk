@@ -1,8 +1,6 @@
 package errors
 
-import (
-	"github.com/cosmos/cosmos-sdk/types/errors"
-)
+import "cosmossdk.io/errors"
 
 // ormCodespace is the codespace for all errors defined in orm package
 const ormCodespace = "legacy_orm"

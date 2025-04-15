@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.tx.v1beta1;
 
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -87,13 +88,8 @@ message SignDocDirectAux {
   // sequence is the sequence number of the signing account.
   uint64 sequence = 5;
 
-  // Tip is the optional tip used for transactions fees paid in another denom.
-  // It should be left empty if the signer is not the tipper for this
-  // transaction.
-  //
-  // This field is ignored if the chain didn't enable tips, i.e. didn't add the
-  // `TipDecorator` in its posthandler.
-  Tip tip = 6;
+  // tips have been depreacted and should not be used
+  Tip tip = 6 [deprecated = true];
 }
 
 // TxBody is the body of a transaction that all signers sign over.
@@ -141,14 +137,13 @@ message AuthInfo {
   // based on the cost of evaluating the body and doing signature verification
   // of the signers. This can be estimated via simulation.
   Fee fee = 2;
-
   // Tip is the optional tip used for transactions fees paid in another denom.
   //
   // This field is ignored if the chain didn't enable tips, i.e. didn't add the
   // `TipDecorator` in its posthandler.
   //
   // Since: cosmos-sdk 0.46
-  Tip tip = 3;
+  Tip tip = 3 [deprecated = true];
 }
 
 // SignerInfo describes the public key and signing mode of a single top-level
@@ -205,8 +200,12 @@ message ModeInfo {
 // which must be above some miminum to be accepted into the mempool.
 message Fee {
   // amount is the amount of coins to be paid as a fee
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 
   // gas_limit is the maximum gas that can be used in transaction processing
   // before an out of gas error occurs
@@ -227,9 +226,14 @@ message Fee {
 //
 // Since: cosmos-sdk 0.46
 message Tip {
+  option deprecated = true;
   // amount is the amount of the tip
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // tipper is the address of the account paying for the tip
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

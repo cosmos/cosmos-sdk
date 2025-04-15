@@ -2,11 +2,12 @@
 
 ## Changelog
 
-- Nov, 23, 2021: Initial Draft
+* Nov, 23, 2021: Initial Draft
+* May, 16, 2023: Proposal ABANDONED. `pre_run` and `post_run` are not necessary anymore and adding the `artifacts` brings minor benefits.
 
 ## Status
 
-PROPOSED Not Implemented
+ABANDONED
 
 ## Abstract
 
@@ -19,9 +20,10 @@ The `upgrade` module in conjunction with Cosmovisor are designed to facilitate a
 
 Users submit a software upgrade governance proposal containing an upgrade `Plan`.
 The [Plan](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto#L12) currently contains the following fields:
-- `name`: A short string identifying the new version.
-- `height`: The chain height at which the upgrade is to be performed.
-- `info`: A string containing information about the upgrade.
+
+* `name`: A short string identifying the new version.
+* `height`: The chain height at which the upgrade is to be performed.
+* `info`: A string containing information about the upgrade.
 
 The `info` string can be anything.
 However, Cosmovisor will try to use the `info` field to automatically download a new version of the blockchain executable.
@@ -40,6 +42,7 @@ Both `DAEMON_HOME` and `DAEMON_NAME` are [environment variables used to configur
 Currently, there is no mechanism that makes Cosmovisor run a command after the upgraded chain has been restarted.
 
 The current upgrade process has this timeline:
+
 1. An upgrade governance proposal is submitted and approved.
 1. The upgrade height is reached.
 1. The `x/upgrade` module writes the `upgrade_info.json` file.
@@ -78,7 +81,8 @@ message UpgradeInstructions {
 ```
 
 All fields in the `UpgradeInstructions` are optional.
-- `pre_run` is a command to run prior to the upgraded chain restarting.
+
+* `pre_run` is a command to run prior to the upgraded chain restarting.
   If defined, it will be executed after halting and downloading the new artifact but before restarting the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
   This command MUST behave the same as the current [pre-upgrade](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md) command.
@@ -91,12 +95,12 @@ All fields in the `UpgradeInstructions` are optional.
   | `30`             | `pre-upgrade` command was executed but failed. This fails the entire upgrade.                                       |
   | `31`             | `pre-upgrade` command was executed but failed. But the command is retried until exit code `1` or `30` are returned. |
   If defined, then the app supervisors (e.g. Cosmovisor) MUST NOT run `app pre-run`.
-- `post_run` is a command to run after the upgraded chain has been started. If defined, this command MUST be only executed at most once by an upgrading node.
+* `post_run` is a command to run after the upgraded chain has been started. If defined, this command MUST be only executed at most once by an upgrading node.
   The output and exit code SHOULD be logged but SHOULD NOT affect the running of the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
-- `artifacts` define items to be downloaded.
+* `artifacts` define items to be downloaded.
   It SHOULD have only one entry per platform.
-- `description` contains human-readable information about the upgrade and might contain references to external resources.
+* `description` contains human-readable information about the upgrade and might contain references to external resources.
   It SHOULD NOT be used for structured processing information.
 
 ```protobuf
@@ -108,20 +112,20 @@ message Artifact {
 }
 ```
 
-- `platform` is a required string that SHOULD be in the format `{OS}/{CPU}`, e.g. `"linux/amd64"`.
+* `platform` is a required string that SHOULD be in the format `{OS}/{CPU}`, e.g. `"linux/amd64"`.
   The string `"any"` SHOULD also be allowed.
   An `Artifact` with a `platform` of `"any"` SHOULD be used as a fallback when a specific `{OS}/{CPU}` entry is not found.
   That is, if an `Artifact` exists with a `platform` that matches the system's OS and CPU, that should be used;
   otherwise, if an `Artifact` exists with a `platform` of `any`, that should be used;
   otherwise no artifact should be downloaded.
-- `url` is a required URL string that MUST conform to [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt).
+* `url` is a required URL string that MUST conform to [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt).
   A request to this `url` MUST return either an executable file or an archive containing either `bin/{DAEMON_NAME}` or `{DAEMON_NAME}`.
   The URL should not contain checksum - it should be specified by the `checksum` attribute.
-- `checksum` is a checksum of the expected result of a request to the `url`.
+* `checksum` is a checksum of the expected result of a request to the `url`.
   It is not required, but is recommended.
   If provided, it MUST be a hex encoded checksum string.
   Tools utilizing these `UpgradeInstructions` MUST fail if a `checksum` is provided but is different from the checksum of the result returned by the `url`.
-- `checksum_algo` is a string identify the algorithm used to generate the `checksum`.
+* `checksum_algo` is a string identify the algorithm used to generate the `checksum`.
   Recommended algorithms: `sha256`, `sha512`.
   Algorithms also supported (but not recommended): `sha1`, `md5`.
   If a `checksum` is provided, a `checksum_algo` MUST also be provided.
@@ -140,6 +144,7 @@ We will update the creation of the `upgrade-info.json` file to include the `Upgr
 
 We will update the optional validation available via CLI to account for the new `Plan` structure.
 We will add the following validation:
+
 1.  If `UpgradeInstructions` are provided:
     1.  There MUST be at least one entry in `artifacts`.
     1.  All of the `artifacts` MUST have a unique `platform`.
@@ -165,6 +170,7 @@ If the `upgrade-info.json` file does not contain any `UpgradeInstructions`, exis
 
 We will update Cosmovisor to look for and handle the new `UpgradeInstructions` in `upgrade-info.json`.
 If the `UpgradeInstructions` are provided, we will do the following:
+
 1.  The `info` field will be ignored.
 1.  The `artifacts` field will be used to identify the artifact to download based on the `platform` that Cosmovisor is running in.
 1.  If a `checksum` is provided (either in the field or as a query param in the `url`), and the downloaded artifact has a different checksum, the upgrade process will be interrupted and Cosmovisor will exit with an error.
@@ -179,6 +185,7 @@ We will deprecate the use of the `info` field for anything other than human read
 A warning will be logged if the `info` field is used to define the assets (either by URL or JSON).
 
 The new upgrade timeline is very similar to the current one. Changes are in bold:
+
 1. An upgrade governance proposal is submitted and approved.
 1. The upgrade height is reached.
 1. The `x/upgrade` module writes the `upgrade_info.json` file **(now possibly with `UpgradeInstructions`)**.
@@ -199,6 +206,7 @@ Additionally, current behavior will be maintained when no `UpgradeInstructions` 
 ### Forwards Compatibility
 
 In order to utilize the `UpgradeInstructions` as part of a software upgrade, both of the following must be true:
+
 1.  The chain must already be using a sufficiently advanced version of the Cosmos SDK.
 1.  The chain's nodes must be using a sufficiently advanced version of Cosmovisor.
 
@@ -237,9 +245,9 @@ In order to utilize the `UpgradeInstructions` as part of a software upgrade, bot
 
 ## References
 
-- [Current upgrade.proto](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto)
-- [Upgrade Module README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/x/upgrade/spec/README.md)
-- [Cosmovisor README](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md)
-- [Pre-upgrade README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md)
-- [Draft/POC PR #10032](https://github.com/cosmos/cosmos-sdk/pull/10032)
-- [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt)
+* [Current upgrade.proto](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto)
+* [Upgrade Module README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/x/upgrade/spec/README.md)
+* [Cosmovisor README](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md)
+* [Pre-upgrade README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md)
+* [Draft/POC PR #10032](https://github.com/cosmos/cosmos-sdk/pull/10032)
+* [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt)

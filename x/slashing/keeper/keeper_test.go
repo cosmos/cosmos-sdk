@@ -3,13 +3,17 @@ package keeper_test
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtime "github.com/cometbft/cometbft/types/time"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,20 +39,23 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	key := sdk.NewKVStoreKey(slashingtypes.StoreKey)
-	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	key := storetypes.NewKVStoreKey(slashingtypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.stakingKeeper = slashingtestutil.NewMockStakingKeeper(ctrl)
+	s.stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
+	s.stakingKeeper.EXPECT().ConsensusAddressCodec().Return(address.NewBech32Codec("cosmosvalcons")).AnyTimes()
 
 	s.ctx = ctx
 	s.slashingKeeper = slashingkeeper.NewKeeper(
 		encCfg.Codec,
 		encCfg.Amino,
-		key,
+		storeService,
 		s.stakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -76,45 +83,51 @@ func (s *KeeperTestSuite) TestPubkey() {
 }
 
 func (s *KeeperTestSuite) TestJailAndSlash() {
+	slashFractionDoubleSign, err := s.slashingKeeper.SlashFractionDoubleSign(s.ctx)
+	s.Require().NoError(err)
+
 	s.stakingKeeper.EXPECT().SlashWithInfractionReason(s.ctx,
 		consAddr,
 		s.ctx.BlockHeight(),
-		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
-		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
+		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
+		slashFractionDoubleSign,
 		stakingtypes.Infraction_INFRACTION_UNSPECIFIED,
-	).Return(sdk.NewInt(0))
+	).Return(sdkmath.NewInt(0), nil)
 
 	s.slashingKeeper.Slash(
 		s.ctx,
 		consAddr,
-		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
-		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
+		slashFractionDoubleSign,
+		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
 	)
 
-	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return()
+	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
 	s.slashingKeeper.Jail(s.ctx, consAddr)
 }
 
 func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
+	slashFractionDoubleSign, err := s.slashingKeeper.SlashFractionDoubleSign(s.ctx)
+	s.Require().NoError(err)
+
 	s.stakingKeeper.EXPECT().SlashWithInfractionReason(s.ctx,
 		consAddr,
 		s.ctx.BlockHeight(),
-		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
-		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
+		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
+		slashFractionDoubleSign,
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
-	).Return(sdk.NewInt(0))
+	).Return(sdkmath.NewInt(0), nil)
 
 	s.slashingKeeper.SlashWithInfractionReason(
 		s.ctx,
 		consAddr,
-		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
-		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
+		slashFractionDoubleSign,
+		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
 
-	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return()
+	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
 	s.slashingKeeper.Jail(s.ctx, consAddr)
 }
 

@@ -1,8 +1,7 @@
 package autocli
 
 import (
-	"context"
-
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
@@ -15,5 +14,15 @@ type Builder struct {
 
 	// GetClientConn specifies how CLI commands will resolve a grpc.ClientConnInterface
 	// from a given context.
-	GetClientConn func(context.Context) grpc.ClientConnInterface
+	GetClientConn func(*cobra.Command) (grpc.ClientConnInterface, error)
+
+	// AddQueryConnFlags and AddTxConnFlags are functions that add flags to query and transaction commands
+	AddQueryConnFlags func(*cobra.Command)
+	AddTxConnFlags    func(*cobra.Command)
+}
+
+// ValidateAndComplete the builder fields.
+// It returns an error if any of the required fields are missing.
+func (b *Builder) ValidateAndComplete() error {
+	return b.Builder.ValidateAndComplete()
 }

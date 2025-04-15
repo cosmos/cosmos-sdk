@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package testpb;
+
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+
+message streng {
+  string value = 1;
+}
+
+message TestRepeatedFields {
+  repeated streng nullable_omitempty = 1;
+
+  // not supported for empty sets
+  // go-amino emits nothing but the protoreflect library emits a null
+  repeated streng nullable_dont_omitempty = 2 [(amino.dont_omitempty) = true];
+
+  // not supported for empty sets
+  // go-amino emits a null but the protoreflect library emits nothing
+  repeated streng non_nullable_omitempty = 3 [(gogoproto.nullable) = false];
+
+  repeated streng non_nullable_dont_omitempty = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message TestNullableFields {
+  streng nullable_omitempty = 1;
+
+  // not supported
+  // go-amino emits nothing and the protoreflect returns an error
+  // alternatively protoreflect could emit `{}`
+  streng nullable_dont_omitempty = 2 [(amino.dont_omitempty) = true];
+
+  // not supported
+  // go-amino emits `{}` but the protoreflect library emits nothing
+  streng non_nullable_omitempty = 3 [(gogoproto.nullable) = false];
+
+  streng non_nullable_dont_omitempty = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message IntAsString {
+  string int_as_string = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
+}
+
+message IntAsBytes {
+  bytes int_as_bytes = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
+}
+
+service IntegrationTxTestMsg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc TestFields(TestRepeatedFields) returns (TestRepeatedFields) {}
+}

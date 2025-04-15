@@ -1,6 +1,6 @@
-# Cosmos SDK v0.47.16 Release Notes
+# Cosmos SDK v0.50.12 Release Notes
 
-💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/6)
+💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/58)
 
 ## 🚀 Highlights
 
@@ -9,8 +9,8 @@ It resolves a `x/group` module issue that can halt chain when handling a malicio
 Only users of the `x/group` module are affected by this issue.
 
 We recommended to upgrade to this patch release as soon as possible.
-When upgrading from <= v0.47.15, please use a chain upgrade to ensure that 2/3 of the validator power upgrade to v0.47.16.
+When upgrading from <= v0.50.11, please use a chain upgrade to ensure that 2/3 of the validator power upgrade to v0.50.12.
 
 ## 📝 Changelog
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.16/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.15...v0.47.16) from last release.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.12/CHANGELOG.md) for an exhaustive list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.50.11...v0.50.12) from the last release.

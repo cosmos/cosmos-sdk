@@ -4,26 +4,30 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/stretchr/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	v2 "github.com/cosmos/cosmos-sdk/x/authz/migrations/v2"
-	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMigration(t *testing.T) {
-	var cdc codec.Codec
-	depinject.Inject(authztestutil.AppConfig, &cdc)
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{}, bank.AppModuleBasic{})
+	cdc := encodingConfig.Codec
 
-	authzKey := sdk.NewKVStoreKey("authz")
-	ctx := testutil.DefaultContext(authzKey, sdk.NewTransientStoreKey("transient_test"))
+	authzKey := storetypes.NewKVStoreKey("authz")
+	ctx := testutil.DefaultContext(authzKey, storetypes.NewTransientStoreKey("transient_test"))
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
@@ -97,7 +101,8 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	store := ctx.KVStore(authzKey)
+	storeService := runtime.NewKVStoreService(authzKey)
+	store := storeService.OpenKVStore(ctx)
 
 	for _, g := range grants {
 		grant := g.authorization()
@@ -105,9 +110,17 @@ func TestMigration(t *testing.T) {
 	}
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Hour))
-	require.NoError(t, v2.MigrateStore(ctx, authzKey, cdc))
+	require.NoError(t, v2.MigrateStore(ctx, storeService, cdc))
 
-	require.NotNil(t, store.Get(v2.GrantStoreKey(grantee1, granter2, genericMsgType)))
-	require.NotNil(t, store.Get(v2.GrantStoreKey(grantee1, granter1, sendMsgType)))
-	require.Nil(t, store.Get(v2.GrantStoreKey(grantee2, granter2, genericMsgType)))
+	bz, err := store.Get(v2.GrantStoreKey(grantee1, granter2, genericMsgType))
+	require.NoError(t, err)
+	require.NotNil(t, bz)
+
+	bz, err = store.Get(v2.GrantStoreKey(grantee1, granter1, sendMsgType))
+	require.NoError(t, err)
+	require.NotNil(t, bz)
+
+	bz, err = store.Get(v2.GrantStoreKey(grantee2, granter2, genericMsgType))
+	require.NoError(t, err)
+	require.Nil(t, bz)
 }

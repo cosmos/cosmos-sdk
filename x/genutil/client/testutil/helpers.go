@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	tmcfg "github.com/cometbft/cometbft/config"
-	"github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/viper"
 
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -19,7 +20,7 @@ import (
 
 func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.Codec) error {
 	logger := log.NewNopLogger()
-	cfg, err := CreateDefaultTendermintConfig(home)
+	cfg, err := CreateDefaultCometConfig(home)
 	if err != nil {
 		return err
 	}
@@ -35,15 +36,15 @@ func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.Codec) erro
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", flags.FlagHome, home)})
 
 	return cmd.ExecuteContext(ctx)
 }
 
-func CreateDefaultTendermintConfig(rootDir string) (*tmcfg.Config, error) {
-	conf := tmcfg.DefaultConfig()
+func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {
+	conf := cmtcfg.DefaultConfig()
 	conf.SetRoot(rootDir)
-	tmcfg.EnsureRoot(rootDir)
+	cmtcfg.EnsureRoot(rootDir)
 
 	if err := conf.ValidateBasic(); err != nil {
 		return nil, fmt.Errorf("error in config file: %v", err)

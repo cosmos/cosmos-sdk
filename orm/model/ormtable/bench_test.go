@@ -5,17 +5,15 @@ import (
 	"fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"google.golang.org/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
-
-	dbm "github.com/cometbft/cometbft-db"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"cosmossdk.io/orm/internal/testkv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/testing/ormtest"
+	"cosmossdk.io/orm/types/kv"
 )
 
 func initBalanceTable(t testing.TB) testpb.BalanceTable {
@@ -70,7 +68,7 @@ func bench(b *testing.B, newBackend func(testing.TB) ormtable.Backend) {
 	})
 }
 
-func benchInsert(b *testing.B, ctx context.Context) {
+func benchInsert(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Insert(ctx, &testpb.Balance{
@@ -81,7 +79,7 @@ func benchInsert(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchUpdate(b *testing.B, ctx context.Context) {
+func benchUpdate(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Update(ctx, &testpb.Balance{
@@ -92,7 +90,7 @@ func benchUpdate(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchGet(b *testing.B, ctx context.Context) {
+func benchGet(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		balance, err := balanceTable.Get(ctx, fmt.Sprintf("acct%d", i), "bar")
@@ -101,7 +99,7 @@ func benchGet(b *testing.B, ctx context.Context) {
 	}
 }
 
-func benchDelete(b *testing.B, ctx context.Context) {
+func benchDelete(b *testing.B, ctx context.Context) { //nolint:revive // ignore for benchmark
 	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Delete(ctx, &testpb.Balance{
@@ -239,7 +237,7 @@ func BenchmarkManualInsertMemory(b *testing.B) {
 
 func BenchmarkManualInsertLevelDB(b *testing.B) {
 	benchManual(b, func() (dbm.DB, error) {
-		return dbm.NewGoLevelDB("test", b.TempDir())
+		return dbm.NewGoLevelDB("test", b.TempDir(), nil)
 	})
 }
 

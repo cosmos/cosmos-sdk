@@ -6,42 +6,44 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	"cosmossdk.io/depinject"
+	sdklog "cosmossdk.io/log"
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
-
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
-
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type SimTestSuite struct {
 	suite.Suite
 
 	r             *rand.Rand
+	txConfig      client.TxConfig
 	accounts      []simtypes.Account
 	ctx           sdk.Context
 	app           *runtime.App
@@ -54,7 +56,7 @@ type SimTestSuite struct {
 }
 
 func (s *SimTestSuite) SetupTest() {
-	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+	sdk.DefaultPowerReduction = math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 
 	s.r = rand.New(rand.NewSource(1))
 	accounts := simtypes.RandomAccounts(s.r, 4)
@@ -63,19 +65,19 @@ func (s *SimTestSuite) SetupTest() {
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	accs := []simtestutil.GenesisAccount{
-		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))},
+		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000)))},
 	}
 
 	// create validator set with single validator
 	account := accounts[0]
-	tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
+	cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.PubKey)
 	require.NoError(s.T(), err)
-	validator := tmtypes.NewValidator(tmPk, 1)
+	validator := cmttypes.NewValidator(cmtPk, 1)
 
 	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = accs
-	startupCfg.ValidatorSet = func() (*tmtypes.ValidatorSet, error) {
-		return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+	startupCfg.ValidatorSet = func() (*cmttypes.ValidatorSet, error) {
+		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 	}
 
 	var (
@@ -86,12 +88,17 @@ func (s *SimTestSuite) SetupTest() {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.SetupWithConfiguration(testutil.AppConfig, startupCfg, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
+	cfg := depinject.Configs(
+		testutil.AppConfig,
+		depinject.Supply(sdklog.NewNopLogger()),
+	)
+
+	app, err := simtestutil.SetupWithConfiguration(cfg, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
 	require.NoError(s.T(), err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	mintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
+	ctx := app.BaseApp.NewContext(false)
+	s.Require().NoError(mintKeeper.Params.Set(ctx, minttypes.DefaultParams()))
+	s.Require().NoError(mintKeeper.Minter.Set(ctx, minttypes.DefaultInitialMinter()))
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
@@ -102,7 +109,7 @@ func (s *SimTestSuite) SetupTest() {
 	for _, account := range accounts[1:] {
 		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
 		accountKeeper.SetAccount(ctx, acc)
-		s.Require().NoError(banktestutil.FundAccount(bankKeeper, ctx, account.Address, initCoins))
+		s.Require().NoError(banktestutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
 	}
 
 	s.accountKeeper = accountKeeper
@@ -122,7 +129,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	cdc := s.encCfg.Codec
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, s.accountKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, cdc, s.txConfig, s.accountKeeper,
 		s.bankKeeper, s.stakingKeeper,
 	)
 
@@ -131,15 +138,15 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simulation.DefaultWeightMsgCreateValidator, types.ModuleName, types.TypeMsgCreateValidator},
-		{simulation.DefaultWeightMsgEditValidator, types.ModuleName, types.TypeMsgEditValidator},
-		{simulation.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgDelegate},
-		{simulation.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
-		{simulation.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
-		{simulation.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, types.TypeMsgCancelUnbondingDelegation},
+		{simulation.DefaultWeightMsgCreateValidator, types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateValidator{})},
+		{simulation.DefaultWeightMsgEditValidator, types.ModuleName, sdk.MsgTypeURL(&types.MsgEditValidator{})},
+		{simulation.DefaultWeightMsgDelegate, types.ModuleName, sdk.MsgTypeURL(&types.MsgDelegate{})},
+		{simulation.DefaultWeightMsgUndelegate, types.ModuleName, sdk.MsgTypeURL(&types.MsgUndelegate{})},
+		{simulation.DefaultWeightMsgBeginRedelegate, types.ModuleName, sdk.MsgTypeURL(&types.MsgBeginRedelegate{})},
+		{simulation.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, sdk.MsgTypeURL(&types.MsgCancelUnbondingDelegation{})},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(s.r, s.app.BaseApp, s.ctx, s.accounts, s.ctx.ChainID())
 		// require.NoError(t, err) // TODO check if it should be NoError
 
@@ -156,20 +163,22 @@ func (s *SimTestSuite) TestWeightedOperations() {
 // Abonormal scenarios, where the message are created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	require := s.Require()
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
+	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgCreateValidator(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgCreateValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, s.ctx, s.accounts[1:], "")
 	require.NoError(err)
 
 	var msg types.MsgCreateValidator
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
-	require.Equal(types.TypeMsgCreateValidator, msg.Type())
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
+	require.Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(&msg))
+	valaddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	require.NoError(err)
+	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", sdk.AccAddress(valaddr).String())
 	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
@@ -188,33 +197,35 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
-	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
-	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	delegation := types.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
+	val0bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator0.GetOperator())
+	s.Require().NoError(err)
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, val0bz, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
-	s.setupValidatorRewards(ctx, validator0.GetOperator())
+	s.setupValidatorRewards(ctx, val0bz)
 
 	// unbonding delegation
-	udb := types.NewUnbondingDelegation(delegator.Address, validator0.GetOperator(), s.app.LastBlockHeight(), blockTime.Add(2*time.Minute), delTokens, 0)
-	s.stakingKeeper.SetUnbondingDelegation(ctx, udb)
-	s.setupValidatorRewards(ctx, validator0.GetOperator())
+	udb := types.NewUnbondingDelegation(delegator.Address, val0bz, s.app.LastBlockHeight()+1, blockTime.Add(2*time.Minute), delTokens, 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
+	require.NoError(s.stakingKeeper.SetUnbondingDelegation(ctx, udb))
+	s.setupValidatorRewards(ctx, val0bz)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgCancelUnbondingDelegate(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgCancelUnbondingDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	accounts := []simtypes.Account{delegator}
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
 	var msg types.MsgCancelUnbondingDelegation
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
-	require.Equal(types.TypeMsgCancelUnbondingDelegation, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgCancelUnbondingDelegation{}), sdk.MsgTypeURL(&msg))
 	require.Equal(delegator.Address.String(), msg.DelegatorAddress)
-	require.Equal(validator0.GetOperator().String(), msg.ValidatorAddress)
+	require.Equal(validator0.GetOperator(), msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
 
@@ -228,19 +239,19 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	// setup accounts[0] as validator
 	_ = s.getTestingValidator0(ctx)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgEditValidator(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgEditValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
 	require.NoError(err)
 
 	var msg types.MsgEditValidator
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
-	require.Equal(types.TypeMsgEditValidator, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgEditValidator{}), sdk.MsgTypeURL(&msg))
 	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
@@ -253,17 +264,17 @@ func (s *SimTestSuite) TestSimulateMsgDelegate() {
 	ctx := s.ctx.WithBlockTime(blockTime)
 
 	// execute operation
-	op := simulation.SimulateMsgDelegate(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts[1:], "")
 	require.NoError(err)
 
 	var msg types.MsgDelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
 	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
 	require.Equal("stake", msg.Amount.Denom)
-	require.Equal(types.TypeMsgDelegate, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgDelegate{}), sdk.MsgTypeURL(&msg))
 	require.Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
@@ -282,28 +293,30 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := s.accounts[2]
-	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
-	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	delegation := types.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
+	val0bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator0.GetOperator())
+	s.Require().NoError(err)
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, val0bz, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
-	s.setupValidatorRewards(ctx, validator0.GetOperator())
+	s.setupValidatorRewards(ctx, val0bz)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgUndelegate(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgUndelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
 	require.NoError(err)
 
 	var msg types.MsgUndelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
 	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
 	require.Equal("1646627814093010272", msg.Amount.Amount.String())
 	require.Equal("stake", msg.Amount.Denom)
-	require.Equal(types.TypeMsgUndelegate, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgUndelegate{}), sdk.MsgTypeURL(&msg))
 	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
@@ -324,29 +337,33 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 
 	// setup accounts[3] as delegator
 	delegator := s.accounts[3]
-	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
-	s.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	delegation := types.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
+	val0bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator0.GetOperator())
+	s.Require().NoError(err)
+	val1bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator1.GetOperator())
+	s.Require().NoError(err)
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, val0bz, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
-	s.setupValidatorRewards(ctx, validator0.GetOperator())
-	s.setupValidatorRewards(ctx, validator1.GetOperator())
+	s.setupValidatorRewards(ctx, val0bz)
+	s.setupValidatorRewards(ctx, val1bz)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: blockTime}})
+	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgBeginRedelegate(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	op := simulation.SimulateMsgBeginRedelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
 	s.T().Logf("operation message: %v", operationMsg)
 	require.NoError(err)
 
 	var msg types.MsgBeginRedelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	err = proto.Unmarshal(operationMsg.Msg, &msg)
+	require.NoError(err)
 	require.True(operationMsg.OK)
 	require.Equal("cosmos1ua0fwyws7vzjrry3pqkklvf8mny93l9s9zg0h4", msg.DelegatorAddress)
 	require.Equal("stake", msg.Amount.Denom)
-	require.Equal(types.TypeMsgBeginRedelegate, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgBeginRedelegate{}), sdk.MsgTypeURL(&msg))
 	require.Equal("cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", msg.ValidatorDstAddress)
 	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorSrcAddress)
 	require.Len(futureOperations, 0)
@@ -373,7 +390,7 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = s.stakingKeeper.TokensFromConsensusPower(ctx, 100)
 
-	s.stakingKeeper.SetValidator(ctx, validator)
+	s.Require().NoError(s.stakingKeeper.SetValidator(ctx, validator))
 
 	return validator
 }

@@ -9,10 +9,10 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/internal/testpb"
+	"cosmossdk.io/orm/internal/testutil"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 func TestUniqueKeyCodec(t *testing.T) {
@@ -46,9 +46,8 @@ func TestUniqueKeyCodec(t *testing.T) {
 		if isTrivialUniqueKey {
 			assert.ErrorContains(t, err, "no new uniqueness constraint")
 			return
-		} else {
-			assert.NilError(t, err)
 		}
+		assert.NilError(t, err)
 
 		for i := 0; i < 100; i++ {
 			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i))

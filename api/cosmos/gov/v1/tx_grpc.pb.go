@@ -27,6 +27,7 @@ const (
 	Msg_VoteWeighted_FullMethodName      = "/cosmos.gov.v1.Msg/VoteWeighted"
 	Msg_Deposit_FullMethodName           = "/cosmos.gov.v1.Msg/Deposit"
 	Msg_UpdateParams_FullMethodName      = "/cosmos.gov.v1.Msg/UpdateParams"
+	Msg_CancelProposal_FullMethodName    = "/cosmos.gov.v1.Msg/CancelProposal"
 )
 
 // MsgClient is the client API for Msg service.
@@ -49,6 +50,10 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// CancelProposal defines a method to cancel governance proposal
+	//
+	// Since: cosmos-sdk 0.50
+	CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error)
 }
 
 type msgClient struct {
@@ -113,6 +118,15 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error) {
+	out := new(MsgCancelProposalResponse)
+	err := c.cc.Invoke(ctx, Msg_CancelProposal_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -133,6 +147,10 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// CancelProposal defines a method to cancel governance proposal
+	//
+	// Since: cosmos-sdk 0.50
+	CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -157,6 +175,9 @@ func (UnimplementedMsgServer) Deposit(context.Context, *MsgDeposit) (*MsgDeposit
 }
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelProposal not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -279,6 +300,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CancelProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CancelProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CancelProposal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CancelProposal(ctx, req.(*MsgCancelProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -309,6 +348,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "CancelProposal",
+			Handler:    _Msg_CancelProposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

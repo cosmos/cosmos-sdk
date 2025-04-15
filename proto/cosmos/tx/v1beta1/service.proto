@@ -82,22 +82,35 @@ service Service {
 // RPC method.
 message GetTxsEventRequest {
   // events is the list of transaction event type.
-  repeated string events = 1;
+  // Deprecated post v0.47.x: use query instead, which should contain a valid
+  // events query.
+  repeated string events = 1 [deprecated = true];
+
   // pagination defines a pagination for the request.
   // Deprecated post v0.46.x: use page and limit instead.
   cosmos.base.query.v1beta1.PageRequest pagination = 2 [deprecated = true];
 
   OrderBy order_by = 3;
-  // page is the page number to query, starts at 1. If not provided, will default to first page.
+
+  // page is the page number to query, starts at 1. If not provided, will
+  // default to first page.
   uint64 page = 4;
+
   // limit is the total number of results to be returned in the result page.
   // If left empty it will default to a value to be set by each app.
   uint64 limit = 5;
+
+  // query defines the transaction event query that is proxied to Tendermint's
+  // TxSearch RPC method. The query must be valid.
+  //
+  // Since cosmos-sdk 0.50
+  string query = 6;
 }
 
 // OrderBy defines the sorting order
 enum OrderBy {
-  // ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case.
+  // ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults
+  // to ASC in this case.
   ORDER_BY_UNSPECIFIED = 0;
   // ORDER_BY_ASC defines ascending order
   ORDER_BY_ASC = 1;
@@ -127,18 +140,19 @@ message BroadcastTxRequest {
   BroadcastMode mode     = 2;
 }
 
-// BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC method.
+// BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC
+// method.
 enum BroadcastMode {
   // zero-value for mode ordering
   BROADCAST_MODE_UNSPECIFIED = 0;
   // DEPRECATED: use BROADCAST_MODE_SYNC instead,
   // BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
   BROADCAST_MODE_BLOCK = 1 [deprecated = true];
-  // BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits for
-  // a CheckTx execution response only.
+  // BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
+  // for a CheckTx execution response only.
   BROADCAST_MODE_SYNC = 2;
-  // BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns
-  // immediately.
+  // BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client
+  // returns immediately.
   BROADCAST_MODE_ASYNC = 3;
 }
 
@@ -196,7 +210,8 @@ message GetBlockWithTxsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
+// GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs
+// method.
 //
 // Since: cosmos-sdk 0.45.2
 message GetBlockWithTxsResponse {

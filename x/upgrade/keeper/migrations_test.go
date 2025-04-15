@@ -4,10 +4,13 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/upgrade/types"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 type storedUpgrade struct {
@@ -20,9 +23,10 @@ func encodeOldDoneKey(upgrade storedUpgrade) []byte {
 }
 
 func TestMigrateDoneUpgradeKeys(t *testing.T) {
-	upgradeKey := sdk.NewKVStoreKey("upgrade")
-	ctx := testutil.DefaultContext(upgradeKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(upgradeKey)
+	upgradeKey := storetypes.NewKVStoreKey("upgrade")
+	storeService := runtime.NewKVStoreService(upgradeKey)
+	ctx := testutil.DefaultContext(upgradeKey, storetypes.NewTransientStoreKey("transient_test"))
+	store := storeService.OpenKVStore(ctx)
 
 	testCases := []struct {
 		name     string
@@ -43,17 +47,22 @@ func TestMigrateDoneUpgradeKeys(t *testing.T) {
 			bz := make([]byte, 8)
 			binary.BigEndian.PutUint64(bz, uint64(upgrade.height))
 			oldKey := encodeOldDoneKey(upgrade)
-			store.Set(oldKey, bz)
+			require.NoError(t, store.Set(oldKey, bz))
 		}
 
-		err := migrateDoneUpgradeKeys(ctx, upgradeKey)
+		err := migrateDoneUpgradeKeys(ctx, storeService)
 		require.NoError(t, err)
 
 		for _, upgrade := range tc.upgrades {
 			newKey := encodeDoneKey(upgrade.name, upgrade.height)
 			oldKey := encodeOldDoneKey(upgrade)
-			require.Nil(t, store.Get(oldKey))
-			require.Equal(t, []byte{1}, store.Get(newKey))
+			v, err := store.Get(oldKey)
+			require.Nil(t, v)
+			require.NoError(t, err)
+
+			nv, err := store.Get(newKey)
+			require.Equal(t, []byte{1}, nv)
+			require.NoError(t, err)
 		}
 	}
 }

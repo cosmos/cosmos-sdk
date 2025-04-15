@@ -5,9 +5,9 @@ package keyring
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
@@ -70,10 +71,10 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	require.Equal(t, "key", k.Name)
 
 	d1 := []byte("my first message")
-	s1, pub1, err := kb.Sign("key", d1)
+	s1, pub1, err := kb.Sign("key", d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
-	s2, pub2, err := SignWithLedger(k, d1)
+	s2, pub2, err := SignWithLedger(k, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
 	require.True(t, pub1.Equals(pub2))
@@ -90,7 +91,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 
 	k, _, err = kb.NewMnemonic("test", English, types.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = SignWithLedger(k, d1)
+	_, _, err = SignWithLedger(k, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Error(t, err)
 	require.Equal(t, "not a ledger object", err.Error())
 }
@@ -104,8 +105,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 
 	// Test unsupported Algo
 	_, err = kr.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 118, 0, 0)
-	require.Error(t, err)
-	require.True(t, strings.Contains(err.Error(), ErrUnsupportedSigningAlgo.Error()))
+	require.True(t, errors.Is(err, ErrUnsupportedSigningAlgo))
 
 	k, err := kr.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 	if err != nil {
@@ -189,7 +189,7 @@ func TestSignWithLedger(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sig, pub, err := SignWithLedger(tc.record, tc.msg)
+			sig, pub, err := SignWithLedger(tc.record, tc.msg, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 			assert.Equal(t, tc.wantSig, sig)
 			assert.Equal(t, tc.wantPub, pub)
 			if tc.wantErr {

@@ -2,16 +2,20 @@ package keeper
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	coreaddress "cosmossdk.io/core/address"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -27,9 +31,14 @@ func TestDoTallyAndUpdate(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	group.RegisterInterfaces(encCfg.InterfaceRegistry)
 
-	storeKey := sdk.NewKVStoreKey(group.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, storeKey, sdk.NewTransientStoreKey("transient_test"))
-	groupKeeper := NewKeeper(storeKey, encCfg.Codec, nil, nil, group.DefaultConfig())
+	storeKey := storetypes.NewKVStoreKey(group.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test"))
+	myAccountKeeper := &mockAccountKeeper{
+		AddressCodecFn: func() coreaddress.Codec {
+			return address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
+		},
+	}
+	groupKeeper := NewKeeper(storeKey, encCfg.Codec, nil, myAccountKeeper, group.DefaultConfig())
 	noEventsFn := func(proposalID uint64) sdk.Events { return sdk.Events{} }
 	type memberVote struct {
 		address string
@@ -164,26 +173,40 @@ func TestDoTallyAndUpdate(t *testing.T) {
 	}
 }
 
+var _ group.AccountKeeper = &mockAccountKeeper{}
+
+// mockAccountKeeper is a mock implementation of the AccountKeeper interface for testing purposes.
+type mockAccountKeeper struct {
+	AddressCodecFn func() coreaddress.Codec
+}
+
+func (m mockAccountKeeper) AddressCodec() coreaddress.Codec {
+	if m.AddressCodecFn == nil {
+		panic("not expected to be called")
+	}
+	return m.AddressCodecFn()
+}
+
+func (m mockAccountKeeper) NewAccount(ctx context.Context, i sdk.AccountI) sdk.AccountI {
+	panic("not expected to be called")
+}
+
+func (m mockAccountKeeper) GetAccount(ctx context.Context, address sdk.AccAddress) sdk.AccountI {
+	panic("not expected to be called")
+}
+
+func (m mockAccountKeeper) SetAccount(ctx context.Context, i sdk.AccountI) {
+	panic("not expected to be called")
+}
+
+func (m mockAccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
+	panic("not expected to be called")
+}
+
 // mockDecisionPolicy is a mock implementation of a decision policy for testing purposes.
 type mockDecisionPolicy struct {
 	fakeProtoType
 	AllowFn func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error)
-}
-
-func (m mockDecisionPolicy) MarshalTo(data []byte) (n int, err error) {
-	panic("implement me")
-}
-
-func (m mockDecisionPolicy) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	panic("implement me")
-}
-
-func (m mockDecisionPolicy) Size() int {
-	panic("implement me")
-}
-
-func (m mockDecisionPolicy) Unmarshal(data []byte) error {
-	panic("implement me")
 }
 
 func (m mockDecisionPolicy) Allow(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
@@ -209,27 +232,14 @@ func (m mockDecisionPolicy) Validate(g group.GroupInfo, config group.Config) err
 	panic("not expected to be called")
 }
 
-var _ codec.ProtoMarshaler = (*fakeProtoType)(nil)
+var (
+	_ proto.Marshaler = (*fakeProtoType)(nil)
+	_ proto.Message   = (*fakeProtoType)(nil)
+)
 
 // fakeProtoType is a struct used for mocking and testing purposes.
 // Custom types can be converted into Any and back via internal CachedValue only.
 type fakeProtoType struct{}
-
-func (a fakeProtoType) MarshalTo(data []byte) (n int, err error) {
-	return 0, nil
-}
-
-func (a fakeProtoType) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	return 0, nil
-}
-
-func (a fakeProtoType) Size() int {
-	return 0
-}
-
-func (a fakeProtoType) Unmarshal(data []byte) error {
-	return nil
-}
 
 func (a fakeProtoType) Reset() {}
 

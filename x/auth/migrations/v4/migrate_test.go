@@ -5,6 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -31,16 +34,17 @@ func TestMigrate(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v1.ModuleName)
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	store := ctx.KVStore(storeKey)
+	storeService := runtime.NewKVStoreService(storeKey)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
-	require.NoError(t, v4.Migrate(ctx, store, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, storeService, legacySubspace, cdc))
 
 	var res types.Params
-	bz := store.Get(v4.ParamsKey)
+	bz, err := storeService.OpenKVStore(ctx).Get(v4.ParamsKey)
+	require.NoError(t, err)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.Equal(t, legacySubspace.ps, res)
 }

@@ -34,17 +34,27 @@ func (u FixedUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (u FixedUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
-	return binary.Write(w, binary.BigEndian, value.Uint())
+	var x uint64
+	if value.IsValid() {
+		x = value.Uint()
+	}
+	return binary.Write(w, binary.BigEndian, x)
 }
 
 func compareUint(v1, v2 protoreflect.Value) int {
-	x := v1.Uint()
-	y := v2.Uint()
-	if x == y {
+	var x, y uint64
+	if v1.IsValid() {
+		x = v1.Uint()
+	}
+	if v2.IsValid() {
+		y = v2.Uint()
+	}
+	switch {
+	case x == y:
 		return 0
-	} else if x < y {
+	case x < y:
 		return -1
-	} else {
+	default:
 		return 1
 	}
 }
@@ -58,7 +68,11 @@ func (c CompactUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (c CompactUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
-	_, err := w.Write(EncodeCompactUint64(value.Uint()))
+	var x uint64
+	if value.IsValid() {
+		x = value.Uint()
+	}
+	_, err := w.Write(EncodeCompactUint64(x))
 	return err
 }
 

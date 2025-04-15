@@ -21,22 +21,28 @@ var (
 
 func (b BoolCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	var err error
-	if value.Bool() {
-		_, err = w.Write(oneBz)
-	} else {
+	if !value.IsValid() || !value.Bool() {
 		_, err = w.Write(zeroBz)
+	} else {
+		_, err = w.Write(oneBz)
 	}
 	return err
 }
 
 func (b BoolCodec) Compare(v1, v2 protoreflect.Value) int {
-	b1 := v1.Bool()
-	b2 := v2.Bool()
-	if b1 == b2 {
+	var b1, b2 bool
+	if v1.IsValid() {
+		b1 = v1.Bool()
+	}
+	if v2.IsValid() {
+		b2 = v2.Bool()
+	}
+	switch {
+	case b1 == b2:
 		return 0
-	} else if b1 {
+	case b1:
 		return -1
-	} else {
+	default:
 		return 1
 	}
 }

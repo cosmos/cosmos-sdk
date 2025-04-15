@@ -2,14 +2,17 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const chainUpgradeGuide = "https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md"
@@ -17,9 +20,10 @@ const chainUpgradeGuide = "https://github.com/cosmos/cosmos-sdk/blob/main/UPGRAD
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
 func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 	return &cobra.Command{
-		Use:   "validate-genesis [file]",
-		Args:  cobra.RangeArgs(0, 1),
-		Short: "validates the genesis file at the default location or at the location passed as an arg",
+		Use:     "validate [file]",
+		Aliases: []string{"validate-genesis"},
+		Args:    cobra.RangeArgs(0, 1),
+		Short:   "Validates the genesis file at the default location or at the location passed as an arg",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -34,38 +38,41 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				genesis = args[0]
 			}
 
-			genDoc, err := validateGenDoc(genesis)
+			appGenesis, err := types.AppGenesisFromFile(genesis)
 			if err != nil {
-				return err
+				return enrichUnmarshalError(err)
+			}
+
+			if err := appGenesis.ValidateAndComplete(); err != nil {
+				return fmt.Errorf("make sure that you have correctly migrated all CometBFT consensus params. Refer the UPGRADING.md (%s): %w", chainUpgradeGuide, err)
 			}
 
 			var genState map[string]json.RawMessage
-			if err = json.Unmarshal(genDoc.AppState, &genState); err != nil {
-				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
+			if err := json.Unmarshal(appGenesis.AppState, &genState); err != nil {
+				if strings.Contains(err.Error(), "unexpected end of JSON input") {
+					return fmt.Errorf("app_state is missing in the genesis file: %s", err.Error())
+				}
+				return fmt.Errorf("error unmarshalling genesis doc %s: %w", genesis, err)
 			}
 
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
-				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
+				errStr := fmt.Sprintf("error validating genesis file %s: %s", genesis, err.Error())
+				if errors.Is(err, io.EOF) {
+					errStr = fmt.Sprintf("%s: section is missing in the app_state", errStr)
+				}
+				return fmt.Errorf("%s", errStr)
 			}
 
-			fmt.Printf("File at %s is a valid genesis file\n", genesis)
+			fmt.Fprintf(cmd.OutOrStdout(), "File at %s is a valid genesis file\n", genesis)
 			return nil
 		},
 	}
 }
 
-// validateGenDoc reads a genesis file and validates that it is a correct
-// Tendermint GenesisDoc. This function does not do any cosmos-related
-// validation.
-func validateGenDoc(importGenesisFile string) (*tmtypes.GenesisDoc, error) {
-	genDoc, err := tmtypes.GenesisDocFromFile(importGenesisFile)
-	if err != nil {
-		return nil, fmt.Errorf("%s. Make sure that"+
-			" you have correctly migrated all Tendermint consensus params, please see the"+
-			" chain migration guide at %s for more info",
-			err.Error(), chainUpgradeGuide,
-		)
+func enrichUnmarshalError(err error) error {
+	var syntaxErr *json.SyntaxError
+	if errors.As(err, &syntaxErr) {
+		return fmt.Errorf("error at offset %d: %s", syntaxErr.Offset, syntaxErr.Error())
 	}
-
-	return genDoc, nil
+	return err
 }

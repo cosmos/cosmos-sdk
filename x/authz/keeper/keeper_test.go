@@ -4,13 +4,17 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtime "github.com/cometbft/cometbft/types/time"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,9 +48,10 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	key := sdk.NewKVStoreKey(authzkeeper.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	key := storetypes.NewKVStoreKey(authzkeeper.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
 	s.baseApp = baseapp.NewBaseApp(
@@ -63,12 +68,14 @@ func (s *TestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
 	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
 	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
 	s.bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
-	s.authzKeeper = authzkeeper.NewKeeper(key, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper).SetBankKeeper(s.bankKeeper)
+	s.authzKeeper = authzkeeper.NewKeeper(storeService, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper).SetBankKeeper(s.bankKeeper)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)
 	authz.RegisterQueryServer(queryHelper, s.authzKeeper)
@@ -469,6 +476,27 @@ func (s *TestSuite) TestGetAuthorization() {
 			s.Assert().Equal(tc.expExp, actExp, "expiration")
 		})
 	}
+}
+
+func (s *TestSuite) TestGetAuthorizations() {
+	require := s.Require()
+	addr1 := s.addrs[1]
+	addr2 := s.addrs[2]
+
+	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
+	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
+
+	start := s.ctx.BlockHeader().Time
+	expired := start.Add(time.Duration(1) * time.Second)
+
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, &expired), "creating multi send grant 1->2")
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthSend, &expired), "creating send grant 1->2")
+
+	authzs, err := s.authzKeeper.GetAuthorizations(s.ctx, addr1, addr2)
+	require.NoError(err)
+	require.Len(authzs, 2)
+	require.Equal(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), authzs[0].MsgTypeURL())
+	require.Equal(sdk.MsgTypeURL(&banktypes.MsgSend{}), authzs[1].MsgTypeURL())
 }
 
 func TestTestSuite(t *testing.T) {

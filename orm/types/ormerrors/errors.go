@@ -1,8 +1,9 @@
 package ormerrors
 
 import (
-	"cosmossdk.io/errors"
 	"google.golang.org/grpc/codes"
+
+	"cosmossdk.io/errors"
 )
 
 var codespace = "orm"
@@ -12,6 +13,7 @@ func IsNotFound(err error) bool {
 	return errors.IsOf(err, NotFound)
 }
 
+// nolint: revive // avoid break API
 var (
 	InvalidTableId                = errors.New(codespace, 1, "invalid or missing table or single id, need a non-zero value")
 	MissingPrimaryKey             = errors.New(codespace, 2, "table is missing primary key")
@@ -43,4 +45,5 @@ var (
 	ReadOnly                      = errors.New(codespace, 30, "database is read-only")
 	AlreadyExists                 = errors.RegisterWithGRPCCode(codespace, 31, codes.AlreadyExists, "already exists")
 	ConstraintViolation           = errors.RegisterWithGRPCCode(codespace, 32, codes.FailedPrecondition, "failed precondition")
+	NoTableDescriptor             = errors.New(codespace, 33, "no table descriptor found")
 )

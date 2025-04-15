@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 

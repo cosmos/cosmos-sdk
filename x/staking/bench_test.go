@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -32,7 +33,7 @@ func benchmarkValidateGenesis(b *testing.B, n int) {
 		addr, pubKey := addressL[i], pubKeyL[i]
 		validator := testutil.NewValidator(b, addr, pubKey)
 		ni := int64(i + 1)
-		validator.Tokens = sdk.NewInt(ni)
+		validator.Tokens = math.NewInt(ni)
 		validator.DelegatorShares = math.LegacyNewDec(ni)
 		validators = append(validators, validator)
 	}

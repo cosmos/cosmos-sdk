@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
+	"reflect"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -40,9 +41,12 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 		// this allows us to use imported messages, such as timestamppb.Timestamp
 		// in iterators.
 		value := values[i]
-		switch value.(type) {
-		case protoreflect.ProtoMessage:
-			value = value.(protoreflect.ProtoMessage).ProtoReflect()
+		if v, ok := value.(protoreflect.ProtoMessage); ok {
+			if !reflect.ValueOf(value).IsNil() {
+				value = v.ProtoReflect()
+			} else {
+				value = nil
+			}
 		}
 		res[i] = protoreflect.ValueOf(value)
 	}

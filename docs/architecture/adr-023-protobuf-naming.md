@@ -191,7 +191,7 @@ is used in source code to denote modules, this is often unnecessary for .proto
 files as modules are the primary thing sub-packages are used for. Only items which
 are known to be used infrequently should have deep sub-package depths.
 
-For the Cosmos SDK, it is recommended that that we simply write `cosmos.bank`,
+For the Cosmos SDK, it is recommended that we simply write `cosmos.bank`,
 `cosmos.gov`, etc. rather than `cosmos.x.bank`. In practice, most non-module
 types can go straight in the `cosmos` package or we can introduce a
 `cosmos.base` package if needed. Note that this naming _will not_ change

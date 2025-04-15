@@ -6,8 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,8 +35,8 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet) {
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}).Codec
 
-	storeKey := sdk.NewKVStoreKey(v4.ModuleName)
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey(v4.ModuleName)
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 	duplicateCreationHeight := int64(1)
@@ -68,7 +70,7 @@ func TestMigrate(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.doMigration {
-				require.NoError(t, v4.MigrateStore(ctx, storeKey, cdc, legacySubspace))
+				require.NoError(t, v4.MigrateStore(ctx, store, cdc, legacySubspace))
 			}
 
 			ubd := getUBD(t, accAddr, valAddr, store, cdc)
@@ -81,7 +83,7 @@ func TestMigrate(t *testing.T) {
 				// checking the updated balance for duplicateCreationHeight
 				for _, ubdEntry := range ubd.Entries {
 					if ubdEntry.CreationHeight == duplicateCreationHeight {
-						require.Equal(t, sdk.NewInt(100*10), ubdEntry.Balance)
+						require.Equal(t, math.NewInt(100*10), ubdEntry.Balance)
 						break
 					}
 				}
@@ -97,7 +99,7 @@ func TestMigrate(t *testing.T) {
 // createOldStateUnbonding will create the ubd entries with duplicate heights
 // 10 duplicate heights and 10 unique ubd with creation height
 func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, store storetypes.KVStore) error {
-	unbondBalance := sdk.NewInt(100)
+	unbondBalance := math.NewInt(100)
 	completionTime := time.Now()
 	ubdEntries := make([]types.UnbondingDelegationEntry, 0, 10)
 

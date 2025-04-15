@@ -4,48 +4,49 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"math"
 
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
-
-	"google.golang.org/protobuf/reflect/protodesc"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
-	"google.golang.org/protobuf/proto"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/orm/encoding/encodeutil"
+	"cosmossdk.io/orm/encoding/ormkv"
+	"cosmossdk.io/orm/model/ormtable"
+	"cosmossdk.io/orm/types/ormerrors"
 )
 
 // ModuleDB defines the ORM database type to be used by modules.
 type ModuleDB interface {
 	ormtable.Schema
 
-	// DefaultJSON writes default JSON for each table in the module to the target.
-	DefaultJSON(ormjson.WriteTarget) error
+	// GenesisHandler returns an implementation of appmodule.HasGenesis
+	// to be embedded in or called from app module implementations.
+	// Ex:
+	//   type AppModule struct {
+	//     appmodule.HasGenesis
+	//   }
+	//
+	//   func NewKeeper(db ModuleDB) *Keeper {
+	//     return &Keeper{genesisHandler: db.GenesisHandler()}
+	//   }
+	//
+	//  func NewAppModule(keeper keeper.Keeper) AppModule {
+	//    return AppModule{HasGenesis: keeper.GenesisHandler()}
+	//  }
+	GenesisHandler() appmodule.HasGenesis
 
-	// ValidateJSON validates JSON for each table in the module.
-	ValidateJSON(ormjson.ReadSource) error
-
-	// ImportJSON imports JSON for each table in the module which has JSON
-	// defined in the read source.
-	ImportJSON(context.Context, ormjson.ReadSource) error
-
-	// ExportJSON exports JSON for each table in the module.
-	ExportJSON(context.Context, ormjson.WriteTarget) error
+	private()
 }
 
 type moduleDB struct {
 	prefix       []byte
-	filesById    map[uint32]*fileDescriptorDB
+	filesByID    map[uint32]*fileDescriptorDB
 	tablesByName map[protoreflect.FullName]ormtable.Table
 }
 
@@ -66,9 +67,14 @@ type ModuleDBOptions struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
-	// GetBackendResolver returns a backend resolver for the requested storage
-	// type or an error if this type of storage isn't supported.
-	GetBackendResolver func(ormv1alpha1.StorageType) (ormtable.BackendResolver, error)
+	// KVStoreService is the storage service to use for the DB if default KV-store storage is used.
+	KVStoreService store.KVStoreService
+
+	// KVStoreService is the storage service to use for the DB if memory storage is used.
+	MemoryStoreService store.MemoryStoreService
+
+	// KVStoreService is the storage service to use for the DB if transient storage is used.
+	TransientStoreService store.TransientStoreService
 }
 
 // NewModuleDB constructs a ModuleDB instance from the provided schema and options.
@@ -76,7 +82,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 	prefix := schema.Prefix
 	db := &moduleDB{
 		prefix:       prefix,
-		filesById:    map[uint32]*fileDescriptorDB{},
+		filesByID:    map[uint32]*fileDescriptorDB{},
 		tablesByName: map[protoreflect.FullName]ormtable.Table{},
 	}
 
@@ -87,12 +93,49 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 
 	for _, entry := range schema.SchemaFile {
 		var backendResolver ormtable.BackendResolver
-		var err error
-		if options.GetBackendResolver != nil {
-			backendResolver, err = options.GetBackendResolver(entry.StorageType)
-			if err != nil {
-				return nil, err
+
+		switch entry.StorageType {
+		case ormv1alpha1.StorageType_STORAGE_TYPE_DEFAULT_UNSPECIFIED:
+			service := options.KVStoreService
+			if service != nil {
+				// for testing purposes, the ORM allows KVStoreService to be omitted
+				// and a default test backend can be used
+				backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
+					kvStore := service.OpenKVStore(ctx)
+					return ormtable.NewBackend(ormtable.BackendOptions{
+						CommitmentStore: kvStore,
+						IndexStore:      kvStore,
+					}), nil
+				}
 			}
+		case ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY:
+			service := options.MemoryStoreService
+			if service == nil {
+				return nil, fmt.Errorf("missing MemoryStoreService")
+			}
+
+			backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
+				kvStore := service.OpenMemoryStore(ctx)
+				return ormtable.NewBackend(ormtable.BackendOptions{
+					CommitmentStore: kvStore,
+					IndexStore:      kvStore,
+				}), nil
+			}
+		case ormv1alpha1.StorageType_STORAGE_TYPE_TRANSIENT:
+			service := options.TransientStoreService
+			if service == nil {
+				return nil, fmt.Errorf("missing TransientStoreService")
+			}
+
+			backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
+				kvStore := service.OpenTransientStore(ctx)
+				return ormtable.NewBackend(ormtable.BackendOptions{
+					CommitmentStore: kvStore,
+					IndexStore:      kvStore,
+				}), nil
+			}
+		default:
+			return nil, fmt.Errorf("unsupported storage type %s", entry.StorageType)
 		}
 
 		id := entry.Id
@@ -118,7 +161,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 			return nil, err
 		}
 
-		db.filesById[id] = fdSchema
+		db.filesByID[id] = fdSchema
 		for name, table := range fdSchema.tablesByName {
 			if _, ok := db.tablesByName[name]; ok {
 				return nil, ormerrors.UnexpectedError.Wrapf("duplicate table %s", name)
@@ -147,7 +190,7 @@ func (m moduleDB) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
-	fileSchema, ok := m.filesById[uint32(id)]
+	fileSchema, ok := m.filesByID[uint32(id)]
 	if !ok {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find FileDescriptor schema with id %d", id)
 	}
@@ -168,3 +211,9 @@ func (m moduleDB) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 func (m moduleDB) GetTable(message proto.Message) ormtable.Table {
 	return m.tablesByName[message.ProtoReflect().Descriptor().FullName()]
 }
+
+func (m moduleDB) GenesisHandler() appmodule.HasGenesis {
+	return appModuleGenesisWrapper{m}
+}
+
+func (moduleDB) private() {}

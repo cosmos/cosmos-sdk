@@ -16,7 +16,9 @@ import (
 	"github.com/otiai10/copy"
 	"github.com/rs/zerolog"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/log"
+	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 type Launcher struct {
@@ -25,13 +27,14 @@ type Launcher struct {
 	fw     *fileWatcher
 }
 
-func NewLauncher(logger *zerolog.Logger, cfg *Config) (Launcher, error) {
+func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	fw, err := newUpgradeFileWatcher(logger, cfg.UpgradeInfoFilePath(), cfg.PollInterval)
 	if err != nil {
 		return Launcher{}, err
 	}
 
-	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
+	zl := logger.Impl().(*zerolog.Logger)
+	return Launcher{logger: zl, cfg: cfg, fw: fw}, nil
 }
 
 // Run launches the app in a subprocess and returns when the subprocess (app)
@@ -43,7 +46,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
 
-	if err := EnsureBinary(bin); err != nil {
+	if err := plan.EnsureBinary(bin); err != nil {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
 
@@ -75,7 +78,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 			return false, err
 		}
 
-		if err := UpgradeBinary(l.logger, l.cfg, l.fw.currentInfo); err != nil {
+		if err := UpgradeBinary(log.NewCustomLogger(*l.logger), l.cfg, l.fw.currentInfo); err != nil {
 			return false, err
 		}
 
@@ -176,7 +179,7 @@ func (l *Launcher) doPreUpgrade() error {
 		}
 
 		if err := l.executePreUpgradeCmd(); err != nil {
-			counter += 1
+			counter++
 
 			switch err.(*exec.ExitError).ProcessState.ExitCode() {
 			case 1:
@@ -229,7 +232,7 @@ func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 func UpgradeSkipHeights(args []string) []int {
 	var heights []int
 	for i, arg := range args {
-		if arg == "--unsafe-skip-upgrades" {
+		if arg == fmt.Sprintf("--%s", FlagSkipUpgradeHeight) {
 			j := i + 1
 
 			for j < len(args) {

@@ -51,7 +51,7 @@ func (suite *SKSuite) TestBytes() {
 func (suite *SKSuite) TestMarshalProto() {
 	require := suite.Require()
 
-	/**** test structure marshalling ****/
+	/**** test structure marshaling ****/
 
 	var sk PrivKey
 	bz, err := proto.Marshal(suite.sk)
@@ -59,7 +59,7 @@ func (suite *SKSuite) TestMarshalProto() {
 	require.NoError(proto.Unmarshal(bz, &sk))
 	require.True(sk.Equals(suite.sk))
 
-	/**** test structure marshalling with codec ****/
+	/**** test structure marshaling with codec ****/
 
 	sk = PrivKey{}
 	registry := types.NewInterfaceRegistry()

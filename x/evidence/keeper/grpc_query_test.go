@@ -1,13 +1,14 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/x/evidence/exported"
+	"cosmossdk.io/x/evidence/types"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryEvidence() {
@@ -37,7 +38,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			func() {
 				numEvidence := 1
 				evidence = suite.populateEvidence(suite.ctx, numEvidence)
-				evidenceHash := evidence[0].Hash().String()
+				evidenceHash := strings.ToUpper(hex.EncodeToString(evidence[0].Hash()))
 				reqHash := strings.Repeat("a", len(evidenceHash))
 				req = types.NewQueryEvidenceRequest(reqHash)
 			},
@@ -47,11 +48,22 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			},
 		},
 		{
+			"non-existent evidence",
+			func() {
+				reqHash := "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
+				req = types.NewQueryEvidenceRequest(reqHash)
+			},
+			false,
+			"evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660 not found",
+			func(res *types.QueryEvidenceResponse) {
+			},
+		},
+		{
 			"success",
 			func() {
 				numEvidence := 100
 				evidence = suite.populateEvidence(suite.ctx, numEvidence)
-				req = types.NewQueryEvidenceRequest(evidence[0].Hash().String())
+				req = types.NewQueryEvidenceRequest(strings.ToUpper(hex.EncodeToString(evidence[0].Hash())))
 			},
 			true,
 			"",
@@ -70,9 +82,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			suite.SetupTest()
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
-			res, err := suite.queryClient.Evidence(ctx, req)
+			res, err := suite.queryClient.Evidence(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -132,9 +142,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 			suite.SetupTest()
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
-			res, err := suite.queryClient.AllEvidence(ctx, req)
+			res, err := suite.queryClient.AllEvidence(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

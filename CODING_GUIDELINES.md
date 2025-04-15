@@ -93,7 +93,7 @@ Make sure your code is well tested:
 * Provide unit tests for every unit of your code if possible. Unit tests are expected to comprise 70%-80% of your tests.
 * Describe the test scenarios you are implementing for integration tests.
 * Create integration tests for queries and msgs.
-* Use both test cases and property / fuzzy testing. We use the [rapid](pgregory.net/rapid) Go library for property-based and fuzzy testing.
+* Use both test cases and property / fuzzy testing. We use the [rapid](https://pgregory.net/rapid) Go library for property-based and fuzzy testing.
 * Do not decrease code test coverage. Explain in a PR if test coverage is decreased.
 
 We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,

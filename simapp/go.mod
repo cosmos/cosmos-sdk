@@ -12,7 +12,6 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
-	cosmossdk.io/x/circuit v0.2.0-rc.2
 	cosmossdk.io/x/evidence v0.2.0-rc.2
 	cosmossdk.io/x/feegrant v0.2.0-rc.2
 	cosmossdk.io/x/nft v0.2.0-rc.2
@@ -223,10 +222,7 @@ require (
 // 	<temporary replace>
 // )
 
-replace (
-	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/x/circuit => ../x/circuit
-)
+replace cosmossdk.io/client/v2 => ../client/v2
 
 // Below are the long-lived replace of the SimApp
 replace (

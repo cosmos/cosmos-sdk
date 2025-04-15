@@ -3,7 +3,7 @@ package simapp
 import (
 	"errors"
 
-	circuitante "cosmossdk.io/x/circuit/ante"
+	circuitante "github.com/cosmos/cosmos-sdk/x/circuit/ante"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"

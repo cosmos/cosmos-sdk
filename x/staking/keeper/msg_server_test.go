@@ -213,8 +213,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					Details:         "details",
 				},
 				Commission: stakingtypes.CommissionRates{
-					Rate:          math.LegacyNewDecWithPrec(5, 1),
-					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					Rate:          math.LegacyNewDecWithPrec(5, 2),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 2),
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
@@ -224,6 +224,29 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				Value:             sdk.NewInt64Coin("stake", 10000),
 			},
 			expErr: false,
+		},
+		{
+			name: "commission greater than max",
+			input: &stakingtypes.MsgCreateValidator{
+				Description: stakingtypes.Description{
+					Moniker:         "NewValidator",
+					Identity:        "xyz",
+					Website:         "xyz.com",
+					SecurityContact: "xyz@gmail.com",
+					Details:         "details",
+				},
+				Commission: stakingtypes.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1), // 50%
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1), // 50%
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  Addr.String(),
+				ValidatorAddress:  ValAddr.String(),
+				Pubkey:            pubkey,
+				Value:             sdk.NewInt64Coin("stake", 10000),
+			},
+			expErr: true,
 		},
 	}
 	for _, tc := range testCases {
@@ -1016,7 +1039,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "invalid authority",
 		},
 		{
-			name: "negative commission rate",
+			name: "negative min commission rate",
 			input: &stakingtypes.MsgUpdateParams{
 				Authority: keeper.GetAuthority(),
 				Params: stakingtypes.Params{

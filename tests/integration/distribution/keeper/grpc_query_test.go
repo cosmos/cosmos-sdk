@@ -99,7 +99,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 
 	initialStake := int64(10)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
 	// set outstanding rewards
@@ -171,7 +171,7 @@ func TestGRPCValidatorCommission(t *testing.T) {
 
 	initialStake := int64(10)
 	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
 	commission := sdk.DecCoins{sdk.DecCoin{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
@@ -511,7 +511,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 		valConsPk0,
 		sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(initialStake)),
 		stakingtypes.NewDescription("test", "test", "test", "test", "test"),
-		stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)),
+		stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)),
 		math.OneInt(),
 	)
 	assert.NilError(t, err)

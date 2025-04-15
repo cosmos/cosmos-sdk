@@ -36,4 +36,5 @@ func TestValidateParams(t *testing.T) {
 
 	params.MinCommissionRate = math.LegacyNewDec(2)
 	require.Error(t, params.Validate())
+
 }

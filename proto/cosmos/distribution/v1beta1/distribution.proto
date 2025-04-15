@@ -194,9 +194,9 @@ message CommunityPoolSpendProposalWithDeposit {
 }
 
 // UserOutstandingRewards represent rewards that a user has claimed with withdrawNow=false.
-// In other words, these are rewards that have been claimed by a user indirectly (e.g. because the user staked more tokens) but have not been moved from the 
-// distribution module account address to the user's account yet. 
-// Note: These rewards do not earn additional staking rewards.
+// In other words, these are rewards that have been claimed by a user indirectly (e.g. because the user staked more
+// tokens) but have not been moved from the distribution module account address to the user's account yet. Note: These
+// rewards do not earn additional staking rewards.
 message UserOutstandingRewards {
   repeated cosmos.base.v1beta1.Coin rewards = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",

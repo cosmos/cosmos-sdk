@@ -52,6 +52,12 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(types.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", minCommRate)
 	}
 
+	maxCommRate := types.MaxCommissionRate
+
+	if msg.Commission.Rate.GT(maxCommRate) {
+		return nil, errorsmod.Wrapf(types.ErrCommissionGTMaxRate, "cannot set validator commission rate to greater than maximum rate of %s, proposed %s", maxCommRate, msg.Commission.MaxRate)
+	}
+
 	// check to see if the pubkey or sender has been registered before
 	if _, err := k.GetValidator(ctx, valAddr); err == nil {
 		return nil, types.ErrValidatorOwnerExists
@@ -186,6 +192,12 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 
 		if msg.CommissionRate.LT(minCommissionRate) {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "commission rate cannot be less than the min commission rate %s", minCommissionRate.String())
+		}
+
+		maxCommRate := types.MaxCommissionRate
+
+		if msg.CommissionRate.GT(maxCommRate) {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "commission rate cannot be greater than the max commission rate %s, proposed: %s", maxCommRate.String(), msg.CommissionRate.String())
 		}
 	}
 

@@ -34,7 +34,7 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.12 // indirect
+	github.com/linxGnu/grocksdb v1.8.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -60,3 +60,8 @@ require (
 retract v0.12.0
 
 retract v1.0.0
+
+// replace (
+// 	<temporary replace>
+// )
+replace github.com/cosmos/cosmos-db => github.com/mmsqe/cosmos-db v0.0.0-20250411095840-e08e5aabf171

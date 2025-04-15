@@ -161,3 +161,11 @@ require (
 
 // Temporary replace until the next 0.53 tag
 replace github.com/cosmos/cosmos-sdk => ../..
+
+// replace (
+// 	<temporary replace>
+// )
+replace (
+	cosmossdk.io/collections => ../../collections
+	github.com/cosmos/cosmos-db => github.com/mmsqe/cosmos-db v0.0.0-20250411095840-e08e5aabf171
+)

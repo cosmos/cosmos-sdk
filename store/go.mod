@@ -16,7 +16,6 @@ require (
 	github.com/hashicorp/go-metrics v0.5.4
 	github.com/hashicorp/go-plugin v1.6.3
 	github.com/hashicorp/golang-lru v1.0.2
-	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
 	go.uber.org/mock v0.5.1
@@ -74,6 +73,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	golang.org/x/arch v0.15.0 // indirect
@@ -84,3 +84,8 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// replace (
+// 	<temporary replace>
+// )
+replace github.com/cosmos/cosmos-db => github.com/mmsqe/cosmos-db v0.0.0-20250411095840-e08e5aabf171

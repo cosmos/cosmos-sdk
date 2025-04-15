@@ -9,7 +9,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 )
 
 type mockValidator struct {
@@ -125,9 +125,9 @@ func RandomRequestFinalizeBlock(
 	blockHeight int64,
 	time time.Time,
 	proposer []byte,
-) *abci.RequestFinalizeBlock {
+) *abci.FinalizeBlockRequest {
 	if len(validators) == 0 {
-		return &abci.RequestFinalizeBlock{
+		return &abci.FinalizeBlockRequest{
 			Height:          blockHeight,
 			Time:            time,
 			ProposerAddress: proposer,
@@ -177,7 +177,7 @@ func RandomRequestFinalizeBlock(
 
 	// return if no past times
 	if len(pastTimes) == 0 {
-		return &abci.RequestFinalizeBlock{
+		return &abci.FinalizeBlockRequest{
 			Height:          blockHeight,
 			Time:            time,
 			ProposerAddress: proposer,
@@ -221,7 +221,7 @@ func RandomRequestFinalizeBlock(
 		event("begin_block", "evidence", "ok")
 	}
 
-	return &abci.RequestFinalizeBlock{
+	return &abci.FinalizeBlockRequest{
 		Height:          blockHeight,
 		Time:            time,
 		ProposerAddress: proposer,

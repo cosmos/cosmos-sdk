@@ -16,35 +16,35 @@ func NewCometABCIWrapper(app servertypes.ABCI) abci.Application {
 	return cometABCIWrapper{app: app}
 }
 
-func (w cometABCIWrapper) Info(_ context.Context, req *abci.RequestInfo) (*abci.ResponseInfo, error) {
+func (w cometABCIWrapper) Info(_ context.Context, req *abci.InfoRequest) (*abci.InfoResponse, error) {
 	return w.app.Info(req)
 }
 
-func (w cometABCIWrapper) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+func (w cometABCIWrapper) Query(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	return w.app.Query(ctx, req)
 }
 
-func (w cometABCIWrapper) CheckTx(_ context.Context, req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
+func (w cometABCIWrapper) CheckTx(_ context.Context, req *abci.CheckTxRequest) (*abci.CheckTxResponse, error) {
 	return w.app.CheckTx(req)
 }
 
-func (w cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+func (w cometABCIWrapper) InitChain(_ context.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 	return w.app.InitChain(req)
 }
 
-func (w cometABCIWrapper) PrepareProposal(_ context.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+func (w cometABCIWrapper) PrepareProposal(_ context.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 	return w.app.PrepareProposal(req)
 }
 
-func (w cometABCIWrapper) ProcessProposal(_ context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+func (w cometABCIWrapper) ProcessProposal(_ context.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
 	return w.app.ProcessProposal(req)
 }
 
-func (w cometABCIWrapper) FinalizeBlock(_ context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (w cometABCIWrapper) FinalizeBlock(_ context.Context, req *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {
 	return w.app.FinalizeBlock(req)
 }
 
-func (w cometABCIWrapper) ExtendVote(ctx context.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+func (w cometABCIWrapper) ExtendVote(ctx context.Context, req *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
 	return w.app.ExtendVote(ctx, req)
 }
 
@@ -52,7 +52,7 @@ func (w cometABCIWrapper) VerifyVoteExtension(_ context.Context, req *abci.Reque
 	return w.app.VerifyVoteExtension(req)
 }
 
-func (w cometABCIWrapper) Commit(_ context.Context, _ *abci.RequestCommit) (*abci.ResponseCommit, error) {
+func (w cometABCIWrapper) Commit(_ context.Context, _ *abci.CommitRequest) (*abci.CommitResponse, error) {
 	return w.app.Commit()
 }
 

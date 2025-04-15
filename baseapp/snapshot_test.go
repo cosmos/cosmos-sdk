@@ -150,13 +150,13 @@ func TestABCI_SnapshotWithPruning(t *testing.T) {
 			}
 
 			// Query 1
-			res, err := suite.baseApp.Query(context.TODO(), &abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight})
+			res, err := suite.baseApp.Query(context.TODO(), &abci.QueryRequest{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight})
 			require.NoError(t, err)
 			require.NotNil(t, res, "height: %d", lastExistingHeight)
 			require.NotNil(t, res.Value, "height: %d", lastExistingHeight)
 
 			// Query 2
-			res, err = suite.baseApp.Query(context.TODO(), &abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight - 1})
+			res, err = suite.baseApp.Query(context.TODO(), &abci.QueryRequest{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight - 1})
 			require.NoError(t, err)
 			require.NotNil(t, res, "height: %d", lastExistingHeight-1)
 

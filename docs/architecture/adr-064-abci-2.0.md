@@ -103,8 +103,8 @@ vote extensions.
 We propose the following new handlers for applications to implement:
 
 ```go
-type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseExtendVote
-type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
+type ExtendVoteHandler func(sdk.Context, abci.ExtendVoteRequest) abci.ExtendVoteResponse
+type VerifyVoteExtensionHandler func(sdk.Context, abci.VerifyVoteExtensionRequest) abci.VerifyVoteExtensionResponse
 ```
 
 An ephemeral context and state will be supplied to both handlers. The
@@ -144,7 +144,7 @@ type VoteExtensionHandler struct {
 
 // ExtendVoteHandler can do something with h.mk and possibly h.state to create
 // a vote extension, such as fetching a series of prices for supported assets.
-func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.RequestExtendVote) abci.ResponseExtendVote {
+func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.ExtendVoteRequest) abci.ExtendVoteResponse {
 	prices := GetPrices(ctx, h.mk.Assets())
 	bz, err := EncodePrices(h.cdc, prices)
 	if err != nil {
@@ -156,22 +156,22 @@ func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.Reques
 	// NOTE: Vote extensions can be overridden since we can timeout in a round.
 	SetPrices(h.state, req, bz)
 
-	return abci.ResponseExtendVote{VoteExtension: bz}
+	return abci.ExtendVoteResponse{VoteExtension: bz}
 }
 
 // VerifyVoteExtensionHandler can do something with h.state and req to verify
 // the req.VoteExtension field, such as ensuring the provided oracle prices are
 // within some valid range of our prices.
-func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension {
+func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req abci.VerifyVoteExtensionRequest) abci.VerifyVoteExtensionResponse {
 	prices, err := DecodePrices(h.cdc, req.VoteExtension)
 	if err != nil {
 		log("failed to decode vote extension", "err", err)
-		return abci.ResponseVerifyVoteExtension{Status: REJECT}
+		return abci.VerifyVoteExtensionResponse{Status: REJECT}
 	}
 
 	if err := ValidatePrices(h.state, req, prices); err != nil {
 		log("failed to validate vote extension", "prices", prices, "err", err)
-		return abci.ResponseVerifyVoteExtension{Status: REJECT}
+		return abci.VerifyVoteExtensionResponse{Status: REJECT}
 	}
 
 	// store updated vote extensions at the given height
@@ -179,7 +179,7 @@ func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req ab
 	// NOTE: Vote extensions can be overridden since we can timeout in a round.
 	SetPrices(h.state, req, req.VoteExtension)
 
-	return abci.ResponseVerifyVoteExtension{Status: ACCEPT}
+	return abci.VerifyVoteExtensionResponse{Status: ACCEPT}
 }
 ```
 
@@ -301,7 +301,7 @@ during `ProcessProposal` because during replay, CometBFT will NOT call `ProcessP
 which would result in an incomplete state view.
 
 ```go
-func (a MyApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+func (a MyApp) PreBlocker(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
 	voteExts := GetVoteExtensions(ctx, req.Txs)
 	
 	// Process and perform some compute on vote extensions, storing any resulting
@@ -350,7 +350,7 @@ legacy ABCI types, e.g. `LegacyBeginBlockRequest` and `LegacyEndBlockRequest`. O
 we can come up with new types and names altogether.
 
 ```go
-func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (app *BaseApp) FinalizeBlock(req abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {
 	ctx := ...
 
 	if app.preBlocker != nil {
@@ -375,7 +375,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.Response
 	endBlockResp, err := app.endBlock(app.finalizeBlockState.ctx)
 	appendBlockEventAttr(beginBlockResp.Events, "end_block")
 
-	return abci.ResponseFinalizeBlock{
+	return abci.FinalizeBlockResponse{
 		TxResults:             txExecResults,
 		Events:                joinEvents(beginBlockResp.Events, endBlockResp.Events),
 		ValidatorUpdates:      endBlockResp.ValidatorUpdates,

@@ -72,7 +72,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
 
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(b, err)
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
@@ -102,7 +102,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 		require.NoError(b, err)
 
 		_, err = baseApp.FinalizeBlock(
-			&abci.RequestFinalizeBlock{
+			&abci.FinalizeBlockRequest{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},
@@ -130,7 +130,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
 
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(b, err)
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
@@ -160,7 +160,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 		require.NoError(b, err)
 
 		_, err = baseApp.FinalizeBlock(
-			&abci.RequestFinalizeBlock{
+			&abci.FinalizeBlockRequest{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},

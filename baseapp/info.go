@@ -145,7 +145,7 @@ func (m misbehaviorWrapper) TotalVotingPower() int64 {
 }
 
 type prepareProposalInfo struct {
-	*abci.RequestPrepareProposal
+	*abci.PrepareProposalRequest
 }
 
 var _ comet.BlockInfo = (*prepareProposalInfo)(nil)

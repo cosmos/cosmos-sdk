@@ -103,6 +103,24 @@ Required wiring:
 
 #### ProtocolPool
 
+:::warning
+
+Using `protocolpool` will cause the following `x/distribution` handlers to return an error:
+
+
+**QueryService**
+
+- `CommunityPool`
+
+**MsgService**
+
+- `CommunityPoolSpend`
+- `FundCommunityPool`
+
+If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
+
+:::
+
 ⚠️Adding this module requires a `StoreUpgrade`⚠️
 
 The new, supplemental `x/protocolpool` module provides extended functionality for managing and distributing block reward revenue.
@@ -120,6 +138,62 @@ Required wiring:
 - entry in SetOrderEndBlockers
 - entry in SetGenesisModuleOrder
 - entry in SetExportModuleOrder **before `x/bank`**
+
+## Custom Minting Function in `x/mint`
+
+This release introduces the ability to configure a custom mint function in `x/mint`. The minting logic is now abstracted as a `MintFn` with a default implementation that can be overridden.
+
+### What’s New
+
+- **Configurable Mint Function:**  
+  A new `MintFn` abstraction is introduced. By default, the module uses `DefaultMintFn`, but you can supply your own implementation.
+
+- **Deprecated InflationCalculationFn Parameter:**  
+  The `InflationCalculationFn` argument previously provided to `mint.NewAppModule()` is now ignored and must be `nil`. To customize the default minter’s inflation behavior, wrap your custom function with `mintkeeper.DefaultMintFn` and pass it via the `WithMintFn` option:
+  
+```go
+  mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))
+```  
+
+### How to Upgrade
+
+1. **Using the Default Minting Function**
+
+   No action is needed if you’re happy with the default behavior. Make sure your application wiring initializes the MintKeeper like this:
+
+```go
+   mintKeeper := mintkeeper.NewKeeper(
+       appCodec,
+       storeService,
+       stakingKeeper,
+       accountKeeper,
+       bankKeeper,
+       authtypes.FeeCollectorName,
+       authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+   )
+```
+
+2. **Using a Custom Minting Function**
+    
+    To use a custom minting function, define it as follows and pass it you your mintKeeper when constructing it:
+
+```go
+func myCustomMintFunc(ctx sdk.Context, k *mintkeeper.Keeper) {
+   // do minting...
+}
+
+// ...
+   mintKeeper := mintkeeper.NewKeeper(
+       appCodec,
+       storeService,
+       stakingKeeper,
+       accountKeeper,
+       bankKeeper,
+       authtypes.FeeCollectorName,
+       authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+       mintkeeper.WithMintFn(myCustomMintFunc), // Use custom minting function
+   )
+```
 
 ### Misc Changes
 

@@ -5,7 +5,7 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )

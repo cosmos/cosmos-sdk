@@ -1,7 +1,7 @@
 package types
 
 import (
-	"cosmossdk.io/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"

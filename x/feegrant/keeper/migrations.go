@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	v2 "cosmossdk.io/x/feegrant/migrations/v2"
+	v2 "github.com/cosmos/cosmos-sdk/x/feegrant/migrations/v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

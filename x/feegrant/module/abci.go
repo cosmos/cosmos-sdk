@@ -3,7 +3,7 @@ package module
 import (
 	"context"
 
-	"cosmossdk.io/x/feegrant/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
 
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {

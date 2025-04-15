@@ -470,7 +470,7 @@ func (rs *Store) LastCommitID() types.CommitID {
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64
-	if cInfo := rs.lastCommitInfo.Load(); cInfo.Version == 0 && rs.initialVersion > 1 {
+	if cInfo := rs.lastCommitInfo.Load(); (cInfo == nil || cInfo.Version == 0) && rs.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = rs.initialVersion
@@ -480,7 +480,11 @@ func (rs *Store) Commit() types.CommitID {
 		// case we increment the version from there,
 		// - or there was no previous commit, and initial version was not set,
 		// in which case we start at version 1.
-		previousHeight = cInfo.Version
+		if cInfo != nil {
+			previousHeight = cInfo.Version
+		} else {
+			previousHeight = 0
+		}
 		version = previousHeight + 1
 	}
 

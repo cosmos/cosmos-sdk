@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

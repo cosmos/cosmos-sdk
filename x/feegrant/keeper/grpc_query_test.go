@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

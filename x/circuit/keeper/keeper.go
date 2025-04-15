@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

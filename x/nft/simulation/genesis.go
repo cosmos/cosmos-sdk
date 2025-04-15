@@ -4,7 +4,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

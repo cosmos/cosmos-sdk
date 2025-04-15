@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/circuit/ante"
-	cbtypes "cosmossdk.io/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit/ante"
+	cbtypes "github.com/cosmos/cosmos-sdk/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"

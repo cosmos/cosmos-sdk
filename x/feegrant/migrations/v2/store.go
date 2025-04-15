@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
-	"cosmossdk.io/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"

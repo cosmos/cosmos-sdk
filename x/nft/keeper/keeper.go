@@ -3,7 +3,7 @@ package keeper
 import (
 	"cosmossdk.io/core/address"
 	store "cosmossdk.io/core/store"
-	"cosmossdk.io/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

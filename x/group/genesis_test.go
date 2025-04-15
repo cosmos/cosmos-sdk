@@ -35,7 +35,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			VotingPeriod: time.Second,
 		},
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "failed to set decision policy for groupPolicy")
 
 	// create another group policy to set invalid decision policy for testing
 	groupPolicy2 := &GroupPolicyInfo{
@@ -51,7 +51,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			VotingPeriod: 0,
 		},
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "failed to set decision policy for groupPolicy2 (invalid for test)")
 
 	proposal := &Proposal{
 		Id:                 1,
@@ -647,7 +647,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid proposal id",
+			"invalid proposal id in vote",
 			GenesisState{
 				Groups: []*GroupInfo{
 					{

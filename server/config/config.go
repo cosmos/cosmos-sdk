@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/crypto-org-chain/cronos/memiavl"
 	"github.com/spf13/viper"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -197,6 +198,8 @@ type Config struct {
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 	Streaming StreamingConfig  `mapstructure:"streaming"`
 	Mempool   MempoolConfig    `mapstructure:"mempool"`
+	MemIAVL   MemIAVLConfig    `mapstructure:"memiavl"`
+	VersionDB VersionDBConfig  `mapstructure:"versiondb"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -269,6 +272,15 @@ func DefaultConfig() *Config {
 		Mempool: MempoolConfig{
 			MaxTxs: -1,
 		},
+		MemIAVL: MemIAVLConfig{
+			Enable:             false,
+			CacheSize:          DefaultCacheSize,
+			SnapshotInterval:   memiavl.DefaultSnapshotInterval,
+			SnapshotKeepRecent: 1,
+		},
+		VersionDB: VersionDBConfig{
+			Enable: false,
+		},
 	}
 }
 
@@ -293,4 +305,30 @@ func (c Config) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+const DefaultCacheSize = 1000
+
+type MemIAVLConfig struct {
+	// Enable defines if the memiavl should be enabled.
+	Enable bool `mapstructure:"enable"`
+	// ZeroCopy defines if the memiavl should return slices pointing to mmap-ed buffers directly (zero-copy),
+	// the zero-copied slices must not be retained beyond current block's execution.
+	// the sdk address cache will be disabled if zero-copy is enabled.
+	ZeroCopy bool `mapstructure:"zero-copy"`
+	// AsyncCommitBuffer defines the size of asynchronous commit queue, this greatly improve block catching-up
+	// performance, -1 means synchronous commit.
+	AsyncCommitBuffer int `mapstructure:"async-commit-buffer"`
+	// SnapshotKeepRecent defines what many old snapshots (excluding the latest one) to keep after new snapshots are
+	// taken, defaults to 1 to make sure ibc relayers work.
+	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
+	// SnapshotInterval defines the block interval the memiavl snapshot is taken, default to 1000.
+	SnapshotInterval uint32 `mapstructure:"snapshot-interval"`
+	// CacheSize defines the size of the cache for each memiavl store.
+	CacheSize int `mapstructure:"cache-size"`
+}
+
+type VersionDBConfig struct {
+	// Enable defines if the versiondb should be enabled.
+	Enable bool `mapstructure:"enable"`
 }

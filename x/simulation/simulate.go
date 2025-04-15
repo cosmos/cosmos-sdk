@@ -243,7 +243,6 @@ func SimulateFromSeedX(
 		proposerAddress = validators.randomProposer(r)
 
 		if config.Commit {
-			app.SimWriteState()
 			if _, err := app.Commit(); err != nil {
 				return params, accs, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
 			}

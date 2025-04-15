@@ -218,6 +218,7 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace cosmossdk.io/store => ../store
 
 // Below are the long-lived replace for tests.
 replace (

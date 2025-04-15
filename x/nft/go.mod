@@ -2,8 +2,6 @@ module cosmossdk.io/x/nft
 
 go 1.23.2
 
-replace github.com/cosmos/cosmos-sdk => ../..
-
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.3
@@ -158,4 +156,11 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
+)
+
+replace (
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/store => ../../store
+	// Temporary replace until the next 0.53 tag
+	github.com/cosmos/cosmos-sdk => ../..
 )

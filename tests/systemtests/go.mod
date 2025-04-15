@@ -2,11 +2,6 @@ module cosmossdk.io/tests/systemtests
 
 go 1.23.2
 
-replace (
-	cosmossdk.io/systemtests => ../../systemtests
-	github.com/cosmos/cosmos-sdk => ../..
-)
-
 require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/systemtests v0.0.0-00010101000000-000000000000
@@ -166,4 +161,10 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
+)
+
+replace (
+	cosmossdk.io/store => ../../store
+	cosmossdk.io/systemtests => ../../systemtests
+	github.com/cosmos/cosmos-sdk => ../..
 )

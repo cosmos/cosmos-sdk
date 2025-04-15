@@ -1,7 +1,7 @@
-cosmossdk.io/api v0.9.0 h1:QYs9APeSlDNGbsBOBFjp3jXgGd4hnEPnnku3+W3tT4Y=
-cosmossdk.io/api v0.9.0/go.mod h1:pLkU/NSqYHWxyN7XftVt8iD7oldKJzqMZgzeiOmT2nk=
-cosmossdk.io/core v0.11.3 h1:mei+MVDJOwIjIniaKelE3jPDqShCc/F4LkNNHh+4yfo=
-cosmossdk.io/core v0.11.3/go.mod h1:9rL4RE1uDt5AJ4Tg55sYyHWXA16VmpHgbe0PbJc6N2Y=
+cosmossdk.io/api v0.9.1-0.20250414160549-8eb17e9db5b2 h1:e51BBHqR4OrBlZDSj9XIM45s4ZuMwQtS/s3D0zxNiLA=
+cosmossdk.io/api v0.9.1-0.20250414160549-8eb17e9db5b2/go.mod h1:NeHF/x8lWFvERrNVnxEMwwoBVqY8i5fAuGAHDtNKjdg=
+cosmossdk.io/core v1.0.1-0.20250414171331-383dae7d7243 h1:74EpgdjAZi1XTJYC7QWiGyP3rcGz9Nmizk7JUUxIIP0=
+cosmossdk.io/core v1.0.1-0.20250414171331-383dae7d7243/go.mod h1:DqzursehxpY2g4D5GG48GzzuAOQRMELmvp7qfMIFB68=
 cosmossdk.io/errors v1.0.2 h1:wcYiJz08HThbWxd/L4jObeLaLySopyyuUFB5w4AGpCo=
 cosmossdk.io/errors v1.0.2/go.mod h1:0rjgiHkftRYPj//3DrD6y8hcm40HcPv/dR4R/4efr0k=
 cosmossdk.io/math v1.5.3 h1:WH6tu6Z3AUCeHbeOSHg2mt9rnoiUWVWaQ2t6Gkll96U=

@@ -191,15 +191,15 @@ type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
 	// Telemetry defines the application telemetry configuration
-	Telemetry       telemetry.Config `mapstructure:"telemetry"`
-	API             APIConfig        `mapstructure:"api"`
-	GRPC            GRPCConfig       `mapstructure:"grpc"`
-	GRPCWeb         GRPCWebConfig    `mapstructure:"grpc-web"`
-	StateSync       StateSyncConfig  `mapstructure:"state-sync"`
-	Streaming       StreamingConfig  `mapstructure:"streaming"`
-	Mempool         MempoolConfig    `mapstructure:"mempool"`
-	MemIAVLConfig   MemIAVLConfig    `mapstructure:"memiavl"`
-	VersionDBConfig VersionDBConfig  `mapstructure:"versiondb"`
+	Telemetry telemetry.Config `mapstructure:"telemetry"`
+	API       APIConfig        `mapstructure:"api"`
+	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
+	StateSync StateSyncConfig  `mapstructure:"state-sync"`
+	Streaming StreamingConfig  `mapstructure:"streaming"`
+	Mempool   MempoolConfig    `mapstructure:"mempool"`
+	MemIAVL   MemIAVLConfig    `mapstructure:"memiavl"`
+	VersionDB VersionDBConfig  `mapstructure:"versiondb"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -272,13 +272,13 @@ func DefaultConfig() *Config {
 		Mempool: MempoolConfig{
 			MaxTxs: -1,
 		},
-		MemIAVLConfig: MemIAVLConfig{
+		MemIAVL: MemIAVLConfig{
 			Enable:             false,
 			CacheSize:          DefaultCacheSize,
 			SnapshotInterval:   memiavl.DefaultSnapshotInterval,
 			SnapshotKeepRecent: 1,
 		},
-		VersionDBConfig: VersionDBConfig{
+		VersionDB: VersionDBConfig{
 			Enable: false,
 		},
 	}

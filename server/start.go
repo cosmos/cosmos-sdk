@@ -24,6 +24,8 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	"github.com/cometbft/cometbft/rpc/core"
+	coregrpc "github.com/cometbft/cometbft/rpc/grpc"
 	sm "github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/store"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -275,7 +277,8 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		app.RegisterNodeService(clientCtx, svrCfg)
 	}
 
-	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	// NOTE: when running in standalone mode, the core environment is passed as nil as cometbft is running out-of-process
+	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app, nil)
 	if err != nil {
 		return err
 	}
@@ -315,6 +318,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 	g, ctx := getCtx(svrCtx, true)
 
+	var coreEnv *core.Environment
 	if gRPCOnly {
 		// TODO: Generalize logic so that gRPC only is really in startStandAlone
 		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
@@ -339,9 +343,14 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 			app.RegisterTendermintService(clientCtx)
 			app.RegisterNodeService(clientCtx, svrCfg)
 		}
+
+		coreEnv, err = tmNode.ConfigureRPC()
+		if err != nil {
+			return err
+		}
 	}
 
-	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app, coreEnv)
 	if err != nil {
 		return err
 	}
@@ -456,6 +465,7 @@ func startGrpcServer(
 	clientCtx client.Context,
 	svrCtx *Context,
 	app types.Application,
+	coreEnv *core.Environment,
 ) (*grpc.Server, client.Context, error) {
 	if !config.Enable {
 		// return grpcServer as nil if gRPC is disabled
@@ -496,6 +506,22 @@ func startGrpcServer(
 	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
 	if err != nil {
 		return nil, clientCtx, err
+	}
+
+	if coreEnv != nil { // in-process mode
+		blockAPI := coregrpc.NewBlockAPI(coreEnv)
+		coregrpc.RegisterBlockAPIServer(grpcSrv, blockAPI)
+
+		g.Go(func() error {
+			return blockAPI.StartNewBlockEventListener(ctx)
+		})
+	} else { // standalone mode
+		blockAPIProxy, err := servergrpc.NewBlockAPIProxy(svrCtx.Config.RPC.GRPCListenAddress)
+		if err != nil {
+			return nil, clientCtx, err
+		}
+
+		coregrpc.RegisterBlockAPIServer(grpcSrv, blockAPIProxy)
 	}
 
 	// Start the gRPC server in a goroutine. Note, the provided ctx will ensure

@@ -1,6 +1,10 @@
 package corecompat
 
-import "context"
+import (
+	"context"
+
+	dbm "github.com/cosmos/cosmos-db"
+)
 
 // KVStoreService represents a unique, non-forgeable handle to a regular merkle-tree
 // backed KVStore. It should be provided as a module-scoped dependency by the runtime
@@ -55,30 +59,4 @@ type KVStore = interface {
 //
 // Callers must make sure the iterator is valid before calling any methods on it,
 // otherwise these methods will panic.
-type Iterator = interface {
-	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
-	Domain() (start, end []byte)
-
-	// Valid returns whether the current iterator is valid. Once invalid, the Iterator remains
-	// invalid forever.
-	Valid() bool
-
-	// Next moves the iterator to the next key in the database, as defined by order of iteration.
-	// If Valid returns false, this method will panic.
-	Next()
-
-	// Key returns the key at the current position. Panics if the iterator is invalid.
-	// Note, the key returned should be a copy and thus safe for modification.
-	Key() []byte
-
-	// Value returns the value at the current position. Panics if the iterator is
-	// invalid.
-	// Note, the value returned should be a copy and thus safe for modification.
-	Value() []byte
-
-	// Error returns the last error encountered by the iterator, if any.
-	Error() error
-
-	// Close closes the iterator, releasing any allocated resources.
-	Close() error
-}
+type Iterator = dbm.Iterator

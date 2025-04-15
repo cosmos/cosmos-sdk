@@ -104,6 +104,21 @@ message ValidatorSigner {
   string signer                 = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
+message ValidatorSigners {
+  option (cosmos.msg.v1.signer) = "signers";
+  repeated string signers       = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
+message ValidatorByteSigner {
+  option (cosmos.msg.v1.signer) = "signer";
+  bytes signer                  = 1;
+}
+
+message ValidatorByteSigners {
+  option (cosmos.msg.v1.signer) = "signers";
+  repeated bytes signers        = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
 service TestSimpleSigner {
   option (cosmos.msg.v1.service) = true;
   rpc TestSimpleSigner(SimpleSigner) returns (SimpleSigner) {}

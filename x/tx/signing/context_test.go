@@ -199,6 +199,27 @@ func TestGetSigners(t *testing.T) {
 			},
 			want: [][]byte{[]byte("foo")},
 		},
+		{
+			name: "validator signers",
+			msg: &testpb.ValidatorSigners{
+				Signers: []string{"val" + hex.EncodeToString([]byte("foo"))},
+			},
+			want: [][]byte{[]byte("foo")},
+		},
+		{
+			name: "validator bytes signer",
+			msg: &testpb.ValidatorByteSigner{
+				Signer: []byte("foo"),
+			},
+			want: [][]byte{[]byte("foo")},
+		},
+		{
+			name: "validator bytes signers",
+			msg: &testpb.ValidatorByteSigners{
+				Signers: [][]byte{[]byte("foo")},
+			},
+			want: [][]byte{[]byte("foo")},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

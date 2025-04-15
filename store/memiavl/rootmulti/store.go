@@ -7,21 +7,20 @@ import (
 	"sort"
 	"strings"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/crypto-org-chain/cronos/memiavl"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/listenkv"
 	"cosmossdk.io/store/mem"
+	"cosmossdk.io/store/memiavl/cachemulti"
+	memiavlstore "cosmossdk.io/store/memiavl/store"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/crypto-org-chain/cronos/memiavl"
-
-	"cosmossdk.io/store/memiavl/cachemulti"
-	memiavlstore "cosmossdk.io/store/memiavl/store"
-	st "cosmossdk.io/store/types"
 )
 
 const CommitInfoFileName = "commit_infos"
@@ -564,7 +563,7 @@ func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 	}
 
 	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
-		return nil, errors.Wrap(st.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned")
+		return nil, errors.Wrap(types.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned")
 	}
 
 	commitInfo := convertCommitInfo(db.LastCommitInfo())
@@ -578,9 +577,9 @@ func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 // parsePath expects a format like /<storeName>[/<subpath>]
 // Must start with /, subpath may be empty
 // Returns error if it doesn't start with /
-func parsePath(path string) (storeName string, subpath string, err error) {
+func parsePath(path string) (storeName, subpath string, err error) {
 	if !strings.HasPrefix(path, "/") {
-		return storeName, subpath, errors.Wrapf(st.ErrUnknownRequest, "invalid path: %s", path)
+		return storeName, subpath, errors.Wrapf(types.ErrUnknownRequest, "invalid path: %s", path)
 	}
 
 	paths := strings.SplitN(path[1:], "/", 2)
@@ -602,19 +601,6 @@ func newStoreParams(key types.StoreKey, typ types.StoreType) storeParams {
 	return storeParams{
 		key: key,
 		typ: typ,
-	}
-}
-
-func mergeStoreInfos(commitInfo *types.CommitInfo, storeInfos []types.StoreInfo) *types.CommitInfo {
-	infos := make([]types.StoreInfo, 0, len(commitInfo.StoreInfos)+len(storeInfos))
-	infos = append(infos, commitInfo.StoreInfos...)
-	infos = append(infos, storeInfos...)
-	sort.SliceStable(infos, func(i, j int) bool {
-		return infos[i].Name < infos[j].Name
-	})
-	return &types.CommitInfo{
-		Version:    commitInfo.Version,
-		StoreInfos: infos,
 	}
 }
 

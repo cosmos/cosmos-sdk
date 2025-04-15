@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"math"
 
-	"cosmossdk.io/store/snapshots/types"
 	protoio "github.com/cosmos/gogoproto/io"
-
 	"github.com/crypto-org-chain/cronos/memiavl"
+
+	"cosmossdk.io/store/snapshots/types"
 )
 
 // Implements interface Snapshotter
@@ -30,7 +30,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) (returnErr 
 	for {
 		item, err := exporter.Next()
 		if err != nil {
-			if err == memiavl.ErrorExportDone {
+			if errors.Is(err, memiavl.ErrorExportDone) {
 				break
 			}
 

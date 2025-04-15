@@ -1,16 +1,17 @@
 package rootmulti
 
 import (
+	stderrors "errors"
 	"fmt"
 	"io"
 	"math"
 
+	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/crypto-org-chain/cronos/memiavl"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/snapshots/types"
 	st "cosmossdk.io/store/types"
-	protoio "github.com/cosmos/gogoproto/io"
-
-	"github.com/crypto-org-chain/cronos/memiavl"
 )
 
 // Implements interface Snapshotter
@@ -46,7 +47,7 @@ loop:
 	for {
 		snapshotItem = types.SnapshotItem{}
 		err := protoReader.ReadMsg(&snapshotItem)
-		if err == io.EOF {
+		if stderrors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return types.SnapshotItem{}, errors.Wrap(err, "invalid protobuf message")

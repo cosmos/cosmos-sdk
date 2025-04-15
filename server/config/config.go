@@ -272,8 +272,15 @@ func DefaultConfig() *Config {
 		Mempool: MempoolConfig{
 			MaxTxs: -1,
 		},
-		MemIAVLConfig:   DefaultMemIAVLConfig(),
-		VersionDBConfig: DefaultVersionDBConfig(),
+		MemIAVLConfig: MemIAVLConfig{
+			Enable:             false,
+			CacheSize:          DefaultCacheSize,
+			SnapshotInterval:   memiavl.DefaultSnapshotInterval,
+			SnapshotKeepRecent: 1,
+		},
+		VersionDBConfig: VersionDBConfig{
+			Enable: false,
+		},
 	}
 }
 
@@ -321,22 +328,7 @@ type MemIAVLConfig struct {
 	CacheSize int `mapstructure:"cache-size"`
 }
 
-func DefaultMemIAVLConfig() MemIAVLConfig {
-	return MemIAVLConfig{
-		Enable:             false,
-		CacheSize:          DefaultCacheSize,
-		SnapshotInterval:   memiavl.DefaultSnapshotInterval,
-		SnapshotKeepRecent: 1,
-	}
-}
-
 type VersionDBConfig struct {
 	// Enable defines if the versiondb should be enabled.
 	Enable bool `mapstructure:"enable"`
-}
-
-func DefaultVersionDBConfig() VersionDBConfig {
-	return VersionDBConfig{
-		Enable: false,
-	}
 }

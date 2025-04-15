@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
 
-	"github.com/cosmos/cosmos-sdk/simsx"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

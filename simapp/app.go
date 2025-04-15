@@ -349,6 +349,7 @@ func NewSimApp(
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
 	)
 
 	app.ProtocolPoolKeeper = protocolpoolkeeper.NewKeeper(

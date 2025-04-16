@@ -1,31 +1,29 @@
 package ante
 
 import (
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/gas"
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	Environment              appmodule.Environment
-	AccountKeeper            AccountKeeper
-	AccountAbstractionKeeper AccountAbstractionKeeper
-	BankKeeper               types.BankKeeper
-	ConsensusKeeper          ConsensusKeeper
-	ExtensionOptionChecker   ExtensionOptionChecker
-	FeegrantKeeper           FeegrantKeeper
-	SignModeHandler          *txsigning.HandlerMap
-	SigGasConsumer           func(meter gas.Meter, sig signing.SignatureV2, params types.Params) error
-	TxFeeChecker             TxFeeChecker
-	UnorderedTxManager       *unorderedtx.Manager
+	AccountKeeper          AccountKeeper
+	BankKeeper             types.BankKeeper
+	ExtensionOptionChecker ExtensionOptionChecker
+	FeegrantKeeper         FeegrantKeeper
+	SignModeHandler        *txsigning.HandlerMap
+	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+	TxFeeChecker           TxFeeChecker
+	// UnorderedNonceManager is an opt-in feature for x/auth.
+	// When set, this application will be able to receive and process unordered transactions.
+	UnorderedNonceManager UnorderedNonceManager
+	UnorderedTxOptions    []UnorderedTxDecoratorOptions
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -45,19 +43,22 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	anteDecorators := []sdk.AnteDecorator{
-		NewSetUpContextDecorator(options.Environment, options.ConsensusKeeper), // outermost AnteDecorator. SetUpContext must be called first
+		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
-		NewValidateBasicDecorator(options.Environment),
-		NewTxTimeoutHeightDecorator(options.Environment),
+		NewValidateBasicDecorator(),
+		NewTxTimeoutHeightDecorator(),
 		NewValidateMemoDecorator(options.AccountKeeper),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(options.AccountKeeper),
-		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigGasConsumer, options.AccountAbstractionKeeper),
+		NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+		NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 
-	if options.UnorderedTxManager != nil {
-		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.UnorderedTxManager, options.Environment, DefaultSha256Cost))
+	if options.UnorderedNonceManager != nil {
+		anteDecorators = append(anteDecorators, NewUnorderedTxDecorator(options.UnorderedNonceManager, options.UnorderedTxOptions...))
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

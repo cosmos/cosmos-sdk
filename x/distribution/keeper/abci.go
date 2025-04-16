@@ -1,41 +1,41 @@
 package keeper
 
 import (
-	"context"
-
-	"cosmossdk.io/x/distribution/types"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block.
-func (k Keeper) BeginBlocker(ctx context.Context) error {
+func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 	start := telemetry.Now()
 	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 
 	// determine the total power signing the block
 	var previousTotalPower int64
-	header := k.HeaderService.HeaderInfo(ctx)
-	ci := k.cometService.CometInfo(ctx)
-	for _, vote := range ci.LastCommit.Votes {
-		previousTotalPower += vote.Validator.Power
+	// determine the total power signing the block
+	for _, voteInfo := range ctx.VoteInfos() {
+		previousTotalPower += voteInfo.Validator.Power
 	}
 
 	// TODO this is Tendermint-dependent
 	// ref https://github.com/cosmos/cosmos-sdk/issues/3095
-	if header.Height > 1 {
-		if err := k.AllocateTokens(ctx, previousTotalPower, ci.LastCommit.Votes); err != nil {
+	height := ctx.BlockHeight()
+	if height > 1 {
+		if err := k.AllocateTokens(ctx, previousTotalPower, ctx.VoteInfos()); err != nil {
 			return err
 		}
 
-		// every 1000 blocks send whole coins from decimal pool to community pool
-		if header.Height%1000 == 0 {
-			if err := k.sendDecimalPoolToCommunityPool(ctx); err != nil {
+		// send whole coins from community pool to x/protocolpool if enabled
+		if k.HasExternalCommunityPool() {
+			if err := k.sendCommunityPoolToExternalPool(ctx); err != nil {
 				return err
 			}
 		}
 	}
 
-	return nil
+	// record the proposer for when we pay out on the next block
+	consAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
+	return k.SetPreviousProposerConsAddr(ctx, consAddr)
 }

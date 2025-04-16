@@ -1,11 +1,9 @@
-//go:build system_test && linux
+//go:build system_test
 
 package systemtests
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -18,6 +16,53 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
+const (
+	testSeed            = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
+	upgradeHeight int64 = 22
+	upgradeName         = "v050-to-v053" // must match UpgradeName in simapp/upgrades.go
+)
+
+type initAccount struct {
+	address string
+	balance string
+}
+
+func createLegacyBinary(t *testing.T, extraAccounts ...initAccount) (*systest.CLIWrapper, *systest.SystemUnderTest) {
+	t.Helper()
+
+	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
+
+	//// Now we're going to switch to a v.50 chain.
+	t.Logf("+++ legacy binary: %s\n", legacyBinary)
+
+	// setup the v50 chain. v53 made some changes to testnet command, so we'll have to adjust here.
+	// this only uses 1 node.
+	legacySut := systest.NewSystemUnderTest("simd", systest.Verbose, 1, 1*time.Second)
+	// we need to explicitly set this here as the constructor infers the exec binary is in the "binaries" directory.
+	legacySut.SetExecBinary(legacyBinary)
+	legacySut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, legacySut))
+	legacySut.SetupChain()
+	v50CLI := systest.NewCLIWrapper(t, legacySut, systest.Verbose)
+	v50CLI.AddKeyFromSeed("account1", testSeed)
+
+	// Typically, SystemUnderTest will create a node with 4 validators. In the legacy setup, we create run a single validator network.
+	// This means we need to add 3 more accounts in order to make further account additions map to the same account number in state
+	modifications := [][]string{
+		{"genesis", "add-genesis-account", v50CLI.AddKey("foo"), "10000000000stake"},
+		{"genesis", "add-genesis-account", v50CLI.AddKey("bar"), "10000000000stake"},
+		{"genesis", "add-genesis-account", v50CLI.AddKey("baz"), "10000000000stake"},
+	}
+	for _, extraAccount := range extraAccounts {
+		modifications = append(modifications, []string{"genesis", "add-genesis-account", extraAccount.address, extraAccount.balance})
+	}
+
+	legacySut.ModifyGenesisCLI(t,
+		modifications...,
+	)
+
+	return v50CLI, legacySut
+}
+
 func TestChainUpgrade(t *testing.T) {
 	// Scenario:
 	// start a legacy chain with some state
@@ -25,22 +70,18 @@ func TestChainUpgrade(t *testing.T) {
 	// then the chain upgrades successfully
 	systest.Sut.StopChain()
 
-	legacyBinary := FetchExecutable(t, "0.52.0-beta.3")
-	t.Logf("+++ legacy binary: %s\n", legacyBinary)
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
+
+	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
 	systest.Sut.SetExecBinary(legacyBinary)
-	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
+	systest.Sut.SetTestnetInitializer(systest.NewModifyConfigYamlInitializer(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
+
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
 
-	const (
-		upgradeHeight int64 = 22
-		upgradeName         = "v052-to-v2" // must match UpgradeName in simapp/upgrades.go
-	)
-
-	systest.Sut.StartChain(t, fmt.Sprintf("--comet.halt-height=%d", upgradeHeight+1))
+	systest.Sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
@@ -71,7 +112,7 @@ func TestChainUpgrade(t *testing.T) {
 	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
 	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
-	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw) // PROPOSAL_STATUS_PASSED
+	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
 	t.Log("waiting for upgrade info")
 	systest.Sut.AwaitUpgradeInfo(t)
@@ -81,35 +122,12 @@ func TestChainUpgrade(t *testing.T) {
 	systest.Sut.SetExecBinary(currentBranchBinary)
 	systest.Sut.SetTestnetInitializer(currentInitializer)
 	systest.Sut.StartChain(t)
-	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+
+	require.Equal(t, upgradeHeight+1, systest.Sut.CurrentHeight())
+	// cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// smoke test that new version runs
-	ownerAddr := cli.GetKeyAddr("node0")
-	got := cli.Run("tx", "accounts", "init", "continuous-locking-account", `{"end_time":"2034-01-22T11:38:15.116127Z", "owner":"`+ownerAddr+`"}`, "--from=node0")
-	systest.RequireTxSuccess(t, got)
-	got = cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
-	systest.RequireTxSuccess(t, got)
-}
-
-const cacheDir = "binaries"
-
-// FetchExecutable to download and extract tar.gz for linux
-func FetchExecutable(t *testing.T, version string) string {
-	// use local cache
-	cacheFolder := filepath.Join(systest.WorkDir, cacheDir)
-	err := os.MkdirAll(cacheFolder, 0o777)
-	if err != nil && !os.IsExist(err) {
-		panic(err)
-	}
-
-	cacheFile := filepath.Join(cacheFolder, fmt.Sprintf("%s_%s", systest.GetExecutableName(), version))
-	if _, err := os.Stat(cacheFile); err == nil {
-		return cacheFile
-	}
-	destFile := cacheFile
-	t.Log("+++ version not in cache, downloading from docker image")
-	systest.MustRunShellCmd(t, "docker", "pull", "ghcr.io/cosmos/simapp:"+version)
-	systest.MustRunShellCmd(t, "docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
-	systest.MustRunShellCmd(t, "docker", "cp", "ci_temp:/usr/bin/simd", destFile)
-	return destFile
+	// TODO: add once protocol pool is enabled
+	//	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+	// systest.RequireTxSuccess(t, got)
 }

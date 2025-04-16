@@ -7,30 +7,30 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
-	v1 "cosmossdk.io/api/cosmos/gov/v1"
-	v1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
-	"cosmossdk.io/core/address"
+	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/gov"
-	govcli "cosmossdk.io/x/gov/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -61,40 +61,39 @@ func TestCLITestSuite(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.encCfg = testutilmod.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, gov.AppModule{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(module.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(clitestutil.MockCometRPC{}).
+		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
-		WithChainID("test-chain").
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
+		WithChainID("test-chain")
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPCWithResponseQueryValue(bz)
+		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+			Value: bz,
+		})
 
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen()
 
+	if testing.Short() {
+		s.T().Skip("skipping test in unit-tests mode.")
+	}
+
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
 
 	granter := accounts[0].Address
 	grantee := accounts[1].Address
-	s.createGrant(granter, grantee, s.baseCtx.AddressCodec)
 
-	granteeStr, err := s.baseCtx.AddressCodec.BytesToString(grantee)
-	s.Require().NoError(err)
-	granterStr, err := s.baseCtx.AddressCodec.BytesToString(granter)
-	s.Require().NoError(err)
+	s.createGrant(granter, grantee)
 
-	grant, err := feegrant.NewGrant(granterStr, granteeStr, &feegrant.BasicAllowance{
+	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100))),
 	})
 	s.Require().NoError(err)
@@ -109,7 +108,7 @@ func (s *CLITestSuite) SetupSuite() {
 }
 
 // createGrant creates a new basic allowance fee grant from granter to grantee.
-func (s *CLITestSuite) createGrant(granter, grantee sdk.AccAddress, addressCodec address.Codec) {
+func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -118,15 +117,10 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.AccAddress, addressCodec
 
 	fee := sdk.NewCoin("stake", sdkmath.NewInt(100))
 
-	granterAddr, err := addressCodec.BytesToString(granter)
-	s.Require().NoError(err)
-	granteeAddr, err := addressCodec.BytesToString(grantee)
-	s.Require().NoError(err)
-
 	args := append(
 		[]string{
-			granterAddr,
-			granteeAddr,
+			granter.String(),
+			grantee.String(),
 			fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 			fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(oneYear)),
@@ -134,7 +128,7 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.AccAddress, addressCodec
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant()
+	cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
 
@@ -145,12 +139,10 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.AccAddress, addressCodec
 
 func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	granter := s.accounts[0]
+	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := s.clientCtx
-	granterAddr, err := s.baseCtx.AddressCodec.BytesToString(granter)
-	s.Require().NoError(err)
-	alreadyExistedGranteeAddr, err := s.baseCtx.AddressCodec.BytesToString(s.addedGrantee)
-	s.Require().NoError(err)
-	fromAddr, fromName, _, err := client.GetFromFields(s.baseCtx, s.kr, granterAddr)
+
+	fromAddr, fromName, _, err := client.GetFromFields(s.baseCtx, s.kr, granter.String())
 	s.Require().Equal(fromAddr, granter)
 	s.Require().NoError(err)
 
@@ -184,7 +176,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"wrong grantee address",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"wrong_grantee",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
@@ -210,7 +202,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid basic fee grant",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
@@ -236,7 +228,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid basic fee grant with amino",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
@@ -250,7 +242,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid basic fee grant without spend limit",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos17h5lzptx3ghvsuhk7wx4c4hnl7rsswxjer97em",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
@@ -262,7 +254,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid basic fee grant without expiration",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos16dlc38dcqt0uralyd8hksxyrny6kaeqfjvjwp5",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
@@ -275,7 +267,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid basic fee grant without spend-limit and expiration",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1ku40qup9vwag4wtf8cls9mkszxfthaklxkp3c8",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
@@ -287,8 +279,8 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"try to add existed grant",
 			append(
 				[]string{
-					granterAddr,
-					alreadyExistedGranteeAddr,
+					granter.String(),
+					alreadyExistedGrantee.String(),
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
@@ -300,7 +292,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"invalid number of args(periodic fee grant)",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
@@ -315,7 +307,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"period mentioned and period limit omitted, invalid periodic grant",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, tenHours),
@@ -330,7 +322,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"period cannot be greater than the actual expiration(periodic fee grant)",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, tenHours),
@@ -346,7 +338,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid periodic fee grant",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1w55kgcf3ltaqdy4ww49nge3klxmrdavrr6frmp",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
@@ -362,7 +354,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid periodic fee grant without spend-limit",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1vevyks8pthkscvgazc97qyfjt40m6g9xe85ry8",
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
@@ -377,7 +369,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid periodic fee grant without expiration",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
@@ -392,7 +384,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"valid periodic fee grant without spend-limit and expiration",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos12nyk4pcf4arshznkpz882e4l4ts0lt0ap8ce54",
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
@@ -406,7 +398,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 			"invalid expiration",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"cosmos1vevyks8pthkscvgazc97qyfjt40m6g9xe85ry8",
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
@@ -421,7 +413,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant()
+			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
@@ -437,17 +429,13 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 func (s *CLITestSuite) TestTxWithFeeGrant() {
 	clientCtx := s.clientCtx
 	granter := s.addedGranter
-	granterAddr, err := s.baseCtx.AddressCodec.BytesToString(granter)
-	s.Require().NoError(err)
 
-	// creating an account manually (This account won't exist in state)
+	// creating an account manually (This account won't be exist in state)
 	k, _, err := s.baseCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 	pub, err := k.GetPubKey()
 	s.Require().NoError(err)
 	grantee := sdk.AccAddress(pub.Address())
-	granteeAddr, err := s.baseCtx.AddressCodec.BytesToString(grantee)
-	s.Require().NoError(err)
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -459,8 +447,8 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 
 	args := append(
 		[]string{
-			granterAddr,
-			granteeAddr,
+			granter.String(),
+			grantee.String(),
 			fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 			fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(oneYear)),
@@ -468,7 +456,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 		commonFlags...,
 	)
 
-	cmd := cli.NewCmdFeeGrant()
+	cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 
 	var res sdk.TxResponse
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -483,30 +471,30 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 	}{
 		{
 			name:  "granted fee allowance for an account which is not in state and creating any tx with it by using --fee-granter shouldn't fail",
-			from:  granteeAddr,
-			flags: []string{fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granterAddr)},
+			from:  grantee.String(),
+			flags: []string{fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String())},
 		},
 		{
 			name:       "--fee-payer should also sign the tx (direct)",
-			from:       granteeAddr,
-			flags:      []string{fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granterAddr)},
+			from:       grantee.String(),
+			flags:      []string{fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granter.String())},
 			expErrCode: 4,
 		},
 		{
 			name: "--fee-payer should also sign the tx (amino-json)",
-			from: granteeAddr,
+			from: grantee.String(),
 			flags: []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granterAddr),
+				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granter.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 			},
 			expErrCode: 4,
 		},
 		{
 			name: "use --fee-payer and --fee-granter together works",
-			from: granteeAddr,
+			from: grantee.String(),
 			flags: []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granteeAddr),
-				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granterAddr),
+				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 			},
 		},
 	}
@@ -514,7 +502,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
 			err := s.msgSubmitLegacyProposal(s.baseCtx, tc.from,
-				"Text Proposal", "No desc", "text",
+				"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 				tc.flags...,
 			)
 			s.Require().NoError(err)
@@ -553,15 +541,11 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 
 func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	granter := s.addedGranter
-	granterAddr, err := s.baseCtx.AddressCodec.BytesToString(granter)
-	s.Require().NoError(err)
 	k, _, err := s.baseCtx.Keyring.NewMnemonic("grantee1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 	pub, err := k.GetPubKey()
 	s.Require().NoError(err)
 	grantee := sdk.AccAddress(pub.Address())
-	granteeAddr, err := s.baseCtx.AddressCodec.BytesToString(grantee)
-	s.Require().NoError(err)
 	clientCtx := s.clientCtx
 
 	commonFlags := []string{
@@ -570,7 +554,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 	}
 	spendLimit := sdk.NewCoin("stake", sdkmath.NewInt(1000))
-	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&v1.MsgVoteWeighted{})}, ",")
+	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string
@@ -595,7 +579,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 			"invalid grantee address",
 			append(
 				[]string{
-					granterAddr,
+					granter.String(),
 					"not an address",
 					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, allowMsgs),
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
@@ -609,8 +593,8 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 			"valid filter fee grant",
 			append(
 				[]string{
-					granterAddr,
-					granteeAddr,
+					granter.String(),
+					grantee.String(),
 					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, allowMsgs),
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
@@ -623,7 +607,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdFeeGrant()
+			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
 				s.Require().Error(err)
@@ -644,9 +628,9 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		{
 			"valid proposal tx",
 			func() error {
-				return s.msgSubmitLegacyProposal(s.baseCtx, granteeAddr,
-					"Text Proposal", "No desc", "Text",
-					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granterAddr),
+				return s.msgSubmitLegacyProposal(s.baseCtx, grantee.String(),
+					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
+					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 				)
 			},
@@ -654,8 +638,8 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		{
 			"valid weighted_vote tx",
 			func() error {
-				return s.msgVote(s.baseCtx, granteeAddr, "0", "yes",
-					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granterAddr),
+				return s.msgVote(s.baseCtx, grantee.String(), "0", "yes",
+					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))).String()),
 				)
 			},
@@ -665,7 +649,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 			func() error {
 				args := append(
 					[]string{
-						granteeAddr,
+						grantee.String(),
 						"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
 						fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 						fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
@@ -673,7 +657,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 					commonFlags...,
 				)
 
-				cmd := cli.NewCmdFeeGrant()
+				cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 

@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
 	"google.golang.org/grpc"
 	proto2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -23,9 +24,7 @@ var (
 
 type Handler = func(ctx context.Context, request, response protoiface.MessageV1) error
 
-// MakeHybridHandler returns a handler that can handle both gogo and protov2 messages, no matter
-// if the handler is a gogo or protov2 handler.
-func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) (Handler, error) {
+func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.MethodDesc, handler any) (Handler, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
 	if err != nil {
@@ -123,13 +122,20 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 				return fmt.Errorf("invalid request type %T, method %s does not accept protov2 messages", inReq, prefMethod.FullName())
 			}
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				return setPointer(msg, inReq)
+				// merge! ref: https://github.com/cosmos/cosmos-sdk/issues/18003
+				// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
+				// using proto.Merge with gogo messages seems to work fine.
+				proto.Merge(msg.(gogoproto.Message), inReq)
+				return nil
 			}, nil)
 			if err != nil {
 				return err
 			}
-
-			return setPointer(outResp, resp)
+			// merge resp, ref: https://github.com/cosmos/cosmos-sdk/issues/18003
+			// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
+			// using proto.Merge with gogo messages seems to work fine.
+			proto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
+			return nil
 		}, nil
 	}
 	// this is a gogo handler, and we have a protov2 counterparty.
@@ -160,13 +166,21 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 		case gogoproto.Message:
 			// we can just call the handler after making a copy of the message, for safety reasons.
 			resp, err := method.Handler(handler, ctx, func(msg any) error {
-				return setPointer(msg, m)
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/18003
+				asGogoProto := msg.(gogoproto.Message)
+				// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
+				// using proto.Merge with gogo messages seems to work fine.
+				proto.Merge(asGogoProto, m)
+				return nil
 			}, nil)
 			if err != nil {
 				return err
 			}
-
-			return setPointer(outResp, resp)
+			// merge on the resp, ref: https://github.com/cosmos/cosmos-sdk/issues/18003
+			// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
+			// using proto.Merge with gogo messages seems to work fine.
+			proto.Merge(outResp.(gogoproto.Message), resp.(gogoproto.Message))
+			return nil
 		default:
 			panic("unreachable")
 		}
@@ -179,7 +193,7 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 // the type. Since the decoder function is passed in by the concrete implementer the expected
 // message where bytes are unmarshaled to, we can use that to determine the type.
 func isProtov2(md grpc.MethodDesc) (isV2Type bool, err error) {
-	pullRequestType := func(msg interface{}) error {
+	pullRequestType := func(msg any) error {
 		typ := reflect.TypeOf(msg)
 		switch {
 		case typ.Implements(protov2Type):
@@ -215,38 +229,4 @@ func RequestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc)
 		return "", fmt.Errorf("invalid method descriptor %s", methodFullName)
 	}
 	return methodDesc.Input().FullName(), nil
-}
-
-// ResponseFullNameFromMethodDesc returns the fully-qualified name of the response message of the provided service's method.
-func ResponseFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (protoreflect.FullName, error) {
-	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
-	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
-	if err != nil {
-		return "", fmt.Errorf("cannot find method descriptor %s", methodFullName)
-	}
-	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
-	if !ok {
-		return "", fmt.Errorf("invalid method descriptor %s", methodFullName)
-	}
-	return methodDesc.Output().FullName(), nil
-}
-
-// since proto.Merge breaks due to the custom cosmos sdk any, we are forced to do this ugly setPointer hack.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/22779
-func setPointer(dst, src any) error {
-	dstValue := reflect.ValueOf(dst)
-	srcValue := reflect.ValueOf(src)
-	if !dstValue.IsValid() || !srcValue.IsValid() {
-		return fmt.Errorf("dst and src must be valid")
-	}
-	if dstValue.IsNil() || srcValue.IsNil() {
-		return fmt.Errorf("dst and src must be non-nil")
-	}
-	dstElem := dstValue.Elem()
-	srcElem := srcValue.Elem()
-	if dstElem.Type() != srcElem.Type() {
-		return fmt.Errorf("dst and src must have the same type")
-	}
-	dstElem.Set(srcElem)
-	return nil
 }

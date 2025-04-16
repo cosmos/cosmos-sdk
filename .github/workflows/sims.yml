@@ -63,9 +63,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
-      - name: test-sim-nondeterminism
+      - name: test-sim-nondeterminism-streaming
         run: |
-          make test-sim-nondeterminism
+          make test-sim-nondeterminism-streaming
 
   test-sim-multi-seed-short:
     runs-on: depot-ubuntu-22.04-16
@@ -102,7 +102,7 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.3.2
+        uses: rtCamp/action-slack-notify@v2.3.3
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims
@@ -126,7 +126,7 @@ jobs:
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.3.2
+        uses: rtCamp/action-slack-notify@v2.3.3
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims

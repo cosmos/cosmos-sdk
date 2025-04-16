@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	stderrors "errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -10,25 +9,15 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	v3 "cosmossdk.io/x/gov/migrations/v3"
-	v1 "cosmossdk.io/x/gov/types/v1"
-	"cosmossdk.io/x/gov/types/v1beta1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var (
-	_ v1.QueryServer = queryServer{}
-
-	defaultVoteOptions = &v1.ProposalVoteOptions{
-		OptionOne:   "yes",
-		OptionTwo:   "abstain",
-		OptionThree: "no",
-		OptionFour:  "no_with_veto",
-		OptionSpam:  "spam",
-	}
-)
+var _ v1.QueryServer = queryServer{}
 
 type queryServer struct{ k *Keeper }
 
@@ -55,56 +44,14 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 	}
 
 	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
-	if err == nil {
-		return &v1.QueryProposalResponse{Proposal: &proposal}, nil
-	}
-	if errors.IsOf(err, collections.ErrNotFound) {
-		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
-	}
-	return nil, status.Error(codes.Internal, err.Error())
-}
-
-// ProposalVoteOptions returns the proposal votes options
-// It returns the stringified vote options if the proposal is a multiple choice proposal
-// Otherwise it returns the generic vote options
-func (q queryServer) ProposalVoteOptions(ctx context.Context, req *v1.QueryProposalVoteOptionsRequest) (*v1.QueryProposalVoteOptionsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	if req.ProposalId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
-	}
-
-	ok, err := q.k.Proposals.Has(ctx, req.ProposalId)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	if !ok {
-		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
-	}
-
-	voteOptions, err := q.k.ProposalVoteOptions.Get(ctx, req.ProposalId)
-	if err != nil {
-		if stderrors.Is(err, collections.ErrNotFound) { // fallback to generic vote options
-			return &v1.QueryProposalVoteOptionsResponse{
-				VoteOptions: defaultVoteOptions,
-			}, nil
+		if errors.IsOf(err, collections.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 		}
-
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &v1.QueryProposalVoteOptionsResponse{
-		VoteOptions: &v1.ProposalVoteOptions{
-			OptionOne:   voteOptions.OptionOne,
-			OptionTwo:   voteOptions.OptionTwo,
-			OptionThree: voteOptions.OptionThree,
-			OptionFour:  voteOptions.OptionFour,
-			OptionSpam:  defaultVoteOptions.OptionSpam,
-		},
-	}, nil
+	return &v1.QueryProposalResponse{Proposal: &proposal}, nil
 }
 
 // Proposals implements the Query/Proposals gRPC method
@@ -176,14 +123,15 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 		return nil, err
 	}
 	vote, err := q.k.Votes.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(voter)))
-	if err == nil {
-		return &v1.QueryVoteResponse{Vote: &vote}, nil
+	if err != nil {
+		if errors.IsOf(err, collections.ErrNotFound) {
+			return nil, status.Errorf(codes.InvalidArgument,
+				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
-	if errors.IsOf(err, collections.ErrNotFound) {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
-	}
-	return nil, status.Error(codes.Internal, err.Error())
+
+	return &v1.QueryVoteResponse{Vote: &vote}, nil
 }
 
 // Votes returns single proposal's votes
@@ -214,38 +162,31 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 
 	params, err := q.k.Params.Get(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
+	response := &v1.QueryParamsResponse{}
 
-	return &v1.QueryParamsResponse{Params: &params}, nil
-}
+	//nolint:staticcheck // needed for legacy parameters
+	switch req.ParamsType {
+	case v1.ParamDeposit:
+		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
+		response.DepositParams = &depositParams
 
-// MessageBasedParams queries params for a specific message
-func (q queryServer) MessageBasedParams(ctx context.Context, req *v1.QueryMessageBasedParamsRequest) (*v1.QueryMessageBasedParamsResponse, error) {
-	if req == nil || req.MsgUrl == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
+	case v1.ParamVoting:
+		votingParams := v1.NewVotingParams(params.VotingPeriod)
+		response.VotingParams = &votingParams
 
-	params, err := q.k.MessageBasedParams.Get(ctx, req.MsgUrl)
-	if err == nil {
-		return &v1.QueryMessageBasedParamsResponse{Params: &params}, nil
-	}
-
-	if errors.IsOf(err, collections.ErrNotFound) {
-		resp, err := q.Params(ctx, &v1.QueryParamsRequest{})
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+	case v1.ParamTallying:
+		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+		response.TallyParams = &tallyParams
+	default:
+		if len(req.ParamsType) > 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "unknown params type: %s", req.ParamsType)
 		}
-
-		return &v1.QueryMessageBasedParamsResponse{Params: &v1.MessageBasedParams{
-			VotingPeriod:  resp.Params.VotingPeriod,
-			Quorum:        resp.Params.Quorum,
-			Threshold:     resp.Params.Threshold,
-			VetoThreshold: resp.Params.VetoThreshold,
-		}}, nil
 	}
+	response.Params = &params
 
-	return nil, status.Error(codes.Internal, err.Error())
+	return response, nil
 }
 
 // Deposit queries single deposit information based on proposalID, depositAddr.
@@ -315,11 +256,11 @@ func (q queryServer) TallyResult(ctx context.Context, req *v1.QueryTallyResultRe
 
 	var tallyResult v1.TallyResult
 
-	switch {
-	case proposal.Status == v1.StatusDepositPeriod:
+	switch proposal.Status {
+	case v1.StatusDepositPeriod:
 		tallyResult = v1.EmptyTallyResult()
 
-	case proposal.Status == v1.StatusPassed || proposal.Status == v1.StatusRejected || proposal.Status == v1.StatusFailed:
+	case v1.StatusPassed, v1.StatusRejected, v1.StatusFailed:
 		tallyResult = *proposal.FinalTallyResult
 
 	default:
@@ -424,11 +365,8 @@ func (q legacyQueryServer) Votes(ctx context.Context, req *v1beta1.QueryVotesReq
 	}, nil
 }
 
+//nolint:staticcheck // this is needed for legacy param support
 func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
 	resp, err := q.qs.Params(ctx, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,
 	})
@@ -437,29 +375,35 @@ func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsR
 	}
 
 	response := &v1beta1.QueryParamsResponse{}
-	switch req.ParamsType {
-	case v1beta1.ParamDeposit:
-		minDeposit := sdk.NewCoins(resp.Params.MinDeposit...)
-		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.Params.MaxDepositPeriod)
-	case v1beta1.ParamVoting:
-		response.VotingParams = v1beta1.NewVotingParams(*resp.Params.VotingPeriod)
-	case v1beta1.ParamTallying:
-		quorum, err := sdkmath.LegacyNewDecFromStr(resp.Params.Quorum)
+
+	if resp.DepositParams == nil && resp.VotingParams == nil && resp.TallyParams == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid parameter type", req.ParamsType)
+	}
+
+	if resp.DepositParams != nil {
+		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
+		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
+	}
+
+	if resp.VotingParams != nil {
+		response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod)
+	}
+
+	if resp.TallyParams != nil {
+		quorum, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Quorum)
 		if err != nil {
 			return nil, err
 		}
-		threshold, err := sdkmath.LegacyNewDecFromStr(resp.Params.Threshold)
+		threshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Threshold)
 		if err != nil {
 			return nil, err
 		}
-		vetoThreshold, err := sdkmath.LegacyNewDecFromStr(resp.Params.VetoThreshold)
+		vetoThreshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.VetoThreshold)
 		if err != nil {
 			return nil, err
 		}
 
 		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, vetoThreshold)
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid parameter type", req.ParamsType)
 	}
 
 	return response, nil

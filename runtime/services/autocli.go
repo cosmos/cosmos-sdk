@@ -25,7 +25,7 @@ type AutoCLIQueryService struct {
 }
 
 // NewAutoCLIQueryService returns a AutoCLIQueryService for the provided modules.
-func NewAutoCLIQueryService(appModules map[string]appmodule.AppModule) *AutoCLIQueryService {
+func NewAutoCLIQueryService(appModules map[string]any) *AutoCLIQueryService {
 	return &AutoCLIQueryService{
 		moduleOptions: ExtractAutoCLIOptions(appModules),
 	}
@@ -36,7 +36,7 @@ func NewAutoCLIQueryService(appModules map[string]appmodule.AppModule) *AutoCLIQ
 // Example Usage:
 //
 //	ExtractAutoCLIOptions(ModuleManager.Modules)
-func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) map[string]*autocliv1.ModuleOptions {
+func ExtractAutoCLIOptions(appModules map[string]any) map[string]*autocliv1.ModuleOptions {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {
@@ -54,9 +54,7 @@ func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) map[string
 			mod.RegisterServices(cfg)
 		}
 
-		if mod, ok := mod.(interface {
-			RegisterServices(grpc.ServiceRegistrar) error
-		}); ok {
+		if mod, ok := mod.(appmodule.HasServices); ok {
 			err := mod.RegisterServices(cfg)
 			if err != nil {
 				panic(err)
@@ -105,7 +103,7 @@ type autocliConfigurator struct {
 	err           error
 }
 
-var _ module.Configurator = &autocliConfigurator{} //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+var _ module.Configurator = &autocliConfigurator{}
 
 func (a *autocliConfigurator) MsgServer() gogogrpc.Server { return &a.msgServer }
 
@@ -115,11 +113,7 @@ func (a *autocliConfigurator) RegisterMigration(string, uint64, module.Migration
 	return nil
 }
 
-func (a *autocliConfigurator) Register(string, uint64, appmodule.MigrationHandler) error {
-	return nil
-}
-
-func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
+func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss any) {
 	if a.registryCache == nil {
 		a.registryCache, a.err = proto.MergedRegistry()
 	}
@@ -143,7 +137,7 @@ type autocliServiceRegistrar struct {
 	serviceName string
 }
 
-func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ interface{}) {
+func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ any) {
 	a.serviceName = sd.ServiceName
 }
 

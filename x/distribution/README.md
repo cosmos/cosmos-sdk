@@ -43,7 +43,7 @@ and delegators to independently and lazily withdraw their rewards.
 
 As a part of the lazy computations, each delegator holds an accumulation term
 specific to each validator which is used to estimate what their approximate
-fair portion of tokens held in the fee pool is owed to them.
+fair portion of tokens held in the global fee pool is owed to them.
 
 ```text
 entitlement = delegator-accumulation / all-delegators-accumulation
@@ -74,13 +74,14 @@ which is considered computationally expensive.
 
 In conclusion, we can only have Atom commission and unbonded atoms
 provisions or bonded atom provisions with no Atom commission, and we elect to
-implement the former. Stakeholders wishing to rebond their provisions, may elect
+implement the former. Stakeholders wishing to rebond their provisions may elect
 to set up a script to periodically withdraw and rebond rewards.
 
 ## Contents
 
 * [Concepts](#concepts)
 * [State](#state)
+    * [FeePool](#feepool)
     * [Validator Distribution](#validator-distribution)
     * [Delegation Distribution](#delegation-distribution)
     * [Params](#params)
@@ -99,7 +100,7 @@ In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are pa
 
 Rewards are calculated per period. The period is updated each time a validator's delegation changes, for example, when the validator receives a new delegation.
 The rewards for a single validator can then be calculated by taking the total rewards for the period before the delegation started, minus the current total rewards.
-To learn more, see the [F1 Fee Distribution paper](https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/docs/spec/fee_distribution/f1_fee_distr.pdf).
+To learn more, see the [F1 Fee Distribution paper](https://github.com/cosmos/cosmos-sdk/tree/main/docs/spec/fee_distribution/f1_fee_distr.pdf).
 
 The commission to the validator is paid when the validator is removed or when the validator requests a withdrawal.
 The commission is calculated and incremented at every `BeginBlock` operation to update accumulated fee amounts.
@@ -128,9 +129,14 @@ count is decremented. If the reference count hits zero, the historical record is
 
 ### FeePool
 
-The `FeePool` is used to store decimal rewards to allow for fractions of coins to be received from operations like inflation.
+All globally tracked parameters for distribution are stored within
+`FeePool`. Rewards are collected and added to the reward pool and
+distributed to validators/delegators from here.
 
-Once those rewards are big enough, they are sent as `sdk.Coins` to the community pool.
+Note that the reward pool holds decimal coins (`DecCoins`) to allow
+for fractions of coins to be received from operations like inflation.
+When coins are distributed from the pool they are truncated back to
+`sdk.Coins` which are non-decimal.
 
 * FeePool: `0x00 -> ProtocolBuffer(FeePool)`
 
@@ -142,6 +148,10 @@ type DecCoin struct {
     Amount math.LegacyDec
     Denom  string
 }
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L116-L123
 ```
 
 ### Validator Distribution
@@ -186,7 +196,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x09 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/distribution/proto/cosmos/distribution/v1beta1/distribution.proto#L12-L44
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L12-L42
 ```
 
 ## Begin Block
@@ -208,14 +218,64 @@ inflationary rewards to the stake. All fees are collected in a specific module
 account during the block. During `BeginBlock`, they are sent to the
 `"distribution"` `ModuleAccount`. No other sending of tokens occurs. Instead, the
 rewards each account is entitled to are stored, and withdrawals can be triggered
-through the messages `WithdrawValidatorCommission` and
+through the messages `FundCommunityPool`, `WithdrawValidatorCommission` and
 `WithdrawDelegatorReward`.
 
 #### Reward to the Community Pool
 
-The community pool (x/protocolpool) gets `community_tax * fees`, plus any remaining dust after
+The community pool gets `community_tax * fees`, plus any remaining dust after
 validators get their rewards that are always rounded down to the nearest
 integer value.
+
+#### Using an External Community Pool
+
+Starting with Cosmos SDK v0.53.0, an external community pool, such as `x/protocolpool`, can be used in place of the `x/distribution` managed community pool.
+
+
+Please view the warning in the next section before deciding to use an external community pool.
+
+```go
+// ExternalCommunityPoolKeeper is the interface that an external community pool module keeper must fulfill
+// for x/distribution to properly accept it as a community pool fund destination.
+type ExternalCommunityPoolKeeper interface {
+	// GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
+	// This is the address that x/distribution will send funds to for external management.
+	GetCommunityPoolModule() string
+	// FundCommunityPool allows an account to directly fund the community fund pool.
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, senderAddr sdk.AccAddress) error
+	// DistributeFromCommunityPool distributes funds from the community pool module account to
+	// a receiver address.
+	DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+}
+```
+
+```go
+app.DistrKeeper = distrkeeper.NewKeeper(
+    appCodec,
+    runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
+    app.AccountKeeper,
+    app.BankKeeper,
+    app.StakingKeeper,
+    authtypes.FeeCollectorName,
+    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+    distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper), // New option.
+)
+```
+
+#### External Community Pool Usage Warning
+
+When using an external community pool with `x/distribution`, the following handlers will return an error:
+
+**QueryService**
+
+- `CommunityPool`
+
+**MsgService**
+
+- `CommunityPoolSpend`
+- `FundCommunityPool`
+
+If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
 
 #### Reward To the Validators
 
@@ -272,20 +332,20 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 Response:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/distribution/proto/cosmos/distribution/v1beta1/tx.proto#L62-L73
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L49-L60
 ```
 
 ```go
 func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
- if k.blockedAddrs[withdrawAddr.String()] {
-  fail with "`{withdrawAddr}` is not allowed to receive external funds"
- }
+	if k.blockedAddrs[withdrawAddr.String()] {
+		fail with "`{withdrawAddr}` is not allowed to receive external funds"
+	}
 
- if !k.GetWithdrawAddrEnabled(ctx) {
-  fail with `ErrSetWithdrawAddrDisabled`
- }
+	if !k.GetWithdrawAddrEnabled(ctx) {
+		fail with `ErrSetWithdrawAddrDisabled`
+	}
 
- k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
+	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 ```
 
 ### MsgWithdrawDelegatorReward
@@ -324,7 +384,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 Response:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/distribution/proto/cosmos/distribution/v1beta1/tx.proto#L79-L90
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L66-L77
 ```
 
 ### WithdrawValidatorCommission
@@ -333,6 +393,39 @@ The validator can send the WithdrawValidatorCommission message to withdraw their
 The commission is calculated in every block during `BeginBlock`, so no iteration is required to withdraw.
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
+
+### FundCommunityPool
+
+:::warning
+
+This handler will return an error if an `ExternalCommunityPool` is used.
+
+:::
+
+This message sends coins directly from the sender to the community pool.
+
+The transaction fails if the amount cannot be transferred from the sender to the distribution module account.
+
+```go
+func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
+  if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
+    return err
+  }
+
+  feePool, err := k.FeePool.Get(ctx)
+  if err != nil {
+    return err
+  }
+
+  feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
+	
+  if err := k.FeePool.Set(ctx, feePool); err != nil {
+    return err
+  }
+
+  return nil
+}
+```
 
 ### Common distribution operations
 
@@ -349,17 +442,17 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
     // period has already been incremented - we want to store the period ended by this delegation action
     previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
 
- // increment reference count for the period we're going to track
- k.incrementReferenceCount(ctx, val, previousPeriod)
+	// increment reference count for the period we're going to track
+	k.incrementReferenceCount(ctx, val, previousPeriod)
 
- validator := k.stakingKeeper.Validator(ctx, val)
- delegation := k.stakingKeeper.Delegation(ctx, del, val)
+	validator := k.stakingKeeper.Validator(ctx, val)
+	delegation := k.stakingKeeper.Delegation(ctx, del, val)
 
- // calculate delegation stake in tokens
- // we don't store directly, so multiply delegation shares * (tokens per share)
- // note: necessary to truncate so we don't allow withdrawing more rewards than owed
- stake := validator.TokensFromSharesTruncated(delegation.GetShares())
- k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
+	// calculate delegation stake in tokens
+	// we don't store directly, so multiply delegation shares * (tokens per share)
+	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
+	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 ```
 
@@ -368,7 +461,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/distribution/proto/cosmos/distribution/v1beta1/tx.proto#L159:L172
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L133-L147
 ```
 
 The message handling can fail if:
@@ -415,7 +508,7 @@ By default, all values are set to a `0`, except period, which is set to `1`.
 * triggered-by: `staking.RemoveValidator`
 
 Outstanding commission is sent to the validator's self-delegation withdrawal address.
-Remaining delegator rewards get sent to the community pool.
+Remaining delegator rewards get sent to the community fee pool.
 
 Note: The validator gets removed only when it has no remaining delegations.
 At that time, all outstanding delegator rewards will have been withdrawn.
@@ -438,6 +531,8 @@ The distribution module emits the following events:
 
 | Type            | Attribute Key | Attribute Value    |
 |-----------------|---------------|--------------------|
+| proposer_reward | validator     | {validatorAddress} |
+| proposer_reward | reward        | {proposerReward}   |
 | commission      | amount        | {commissionAmount} |
 | commission      | validator     | {validatorAddress} |
 | rewards         | amount        | {rewardAmount}     |
@@ -486,12 +581,13 @@ The distribution module contains the following parameters:
 * `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.
 
 :::note
-The community tax is collected and sent to the community pool (x/protocolpool).
+The reserve pool is the pool of collected funds for use by governance taken via the `CommunityTax`.
+Currently with the Cosmos SDK, tokens collected by the CommunityTax are accounted for but unspendable.
 :::
 
 ## Client
 
-### CLI
+## CLI
 
 A user can query and interact with the `distribution` module using the CLI.
 
@@ -521,6 +617,28 @@ Example Output:
 
 ```yml
 commission:
+- amount: "1000000.000000000000000000"
+  denom: stake
+```
+
+##### community-pool
+
+The `community-pool` command allows users to query all coin balances within the community pool.
+
+```shell
+simd query distribution community-pool [flags]
+```
+
+Example:
+
+```shell
+simd query distribution community-pool
+```
+
+Example Output:
+
+```yml
+pool:
 - amount: "1000000.000000000000000000"
   denom: stake
 ```
@@ -626,7 +744,7 @@ rewards:
 
 The `validator-distribution-info` command allows users to query validator commission and self-delegation rewards for validator.
 
-```shell
+````shell
 simd query distribution validator-distribution-info cosmosvaloper1...
 ```
 
@@ -648,6 +766,20 @@ The `tx` commands allow users to interact with the `distribution` module.
 
 ```shell
 simd tx distribution --help
+```
+
+##### fund-community-pool
+
+The `fund-community-pool` command allows users to send funds to the community pool.
+
+```shell
+simd tx distribution fund-community-pool [amount] [flags]
+```
+
+Example:
+
+```shell
+simd tx distribution fund-community-pool 100stake --from cosmos1...
 ```
 
 ##### set-withdraw-addr
@@ -944,5 +1076,30 @@ Example Output:
 ```json
 {
   "withdrawAddress": "cosmos1..."
+}
+```
+
+#### CommunityPool
+
+The `CommunityPool` endpoint allows users to query the community pool coins.
+
+Example:
+
+```shell
+grpcurl -plaintext \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/CommunityPool
+```
+
+Example Output:
+
+```json
+{
+  "pool": [
+    {
+      "denom": "stake",
+      "amount": "1000000000000000000"
+    }
+  ]
 }
 ```

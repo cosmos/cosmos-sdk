@@ -15,12 +15,12 @@ import (
 
 // Info is the special structure that the Plan.Info string can be (as json).
 type Info struct {
-	parseConfig ParseConfig
+	parseConfig ParseConfig `json:"-"`
 
 	Binaries BinaryDownloadURLMap `json:"binaries"`
 }
 
-// BinaryDownloadURLMap is a map of os/architecture strings to a URL where the binary can be downloaded.
+// BinaryDownloadURLMap is a map of os/architecture stings to a URL where the binary can be downloaded.
 type BinaryDownloadURLMap map[string]string
 
 // ParseConfig is used to configure the parsing of a Plan.Info string.

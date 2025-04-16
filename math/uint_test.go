@@ -136,8 +136,8 @@ func (s *uintTestSuite) TestArithUint() {
 			{u1.AddUint64(n2), n1 + n2},
 			{u1.MulUint64(n2), n1 * n2},
 			{u1.QuoUint64(n2), n1 / n2},
-			{sdkmath.MinUint(u1, u2), minuint(n1, n2)},
-			{sdkmath.MaxUint(u1, u2), maxuint(n1, n2)},
+			{sdkmath.MinUint(u1, u2), min(n1, n2)},
+			{sdkmath.MaxUint(u1, u2), max(n1, n2)},
 			{u1.Incr(), n1 + 1},
 		}
 
@@ -314,20 +314,6 @@ func (s *uintTestSuite) TestRelativePow() {
 		res := sdkmath.RelativePow(tc.args[0], tc.args[1], tc.args[2])
 		s.Require().Equal(tc.want, res, "unexpected result for test case %d, input: %v, got: %v", i, tc.args, res)
 	}
-}
-
-func minuint(i1, i2 uint64) uint64 {
-	if i1 < i2 {
-		return i1
-	}
-	return i2
-}
-
-func maxuint(i1, i2 uint64) uint64 {
-	if i1 > i2 {
-		return i1
-	}
-	return i2
 }
 
 func TestRoundTripMarshalToUint(t *testing.T) {

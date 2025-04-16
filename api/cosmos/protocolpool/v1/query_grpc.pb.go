@@ -20,7 +20,9 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Query_CommunityPool_FullMethodName   = "/cosmos.protocolpool.v1.Query/CommunityPool"
-	Query_UnclaimedBudget_FullMethodName = "/cosmos.protocolpool.v1.Query/UnclaimedBudget"
+	Query_ContinuousFund_FullMethodName  = "/cosmos.protocolpool.v1.Query/ContinuousFund"
+	Query_ContinuousFunds_FullMethodName = "/cosmos.protocolpool.v1.Query/ContinuousFunds"
+	Query_Params_FullMethodName          = "/cosmos.protocolpool.v1.Query/Params"
 )
 
 // QueryClient is the client API for Query service.
@@ -31,8 +33,12 @@ const (
 type QueryClient interface {
 	// CommunityPool queries the community pool coins.
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
-	// UnclaimedBudget queries the remaining budget left to be claimed and it gives overall budget allocation view.
-	UnclaimedBudget(ctx context.Context, in *QueryUnclaimedBudgetRequest, opts ...grpc.CallOption) (*QueryUnclaimedBudgetResponse, error)
+	// ContinuousFund queries a continuous fund by the recipient is is associated with.
+	ContinuousFund(ctx context.Context, in *QueryContinuousFundRequest, opts ...grpc.CallOption) (*QueryContinuousFundResponse, error)
+	// ContinuousFunds queries all continuous funds in the store.
+	ContinuousFunds(ctx context.Context, in *QueryContinuousFundsRequest, opts ...grpc.CallOption) (*QueryContinuousFundsResponse, error)
+	// Params returns the total set of x/protocolpool parameters.
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
 type queryClient struct {
@@ -53,10 +59,30 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 	return out, nil
 }
 
-func (c *queryClient) UnclaimedBudget(ctx context.Context, in *QueryUnclaimedBudgetRequest, opts ...grpc.CallOption) (*QueryUnclaimedBudgetResponse, error) {
+func (c *queryClient) ContinuousFund(ctx context.Context, in *QueryContinuousFundRequest, opts ...grpc.CallOption) (*QueryContinuousFundResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(QueryUnclaimedBudgetResponse)
-	err := c.cc.Invoke(ctx, Query_UnclaimedBudget_FullMethodName, in, out, cOpts...)
+	out := new(QueryContinuousFundResponse)
+	err := c.cc.Invoke(ctx, Query_ContinuousFund_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ContinuousFunds(ctx context.Context, in *QueryContinuousFundsRequest, opts ...grpc.CallOption) (*QueryContinuousFundsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryContinuousFundsResponse)
+	err := c.cc.Invoke(ctx, Query_ContinuousFunds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryParamsResponse)
+	err := c.cc.Invoke(ctx, Query_Params_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +97,12 @@ func (c *queryClient) UnclaimedBudget(ctx context.Context, in *QueryUnclaimedBud
 type QueryServer interface {
 	// CommunityPool queries the community pool coins.
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
-	// UnclaimedBudget queries the remaining budget left to be claimed and it gives overall budget allocation view.
-	UnclaimedBudget(context.Context, *QueryUnclaimedBudgetRequest) (*QueryUnclaimedBudgetResponse, error)
+	// ContinuousFund queries a continuous fund by the recipient is is associated with.
+	ContinuousFund(context.Context, *QueryContinuousFundRequest) (*QueryContinuousFundResponse, error)
+	// ContinuousFunds queries all continuous funds in the store.
+	ContinuousFunds(context.Context, *QueryContinuousFundsRequest) (*QueryContinuousFundsResponse, error)
+	// Params returns the total set of x/protocolpool parameters.
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -86,8 +116,14 @@ type UnimplementedQueryServer struct{}
 func (UnimplementedQueryServer) CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPool not implemented")
 }
-func (UnimplementedQueryServer) UnclaimedBudget(context.Context, *QueryUnclaimedBudgetRequest) (*QueryUnclaimedBudgetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnclaimedBudget not implemented")
+func (UnimplementedQueryServer) ContinuousFund(context.Context, *QueryContinuousFundRequest) (*QueryContinuousFundResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ContinuousFund not implemented")
+}
+func (UnimplementedQueryServer) ContinuousFunds(context.Context, *QueryContinuousFundsRequest) (*QueryContinuousFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ContinuousFunds not implemented")
+}
+func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -128,20 +164,56 @@ func _Query_CommunityPool_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UnclaimedBudget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryUnclaimedBudgetRequest)
+func _Query_ContinuousFund_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryContinuousFundRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).UnclaimedBudget(ctx, in)
+		return srv.(QueryServer).ContinuousFund(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Query_UnclaimedBudget_FullMethodName,
+		FullMethod: Query_ContinuousFund_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).UnclaimedBudget(ctx, req.(*QueryUnclaimedBudgetRequest))
+		return srv.(QueryServer).ContinuousFund(ctx, req.(*QueryContinuousFundRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ContinuousFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryContinuousFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ContinuousFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ContinuousFunds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ContinuousFunds(ctx, req.(*QueryContinuousFundsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Params(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Params_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -158,8 +230,16 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_CommunityPool_Handler,
 		},
 		{
-			MethodName: "UnclaimedBudget",
-			Handler:    _Query_UnclaimedBudget_Handler,
+			MethodName: "ContinuousFund",
+			Handler:    _Query_ContinuousFund_Handler,
+		},
+		{
+			MethodName: "ContinuousFunds",
+			Handler:    _Query_ContinuousFunds_Handler,
+		},
+		{
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

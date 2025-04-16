@@ -10,14 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var ac = codectestutil.CodecOptions{}.GetAddressCodec()
+func TestErrorHandling(t *testing.T) {
+	// first, try to generate a key, must return an error
+	// (no panic)
+	path := *hd.NewParams(44, 555, 0, false, 0)
+	_, err := NewPrivKeySecp256k1Unsafe(path)
+	require.Error(t, err)
+}
 
 func TestPublicKeyUnsafe(t *testing.T) {
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
@@ -28,14 +33,14 @@ func TestPublicKeyUnsafe(t *testing.T) {
 
 func checkDefaultPubKey(t *testing.T, priv types.LedgerPrivKey) {
 	t.Helper()
+
 	require.NotNil(t, priv)
 	expectedPkStr := "PubKeySecp256k1{034FEF9CD7C4C63588D3B03FEB5281B9D232CBA34D6F3D71AEE59211FFBFE1FE87}"
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
 		"Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 	require.Equal(t, expectedPkStr, priv.PubKey().String())
-	addr, err := ac.BytesToString(priv.PubKey().Address())
-	require.NoError(t, err)
+	addr := sdk.AccAddress(priv.PubKey().Address()).String()
 	require.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
 		addr, "Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 }
@@ -99,11 +104,10 @@ func TestPublicKeySafe(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, priv)
-	require.Nil(t, ShowAddress(path, priv.PubKey(), "cosmos"))
+	require.Nil(t, ShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
 	checkDefaultPubKey(t, priv)
 
-	addr2, err := ac.BytesToString(priv.PubKey().Address())
-	require.NoError(t, err)
+	addr2 := sdk.AccAddress(priv.PubKey().Address()).String()
 	require.Equal(t, addr, addr2)
 }
 
@@ -148,9 +152,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.NotNil(t, addr)
 		require.NotNil(t, priv)
 
-		addr2, err := ac.BytesToString(priv.PubKey().Address())
-		require.NoError(t, err)
-
+		addr2 := sdk.AccAddress(priv.PubKey().Address()).String()
 		require.Equal(t, addr2, addr)
 		require.Equal(t,
 			expectedAddrs[i], addr,

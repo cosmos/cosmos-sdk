@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/core/appmodule"
 )
 
 func TestModuleIntSuite(t *testing.T) {
@@ -19,7 +17,7 @@ type TestSuite struct {
 
 func (s *TestSuite) TestAssertNoForgottenModules() {
 	m := Manager{
-		Modules: map[string]appmodule.AppModule{"a": nil, "b": nil},
+		Modules: map[string]any{"a": nil, "b": nil},
 	}
 	tcs := []struct {
 		name     string
@@ -44,7 +42,7 @@ func (s *TestSuite) TestAssertNoForgottenModules() {
 
 func (s *TestSuite) TestModuleNames() {
 	m := Manager{
-		Modules: map[string]appmodule.AppModule{"a": nil, "b": nil},
+		Modules: map[string]any{"a": nil, "b": nil},
 	}
 	ms := m.ModuleNames()
 	sort.Strings(ms)

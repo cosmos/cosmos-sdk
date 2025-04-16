@@ -2,10 +2,10 @@ package flag
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -202,11 +202,10 @@ func (m compositeMapType[T]) NewValue(ctx *context.Context, opts *Builder) Value
 func (m *compositeMapValue[T]) Set(s string) error {
 	comaArgs := strings.Split(s, ",")
 	for _, arg := range comaArgs {
-		parts := strings.SplitN(arg, "=", 2)
-		if len(parts) != 2 {
+		key, val, found := strings.Cut(arg, "=")
+		if !found {
 			return errors.New("invalid format, expected key=value")
 		}
-		key, val := parts[0], parts[1]
 
 		keyValue, err := m.keyValueResolver(key)
 		if err != nil {

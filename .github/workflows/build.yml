@@ -31,14 +31,20 @@ jobs:
         ###################
         #### Build App ####
         ###################
-      - name: Build with sqlite backend
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,sqlite make build
-      - name: Build with BLS12381
-        if: matrix.go-arch == 'amd64'
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,bls12381 make build
+      - name: Build
+        run: GOARCH=${{ matrix.go-arch }} make build
+      - name: Build with legacy app.go
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="legacy" make build
+      # TODO re-add with comet v1
+      #- name: Build with BLS12381
+      #  if: matrix.go-arch == 'amd64'
+      #  run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="bls12381" make build
       - name: Build with Secp_cgo
         if: matrix.go-arch == 'amd64'
-        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=v2,secp make build
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="secp" make build
+      - name: Build with legacy app.go and Secp_cgo
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="legacy,secp" make build
         ###################
         ## Build Tooling ##
         ###################

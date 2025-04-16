@@ -1,9 +1,7 @@
 package keyring
 
 import (
-	"errors"
-
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	"github.com/cockroachdb/errors"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -105,7 +103,7 @@ func (k Record) GetType() KeyType {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (k *Record) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pk cryptotypes.PubKey
 	if err := unpacker.UnpackAny(k.PubKey, &pk); err != nil {
 		return err
@@ -128,13 +126,6 @@ func extractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
 	return extractPrivKeyFromLocal(rl)
 }
 
-// extractPrivKeyFromLocal extracts the private key from a local record.
-// It checks if the private key is available in the provided Record_Local instance.
-// Parameters:
-// - rl: A pointer to a Record_Local instance from which the private key will be extracted.
-// Returns:
-// - priv: The extracted cryptotypes.PrivKey if successful.
-// - error: An error if the private key is not available or if the casting fails.
 func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
 	if rl.PrivKey == nil {
 		return nil, ErrPrivKeyNotAvailable

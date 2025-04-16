@@ -4,10 +4,10 @@ import (
 	"errors"
 	"testing"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
 	"cosmossdk.io/store/snapshots/types"
@@ -249,7 +249,7 @@ func TestManager_Restore(t *testing.T) {
 
 func TestManager_TakeError(t *testing.T) {
 	snapshotter := &mockErrorSnapshotter{}
-	store, err := snapshots.NewStore(coretesting.NewMemDB(), GetTempDir(t))
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
 	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 

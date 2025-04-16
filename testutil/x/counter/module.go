@@ -4,16 +4,13 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/registry"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
-var (
-	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-)
+var _ appmodule.AppModule = AppModule{}
 
 // AppModule implements an application module
 type AppModule struct {
@@ -45,6 +42,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
-func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+func (AppModule) RegisterInterfaces(registrar codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registrar)
 }

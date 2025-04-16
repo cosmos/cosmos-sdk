@@ -1,7 +1,8 @@
 package types
 
 import (
-	"errors"
+	"fmt"
+	"slices"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,12 +31,7 @@ func NewPermissionsForAddress(name string, permissions []string) PermissionsForA
 
 // HasPermission returns whether the PermissionsForAddress contains permission.
 func (pa PermissionsForAddress) HasPermission(permission string) bool {
-	for _, perm := range pa.permissions {
-		if perm == permission {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(pa.permissions, permission)
 }
 
 // GetAddress returns the address of the PermissionsForAddress object
@@ -52,7 +48,7 @@ func (pa PermissionsForAddress) GetPermissions() []string {
 func validatePermissions(permissions ...string) error {
 	for _, perm := range permissions {
 		if strings.TrimSpace(perm) == "" {
-			return errors.New("module permission is empty")
+			return fmt.Errorf("module permission is empty")
 		}
 	}
 	return nil

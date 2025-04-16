@@ -5,18 +5,20 @@ import (
 	"sort"
 	"testing"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestValidatorTestEquivalent(t *testing.T) {
@@ -32,10 +34,6 @@ func TestUpdateDescription(t *testing.T) {
 	d1 := types.Description{
 		Website: "https://validator.cosmos",
 		Details: "Test validator",
-		Metadata: &types.Metadata{
-			ProfilePicUri:    "https://validator.cosmos/profile.png",
-			SocialHandleUris: []string{"https://validator.cosmos/twitter", "https://validator.cosmos/telegram"},
-		},
 	}
 
 	d2 := types.Description{
@@ -43,10 +41,6 @@ func TestUpdateDescription(t *testing.T) {
 		Identity: types.DoNotModifyDesc,
 		Website:  types.DoNotModifyDesc,
 		Details:  types.DoNotModifyDesc,
-		Metadata: &types.Metadata{
-			ProfilePicUri:    types.DoNotModifyDesc,
-			SocialHandleUris: []string{"https://validator.cosmos/twitter", "https://validator.cosmos/telegram"},
-		},
 	}
 
 	d3 := types.Description{
@@ -54,7 +48,6 @@ func TestUpdateDescription(t *testing.T) {
 		Identity: "",
 		Website:  "",
 		Details:  "",
-		Metadata: &types.Metadata{},
 	}
 
 	d, err := d1.UpdateDescription(d2)
@@ -64,6 +57,24 @@ func TestUpdateDescription(t *testing.T) {
 	d, err = d1.UpdateDescription(d3)
 	require.Nil(t, err)
 	require.Equal(t, d, d3)
+}
+
+func TestABCIValidatorUpdate(t *testing.T) {
+	validator := newValidator(t, valAddr1, pk1)
+	abciVal := validator.ABCIValidatorUpdate(sdk.DefaultPowerReduction)
+	pk, err := validator.TmConsPublicKey()
+	require.NoError(t, err)
+	require.Equal(t, pk, abciVal.PubKey)
+	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
+}
+
+func TestABCIValidatorUpdateZero(t *testing.T) {
+	validator := newValidator(t, valAddr1, pk1)
+	abciVal := validator.ABCIValidatorUpdateZero()
+	pk, err := validator.TmConsPublicKey()
+	require.NoError(t, err)
+	require.Equal(t, pk, abciVal.PubKey)
+	require.Equal(t, int64(0), abciVal.Power)
 }
 
 func TestShareTokens(t *testing.T) {
@@ -125,10 +136,8 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
-	addr1, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr1)
-	require.NoError(t, err)
 	valA := types.Validator{
-		OperatorAddress: addr1,
+		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: pk1Any,
 		Status:          types.Bonded,
 		Tokens:          math.NewInt(100),
@@ -252,7 +261,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	copy(sortedVals, vals)
 
 	// Randomly shuffle validators, sort, and check it is equal to original sort
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		rand.Shuffle(10, func(i, j int) {
 			vals[i], vals[j] = vals[j], vals[i]
 		})
@@ -260,6 +269,58 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 		types.Validators{Validators: vals, ValidatorCodec: address.NewBech32Codec("cosmosvaloper")}.Sort()
 		require.Equal(t, sortedVals, vals, "Validator sort returned different slices")
 	}
+}
+
+// Check SortCometBFT sorts the same as CometBFT
+func TestValidatorsSortCometBFT(t *testing.T) {
+	vals := make([]types.Validator, 100)
+
+	for i := range vals {
+		pk := ed25519.GenPrivKey().PubKey()
+		pk2 := ed25519.GenPrivKey().PubKey()
+		vals[i] = newValidator(t, sdk.ValAddress(pk2.Address()), pk)
+		vals[i].Status = types.Bonded
+		vals[i].Tokens = math.NewInt(rand.Int63())
+	}
+	// create some validators with the same power
+	for i := range 10 {
+		vals[i].Tokens = math.NewInt(1000000)
+	}
+
+	valz := types.Validators{Validators: vals, ValidatorCodec: address.NewBech32Codec("cosmosvaloper")}
+
+	// create expected CometBFT validators by converting to CometBFT then sorting
+	expectedVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
+	require.NoError(t, err)
+	sort.Sort(cmttypes.ValidatorsByVotingPower(expectedVals))
+
+	// sort in SDK and then convert to CometBFT
+	sort.SliceStable(valz.Validators, func(i, j int) bool {
+		return types.ValidatorsByVotingPower(valz.Validators).Less(i, j, sdk.DefaultPowerReduction)
+	})
+	actualVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
+	require.NoError(t, err)
+
+	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in CometBFT")
+}
+
+func TestValidatorToCmt(t *testing.T) {
+	vals := types.Validators{}
+	expected := make([]*cmttypes.Validator, 10)
+
+	for i := range 10 {
+		pk := ed25519.GenPrivKey().PubKey()
+		val := newValidator(t, sdk.ValAddress(pk.Address()), pk)
+		val.Status = types.Bonded
+		val.Tokens = math.NewInt(rand.Int63())
+		vals.Validators = append(vals.Validators, val)
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
+		require.NoError(t, err)
+		expected[i] = cmttypes.NewValidator(cmtPk, val.ConsensusPower(sdk.DefaultPowerReduction))
+	}
+	vs, err := testutil.ToCmtValidators(vals, sdk.DefaultPowerReduction)
+	require.NoError(t, err)
+	require.Equal(t, expected, vs)
 }
 
 func TestBondStatus(t *testing.T) {
@@ -274,9 +335,8 @@ func TestBondStatus(t *testing.T) {
 }
 
 func mkValidator(tokens int64, shares math.LegacyDec) types.Validator {
-	vAddr1, _ := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr1)
 	return types.Validator{
-		OperatorAddress: vAddr1,
+		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: pk1Any,
 		Status:          types.Bonded,
 		Tokens:          math.NewInt(tokens),
@@ -287,9 +347,7 @@ func mkValidator(tokens int64, shares math.LegacyDec) types.Validator {
 // Creates a new validators and asserts the error check.
 func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey) types.Validator {
 	t.Helper()
-	addr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(operator)
-	require.NoError(t, err)
-	v, err := types.NewValidator(addr, pubKey, types.Description{})
+	v, err := types.NewValidator(operator.String(), pubKey, types.Description{})
 	require.NoError(t, err)
 	return v
 }

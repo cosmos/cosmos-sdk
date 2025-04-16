@@ -32,7 +32,7 @@ const (
 type QueryClient interface {
 	// Account returns account permissions.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*AccountResponse, error)
-	// Accounts returns multiple accounts permissions.
+	// Account returns account permissions.
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*AccountsResponse, error)
 	// DisabledList returns a list of disabled message urls
 	DisabledList(ctx context.Context, in *QueryDisabledListRequest, opts ...grpc.CallOption) (*DisabledListResponse, error)
@@ -84,7 +84,7 @@ func (c *queryClient) DisabledList(ctx context.Context, in *QueryDisabledListReq
 type QueryServer interface {
 	// Account returns account permissions.
 	Account(context.Context, *QueryAccountRequest) (*AccountResponse, error)
-	// Accounts returns multiple accounts permissions.
+	// Account returns account permissions.
 	Accounts(context.Context, *QueryAccountsRequest) (*AccountsResponse, error)
 	// DisabledList returns a list of disabled message urls
 	DisabledList(context.Context, *QueryDisabledListRequest) (*DisabledListResponse, error)

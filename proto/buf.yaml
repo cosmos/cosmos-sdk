@@ -2,17 +2,18 @@
 version: v1
 name: buf.build/cosmos/cosmos-sdk
 deps:
-  - buf.build/cometbft/cometbft:4a62c99d422068a5165429b62a7eb824df46cca9 
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
-  - buf.build/protocolbuffers/wellknowntypes:v23.4
+  - buf.build/protocolbuffers/wellknowntypes
 breaking:
   use:
     - FILE
+  ignore:
+    - testpb
 lint:
   use:
-    - DEFAULT
+    - STANDARD
     - COMMENTS
     - FILE_LOWER_SNAKE_CASE
   except:
@@ -21,6 +22,5 @@ lint:
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
     - RPC_REQUEST_STANDARD_NAME
-    - ENUM_NO_ALLOW_ALIAS
   ignore:
     - tendermint

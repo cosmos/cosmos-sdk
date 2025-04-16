@@ -2,6 +2,7 @@ package address
 
 import (
 	"crypto/sha256"
+	"slices"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -40,7 +41,7 @@ func (suite *AddressSuite) TestComposed() {
 	assert.Len(ac, Len)
 
 	// check if optimizations work
-	checkingKey := append([]byte{}, a1.AddressWithLen(suite.T())...)
+	checkingKey := slices.Clone(a1.AddressWithLen(suite.T()))
 	checkingKey = append(checkingKey, a2.AddressWithLen(suite.T())...)
 	ac2 := Hash(typ, checkingKey)
 	assert.Equal(ac, ac2, "NewComposed works correctly")
@@ -116,6 +117,7 @@ func (a addrMock) Address() []byte {
 
 func (a addrMock) AddressWithLen(t *testing.T) []byte {
 	t.Helper()
+
 	addr, err := LengthPrefix(a.Addr)
 	assert.NoError(t, err)
 	return addr

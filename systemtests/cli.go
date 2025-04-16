@@ -154,6 +154,14 @@ func (c CLIWrapper) clone(mutator ...func(r *CLIWrapper)) CLIWrapper {
 	return *r
 }
 
+// RunOnly just runs the command, returns the output. and does nothing else
+func (c CLIWrapper) RunOnly(args ...string) (string, bool) {
+	c.t.Helper()
+	args = c.WithTXFlags(args...)
+	output, ok := c.run(args)
+	return output, ok
+}
+
 // Run main entry for executing cli commands.
 // When configured, method blocks until tx is committed.
 func (c CLIWrapper) Run(args ...string) string {
@@ -220,14 +228,14 @@ func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration
 	return "", false
 }
 
-// Keys wasmd keys CLI command
+// Keys runs the keys CLI command
 func (c CLIWrapper) Keys(args ...string) string {
 	args = c.WithKeyringFlags(args...)
 	out, _ := c.run(args)
 	return out
 }
 
-// CustomQuery main entrypoint for wasmd CLI queries
+// CustomQuery main entrypoint for CLI queries
 func (c CLIWrapper) CustomQuery(args ...string) string {
 	args = c.WithQueryFlags(args...)
 	out, _ := c.run(args)

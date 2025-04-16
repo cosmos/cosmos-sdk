@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -52,7 +53,7 @@ func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize 
 	return state, blockSize
 }
 
-func mustMarshalJSONIndent(o interface{}) []byte {
+func mustMarshalJSONIndent(o any) []byte {
 	bz, err := json.MarshalIndent(o, "", "  ")
 	if err != nil {
 		panic(fmt.Sprintf("failed to JSON encode: %s", err))
@@ -64,7 +65,7 @@ func mustMarshalJSONIndent(o interface{}) []byte {
 // OperationInput is a struct that holds all the needed values to generate a tx and deliver it
 type OperationInput struct {
 	R               *rand.Rand
-	App             simtypes.AppEntrypoint
+	App             *baseapp.BaseApp
 	TxGen           client.TxConfig
 	Cdc             *codec.ProtoCodec
 	Msg             sdk.Msg
@@ -89,7 +90,7 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "message doesn't leave room for fees"), nil, err
 	}
 
-	fees, err = simtypes.RandomFees(txCtx.R, coins)
+	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
 	if err != nil {
 		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate fees"), nil, err
 	}

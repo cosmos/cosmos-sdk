@@ -4,7 +4,7 @@ package event
 import (
 	"context"
 
-	"cosmossdk.io/core/transaction"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 // Service represents an event service which can retrieve and set an event manager in a context.
@@ -18,12 +18,26 @@ type Service interface {
 type Manager interface {
 	// Emit emits events represented as a protobuf message (as described in ADR 032).
 	//
-	// Callers SHOULD assume that these events will not be included in consensus.
-	Emit(event transaction.Msg) error
+	// Callers SHOULD assume that these events may be included in consensus. These events
+	// MUST be emitted deterministically and adding, removing or changing these events SHOULD
+	// be considered state-machine breaking.
+	Emit(ctx context.Context, event protoiface.MessageV1) error
 
 	// EmitKV emits an event based on an event and kv-pair attributes.
 	//
 	// These events will not be part of consensus and adding, removing or changing these events is
 	// not a state-machine breaking change.
-	EmitKV(eventType string, attrs ...Attribute) error
+	EmitKV(ctx context.Context, eventType string, attrs ...Attribute) error
+
+	// EmitNonConsensus emits events represented as a protobuf message (as described in ADR 032), without
+	// including it in blockchain consensus.
+	//
+	// These events will not be part of consensus and adding, removing or changing events is
+	// not a state-machine breaking change.
+	EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error
+}
+
+// KVEventAttribute is a kv-pair event attribute.
+type Attribute struct {
+	Key, Value string
 }

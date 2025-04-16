@@ -20,6 +20,8 @@ import (
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 const (
@@ -30,17 +32,21 @@ const (
 	DecScalarType                    = "cosmos.Dec"
 )
 
+// FileResolver specifies how protobuf file descriptors will be resolved.
+type FileResolver interface {
+	protodesc.Resolver
+	RangeFiles(func(protoreflect.FileDescriptor) bool)
+}
+
 // Builder manages options for building pflag flags for protobuf messages.
 type Builder struct {
-	// TypeResolver specifies how protobuf types will be resolved. If it is
-	// nil protoregistry.GlobalTypes will be used.
+	// TypeResolver specifies how protobuf types will be resolved.
 	TypeResolver interface {
 		protoregistry.MessageTypeResolver
 		protoregistry.ExtensionTypeResolver
 	}
 
-	// FileResolver specifies how protobuf file descriptors will be resolved. If it is
-	// nil protoregistry.GlobalFiles will be used.
+	// FileResolver specifies how protobuf file descriptors will be resolved.
 	FileResolver interface {
 		protodesc.Resolver
 		RangeFiles(func(protoreflect.FileDescriptor) bool)
@@ -51,8 +57,8 @@ type Builder struct {
 
 	// Address Codecs are the address codecs to use for client/v2.
 	AddressCodec          address.Codec
-	ValidatorAddressCodec address.ValidatorAddressCodec
-	ConsensusAddressCodec address.ConsensusAddressCodec
+	ValidatorAddressCodec runtime.ValidatorAddressCodec
+	ConsensusAddressCodec runtime.ConsensusAddressCodec
 }
 
 func (b *Builder) init() {
@@ -298,7 +304,7 @@ func (b *Builder) addFlattenFieldBindingToArgs(ctx *context.Context, path string
 func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *MessageBinder, name protoreflect.Name, fields protoreflect.FieldDescriptors) (fieldBinding, error) {
 	field := fields.ByName(name)
 	if field == nil {
-		return fieldBinding{}, fmt.Errorf("can't find field %s", name) // TODO: it will improve error if msg.FullName() was included.`
+		return fieldBinding{}, fmt.Errorf("can't find field %s in %s", name, messageBinder.messageType.Descriptor().FullName())
 	}
 
 	_, hasValue, err := b.addFieldFlag(

@@ -3,14 +3,13 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule"
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each
@@ -18,7 +17,7 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]appmodule.ValidatorUpdate, error) {
+func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res []abci.ValidatorUpdate) {
 	bondedTokens := math.ZeroInt()
 	notBondedTokens := math.ZeroInt()
 
@@ -27,102 +26,100 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
-	if sdkCtx, ok := sdk.TryUnwrapSDKContext(ctx); ok {
-		// this munging of the context is not necessary for server/v2 code paths, `ok` will be false
-		sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay) // TODO: remove this need for WithBlockHeight
-		ctx = sdkCtx
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
+	ctx = sdkCtx
+
+	if err := k.SetParams(ctx, data.Params); err != nil {
+		panic(err)
 	}
 
-	if err := k.Params.Set(ctx, data.Params); err != nil {
-		return nil, err
-	}
-
-	if err := k.LastTotalPower.Set(ctx, data.LastTotalPower); err != nil {
-		return nil, err
+	if err := k.SetLastTotalPower(ctx, data.LastTotalPower); err != nil {
+		panic(err)
 	}
 
 	for _, validator := range data.Validators {
 		if err := k.SetValidator(ctx, validator); err != nil {
-			return nil, err
+			panic(err)
 		}
 
 		// Manually set indices for the first time
 		if err := k.SetValidatorByConsAddr(ctx, validator); err != nil {
-			return nil, err
+			panic(err)
 		}
 
 		if err := k.SetValidatorByPowerIndex(ctx, validator); err != nil {
-			return nil, err
+			panic(err)
 		}
 
 		// Call the creation hook if not exported
 		if !data.Exported {
 			valbz, err := k.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 			if err != nil {
-				return nil, err
+				panic(err)
 			}
 			if err := k.Hooks().AfterValidatorCreated(ctx, valbz); err != nil {
-				return nil, err
+				panic(err)
 			}
 		}
 
 		// update timeslice if necessary
 		if validator.IsUnbonding() {
 			if err := k.InsertUnbondingValidatorQueue(ctx, validator); err != nil {
-				return nil, err
+				panic(err)
 			}
 		}
 
 		switch validator.GetStatus() {
-		case sdk.Bonded:
+		case types.Bonded:
 			bondedTokens = bondedTokens.Add(validator.GetTokens())
 
-		case sdk.Unbonding, sdk.Unbonded:
+		case types.Unbonding, types.Unbonded:
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
 
 		default:
-			return nil, fmt.Errorf("invalid validator status: %v", validator.GetStatus())
+			panic("invalid validator status")
 		}
 	}
 
 	for _, delegation := range data.Delegations {
 		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 		if err != nil {
-			return nil, fmt.Errorf("invalid delegator address: %w", err)
+			panic(fmt.Errorf("invalid delegator address: %w", err))
 		}
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 
 		// Call the before-creation hook if not exported
 		if !data.Exported {
 			if err := k.Hooks().BeforeDelegationCreated(ctx, delegatorAddress, valAddr); err != nil {
-				return nil, err
+				panic(err)
 			}
 		}
 
 		if err := k.SetDelegation(ctx, delegation); err != nil {
-			return nil, err
+			panic(err)
 		}
 
 		// Call the after-modification hook if not exported
 		if !data.Exported {
 			if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, valAddr); err != nil {
-				return nil, err
+				panic(err)
 			}
 		}
 	}
 
 	for _, ubd := range data.UnbondingDelegations {
 		if err := k.SetUnbondingDelegation(ctx, ubd); err != nil {
-			return nil, err
+			panic(err)
 		}
 
 		for _, entry := range ubd.Entries {
 			if err := k.InsertUBDQueue(ctx, ubd, entry.CompletionTime); err != nil {
-				return nil, err
+				panic(err)
 			}
 			notBondedTokens = notBondedTokens.Add(entry.Balance)
 		}
@@ -130,12 +127,12 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 
 	for _, red := range data.Redelegations {
 		if err := k.SetRedelegation(ctx, red); err != nil {
-			return nil, err
+			panic(err)
 		}
 
 		for _, entry := range red.Entries {
 			if err := k.InsertRedelegationQueue(ctx, red, entry.CompletionTime); err != nil {
-				return nil, err
+				panic(err)
 			}
 		}
 	}
@@ -146,7 +143,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 	// check if the unbonded and bonded pools accounts exists
 	bondedPool := k.GetBondedPool(ctx)
 	if bondedPool == nil {
-		return nil, fmt.Errorf("%s module account has not been set", types.BondedPoolName)
+		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
 	}
 
 	// TODO: remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
@@ -156,14 +153,14 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 		k.authKeeper.SetModuleAccount(ctx, bondedPool)
 	}
 
-	// if balance is different from bonded coins error because genesis is most likely malformed
+	// if balance is different from bonded coins panic because genesis is most likely malformed
 	if !bondedBalance.Equal(bondedCoins) {
-		return nil, fmt.Errorf("bonded pool balance is different from bonded coins: %s <-> %s", bondedBalance, bondedCoins)
+		panic(fmt.Sprintf("bonded pool balance is different from bonded coins: %s <-> %s", bondedBalance, bondedCoins))
 	}
 
 	notBondedPool := k.GetNotBondedPool(ctx)
 	if notBondedPool == nil {
-		return nil, fmt.Errorf("%s module account has not been set", types.NotBondedPoolName)
+		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
 	notBondedBalance := k.bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
@@ -171,110 +168,58 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 		k.authKeeper.SetModuleAccount(ctx, notBondedPool)
 	}
 
-	// If balance is different from non bonded coins error because genesis is most
+	// If balance is different from non bonded coins panic because genesis is most
 	// likely malformed.
 	if !notBondedBalance.Equal(notBondedCoins) {
-		return nil, fmt.Errorf("not bonded pool balance is different from not bonded coins: %s <-> %s", notBondedBalance, notBondedCoins)
-	}
-
-	for _, record := range data.RotationIndexRecords {
-		if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(record.Address, *record.Time)); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, history := range data.RotationHistory {
-		if err := k.RotationHistory.Set(ctx, collections.Join(history.OperatorAddress, history.Height), history); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, record := range data.RotationQueue {
-		if err := k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, *record.Time, *record.ValAddrs); err != nil {
-			return nil, err
-		}
-	}
-
-	for i, record := range data.RotatedConsAddresses {
-		oldAddr, err := k.consensusAddressCodec.StringToBytes(record.OldAddress)
-		if err != nil {
-			return nil, fmt.Errorf("decode old address at entry %d: %w", i, err)
-		}
-		newAddr, err := k.consensusAddressCodec.StringToBytes(record.NewAddress)
-		if err != nil {
-			return nil, fmt.Errorf("decode new address at entry %d: %w", i, err)
-		}
-		// sets a map: old ConsKey -> new ConsKey
-		if err := k.OldToNewConsAddrMap.Set(ctx, oldAddr, newAddr); err != nil {
-			return nil, err
-		}
-	}
-	for i, record := range data.InitialConsAddresses {
-		initAddr, err := k.consensusAddressCodec.StringToBytes(record.OldAddress)
-		if err != nil {
-			return nil, fmt.Errorf("decode initial address at entry %d: %w", i, err)
-		}
-		currentAddr, err := k.consensusAddressCodec.StringToBytes(record.NewAddress)
-		if err != nil {
-			return nil, fmt.Errorf("decode current address at entry %d: %w", i, err)
-		}
-		// sets a map: current ConsKey -> initial ConsKey
-		if err := k.ConsAddrToValidatorIdentifierMap.Set(ctx, currentAddr, initAddr); err != nil {
-			return nil, err
-		}
+		panic(fmt.Sprintf("not bonded pool balance is different from not bonded coins: %s <-> %s", notBondedBalance, notBondedCoins))
 	}
 
 	// don't need to run CometBFT updates if we exported
-	var moduleValidatorUpdates []appmodule.ValidatorUpdate
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
 			valAddr, err := k.validatorAddressCodec.StringToBytes(lv.Address)
 			if err != nil {
-				return nil, err
+				panic(err)
 			}
 
 			err = k.SetLastValidatorPower(ctx, valAddr, lv.Power)
 			if err != nil {
-				return nil, err
+				panic(err)
 			}
 
 			validator, err := k.GetValidator(ctx, valAddr)
 			if err != nil {
-				return nil, fmt.Errorf("validator %s not found", lv.Address)
+				panic(fmt.Sprintf("validator %s not found", lv.Address))
 			}
 
-			update := validator.ModuleValidatorUpdate(k.PowerReduction(ctx))
+			update := validator.ABCIValidatorUpdate(k.PowerReduction(ctx))
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
-			moduleValidatorUpdates = append(moduleValidatorUpdates, update)
+			res = append(res, update)
 		}
 	} else {
 		var err error
 
-		moduleValidatorUpdates, err = k.ApplyAndReturnValidatorSetUpdates(ctx)
+		res, err = k.ApplyAndReturnValidatorSetUpdates(ctx)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 	}
 
-	return moduleValidatorUpdates, nil
+	return res
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper. The
 // GenesisState will contain the pool, params, validators, and bonds found in
 // the keeper.
-func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	var unbondingDelegations []types.UnbondingDelegation
-	var fnErr error
-	err := k.UnbondingDelegations.Walk(
-		ctx,
-		nil,
-		func(key collections.Pair[[]byte, []byte], value types.UnbondingDelegation) (stop bool, err error) {
-			unbondingDelegations = append(unbondingDelegations, value)
-			return false, nil
-		},
-	)
+
+	err := k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
+		unbondingDelegations = append(unbondingDelegations, ubd)
+		return false
+	})
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	var redelegations []types.Redelegation
@@ -284,7 +229,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		return false
 	})
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	var lastValidatorPowers []types.LastValidatorPower
@@ -292,105 +237,33 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	err = k.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
 		addrStr, err := k.validatorAddressCodec.BytesToString(addr)
 		if err != nil {
-			fnErr = err
-			return true
+			panic(err)
 		}
 		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addrStr, Power: power})
 		return false
 	})
 	if err != nil {
-		return nil, err
-	}
-	if fnErr != nil {
-		return nil, fnErr
+		panic(err)
 	}
 
-	params, err := k.Params.Get(ctx)
+	params, err := k.GetParams(ctx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	totalPower, err := k.LastTotalPower.Get(ctx)
+	totalPower, err := k.GetLastTotalPower(ctx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	allDelegations, err := k.GetAllDelegations(ctx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	allValidators, err := k.GetAllValidators(ctx)
 	if err != nil {
-		return nil, err
-	}
-
-	rotationIndex := []types.RotationIndexRecord{}
-	err = k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, nil, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
-		t := key.K2()
-		rotationIndex = append(rotationIndex, types.RotationIndexRecord{
-			Address: key.K1(),
-			Time:    &t,
-		})
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	conspubKeyRotationHistory := []types.ConsPubKeyRotationHistory{}
-	err = k.RotationHistory.Walk(ctx, nil, func(key collections.Pair[[]byte, uint64], value types.ConsPubKeyRotationHistory) (stop bool, err error) {
-		conspubKeyRotationHistory = append(conspubKeyRotationHistory, value)
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	rotationQueue := []types.RotationQueueRecord{}
-	err = k.ValidatorConsensusKeyRotationRecordQueue.Walk(ctx, nil, func(key time.Time, value types.ValAddrsOfRotatedConsKeys) (stop bool, err error) {
-		record := types.RotationQueueRecord{
-			Time:     &key,
-			ValAddrs: &value,
-		}
-		rotationQueue = append(rotationQueue, record)
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var initConsAddrs, rotatedConsAddrs []types.RotatedConsensusAddresses
-	err = k.ConsAddrToValidatorIdentifierMap.Walk(ctx, nil, func(newBz, initBz []byte) (stop bool, err error) {
-		oldAddr, err2 := k.consensusAddressCodec.BytesToString(initBz)
-		if err2 != nil {
-			return true, fmt.Errorf("decode initial address %X: %w", initBz, err2)
-		}
-		newAddr, err2 := k.consensusAddressCodec.BytesToString(newBz)
-		if err2 != nil {
-			return true, fmt.Errorf("decode new address %X: %w", newBz, err2)
-		}
-		initConsAddrs = append(initConsAddrs, types.RotatedConsensusAddresses{OldAddress: oldAddr, NewAddress: newAddr})
-		return false, nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("cons addrs to validator ident: %w", err)
-	}
-
-	err = k.OldToNewConsAddrMap.Walk(ctx, nil, func(oldBz, newBz []byte) (stop bool, err error) {
-		oldAddr, err2 := k.consensusAddressCodec.BytesToString(oldBz)
-		if err2 != nil {
-			return true, fmt.Errorf("decode old address %X: %w", oldBz, err2)
-		}
-		newAddr, err2 := k.consensusAddressCodec.BytesToString(newBz)
-		if err2 != nil {
-			return true, fmt.Errorf("decode new address %X: %w", newBz, err2)
-		}
-		rotatedConsAddrs = append(rotatedConsAddrs, types.RotatedConsensusAddresses{OldAddress: oldAddr, NewAddress: newAddr})
-		return false, nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("old to new cons addrs: %w", err)
+		panic(err)
 	}
 
 	return &types.GenesisState{
@@ -402,10 +275,5 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
 		Exported:             true,
-		RotationIndexRecords: rotationIndex,
-		RotationHistory:      conspubKeyRotationHistory,
-		RotationQueue:        rotationQueue,
-		RotatedConsAddresses: rotatedConsAddrs,
-		InitialConsAddresses: initConsAddrs,
-	}, nil
+	}
 }

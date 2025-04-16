@@ -12,9 +12,9 @@ package testutil
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	address "cosmossdk.io/core/address"
-	appmodule "cosmossdk.io/core/appmodule"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gomock "go.uber.org/mock/gomock"
@@ -72,20 +72,6 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
 }
 
-// GetEnvironment mocks base method.
-func (m *MockAccountKeeper) GetEnvironment() appmodule.Environment {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEnvironment")
-	ret0, _ := ret[0].(appmodule.Environment)
-	return ret0
-}
-
-// GetEnvironment indicates an expected call of GetEnvironment.
-func (mr *MockAccountKeeperMockRecorder) GetEnvironment() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironment", reflect.TypeOf((*MockAccountKeeper)(nil).GetEnvironment))
-}
-
 // GetModuleAddress mocks base method.
 func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types.AccAddress {
 	m.ctrl.T.Helper()
@@ -114,20 +100,6 @@ func (mr *MockAccountKeeperMockRecorder) GetParams(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockAccountKeeper)(nil).GetParams), ctx)
 }
 
-// NewAccountWithAddress mocks base method.
-func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) types.AccountI {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
-	ret0, _ := ret[0].(types.AccountI)
-	return ret0
-}
-
-// NewAccountWithAddress indicates an expected call of NewAccountWithAddress.
-func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAccountWithAddress", reflect.TypeOf((*MockAccountKeeper)(nil).NewAccountWithAddress), ctx, addr)
-}
-
 // SetAccount mocks base method.
 func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
@@ -138,6 +110,58 @@ func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) 
 func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), ctx, acc)
+}
+
+// MockUnorderedNonceManager is a mock of UnorderedNonceManager interface.
+type MockUnorderedNonceManager struct {
+	ctrl     *gomock.Controller
+	recorder *MockUnorderedNonceManagerMockRecorder
+	isgomock struct{}
+}
+
+// MockUnorderedNonceManagerMockRecorder is the mock recorder for MockUnorderedNonceManager.
+type MockUnorderedNonceManagerMockRecorder struct {
+	mock *MockUnorderedNonceManager
+}
+
+// NewMockUnorderedNonceManager creates a new mock instance.
+func NewMockUnorderedNonceManager(ctrl *gomock.Controller) *MockUnorderedNonceManager {
+	mock := &MockUnorderedNonceManager{ctrl: ctrl}
+	mock.recorder = &MockUnorderedNonceManagerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUnorderedNonceManager) EXPECT() *MockUnorderedNonceManagerMockRecorder {
+	return m.recorder
+}
+
+// RemoveExpiredUnorderedNonces mocks base method.
+func (m *MockUnorderedNonceManager) RemoveExpiredUnorderedNonces(ctx types.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveExpiredUnorderedNonces", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveExpiredUnorderedNonces indicates an expected call of RemoveExpiredUnorderedNonces.
+func (mr *MockUnorderedNonceManagerMockRecorder) RemoveExpiredUnorderedNonces(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveExpiredUnorderedNonces", reflect.TypeOf((*MockUnorderedNonceManager)(nil).RemoveExpiredUnorderedNonces), ctx)
+}
+
+// TryAddUnorderedNonce mocks base method.
+func (m *MockUnorderedNonceManager) TryAddUnorderedNonce(ctx types.Context, sender []byte, timestamp time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TryAddUnorderedNonce", ctx, sender, timestamp)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TryAddUnorderedNonce indicates an expected call of TryAddUnorderedNonce.
+func (mr *MockUnorderedNonceManagerMockRecorder) TryAddUnorderedNonce(ctx, sender, timestamp any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TryAddUnorderedNonce", reflect.TypeOf((*MockUnorderedNonceManager)(nil).TryAddUnorderedNonce), ctx, sender, timestamp)
 }
 
 // MockFeegrantKeeper is a mock of FeegrantKeeper interface.
@@ -176,59 +200,4 @@ func (m *MockFeegrantKeeper) UseGrantedFees(ctx context.Context, granter, grante
 func (mr *MockFeegrantKeeperMockRecorder) UseGrantedFees(ctx, granter, grantee, fee, msgs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UseGrantedFees", reflect.TypeOf((*MockFeegrantKeeper)(nil).UseGrantedFees), ctx, granter, grantee, fee, msgs)
-}
-
-// MockConsensusKeeper is a mock of ConsensusKeeper interface.
-type MockConsensusKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockConsensusKeeperMockRecorder
-	isgomock struct{}
-}
-
-// MockConsensusKeeperMockRecorder is the mock recorder for MockConsensusKeeper.
-type MockConsensusKeeperMockRecorder struct {
-	mock *MockConsensusKeeper
-}
-
-// NewMockConsensusKeeper creates a new mock instance.
-func NewMockConsensusKeeper(ctrl *gomock.Controller) *MockConsensusKeeper {
-	mock := &MockConsensusKeeper{ctrl: ctrl}
-	mock.recorder = &MockConsensusKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
-	return m.recorder
-}
-
-// AppVersion mocks base method.
-func (m *MockConsensusKeeper) AppVersion(ctx context.Context) (uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AppVersion", ctx)
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// AppVersion indicates an expected call of AppVersion.
-func (mr *MockConsensusKeeperMockRecorder) AppVersion(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppVersion", reflect.TypeOf((*MockConsensusKeeper)(nil).AppVersion), ctx)
-}
-
-// BlockParams mocks base method.
-func (m *MockConsensusKeeper) BlockParams(arg0 context.Context) (uint64, uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BlockParams", arg0)
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(uint64)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// BlockParams indicates an expected call of BlockParams.
-func (mr *MockConsensusKeeperMockRecorder) BlockParams(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockParams", reflect.TypeOf((*MockConsensusKeeper)(nil).BlockParams), arg0)
 }

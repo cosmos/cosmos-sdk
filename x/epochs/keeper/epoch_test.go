@@ -3,8 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 func (s *KeeperTestSuite) TestAddEpochInfo() {
@@ -54,7 +53,7 @@ func (s *KeeperTestSuite) TestAddEpochInfo() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: startBlockHeight, Time: startBlockTime})
+			s.Ctx = s.Ctx.WithBlockHeight(startBlockHeight).WithBlockTime(startBlockTime)
 			err := s.EpochsKeeper.AddEpochInfo(s.Ctx, test.addedEpochInfo)
 			if !test.expErr {
 				s.Require().NoError(err)

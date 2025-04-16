@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/group/errors"
+
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // MaxBytesLen is the maximum allowed length for a key part of type []byte
@@ -17,7 +18,7 @@ const MaxBytesLen = 255
 //   - []byte is encoded with a single byte length prefix
 //   - strings are null-terminated
 //   - integers are encoded using 8 byte big endian.
-func buildKeyFromParts(parts []interface{}) ([]byte, error) {
+func buildKeyFromParts(parts []any) ([]byte, error) {
 	bytesSlice := make([][]byte, len(parts))
 	totalLen := 0
 	var err error
@@ -35,7 +36,7 @@ func buildKeyFromParts(parts []interface{}) ([]byte, error) {
 	return key, nil
 }
 
-func keyPartBytes(part interface{}, last bool) ([]byte, error) {
+func keyPartBytes(part any, last bool) ([]byte, error) {
 	switch v := part.(type) {
 	case []byte:
 		if last || len(v) == 0 {
@@ -78,7 +79,7 @@ func NullTerminatedBytes(s string) []byte {
 // stripRowID returns the RowID from the indexKey based on secondaryIndexKey type.
 // It is the reverse operation to buildKeyFromParts for index keys
 // where the first part is the encoded secondaryIndexKey and the second part is the RowID.
-func stripRowID(indexKey []byte, secondaryIndexKey interface{}) (RowID, error) {
+func stripRowID(indexKey []byte, secondaryIndexKey any) (RowID, error) {
 	switch v := secondaryIndexKey.(type) {
 	case []byte:
 		searchableKeyLen := indexKey[0]

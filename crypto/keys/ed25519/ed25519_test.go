@@ -2,11 +2,9 @@ package ed25519_test
 
 import (
 	stded25519 "crypto/ed25519"
-	"crypto/rand"
 	"encoding/base64"
 	"testing"
 
-	"filippo.io/edwards25519"
 	"github.com/cometbft/cometbft/crypto"
 	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/stretchr/testify/assert"
@@ -141,7 +139,7 @@ func TestMarshalAmino(t *testing.T) {
 	testCases := []struct {
 		desc      string
 		msg       codec.AminoMarshaler
-		typ       interface{}
+		typ       any
 		expBinary []byte
 		expJSON   string
 	}{
@@ -197,9 +195,9 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 
 	testCases := []struct {
 		desc      string
-		tmKey     interface{}
-		ourKey    interface{}
-		marshalFn func(o interface{}) ([]byte, error)
+		tmKey     any
+		ourKey    any
+		marshalFn func(o any) ([]byte, error)
 	}{
 		{
 			"ed25519 private key, binary",
@@ -255,41 +253,4 @@ func TestMarshalJSON(t *testing.T) {
 	err = cdc.UnmarshalInterfaceJSON(bz, &pk2)
 	require.NoError(err)
 	require.True(pk2.Equals(pk))
-}
-
-func TestPubKeyOnCurve(t *testing.T) {
-	t.Parallel()
-
-	t.Run("invalid public key size", func(t *testing.T) {
-		t.Parallel()
-
-		key := &ed25519.PubKey{
-			Key: make(stded25519.PublicKey, ed25519.PubKeySize+1),
-		}
-
-		assert.False(t, key.IsOnCurve())
-	})
-
-	t.Run("identity point", func(t *testing.T) {
-		t.Parallel()
-
-		key := &ed25519.PubKey{
-			Key: stded25519.PublicKey(edwards25519.NewIdentityPoint().Bytes()),
-		}
-
-		assert.False(t, key.IsOnCurve())
-	})
-
-	t.Run("valid public key", func(t *testing.T) {
-		t.Parallel()
-
-		publicKey, _, err := stded25519.GenerateKey(rand.Reader)
-		require.NoError(t, err)
-
-		key := &ed25519.PubKey{
-			Key: publicKey,
-		}
-
-		assert.True(t, key.IsOnCurve())
-	})
 }

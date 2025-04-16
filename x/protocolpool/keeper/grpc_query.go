@@ -3,15 +3,15 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -25,51 +25,74 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	amount, err := k.Keeper.GetCommunityPool(ctx)
-	if err != nil {
-		return nil, err
-	}
-	decCoins := sdk.NewDecCoinsFromCoins(amount...)
-	return &types.QueryCommunityPoolResponse{Pool: decCoins}, nil
-}
+func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-// UnclaimedBudget queries the unclaimed budget for given recipient
-func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedBudgetRequest) (*types.QueryUnclaimedBudgetResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	address, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(req.Address)
+
+	amount, err := k.GetCommunityPool(sdkCtx)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid recipient address: %s", err.Error())
+		return nil, err
 	}
-	budget, err := k.Keeper.BudgetProposal.Get(ctx, address)
+	return &types.QueryCommunityPoolResponse{Pool: amount}, nil
+}
+
+// ContinuousFund queries a continuous fund by its recipient address.
+func (k Querier) ContinuousFund(ctx context.Context, req *types.QueryContinuousFundRequest) (*types.QueryContinuousFundResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	acc, err := k.authKeeper.AddressCodec().StringToBytes(req.Recipient)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Errorf("invalid address: %w", err).Error())
+	}
+
+	fund, err := k.Keeper.ContinuousFunds.Get(sdkCtx, acc)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("not found %s", req.Recipient))
+	}
+
+	return &types.QueryContinuousFundResponse{ContinuousFund: fund}, nil
+}
+
+// ContinuousFunds queries all continuous funds in the store.
+func (k Querier) ContinuousFunds(ctx context.Context, req *types.QueryContinuousFundsRequest) (*types.QueryContinuousFundsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	funds, err := k.GetAllContinuousFunds(sdkCtx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Errorf("failed to fetch continuous funds: %w", err).Error())
+	}
+
+	return &types.QueryContinuousFundsResponse{ContinuousFunds: funds}, nil
+}
+
+// Params queries params of x/protocolpool module.
+func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	params, err := k.Keeper.Params.Get(sdkCtx)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return nil, status.Errorf(codes.NotFound, "no budget proposal found for address: %s", req.Address)
+			return nil, status.Errorf(codes.NotFound, "params not found")
 		}
 		return nil, err
 	}
 
-	totalBudgetAmountLeftToDistribute := budget.BudgetPerTranche.Amount.Mul(math.NewIntFromUint64(budget.TranchesLeft))
-	totalBudgetAmountLeft := sdk.NewCoin(budget.BudgetPerTranche.Denom, totalBudgetAmountLeftToDistribute)
-
-	var unclaimedBudget sdk.Coin
-	if budget.ClaimedAmount == nil {
-		unclaimedBudget = totalBudgetAmountLeft
-		zeroCoin := sdk.NewCoin(budget.BudgetPerTranche.Denom, math.ZeroInt())
-		budget.ClaimedAmount = &zeroCoin
-	} else {
-		unclaimedBudget = totalBudgetAmountLeft
-	}
-
-	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period)
-
-	return &types.QueryUnclaimedBudgetResponse{
-		ClaimedAmount:   budget.ClaimedAmount,
-		UnclaimedAmount: &unclaimedBudget,
-		NextClaimFrom:   &nextClaimFrom,
-		Period:          budget.Period,
-		TranchesLeft:    budget.TranchesLeft,
+	return &types.QueryParamsResponse{
+		Params: params,
 	}, nil
 }

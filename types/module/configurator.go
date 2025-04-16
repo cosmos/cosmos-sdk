@@ -9,7 +9,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
-	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,8 +16,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Deprecated: The Configurator is deprecated.
-// Preferably use core services for registering msg/query server and migrations.
+// Configurator provides the hooks to allow modules to configure and register
+// their services in the RegisterServices method. It is designed to eventually
+// support module object capabilities isolation as described in
+// https://github.com/cosmos/cosmos-sdk/issues/7093
 type Configurator interface {
 	grpc.Server
 
@@ -44,10 +45,6 @@ type Configurator interface {
 	// will panic. If the ConsensusVersion bump does not introduce any store
 	// changes, then a no-op function must be registered here.
 	RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error
-
-	// Register registers an in-place store migration for a module.
-	// It permits to register modules migrations that have migrated to serverv2 but still be compatible with baseapp.
-	Register(moduleName string, fromVersion uint64, handler appmodule.MigrationHandler) error
 }
 
 type configurator struct {
@@ -62,7 +59,7 @@ type configurator struct {
 }
 
 // RegisterService implements the grpc.Server interface.
-func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}) {
+func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss any) {
 	desc, err := c.cdc.InterfaceRegistry().FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
 	if err != nil {
 		c.err = err
@@ -120,14 +117,6 @@ func (c *configurator) RegisterMigration(moduleName string, fromVersion uint64, 
 	c.migrations[moduleName][fromVersion] = handler
 
 	return nil
-}
-
-// Register implements the Configurator.Register method
-// It allows to register modules migrations that have migrated to server/v2 but still be compatible with baseapp.
-func (c *configurator) Register(moduleName string, fromVersion uint64, handler appmodule.MigrationHandler) error {
-	return c.RegisterMigration(moduleName, fromVersion, func(sdkCtx sdk.Context) error {
-		return handler(sdkCtx)
-	})
 }
 
 // runModuleMigrations runs all in-place store migrations for one given module from a

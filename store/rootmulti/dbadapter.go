@@ -17,7 +17,7 @@ var (
 // commitDBStoreWrapper should only be used for simulation/debugging,
 // as it doesn't compute any commit hash, and it cannot load older state.
 
-// Wrapper type for corestore.KVStoreWithBatch with implementation of KVStore
+// Wrapper type for dbm.Db with implementation of KVStore
 type commitDBStoreAdapter struct {
 	dbadapter.Store
 }
@@ -34,10 +34,6 @@ func (cdsa commitDBStoreAdapter) LastCommitID() types.CommitID {
 		Version: -1,
 		Hash:    commithash,
 	}
-}
-
-func (cdsa commitDBStoreAdapter) LatestVersion() int64 {
-	return -1
 }
 
 func (cdsa commitDBStoreAdapter) WorkingHash() []byte {

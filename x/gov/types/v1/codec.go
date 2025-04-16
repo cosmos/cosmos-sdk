@@ -1,40 +1,34 @@
 package v1
 
 import (
-	"cosmossdk.io/core/registry"
-	coretransaction "cosmossdk.io/core/transaction"
-
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // governance module.
-func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
-	legacy.RegisterAminoMsg(registrar, &MsgSubmitProposal{}, "cosmos-sdk/v1/MsgSubmitProposal")
-	legacy.RegisterAminoMsg(registrar, &MsgSubmitMultipleChoiceProposal{}, "gov/MsgSubmitMultipleChoiceProposal")
-	legacy.RegisterAminoMsg(registrar, &MsgDeposit{}, "cosmos-sdk/v1/MsgDeposit")
-	legacy.RegisterAminoMsg(registrar, &MsgVote{}, "cosmos-sdk/v1/MsgVote")
-	legacy.RegisterAminoMsg(registrar, &MsgVoteWeighted{}, "cosmos-sdk/v1/MsgVoteWeighted")
-	legacy.RegisterAminoMsg(registrar, &MsgExecLegacyContent{}, "cosmos-sdk/v1/MsgExecLegacyContent")
-	legacy.RegisterAminoMsg(registrar, &MsgUpdateParams{}, "cosmos-sdk/x/gov/v1/MsgUpdateParams")
-	legacy.RegisterAminoMsg(registrar, &MsgUpdateMessageParams{}, "x/gov/v1/MsgUpdateMessageParams")
-	legacy.RegisterAminoMsg(registrar, &MsgSudoExec{}, "cosmos-sdk/x/gov/v1/MsgSudoExec")
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	legacy.RegisterAminoMsg(cdc, &MsgSubmitProposal{}, "cosmos-sdk/v1/MsgSubmitProposal")
+	legacy.RegisterAminoMsg(cdc, &MsgDeposit{}, "cosmos-sdk/v1/MsgDeposit")
+	legacy.RegisterAminoMsg(cdc, &MsgVote{}, "cosmos-sdk/v1/MsgVote")
+	legacy.RegisterAminoMsg(cdc, &MsgVoteWeighted{}, "cosmos-sdk/v1/MsgVoteWeighted")
+	legacy.RegisterAminoMsg(cdc, &MsgExecLegacyContent{}, "cosmos-sdk/v1/MsgExecLegacyContent")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/gov/v1/MsgUpdateParams")
 }
 
 // RegisterInterfaces registers the interfaces types with the Interface Registry.
-func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
+func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSubmitProposal{},
-		&MsgSubmitMultipleChoiceProposal{},
 		&MsgVote{},
 		&MsgVoteWeighted{},
 		&MsgDeposit{},
 		&MsgExecLegacyContent{},
 		&MsgUpdateParams{},
-		&MsgUpdateMessageParams{},
-		&MsgSudoExec{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

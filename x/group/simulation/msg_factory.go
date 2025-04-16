@@ -7,33 +7,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"cosmossdk.io/x/group"
-	"cosmossdk.io/x/group/keeper"
-
-	"github.com/cosmos/cosmos-sdk/simsx"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
-
-const unsetGroupID = 100000000000000
-
-// SharedState shared state between message invocations
-type SharedState struct {
-	minGroupID atomic.Uint64
-}
-
-// NewSharedState constructor
-func NewSharedState() *SharedState {
-	r := &SharedState{}
-	r.setMinGroupID(unsetGroupID)
-	return r
-}
-
-func (s *SharedState) getMinGroupID() uint64 {
-	return s.minGroupID.Load()
-}
-
-func (s *SharedState) setMinGroupID(id uint64) {
-	s.minGroupID.Store(id)
-}
 
 func MsgCreateGroupFactory() simsx.SimMsgFactoryFn[*group.MsgCreateGroup] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *group.MsgCreateGroup) {
@@ -55,7 +33,7 @@ func MsgCreateGroupPolicyFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFa
 
 		r := testData.Rand()
 		msg, err := group.NewMsgCreateGroupPolicy(
-			groupAdmin.AddressBech32,
+			groupAdmin.Address,
 			groupID,
 			r.StringN(10),
 			&group.ThresholdDecisionPolicy{
@@ -272,7 +250,7 @@ func MsgExecFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 }
 
 func randomGroupPolicyWithAdmin(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, k keeper.Keeper, s *SharedState) (*group.GroupPolicyInfo, simsx.SimAccount) {
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		_, groupPolicy := randomGroupPolicyX(ctx, testData, reporter, k, s)
 		if groupPolicy != nil && testData.HasAccount(groupPolicy.Admin) {
 			return groupPolicy, testData.GetAccount(reporter, groupPolicy.Admin)
@@ -329,7 +307,7 @@ func MsgUpdateGroupMembersFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgF
 		}
 		oldMemberAddrs := simsx.Collect(res.Members, func(a *group.GroupMember) string { return a.Member.Address })
 		members := genGroupMembersX(testData, reporter, simsx.ExcludeAddresses(oldMemberAddrs...))
-		if len(res.Members) != 1 {
+		if len(res.Members) > 1 {
 			// set existing random group member weight to zero to remove from the group
 			obsoleteMember := simsx.OneOf(testData.Rand(), res.Members)
 			obsoleteMember.Member.Weight = "0"
@@ -367,7 +345,12 @@ func MsgUpdateGroupPolicyDecisionPolicyFactory(k keeper.Keeper, s *SharedState) 
 			return nil, nil
 		}
 		r := testData.Rand()
-		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(policyAdmin.AddressBech32, groupPolicy.Address, &group.ThresholdDecisionPolicy{
+		policyAddr, err := k.AddressCodec().StringToBytes(groupPolicy.Address)
+		if err != nil {
+			reporter.Skip(err.Error())
+			return nil, nil
+		}
+		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(policyAdmin.Address, policyAddr, &group.ThresholdDecisionPolicy{
 			Threshold: strconv.Itoa(r.IntInRange(1, 10)),
 			Windows: &group.DecisionPolicyWindows{
 				VotingPeriod: time.Second * time.Duration(r.IntInRange(100, 1000)),
@@ -439,7 +422,7 @@ func genGroupMembersX(testData *simsx.ChainDataSource, reporter simsx.Simulation
 
 func randomGroupX(ctx context.Context, k keeper.Keeper, testdata *simsx.ChainDataSource, reporter simsx.SimulationReporter, s *SharedState) *group.GroupInfo {
 	r := testdata.Rand()
-	groupID := k.GetGroupSequence(ctx)
+	groupID := k.GetGroupSequence(sdk.UnwrapSDKContext(ctx))
 	if initialGroupID := s.getMinGroupID(); initialGroupID == unsetGroupID {
 		s.setMinGroupID(groupID)
 	} else if initialGroupID < groupID {
@@ -467,7 +450,7 @@ func randomGroupPolicyX(
 	k keeper.Keeper,
 	s *SharedState,
 ) (*group.GroupInfo, *group.GroupPolicyInfo) {
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		groupInfo := randomGroupX(ctx, k, testdata, reporter, s)
 		if reporter.IsSkipped() {
 			return nil, nil
@@ -484,4 +467,24 @@ func randomGroupPolicyX(
 	}
 	reporter.Skip("no group policies")
 	return nil, nil
+}
+
+// SharedState shared state between message invocations
+type SharedState struct {
+	minGroupID atomic.Uint64
+}
+
+// NewSharedState constructor
+func NewSharedState() *SharedState {
+	r := &SharedState{}
+	r.setMinGroupID(unsetGroupID)
+	return r
+}
+
+func (s *SharedState) getMinGroupID() uint64 {
+	return s.minGroupID.Load()
+}
+
+func (s *SharedState) setMinGroupID(id uint64) {
+	s.minGroupID.Store(id)
 }

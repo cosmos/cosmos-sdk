@@ -1,7 +1,11 @@
 package types
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 func NewGenesisState(
-	params Params, fp FeePool, dwis []DelegatorWithdrawInfo, r []ValidatorOutstandingRewardsRecord,
+	params Params, fp FeePool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord, slashes []ValidatorSlashEventRecord,
 ) *GenesisState {
@@ -9,6 +13,7 @@ func NewGenesisState(
 		Params:                          params,
 		FeePool:                         fp,
 		DelegatorWithdrawInfos:          dwis,
+		PreviousProposer:                pp.String(),
 		OutstandingRewards:              r,
 		ValidatorAccumulatedCommissions: acc,
 		ValidatorHistoricalRewards:      historical,
@@ -24,6 +29,7 @@ func DefaultGenesisState() *GenesisState {
 		FeePool:                         InitialFeePool(),
 		Params:                          DefaultParams(),
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
+		PreviousProposer:                "",
 		OutstandingRewards:              []ValidatorOutstandingRewardsRecord{},
 		ValidatorAccumulatedCommissions: []ValidatorAccumulatedCommissionRecord{},
 		ValidatorHistoricalRewards:      []ValidatorHistoricalRewardsRecord{},

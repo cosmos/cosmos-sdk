@@ -30,6 +30,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+
     steps:
       # set VERSION to new version when making changes, when merged to main the image will automatically be pushed
       - uses: actions/checkout@v4
@@ -56,6 +58,9 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Depot
+        uses: depot/setup-action@v1
 
       - name: Publish to GHCR
         uses: depot/build-push-action@v1

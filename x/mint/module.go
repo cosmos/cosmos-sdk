@@ -6,153 +6,157 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 
-	"cosmossdk.io/collections"
+	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/codec"
-	"cosmossdk.io/core/registry"
-	"cosmossdk.io/schema"
-	"cosmossdk.io/x/mint/keeper"
-	"cosmossdk.io/x/mint/simulation"
-	"cosmossdk.io/x/mint/types"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simsx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/exported"
+	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // ConsensusVersion defines the current x/mint module consensus version.
-const ConsensusVersion = 3
+const ConsensusVersion = 2
 
 var (
-	_ module.HasAminoCodec       = AppModule{}
-	_ module.HasGRPCGateway      = AppModule{}
+	_ module.AppModuleBasic      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 
-	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasMigrations         = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-	_ appmodule.HasGenesis            = AppModule{}
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
-// AppModule implements an application module for the mint module.
-type AppModule struct {
-	cdc        codec.Codec
-	keeper     *keeper.Keeper
-	authKeeper types.AccountKeeper
+// AppModuleBasic defines the basic application module used by the mint module.
+type AppModuleBasic struct {
+	cdc codec.Codec
 }
-
-// NewAppModule creates a new AppModule object.
-// If the mintFn argument is nil, then the default minting function will be used.
-func NewAppModule(
-	cdc codec.Codec,
-	keeper *keeper.Keeper,
-	ak types.AccountKeeper,
-) AppModule {
-	return AppModule{
-		cdc:        cdc,
-		keeper:     keeper,
-		authKeeper: ak,
-	}
-}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (AppModule) IsAppModule() {}
 
 // Name returns the mint module's name.
-// Deprecated: kept for legacy reasons.
-func (AppModule) Name() string {
+func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
-	types.RegisterLegacyAminoCodec(registrar)
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers the module's interface types
-func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	types.RegisterInterfaces(registrar)
+func (b AppModuleBasic) RegisterInterfaces(r cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(r)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
-func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
-}
-
-// RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(registrar, keeper.NewQueryServerImpl(am.keeper))
-
-	return nil
-}
-
-// RegisterMigrations registers module migrations.
-func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
-	m := keeper.NewMigrator(am.keeper)
-
-	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
-	}
-
-	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %w", types.ModuleName, err)
-	}
-
-	return nil
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the mint module.
-func (am AppModule) DefaultGenesis() json.RawMessage {
-	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
-	if err != nil {
-		panic(err)
-	}
-	return data
+// DefaultGenesis returns default genesis state as raw bytes for the mint
+// module.
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the mint module.
-func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
-	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
 	return types.ValidateGenesis(data)
 }
 
-// InitGenesis performs genesis initialization for the mint module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	var genesisState types.GenesisState
-	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
-		return err
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
+}
+
+// AppModule implements an application module for the mint module.
+type AppModule struct {
+	AppModuleBasic
+
+	keeper     keeper.Keeper
+	authKeeper types.AccountKeeper
+
+	// legacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace exported.Subspace
+}
+
+// NewAppModule creates a new AppModule object. If the InflationCalculationFn
+// argument is nil, then the SDK's default inflation function will be used.
+func NewAppModule(
+	cdc codec.Codec,
+	keeper keeper.Keeper,
+	ak types.AccountKeeper,
+	// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
+	ic types.InflationCalculationFn,
+	ss exported.Subspace,
+) AppModule {
+	if ic != nil {
+		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, use the WithMintFn option when constructing the x/mint keeper as follows: mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn))")
 	}
 
-	return am.keeper.InitGenesis(ctx, am.authKeeper, &genesisState)
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		authKeeper:     ak,
+		legacySubspace: ss,
+	}
+}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// RegisterServices registers a gRPC query service to respond to the
+// module-specific gRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
+
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
+}
+
+// InitGenesis performs genesis initialization for the mint module. It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+
+	am.keeper.InitGenesis(ctx, am.authKeeper, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the mint
 // module.
-func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	gs, err := am.keeper.ExportGenesis(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return am.cdc.MarshalJSON(gs)
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	gs := am.keeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(gs)
 }
 
-// ConsensusVersion implements HasConsensusVersion
+// ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx)
+	return BeginBlocker(ctx, am.keeper)
 }
 
 // AppModuleSimulation functions
@@ -160,6 +164,12 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 // GenerateGenesisState creates a randomized GenState of the mint module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
+}
+
+// ProposalMsgs returns msgs used for governance proposals for simulations.
+// migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs()
 }
 
 // ProposalMsgsX returns msgs used for governance proposals for simulations.
@@ -172,8 +182,81 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
-// ModuleCodec implements schema.HasModuleCodec.
-// It allows the indexer to decode the module's KVPairUpdate.
-func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
-	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
+// WeightedOperations doesn't return any mint module operation.
+func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return nil
+}
+
+//
+// App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(ProvideModule),
+	)
+}
+
+type ModuleInputs struct {
+	depinject.In
+
+	ModuleKey    depinject.OwnModuleKey
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	// Deprecated: This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
+	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
+	MintFn                 keeper.MintFn                `optional:"true"`
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace exported.Subspace `optional:"true"`
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
+}
+
+type ModuleOutputs struct {
+	depinject.Out
+
+	MintKeeper keeper.Keeper
+	Module     appmodule.AppModule
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+	feeCollectorName := in.Config.FeeCollectorName
+	if feeCollectorName == "" {
+		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
+	if in.InflationCalculationFn != nil {
+		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, while using depinject ")
+	}
+
+	var opts []keeper.InitOption
+	if in.MintFn != nil {
+		opts = append(opts, keeper.WithMintFn(in.MintFn))
+	}
+
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.StoreService,
+		in.StakingKeeper,
+		in.AccountKeeper,
+		in.BankKeeper,
+		feeCollectorName,
+		authority.String(),
+		opts...,
+	)
+
+	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil, in.LegacySubspace)
+
+	return ModuleOutputs{MintKeeper: k, Module: m}
 }

@@ -1,20 +1,18 @@
 package v1beta1
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/gov/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // DefaultStartingProposalID is 1
@@ -82,7 +80,7 @@ func (p Proposal) GetTitle() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (p Proposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content Content
 	return unpacker.UnpackAny(p.Content, &content)
 }
@@ -90,7 +88,7 @@ func (p Proposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
-var _ gogoprotoany.UnpackInterfacesMessage = Proposals{}
+var _ codectypes.UnpackInterfacesMessage = Proposals{}
 
 // Equal returns true if two slices (order-dependant) of proposals are equal.
 func (p Proposals) Equal(other Proposals) bool {
@@ -119,7 +117,7 @@ func (p Proposals) String() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposals) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (p Proposals) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, x := range p {
 		err := x.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -144,8 +142,7 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	case 's':
 		_, _ = s.Write([]byte(status.String()))
 	default:
-		// TODO: Do this conversion more directly
-		_, _ = s.Write([]byte(fmt.Sprintf("%v", byte(status))))
+		_, _ = fmt.Fprintf(s, "%v", byte(status))
 	}
 }
 
@@ -251,7 +248,7 @@ func IsValidProposalType(ty string) bool {
 // proposals (ie. TextProposal ). Since these are
 // merely signaling mechanisms at the moment and do not affect state, it
 // performs a no-op.
-func ProposalHandler(_ context.Context, c Content) error {
+func ProposalHandler(_ sdk.Context, c Content) error {
 	switch c.ProposalType() {
 	case ProposalTypeText:
 		// both proposal types do not change state so this performs a no-op

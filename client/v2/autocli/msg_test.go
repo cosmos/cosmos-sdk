@@ -41,7 +41,7 @@ var bankAutoCLI = &autocliv1.ServiceCommandDescriptor{
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 		{
 			RpcMethod:      "Send",
-			Use:            "send <from_key_or_address> <to_address> <amount> [flags]",
+			Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
 			Short:          "Send coins from one account to another",
 			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
 		},
@@ -55,17 +55,17 @@ func TestMsg(t *testing.T) {
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--generate-only",
 		"--output", "json",
-		"--chain-id", fixture.chainID,
+		"--chain-id", "test-chain",
 	)
 	assert.NilError(t, err)
-	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
+	golden.Assert(t, out.String(), "msg-output.golden")
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
-				Use:            "send <from_key_or_address> <to_address> <amount> [flags]",
+				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
 				Short:          "Send coins from one account to another",
 				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
 			},
@@ -75,17 +75,16 @@ func TestMsg(t *testing.T) {
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--generate-only",
 		"--output", "json",
-		"--chain-id", fixture.chainID,
 	)
 	assert.NilError(t, err)
-	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
+	golden.Assert(t, out.String(), "msg-output.golden")
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
-				Use:            "send <from_key_or_address> <to_address> <amount> [flags]",
+				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
 				Short:          "Send coins from one account to another",
 				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
 				// from_address should be automatically added
@@ -95,20 +94,18 @@ func TestMsg(t *testing.T) {
 	}), "send",
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--from", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
-		"--output", "json",
 		"--generate-only",
-		"--chain-id", fixture.chainID,
-		"--keyring-backend", fixture.kBackend,
+		"--output", "json",
 	)
 	assert.NilError(t, err)
-	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
+	golden.Assert(t, out.String(), "msg-output.golden")
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
-				Use:            "send <from_key_or_address> <to_address> <amount> [flags]",
+				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
 				Short:          "Send coins from one account to another",
 				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
 				FlagOptions: map[string]*autocliv1.FlagOptions{
@@ -120,9 +117,8 @@ func TestMsg(t *testing.T) {
 	}), "send",
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--sender", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
-		"--output", "json",
 		"--generate-only",
-		"--chain-id", fixture.chainID,
+		"--output", "json",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -149,7 +145,7 @@ func TestMsgWithFlattenFields(t *testing.T) {
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "stake", "true", "true",
 		"--generate-only",
 		"--output", "json",
-		"--chain-id", fixture.chainID,
+		"--chain-id", "test-chain",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "flatten-output.golden"))

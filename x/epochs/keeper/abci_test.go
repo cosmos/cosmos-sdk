@@ -8,8 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/x/epochs/types"
 )
 
 // This test is responsible for testing how epochs increment based off
@@ -81,7 +80,7 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 	for name, test := range tests {
 		suite.Run(name, func() {
 			suite.SetupTest()
-			suite.Ctx = suite.Ctx.WithHeaderInfo(header.Info{Height: 1, Time: block1Time})
+			suite.Ctx = suite.Ctx.WithBlockHeight(1).WithBlockTime(block1Time)
 			initialEpoch := initializeBlankEpochInfoFields(test.initialEpochInfo, defaultIdentifier, defaultDuration)
 			err := suite.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
 			suite.Require().NoError(err)
@@ -99,7 +98,7 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			})
 			for _, h := range heights {
 				// for each height in order, run begin block
-				suite.Ctx = suite.Ctx.WithHeaderInfo(header.Info{Height: int64(h), Time: test.blockHeightTimePairs[h]})
+				suite.Ctx = suite.Ctx.WithBlockHeight(int64(h)).WithBlockTime(test.blockHeightTimePairs[h])
 				err := suite.EpochsKeeper.BeginBlocker(suite.Ctx)
 				suite.Require().NoError(err)
 			}
@@ -124,7 +123,7 @@ func initializeBlankEpochInfoFields(epoch types.EpochInfo, identifier string, du
 }
 
 func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
-	ctx, epochsKeeper, _ := Setup(t)
+	ctx, epochsKeeper := Setup(t)
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status
 	epochInfos, err := epochsKeeper.AllEpochInfos(ctx)
@@ -138,7 +137,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	week := time.Hour * 24 * 7
 	month := time.Hour * 24 * 30
 	initialBlockHeight := int64(1)
-	ctx = ctx.WithHeaderInfo(header.Info{Height: initialBlockHeight, Time: now})
+	ctx = ctx.WithBlockHeight(initialBlockHeight).WithBlockTime(now)
 
 	err = epochsKeeper.InitGenesis(ctx, types.GenesisState{
 		Epochs: []types.EpochInfo{
@@ -147,7 +146,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 				StartTime:               now.Add(month),
 				Duration:                time.Hour * 24 * 30,
 				CurrentEpoch:            0,
-				CurrentEpochStartHeight: ctx.HeaderInfo().Height,
+				CurrentEpochStartHeight: ctx.BlockHeight(),
 				CurrentEpochStartTime:   time.Time{},
 				EpochCountingStarted:    false,
 			},
@@ -164,7 +163,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.EpochCountingStarted, false)
 
 	// after 1 week
-	ctx = ctx.WithHeaderInfo(header.Info{Height: 2, Time: now.Add(week)})
+	ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(week))
 	err = epochsKeeper.BeginBlocker(ctx)
 	require.NoError(t, err)
 
@@ -177,7 +176,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.EpochCountingStarted, false)
 
 	// after 1 month
-	ctx = ctx.WithHeaderInfo(header.Info{Height: 3, Time: now.Add(month)})
+	ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(month))
 	err = epochsKeeper.BeginBlocker(ctx)
 	require.NoError(t, err)
 
@@ -185,7 +184,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	epochInfo, err = epochsKeeper.EpochInfo.Get(ctx, "monthly")
 	require.NoError(t, err)
 	require.Equal(t, epochInfo.CurrentEpoch, int64(1))
-	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.HeaderInfo().Height)
+	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
 }

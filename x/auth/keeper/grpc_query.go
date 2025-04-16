@@ -39,12 +39,7 @@ func (s queryServer) AccountAddressByID(ctx context.Context, req *types.QueryAcc
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", accID)
 	}
 
-	addr, err := s.k.addressCodec.BytesToString(address)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryAccountAddressByIDResponse{AccountAddress: addr}, nil
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: address.String()}, nil
 }
 
 func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
@@ -80,36 +75,35 @@ func (s queryServer) Account(ctx context.Context, req *types.QueryAccountRequest
 	}
 	account := s.k.GetAccount(ctx, addr)
 	if account == nil {
-		xAccount, err := s.getFromXAccounts(ctx, addr)
-		if err != nil {
-			return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
-		}
-		return &types.QueryAccountResponse{Account: xAccount.Account}, nil
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
 	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &types.QueryAccountResponse{Account: any}, nil
 }
 
 // Params returns parameters of auth module
-func (s queryServer) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (s queryServer) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+	ctx := sdk.UnwrapSDKContext(c)
 	params := s.k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 // ModuleAccounts returns all the existing Module Accounts
-func (s queryServer) ModuleAccounts(ctx context.Context, req *types.QueryModuleAccountsRequest) (*types.QueryModuleAccountsResponse, error) {
+func (s queryServer) ModuleAccounts(c context.Context, req *types.QueryModuleAccountsRequest) (*types.QueryModuleAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+
+	ctx := sdk.UnwrapSDKContext(c)
 
 	// For deterministic output, sort the permAddrs by module name.
 	sortedPermAddrs := make([]string, 0, len(s.k.permAddrs))
@@ -127,7 +121,7 @@ func (s queryServer) ModuleAccounts(ctx context.Context, req *types.QueryModuleA
 		}
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 		modAccounts = append(modAccounts, any)
 	}
@@ -136,7 +130,7 @@ func (s queryServer) ModuleAccounts(ctx context.Context, req *types.QueryModuleA
 }
 
 // ModuleAccountByName returns module account by module name
-func (s queryServer) ModuleAccountByName(ctx context.Context, req *types.QueryModuleAccountByNameRequest) (*types.QueryModuleAccountByNameResponse, error) {
+func (s queryServer) ModuleAccountByName(c context.Context, req *types.QueryModuleAccountByNameRequest) (*types.QueryModuleAccountByNameResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -145,6 +139,7 @@ func (s queryServer) ModuleAccountByName(ctx context.Context, req *types.QueryMo
 		return nil, status.Error(codes.InvalidArgument, "module name is empty")
 	}
 
+	ctx := sdk.UnwrapSDKContext(c)
 	moduleName := req.Name
 
 	account := s.k.GetModuleAccount(ctx, moduleName)
@@ -153,7 +148,7 @@ func (s queryServer) ModuleAccountByName(ctx context.Context, req *types.QueryMo
 	}
 	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &types.QueryModuleAccountByNameResponse{Account: any}, nil
@@ -228,13 +223,7 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 
 	account := s.k.GetAccount(ctx, addr)
 	if account == nil {
-		xAccount, err := s.getFromXAccounts(ctx, addr)
-		// account info is nil it means that the account can be encapsulated into a
-		// legacy account representation but not a base account one.
-		if err != nil || xAccount.Base == nil {
-			return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
-		}
-		return &types.QueryAccountInfoResponse{Info: xAccount.Base}, nil
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
 	// if there is no public key, avoid serializing the nil value
@@ -243,7 +232,7 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 	if pubKey != nil {
 		pkAny, err = codectypes.NewAnyWithValue(account.GetPubKey())
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
 
@@ -255,27 +244,4 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 			Sequence:      account.GetSequence(),
 		},
 	}, nil
-}
-
-var (
-	errNotXAccount              = errors.New("not an x/account")
-	errInvalidLegacyAccountImpl = errors.New("invalid legacy account implementation")
-)
-
-func (s queryServer) getFromXAccounts(ctx context.Context, address []byte) (*types.QueryLegacyAccountResponse, error) {
-	if !s.k.AccountsModKeeper.IsAccountsModuleAccount(ctx, address) {
-		return nil, errNotXAccount
-	}
-
-	// attempt to check if it can be queried for a legacy account representation.
-	resp, err := s.k.AccountsModKeeper.Query(ctx, address, &types.QueryLegacyAccount{})
-	if err != nil {
-		return nil, err
-	}
-
-	typedResp, ok := resp.(*types.QueryLegacyAccountResponse)
-	if !ok {
-		return nil, errInvalidLegacyAccountImpl
-	}
-	return typedResp, nil
 }

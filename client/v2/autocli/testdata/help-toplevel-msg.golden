@@ -5,7 +5,6 @@ Usage:
   test [command]
 
 Available Commands:
-  burn             Execute the Burn RPC method
   completion       Generate the autocompletion script for the specified shell
   help             Help about any command
   multi-send       Execute the MultiSend RPC method

@@ -6,9 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestParamsEqual(t *testing.T) {
@@ -28,22 +27,13 @@ func TestParamsEqual(t *testing.T) {
 func TestValidateParams(t *testing.T) {
 	params := types.DefaultParams()
 
-	coinZero := sdk.NewInt64Coin("stake", 0)
-
 	// default params have no error
 	require.NoError(t, params.Validate())
 
-	// validate min commission rate
+	// validate mincommission
 	params.MinCommissionRate = math.LegacyNewDec(-1)
 	require.Error(t, params.Validate())
 
 	params.MinCommissionRate = math.LegacyNewDec(2)
-	require.Error(t, params.Validate())
-
-	// reset params to default
-	params = types.DefaultParams()
-
-	// check keyRotationFee
-	params.KeyRotationFee = coinZero
 	require.Error(t, params.Validate())
 }

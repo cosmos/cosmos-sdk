@@ -64,7 +64,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateSignedBlocksWindow(i interface{}) error {
+func validateSignedBlocksWindow(i any) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -77,7 +77,7 @@ func validateSignedBlocksWindow(i interface{}) error {
 	return nil
 }
 
-func validateMinSignedPerWindow(i interface{}) error {
+func validateMinSignedPerWindow(i any) error {
 	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -96,7 +96,7 @@ func validateMinSignedPerWindow(i interface{}) error {
 	return nil
 }
 
-func validateDowntimeJailDuration(i interface{}) error {
+func validateDowntimeJailDuration(i any) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -109,7 +109,7 @@ func validateDowntimeJailDuration(i interface{}) error {
 	return nil
 }
 
-func validateSlashFractionDoubleSign(i interface{}) error {
+func validateSlashFractionDoubleSign(i any) error {
 	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -128,7 +128,7 @@ func validateSlashFractionDoubleSign(i interface{}) error {
 	return nil
 }
 
-func validateSlashFractionDowntime(i interface{}) error {
+func validateSlashFractionDowntime(i any) error {
 	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -145,14 +145,4 @@ func validateSlashFractionDowntime(i interface{}) error {
 	}
 
 	return nil
-}
-
-// MinSignedPerWindowInt returns min signed per window as an integer (vs the decimal in the param)
-func (p *Params) MinSignedPerWindowInt() int64 {
-	signedBlocksWindow := p.SignedBlocksWindow
-	minSignedPerWindow := p.MinSignedPerWindow
-
-	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
-	//       less than 1.
-	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
 }

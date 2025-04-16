@@ -11,8 +11,7 @@ var (
 	// ErrTxDecode is returned if we cannot parse a transaction
 	ErrTxDecode = errorsmod.Register(RootCodespace, 2, "tx parse error")
 
-	// ErrInvalidSequence is used the sequence number (nonce) is incorrect
-	// for the signature
+	// ErrInvalidSequence is returned when the sequence number (nonce) is incorrect for the signature.
 	ErrInvalidSequence = errorsmod.Register(RootCodespace, 3, "invalid sequence")
 
 	// ErrUnauthorized is used whenever a request without sufficient
@@ -22,34 +21,34 @@ var (
 	// ErrInsufficientFunds is used when the account cannot pay requested amount.
 	ErrInsufficientFunds = errorsmod.Register(RootCodespace, 5, "insufficient funds")
 
-	// ErrUnknownRequest to doc
+	// ErrUnknownRequest is returned for unrecognized requests.
 	ErrUnknownRequest = errorsmod.Register(RootCodespace, 6, "unknown request")
 
-	// ErrInvalidAddress to doc
+	// ErrInvalidAddress is returned when an address is invalid.
 	ErrInvalidAddress = errorsmod.Register(RootCodespace, 7, "invalid address")
 
-	// ErrInvalidPubKey to doc
+	// ErrInvalidPubKey is returned when a public key is invalid.
 	ErrInvalidPubKey = errorsmod.Register(RootCodespace, 8, "invalid pubkey")
 
-	// ErrUnknownAddress to doc
+	// ErrUnknownAddress is returned when an address is not found.
 	ErrUnknownAddress = errorsmod.Register(RootCodespace, 9, "unknown address")
 
-	// ErrInvalidCoins to doc
+	// ErrInvalidCoins is returned when coins are malformed or invalid.
 	ErrInvalidCoins = errorsmod.Register(RootCodespace, 10, "invalid coins")
 
-	// ErrOutOfGas to doc
+	// ErrOutOfGas is returned when transaction processing runs out of gas.
 	ErrOutOfGas = errorsmod.Register(RootCodespace, 11, "out of gas")
 
-	// ErrMemoTooLarge to doc
+	// ErrMemoTooLarge is returned when a memo exceeds the allowed size.
 	ErrMemoTooLarge = errorsmod.Register(RootCodespace, 12, "memo too large")
 
-	// ErrInsufficientFee to doc
+	// ErrInsufficientFee is returned when the provided fee is too low.
 	ErrInsufficientFee = errorsmod.Register(RootCodespace, 13, "insufficient fee")
 
-	// ErrTooManySignatures to doc
+	// ErrTooManySignatures is returned when a tx contains too many signatures.
 	ErrTooManySignatures = errorsmod.Register(RootCodespace, 14, "maximum number of signatures exceeded")
 
-	// ErrNoSignatures to doc
+	// ErrNoSignatures is returned when no signatures are provided.
 	ErrNoSignatures = errorsmod.Register(RootCodespace, 15, "no signatures supplied")
 
 	// ErrJSONMarshal defines an ABCI typed JSON marshaling error
@@ -93,7 +92,7 @@ var (
 	// ErrInvalidChainID defines an error when the chain-id is invalid.
 	ErrInvalidChainID = errorsmod.Register(RootCodespace, 28, "invalid chain-id")
 
-	// ErrInvalidType defines an error an invalid type.
+	// ErrInvalidType defines an error for an invalid type.
 	ErrInvalidType = errorsmod.Register(RootCodespace, 29, "invalid type")
 
 	// ErrTxTimeoutHeight defines an error for when a tx is rejected out due to an
@@ -128,9 +127,9 @@ var (
 	// ErrNotFound defines an error when requested entity doesn't exist in the state.
 	ErrNotFound = errorsmod.Register(RootCodespace, 38, "not found")
 
-	// ErrIO should be used to wrap internal errors caused by external operation.
-	// Examples: not DB domain error, file writing etc...
-	ErrIO = errorsmod.Register(RootCodespace, 39, "Internal IO error")
+	// ErrIO wraps internal errors caused by external operations (e.g., I/O, file writing,
+	// non-DB domain errors).
+	ErrIO = errorsmod.Register(RootCodespace, 39, "internal IO error")
 
 	// ErrAppConfig defines an error occurred if application configuration is
 	// misconfigured.
@@ -140,7 +139,7 @@ var (
 	// supplied.
 	ErrInvalidGasLimit = errorsmod.Register(RootCodespace, 41, "invalid gas limit")
 
-	// ErrPanic should only be set when we recovering from a panic
+	// ErrPanic should only be set when recovering from a panic.
 	ErrPanic = errorsmod.ErrPanic
 
 	// ErrTxTimeout defines an error for when a tx is rejected out due to an

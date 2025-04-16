@@ -3,17 +3,17 @@ package testutil
 import (
 	"fmt"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/keeper"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func CreateValidator(pk cryptotypes.PubKey, operator string, stake math.Int) (stakingtypes.Validator, error) {
-	val, err := stakingtypes.NewValidator(operator, pk, stakingtypes.Description{Moniker: "TestValidator"})
+func CreateValidator(pk cryptotypes.PubKey, stake math.Int) (stakingtypes.Validator, error) {
+	valConsAddr := sdk.GetConsAddress(pk)
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr).String(), pk, stakingtypes.Description{Moniker: "TestValidator"})
 	val.Tokens = stake
 	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	return val, err
@@ -112,7 +112,6 @@ func Delegate(
 	amount math.Int,
 	delegation *stakingtypes.Delegation,
 	sk *MockStakingKeeper,
-	addressCodec address.Codec,
 ) (
 	newShares math.LegacyDec,
 	updatedDel stakingtypes.Delegation,
@@ -126,14 +125,7 @@ func Delegate(
 		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, valBz)
 	} else {
 		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, valBz)
-		if err != nil {
-			return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
-		}
-		delAddr, err := addressCodec.BytesToString(delegator)
-		if err != nil {
-			return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
-		}
-		del := stakingtypes.NewDelegation(delAddr, validator.GetOperator(), math.LegacyZeroDec())
+		del := stakingtypes.NewDelegation(delegator.String(), validator.GetOperator(), math.LegacyZeroDec())
 		delegation = &del
 	}
 

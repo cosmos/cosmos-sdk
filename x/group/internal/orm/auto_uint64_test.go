@@ -7,29 +7,24 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 func TestAutoUInt64PrefixScan(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
+	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	ctx := NewMockContext()
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	metadata := []byte("metadata")
 	t1 := testdata.TableModel{
@@ -57,7 +52,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
 		expError   *errorsmod.Error
-		method     func(store corestore.KVStore, start, end uint64) (Iterator, error)
+		method     func(store storetypes.KVStore, start, end uint64) (Iterator, error)
 	}{
 		"first element": {
 			start:     1,

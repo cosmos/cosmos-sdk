@@ -183,7 +183,7 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 	return acc.GetSequence(), nil
 }
 
-func (ak AccountKeeper) GetAccountNumberLegacy(ctx context.Context) (uint64, error) {
+func (ak AccountKeeper) getAccountNumberLegacy(ctx context.Context) (uint64, error) {
 	store := ak.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.LegacyGlobalAccountNumberKey)
 	if err != nil {
@@ -204,7 +204,7 @@ func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
 		// this won't happen in the tip of production network,
 		// but can happen when query historical states,
 		// fallback to old key for backward-compatibility.
-		n, err = ak.GetAccountNumberLegacy(ctx)
+		n, err = ak.getAccountNumberLegacy(ctx)
 	}
 
 	if err != nil {

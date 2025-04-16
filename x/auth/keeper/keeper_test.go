@@ -3,6 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
@@ -32,6 +36,17 @@ var (
 	randomPermAcc = types.NewEmptyModuleAccount(randomPerm, "random")
 )
 
+func getMaccPerms() map[string][]string {
+	return map[string][]string{
+		"fee_collector":          nil,
+		"mint":                   {"minter"},
+		"bonded_tokens_pool":     {"burner", "staking"},
+		"not_bonded_tokens_pool": {"burner", "staking"},
+		multiPerm:                {"burner", "minter", "staking"},
+		randomPerm:               {"random"},
+	}
+}
+
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -51,20 +66,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
-	maccPerms := map[string][]string{
-		"fee_collector":          nil,
-		"mint":                   {"minter"},
-		"bonded_tokens_pool":     {"burner", "staking"},
-		"not_bonded_tokens_pool": {"burner", "staking"},
-		multiPerm:                {"burner", "minter", "staking"},
-		randomPerm:               {"random"},
-	}
-
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
 		storeService,
 		types.ProtoBaseAccount,
-		maccPerms,
+		getMaccPerms(),
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
@@ -214,4 +220,42 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	nextNum = suite.accountKeeper.NextAccountNumber(ctx)
 	// we expect nextNum to be 2 because we initialize fee_collector as account number 1
 	suite.Require().Equal(2, int(nextNum))
+}
+
+func TestNextAccountNumber(t *testing.T) {
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
+
+	ak := keeper.NewAccountKeeper(
+		encCfg.Codec,
+		storeService,
+		types.ProtoBaseAccount,
+		getMaccPerms(),
+		authcodec.NewBech32Codec("cosmos"),
+		"cosmos",
+		types.NewModuleAddress("gov").String(),
+	)
+
+	num := uint64(10)
+	val := &gogotypes.UInt64Value{
+		Value: num,
+	}
+	data, err := val.Marshal()
+	require.NoError(t, err)
+	store := storeService.OpenKVStore(ctx)
+	err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+	require.NoError(t, err)
+
+	nextNum := ak.NextAccountNumber(ctx)
+	require.Equal(t, num, nextNum)
+
+	num = uint64(0)
+	err = ak.AccountNumber.Set(ctx, num)
+	require.NoError(t, err)
+
+	nextNum = ak.NextAccountNumber(ctx)
+	require.Equal(t, num, nextNum)
 }

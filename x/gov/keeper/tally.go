@@ -38,6 +38,7 @@ func defaultCalculateVoteResultsAndVotingPower(
 	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
 
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
+	votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
 	err = k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
 		voter, err := k.authKeeper.AddressCodec().StringToBytes(vote.Voter)
@@ -81,10 +82,18 @@ func defaultCalculateVoteResultsAndVotingPower(
 			return false, err
 		}
 
-		return false, k.Votes.Remove(ctx, collections.Join(vote.ProposalId, sdk.AccAddress(voter)))
+		votesToRemove = append(votesToRemove, key)
+		return false, nil
 	})
 	if err != nil {
 		return math.LegacyZeroDec(), nil, fmt.Errorf("error while iterating delegations: %w", err)
+	}
+
+	// remove all votes from store
+	for _, key := range votesToRemove {
+		if err := k.Votes.Remove(ctx, key); err != nil {
+			return math.LegacyDec{}, nil, fmt.Errorf("error while removing vote (%d/%s): %w", key.K1(), key.K2(), err)
+		}
 	}
 
 	// iterate over the validators again to tally their voting power

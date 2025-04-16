@@ -204,6 +204,7 @@ func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
 		// this won't happen in the tip of production network,
 		// but can happen when query historical states,
 		// fallback to old key for backward-compatibility.
+		// for more info, see https://github.com/cosmos/cosmos-sdk/issues/23741
 		n, err = ak.getAccountNumberLegacy(ctx)
 	}
 

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
@@ -18,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.

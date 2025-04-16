@@ -9,12 +9,11 @@ require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.5.1
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/evidence v0.2.0-rc.2
 	cosmossdk.io/x/feegrant v0.2.0-rc.2
 	cosmossdk.io/x/nft v0.2.0-rc.2 // indirect
-	cosmossdk.io/x/tx v0.14.0
+	cosmossdk.io/x/tx v0.14.0-rc.2
 	cosmossdk.io/x/upgrade v0.2.0-rc.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
@@ -32,6 +31,8 @@ require (
 	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.2.0
 )
+
+require cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 
 require (
 	cel.dev/expr v0.19.1 // indirect
@@ -197,7 +198,7 @@ require (
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect

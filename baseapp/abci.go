@@ -1319,7 +1319,9 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 // be a need to vary retention for other nodes, e.g. sentry nodes which do not
 // need historical blocks.
 func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
-	// pruning is disabled if minRetainBlocks is zero
+	// If minRetainBlocks is zero, pruning is disabled and we return 0
+	// If commitHeight is smaller than minRetainBlocks, we also return 0 since there
+	// aren't enough blocks yet to trigger pruning
 	if app.minRetainBlocks == 0 || app.minRetainBlocks >= uint64(commitHeight) {
 		return 0
 	}

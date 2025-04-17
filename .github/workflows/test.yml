@@ -56,26 +56,13 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
-            **/Makefile
-            Makefile
       - uses: actions/download-artifact@v4
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
       - name: test & coverage report creation
-        if: env.GIT_DIFF
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -race -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='ledger test_ledger_mock'
       - uses: actions/upload-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
@@ -89,23 +76,10 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
-            **/Makefile
-            Makefile
       - name: integration tests
-        if: env.GIT_DIFF
         run: |
           make test-integration-cov
       - uses: actions/upload-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-integration-coverage"
           path: ./tests/integration-profile.out
@@ -119,23 +93,10 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
-            **/Makefile
-            Makefile
       - name: e2e tests
-        if: env.GIT_DIFF
         run: |
           make test-e2e-cov
       - uses: actions/upload-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-e2e-coverage"
           path: ./tests/e2e-profile.out
@@ -145,37 +106,22 @@ jobs:
     needs: [tests, test-integration, test-e2e]
     steps:
       - uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
       - uses: actions/download-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-00-coverage"
       - uses: actions/download-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-01-coverage"
       - uses: actions/download-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-02-coverage"
       - uses: actions/download-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-03-coverage"
       - uses: actions/download-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-integration-coverage"
       - uses: actions/download-artifact@v4
-        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-e2e-coverage"
         continue-on-error: true
@@ -214,7 +160,7 @@ jobs:
       - name: test liveness
         if: env.GIT_DIFF
         run: |
-          ./contrib/localnet_liveness.sh 100 5 50 localhost
+          ./contrib/localnet_liveness.sh 100 2 50 localhost
 
   test-sim-nondeterminism:
     runs-on: ubuntu-latest

@@ -12,6 +12,12 @@ if ! [ -f "${BINARY}" ]; then
 fi
 
 export SIMDHOME="/data/node${ID}/simd"
+CONFIG_TOML="${SIMDHOME}/config/config.toml"
+
+# Check if config.toml exists and modify timeout_commit
+if [ -f "${CONFIG_TOML}" ]; then
+    sed -i'' -e 's/^timeout_commit =.*/timeout_commit = "1s"/' "${CONFIG_TOML}"
+fi
 
 if [ -d "$(dirname "${SIMDHOME}"/"${LOG}")" ]; then
   "${BINARY}" --home "${SIMDHOME}" "$@" | tee "${SIMDHOME}/${LOG}"

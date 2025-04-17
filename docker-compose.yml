@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   simdnode0:
     container_name: simdnode0

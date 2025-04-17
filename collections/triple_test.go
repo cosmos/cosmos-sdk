@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/collections/internal/testutil"
 )
 
 func TestTriple(t *testing.T) {
@@ -19,8 +19,8 @@ func TestTriple(t *testing.T) {
 }
 
 func TestTripleRange(t *testing.T) {
-	ctx := coretesting.Context()
-	sk := coretesting.KVStoreService(ctx, "test")
+	ctx := testutil.Context()
+	sk := testutil.KVStoreService(ctx, "test")
 	schema := collections.NewSchemaBuilder(sk)
 	// this is a key composed of 3 parts: uint64, string, []byte
 	kc := collections.TripleKeyCodec(collections.Uint64Key, collections.StringKey, collections.BytesKey)

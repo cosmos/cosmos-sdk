@@ -38,11 +38,11 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 }
 
 func (s *StdTxBuilder) SetFeeAmount(amount sdk.Coins) {
-	s.StdTx.Fee.Amount = amount
+	s.Fee.Amount = amount
 }
 
 func (s *StdTxBuilder) SetGasLimit(limit uint64) {
-	s.StdTx.Fee.Gas = limit
+	s.Fee.Gas = limit
 }
 
 // SetMemo implements TxBuilder.SetMemo
@@ -136,7 +136,7 @@ func SignatureV2ToStdSignature(cdc *codec.LegacyAmino, sig signing.SignatureV2) 
 }
 
 // Unmarshaler is a generic type for Unmarshal functions
-type Unmarshaler func(bytes []byte, ptr interface{}) error
+type Unmarshaler func(bytes []byte, ptr any) error
 
 // DefaultTxEncoder logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.LegacyAmino) sdk.TxEncoder {

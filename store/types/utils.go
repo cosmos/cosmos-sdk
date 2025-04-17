@@ -80,15 +80,3 @@ func BigEndianToUint64(bz []byte) uint64 {
 
 	return binary.BigEndian.Uint64(bz)
 }
-
-// SliceContains implements a generic function for checking if a slice contains
-// a certain value.
-func SliceContains[T comparable](elements []T, v T) bool {
-	for _, s := range elements {
-		if v == s {
-			return true
-		}
-	}
-
-	return false
-}

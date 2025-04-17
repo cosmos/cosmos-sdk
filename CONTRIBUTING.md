@@ -117,7 +117,7 @@ PRs must have a category prefix that is based on the type of changes being made 
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.
 
-Pull requests are merged automatically using [`A:automerge` action](https://mergify.io/features/auto-merge).
+Pull requests are merged automatically using [`A:automerge` action](https://docs.mergify.com/workflow/automerge/).
 
 NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 

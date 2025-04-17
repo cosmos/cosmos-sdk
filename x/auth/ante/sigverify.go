@@ -438,7 +438,7 @@ func DefaultSigVerificationGasConsumer(
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
-		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
+		return nil
 
 	case *secp256k1.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
@@ -472,7 +472,7 @@ func ConsumeMultisignatureVerificationGas(
 	size := sig.BitArray.Count()
 	sigIndex := 0
 
-	for i := 0; i < size; i++ {
+	for i := range size {
 		if !sig.BitArray.GetIndex(i) {
 			continue
 		}

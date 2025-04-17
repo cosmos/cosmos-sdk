@@ -35,7 +35,7 @@ func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
 func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMember {
 	addressPool := simtestutil.CreateIncrementalAccounts(numMembers)
 	members := make([]group.MemberRequest, numMembers)
-	for i := 0; i < len(members); i++ {
+	for i := range members {
 		members[i] = group.MemberRequest{
 			Address: addressPool[i].String(),
 			Weight:  "1",
@@ -1823,7 +1823,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"with try exec": {
 			preRun: func(msgs []sdk.Msg) {
-				for i := 0; i < len(msgs); i++ {
+				for i := range msgs {
 					s.bankKeeper.EXPECT().Send(gomock.Any(), msgs[i]).Return(nil, nil)
 				}
 			},
@@ -1895,7 +1895,7 @@ func (s *TestSuite) TestSubmitProposal() {
 			s.Require().NoError(err)
 			id := res.ProposalId
 
-			if !(spec.expProposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
+			if spec.expProposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				// then all data persisted
 				proposalRes, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: id})
 				s.Require().NoError(err)
@@ -2410,7 +2410,7 @@ func (s *TestSuite) TestVote() {
 			}
 			s.Require().NoError(err)
 
-			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
+			if spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				// vote is stored and all data persisted
 				res, err := s.groupKeeper.VoteByProposalVoter(sdkCtx, &group.QueryVoteByProposalVoterRequest{
 					ProposalId: spec.req.ProposalId,
@@ -2762,7 +2762,7 @@ func (s *TestSuite) TestExecProposal() {
 			}
 			s.Require().NoError(err)
 
-			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
+			if spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 
 				// and proposal is updated
 				res, err := s.groupKeeper.Proposal(sdkCtx, &group.QueryProposalRequest{ProposalId: proposalID})

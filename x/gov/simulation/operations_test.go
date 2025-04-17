@@ -75,7 +75,7 @@ func (m MockWeightedProposals) ContentSimulatorFn() simtypes.ContentSimulatorFn 
 
 func mockWeightedProposalMsg(n int) []simtypes.WeightedProposalMsg {
 	wpc := make([]simtypes.WeightedProposalMsg, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		wpc[i] = MockWeightedProposals{i}
 	}
 	return wpc
@@ -84,7 +84,7 @@ func mockWeightedProposalMsg(n int) []simtypes.WeightedProposalMsg {
 // nolint // keeping this legacy proposal for testing
 func mockWeightedLegacyProposalContent(n int) []simtypes.WeightedProposalContent {
 	wpc := make([]simtypes.WeightedProposalContent, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		wpc[i] = MockWeightedProposals{i}
 	}
 	return wpc
@@ -183,7 +183,6 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 		Hash:   app.LastCommitID().Hash,
 	})
 	require.NoError(t, err)
-
 	// execute operation
 	op := simulation.SimulateMsgSubmitLegacyProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.ContentSimulatorFn())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
@@ -435,7 +434,7 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
 	require.NoError(t, err)
 
-	ctx := app.BaseApp.NewContext(isCheckTx)
+	ctx := app.NewContext(isCheckTx)
 
 	res.App = app
 	return res, ctx

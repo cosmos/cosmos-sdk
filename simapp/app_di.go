@@ -3,12 +3,9 @@
 package simapp
 
 import (
-	"fmt"
 	"io"
-	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/depinject"
@@ -22,7 +19,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -34,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -46,6 +41,7 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
@@ -68,8 +64,6 @@ type SimApp struct {
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	UnorderedTxManager *unorderedtx.Manager
-
 	// essential keepers
 	AccountKeeper         authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.BaseKeeper
@@ -84,11 +78,12 @@ type SimApp struct {
 	CircuitKeeper         circuitkeeper.Keeper
 
 	// supplementary keepers
-	FeeGrantKeeper feegrantkeeper.Keeper
-	GroupKeeper    groupkeeper.Keeper
-	AuthzKeeper    authzkeeper.Keeper
-	NFTKeeper      nftkeeper.Keeper
-	EpochsKeeper   epochskeeper.Keeper
+	FeeGrantKeeper     feegrantkeeper.Keeper
+	GroupKeeper        groupkeeper.Keeper
+	AuthzKeeper        authzkeeper.Keeper
+	NFTKeeper          nftkeeper.Keeper
+	EpochsKeeper       epochskeeper.Keeper
+	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -161,7 +156,7 @@ func NewSimApp(
 				//
 
 				// For providing a custom inflation function for x/mint add here your
-				// custom function that implements the minttypes.InflationCalculationFn
+				// custom minting function that implements the mintkeeper.MintFn
 				// interface.
 			),
 		)
@@ -189,6 +184,7 @@ func NewSimApp(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitKeeper,
 		&app.EpochsKeeper,
+		&app.ProtocolPoolKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -263,25 +259,6 @@ func NewSimApp(
 	// 	return app.App.InitChainer(ctx, req)
 	// })
 
-	// create, start, and load the unordered tx manager
-	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-	app.UnorderedTxManager.Start()
-
-	if err := app.UnorderedTxManager.OnInit(); err != nil {
-		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-	}
-
-	// register custom snapshot extensions (if any)
-	if manager := app.SnapshotManager(); manager != nil {
-		err := manager.RegisterExtensions(
-			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-		)
-		if err != nil {
-			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
-		}
-	}
-
 	// set custom ante handler
 	app.setAnteHandler(app.txConfig)
 
@@ -298,12 +275,12 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:      app.AccountKeeper,
-				BankKeeper:         app.BankKeeper,
-				SignModeHandler:    txConfig.SignModeHandler(),
-				FeegrantKeeper:     app.FeeGrantKeeper,
-				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
-				UnorderedTxManager: app.UnorderedTxManager,
+				UnorderedNonceManager: app.AccountKeeper,
+				AccountKeeper:         app.AccountKeeper,
+				BankKeeper:            app.BankKeeper,
+				SignModeHandler:       txConfig.SignModeHandler(),
+				FeegrantKeeper:        app.FeeGrantKeeper,
+				SigGasConsumer:        ante.DefaultSigVerificationGasConsumer,
 			},
 			&app.CircuitKeeper,
 		},

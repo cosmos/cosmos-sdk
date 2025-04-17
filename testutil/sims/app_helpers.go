@@ -96,13 +96,13 @@ func DefaultStartUpConfig() StartupConfig {
 
 // Setup initializes a new runtime.App and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
-func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
+func Setup(appConfig depinject.Config, extraOutputs ...any) (*runtime.App, error) {
 	return SetupWithConfiguration(appConfig, DefaultStartUpConfig(), extraOutputs...)
 }
 
 // SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
-func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
+func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...any) (*runtime.App, error) {
 	cfg := DefaultStartUpConfig()
 	cfg.AtGenesis = true
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
@@ -130,17 +130,13 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 		Time:   header.Time,
 	})
 
-	if err != nil {
-		return sdk.Context{}, err
-	}
-
-	return newCtx, err
+	return newCtx, nil
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
-func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupConfig, extraOutputs ...interface{}) (*runtime.App, error) {
+func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupConfig, extraOutputs ...any) (*runtime.App, error) {
 	// create the app with depinject
 	var (
 		app        *runtime.App
@@ -289,17 +285,17 @@ func GenesisStateWithValSet(
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
+func (ao EmptyAppOptions) Get(o string) any {
 	return nil
 }
 
 // AppOptionsMap is a stub implementing AppOptions which can get data from a map
-type AppOptionsMap map[string]interface{}
+type AppOptionsMap map[string]any
 
-func (m AppOptionsMap) Get(key string) interface{} {
+func (m AppOptionsMap) Get(key string) any {
 	v, ok := m[key]
 	if !ok {
-		return interface{}(nil)
+		return any(nil)
 	}
 
 	return v

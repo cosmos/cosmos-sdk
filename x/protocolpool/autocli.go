@@ -68,6 +68,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 					GovProposal: true,
 				},
+
 				{
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal <params>",

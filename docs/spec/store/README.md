@@ -42,7 +42,7 @@ until `Commit()` is called on the `CommitMultiStore`.
 
 ### `CommitMultiStore`
 
-The `CommitMultiStore` interface exposes the the top-level interface that is used
+The `CommitMultiStore` interface exposes the top-level interface that is used
 to manage state commitment and storage by an SDK application and abstracts the
 concept of multiple `KVStore`s which are used by multiple modules. Specifically,
 it supports the following high-level primitives:

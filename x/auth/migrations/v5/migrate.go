@@ -39,7 +39,7 @@ func Migrate(ctx context.Context, storeService storetypes.KVStoreService, sequen
 	}
 
 	// remove the value from the old prefix.
-	err = store.Delete(authtypes.LegacyGlobalAccountNumberKey)
+	err = store.Delete(LegacyGlobalAccountNumberKey)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
@@ -17,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
@@ -1073,4 +1075,372 @@ func Test100PercentCommissionReward(t *testing.T) {
 		}
 	}
 	require.True(t, hasValue)
+}
+
+func TestWithdrawDelegationRewards_VestingAccount(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	blockTime := time.Now()
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1, Time: blockTime})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	// Mock Vesting Account setup
+	addr := sdk.AccAddress(valConsAddr0)
+	mockVestingAcc := &vestingtypes.ContinuousVestingAccount{
+		BaseVestingAccount: &vestingtypes.BaseVestingAccount{
+			BaseAccount:     authtypes.NewBaseAccountWithAddress(addr),
+			EndTime:         ctx.BlockTime().Add(24 * time.Hour).Unix(),
+			OriginalVesting: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000))),
+		},
+		StartTime: ctx.BlockTime().Unix(),
+	}
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	// reset fee pool & params
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+
+	// create validator with 0% commission
+	valAddr := sdk.ValAddress(valConsAddr0)
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()) // 0% commission
+
+	// delegation mock
+	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
+
+	// run the necessary hooks manually
+	err = distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr)
+	require.NoError(t, err)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(blockTime.Add(time.Second)) // Increment time for UpdateSchedule call
+
+	// allocate some rewards
+	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	// --- Setup for Withdraw ---
+	// Expect GetAccount to return the mock vesting account
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), addr).Return(mockVestingAcc)
+
+	// Expect the vesting account's UpdateSchedule to be called
+	expectedRewardsCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initial)) // 0% commission
+
+	// Expect SetAccount to be called with the updated vesting account
+	accountKeeper.EXPECT().SetAccount(gomock.Any(), mockVestingAcc)
+
+	// Expect SendCoinsFromModuleToAccount to send to the delegator address (vesting account address)
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), disttypes.ModuleName, addr, expectedRewardsCoins).Return(nil)
+
+	// Expect UserOutstandingRewards to be checked and removed (assuming none exist initially)
+	keyOutstanding := collections.Join(addr, valAddr)
+	// We need to mock the Get and Remove methods on the UserOutstandingRewards collection
+	// Since UserOutstandingRewards is not an interface, we can't directly mock it with gomock.
+	// Instead, we'll ensure the state is correct before and after the call.
+	// Check initial state: no outstanding rewards for this user/val pair
+	_, err = distrKeeper.UserOutstandingRewards.Get(ctx, keyOutstanding)
+	require.ErrorIs(t, err, collections.ErrNotFound)
+
+	// --- Execute Withdraw ---
+	initialOriginalVesting := mockVestingAcc.GetOriginalVesting() // Capture initial amount
+	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, addr, valAddr)
+	require.NoError(t, err)
+	require.Equal(t, expectedRewardsCoins, rewards)
+
+	// --- Verify State Changes ---
+	// Starting info should be removed and re-initialized
+	_, err = distrKeeper.GetDelegatorStartingInfo(ctx, valAddr, addr)
+	require.NoError(t, err, "Delegator starting info should exist after withdrawal")
+
+	// Outstanding rewards for the user should be gone
+	_, err = distrKeeper.UserOutstandingRewards.Get(ctx, keyOutstanding)
+	require.ErrorIs(t, err, collections.ErrNotFound, "User outstanding rewards should be removed after withdrawal")
+
+	// Validator outstanding rewards should be updated (reduced by the withdrawn amount)
+	valOutstanding, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr)
+	require.NoError(t, err)
+	// Since commission is 0 and all rewards were allocated and withdrawn, outstanding should be zero.
+	require.True(t, valOutstanding.Rewards.IsZero(), "Validator outstanding rewards should be zero after withdrawal, got %s", valOutstanding.Rewards)
+
+	// Community pool should remain empty (no truncation remainder)
+	feePool, err := distrKeeper.FeePool.Get(ctx)
+	require.NoError(t, err)
+	require.True(t, feePool.CommunityPool.IsZero())
+
+	// Check that OriginalVesting increased
+	require.Equal(t, initialOriginalVesting.Add(expectedRewardsCoins...), mockVestingAcc.GetOriginalVesting(), "OriginalVesting should increase by rewards amount")
+}
+
+func TestWithdrawDelegationRewards_VestingAccount_WithOutstanding(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	blockTime := time.Now()
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1, Time: blockTime})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	// Mock Vesting Account setup
+	addr := sdk.AccAddress(valConsAddr0)
+	// Using a real vesting account type for simplicity in testing UpdateSchedule behavior
+	mockVestingAcc := &vestingtypes.ContinuousVestingAccount{
+		BaseVestingAccount: &vestingtypes.BaseVestingAccount{
+			BaseAccount: authtypes.NewBaseAccountWithAddress(addr),
+			EndTime:     ctx.BlockTime().Add(24 * time.Hour).Unix(),
+			OriginalVesting: sdk.NewCoins(
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)),
+			),
+		},
+		StartTime: ctx.BlockTime().Unix(),
+	}
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	// reset fee pool & params
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+
+	// create validator with 0% commission
+	valAddr := sdk.ValAddress(valConsAddr0)
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()) // 0% commission
+
+	// delegation mock
+	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
+
+	// run the necessary hooks manually
+	err = distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr)
+	require.NoError(t, err)
+
+	// --- Set Initial Outstanding Rewards ---
+	keyOutstanding := collections.Join(addr, valAddr)
+	outstandingAmount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(50))) // Example outstanding amount
+	initialOutstanding := disttypes.UserOutstandingRewards{Rewards: outstandingAmount}
+	require.NoError(t, distrKeeper.UserOutstandingRewards.Set(ctx, keyOutstanding, initialOutstanding))
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(blockTime.Add(time.Second)) // Increment time
+
+	// allocate some new rewards
+	newRewardsAmount := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction) // e.g., 1000000
+	newTokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, newRewardsAmount)}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, newTokens))
+
+	// --- Setup for Withdraw ---
+	// Expect GetAccount to return the mock vesting account
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), addr).Return(mockVestingAcc)
+
+	// Calculate total expected rewards (outstanding + new)
+	expectedTotalRewardsCoins := outstandingAmount.Add(sdk.NewCoin(sdk.DefaultBondDenom, newRewardsAmount))
+
+	// Expect SetAccount to be called with the updated vesting account
+	// Note: We don't mock UpdateSchedule directly on the real vesting account type,
+	// but we verify the outcome via SetAccount and SendCoins.
+	accountKeeper.EXPECT().SetAccount(gomock.Any(), mockVestingAcc) // Expecting the same account instance to be set
+
+	// Expect SendCoinsFromModuleToAccount to send the TOTAL rewards to the delegator address
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), disttypes.ModuleName, addr, expectedTotalRewardsCoins).Return(nil)
+
+	// Expect UserOutstandingRewards to be checked (and found) and removed
+	// We verify the state before and after instead of mocking Get/Remove directly
+
+	// --- Verify Initial Outstanding State ---
+	retrievedOutstanding, err := distrKeeper.UserOutstandingRewards.Get(ctx, keyOutstanding)
+	require.NoError(t, err)
+	require.Equal(t, initialOutstanding, retrievedOutstanding)
+
+	// --- Execute Withdraw ---
+	initialOriginalVesting := mockVestingAcc.GetOriginalVesting() // Capture initial amount
+	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, addr, valAddr)
+	require.NoError(t, err)
+	require.Equal(t, expectedTotalRewardsCoins, rewards) // Verify the returned amount is the total
+
+	// --- Verify State Changes ---
+	// Starting info should be removed and re-initialized
+	_, err = distrKeeper.GetDelegatorStartingInfo(ctx, valAddr, addr)
+	require.NoError(t, err, "Delegator starting info should exist after withdrawal")
+
+	// Outstanding rewards for the user should be gone
+	_, err = distrKeeper.UserOutstandingRewards.Get(ctx, keyOutstanding)
+	require.ErrorIs(t, err, collections.ErrNotFound, "User outstanding rewards should be removed after withdrawal")
+
+	// Validator outstanding rewards should be updated (reduced by the withdrawn amount)
+	valOutstanding, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr)
+	require.NoError(t, err)
+	// Since commission is 0 and all rewards (new + initial outstanding) were withdrawn, outstanding should be zero.
+	require.True(t, valOutstanding.Rewards.IsZero(), "Validator outstanding rewards should be zero after withdrawal, got %s", valOutstanding.Rewards)
+
+	// Community pool should remain empty (no truncation remainder)
+	feePool, err := distrKeeper.FeePool.Get(ctx)
+	require.NoError(t, err)
+	require.True(t, feePool.CommunityPool.IsZero())
+
+	// Check that OriginalVesting increased
+	require.Equal(t, initialOriginalVesting.Add(expectedTotalRewardsCoins...), mockVestingAcc.GetOriginalVesting(), "OriginalVesting should increase by total rewards amount")
+}
+
+func TestWithdrawDelegationRewards_VestingAccount_WithWithdrawAddrSet(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	blockTime := time.Now()
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1, Time: blockTime})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	// Mock Vesting Account setup
+	delegatorAddr := sdk.AccAddress(valConsAddr0)
+	withdrawAddr := sdk.AccAddress(valConsAddr1) // Different withdraw address
+
+	mockVestingAcc := &vestingtypes.ContinuousVestingAccount{
+		BaseVestingAccount: &vestingtypes.BaseVestingAccount{
+			BaseAccount:     authtypes.NewBaseAccountWithAddress(delegatorAddr),
+			EndTime:         ctx.BlockTime().Add(24 * time.Hour).Unix(),
+			OriginalVesting: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000))),
+		},
+		StartTime: ctx.BlockTime().Unix(),
+	}
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	// reset fee pool & params (ensure WithdrawAddrEnabled is true)
+	params := disttypes.DefaultParams()
+	params.WithdrawAddrEnabled = true
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, params))
+
+	// create validator with 0% commission
+	valAddr := sdk.ValAddress(valConsAddr0)
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()) // 0% commission
+
+	// delegation mock
+	del := stakingtypes.NewDelegation(delegatorAddr.String(), valAddr.String(), val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), delegatorAddr, valAddr).Return(del, nil).AnyTimes()
+
+	// run the necessary hooks manually
+	err = distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, delegatorAddr, valAddr)
+	require.NoError(t, err)
+
+	// Set the withdraw address
+	bankKeeper.EXPECT().BlockedAddr(withdrawAddr).Return(false)
+	err = distrKeeper.SetWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
+	require.NoError(t, err)
+	storedWithdrawAddr, err := distrKeeper.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
+	require.NoError(t, err)
+	require.Equal(t, withdrawAddr, storedWithdrawAddr, "Withdraw address should be set correctly")
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(blockTime.Add(time.Second)) // Increment time
+
+	// allocate some rewards
+	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	// --- Setup for Withdraw ---
+	// Expect GetAccount to return the mock vesting account
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), delegatorAddr).Return(mockVestingAcc)
+
+	// Expect the vesting account's UpdateSchedule to be called (implicitly via TrackDelegation)
+	expectedRewardsCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initial)) // 0% commission
+
+	// Expect SetAccount to be called with the updated vesting account
+	accountKeeper.EXPECT().SetAccount(gomock.Any(), mockVestingAcc)
+
+	// CRITICAL: Expect SendCoinsFromModuleToAccount to send to the DELEGATOR address, NOT the withdrawAddr
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), disttypes.ModuleName, delegatorAddr, expectedRewardsCoins).Return(nil)
+
+	// Expect UserOutstandingRewards to be checked and removed
+	keyOutstanding := collections.Join(delegatorAddr, valAddr)
+	_, err = distrKeeper.UserOutstandingRewards.Get(ctx, keyOutstanding)
+	require.ErrorIs(t, err, collections.ErrNotFound)
+
+	// --- Execute Withdraw ---
+	initialOriginalVesting := mockVestingAcc.GetOriginalVesting() // Capture initial amount
+	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, delegatorAddr, valAddr)
+	require.NoError(t, err)
+	require.Equal(t, expectedRewardsCoins, rewards)
+
+	// --- Verify State Changes ---
+	// Starting info should be removed and re-initialized
+	_, err = distrKeeper.GetDelegatorStartingInfo(ctx, valAddr, delegatorAddr)
+	require.NoError(t, err, "Delegator starting info should exist after withdrawal")
+
+	// Outstanding rewards for the user should be gone
+	_, err = distrKeeper.UserOutstandingRewards.Get(ctx, keyOutstanding)
+	require.ErrorIs(t, err, collections.ErrNotFound, "User outstanding rewards should be removed after withdrawal")
+
+	// Validator outstanding rewards should be updated
+	valOutstanding, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr)
+	require.NoError(t, err)
+	require.True(t, valOutstanding.Rewards.IsZero(), "Validator outstanding rewards should be zero after withdrawal, got %s", valOutstanding.Rewards)
+
+	// Community pool should remain empty
+	feePool, err := distrKeeper.FeePool.Get(ctx)
+	require.NoError(t, err)
+	require.True(t, feePool.CommunityPool.IsZero())
+
+	// Check that OriginalVesting increased
+	require.Equal(t, initialOriginalVesting.Add(expectedRewardsCoins...), mockVestingAcc.GetOriginalVesting(), "OriginalVesting should increase by rewards amount")
 }

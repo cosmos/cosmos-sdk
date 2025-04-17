@@ -32,6 +32,12 @@ func (k msgServer) SetWithdrawAddress(ctx context.Context, msg *types.MsgSetWith
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}
 
+	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
+	_, ok := acc.(types.VestingAccount)
+	if ok {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("cannot set withdraw address for vesting account %s", delegatorAddress)
+	}
+
 	withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.WithdrawAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid withdraw address: %s", err)

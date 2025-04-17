@@ -270,7 +270,11 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 			// add the outstanding rewards to the rewards
 			finalRewards = finalRewards.Add(outstanding.Rewards...)
 
-			vestingAcc := k.authKeeper.GetAccount(ctx, withdrawAddr)
+			// check if the delegator account is a vesting account
+			// if it is, we need to update the vesting schedule
+			// and send the rewards to the vesting account
+			// if it is not, we can send the rewards to the withdraw address
+			vestingAcc := k.authKeeper.GetAccount(ctx, delAddr)
 			if v, ok := vestingAcc.(types.VestingAccount); ok {
 				// update account with rewards being sent
 				if err := v.UpdateSchedule(sdk.UnwrapSDKContext(ctx).BlockTime(), finalRewards); err != nil {
@@ -279,11 +283,17 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 
 				// set the updated account
 				k.authKeeper.SetAccount(ctx, vestingAcc)
-			}
 
-			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, finalRewards)
-			if err != nil {
-				return nil, err
+				err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delAddr, finalRewards)
+				if err != nil {
+					return nil, err
+				}
+
+			} else {
+				err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, finalRewards)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			// delete the outstanding rewards

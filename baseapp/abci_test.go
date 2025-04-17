@@ -1322,8 +1322,14 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 			commitHeight: 10000,
 			expected:     0,
 		},
-		"no pruning due to min retain blocks": {
+		"no pruning due to min retain blocks equal to commit height": {
 			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(499000)),
+			maxAgeBlocks: 362880,
+			commitHeight: 499000,
+			expected:     0,
+		},
+		"no pruning due to min retain blocks greater than commit height": {
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(499001)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     0,

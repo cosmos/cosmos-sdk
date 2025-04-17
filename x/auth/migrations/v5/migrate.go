@@ -15,7 +15,7 @@ var LegacyGlobalAccountNumberKey = authtypes.LegacyGlobalAccountNumberKey
 
 func Migrate(ctx context.Context, storeService storetypes.KVStoreService, sequence collections.Sequence) error {
 	store := storeService.OpenKVStore(ctx)
-	b, err := store.Get(authtypes.LegacyGlobalAccountNumberKey)
+	b, err := store.Get(LegacyGlobalAccountNumberKey)
 	if err != nil {
 		return err
 	}

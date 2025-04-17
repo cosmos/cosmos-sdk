@@ -143,7 +143,7 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 	if err != nil {
 		return nil, fmt.Errorf("cannot marshal staking type query request, %w", err)
 	}
-	req := abci.RequestQuery{
+	req := abci.QueryRequest{
 		Data: b,
 		Path: delegatorDelegationPath,
 	}
@@ -187,7 +187,7 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 	if err != nil {
 		return nil, fmt.Errorf("cannot marshal staking type query request, %w", err)
 	}
-	req := abci.RequestQuery{
+	req := abci.QueryRequest{
 		Data: b,
 		Path: delegatorUnbondingDelegationsPath,
 	}
@@ -234,7 +234,7 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 		return nil, fmt.Errorf("cannot marshal bank type query request, %w", err)
 	}
 
-	req := abci.RequestQuery{
+	req := abci.QueryRequest{
 		Data: b,
 		Path: balancesPath,
 	}
@@ -265,7 +265,7 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("cannot marshal staking params query request, %w", err)
 	}
-	req := abci.RequestQuery{
+	req := abci.QueryRequest{
 		Data: b,
 		Path: stakingParamsPath,
 	}

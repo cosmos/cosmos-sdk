@@ -5,7 +5,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
@@ -98,7 +98,7 @@ func (c Context) BlockHeader() cmtproto.Header {
 	return c.header
 }
 
-// HeaderHash returns a copy of the header hash obtained during abci.RequestBeginBlock
+// HeaderHash returns a copy of the header hash obtained during abci.BeginBlockRequest
 func (c Context) HeaderHash() []byte {
 	hash := make([]byte, len(c.headerHash))
 	copy(hash, c.headerHash)

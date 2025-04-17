@@ -9,7 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -222,7 +224,8 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().Equal(2, int(nextNum))
 }
 
-func TestNextAccountNumber(t *testing.T) {
+func setupAccountKeeper(t *testing.T) (sdk.Context, keeper.AccountKeeper, store.KVStoreService) {
+	t.Helper()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
@@ -239,6 +242,11 @@ func TestNextAccountNumber(t *testing.T) {
 		types.NewModuleAddress("gov").String(),
 	)
 
+	return ctx, ak, storeService
+}
+
+func TestNextAccountNumber(t *testing.T) {
+	ctx, ak, storeService := setupAccountKeeper(t)
 	num := uint64(10)
 	val := &gogotypes.UInt64Value{
 		Value: num,
@@ -258,4 +266,59 @@ func TestNextAccountNumber(t *testing.T) {
 
 	nextNum = ak.NextAccountNumber(ctx)
 	require.Equal(t, num, nextNum)
+}
+
+func TestNextAccountNumber_NoKeysSet(t *testing.T) {
+	ctx, ak, _ := setupAccountKeeper(t)
+	nextNum := ak.NextAccountNumber(ctx)
+	require.Equal(t, uint64(0), nextNum)
+
+	nextNum = ak.NextAccountNumber(ctx)
+	require.Equal(t, uint64(1), nextNum)
+}
+
+func TestNextAccountNumber_LegacyFallback(t *testing.T) {
+	ctx, ak, storeService := setupAccountKeeper(t)
+	legacyNum := uint64(50)
+	val := &gogotypes.UInt64Value{
+		Value: legacyNum,
+	}
+	data, err := val.Marshal()
+	require.NoError(t, err)
+	store := storeService.OpenKVStore(ctx)
+	err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+	require.NoError(t, err)
+
+	// unset new key
+	err = (collections.Item[uint64])(ak.AccountNumber).Remove(ctx)
+	require.NoError(t, err)
+
+	nextNum := ak.NextAccountNumber(ctx)
+	require.Equal(t, legacyNum, nextNum)
+
+	nextNum = ak.NextAccountNumber(ctx)
+	require.Equal(t, legacyNum+1, nextNum)
+}
+
+func TestNextAccountNumber_NewKeyPrecedence(t *testing.T) {
+	ctx, ak, storeService := setupAccountKeeper(t)
+	legacyNum := uint64(50)
+	val := &gogotypes.UInt64Value{
+		Value: legacyNum,
+	}
+	data, err := val.Marshal()
+	require.NoError(t, err)
+	store := storeService.OpenKVStore(ctx)
+	err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+	require.NoError(t, err)
+
+	newNum := uint64(100)
+	err = ak.AccountNumber.Set(ctx, newNum)
+	require.NoError(t, err)
+
+	nextNum := ak.NextAccountNumber(ctx)
+	require.Equal(t, newNum, nextNum)
+
+	nextNum = ak.NextAccountNumber(ctx)
+	require.Equal(t, newNum+1, nextNum)
 }

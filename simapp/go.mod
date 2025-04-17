@@ -226,6 +226,7 @@ require (
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/x/circuit => ../x/circuit
+    cosmossdk.io/store => ../store
 )
 
 // Below are the long-lived replace of the SimApp

@@ -219,6 +219,10 @@ require (
 // 	<temporary replace>
 // )
 
+replace (
+    cosmossdk.io/store => ../store
+)
+
 // Below are the long-lived replace for tests.
 replace (
 	// We always want to test against the latest version of the simapp.

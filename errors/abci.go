@@ -5,6 +5,8 @@ import (
 	"reflect"
 )
 
+// blah blah blah.
+
 const (
 	// SuccessABCICode declares an ABCI response use 0 to signal that the
 	// processing was successful and no error is returned.

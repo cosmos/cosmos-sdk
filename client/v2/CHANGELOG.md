@@ -34,7 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v2.0.0-beta.9] - 2025-04-24
 
 ### Features
 

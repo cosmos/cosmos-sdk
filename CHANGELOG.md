@@ -66,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/feegrant) [24461](https://github.com/cosmos/cosmos-sdk/pull/24461) Use collections for `FeeAllowance`, `FeeAllowanceQueue`.
 * (x/bank) [#24431](https://github.com/cosmos/cosmos-sdk/pull/24431) Reduce the number of `ValidateDenom` calls in `bank.SendCoins` and `Coin`.
   * The `AmountOf()` method on`sdk.Coins` no longer will `panic` if given an invalid denom and will instead return a zero value.
 * (x/staking) [#24391](https://github.com/cosmos/cosmos-sdk/pull/24391) Replace panics with error results; more verbose error messages

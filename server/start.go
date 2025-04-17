@@ -533,6 +533,9 @@ func startAPIServer(
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
+	if cfg.Telemetry.OtlpExporterEnabled {
+		telemetry.StartOtlpExporter(cfg.Telemetry)
+	}
 	return telemetry.New(cfg.Telemetry)
 }
 

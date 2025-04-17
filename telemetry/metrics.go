@@ -90,6 +90,15 @@ type Config struct {
 	// DatadogHostname defines the hostname to use when emitting metrics to
 	// Datadog. Only utilized if MetricsSink is set to "dogstatsd".
 	DatadogHostname string `mapstructure:"datadog-hostname"`
+
+	// Otlp Exporter fields
+	OtlpExporterEnabled         bool          `mapstructure:"otlp-exporter-enabled"`
+	OtlpCollectorEndpoint       string        `mapstructure:"otlp-collector-endpoint"`
+	OtlpCollectorMetricsURLPath string        `mapstructure:"otlp-collector-metrics-url-path"`
+	OtlpUser                    string        `mapstructure:"otlp-user"`
+	OtlpToken                   string        `mapstructure:"otlp-token"`
+	OtlpServiceName             string        `mapstructure:"otlp-service-name"`
+	OtlpPushInterval            time.Duration `mapstructure:"otlp-push-interval"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows

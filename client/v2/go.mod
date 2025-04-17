@@ -2,8 +2,6 @@ module cosmossdk.io/client/v2
 
 go 1.23.2
 
-replace github.com/cosmos/cosmos-sdk => ../..
-
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.3

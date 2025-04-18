@@ -192,16 +192,16 @@ func (k Keeper) SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, 
 	msgType := authorization.MsgTypeURL()
 
 	// Ensure grantee is a valid bech32 address
-	_, err := sdk.AccAddressFromBech32(grantee.String())
-	if err != nil {
-		return fmt.Errorf("failed to convert grantee address to bytes: %w", err)
-	}
+	// _, err := sdk.AccAddressFromBech32(grantee.String())
+	// if err != nil {
+	// 	return fmt.Errorf("failed to convert grantee address to bytes: %w", err)
+	// }
 
-	// Ensure granter is a valid bech32 address
-	_, err = sdk.AccAddressFromBech32(granter.String())
-	if err != nil {
-		return fmt.Errorf("failed to convert granter address to bytes: %w", err)
-	}
+	// // Ensure granter is a valid bech32 address
+	// _, err = sdk.AccAddressFromBech32(granter.String())
+	// if err != nil {
+	// 	return fmt.Errorf("failed to convert granter address to bytes: %w", err)
+	// }
 
 	store := k.storeService.OpenKVStore(ctx)
 	skey := grantStoreKey(grantee, granter, msgType)

@@ -525,18 +525,18 @@ func (s *TestSuite) TestSaveGrant_AddressValidation() {
 			granter: validGranter,
 			wantErr: "",
 		},
-		// {
-		// 	name:    "both invalid",
-		// 	grantee: invalidAddr,
-		// 	granter: invalidAddr,
-		// 	wantErr: "failed to convert grantee address",
-		// },
-		// {
-		// 	name:    "valid grantee, invalid granter",
-		// 	grantee: validGrantee,
-		// 	granter: invalidAddr,
-		// 	wantErr: "failed to convert granter address",
-		// },
+		{
+			name:    "both invalid",
+			grantee: invalidAddr,
+			granter: invalidAddr,
+			wantErr: "failed to convert grantee address",
+		},
+		{
+			name:    "valid grantee, invalid granter",
+			grantee: validGrantee,
+			granter: invalidAddr,
+			wantErr: "failed to convert granter address",
+		},
 		{
 			name:    "invalid grantee, valid granter",
 			grantee: invalidAddr,

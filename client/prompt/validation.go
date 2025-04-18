@@ -1,9 +1,11 @@
-package client
+package prompt
 
 import (
 	"fmt"
 	"net/url"
 	"unicode"
+
+	"cosmossdk.io/core/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -17,6 +19,17 @@ func ValidatePromptNotEmpty(input string) error {
 	return nil
 }
 
+// ValidateAddress returns a validation function that checks if a string is a valid address for the given address codec.
+func ValidateAddress(ac address.Codec) func(string) error {
+	return func(i string) error {
+		if _, err := ac.StringToBytes(i); err != nil {
+			return fmt.Errorf("invalid address")
+		}
+
+		return nil
+	}
+}
+
 // ValidatePromptURL validates that the input is a valid URL.
 func ValidatePromptURL(input string) error {
 	_, err := url.ParseRequestURI(input)
@@ -28,6 +41,8 @@ func ValidatePromptURL(input string) error {
 }
 
 // ValidatePromptAddress validates that the input is a valid Bech32 address.
+// Deprecated: This function is not used and is deprecated.
+// It will be removed in future versions.
 func ValidatePromptAddress(input string) error {
 	_, err := sdk.AccAddressFromBech32(input)
 	if err == nil {

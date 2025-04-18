@@ -5,6 +5,7 @@ package systemtests
 import (
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -281,11 +282,21 @@ func TestContinuousFunds(t *testing.T) {
 	systemtests.Sut.StartChain(t)
 
 	govAddress := getGovAddress(t)
-	expiry := time.Now().Add(20 * time.Second).UTC()
-
-	t.Run("valid proposal", func(t *testing.T) {
-		// Create a valid new proposal JSON.
-		validProp := fmt.Sprintf(`
+	duration := 30 * time.Second
+	// wait long enough that it will be expired
+	buffer := 11 * time.Second
+	expiry := time.Now().Add(duration).UTC()
+	var balanceBefore int64
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
+	time.AfterFunc(duration+buffer, func() {
+		wg.Done()
+	})
+	go func() {
+		defer wg.Done()
+		t.Run("valid proposal", func(t *testing.T) {
+			// Create a valid new proposal JSON.
+			validProp := fmt.Sprintf(`
 {
 	"messages": [
 		{
@@ -300,33 +311,33 @@ func TestContinuousFunds(t *testing.T) {
 	"summary": "My awesome description",
 	"deposit": "%s"
 }`,
-			govAddress,
-			account1Addr,
-			expiry.Format(time.RFC3339),
-			sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(depositAmount)),
-		)
-		validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
-		defer validPropFile.Close()
+				govAddress,
+				account1Addr,
+				expiry.Format(time.RFC3339),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(depositAmount)),
+			)
+			validPropFile := systemtests.StoreTempFile(t, []byte(validProp))
+			defer validPropFile.Close()
 
-		submitGovProposal(t, valAddr, validPropFile)
-	})
+			submitGovProposal(t, valAddr, validPropFile)
+		})
 
-	// get balance before any distribution
-	balanceBefore := cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
-	voteAndEnsureProposalPassed(t, valAddr, 1)
+		// get balance before any distribution
+		balanceBefore = cli.QueryBalance(account1Addr, sdk.DefaultBondDenom)
+		voteAndEnsureProposalPassed(t, valAddr, 1)
 
-	// ensure that vote has passed
-	t.Run("ensure that the vote has passed", func(t *testing.T) {
-		// check that the fund exists
-		rsp := cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
-		gotExpiry := gjson.Get(rsp, "continuous_fund.expiry").Time()
-		require.Equal(t, expiry.Truncate(time.Second), gotExpiry.Truncate(time.Second))
-		recipient := gjson.Get(rsp, "continuous_fund.recipient").String()
-		require.Equal(t, account1Addr, recipient)
-	})
+		// ensure that vote has passed
+		t.Run("ensure that the vote has passed", func(t *testing.T) {
+			// check that the fund exists
+			rsp := cli.CustomQuery("q", protocolPoolModule, "continuous-fund", account1Addr)
+			gotExpiry := gjson.Get(rsp, "continuous_fund.expiry").Time()
+			require.Equal(t, expiry.Truncate(time.Second), gotExpiry.Truncate(time.Second))
+			recipient := gjson.Get(rsp, "continuous_fund.recipient").String()
+			require.Equal(t, account1Addr, recipient)
+		})
+	}()
 
-	// wait long enough that it will be expired
-	time.Sleep(11 * time.Second)
+	wg.Wait()
 	systemtests.Sut.AwaitNextBlock(t)
 
 	t.Run("check balance and that the fund is expired", func(t *testing.T) {

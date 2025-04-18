@@ -256,3 +256,30 @@ func TestManager_TakeError(t *testing.T) {
 	_, err = manager.Create(1)
 	require.Error(t, err)
 }
+
+type mockExtensionSnapshotter struct {
+	types.ExtensionSnapshotter
+	formats []uint32
+}
+
+func (m *mockExtensionSnapshotter) SnapshotName() string       { return "mock" }
+func (m *mockExtensionSnapshotter) SupportedFormats() []uint32 { return m.formats }
+
+func TestIsFormatSupported(t *testing.T) {
+	mockExtension := &mockExtensionSnapshotter{
+		formats: []uint32{1, 2},
+	}
+
+	t.Run("supported format", func(t *testing.T) {
+		require.True(t, snapshots.IsFormatSupported(mockExtension, 1))
+	})
+
+	t.Run("unsupported format", func(t *testing.T) {
+		require.False(t, snapshots.IsFormatSupported(mockExtension, 3))
+	})
+
+	t.Run("empty supported formats", func(t *testing.T) {
+		emptyExtension := &mockExtensionSnapshotter{formats: []uint32{}}
+		require.False(t, snapshots.IsFormatSupported(emptyExtension, 1))
+	})
+}

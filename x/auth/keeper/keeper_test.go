@@ -246,79 +246,81 @@ func setupAccountKeeper(t *testing.T) (sdk.Context, keeper.AccountKeeper, store.
 }
 
 func TestNextAccountNumber(t *testing.T) {
+	const newNum = uint64(100)
+	const legacyNum = uint64(50)
+	legacyVal := &gogotypes.UInt64Value{Value: legacyNum}
 	ctx, ak, storeService := setupAccountKeeper(t)
-	num := uint64(10)
-	val := &gogotypes.UInt64Value{
-		Value: num,
+	testCases := []struct {
+		name    string
+		setup   func()
+		onNext  func()
+		expects []uint64
+	}{
+		{
+			name: "reset account number to 0 after using legacy key",
+			setup: func() {
+				data, err := legacyVal.Marshal()
+				require.NoError(t, err)
+				store := storeService.OpenKVStore(ctx)
+				err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+				require.NoError(t, err)
+			},
+			onNext: func() {
+				num := uint64(0)
+				err := ak.AccountNumber.Set(ctx, num)
+				require.NoError(t, err)
+			},
+			expects: []uint64{legacyNum, 0},
+		},
+		{
+			name:    "no keys set, account number starts at 0",
+			setup:   func() {},
+			expects: []uint64{0, 1},
+		},
+		{
+			name: "fallback to legacy key when new key is unset",
+			setup: func() {
+				data, err := legacyVal.Marshal()
+				require.NoError(t, err)
+				store := storeService.OpenKVStore(ctx)
+				err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+				require.NoError(t, err)
+
+				// unset new key
+				err = (collections.Item[uint64])(ak.AccountNumber).Remove(ctx)
+				require.NoError(t, err)
+			},
+			expects: []uint64{legacyNum, legacyNum + 1},
+		},
+		{
+			name: "new key takes precedence over legacy key",
+			setup: func() {
+				data, err := legacyVal.Marshal()
+				require.NoError(t, err)
+				store := storeService.OpenKVStore(ctx)
+				err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+				require.NoError(t, err)
+
+				err = ak.AccountNumber.Set(ctx, newNum)
+				require.NoError(t, err)
+			},
+			expects: []uint64{newNum, newNum + 1},
+		},
 	}
-	data, err := val.Marshal()
-	require.NoError(t, err)
-	store := storeService.OpenKVStore(ctx)
-	err = store.Set(types.LegacyGlobalAccountNumberKey, data)
-	require.NoError(t, err)
 
-	nextNum := ak.NextAccountNumber(ctx)
-	require.Equal(t, num, nextNum)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, ak, storeService = setupAccountKeeper(t)
+			tc.setup()
+			nextNum := ak.NextAccountNumber(ctx)
+			require.Equal(t, tc.expects[0], nextNum)
 
-	num = uint64(0)
-	err = ak.AccountNumber.Set(ctx, num)
-	require.NoError(t, err)
+			if tc.onNext != nil {
+				tc.onNext()
+			}
 
-	nextNum = ak.NextAccountNumber(ctx)
-	require.Equal(t, num, nextNum)
-}
-
-func TestNextAccountNumber_NoKeysSet(t *testing.T) {
-	ctx, ak, _ := setupAccountKeeper(t)
-	nextNum := ak.NextAccountNumber(ctx)
-	require.Equal(t, uint64(0), nextNum)
-
-	nextNum = ak.NextAccountNumber(ctx)
-	require.Equal(t, uint64(1), nextNum)
-}
-
-func TestNextAccountNumber_LegacyFallback(t *testing.T) {
-	ctx, ak, storeService := setupAccountKeeper(t)
-	legacyNum := uint64(50)
-	val := &gogotypes.UInt64Value{
-		Value: legacyNum,
+			nextNum = ak.NextAccountNumber(ctx)
+			require.Equal(t, tc.expects[1], nextNum)
+		})
 	}
-	data, err := val.Marshal()
-	require.NoError(t, err)
-	store := storeService.OpenKVStore(ctx)
-	err = store.Set(types.LegacyGlobalAccountNumberKey, data)
-	require.NoError(t, err)
-
-	// unset new key
-	err = (collections.Item[uint64])(ak.AccountNumber).Remove(ctx)
-	require.NoError(t, err)
-
-	nextNum := ak.NextAccountNumber(ctx)
-	require.Equal(t, legacyNum, nextNum)
-
-	nextNum = ak.NextAccountNumber(ctx)
-	require.Equal(t, legacyNum+1, nextNum)
-}
-
-func TestNextAccountNumber_NewKeyPrecedence(t *testing.T) {
-	ctx, ak, storeService := setupAccountKeeper(t)
-	legacyNum := uint64(50)
-	val := &gogotypes.UInt64Value{
-		Value: legacyNum,
-	}
-	data, err := val.Marshal()
-	require.NoError(t, err)
-	store := storeService.OpenKVStore(ctx)
-	err = store.Set(types.LegacyGlobalAccountNumberKey, data)
-	require.NoError(t, err)
-
-	newNum := uint64(100)
-	err = ak.AccountNumber.Set(ctx, newNum)
-	require.NoError(t, err)
-
-	nextNum := ak.NextAccountNumber(ctx)
-	require.Equal(t, newNum, nextNum)
-
-	nextNum = ak.NextAccountNumber(ctx)
-	require.Equal(t, newNum+1, nextNum)
 }

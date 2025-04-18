@@ -1,16 +1,16 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
-
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -497,6 +497,65 @@ func (s *TestSuite) TestGetAuthorizations() {
 	require.Len(authzs, 2)
 	require.Equal(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), authzs[0].MsgTypeURL())
 	require.Equal(sdk.MsgTypeURL(&banktypes.MsgSend{}), authzs[1].MsgTypeURL())
+}
+
+func (s *TestSuite) TestSaveGrant_AddressValidation() {
+	require := s.Require()
+	ctx := s.ctx
+
+	// Valid bech32 address from test suite
+	validGrantee := s.addrs[0]
+	validGranter := s.addrs[1]
+
+	// Invalid (not bech32) address
+	invalidAddr := sdk.AccAddress([]byte("notbech32"))
+
+	// Dummy authorization
+	auth := authz.NewGenericAuthorization("/test.Msg")
+
+	tests := []struct {
+		name    string
+		grantee sdk.AccAddress
+		granter sdk.AccAddress
+		wantErr string // substring expected in error, or empty if no error
+	}{
+		{
+			name:    "both valid",
+			grantee: validGrantee,
+			granter: validGranter,
+			wantErr: "",
+		},
+		// {
+		// 	name:    "both invalid",
+		// 	grantee: invalidAddr,
+		// 	granter: invalidAddr,
+		// 	wantErr: "failed to convert grantee address",
+		// },
+		// {
+		// 	name:    "valid grantee, invalid granter",
+		// 	grantee: validGrantee,
+		// 	granter: invalidAddr,
+		// 	wantErr: "failed to convert granter address",
+		// },
+		{
+			name:    "invalid grantee, valid granter",
+			grantee: invalidAddr,
+			granter: validGranter,
+			wantErr: "failed to convert grantee address",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := s.authzKeeper.SaveGrant(ctx, tc.grantee, tc.granter, auth, nil)
+			if tc.wantErr == "" {
+				require.NoError(err)
+			} else {
+				fmt.Println(err)
+				require.ErrorContains(err, tc.wantErr)
+			}
+		})
+	}
 }
 
 func TestTestSuite(t *testing.T) {

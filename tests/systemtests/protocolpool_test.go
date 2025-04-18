@@ -281,7 +281,7 @@ func TestContinuousFunds(t *testing.T) {
 	systemtests.Sut.StartChain(t)
 
 	govAddress := getGovAddress(t)
-	expiry := time.Now().Add(20 * time.Second).UTC()
+	expiry := time.Now().Add(30 * time.Second).UTC()
 
 	t.Run("valid proposal", func(t *testing.T) {
 		// Create a valid new proposal JSON.

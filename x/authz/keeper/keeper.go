@@ -7,13 +7,12 @@ import (
 	"strconv"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/gogoproto/proto"
-
 	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -191,6 +190,19 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 func (k Keeper) SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	msgType := authorization.MsgTypeURL()
+
+	// Ensure grantee is a valid bech32 address
+	_, err := sdk.AccAddressFromBech32(grantee.String())
+	if err != nil {
+		return fmt.Errorf("failed to convert grantee address to bytes: %w", err)
+	}
+
+	// Ensure granter is a valid bech32 address
+	_, err = sdk.AccAddressFromBech32(granter.String())
+	if err != nil {
+		return fmt.Errorf("failed to convert granter address to bytes: %w", err)
+	}
+
 	store := k.storeService.OpenKVStore(ctx)
 	skey := grantStoreKey(grantee, granter, msgType)
 

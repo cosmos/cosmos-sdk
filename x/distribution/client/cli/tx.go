@@ -38,11 +38,7 @@ func NewTxCmd(valAc, ac address.Codec) *cobra.Command {
 	}
 
 	distTxCmd.AddCommand(
-		NewWithdrawRewardsCmd(valAc, ac),
 		NewWithdrawAllRewardsCmd(valAc, ac),
-		NewSetWithdrawAddrCmd(ac),
-		NewFundCommunityPoolCmd(ac),
-		NewDepositValidatorRewardsPoolCmd(valAc, ac),
 	)
 
 	return distTxCmd
@@ -72,6 +68,8 @@ func newSplitAndApply(
 }
 
 // NewWithdrawRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewWithdrawRewardsCmd(valCodec, ac address.Codec) *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -185,6 +183,8 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 }
 
 // NewSetWithdrawAddrCmd returns a CLI command handler for creating a MsgSetWithdrawAddress transaction.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewSetWithdrawAddrCmd(ac address.Codec) *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
@@ -224,6 +224,8 @@ $ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 }
 
 // NewFundCommunityPoolCmd returns a CLI command handler for creating a MsgFundCommunityPool transaction.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewFundCommunityPoolCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fund-community-pool [amount]",
@@ -265,6 +267,8 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 
 // NewDepositValidatorRewardsPoolCmd returns a CLI command handler for creating
 // a MsgDepositValidatorRewardsPool transaction.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewDepositValidatorRewardsPoolCmd(valCodec, ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fund-validator-rewards-pool [val_addr] [amount]",

@@ -1,6 +1,8 @@
 package v1
 
 import (
+	time "time"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -18,6 +20,7 @@ func NewMsgSubmitProposal(
 	initialDeposit sdk.Coins,
 	proposer, metadata, title, summary string,
 	expedited bool,
+	duration *time.Duration,
 ) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
@@ -26,6 +29,7 @@ func NewMsgSubmitProposal(
 		Title:          title,
 		Summary:        summary,
 		Expedited:      expedited,
+		Duration:       duration,
 	}
 
 	anys, err := sdktx.SetMsgs(messages)

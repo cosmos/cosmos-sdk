@@ -7,6 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Default period for deposits & voting
@@ -220,4 +221,43 @@ func (p Params) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// CalculateThresholdAndMinDeposit computes a dynamic Threshold and MinDeposit
+// based on a desired proposal duration, interpolating between the normal and expedited values.
+func (p Params) CalculateThresholdAndMinDeposit(duration time.Duration) (threshold string, minDeposit []types.Coin) {
+	// Ensure voting period ranges make sense
+	totalRange := p.VotingPeriod.Seconds() - p.ExpeditedVotingPeriod.Seconds()
+	var rate float64
+	if totalRange <= 0 {
+		// Fallback: use expedited values
+		return p.ExpeditedThreshold, p.ExpeditedMinDeposit
+	}
+	rate = (duration.Seconds() - p.ExpeditedVotingPeriod.Seconds()) / totalRange
+	// Clamp between 0 and 1
+	if rate < 0 {
+		rate = 0
+	} else if rate > 1 {
+		rate = 1
+	}
+	// Parse thresholds
+	normalTh := sdkmath.LegacyMustNewDecFromStr(p.Threshold)
+	expeditedTh := sdkmath.LegacyMustNewDecFromStr(p.ExpeditedThreshold)
+	deltaTh := expeditedTh.Sub(normalTh)
+	rateDec := sdkmath.LegacyMustNewDecFromStr(fmt.Sprintf("%.18f", rate))
+	dynTh := expeditedTh.Sub(deltaTh.Mul(rateDec))
+	threshold = dynTh.String()
+
+	// Interpolate MinDeposit coins
+	normalCoins := p.MinDeposit
+	expeditedCoins := p.ExpeditedMinDeposit
+	minDeposit = make([]sdk.Coin, 0, len(expeditedCoins))
+	for i, nc := range expeditedCoins {
+		ec := normalCoins[i]
+		diff := nc.Amount.Sub(ec.Amount)
+		scaled := sdkmath.LegacyNewDecFromInt(diff).Mul(rateDec).TruncateInt()
+		newAmt := nc.Amount.Sub(scaled)
+		minDeposit = append(minDeposit, sdk.NewCoin(nc.Denom, newAmt))
+	}
+	return
 }

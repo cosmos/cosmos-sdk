@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
@@ -282,7 +283,7 @@ func (k Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uint64) 
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
 // required at the time of proposal submission. This threshold amount is determined by
 // the deposit parameters. Returns nil on success, error otherwise.
-func (k Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, initialDeposit sdk.Coins, expedited bool) error {
+func (k Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, initialDeposit sdk.Coins, expedited bool, duration *time.Duration) error {
 	if !initialDeposit.IsValid() || initialDeposit.IsAnyNegative() {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, initialDeposit.String())
 	}
@@ -297,7 +298,12 @@ func (k Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, in
 
 	var minDepositCoins sdk.Coins
 	if expedited {
-		minDepositCoins = params.ExpeditedMinDeposit
+		if duration == nil {
+			minDepositCoins = params.ExpeditedMinDeposit
+		} else {
+			_, minDepositCoins = params.CalculateThresholdAndMinDeposit(*duration)
+		}
+
 	} else {
 		minDepositCoins = params.MinDeposit
 	}

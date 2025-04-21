@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -88,6 +89,7 @@ type proposal struct {
 	Title     string            `json:"title"`
 	Summary   string            `json:"summary"`
 	Expedited bool              `json:"expedited"`
+	Duration  time.Duration     `json:"duration"`
 }
 
 // parseSubmitProposal reads and parses the proposal.

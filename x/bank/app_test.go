@@ -389,6 +389,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"Change send enabled",
 		"Modify send enabled and set to true",
 		false,
+		nil,
 	)
 	require.NoError(t, err, "making goodGovProp")
 

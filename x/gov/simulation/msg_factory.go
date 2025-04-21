@@ -166,6 +166,7 @@ func submitProposalWithVotesScheduled(
 		r.StringN(100),
 		r.StringN(100),
 		expedited,
+		nil,
 	)
 	if err != nil {
 		reporter.Skip("unable to generate a submit proposal msg")

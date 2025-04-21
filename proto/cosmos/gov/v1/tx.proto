@@ -9,6 +9,7 @@ import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
@@ -85,6 +86,11 @@ message MsgSubmitProposal {
 
   // expedited defines if the proposal is expedited or not
   bool expedited = 7 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
+
+  // this field that can be used to set a desired proposal duration which
+  // will be used to generate the required quorum for passing
+  google.protobuf.Duration duration = 8
+      [(gogoproto.stdduration) = true, (gogoproto.jsontag) = "max_deposit_period,omitempty"];
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.

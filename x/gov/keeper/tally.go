@@ -194,7 +194,12 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 	// For expedited 2/3
 	var thresholdStr string
 	if proposal.Expedited {
-		thresholdStr = params.GetExpeditedThreshold()
+		if proposal.Duration != nil {
+			thresholdStr, _ = params.CalculateThresholdAndMinDeposit(*proposal.Duration)
+		} else {
+			thresholdStr = params.GetExpeditedThreshold()
+
+		}
 	} else {
 		thresholdStr = params.GetThreshold()
 	}

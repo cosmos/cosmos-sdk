@@ -89,7 +89,7 @@ type proposal struct {
 	Title     string            `json:"title"`
 	Summary   string            `json:"summary"`
 	Expedited bool              `json:"expedited"`
-	Duration  time.Duration     `json:"duration"`
+	Duration  Duration          `json:"duration"`
 }
 
 // parseSubmitProposal reads and parses the proposal.
@@ -186,4 +186,24 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 // Deprecated: use ReadPropCmdFlags instead, as this depends on global bech32 prefixes.
 func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
 	return ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
+}
+
+type Duration time.Duration
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	duration, err := time.ParseDuration(s)
+	if err != nil {
+		return err
+	}
+	*d = Duration(duration)
+	return nil
+}
+
+func (d Duration) ToDuration() *time.Duration {
+	duration := time.Duration(d)
+	return &duration
 }

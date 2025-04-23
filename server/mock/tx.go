@@ -118,6 +118,9 @@ func (msg *KVStoreTx) ValidateBasic() error {
 }
 
 func (msg *KVStoreTx) GetSigners() ([][]byte, error) {
+	if msg.address == nil {
+		return [][]byte{}, nil
+	}
 	return [][]byte{msg.address.Bytes()}, nil
 }
 

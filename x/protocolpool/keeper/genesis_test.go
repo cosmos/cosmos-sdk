@@ -30,28 +30,6 @@ func (suite *KeeperTestSuite) TestInitExportGenesis() {
 	suite.Require().Equal(gs.ContinuousFunds, exportedGenState.ContinuousFunds)
 }
 
-func (suite *KeeperTestSuite) TestInitGenesisDuplicateAddress() {
-	suite.bankKeeper.EXPECT().BlockedAddr(recipientAddr).Return(false).Times(1)
-
-	gs := types.NewGenesisState(
-		[]types.ContinuousFund{
-			{
-				Recipient:  recipientAddr.String(),
-				Percentage: math.LegacyMustNewDecFromStr("0.1"),
-				Expiry:     nil,
-			},
-			{
-				Recipient:  recipientAddr.String(),
-				Percentage: math.LegacyMustNewDecFromStr("0.1"),
-				Expiry:     nil,
-			},
-		},
-	)
-
-	err := suite.poolKeeper.InitGenesis(suite.ctx, gs)
-	suite.Require().Error(err)
-}
-
 func (suite *KeeperTestSuite) TestInitExportGenesis_BlockedAddress() {
 	suite.bankKeeper.EXPECT().BlockedAddr(recipientAddr).Return(true).Times(1)
 

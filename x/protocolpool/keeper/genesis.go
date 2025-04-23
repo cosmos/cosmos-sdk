@@ -15,18 +15,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) error {
 		return fmt.Errorf("failed to set params: %w", err)
 	}
 
-	seenContinuousFunds := make(map[string]struct{})
-
 	for _, cf := range data.ContinuousFunds {
 		recipientAddress, err := k.authKeeper.AddressCodec().StringToBytes(cf.Recipient)
 		if err != nil {
 			return fmt.Errorf("failed to decode recipient address: %w", err)
 		}
-
-		if _, ok := seenContinuousFunds[string(recipientAddress)]; ok {
-			return fmt.Errorf("duplicated recipient address: %s", recipientAddress)
-		}
-		seenContinuousFunds[string(recipientAddress)] = struct{}{}
 
 		if k.bankKeeper.BlockedAddr(recipientAddress) {
 			return fmt.Errorf("recipient is blocked in the bank keeper: %s", recipientAddress)

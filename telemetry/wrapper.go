@@ -8,6 +8,7 @@ import (
 
 // Common metric key constants
 const (
+	MetricKeyPreBlocker   = "pre_blocker"
 	MetricKeyBeginBlocker = "begin_blocker"
 	MetricKeyEndBlocker   = "end_blocker"
 	MetricLabelNameModule = "module"

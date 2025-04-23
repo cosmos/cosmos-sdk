@@ -4,6 +4,8 @@ sidebar_position: 1
 
 # `x/mint`
 
+The `x/mint` module handles the regular minting of new tokens in a configurable manner.
+
 ## Contents
 
 * [State](#state)
@@ -25,7 +27,7 @@ sidebar_position: 1
 
 ### The Minting Mechanism
 
-The minting mechanism was designed to:
+The default minting mechanism was designed to:
 
 * allow for a flexible inflation rate determined by market demand targeting a particular bonded-stake ratio
 * effect a balance between market liquidity and staked supply
@@ -46,6 +48,31 @@ It can be broken down in the following way:
 * If the actual percentage of bonded tokens is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
 
+### Custom Minters
+
+As of Cosmos SDK v0.53.0, developers can set a custom `MintFn` for the module for specialized token minting logic.
+
+The function signature that a `MintFn` must implement is as follows:
+
+```go
+// MintFn defines the function that needs to be implemented in order to customize the minting process.
+type MintFn func(ctx sdk.Context, k *Keeper) error
+```
+
+This can be passed to the `Keeper` upon creation with an additional `Option`:
+
+```go
+app.MintKeeper = mintkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
+		app.StakingKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// mintkeeper.WithMintFn(CUSTOM_MINT_FN), // custom mintFn can be added here
+	)
+```
 
 ## State
 

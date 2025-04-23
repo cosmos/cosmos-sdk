@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -32,8 +33,20 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	// send tokens
-	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", "--timeout-timestamp=8m", "--unordered", "--sequence=1", "--note=1"}
+	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", "--timeout-timestamp=5m", "--unordered", "--sequence=1", "--note=1", "--chain-id=testing", "--generate-only"}
 	rsp1 := cli.Run(cmd...)
+	txFile := testutil.TempFile(t)
+	_, err := txFile.WriteString(rsp1)
+	require.NoError(t, err)
+
+	signCmd := []string{"tx", "sign", txFile.Name(), "--from=", account1Addr, "--chain-id=testing"}
+	rsp1 = cli.Run(signCmd...)
+
+	signedFile := testutil.TempFile(t)
+	signedFile.WriteString(rsp1)
+
+	cmd = []string{"tx", "broadcast", signedFile.Name(), "--chain-id=testing"}
+	rsp1 = cli.Run(cmd...)
 	systest.RequireTxSuccess(t, rsp1)
 
 	assertDuplicateErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
@@ -44,6 +57,10 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 		require.Equal(t, int64(19), code.Int()) // 19 == already in mempool.
 		return false                            // always abort
 	}
+	rsp1 = cli.Run(signCmd...)
+	signedFileDuplicate := testutil.TempFile(t)
+	signedFileDuplicate.WriteString(rsp1)
+	cmd = []string{"tx", "broadcast", signedFileDuplicate.Name(), "--chain-id=testing"}
 	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run(cmd...)
 	systest.RequireTxFailure(t, rsp2)
 

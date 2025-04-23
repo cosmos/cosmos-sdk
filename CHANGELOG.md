@@ -105,6 +105,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#24074](https://github.com/cosmos/cosmos-sdk/pull/24074) Use CometBFT's ComputeProtoSizeForTxs in defaultTxSelector.SelectTxForProposal for consistency.
 * (cli) [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Prune cmd should disable async pruning.
 * (x/auth) [#19239](https://github.com/cosmos/cosmos-sdk/pull/19239) Sets from flag in multi-sign command to avoid no key name provided error.
+* (x/auth) [#23741](https://github.com/cosmos/cosmos-sdk/pull/23741) Support legacy global AccountNumber for legacy compatibility.
 * (baseapp) [#24526](https://github.com/cosmos/cosmos-sdk/pull/24526) Fix incorrect retention height when `commitHeight` equals `minRetainBlocks`.
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20

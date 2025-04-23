@@ -73,7 +73,9 @@ func (msg *KVStoreTx) Equals(key cryptotypes.PubKey) bool {
 
 // dummy implementation of proto.Message
 func (msg *KVStoreTx) Reset()         {}
-func (msg *KVStoreTx) String() string { return "TODO" }
+func (msg *KVStoreTx) String() string {
+	return fmt.Sprintf("KVStoreTx{key=%s, value=%s, address=%s}", msg.key, msg.value, msg.address)
+}
 func (msg *KVStoreTx) ProtoMessage()  {}
 
 var (
@@ -116,7 +118,7 @@ func (msg *KVStoreTx) ValidateBasic() error {
 }
 
 func (msg *KVStoreTx) GetSigners() ([][]byte, error) {
-	return nil, nil
+	return [][]byte{msg.address.Bytes()}, nil
 }
 
 func (msg *KVStoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }

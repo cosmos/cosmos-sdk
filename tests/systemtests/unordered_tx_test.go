@@ -34,14 +34,13 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 
 	// send tokens
 	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", "--timeout-timestamp=5m", "--unordered", "--sequence=1", "--note=1", "--chain-id=testing", "--generate-only"}
-	rsp1 := cli.Run(cmd...)
+	rsp1, _ := cli.RunOnly(cmd...)
 	txFile := testutil.TempFile(t)
 	_, err := txFile.WriteString(rsp1)
 	require.NoError(t, err)
 
 	signCmd := []string{"tx", "sign", txFile.Name(), "--from=", account1Addr, "--chain-id=testing"}
-	rsp1 = cli.Run(signCmd...)
-
+	rsp1, _ = cli.RunOnly(signCmd...)
 	signedFile := testutil.TempFile(t)
 	signedFile.WriteString(rsp1)
 
@@ -57,9 +56,10 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 		require.Equal(t, int64(19), code.Int()) // 19 == already in mempool.
 		return false                            // always abort
 	}
-	rsp1 = cli.Run(signCmd...)
+	rsp1, _ = cli.RunOnly(signCmd...)
 	signedFileDuplicate := testutil.TempFile(t)
 	signedFileDuplicate.WriteString(rsp1)
+
 	cmd = []string{"tx", "broadcast", signedFileDuplicate.Name(), "--chain-id=testing"}
 	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run(cmd...)
 	systest.RequireTxFailure(t, rsp2)

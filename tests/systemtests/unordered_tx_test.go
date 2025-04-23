@@ -31,9 +31,8 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 
 	systest.Sut.StartChain(t)
 
-	timeoutTimestamp := time.Now().Add(time.Minute)
 	// send tokens
-	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1", "--note=1"}
+	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", "--timeout-timestamp=1m", "--unordered", "--sequence=1", "--note=1"}
 	rsp1 := cli.Run(cmd...)
 	systest.RequireTxSuccess(t, rsp1)
 
@@ -86,7 +85,7 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	code := gjson.Get(response, "code").Int()
 	require.Equal(t, int64(0), code)
 
-	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct", "--unordered", "--timeout-timestamp=10000"}
+	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct", "--unordered", "--timeout-timestamp=5m"}
 	res, ok = v53CLI.RunOnly(bankSendCmdArgs...)
 	require.True(t, ok)
 

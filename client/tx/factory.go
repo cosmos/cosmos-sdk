@@ -88,8 +88,11 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 
 	gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)
 	memo := clientCtx.Viper.GetString(flags.FlagNote)
-	timestampUnix := clientCtx.Viper.GetInt64(flags.FlagTimeoutTimestamp)
-	timeoutTimestamp := time.Unix(timestampUnix, 0)
+	timeout := clientCtx.Viper.GetDuration(flags.TimeoutDuration)
+	var timeoutTimestamp time.Time
+	if timeout > 0 {
+		timeoutTimestamp = time.Now().Add(timeout)
+	}
 	timeoutHeight := clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
 	unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
 

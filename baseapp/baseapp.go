@@ -434,7 +434,7 @@ func (app *BaseApp) Mempool() mempool.Mempool {
 // nil otherwise. Panics if the app is already sealed.
 func (app *BaseApp) Init() error {
 	if app.sealed {
-		panic("cannot call initFromMainStore: baseapp already sealed")
+		panic("cannot call  initFromMainStore: baseapp already sealed")
 	}
 
 	if app.cms == nil {

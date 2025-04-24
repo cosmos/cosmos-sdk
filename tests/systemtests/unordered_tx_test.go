@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
@@ -18,8 +17,8 @@ import (
 func TestUnorderedTXDuplicate(t *testing.T) {
 	// scenario: test unordered tx duplicate
 	// given a running chain with a tx in the unordered tx pool
-	// when a new tx with the same hash is broadcasted
-	// then the new tx should be rejected
+	// when a new tx with the same unordered nonce is broadcasted,
+	// then the new tx should be rejected.
 
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -33,36 +32,27 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	// send tokens
-	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", "--timeout-timestamp=5m", "--unordered", "--sequence=1", "--note=1", "--chain-id=testing", "--generate-only"}
-	rsp1, _ := cli.RunOnly(cmd...)
+	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", "--timeout-timestamp=5m", "--unordered", "--note=1", "--chain-id=testing", "--generate-only"}
+	rsp1 := cli.RunCommandWithArgs(cmd...)
 	txFile := testutil.TempFile(t)
 	_, err := txFile.WriteString(rsp1)
 	require.NoError(t, err)
 
-	signCmd := []string{"tx", "sign", txFile.Name(), "--from=", account1Addr, "--chain-id=testing"}
-	rsp1, _ = cli.RunOnly(signCmd...)
+	signCmd := []string{"tx", "sign", txFile.Name(), "--from=" + account1Addr, "--chain-id=testing"}
+	rsp1 = cli.RunCommandWithArgs(signCmd...)
 	signedFile := testutil.TempFile(t)
 	signedFile.WriteString(rsp1)
 
 	cmd = []string{"tx", "broadcast", signedFile.Name(), "--chain-id=testing"}
-	rsp1 = cli.Run(cmd...)
+	rsp1 = cli.RunCommandWithArgs(cmd...)
 	systest.RequireTxSuccess(t, rsp1)
 
-	assertDuplicateErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-		require.Len(t, gotOutputs, 1)
-		output := gotOutputs[0].(string)
-		code := gjson.Get(output, "code")
-		require.True(t, code.Exists())
-		require.Equal(t, int64(19), code.Int()) // 19 == already in mempool.
-		return false                            // always abort
-	}
-	rsp1, _ = cli.RunOnly(signCmd...)
-	signedFileDuplicate := testutil.TempFile(t)
-	signedFileDuplicate.WriteString(rsp1)
-
-	cmd = []string{"tx", "broadcast", signedFileDuplicate.Name(), "--chain-id=testing"}
-	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run(cmd...)
+	cmd = []string{"tx", "broadcast", signedFile.Name(), "--chain-id=testing"}
+	rsp2, _ := cli.RunOnly(cmd...)
 	systest.RequireTxFailure(t, rsp2)
+	code := gjson.Get(rsp2, "code")
+	require.True(t, code.Exists())
+	require.Equal(t, int64(19), code.Int())
 
 	require.Eventually(t, func() bool {
 		return cli.QueryBalance(account2Addr, "stake") == 5000

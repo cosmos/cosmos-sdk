@@ -100,13 +100,16 @@ type AppModule struct {
 // PreBlock cleans up expired unordered transaction nonces from state.
 // Please ensure to add `x/auth`'s module name to the OrderPreBlocker list in your application.
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
-	start := telemetry.Now()
-	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyPreBlocker)
-	err := am.accountKeeper.RemoveExpiredUnorderedNonces(sdk.UnwrapSDKContext(ctx))
-	if err != nil {
-		return nil, err
+	if am.accountKeeper.IsUnorderedTransactionsEnabled() {
+		start := telemetry.Now()
+		defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyPreBlocker)
+		err := am.accountKeeper.RemoveExpiredUnorderedNonces(sdk.UnwrapSDKContext(ctx))
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
+
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -218,6 +221,8 @@ type ModuleInputs struct {
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
+
+	EnableUnorderedTransactions bool `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -247,7 +252,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String())
+	opts := []keeper.InitOption{
+		keeper.WithUnorderedTransactions(in.EnableUnorderedTransactions),
+	}
+
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String(), opts...)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

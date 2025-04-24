@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -218,15 +219,49 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak              AccountKeeper
-	signModeHandler *txsigning.HandlerMap
+	ak                   AccountKeeper
+	signModeHandler      *txsigning.HandlerMap
+	maxTxTimeoutDuration time.Duration
+	unorderedTxGasCost   uint64
+	unorderedTxManager   UnorderedNonceManager
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap) SigVerificationDecorator {
-	return SigVerificationDecorator{
-		ak:              ak,
-		signModeHandler: signModeHandler,
+type SigVerificationDecoratorOption func(svd *SigVerificationDecorator)
+
+func WithMaxTxTimeoutDuration(duration time.Duration) SigVerificationDecoratorOption {
+	return func(svd *SigVerificationDecorator) {
+		svd.maxTxTimeoutDuration = duration
 	}
+}
+
+func WithUnorderedTxGasCost(gasCost uint64) SigVerificationDecoratorOption {
+	return func(svd *SigVerificationDecorator) {
+		svd.unorderedTxGasCost = gasCost
+	}
+}
+
+const (
+	// DefaultMaxTimoutDuration defines a default maximum TTL a transaction can define.
+	DefaultMaxTimoutDuration = 10 * time.Minute
+	// DefaultUnorderedTxGasCost defines a default gas cost for unordered transactions.
+	// We must charge extra gas for unordered transactions
+	// as they incur extra processing time for cleaning up the expired txs in x/auth PreBlocker.
+	// Note: this value was chosen by 2x-ing the cost of fetching and removing an unordered nonce entry.
+	DefaultUnorderedTxGasCost = uint64(2240)
+)
+
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, opts ...SigVerificationDecoratorOption) SigVerificationDecorator {
+	svd := SigVerificationDecorator{
+		ak:                 ak,
+		signModeHandler:    signModeHandler,
+		unorderedTxManager: ak.(UnorderedNonceManager),
+	}
+
+	for _, opt := range opts {
+		opt(&svd)
+	}
+
+	return svd
 }
 
 // OnlyLegacyAminoSigners checks SignatureData to see if all
@@ -258,6 +293,11 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	utx, ok := tx.(sdk.TxWithUnordered)
 	isUnordered := ok && utx.GetUnordered()
+	unorderedEnabled := svd.ak.IsUnorderedTransactionsEnabled()
+
+	if isUnordered && !unorderedEnabled {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "unordered transactions are disabled")
+	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
@@ -289,7 +329,11 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// Check account sequence number.
-		if !isUnordered {
+		if isUnordered {
+			if err := svd.verifyUnorderedSequence(ctx, utx); err != nil {
+				return ctx, err
+			}
+		} else {
 			if sig.Sequence != acc.GetSequence() {
 				return ctx, errorsmod.Wrapf(
 					sdkerrors.ErrWrongSequence,
@@ -344,6 +388,69 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	return next(ctx, tx, simulate)
 }
 
+// verifyUnorderedSequence verifies the unordered nonce of an unordered transaction.
+// This checks that:
+// 1. The unordered transaction's timeout timestamp is set.
+// 2. The unordered transaction's timeout timestamp is not in the past.
+// 3. The unordered transaction's timeout timestamp is not more than the max TTL.
+// 4. The unordered transaction's nonce has not been used previously.
+//
+// If all the checks above pass, the nonce is marked as used for each signer of the transaction.
+func (svd SigVerificationDecorator) verifyUnorderedSequence(ctx sdk.Context, unorderedTx sdk.TxWithUnordered) error {
+	blockTime := ctx.BlockTime()
+	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
+	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"unordered transaction must have timeout_timestamp set",
+		)
+	}
+	if timeoutTimestamp.Before(blockTime) {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"unordered transaction has a timeout_timestamp that has already passed",
+		)
+	}
+	if timeoutTimestamp.After(blockTime.Add(svd.maxTxTimeoutDuration)) {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"unordered tx ttl exceeds %s",
+			svd.maxTxTimeoutDuration.String(),
+		)
+	}
+
+	ctx.GasMeter().ConsumeGas(svd.unorderedTxGasCost, "unordered tx")
+
+	execMode := ctx.ExecMode()
+	if execMode == sdk.ExecModeSimulate {
+		return nil
+	}
+
+	signerAddrs, err := extractSignersBytes(unorderedTx)
+	if err != nil {
+		return err
+	}
+
+	for _, signerAddr := range signerAddrs {
+		if err := svd.unorderedTxManager.TryAddUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"failed to add unordered nonce: %s", err,
+			)
+		}
+	}
+
+	return nil
+}
+
+func extractSignersBytes(tx sdk.Tx) ([][]byte, error) {
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+	}
+	return sigTx.GetSigners()
+}
+
 // IncrementSequenceDecorator handles incrementing sequences of all signers.
 // Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
 // there is need to execute IncrementSequenceDecorator on RecheckTx since
@@ -365,6 +472,9 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	if utx, ok := tx.(sdk.TxWithUnordered); ok && utx.GetUnordered() {
+		if !isd.ak.IsUnorderedTransactionsEnabled() {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "unordered transactions are disabled")
+		}
 		return next(ctx, tx, simulate)
 	}
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)

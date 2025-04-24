@@ -18,6 +18,7 @@ type AccountKeeper interface {
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	AddressCodec() address.Codec
+	IsUnorderedTransactionsEnabled() bool
 }
 
 // UnorderedNonceManager defines the contract needed for UnorderedNonce management.

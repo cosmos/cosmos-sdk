@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"

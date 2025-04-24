@@ -60,7 +60,7 @@ func doRejectUnknownFields(
 
 	desc, ok := msg.(descriptorIface)
 	if !ok {
-		return hasUnknownNonCriticals, fmt.Errorf("%T does not have a Descriptor() method", msg)
+		return hasUnknownNonCriticals, fmt.Errorf("%T does not  have a Descriptor() method", msg)
 	}
 
 	fieldDescProtoFromTagNum, _, err := getDescriptorInfo(desc, msg)

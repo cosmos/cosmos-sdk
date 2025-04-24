@@ -11,6 +11,7 @@ import (
 	io "io"
 	reflect "reflect"
 	sync "sync"
+	errors "errors"
 )
 
 var (
@@ -114,7 +115,7 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Authority != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
+			panic(errors.New("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
 		}
 		panic(fmt.Errorf("message cosmos.circuit.module.v1.Module does not contain field %s", fd.FullName()))
 	}
@@ -132,7 +133,7 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 		x.Authority = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
+			panic(errors.New("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
 		}
 		panic(fmt.Errorf("message cosmos.circuit.module.v1.Module does not contain field %s", fd.FullName()))
 	}
@@ -151,7 +152,7 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
+			panic(errors.New("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
 		}
 		panic(fmt.Errorf("message cosmos.circuit.module.v1.Module does not contain field %s", descriptor.FullName()))
 	}
@@ -173,7 +174,7 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 		x.Authority = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
+			panic(errors.New("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
 		}
 		panic(fmt.Errorf("message cosmos.circuit.module.v1.Module does not contain field %s", fd.FullName()))
 	}
@@ -192,10 +193,10 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.circuit.module.v1.Module.authority":
-		panic(fmt.Errorf("field authority of message cosmos.circuit.module.v1.Module is not mutable"))
+		panic(errors.New("field authority of message cosmos.circuit.module.v1.Module is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
+			panic(errors.New("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
 		}
 		panic(fmt.Errorf("message cosmos.circuit.module.v1.Module does not contain field %s", fd.FullName()))
 	}
@@ -210,7 +211,7 @@ func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
+			panic(errors.New("proto3 declared messages do not support extensions: cosmos.circuit.module.v1.Module"))
 		}
 		panic(fmt.Errorf("message cosmos.circuit.module.v1.Module does not contain field %s", fd.FullName()))
 	}
@@ -360,7 +361,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Module: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, errors.New("proto: Module: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Module: illegal tag %d (wire type %d)", fieldNum, wire)

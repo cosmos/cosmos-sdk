@@ -27,12 +27,12 @@ const (
 	DefaultWeightMsgUndelegate                  int = 100
 	DefaultWeightMsgBeginRedelegate             int = 100
 	DefaultWeightMsgCancelUnbondingDelegation   int = 100
-	DefaultWeightMsgValidatorBond               int = 100
-	DefaultWeightMsgTokenizeShares              int = 25
-	DefaultWeightMsgRedeemTokensforShares       int = 25
-	DefaultWeightMsgTransferTokenizeShareRecord int = 5
-	DefaultWeightMsgEnableTokenizeShares        int = 1
-	DefaultWeightMsgDisableTokenizeShares       int = 1
+	DefaultWeightMsgValidatorBond               int = 0
+	DefaultWeightMsgTokenizeShares              int = 0
+	DefaultWeightMsgRedeemTokensforShares       int = 0
+	DefaultWeightMsgTransferTokenizeShareRecord int = 0
+	DefaultWeightMsgEnableTokenizeShares        int = 0
+	DefaultWeightMsgDisableTokenizeShares       int = 0
 
 	OpWeightMsgCreateValidator             = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator               = "op_weight_msg_edit_validator"

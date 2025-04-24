@@ -4,7 +4,7 @@ package keeper
 import (
 	"cosmossdk.io/core/address"
 	store "cosmossdk.io/core/store"
-	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft" //nolint:staticcheck // deprecated and to be removed
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

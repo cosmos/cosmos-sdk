@@ -5,6 +5,7 @@ import (
 	"io"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
@@ -58,6 +59,9 @@ type (
 
 		// Return the snapshot manager
 		SnapshotManager() *snapshots.Manager
+
+		// ValidatorKeyProvider returns a function that generates a validator key
+		ValidatorKeyProvider() func() (cmtcrypto.PrivKey, error)
 
 		// Close is called in start cmd to gracefully cleanup resources.
 		// Must be safe to be called multiple times.

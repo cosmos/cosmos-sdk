@@ -15,9 +15,9 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -308,10 +308,10 @@ func TestABCI_ExtendVote(t *testing.T) {
 		// do some kind of verification here
 		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
-			return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 		}
 
-		return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	})
 
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
@@ -355,16 +355,16 @@ func TestABCI_ExtendVote(t *testing.T) {
 	// First vote on the first enabled height
 	vres, err := app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT, vres.Status)
 
 	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT, vres.Status)
 
 	// Reject because it's just some random bytes
 	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT, vres.Status)
 
 	// Reject because the verification failed (no error)
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
@@ -372,7 +372,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 	})
 	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT, vres.Status)
 }
 
 // TestABCI_OnlyVerifyVoteExtension makes sure we can call VerifyVoteExtension
@@ -386,10 +386,10 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 		// do some kind of verification here
 		expectedVoteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
 		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
-			return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 		}
 
-		return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	})
 
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
@@ -412,16 +412,16 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	// First vote on the first enabled height
 	vres, err := app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 200, Hash: []byte("thehash"), VoteExtension: []byte("foo74686568617368200")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT, vres.Status)
 
 	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 1000, Hash: []byte("thehash"), VoteExtension: []byte("foo746865686173681000")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_ACCEPT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT, vres.Status)
 
 	// Reject because it's just some random bytes
 	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT, vres.Status)
 
 	// Reject because the verification failed (no error)
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
@@ -429,7 +429,7 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	})
 	vres, err = app.VerifyVoteExtension(&abci.VerifyVoteExtensionRequest{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+	require.Equal(t, abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT, vres.Status)
 }
 
 func TestABCI_GRPCQuery(t *testing.T) {
@@ -589,7 +589,10 @@ func TestABCI_CheckTx(t *testing.T) {
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
-		r, err := suite.baseApp.CheckTx(&abci.CheckTxRequest{Tx: txBytes})
+		r, err := suite.baseApp.CheckTx(&abci.CheckTxRequest{
+			Type: abci.CHECK_TX_TYPE_CHECK,
+			Tx:   txBytes,
+		})
 		require.NoError(t, err)
 		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 		require.Empty(t, r.GetEvents())
@@ -1422,7 +1425,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 
 	reqCheckTx := abci.CheckTxRequest{
 		Tx:   txBytes,
-		Type: abci.CheckTxType_New,
+		Type: abci.CHECK_TX_TYPE_CHECK,
 	}
 	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
@@ -1454,7 +1457,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 
 	// the same txs as in PrepareProposal
 	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
@@ -1512,7 +1515,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 }
 
 func TestABCI_Proposals_WithVE(t *testing.T) {
@@ -1537,7 +1540,7 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 		bapp.SetProcessProposal(func(ctx sdk.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
 			// Check that the vote extension is still there
 			require.Equal(t, someVoteExtension, req.Txs[0])
-			return &abci.ProcessProposalResponse{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+			return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT}, nil
 		})
 	}
 
@@ -1563,7 +1566,7 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 	}
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 
 	// Run finalize block and ensure that the vote extension is still there and that
 	// the proposal is accepted
@@ -1737,7 +1740,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 
 	reqCheckTx := abci.CheckTxRequest{
 		Tx:   txBytes,
-		Type: abci.CheckTxType_New,
+		Type: abci.CHECK_TX_TYPE_CHECK,
 	}
 	checkTxRes, err := suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
@@ -1927,7 +1930,7 @@ func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	require.NotPanics(t, func() {
 		res, err := suite.baseApp.ProcessProposal(&abci.ProcessProposalRequest{Height: 1})
 		require.NoError(t, err)
-		require.Equal(t, res.Status, abci.ResponseProcessProposal_REJECT)
+		require.Equal(t, res.Status, abci.PROCESS_PROPOSAL_STATUS_REJECT)
 	})
 }
 
@@ -1952,7 +1955,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 			// This key should not exist given that we reset the state on every call.
 			require.False(t, ctx.KVStore(capKey1).Has(someKey))
 			ctx.KVStore(capKey1).Set(someKey, someKey)
-			return &abci.ProcessProposalResponse{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+			return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT}, nil
 		})
 	}
 
@@ -1987,7 +1990,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	for range 5 {
 		resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 		require.NoError(t, err)
-		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+		require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 	}
 }
 
@@ -2110,10 +2113,10 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			// here we would do some price validation, must not be 0 and not too high
 			if vePrice > 11000000 || vePrice == 0 {
 				// usually application should always return ACCEPT unless they really want to discard the entire vote
-				return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+				return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 			}
 
-			return &abci.VerifyVoteExtensionResponse{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 		})
 
 		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
@@ -2144,12 +2147,12 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				if len(v) == 8 {
 					// pretend this is a way to check if the VE is valid
 					if binary.BigEndian.Uint64(v) > 11000000 || binary.BigEndian.Uint64(v) == 0 {
-						return &abci.ProcessProposalResponse{Status: abci.ResponseProcessProposal_REJECT}, nil
+						return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_REJECT}, nil
 					}
 				}
 			}
 
-			return &abci.ProcessProposalResponse{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+			return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT}, nil
 		})
 
 		app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) (*sdk.ResponsePreBlock, error) {
@@ -2215,7 +2218,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			VoteExtension: v,
 		})
 		require.NoError(t, err)
-		if res.Status == abci.ResponseVerifyVoteExtension_ACCEPT {
+		if res.Status == abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT {
 			successful++
 		}
 	}
@@ -2263,7 +2266,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	procPropRes, err := suite.baseApp.ProcessProposal(&abci.ProcessProposalRequest{Height: 1, Txs: resp.Txs})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, procPropRes.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, procPropRes.Status)
 
 	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: resp.Txs})
 	require.NoError(t, err)
@@ -2310,7 +2313,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	procPropRes, err = suite.baseApp.ProcessProposal(&abci.ProcessProposalRequest{Height: 2, Txs: resp.Txs})
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, procPropRes.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, procPropRes.Status)
 
 	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2, Txs: resp.Txs})
 	require.NoError(t, err)
@@ -2387,7 +2390,7 @@ func TestOptimisticExecution(t *testing.T) {
 		}
 
 		respProcProp, err := suite.baseApp.ProcessProposal(&reqProcProp)
-		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, respProcProp.Status)
+		require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, respProcProp.Status)
 		require.NoError(t, err)
 
 		reqFinalizeBlock := abci.FinalizeBlockRequest{
@@ -2440,7 +2443,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 
 	reqCheckTx := abci.CheckTxRequest{
 		Tx:   txBytes,
-		Type: abci.CheckTxType_New,
+		Type: abci.CHECK_TX_TYPE_CHECK,
 	}
 	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
@@ -2467,7 +2470,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	// call recheck on the first tx, it MUST return an error
 	reqReCheckTx := abci.CheckTxRequest{
 		Tx:   txBytes,
-		Type: abci.CheckTxType_Recheck,
+		Type: abci.CHECK_TX_TYPE_RECHECK,
 	}
 	resp, err := suite.baseApp.CheckTx(&reqReCheckTx)
 	require.NoError(t, err)
@@ -2493,7 +2496,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 
 	// the same txs as in PrepareProposal
 	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{

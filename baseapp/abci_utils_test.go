@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -98,8 +99,8 @@ func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
 
 	// create context
 	s.ctx = sdk.Context{}.WithConsensusParams(cmtproto.ConsensusParams{
-		Abci: &cmtproto.ABCIParams{
-			VoteExtensionsEnableHeight: 2,
+		Feature: &cmtproto.FeatureParams{
+			VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
 		},
 	}).WithBlockHeader(cmtproto.Header{
 		ChainID: chainID,

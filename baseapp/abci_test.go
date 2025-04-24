@@ -22,6 +22,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -319,8 +320,8 @@ func TestABCI_ExtendVote(t *testing.T) {
 		&abci.InitChainRequest{
 			InitialHeight: 1,
 			ConsensusParams: &cmtproto.ConsensusParams{
-				Abci: &cmtproto.ABCIParams{
-					VoteExtensionsEnableHeight: 200,
+				Feature: &cmtproto.FeatureParams{
+					VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 200},
 				},
 			},
 		},
@@ -397,8 +398,8 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 		&abci.InitChainRequest{
 			InitialHeight: 1,
 			ConsensusParams: &cmtproto.ConsensusParams{
-				Abci: &cmtproto.ABCIParams{
-					VoteExtensionsEnableHeight: 200,
+				Feature: &cmtproto.FeatureParams{
+					VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 200},
 				},
 			},
 		},
@@ -1815,7 +1816,11 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 			}
 
 			cp := ctx.ConsensusParams()
-			extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+			extsEnabled := cp.Feature.VoteExtensionsEnableHeight != nil && req.Height >= cp.Feature.VoteExtensionsEnableHeight.Value && cp.Feature.VoteExtensionsEnableHeight.Value != 0
+			if !extsEnabled {
+				// check abci params
+				extsEnabled = cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+			}
 			if extsEnabled {
 				req.Txs = append(req.Txs, []byte("some-tx-that-does-something-from-votes"))
 			}
@@ -1828,8 +1833,8 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		InitialHeight: 1,
 		ConsensusParams: &cmtproto.ConsensusParams{
-			Abci: &cmtproto.ABCIParams{
-				VoteExtensionsEnableHeight: 2,
+			Feature: &cmtproto.FeatureParams{
+				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
 			},
 		},
 	})
@@ -2184,8 +2189,8 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{
-			Abci: &cmtproto.ABCIParams{
-				VoteExtensionsEnableHeight: 1,
+			Feature: &cmtproto.FeatureParams{
+				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1},
 			},
 		},
 	})

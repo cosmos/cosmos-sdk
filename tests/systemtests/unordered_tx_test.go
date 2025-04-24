@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	systest "cosmossdk.io/systemtests"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {
@@ -41,7 +42,8 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	signCmd := []string{"tx", "sign", txFile.Name(), "--from=" + account1Addr, "--chain-id=testing"}
 	rsp1 = cli.RunCommandWithArgs(signCmd...)
 	signedFile := testutil.TempFile(t)
-	signedFile.WriteString(rsp1)
+	_, err = signedFile.WriteString(rsp1)
+	require.NoError(t, err)
 
 	cmd = []string{"tx", "broadcast", signedFile.Name(), "--chain-id=testing"}
 	rsp1 = cli.RunCommandWithArgs(cmd...)

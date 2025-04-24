@@ -34,7 +34,7 @@ These custom queries methods should be implemented by a module's keeper, typical
 Here's an example implementation for the bank module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/grpc_query.go
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.4/x/bank/keeper/grpc_query.go
 ```
 
 ### Calling queries from the State Machine

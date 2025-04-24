@@ -34,7 +34,7 @@ Each `Msg` service method must have exactly one argument, which must implement t
 See an example of a `Msg` service definition from `x/bank` module:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.4/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
 ```
 
 ### `sdk.Msg` Interface
@@ -98,7 +98,7 @@ Queries should be defined using [Protobuf services](https://developers.google.co
 Here's an example of such a `Query` service definition:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/auth/v1beta1/query.proto#L14-L89
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.4/proto/cosmos/auth/v1beta1/query.proto#L14-L89
 ```
 
 As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).
@@ -133,5 +133,5 @@ Store queries query directly for store keys. They use `clientCtx.QueryABCI(req a
 See following examples:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L864-L894
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.4/baseapp/abci.go#L864-L894
 ```

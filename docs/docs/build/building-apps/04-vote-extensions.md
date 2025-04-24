@@ -40,7 +40,7 @@ other validators when validating their pre-commits. For a given vote extension,
 this process MUST be deterministic. The Cosmos SDK defines `sdk.VerifyVoteExtensionHandler`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/abci.go#L26-L27
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.4/types/abci.go#L26-L27
 ```
 
 An application can set this handler in `app.go` via the `baseapp.SetVerifyVoteExtensionHandler`

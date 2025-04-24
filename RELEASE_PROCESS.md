@@ -245,4 +245,4 @@ Modules that do not depend on the Cosmos SDK can be released at any time from th
 
 Branches that go modules are released from:
 
-* Store v1 is released from `release/v0.50.x` branch.
+* Store v1 is released from `release/v0.53.x` branch.

@@ -10,5 +10,5 @@ For now please instead read the [tutorials](https://tutorials.cosmos.network) fo
 ## Complete `app.go`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.4/simapp/app.go
 ```

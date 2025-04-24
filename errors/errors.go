@@ -41,7 +41,7 @@ func Register(codespace string, code uint32, description string) *Error {
 // code with a registered error.
 func RegisterWithGRPCCode(codespace string, code uint32, grpcCode grpccodes.Code, description string) *Error {
 	if e := getUsed(codespace, code); e != nil {
-		_, err := io.WriteString(os.Stderr, "error with code "+errorID(codespace, code)+" is already registered: "+e.desc+" Overwriting...\n")
+		_, err := io.WriteString(os.Stderr, "error with code "+errorID(codespace, code)+" is already registered: "+e.desc+". Overwriting with current error...\n")
 		if err != nil {
 			panic(err)
 		}

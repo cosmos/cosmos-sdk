@@ -384,7 +384,9 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 				app := appCreator(logger, db, nil, serverCtx.Viper)
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
-
+			if height < 0 {
+				return fmt.Errorf("height must be non-negative, got %d", height)
+			}
 			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
 		},
 	}

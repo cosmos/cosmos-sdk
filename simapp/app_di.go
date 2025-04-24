@@ -39,7 +39,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"

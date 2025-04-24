@@ -124,6 +124,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 	}
 
 	metricsConf := metrics.DefaultConfig(cfg.ServiceName)
+	// mic test test
 	metricsConf.EnableHostname = cfg.EnableHostname
 	metricsConf.EnableHostnameLabel = cfg.EnableHostnameLabel
 

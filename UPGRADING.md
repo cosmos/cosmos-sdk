@@ -57,8 +57,8 @@ options := ante.HandlerOptions{
 
 ```go
 anteDecorators := []sdk.AnteDecorator{
-  // ... snip ...
-  ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigVerifyOptions...), // supply new options
+    // ... other decorators ...
+    ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigVerifyOptions...), // supply new options
 }
 ```
 

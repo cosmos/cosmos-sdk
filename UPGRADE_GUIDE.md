@@ -436,7 +436,7 @@ options := ante.HandlerOptions{
 
 ```go
 anteDecorators := []sdk.AnteDecorator{
-	// ... snip
+	// ... other decorators ...
     ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigVerifyOptions...), // supply new options
 }
 ```

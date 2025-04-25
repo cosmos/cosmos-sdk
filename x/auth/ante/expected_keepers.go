@@ -19,10 +19,6 @@ type AccountKeeper interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	AddressCodec() address.Codec
 	IsUnorderedTransactionsEnabled() bool
-}
-
-// UnorderedNonceManager defines the contract needed for UnorderedNonce management.
-type UnorderedNonceManager interface {
 	RemoveExpiredUnorderedNonces(ctx sdk.Context) error
 	TryAddUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) error
 }

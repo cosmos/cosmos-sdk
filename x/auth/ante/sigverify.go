@@ -223,7 +223,6 @@ type SigVerificationDecorator struct {
 	signModeHandler      *txsigning.HandlerMap
 	maxTxTimeoutDuration time.Duration
 	unorderedTxGasCost   uint64
-	unorderedTxManager   UnorderedNonceManager
 }
 
 type SigVerificationDecoratorOption func(svd *SigVerificationDecorator)
@@ -252,9 +251,10 @@ const (
 
 func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, opts ...SigVerificationDecoratorOption) SigVerificationDecorator {
 	svd := SigVerificationDecorator{
-		ak:                 ak,
-		signModeHandler:    signModeHandler,
-		unorderedTxManager: ak.(UnorderedNonceManager),
+		ak:                   ak,
+		signModeHandler:      signModeHandler,
+		maxTxTimeoutDuration: DefaultMaxTimoutDuration,
+		unorderedTxGasCost:   DefaultUnorderedTxGasCost,
 	}
 
 	for _, opt := range opts {
@@ -296,7 +296,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	unorderedEnabled := svd.ak.IsUnorderedTransactionsEnabled()
 
 	if isUnordered && !unorderedEnabled {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "unordered transactions are disabled")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrNotSupported, "unordered transactions are not enabled")
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
@@ -316,6 +316,14 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
 	}
 
+	// we verify the unordered sequence outside the loop below because we use the nonce value for each signer in one go.
+	// we don't need to verify the unordered fields for each signer, as they're always the same.
+	if isUnordered {
+		if err := svd.verifyUnorderedSequence(ctx, utx); err != nil {
+			return ctx, err
+		}
+	}
+
 	for i, sig := range sigs {
 		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
@@ -329,11 +337,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// Check account sequence number.
-		if isUnordered {
-			if err := svd.verifyUnorderedSequence(ctx, utx); err != nil {
-				return ctx, err
-			}
-		} else {
+		if !isUnordered {
 			if sig.Sequence != acc.GetSequence() {
 				return ctx, errorsmod.Wrapf(
 					sdkerrors.ErrWrongSequence,
@@ -432,7 +436,7 @@ func (svd SigVerificationDecorator) verifyUnorderedSequence(ctx sdk.Context, uno
 	}
 
 	for _, signerAddr := range signerAddrs {
-		if err := svd.unorderedTxManager.TryAddUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
+		if err := svd.ak.TryAddUnorderedNonce(ctx, signerAddr, unorderedTx.GetTimeoutTimeStamp()); err != nil {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
 				"failed to add unordered nonce: %s", err,
@@ -473,7 +477,7 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	if utx, ok := tx.(sdk.TxWithUnordered); ok && utx.GetUnordered() {
 		if !isd.ak.IsUnorderedTransactionsEnabled() {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "unordered transactions are disabled")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrNotSupported, "unordered transactions are disabled")
 		}
 		return next(ctx, tx, simulate)
 	}

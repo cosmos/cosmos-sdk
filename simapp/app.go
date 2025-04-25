@@ -707,7 +707,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 				SigVerifyOptions: []ante.SigVerificationDecoratorOption{
 					// change below as needed.
 					ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
-					ante.WithMaxTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
+					ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
 				},
 			},
 			&app.CircuitKeeper,

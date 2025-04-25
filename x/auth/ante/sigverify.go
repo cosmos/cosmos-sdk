@@ -230,8 +230,8 @@ type SigVerificationDecorator struct {
 
 type SigVerificationDecoratorOption func(svd *SigVerificationDecorator)
 
-// WithMaxTxTimeoutDuration sets the maximum TTL a transaction can define for unordered transactions.
-func WithMaxTxTimeoutDuration(duration time.Duration) SigVerificationDecoratorOption {
+// WithMaxUnorderedTxTimeoutDuration sets the maximum TTL a transaction can define for unordered transactions.
+func WithMaxUnorderedTxTimeoutDuration(duration time.Duration) SigVerificationDecoratorOption {
 	return func(svd *SigVerificationDecorator) {
 		svd.maxTxTimeoutDuration = duration
 	}

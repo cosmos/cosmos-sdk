@@ -143,6 +143,9 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 
 	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
 	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		if nonce > 0 {
+			return errors.New("unordered txs must not have sequence set")
+		}
 		timestamp := unordered.GetTimeoutTimeStamp().UnixNano()
 		if timestamp < 0 {
 			return errors.New("invalid timestamp value")
@@ -240,6 +243,9 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 
 	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
 	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		if nonce > 0 {
+			return errors.New("unordered txs must not have sequence set")
+		}
 		timestamp := unordered.GetTimeoutTimeStamp().UnixNano()
 		if timestamp < 0 {
 			return errors.New("invalid timestamp value")

@@ -93,6 +93,8 @@ type AccountKeeper struct {
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
 
+	// enableUnorderedTxs enables unordered transaction support.
+	// This boolean helps sigverify ante handlers to determine if they should process unordered transactions.
 	enableUnorderedTxs bool
 
 	// The prototypical AccountI constructor.
@@ -112,6 +114,9 @@ type AccountKeeper struct {
 
 type InitOption func(*AccountKeeper)
 
+// WithUnorderedTransactions enables unordered transaction support.
+// When true, sigverify ante handlers will validate and process unordered transactions.
+// When false, sigverify ante handlers will reject unordered transactions.
 func WithUnorderedTransactions(enable bool) InitOption {
 	return func(ak *AccountKeeper) {
 		ak.enableUnorderedTxs = enable

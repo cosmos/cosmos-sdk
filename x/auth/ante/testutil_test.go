@@ -232,7 +232,6 @@ func (suite *AnteTestSuite) createTx(
 	accNums, accSeqs []uint64,
 	chainID string, signMode signing.SignMode, unordered bool, unorderedTimeout time.Time,
 ) (xauthsigning.Tx, error) {
-
 	suite.txBuilder.SetUnordered(unordered)
 	suite.txBuilder.SetTimeoutTimestamp(unorderedTimeout)
 

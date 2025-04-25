@@ -109,7 +109,6 @@ func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, e
 		}
 	}
 	return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
-
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.

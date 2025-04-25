@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -10,11 +9,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-)
-
-// TODO: move this somewhere else
-const (
-	TruncatedSize = 20
+	"github.com/cometbft/cometbft/crypto/tmhash"
 )
 
 type mockValidator struct {
@@ -74,7 +69,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) []byte {
 
 	proposer := vals[key].val
 
-	return SumTruncated(proposer.PubKeyBytes)
+	return tmhash.SumTruncated(proposer.PubKeyBytes)
 }
 
 // updateValidators mimics CometBFT's update logic.
@@ -164,7 +159,7 @@ func RandomRequestFinalizeBlock(
 
 		voteInfos[i] = abci.VoteInfo{
 			Validator: abci.Validator{
-				Address: SumTruncated(mVal.val.PubKeyBytes),
+				Address: tmhash.SumTruncated(mVal.val.PubKeyBytes),
 				Power:   mVal.val.Power,
 			},
 			BlockIdFlag: commitStatus,
@@ -226,10 +221,4 @@ func RandomRequestFinalizeBlock(
 		},
 		Misbehavior: evidence,
 	}
-}
-
-// SumTruncated returns the first 20 bytes of SHA256 of the bz.
-func SumTruncated(bz []byte) []byte {
-	hash := sha256.Sum256(bz)
-	return hash[:TruncatedSize]
 }

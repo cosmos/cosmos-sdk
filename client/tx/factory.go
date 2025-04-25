@@ -515,6 +515,9 @@ func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureDat
 // A new Factory with the updated fields will be returned.
 // Note: When in offline mode, the Prepare does nothing and returns the original factory.
 func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
+	if f.sequence > 0 && f.unordered {
+		return f, errors.New("unordered transactions must not have sequence values set")
+	}
 	if clientCtx.Offline {
 		return f, nil
 	}

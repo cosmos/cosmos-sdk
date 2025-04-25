@@ -221,7 +221,7 @@ type ModuleInputs struct {
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
 
-	Options func() []keeper.InitOption `optional:"true"`
+	Options []keeper.InitOption `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -251,7 +251,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String(), in.Options()...)
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String(), in.Options...)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

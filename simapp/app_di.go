@@ -139,8 +139,8 @@ func NewSimApp(
 				// with the prefix defined in the auth module configuration.
 				//
 				// func() address.Codec { return <- custom address codec type -> }
-				func() authkeeper.InitOption {
-					return authkeeper.WithUnorderedTransactions(true)
+				func() []authkeeper.InitOption {
+					return []authkeeper.InitOption{authkeeper.WithUnorderedTransactions(true)}
 				},
 				//
 				// STAKING

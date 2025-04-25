@@ -139,7 +139,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/client/tx_config.go#L39-L
 * `Memo`, a note or comment to send with the transaction.
 * `FeeAmount`, the maximum amount the user is willing to pay in fees.
 * `TimeoutHeight`, block height until which the transaction is valid.
-* `Unordered`, an option indicating this transaction may be executed in any order (requires TimeoutTimestamp to be set)
+* `Unordered`, an option indicating this transaction may be executed in any order (requires Sequence to be unset.)
 * `TimeoutTimestamp`, the timeout timestamp (unordered nonce) of the transaction (required to be used with Unordered).
 * `Signatures`, the array of signatures from all signers of the transaction.
 
@@ -212,7 +212,7 @@ Check out the [v0.53.0 Upgrade Guide](https://docs.cosmos.network/v0.53/build/mi
 :::
 
 Beginning with Cosmos SDK v0.53.0, chains may enable unordered transaction support. 
-Unordered transactions work by using a timestamp as the transaction's nonce value.
+Unordered transactions work by using a timestamp as the transaction's nonce value. The sequence value must NOT be set in the signature(s) of the transaction.
 The timestamp must be greater than the current block time and not exceed the chain's configured max unordered timeout timestamp duration.
 Senders must use a unique timestamp for each distinct transaction. The difference may be as small as a nanosecond, however.
 

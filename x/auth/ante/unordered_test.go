@@ -13,14 +13,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestSigVerification_UnorderedTxs(t *testing.T) {
-
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 	var (
@@ -35,9 +33,7 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 		suite = SetupTestSuiteWithUnordered(t, isCheckTx, withUnordered)
 		suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
 
-		enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_TEXTUAL, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
-		// Since TEXTUAL is not enabled by default, we create a custom TxConfig
-		// here which includes it.
+		enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT}
 		txConfigOpts := authtx.ConfigOptions{
 			TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
 			EnabledSignModes:           enabledSignModes,
@@ -84,8 +80,7 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 		require.NoError(t, err)
 		svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
 		antehandler = sdk.ChainAnteDecorators(spkd, svd)
-		defaultSignMode, err = authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
-		require.NoError(t, err)
+		defaultSignMode = signing.SignMode_SIGN_MODE_DIRECT
 	}
 
 	testCases := map[string]struct {

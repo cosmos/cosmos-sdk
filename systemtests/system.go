@@ -294,7 +294,7 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 	go func() { // query for a non empty block on status page
 		t.Logf("Checking node status: %s\n", rpcAddr)
 		for {
-			con, err := client.New(rpcAddr, "/websocket")
+			con, err := client.New(rpcAddr)
 			if err != nil || con.Start() != nil {
 				time.Sleep(time.Second)
 				continue
@@ -828,7 +828,7 @@ type EventListener struct {
 // NewEventListener event listener
 func NewEventListener(t *testing.T, rpcAddr string) *EventListener {
 	t.Helper()
-	httpClient, err := client.New(rpcAddr, "/websocket")
+	httpClient, err := client.New(rpcAddr)
 	require.NoError(t, err)
 	require.NoError(t, httpClient.Start())
 	return &EventListener{client: httpClient, t: t}

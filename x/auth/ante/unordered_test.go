@@ -28,8 +28,8 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 	var defaultSignMode signing.SignMode
 	var accs []sdk.AccountI
 	var msgs []sdk.Msg
-	reset := func(withUnordered bool) {
-		suite = SetupTestSuiteWithUnordered(t, true, withUnordered)
+	reset := func(isCheckTx, withUnordered bool) {
+		suite = SetupTestSuiteWithUnordered(t, isCheckTx, withUnordered)
 		suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
 
 		enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_TEXTUAL, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
@@ -162,7 +162,7 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			reset(!tc.unorderedDisabled)
+			reset(tc.execMode == sdk.ExecModeCheck, !tc.unorderedDisabled)
 			ctx := suite.ctx.WithBlockTime(tc.blockTime).WithExecMode(tc.execMode).WithIsSigverifyTx(true)
 
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test

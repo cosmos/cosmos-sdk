@@ -406,7 +406,7 @@ Lastly, add an entry for epochs in the ModuleConfig:
 
 ## Enable Unordered Transactions **OPTIONAL**
 
-To enable unordered transaction support on an application, the `x/auth` keeper must be supplied with a new option.
+To enable unordered transaction support on an application, the `x/auth` keeper must be supplied with the `WithUnorderedTransactions` option.
 
 ```go
 	app.AccountKeeper = authkeeper.NewAccountKeeper(

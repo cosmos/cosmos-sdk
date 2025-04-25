@@ -213,8 +213,11 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	return next(ctx, tx, simulate)
 }
 
-// SigVerificationDecorator verifies all signatures for a tx and return an error if any are invalid. Note,
-// the SigVerificationDecorator will not check signatures on ReCheck.
+// SigVerificationDecorator verifies all signatures for a tx and returns an error if any are invalid.
+// Note, the SigVerificationDecorator will not check signatures on ReCheck.
+//
+// As of Cosmos SDK v0.53.0, the SigVerificationDecorator will also verify the validity of unordered transactions.
+// This involves ensuring the TTL is valid, and that the unordered nonce has not been used previously.
 //
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
@@ -227,12 +230,17 @@ type SigVerificationDecorator struct {
 
 type SigVerificationDecoratorOption func(svd *SigVerificationDecorator)
 
+// WithMaxTxTimeoutDuration sets the maximum TTL a transaction can define for unordered transactions.
 func WithMaxTxTimeoutDuration(duration time.Duration) SigVerificationDecoratorOption {
 	return func(svd *SigVerificationDecorator) {
 		svd.maxTxTimeoutDuration = duration
 	}
 }
 
+// WithUnorderedTxGasCost sets the gas cost for unordered transactions.
+// We must charge extra gas for unordered transactions
+// as they incur extra processing time for cleaning up the expired txs in x/auth PreBlocker.
+// Note: this value was chosen by 2x-ing the cost of fetching and removing an unordered nonce entry.
 func WithUnorderedTxGasCost(gasCost uint64) SigVerificationDecoratorOption {
 	return func(svd *SigVerificationDecorator) {
 		svd.unorderedTxGasCost = gasCost
@@ -316,10 +324,11 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
 	}
 
-	// we verify the unordered sequence outside the loop below because we use the nonce value for each signer in one go.
-	// we don't need to verify the unordered fields for each signer, as they're always the same.
+	// In normal transactions, each signer has a sequence value. In unordered transactions, the nonce value is at the tx body level,
+	// so we get one nonce value for all the signers, rather than a sequence value for each signer.
+	// Because of this, we verify the unordered nonce outside the sigs loop, to avoid verifying the same nonce multiple times.
 	if isUnordered {
-		if err := svd.verifyUnorderedSequence(ctx, utx); err != nil {
+		if err := svd.verifyUnorderedNonce(ctx, utx); err != nil {
 			return ctx, err
 		}
 	}
@@ -392,7 +401,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	return next(ctx, tx, simulate)
 }
 
-// verifyUnorderedSequence verifies the unordered nonce of an unordered transaction.
+// verifyUnorderedNonce verifies the unordered nonce of an unordered transaction.
 // This checks that:
 // 1. The unordered transaction's timeout timestamp is set.
 // 2. The unordered transaction's timeout timestamp is not in the past.
@@ -400,7 +409,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 // 4. The unordered transaction's nonce has not been used previously.
 //
 // If all the checks above pass, the nonce is marked as used for each signer of the transaction.
-func (svd SigVerificationDecorator) verifyUnorderedSequence(ctx sdk.Context, unorderedTx sdk.TxWithUnordered) error {
+func (svd SigVerificationDecorator) verifyUnorderedNonce(ctx sdk.Context, unorderedTx sdk.TxWithUnordered) error {
 	blockTime := ctx.BlockTime()
 	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
 	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {

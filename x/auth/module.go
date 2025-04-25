@@ -100,9 +100,9 @@ type AppModule struct {
 // PreBlock cleans up expired unordered transaction nonces from state.
 // Please ensure to add `x/auth`'s module name to the OrderPreBlocker list in your application.
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
+	start := telemetry.Now()
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyPreBlocker)
 	if am.accountKeeper.IsUnorderedTransactionsEnabled() {
-		start := telemetry.Now()
-		defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyPreBlocker)
 		err := am.accountKeeper.RemoveExpiredUnorderedNonces(sdk.UnwrapSDKContext(ctx))
 		if err != nil {
 			return nil, err

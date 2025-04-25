@@ -86,6 +86,7 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 	testCases := map[string]struct {
 		unorderedDisabled bool
 		unordered         bool
+		sequences         []uint64
 		timeout           time.Time
 		blockTime         time.Time
 		duplicate         bool
@@ -142,6 +143,14 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 			execMode:    sdk.ExecModeFinalize,
 			expectedErr: "unordered tx ttl exceeds",
 		},
+		"fail if sequences are set in tx": {
+			unordered:   true,
+			timeout:     time.Unix(15, 0),
+			blockTime:   time.Unix(10, 0),
+			sequences:   []uint64{1, 2, 3},
+			execMode:    sdk.ExecModeFinalize,
+			expectedErr: "sequences is not allowed for unordered transactions",
+		},
 		"fails if manager has duplicate": {
 			unordered:   true,
 			timeout:     time.Unix(10, 0),
@@ -167,11 +176,15 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 			require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 			suite.txBuilder.SetFeeAmount(feeAmount)
 			suite.txBuilder.SetGasLimit(gasLimit)
+			sequences := []uint64{0, 0, 0}
+			if len(tc.sequences) > 0 {
+				sequences = tc.sequences
+			}
 			tx, err := suite.CreateTestUnorderedTx(
 				suite.ctx,
 				[]cryptotypes.PrivKey{priv1, priv2, priv3},
 				[]uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()},
-				[]uint64{0, 0, 0},
+				sequences,
 				suite.ctx.ChainID(),
 				defaultSignMode,
 				tc.unordered,

@@ -30,40 +30,38 @@ Please ensure no sequence value is set when submitting an unordered transaction.
 
 #### Enabling Unordered Transactions
 
-To enable unordered transactions, set the new `UnorderedNonceManager` field in the `x/auth` `ante.HandlerOptions`.
+To enable unordered transactions, supply the `WithUnorderedTransactions` option to the `x/auth` keeper:
 
-By default, unordered transactions use a transaction timeout duration of 10 minutes and a default gas charge of 2240 gas.
-To modify these default values, pass in the corresponding options to the new `UnorderedTxOptions` field in `x/auth's` `ante.HandlerOptions`.
+```go
+	app.AccountKeeper = authkeeper.NewAccountKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		sdk.Bech32MainPrefix,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authkeeper.WithUnorderedTransactions(true), // new option!
+	)
+```
+
+By default, unordered transactions use a transaction timeout duration of 10 minutes and a default gas charge of 2240 gas units.
+To modify these default values, pass in the corresponding options to the new `SigVerifyOptions` field in `x/auth's` `ante.HandlerOptions`.
 
 ```go
 options := ante.HandlerOptions{
-    UnorderedNonceManager: app.AccountKeeper,
-	// The following options are set by default.
-	// If you do not want to change these, you may remove the UnorderedTxOptions field entirely.
-    UnorderedTxOptions: []ante.UnorderedTxDecoratorOptions{
-        ante.WithUnorderedTxGasCost(2240),
-        ante.WithTimeoutDuration(10 * time.Minute),
+    SigVerifyOptions: []ante.SigVerificationDecoratorOption{
+        // change below as needed.
+        ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+        ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimoutDuration),
     },
 }
 ```
 
 ```go
 anteDecorators := []sdk.AnteDecorator{
-  ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
-  circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
-  ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
-  ante.NewValidateBasicDecorator(),
-  ante.NewTxTimeoutHeightDecorator(),
-  ante.NewValidateMemoDecorator(options.AccountKeeper),
-  ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-  ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
-  ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
-  ante.NewValidateSigCountDecorator(options.AccountKeeper),
-  ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
-  ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
-  ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-  // NEW !! NEW !! NEW !!
-  ante.NewUnorderedTxDecorator(options.UnorderedNonceManager, options.UnorderedTxOptions...)
+    // ... other decorators ...
+    ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigVerifyOptions...), // supply new options
 }
 ```
 

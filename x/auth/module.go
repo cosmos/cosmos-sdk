@@ -102,9 +102,11 @@ type AppModule struct {
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
 	start := telemetry.Now()
 	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyPreBlocker)
-	err := am.accountKeeper.RemoveExpiredUnorderedNonces(sdk.UnwrapSDKContext(ctx))
-	if err != nil {
-		return nil, err
+	if am.accountKeeper.IsUnorderedTransactionsEnabled() {
+		err := am.accountKeeper.RemoveExpiredUnorderedNonces(sdk.UnwrapSDKContext(ctx))
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
 }
@@ -218,6 +220,8 @@ type ModuleInputs struct {
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
+
+	KeeperOptions []keeper.InitOption `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -247,7 +251,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountI = types.ProtoBaseAccount
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String())
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String(), in.KeeperOptions...)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

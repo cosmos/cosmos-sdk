@@ -537,7 +537,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 			fc = fc.WithAccountNumber(num)
 		}
 
-		if initSeq == 0 {
+		if initSeq == 0 && !f.unordered {
 			fc = fc.WithSequence(seq)
 		}
 	}

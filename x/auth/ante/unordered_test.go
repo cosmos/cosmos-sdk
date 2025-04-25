@@ -20,14 +20,17 @@ import (
 )
 
 func TestSigVerification_UnorderedTxs(t *testing.T) {
-	var suite *AnteTestSuite
+
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	var priv1, priv2, priv3 cryptotypes.PrivKey
-	var antehandler sdk.AnteHandler
-	var defaultSignMode signing.SignMode
-	var accs []sdk.AccountI
-	var msgs []sdk.Msg
+	var (
+		suite               *AnteTestSuite
+		priv1, priv2, priv3 cryptotypes.PrivKey
+		antehandler         sdk.AnteHandler
+		defaultSignMode     signing.SignMode
+		accs                []sdk.AccountI
+		msgs                []sdk.Msg
+	)
 	reset := func(isCheckTx, withUnordered bool) {
 		suite = SetupTestSuiteWithUnordered(t, isCheckTx, withUnordered)
 		suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()

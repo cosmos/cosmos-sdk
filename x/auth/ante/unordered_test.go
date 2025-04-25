@@ -139,7 +139,7 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 		},
 		"timeout after the max duration should fail": {
 			unordered:   true,
-			timeout:     time.Unix(10, 1).Add(ante.DefaultMaxTimoutDuration),
+			timeout:     time.Unix(10, 1).Add(ante.DefaultMaxTimeoutDuration),
 			blockTime:   time.Unix(10, 0),
 			execMode:    sdk.ExecModeFinalize,
 			expectedErr: "unordered tx ttl exceeds",

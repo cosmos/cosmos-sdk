@@ -248,8 +248,8 @@ func WithUnorderedTxGasCost(gasCost uint64) SigVerificationDecoratorOption {
 }
 
 const (
-	// DefaultMaxTimoutDuration defines a default maximum TTL a transaction can define.
-	DefaultMaxTimoutDuration = 10 * time.Minute
+	// DefaultMaxTimeoutDuration defines a default maximum TTL a transaction can define.
+	DefaultMaxTimeoutDuration = 10 * time.Minute
 	// DefaultUnorderedTxGasCost defines a default gas cost for unordered transactions.
 	// We must charge extra gas for unordered transactions
 	// as they incur extra processing time for cleaning up the expired txs in x/auth PreBlocker.
@@ -261,7 +261,7 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.Ha
 	svd := SigVerificationDecorator{
 		ak:                   ak,
 		signModeHandler:      signModeHandler,
-		maxTxTimeoutDuration: DefaultMaxTimoutDuration,
+		maxTxTimeoutDuration: DefaultMaxTimeoutDuration,
 		unorderedTxGasCost:   DefaultUnorderedTxGasCost,
 	}
 

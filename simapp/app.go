@@ -469,7 +469,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -499,7 +499,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 
@@ -707,7 +707,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 				SigVerifyOptions: []ante.SigVerificationDecoratorOption{
 					// change below as needed.
 					ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
-					ante.WithMaxTxTimeoutDuration(ante.DefaultMaxTimoutDuration),
+					ante.WithMaxTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
 				},
 			},
 			&app.CircuitKeeper,

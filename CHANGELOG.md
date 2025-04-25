@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#444](https://github.com/celestiaorg/cosmos-sdk/pull/443) Added a limit of 1000 to historical info key migration. A further 1000 keys are migrated per `BeginBlock`, tracked by `NextMigrateHistoricalInfoKey`. 
 * (x/slashing) [#447](https://github.com/celestiaorg/cosmos-sdk/pull/447) Updates the x/slashing key prefix for validator missed block bitarray from `0x02` to `0x12` and modifies the x/slashing v4 migration handler to be deletion of old keys, only. The migration is now done lazily via `BeginBlocker`.
 * (server) [#455](https://github.com/celestiaorg/cosmos-sdk/pull/455) Added celestia-core `BlockAPI` to app grpc server. When running in standalone mode the app uses a `BlockAPI` proxy service to maintain support through same the app grpc port. 
+* (server) [#576](https://github.com/celestiaorg/cosmos-sdk/pull/576) Updated the default listen address for remote ABCI connections over grpc from `tcp://127.0.0.1:26658` to `tcp://127.0.0.1:36658`.
 
 ## [Unreleased-Cosmos-SDK]
 

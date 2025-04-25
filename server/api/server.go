@@ -159,7 +159,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	// an error upon failure, which we'll send on the error channel that will be
 	// consumed by the for block below.
 	go func(enableUnsafeCORS bool) {
-		s.logger.Info("starting API server ironbird7...", "address", cfg.API.Address)
+		s.logger.Info("starting API server ironbird8...", "address", cfg.API.Address)
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))

@@ -421,6 +421,19 @@ To enable unordered transaction support on an application, the `x/auth` keeper m
 	)
 ```
 
+If using dependency injection, update the auth module config.
+
+```go
+		{
+			Name: authtypes.ModuleName,
+			Config: appconfig.WrapAny(&authmodulev1.Module{
+				Bech32Prefix:             "cosmos",
+				ModuleAccountPermissions: moduleAccPerms,
+				EnableUnorderedTransactions: true, // remove this line if you do not want unordered transactions.
+			}),
+		},
+```
+
 By default, unordered transactions use a transaction timeout duration of 10 minutes and a default gas charge of 2240 gas units.
 To modify these default values, pass in the corresponding options to the new `SigVerifyOptions` field in `x/auth's` `ante.HandlerOptions`.
 

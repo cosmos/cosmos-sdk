@@ -46,7 +46,7 @@ Later, validators decide whether to include the transaction in their block by co
 With Cosmos SDK v0.53.0, users may send unordered transactions to chains that have this feature enabled.
 The following flags allow a user to build an unordered transaction from the CLI.
 
-* `--unordered` specifies that this transaction should be unordered. (transaction Sequence must be unset)
+* `--unordered` specifies that this transaction should be unordered. (transaction sequence must be unset)
 * `--timeout-duration` specifies the amount of time the unordered transaction should be valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + timeout duration.
 
 #### CLI Example

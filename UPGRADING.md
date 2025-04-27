@@ -25,7 +25,7 @@ To submit an unordered transaction, clients must set the `unordered` flag to
 used as a TTL for the transaction and provides replay protection. Each transaction's `timeout_timestamp` must be
 unique to the account; however, the difference may be as small as a nanosecond. See [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md) for more details.
 
-Note that unordered transactions will FAIL if a sequence value is set. 
+Note that unordered transactions will **FAIL** if a sequence value is set. 
 Please ensure no sequence value is set when submitting an unordered transaction.
 
 #### Enabling Unordered Transactions

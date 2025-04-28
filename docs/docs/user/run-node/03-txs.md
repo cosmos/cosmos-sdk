@@ -183,6 +183,14 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
 Starting with Cosmos SDK v0.53.0, users may send unordered transactions to chains that have the feature enabled.
 
+:::warning
+
+Unordered transactions MUST leave sequence values unset. When a transaction is both unordered and contains a non-zero sequence value,
+the transaction will be rejected. External services that operate on prior assumptions about transaction sequence values should be updated to handle unordered transactions.
+Services should be aware that when the transaction is unordered, the transaction sequence will always be zero.
+
+:::
+
 Using the example above, we can set the required fields to mark a transaction as unordered. 
 By default, unordered transactions charge an extra 2240 units of gas to offset the additional storage overhead that supports their functionality.
 The extra units of gas are customizable and therefore vary by chain, so be sure to check the chain's ante handler for the gas value set, if any.

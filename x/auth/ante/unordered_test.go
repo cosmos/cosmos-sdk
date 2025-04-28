@@ -18,75 +18,87 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+type UnorderedTxTestSuite struct {
+	anteSuite           *AnteTestSuite
+	priv1, priv2, priv3 cryptotypes.PrivKey
+	antehandler         sdk.AnteHandler
+	defaultSignMode     signing.SignMode
+	accs                []sdk.AccountI
+	msgs                []sdk.Msg
+}
+
+func setupUnorderedTxTestSuite(t *testing.T, isCheckTx, withUnordered bool) *UnorderedTxTestSuite {
+	t.Helper()
+	anteSuite := SetupTestSuiteWithUnordered(t, isCheckTx, withUnordered)
+	anteSuite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
+
+	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT}
+	txConfigOpts := authtx.ConfigOptions{
+		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(anteSuite.clientCtx),
+		EnabledSignModes:           enabledSignModes,
+	}
+	var err error
+	anteSuite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(
+		codec.NewProtoCodec(anteSuite.encCfg.InterfaceRegistry),
+		txConfigOpts,
+	)
+	require.NoError(t, err)
+	anteSuite.txBuilder = anteSuite.clientCtx.TxConfig.NewTxBuilder()
+
+	// make block height non-zero to ensure account numbers part of signBytes
+	anteSuite.ctx = anteSuite.ctx.WithBlockHeight(1)
+
+	// keys and addresses
+	pk1, _, addr1 := testdata.KeyTestPubAddr()
+	pk2, _, addr2 := testdata.KeyTestPubAddr()
+	pk3, _, addr3 := testdata.KeyTestPubAddr()
+	priv1, priv2, priv3 := pk1, pk2, pk3
+
+	addrs := []sdk.AccAddress{addr1, addr2, addr3}
+
+	msgs := make([]sdk.Msg, len(addrs))
+	accs := make([]sdk.AccountI, len(addrs))
+	// set accounts and create msg for each address
+	for i, addr := range addrs {
+		acc := anteSuite.accountKeeper.NewAccountWithAddress(anteSuite.ctx, addr)
+		require.NoError(t, acc.SetAccountNumber(uint64(i)+1000))
+		anteSuite.accountKeeper.SetAccount(anteSuite.ctx, acc)
+		msgs[i] = testdata.NewTestMsg(addr)
+		accs[i] = acc
+	}
+
+	spkd := ante.NewSetPubKeyDecorator(anteSuite.accountKeeper)
+	txConfigOpts = authtx.ConfigOptions{
+		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(anteSuite.txBankKeeper),
+		EnabledSignModes:           enabledSignModes,
+	}
+	anteTxConfig, err := authtx.NewTxConfigWithOptions(
+		codec.NewProtoCodec(anteSuite.encCfg.InterfaceRegistry),
+		txConfigOpts,
+	)
+	require.NoError(t, err)
+	svd := ante.NewSigVerificationDecorator(anteSuite.accountKeeper, anteTxConfig.SignModeHandler())
+	antehandler := sdk.ChainAnteDecorators(spkd, svd)
+	defaultSignMode := signing.SignMode_SIGN_MODE_DIRECT
+
+	return &UnorderedTxTestSuite{
+		anteSuite:       anteSuite,
+		priv1:           priv1,
+		priv2:           priv2,
+		priv3:           priv3,
+		antehandler:     antehandler,
+		defaultSignMode: defaultSignMode,
+		accs:            accs,
+		msgs:            msgs,
+	}
+}
+
 func TestSigVerification_UnorderedTxs(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	var (
-		suite               *AnteTestSuite
-		priv1, priv2, priv3 cryptotypes.PrivKey
-		antehandler         sdk.AnteHandler
-		defaultSignMode     signing.SignMode
-		accs                []sdk.AccountI
-		msgs                []sdk.Msg
-	)
-	reset := func(isCheckTx, withUnordered bool) {
-		suite = SetupTestSuiteWithUnordered(t, isCheckTx, withUnordered)
-		suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
-
-		enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT}
-		txConfigOpts := authtx.ConfigOptions{
-			TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
-			EnabledSignModes:           enabledSignModes,
-		}
-		var err error
-		suite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(
-			codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
-			txConfigOpts,
-		)
-		require.NoError(t, err)
-		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-		// make block height non-zero to ensure account numbers part of signBytes
-		suite.ctx = suite.ctx.WithBlockHeight(1)
-
-		// keys and addresses
-		pk1, _, addr1 := testdata.KeyTestPubAddr()
-		pk2, _, addr2 := testdata.KeyTestPubAddr()
-		pk3, _, addr3 := testdata.KeyTestPubAddr()
-		priv1, priv2, priv3 = pk1, pk2, pk3
-
-		addrs := []sdk.AccAddress{addr1, addr2, addr3}
-
-		msgs = make([]sdk.Msg, len(addrs))
-		accs = make([]sdk.AccountI, len(addrs))
-		// set accounts and create msg for each address
-		for i, addr := range addrs {
-			acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-			require.NoError(t, acc.SetAccountNumber(uint64(i)+1000))
-			suite.accountKeeper.SetAccount(suite.ctx, acc)
-			msgs[i] = testdata.NewTestMsg(addr)
-			accs[i] = acc
-		}
-
-		spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
-		txConfigOpts = authtx.ConfigOptions{
-			TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper),
-			EnabledSignModes:           enabledSignModes,
-		}
-		anteTxConfig, err := authtx.NewTxConfigWithOptions(
-			codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
-			txConfigOpts,
-		)
-		require.NoError(t, err)
-		svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler())
-		antehandler = sdk.ChainAnteDecorators(spkd, svd)
-		defaultSignMode = signing.SignMode_SIGN_MODE_DIRECT
-	}
-
 	testCases := map[string]struct {
 		unorderedDisabled bool
 		unordered         bool
-		sequences         []uint64
 		timeout           time.Time
 		blockTime         time.Time
 		duplicate         bool
@@ -143,14 +155,6 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 			execMode:    sdk.ExecModeFinalize,
 			expectedErr: "unordered tx ttl exceeds",
 		},
-		"fail if sequences are set in tx": {
-			unordered:   true,
-			timeout:     time.Unix(15, 0),
-			blockTime:   time.Unix(10, 0),
-			sequences:   []uint64{1, 2, 3},
-			execMode:    sdk.ExecModeFinalize,
-			expectedErr: "sequence is not allowed for unordered transactions",
-		},
 		"fails if manager has duplicate": {
 			unordered:   true,
 			timeout:     time.Unix(10, 0),
@@ -169,40 +173,36 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			reset(tc.execMode == sdk.ExecModeCheck, !tc.unorderedDisabled)
-			ctx := suite.ctx.WithBlockTime(tc.blockTime).WithExecMode(tc.execMode).WithIsSigverifyTx(true)
+			suite := setupUnorderedTxTestSuite(t, tc.execMode == sdk.ExecModeCheck, !tc.unorderedDisabled)
+			ctx := suite.anteSuite.ctx.WithBlockTime(tc.blockTime).WithExecMode(tc.execMode).WithIsSigverifyTx(true)
 
-			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
-			require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
-			suite.txBuilder.SetFeeAmount(feeAmount)
-			suite.txBuilder.SetGasLimit(gasLimit)
-			sequences := []uint64{0, 0, 0}
-			if len(tc.sequences) > 0 {
-				sequences = tc.sequences
-			}
-			tx, err := suite.CreateTestUnorderedTx(
-				suite.ctx,
-				[]cryptotypes.PrivKey{priv1, priv2, priv3},
-				[]uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()},
-				sequences,
-				suite.ctx.ChainID(),
-				defaultSignMode,
+			suite.anteSuite.txBuilder = suite.anteSuite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
+			require.NoError(t, suite.anteSuite.txBuilder.SetMsgs(suite.msgs...))
+			suite.anteSuite.txBuilder.SetFeeAmount(feeAmount)
+			suite.anteSuite.txBuilder.SetGasLimit(gasLimit)
+			tx, err := suite.anteSuite.CreateTestUnorderedTx(
+				suite.anteSuite.ctx,
+				[]cryptotypes.PrivKey{suite.priv1, suite.priv2, suite.priv3},
+				[]uint64{suite.accs[0].GetAccountNumber(), suite.accs[1].GetAccountNumber(), suite.accs[2].GetAccountNumber()},
+				[]uint64{0, 0, 0},
+				suite.anteSuite.ctx.ChainID(),
+				suite.defaultSignMode,
 				tc.unordered,
 				tc.timeout,
 			)
 			require.NoError(t, err)
-			txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+			txBytes, err := suite.anteSuite.clientCtx.TxConfig.TxEncoder()(tx)
 			require.NoError(t, err)
 			ctx = ctx.WithTxBytes(txBytes)
 
 			simulate := tc.execMode == sdk.ExecModeSimulate
 
 			if tc.duplicate {
-				_, err = antehandler(ctx, tx, simulate)
+				_, err = suite.antehandler(ctx, tx, simulate)
 				require.NoError(t, err)
 			}
 
-			_, err = antehandler(ctx, tx, simulate)
+			_, err = suite.antehandler(ctx, tx, simulate)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {

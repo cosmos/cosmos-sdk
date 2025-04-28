@@ -120,11 +120,21 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, err
 	}
 
+	isUnordered := false
+	utx, ok := tx.(sdk.TxWithUnordered)
+	if ok && utx.GetUnordered() {
+		isUnordered = true
+	}
+
 	var events sdk.Events
 	for i, sig := range sigs {
-		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStrs[i], sig.Sequence)),
-		))
+		// this shouldn't happen, but if we somehow got a tx with both a sequence set, and is unordered,
+		// we shouldn't emit the event, as this is a false sequence, and won't actually be used.
+		if !isUnordered {
+			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
+				sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStrs[i], sig.Sequence)),
+			))
+		}
 
 		sigBzs, err := signatureDataToBz(sig.Data)
 		if err != nil {
@@ -334,6 +344,9 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	for i, sig := range sigs {
+		if sig.Sequence > 0 && isUnordered {
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sequence is not allowed for unordered transactions")
+		}
 		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
 			return ctx, err

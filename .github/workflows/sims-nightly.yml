@@ -29,8 +29,23 @@ jobs:
         run: |
           make test-sim-multi-seed-long
 
+  test-sim-import-export:
+    runs-on: depot-ubuntu-22.04-4
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+      - name: test-sim-import-export
+        env:
+          GOMEMLIMIT: 14GiB # reserve 2 GiB as buffer for GC to avoid OOM
+        run: |
+          make test-sim-import-export
+
   sims-notify-success:
-    needs: [test-sim-multi-seed-long]
+    needs: [test-sim-multi-seed-long, test-sim-import-export]
     runs-on: depot-ubuntu-22.04-4
     if: ${{ success() }}
     steps:

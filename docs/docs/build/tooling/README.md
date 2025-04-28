@@ -11,7 +11,6 @@ This includes tools for development, operating a node, and ease of use of a Cosm
 
 * [Cosmovisor](./01-cosmovisor.md)
 * [Confix](./02-confix.md)
-* [Rosetta](https://docs.cosmos.network/main/run-node/rosetta)
 
 ## Other Tools
 

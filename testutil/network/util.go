@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -65,9 +63,9 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	cmtApp := server.NewCometABCIWrapper(app)
-	pv, err := pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile(), func() (cmtcrypto.PrivKey, error) {
-		return ed25519.GenPrivKey(), nil
-	})
+
+	// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
+	pv, err := pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile(), nil)
 	if err != nil {
 		return err
 	}

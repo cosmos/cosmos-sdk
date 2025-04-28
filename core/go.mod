@@ -3,7 +3,7 @@ module cosmossdk.io/core
 go 1.23.0
 
 require (
-	cosmossdk.io/api v0.9.0
+	cosmossdk.io/api v0.9.2
 	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-db v1.1.1

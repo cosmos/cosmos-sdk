@@ -11,6 +11,9 @@ type Snapshotter interface {
 	// Snapshot writes snapshot items into the protobuf writer.
 	Snapshot(height uint64, protoWriter protoio.Writer) error
 
+	// AnnounceSnapshotHeight informs the underlying system of a snapshot being initiated at a given height.
+	AnnounceSnapshotHeight(height int64)
+
 	// PruneSnapshotHeight prunes the given height according to the prune strategy.
 	// If PruneNothing, this is a no-op.
 	// If other strategy, this height is persisted until it is

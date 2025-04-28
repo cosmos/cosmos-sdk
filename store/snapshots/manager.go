@@ -165,6 +165,7 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 		return nil, errorsmod.Wrap(storetypes.ErrLogic, "no snapshot store configured")
 	}
 
+	m.multistore.AnnounceSnapshotHeight(int64(height))
 	defer m.multistore.PruneSnapshotHeight(int64(height))
 
 	err := m.begin(opSnapshot)

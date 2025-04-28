@@ -110,6 +110,7 @@ func TestStrategies(t *testing.T) {
 			for curHeight := int64(0); curHeight < 110000; curHeight++ {
 				if tc.snapshotInterval != 0 {
 					if curHeight > int64(tc.snapshotInterval) && curHeight%int64(tc.snapshotInterval) == int64(tc.snapshotInterval)-1 {
+						manager.AnnounceSnapshotHeight(curHeight - int64(tc.snapshotInterval) + 1)
 						manager.HandleSnapshotHeight(curHeight - int64(tc.snapshotInterval) + 1)
 						snHeight = curHeight
 					}
@@ -204,6 +205,7 @@ func TestHandleSnapshotHeight_DbErr_Panic(t *testing.T) {
 	dbMock.EXPECT().SetSync(gomock.Any(), gomock.Any()).Return(errors.New(dbErr)).Times(1)
 
 	manager := pruning.NewManager(dbMock, log.NewNopLogger())
+	manager.SetSnapshotInterval(1)
 	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
 	require.NotNil(t, manager)
 
@@ -282,7 +284,7 @@ func TestLoadPruningSnapshotHeights(t *testing.T) {
 			db := db.NewMemDB()
 
 			if tc.getFlushedPruningSnapshotHeights != nil {
-				err = db.Set(pruning.PruneSnapshotHeightsKey, pruning.Int64SliceToBytes(tc.getFlushedPruningSnapshotHeights()))
+				err = db.Set(pruning.PruneSnapshotHeightsKey, pruning.Int64SliceToBytes(tc.getFlushedPruningSnapshotHeights()...))
 				require.NoError(t, err)
 			}
 

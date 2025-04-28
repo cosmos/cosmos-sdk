@@ -68,8 +68,9 @@ func TestManager_Take(t *testing.T) {
 		{7, 8, 9},
 	}
 	snapshotter := &mockSnapshotter{
-		items:         items,
-		prunedHeights: make(map[int64]struct{}),
+		items:            items,
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
 	}
 	extSnapshotter := newExtSnapshotter(10)
 
@@ -138,7 +139,8 @@ func TestManager_Prune(t *testing.T) {
 func TestManager_Restore(t *testing.T) {
 	store := setupStore(t)
 	target := &mockSnapshotter{
-		prunedHeights: make(map[int64]struct{}),
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
 	}
 	extSnapshotter := newExtSnapshotter(0)
 	manager := snapshots.NewManager(store, opts, target, nil, log.NewNopLogger())

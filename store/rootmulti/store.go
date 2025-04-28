@@ -357,6 +357,10 @@ func (rs *Store) PruneSnapshotHeight(height int64) {
 	rs.pruningManager.HandleSnapshotHeight(height)
 }
 
+func (rs *Store) AnnounceSnapshotHeight(height int64) {
+	rs.pruningManager.AnnounceSnapshotHeight(height)
+}
+
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
 // When this is defined, all CommitKVStores will be wrapped with their respective
 // inter-block cache.

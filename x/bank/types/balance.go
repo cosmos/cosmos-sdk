@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"encoding/json"
+	"slices"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -83,9 +84,7 @@ type GenesisBalancesIterator struct{}
 func (GenesisBalancesIterator) IterateGenesisBalances(
 	cdc codec.JSONCodec, appState map[string]json.RawMessage, cb func(exported.GenesisBalance) (stop bool),
 ) {
-	for _, balance := range GetGenesisStateFromAppState(cdc, appState).Balances {
-		if cb(balance) {
-			break
-		}
+	if slices.ContainsFunc(GetGenesisStateFromAppState(cdc, appState).Balances, cb) {
+
 	}
 }

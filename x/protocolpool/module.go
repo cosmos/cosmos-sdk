@@ -84,8 +84,8 @@ func (am AppModule) RegisterServices(configurator module.Configurator) {
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the protocolpool module.
-func (am AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
-	data, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+func (am AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	data, err := cdc.MarshalJSON(types.DefaultGenesisState())
 	if err != nil {
 		panic(err)
 	}
@@ -93,9 +93,9 @@ func (am AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the protocolpool module.
-func (am AppModule) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
-	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
@@ -103,9 +103,9 @@ func (am AppModule) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig
 }
 
 // InitGenesis performs genesis initialization for the protocolpool module.
-func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, data json.RawMessage) {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
-	am.cdc.MustUnmarshalJSON(data, &genesisState)
+	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	if err := am.keeper.InitGenesis(ctx, &genesisState); err != nil {
 		panic(fmt.Errorf("failed to init genesis state: %w", err))
@@ -113,12 +113,12 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, data json.Ra
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the protocolpool module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
 		panic(fmt.Errorf("failed to export genesis state: %w", err))
 	}
-	return am.cdc.MustMarshalJSON(gs)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock implements appmodule.HasBeginBlocker.

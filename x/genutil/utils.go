@@ -9,8 +9,6 @@ import (
 	"time"
 
 	cfg "github.com/cometbft/cometbft/config"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmtbls12381 "github.com/cometbft/cometbft/crypto/bls12381"
 	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
@@ -46,18 +44,14 @@ func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.Ge
 	return appGenesis.SaveAs(genFile)
 }
 
-// InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config, keyType string) (
-	nodeID string, valPubKey cryptotypes.PubKey, err error,
-) {
-	return InitializeNodeValidatorFilesFromMnemonic(config, "", keyType)
+// InitializeNodeValidatorFiles creates private validator and p2p configuration files. Key type is ed25519.
+func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+	return InitializeNodeValidatorFilesFromMnemonic(config, "")
 }
 
 // InitializeNodeValidatorFilesFromMnemonic creates private validator and p2p configuration files using the given mnemonic.
-// If no valid mnemonic is given, a random one will be used instead.
-func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyType string) (
-	nodeID string, valPubKey cryptotypes.PubKey, err error,
-) {
+// If no valid mnemonic is given, a random one will be used instead. Key type is ed25519.
+func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
 	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
 		return "", nil, errors.New("invalid mnemonic")
 	}
@@ -78,34 +72,16 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 		return "", nil, fmt.Errorf("could not create directory %q: %w", filepath.Dir(pvStateFile), err)
 	}
 
-	var (
-		filePV  *privval.FilePV
-		privKey cmtcrypto.PrivKey
-	)
+	var filePV *privval.FilePV
 
 	if len(mnemonic) == 0 {
-		switch keyType {
-		case "ed25519":
-			filePV = loadOrGenFilePV(tmed25519.GenPrivKey(), pvKeyFile, pvStateFile)
-		case "bls12_381":
-			privKey, err = cmtbls12381.GenPrivKey()
-			if err != nil {
-				return "", nil, err
-			}
-			filePV = loadOrGenFilePV(privKey, pvKeyFile, pvStateFile)
-		default:
-			filePV = loadOrGenFilePV(tmed25519.GenPrivKey(), pvKeyFile, pvStateFile)
+		// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
+		filePV, err = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile, nil)
+		if err != nil {
+			return "", nil, err
 		}
 	} else {
-		switch keyType {
-		case "ed25519":
-			privKey = tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
-		case "bls12_381":
-			// TODO: need to add support for getting from mnemonic in Comet.
-			return "", nil, errors.New("BLS key type does not support mnemonic")
-		default:
-			privKey = tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
-		}
+		privKey := tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
 		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
 		filePV.Save()
 	}
@@ -121,20 +97,4 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 	}
 
 	return nodeID, valPubKey, nil
-}
-
-// loadOrGenFilePV loads a FilePV from the given filePaths
-// or else generates a new one and saves it to the filePaths.
-func loadOrGenFilePV(privKey cmtcrypto.PrivKey, keyFilePath, stateFilePath string) *privval.FilePV {
-	_, err := os.Stat(keyFilePath)
-	exists := !os.IsNotExist(err)
-
-	var pv *privval.FilePV
-	if exists {
-		pv = privval.LoadFilePV(keyFilePath, stateFilePath)
-	} else {
-		pv = privval.NewFilePV(privKey, keyFilePath, stateFilePath)
-		pv.Save()
-	}
-	return pv
 }

@@ -65,12 +65,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			config := serverCtx.Config
 			config.SetRoot(clientCtx.HomeDir)
 
-			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
-			if err != nil {
-				return errors.Wrap(err, "Failed to get consensus key algo")
-			}
-
-			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config, consensusKey)
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}

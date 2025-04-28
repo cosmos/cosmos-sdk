@@ -36,7 +36,6 @@ var (
 
 // AppModule implements an application module for the pool module
 type AppModule struct {
-	cdc           codec.Codec
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper

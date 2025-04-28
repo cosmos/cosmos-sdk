@@ -1450,7 +1450,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 }
 
 func TestAnteHandlerUnorderedTx(t *testing.T) {
-	suite := SetupTestSuite(t, false)
+	suite := SetupTestSuiteWithUnordered(t, false, true)
 	accs := suite.CreateTestAccounts(1)
 	msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
 

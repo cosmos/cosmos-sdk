@@ -319,8 +319,21 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	return after - before, err
 }
 
-func TestIncrementSequenceDecorator(t *testing.T) {
+func TestIncrementSequenceDecorator_ShouldFailWhenUnorderedTxsDisabled(t *testing.T) {
 	suite := SetupTestSuite(t, true)
+	isd := ante.NewIncrementSequenceDecorator(suite.accountKeeper)
+	antehandler := sdk.ChainAnteDecorators(isd)
+
+	priv, _, _ := testdata.KeyTestPubAddr()
+	tx, err := suite.CreateTestUnorderedTx(suite.ctx, []cryptotypes.PrivKey{priv}, []uint64{0}, []uint64{0}, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT, true, time.Now())
+	require.NoError(t, err)
+
+	_, err = antehandler(suite.ctx, tx, false)
+	require.ErrorContains(t, err, "unordered transactions are disabled")
+}
+
+func TestIncrementSequenceDecorator(t *testing.T) {
+	suite := SetupTestSuiteWithUnordered(t, true, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	priv, _, addr := testdata.KeyTestPubAddr()
@@ -382,7 +395,7 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 			true,
 		},
 		{
-			"no inc on unordered",
+			"unordered tx should not inc sequence",
 			suite.ctx.WithIsReCheckTx(true),
 			true,
 			func() sdk.Tx {

@@ -197,6 +197,7 @@ var (
 				// By default modules authority is the governance module. This is configurable with the following:
 				// Authority: "group", // A custom module authority can be set using a module name
 				// Authority: "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv", // or a specific address
+				EnableUnorderedTransactions: true,
 			}),
 		},
 		{

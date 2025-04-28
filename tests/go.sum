@@ -614,8 +614,6 @@ cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoIS
 cloud.google.com/go/workflows v1.8.0/go.mod h1:ysGhmEajwZxGn1OhGOGKsTXc5PyxOc0vfKf5Af+to4M=
 cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT3ujaO/WwSA=
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
-cosmossdk.io/api v0.9.0 h1:QYs9APeSlDNGbsBOBFjp3jXgGd4hnEPnnku3+W3tT4Y=
-cosmossdk.io/api v0.9.0/go.mod h1:pLkU/NSqYHWxyN7XftVt8iD7oldKJzqMZgzeiOmT2nk=
 cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e h1:NqQEVIjRqSdsAfTI9uDRZ1oU/cQuCoAbUuIkndQM+Bo=
 cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e/go.mod h1:4p0P6o0ro+FizakJUYS9SeM94RNbv0thLmkHRw5o5as=
 cosmossdk.io/collections v1.2.0 h1:IesfVG8G/+FYCMVMP01frS/Cw99Omk5vBh3cHbO01Gg=

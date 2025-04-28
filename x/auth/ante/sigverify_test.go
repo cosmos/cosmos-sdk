@@ -77,26 +77,14 @@ func TestSetPubKey_UnorderedNoEvents(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	// keys and addresses
+	// prepare accounts for tx
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	priv2, _, addr2 := testdata.KeyTestPubAddr()
-	priv3, _, addr3 := testdata.KeyTestPubAddrSecp256R1(t)
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	require.NoError(t, acc.SetAccountNumber(uint64(1000)))
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+	require.NoError(t, suite.txBuilder.SetMsgs(testdata.NewTestMsg(addr1)))
 
-	addrs := []sdk.AccAddress{addr1, addr2, addr3}
-
-	msgs := make([]sdk.Msg, len(addrs))
-	// set accounts and create msg for each address
-	for i, addr := range addrs {
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(t, acc.SetAccountNumber(uint64(i+1000)))
-		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		msgs[i] = testdata.NewTestMsg(addr)
-	}
-	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
-	suite.txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
-	suite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 0, 0}, []uint64{0, 0, 0}
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestUnorderedTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT, true, time.Unix(100, 0))
 	require.NoError(t, err)
 

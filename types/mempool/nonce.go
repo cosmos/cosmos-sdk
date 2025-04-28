@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// chooseNonce gets the nonce from a transaction. If the transaction is unordered,
+// ChooseNonce gets the nonce from a transaction. If the transaction is unordered,
 // it uses the timeout timestamp as the nonce. Sequence values must be zero in this case.
 // If the transaction is ordered, it uses the sequence number as the nonce.
-func chooseNonce(seq uint64, tx sdk.Tx) (uint64, error) {
+func ChooseNonce(seq uint64, tx sdk.Tx) (uint64, error) {
 	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
 	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
 		if seq > 0 {

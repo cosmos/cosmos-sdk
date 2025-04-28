@@ -138,7 +138,7 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
-	nonce, err := chooseNonce(sig.Sequence, tx)
+	nonce, err := ChooseNonce(sig.Sequence, tx)
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
-	nonce, err := chooseNonce(sig.Sequence, tx)
+	nonce, err := ChooseNonce(sig.Sequence, tx)
 	if err != nil {
 		return err
 	}

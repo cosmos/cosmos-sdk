@@ -10,7 +10,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -102,12 +102,12 @@ func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -133,7 +133,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 
-	_, err = suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err = suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -168,7 +168,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 			txs = append(txs, txBytes)
 		}
 
-		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 			Height: height,
 			Txs:    txs,
 		})
@@ -219,7 +219,7 @@ func TestAnteHandlerGasMeter(t *testing.T) {
 	}
 
 	suite := NewBaseAppSuite(t, anteOpt, beginBlockerOpt)
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -230,7 +230,7 @@ func TestAnteHandlerGasMeter(t *testing.T) {
 	tx := newTxCounter(t, suite.txConfig, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 }
 
@@ -256,14 +256,14 @@ func TestLoadVersion(t *testing.T) {
 	require.Equal(t, emptyCommitID, lastID)
 
 	// execute a block, collect commit ID
-	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
 	_, err = app.Commit()
 	require.NoError(t, err)
 
 	// execute a block, collect commit ID
-	res, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+	res, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2})
 	require.NoError(t, err)
 	commitID2 := storetypes.CommitID{Version: 2, Hash: res.AppHash}
 	_, err = app.Commit()
@@ -286,7 +286,7 @@ func TestLoadVersion(t *testing.T) {
 
 	testLoadVersionHelper(t, app, int64(1), commitID1)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -376,7 +376,7 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			// "execute" one block
-			res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+			res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2})
 			require.NoError(t, err)
 			require.NotNil(t, res.AppHash)
 			_, err = app.Commit()
@@ -396,7 +396,7 @@ func TestVersionSetterGetter(t *testing.T) {
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil, pruningOpt)
 
 	require.Equal(t, "", app.Version())
-	res, err := app.Query(context.TODO(), &abci.RequestQuery{Path: "app/version"})
+	res, err := app.Query(context.TODO(), &abci.QueryRequest{Path: "app/version"})
 	require.NoError(t, err)
 	require.True(t, res.IsOK())
 	require.Equal(t, "", string(res.Value))
@@ -405,7 +405,7 @@ func TestVersionSetterGetter(t *testing.T) {
 	app.SetVersion(versionString)
 	require.Equal(t, versionString, app.Version())
 
-	res, err = app.Query(context.TODO(), &abci.RequestQuery{Path: "app/version"})
+	res, err = app.Query(context.TODO(), &abci.QueryRequest{Path: "app/version"})
 	require.NoError(t, err)
 	require.True(t, res.IsOK())
 	require.Equal(t, versionString, string(res.Value))
@@ -425,7 +425,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	err = app.LoadVersion(-1)
 	require.Error(t, err)
 
-	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.AppHash}
 	_, err = app.Commit()
@@ -534,7 +534,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -559,7 +559,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 		require.PanicsWithValue(t, customPanicMsg, func() {
 			bz, err := suite.txConfig.TxEncoder()(tx)
 			require.NoError(t, err)
-			_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{bz}})
+			_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{bz}})
 			require.Error(t, err)
 		})
 	}
@@ -575,7 +575,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	deliverKey := []byte("deliver-key")
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -590,7 +590,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
@@ -607,7 +607,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	res, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	res, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
@@ -624,7 +624,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	res, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	res, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
@@ -650,7 +650,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, []byte("foo")})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -663,7 +663,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.Empty(t, res.Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
@@ -676,7 +676,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	tx = setFailOnHandler(suite.txConfig, tx, true)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
-	res, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	res, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
@@ -687,7 +687,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	tx = wonkyMsg(t, suite.txConfig, tx)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.NotContains(t, suite.logBuffer.String(), "panic recovered in runTx")
 }
@@ -735,7 +735,7 @@ func TestBaseAppPostHandlerErrorHandling(t *testing.T) {
 			}
 			baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), csMock)
 
-			_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+			_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 				ConsensusParams: &cmtproto.ConsensusParams{},
 			})
 			require.NoError(t, err)
@@ -744,7 +744,7 @@ func TestBaseAppPostHandlerErrorHandling(t *testing.T) {
 			require.NoError(t, err)
 
 			// when
-			res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 			// then
 			require.NoError(t, err)
 			assert.Equal(t, spec.expCode, res.TxResults[0].Code)
@@ -778,7 +778,7 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.headerHeight != tc.height {
-				_, err := app.InitChain(&abci.RequestInitChain{
+				_, err := app.InitChain(&abci.InitChainRequest{
 					InitialHeight: tc.headerHeight,
 				})
 				require.NoError(t, err)
@@ -814,7 +814,7 @@ func TestABCI_CreateQueryContextWithCheckHeader(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("valid height with different initial height", func(t *testing.T) {
-			_, err := app.InitChain(&abci.RequestInitChain{
+			_, err := app.InitChain(&abci.InitChainRequest{
 				InitialHeight: headerHeight,
 			})
 			require.NoError(t, err)
@@ -840,12 +840,12 @@ func TestABCI_CreateQueryContext_Before_Set_CheckState(t *testing.T) {
 	t.Run("valid height with different initial height", func(t *testing.T) {
 		app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
-		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+		_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 		require.NoError(t, err)
 		_, err = app.Commit()
 		require.NoError(t, err)
 
-		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+		_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2})
 		require.NoError(t, err)
 
 		var queryCtx *sdk.Context
@@ -853,7 +853,7 @@ func TestABCI_CreateQueryContext_Before_Set_CheckState(t *testing.T) {
 		app.SetStreamingManager(storetypes.StreamingManager{
 			ABCIListeners: []storetypes.ABCIListener{
 				&mockABCIListener{
-					ListenCommitFn: func(context.Context, abci.ResponseCommit, []*storetypes.StoreKVPair) error {
+					ListenCommitFn: func(context.Context, abci.CommitResponse, []*storetypes.StoreKVPair) error {
 						qCtx, qErr := app.CreateQueryContext(0, true)
 						queryCtx = &qCtx
 						queryCtxErr = qErr
@@ -866,7 +866,7 @@ func TestABCI_CreateQueryContext_Before_Set_CheckState(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, queryCtxErr)
 		require.Equal(t, height, queryCtx.BlockHeight())
-		_, err = app.InitChain(&abci.RequestInitChain{
+		_, err = app.InitChain(&abci.InitChainRequest{
 			InitialHeight: headerHeight,
 		})
 		require.NoError(t, err)
@@ -938,7 +938,7 @@ func TestQueryGasLimit(t *testing.T) {
 
 func TestGetMaximumBlockGas(t *testing.T) {
 	suite := NewBaseAppSuite(t)
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{})
 	require.NoError(t, err)
 
 	ctx := suite.baseApp.NewContext(true)
@@ -958,7 +958,7 @@ func TestGetMaximumBlockGas(t *testing.T) {
 
 func TestGetEmptyConsensusParams(t *testing.T) {
 	suite := NewBaseAppSuite(t)
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{})
 	require.NoError(t, err)
 	ctx := suite.baseApp.NewContext(true)
 
@@ -998,7 +998,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
 	// (keep recent) and 3 (keep every).
 	for i := int64(1); i <= 7; i++ {
-		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
+		res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: i})
 		require.NoError(t, err)
 		_, err = app.Commit()
 		require.NoError(t, err)

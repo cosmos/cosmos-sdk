@@ -7,7 +7,7 @@ import (
 	"time"
 
 	types2 "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
+	types "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/errors"
@@ -127,7 +127,7 @@ func SignCheckDeliver(
 	bz, err := txCfg.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	resBlock, err := app.FinalizeBlock(&types2.RequestFinalizeBlock{
+	resBlock, err := app.FinalizeBlock(&types2.FinalizeBlockRequest{
 		Height: header.Height,
 		Txs:    [][]byte{bz},
 	})

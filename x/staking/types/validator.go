@@ -8,7 +8,8 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	"github.com/cometbft/cometbft/crypto/encoding"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
@@ -263,10 +264,14 @@ func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
 	if err != nil {
 		panic(err)
 	}
-
+	tmPk, err := encoding.PubKeyFromProto(tmProtoPk)
+	if err != nil {
+		panic(err)
+	}
 	return abci.ValidatorUpdate{
-		PubKey: tmProtoPk,
-		Power:  v.ConsensusPower(r),
+		PubKeyBytes: tmPk.Bytes(),
+		PubKeyType:  tmPk.Type(),
+		Power:       v.ConsensusPower(r),
 	}
 }
 
@@ -277,10 +282,14 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	if err != nil {
 		panic(err)
 	}
-
+	tmPk, err := encoding.PubKeyFromProto(tmProtoPk)
+	if err != nil {
+		panic(err)
+	}
 	return abci.ValidatorUpdate{
-		PubKey: tmProtoPk,
-		Power:  0,
+		PubKeyBytes: tmPk.Bytes(),
+		PubKeyType:  tmPk.Type(),
+		Power:       0,
 	}
 }
 

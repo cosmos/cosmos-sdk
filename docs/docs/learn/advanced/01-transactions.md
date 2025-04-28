@@ -211,6 +211,14 @@ Check out the [v0.53.0 Upgrade Guide](https://docs.cosmos.network/v0.53/build/mi
 
 :::
 
+:::warning
+
+Unordered transactions MUST leave sequence values unset. When a transaction is both unordered and contains a non-zero sequence value,
+the transaction will be rejected. Services that operate on prior assumptions about transaction sequence values should be updated to handle unordered transactions.
+Services should be aware that when the transaction is unordered, the transaction sequence will always be zero.
+
+:::
+
 Beginning with Cosmos SDK v0.53.0, chains may enable unordered transaction support. 
 Unordered transactions work by using a timestamp as the transaction's nonce value. The sequence value must NOT be set in the signature(s) of the transaction.
 The timestamp must be greater than the current block time and not exceed the chain's configured max unordered timeout timestamp duration.

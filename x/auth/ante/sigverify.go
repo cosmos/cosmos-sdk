@@ -301,7 +301,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	utx, ok := tx.(sdk.TxWithUnordered)
 	isUnordered := ok && utx.GetUnordered()
-	unorderedEnabled := svd.ak.IsUnorderedTransactionsEnabled()
+	unorderedEnabled := svd.ak.UnorderedTransactionsEnabled()
 
 	if isUnordered && !unorderedEnabled {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrNotSupported, "unordered transactions are not enabled")
@@ -485,7 +485,7 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	if utx, ok := tx.(sdk.TxWithUnordered); ok && utx.GetUnordered() {
-		if !isd.ak.IsUnorderedTransactionsEnabled() {
+		if !isd.ak.UnorderedTransactionsEnabled() {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrNotSupported, "unordered transactions are disabled")
 		}
 		return next(ctx, tx, simulate)

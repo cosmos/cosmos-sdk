@@ -100,18 +100,18 @@ func (mr *MockAccountKeeperMockRecorder) GetParams(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockAccountKeeper)(nil).GetParams), ctx)
 }
 
-// IsUnorderedTransactionsEnabled mocks base method.
-func (m *MockAccountKeeper) IsUnorderedTransactionsEnabled() bool {
+// UnorderedTransactionsEnabled mocks base method.
+func (m *MockAccountKeeper) UnorderedTransactionsEnabled() bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsUnorderedTransactionsEnabled")
+	ret := m.ctrl.Call(m, "UnorderedTransactionsEnabled")
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// IsUnorderedTransactionsEnabled indicates an expected call of IsUnorderedTransactionsEnabled.
-func (mr *MockAccountKeeperMockRecorder) IsUnorderedTransactionsEnabled() *gomock.Call {
+// UnorderedTransactionsEnabled indicates an expected call of UnorderedTransactionsEnabled.
+func (mr *MockAccountKeeperMockRecorder) UnorderedTransactionsEnabled() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUnorderedTransactionsEnabled", reflect.TypeOf((*MockAccountKeeper)(nil).IsUnorderedTransactionsEnabled))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnorderedTransactionsEnabled", reflect.TypeOf((*MockAccountKeeper)(nil).UnorderedTransactionsEnabled))
 }
 
 // RemoveExpiredUnorderedNonces mocks base method.

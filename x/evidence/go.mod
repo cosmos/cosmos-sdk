@@ -2,8 +2,6 @@ module cosmossdk.io/x/evidence
 
 go 1.23.5
 
-toolchain go1.23.7
-
 require (
 	cosmossdk.io/api v0.9.1-0.20250414160549-8eb17e9db5b2
 	cosmossdk.io/collections v1.2.0

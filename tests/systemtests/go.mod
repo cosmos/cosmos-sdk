@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/systemtests v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.3.0.20250425000500-674051b6bb4a
+	github.com/cosmos/cosmos-sdk v0.53.0-rc.3.0.20250428141703-94b270a58d77
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/cosmos/iavl v1.2.2 // indirect

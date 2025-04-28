@@ -559,13 +559,11 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 
 func (s *E2ETestSuite) TestUnorderedCannotUseSequence() {
 	val1 := *s.network.Validators[0]
-	addr := val1.Address
-	// Send coins from validator to multisig.
 	coins := sdk.NewInt64Coin(s.cfg.BondDenom, 15)
 	_, err := cli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
-		addr,
+		val1.Address,
 		sdk.NewCoins(coins),
 		addresscodec.NewBech32Codec("cosmos"),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -573,7 +571,7 @@ func (s *E2ETestSuite) TestUnorderedCannotUseSequence() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 		fmt.Sprintf("--sequence=%d", 15),
-		fmt.Sprintf("--unordered"),
+		"--unordered",
 		fmt.Sprintf("--timeout-duration=%s", "10s"),
 	)
 	s.Require().ErrorContains(err, "if any flags in the group [unordered sequence] are set none of the others can be; [sequence unordered] were all set")

@@ -44,7 +44,7 @@ func TestFactoryPrepare(t *testing.T) {
 
 	// sequence and unordered set should break the tx.
 	factory = Factory{}.WithAccountRetriever(client.MockAccountRetriever{ReturnAccNum: 10, ReturnAccSeq: 15}).WithUnordered(true).WithSequence(15)
-	output, err = factory.Prepare(clientCtx.WithFrom("foo"))
+	_, err = factory.Prepare(clientCtx.WithFrom("foo"))
 	require.ErrorContains(t, err, "unordered transactions must not have sequence values set")
 
 	// unordered set should ignore the retrieved sequence value.

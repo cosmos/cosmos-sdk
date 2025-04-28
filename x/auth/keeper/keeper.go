@@ -167,7 +167,7 @@ func NewAccountKeeper(
 	return ak
 }
 
-func (ak AccountKeeper) IsUnorderedTransactionsEnabled() bool {
+func (ak AccountKeeper) UnorderedTransactionsEnabled() bool {
 	return ak.enableUnorderedTxs
 }
 

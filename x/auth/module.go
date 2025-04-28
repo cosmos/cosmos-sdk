@@ -102,7 +102,7 @@ type AppModule struct {
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
 	start := telemetry.Now()
 	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyPreBlocker)
-	if am.accountKeeper.IsUnorderedTransactionsEnabled() {
+	if am.accountKeeper.UnorderedTransactionsEnabled() {
 		err := am.accountKeeper.RemoveExpiredUnorderedNonces(sdk.UnwrapSDKContext(ctx))
 		if err != nil {
 			return nil, err

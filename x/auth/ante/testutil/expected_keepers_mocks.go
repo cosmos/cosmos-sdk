@@ -100,20 +100,6 @@ func (mr *MockAccountKeeperMockRecorder) GetParams(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockAccountKeeper)(nil).GetParams), ctx)
 }
 
-// IsUnorderedTransactionsEnabled mocks base method.
-func (m *MockAccountKeeper) IsUnorderedTransactionsEnabled() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsUnorderedTransactionsEnabled")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// IsUnorderedTransactionsEnabled indicates an expected call of IsUnorderedTransactionsEnabled.
-func (mr *MockAccountKeeperMockRecorder) IsUnorderedTransactionsEnabled() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUnorderedTransactionsEnabled", reflect.TypeOf((*MockAccountKeeper)(nil).IsUnorderedTransactionsEnabled))
-}
-
 // RemoveExpiredUnorderedNonces mocks base method.
 func (m *MockAccountKeeper) RemoveExpiredUnorderedNonces(ctx types.Context) error {
 	m.ctrl.T.Helper()
@@ -152,6 +138,20 @@ func (m *MockAccountKeeper) TryAddUnorderedNonce(ctx types.Context, sender []byt
 func (mr *MockAccountKeeperMockRecorder) TryAddUnorderedNonce(ctx, sender, timestamp any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TryAddUnorderedNonce", reflect.TypeOf((*MockAccountKeeper)(nil).TryAddUnorderedNonce), ctx, sender, timestamp)
+}
+
+// UnorderedTransactionsEnabled mocks base method.
+func (m *MockAccountKeeper) UnorderedTransactionsEnabled() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnorderedTransactionsEnabled")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// UnorderedTransactionsEnabled indicates an expected call of UnorderedTransactionsEnabled.
+func (mr *MockAccountKeeperMockRecorder) UnorderedTransactionsEnabled() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnorderedTransactionsEnabled", reflect.TypeOf((*MockAccountKeeper)(nil).UnorderedTransactionsEnabled))
 }
 
 // MockFeegrantKeeper is a mock of FeegrantKeeper interface.

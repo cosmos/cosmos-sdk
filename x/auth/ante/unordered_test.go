@@ -28,6 +28,7 @@ type UnorderedTxTestSuite struct {
 }
 
 func setupUnorderedTxTestSuite(t *testing.T, isCheckTx, withUnordered bool) *UnorderedTxTestSuite {
+	t.Helper()
 	anteSuite := SetupTestSuiteWithUnordered(t, isCheckTx, withUnordered)
 	anteSuite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
 

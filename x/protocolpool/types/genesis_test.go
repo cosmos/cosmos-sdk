@@ -93,6 +93,39 @@ func TestValidateGenesis(t *testing.T) {
 			},
 			expectedErr: "total percentage cannot be greater than 100",
 		},
+		{
+			name: "invalid genesis state with invalid continuous fund (percentage sum > 1)",
+			genesisState: &types.GenesisState{
+				ContinuousFunds: []types.ContinuousFund{
+					{
+						Recipient:  "cosmos1dupaddress",
+						Percentage: math.LegacyMustNewDecFromStr("1.1"),
+						Expiry:     nil,
+					},
+				},
+				Params: types.DefaultParams(),
+			},
+			expectedErr: "percentage cannot be greater than one",
+		},
+		{
+			name: "invalid genesis state with duplicate recipient addresses",
+			genesisState: &types.GenesisState{
+				ContinuousFunds: []types.ContinuousFund{
+					{
+						Recipient:  "cosmos1dupaddress",
+						Percentage: math.LegacyMustNewDecFromStr("0.4"),
+						Expiry:     nil,
+					},
+					{
+						Recipient:  "cosmos1dupaddress", // duplicate
+						Percentage: math.LegacyMustNewDecFromStr("0.3"),
+						Expiry:     nil,
+					},
+				},
+				Params: types.DefaultParams(),
+			},
+			expectedErr: "duplicated continuous fund recipient address",
+		},
 	}
 
 	for _, tc := range tests {

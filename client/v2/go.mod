@@ -2,8 +2,6 @@ module cosmossdk.io/client/v2
 
 go 1.23.2
 
-replace github.com/cosmos/cosmos-sdk => ../..
-
 require (
 	cosmossdk.io/api v0.9.0
 	cosmossdk.io/core v0.11.3
@@ -17,7 +15,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.71.1
+	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.6
 	gotest.tools/v3 v3.5.2
 	sigs.k8s.io/yaml v1.4.0
@@ -156,7 +154,7 @@ require (
 	golang.org/x/text v0.24.0 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.2.0 // indirect

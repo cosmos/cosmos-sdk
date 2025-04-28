@@ -35,9 +35,7 @@ failure type:
   inconsistencies between the stores.
 * `AppSimulationAfterImport`: Queues two simulations together. The first one provides the app state (_i.e_ genesis) to the second. Useful to test software upgrades or hard-forks from a live chain.
 * `AppStateDeterminism`: Checks that all the nodes return the same values, in the same order.
-* `BenchmarkInvariants`: Analysis of the performance of running all modules' invariants (_i.e_ sequentially runs a [benchmark](https://pkg.go.dev/testing/#hdr-Benchmarks) test). An invariant checks for
-  differences between the values that are on the store and the passive tracker. Eg: total coins held by accounts vs total supply tracker.
-* `FullAppSimulation`: General simulation mode. Runs the chain and the specified operations for a given number of blocks. Tests that there're no `panics` on the simulation. It does also run invariant checks on every `Period` but they are not benchmarked.
+* `FullAppSimulation`: General simulation mode. Runs the chain and the specified operations for a given number of blocks. Tests that there're no `panics` on the simulation.
 
 Each simulation must receive a set of inputs (_i.e_ flags) such as the number of
 blocks that the simulation is run, seed, block size, etc.
@@ -80,15 +78,10 @@ Here are some suggestions when encountering a simulation failure:
   by passing the `-ExportStatePath` flag to the simulator.
 * Use `-Verbose` logs. They could give you a better hint on all the operations
   involved.
-* Reduce the simulation `-Period`. This will run the invariants checks more
-  frequently.
-* Print all the failed invariants at once with `-PrintAllInvariants`.
 * Try using another `-Seed`. If it can reproduce the same error and if it fails
   sooner, you will spend less time running the simulations.
 * Reduce the `-NumBlocks` . How's the app state at the height previous to the
   failure?
-* Run invariants on every operation with `-SimulateEveryOperation`. _Note_: this
-  will slow down your simulation **a lot**.
 * Try adding logs to operations that are not logged. You will have to define a
   [Logger](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/x/staking/keeper/keeper.go#L77-L81) on your `Keeper`.
 

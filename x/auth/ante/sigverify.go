@@ -345,7 +345,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	for i, sig := range sigs {
 		if sig.Sequence > 0 && isUnordered {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sequences is not allowed for unordered transactions")
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sequence is not allowed for unordered transactions")
 		}
 		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {

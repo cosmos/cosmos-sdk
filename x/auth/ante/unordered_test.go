@@ -149,7 +149,7 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 			blockTime:   time.Unix(10, 0),
 			sequences:   []uint64{1, 2, 3},
 			execMode:    sdk.ExecModeFinalize,
-			expectedErr: "sequences is not allowed for unordered transactions",
+			expectedErr: "sequence is not allowed for unordered transactions",
 		},
 		"fails if manager has duplicate": {
 			unordered:   true,

@@ -25,7 +25,6 @@ cat ../x/README.md | sed 's/\.\.\/docs\/build\/building-modules\/README\.md/\/bu
 ## Add tooling documentation
 cp ../tools/cosmovisor/README.md ./docs/build/tooling/01-cosmovisor.md
 cp ../tools/confix/README.md ./docs/build/tooling/02-confix.md
-wget -O docs/user/run-node/04-rosetta.md https://raw.githubusercontent.com/cosmos/rosetta/main/README.md
 
 ## Add package documentation
 cp ../client/v2/README.md ./docs/learn/advanced/17-autocli.md

@@ -161,4 +161,7 @@ require (
 )
 
 // Temporary replace until the next 0.53 tag
-replace github.com/cosmos/cosmos-sdk => ../..
+replace (
+	cosmossdk.io/api => ../../api
+	github.com/cosmos/cosmos-sdk => ../..
+)

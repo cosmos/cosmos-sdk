@@ -3,7 +3,7 @@ go 1.23.2
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.9.0
+	cosmossdk.io/api v0.9.2
 	cosmossdk.io/collections v1.2.0
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.0
@@ -174,7 +174,6 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace cosmossdk.io/api => ./api
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

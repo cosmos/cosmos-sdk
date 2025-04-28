@@ -3,7 +3,7 @@ module cosmossdk.io/x/feegrant
 go 1.23.2
 
 require (
-	cosmossdk.io/api v0.9.0
+	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/errors v1.0.2
@@ -161,7 +161,4 @@ require (
 )
 
 // Temporary replace until the next 0.53 tag
-replace (
-	cosmossdk.io/api => ../../api
-	github.com/cosmos/cosmos-sdk => ../..
-)
+replace github.com/cosmos/cosmos-sdk => ../..

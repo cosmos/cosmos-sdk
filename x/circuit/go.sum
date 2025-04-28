@@ -1,7 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cosmossdk.io/api v0.9.0 h1:QYs9APeSlDNGbsBOBFjp3jXgGd4hnEPnnku3+W3tT4Y=
-cosmossdk.io/api v0.9.0/go.mod h1:pLkU/NSqYHWxyN7XftVt8iD7oldKJzqMZgzeiOmT2nk=
+cosmossdk.io/api v0.9.2 h1:9i9ptOBdmoIEVEVWLtYYHjxZonlF/aOVODLFaxpmNtg=
+cosmossdk.io/api v0.9.2/go.mod h1:CWt31nVohvoPMTlPv+mMNCtC0a7BqRdESjCsstHcTkU=
 cosmossdk.io/collections v1.2.0 h1:IesfVG8G/+FYCMVMP01frS/Cw99Omk5vBh3cHbO01Gg=
 cosmossdk.io/collections v1.2.0/go.mod h1:4NkMoYw6qRA8fnSH/yn1D/MOutr8qyQnwsO50Mz9ItU=
 cosmossdk.io/core v0.11.3 h1:mei+MVDJOwIjIniaKelE3jPDqShCc/F4LkNNHh+4yfo=

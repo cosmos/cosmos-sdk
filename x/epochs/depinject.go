@@ -45,7 +45,7 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.StoreService, in.Cdc)
-	m := NewAppModule(in.Cdc, k)
+	m := NewAppModule(k)
 	return ModuleOutputs{EpochKeeper: k, Module: m}
 }
 

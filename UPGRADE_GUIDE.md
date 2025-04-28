@@ -408,6 +408,11 @@ Lastly, add an entry for epochs in the ModuleConfig:
 
 To enable unordered transaction support on an application, the `x/auth` keeper must be supplied with the `WithUnorderedTransactions` option.
 
+Note that unordered transactions require sequence values to be zero, and will **FAIL** if a non-zero sequence value is set.
+Please ensure no sequence value is set when submitting an unordered transaction.
+Services that rely on prior assumptions about sequence values should be updated to handle unordered transactions.
+Services should be aware that when the transaction is unordered, the transaction sequence will always be zero.
+
 ```go
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,

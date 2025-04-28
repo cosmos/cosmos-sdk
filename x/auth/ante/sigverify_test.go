@@ -72,6 +72,35 @@ func TestSetPubKey(t *testing.T) {
 	}
 }
 
+// TestSetPubKey_UnorderedNoEvents tests that when the tx is unordered, the sequence event is not emitted.
+func TestSetPubKey_UnorderedNoEvents(t *testing.T) {
+	suite := SetupTestSuite(t, true)
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+	// prepare accounts for tx
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	require.NoError(t, acc.SetAccountNumber(uint64(1000)))
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+	require.NoError(t, suite.txBuilder.SetMsgs(testdata.NewTestMsg(addr1)))
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := suite.CreateTestUnorderedTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT, true, time.Unix(100, 0))
+	require.NoError(t, err)
+
+	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
+	antehandler := sdk.ChainAnteDecorators(spkd)
+
+	ctx, err := antehandler(suite.ctx.WithBlockTime(time.Unix(95, 0)), tx, false)
+	require.NoError(t, err)
+	events := ctx.EventManager().Events()
+	for _, event := range events {
+		// if this event were emitted, the tx search by address/sequence would break when an unordered
+		// transaction uses the same sequence number as another transaction from the same sender.
+		require.NotContains(t, event.Attributes, sdk.AttributeKeyAccountSequence)
+	}
+}
+
 func TestConsumeSignatureVerificationGas(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	params := types.DefaultParams()

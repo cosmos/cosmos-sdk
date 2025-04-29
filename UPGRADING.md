@@ -95,7 +95,92 @@ app.ModuleManager.SetOrderPreBlockers(
 )
 ```
 
-That's it.
+### Arbitrary Module Configuration
+
+We've introduced a new feature that allows modules to specify arbitrary configuration blobs by key and type and receive them via depinject. This provides more flexibility in configuring modules without adding hardcoded configuration fields.
+
+#### For Module Developers
+
+To use this feature in your module:
+
+1. Update your module proto definition to include a configuration entry field:
+
+```protobuf
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "example.com/mymodule"
+  };
+  
+  // Add a repeated field for configuration entries
+  repeated ConfigEntry config_entries = 1;
+}
+
+message ConfigEntry {
+  string key = 1;
+  google.protobuf.Any value = 2;
+}
+```
+
+2. Access these configuration values in your module's provider function:
+
+```go
+func ProvideModule(in ModuleInputs) (ModuleOutputs, error) {
+  // Access configuration entries
+  for _, entry := range in.Config.ConfigEntries {
+    // Process each configuration entry by key
+    if entry.Key == "my_custom_config" {
+      var customConfig types.CustomConfig
+      if err := anypb.UnmarshalTo(entry.Value, &customConfig, proto.UnmarshalOptions{}); err != nil {
+        return ModuleOutputs{}, err
+      }
+      
+      // Use the configuration
+    }
+  }
+  
+  // Continue module initialization...
+}
+```
+
+#### For Chain Developers
+
+To configure modules with arbitrary configuration values:
+
+```yaml
+# In app.yaml
+modules:
+  - name: mymodule
+    config:
+      "@type": "/example.com.mymodule.Module"
+      config_entries:
+        - key: "my_custom_config"
+          value:
+            "@type": "/example.com.mymodule.CustomConfig"
+            parameter1: "value1"
+            parameter2: 42
+```
+
+Or in Go:
+
+```go
+// In app_config.go
+{
+  Name: "mymodule",
+  Config: appconfig.WrapAny(&mymodulev1.Module{
+    ConfigEntries: []*mymodulev1.ConfigEntry{
+      {
+        Key: "my_custom_config",
+        Value: appconfig.WrapAny(&mymodulev1.CustomConfig{
+          Parameter1: "value1",
+          Parameter2: 42,
+        }),
+      },
+    },
+  }),
+}
+```
+
+See [Module Configuration Documentation](docs/docs/build/building-modules/15-depinject.md) for more details.
 
 ### New Modules
 
@@ -159,13 +244,13 @@ Required wiring:
 
 This release introduces the ability to configure a custom mint function in `x/mint`. The minting logic is now abstracted as a `MintFn` with a default implementation that can be overridden.
 
-### What’s New
+### What's New
 
 - **Configurable Mint Function:**  
   A new `MintFn` abstraction is introduced. By default, the module uses `DefaultMintFn`, but you can supply your own implementation.
 
 - **Deprecated InflationCalculationFn Parameter:**  
-  The `InflationCalculationFn` argument previously provided to `mint.NewAppModule()` is now ignored and must be `nil`. To customize the default minter’s inflation behavior, wrap your custom function with `mintkeeper.DefaultMintFn` and pass it via the `WithMintFn` option:
+  The `InflationCalculationFn` argument previously provided to `mint.NewAppModule()` is now ignored and must be `nil`. To customize the default minter's inflation behavior, wrap your custom function with `mintkeeper.DefaultMintFn` and pass it via the `WithMintFn` option:
   
 ```go
   mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))
@@ -175,7 +260,7 @@ This release introduces the ability to configure a custom mint function in `x/mi
 
 1. **Using the Default Minting Function**
 
-   No action is needed if you’re happy with the default behavior. Make sure your application wiring initializes the MintKeeper like this:
+   No action is needed if you're happy with the default behavior. Make sure your application wiring initializes the MintKeeper like this:
 
 ```go
    mintKeeper := mintkeeper.NewKeeper(

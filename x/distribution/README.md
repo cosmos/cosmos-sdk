@@ -125,6 +125,29 @@ is created which might need to reference the historical record, the reference co
 Each time one object which previously needed to reference the historical record is deleted, the reference
 count is decremented. If the reference count hits zero, the historical record is deleted.
 
+### External Community Pool Keepers
+
+An external pool community keeper is defined as:
+
+```go
+// ExternalCommunityPoolKeeper is the interface that an external community pool module keeper must fulfill
+// for x/distribution to properly accept it as a community pool fund destination.
+type ExternalCommunityPoolKeeper interface {
+	// GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
+	// This is the address that x/distribution will send funds to for external management.
+	GetCommunityPoolModule() string
+	// FundCommunityPool allows an account to directly fund the community fund pool.
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, senderAddr sdk.AccAddress) error
+	// DistributeFromCommunityPool distributes funds from the community pool module account to
+	// a receiver address.
+	DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+}
+```
+
+By default, the distribution module will use a community pool implementation that is internal.  An external community pool 
+can be provided to the module which will have funds be diverted to it instead of the internal implementation.  The reference
+external community pool maintained by the Cosmos SDK is [`x/protocolpool`](../protocolpool/README.md).
+
 ## State
 
 ### FeePool

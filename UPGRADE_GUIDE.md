@@ -161,6 +161,8 @@ app.ModuleManager.SetOrderInitGenesis(
 
 ### DI Wiring
 
+Note: _as long as an external protocol pool keeper (here, `x/protocolpool`) is wired in DI configs, `x/distribution` will use it for its external pool._
+
 First, set up the keeper for the application.
 
 Import the protocolpool keeper:

@@ -13,9 +13,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
-	"github.com/cosmos/cosmos-sdk/x/group/simulation"
+	"github.com/cosmos/cosmos-sdk/x/group"                    //nolint:staticcheck // deprecated and to be removed
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/group/simulation"         //nolint:staticcheck // deprecated and to be removed
 )
 
 func TestRandomizedGenState(t *testing.T) {

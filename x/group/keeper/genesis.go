@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group" //nolint:staticcheck // deprecated and to be removed
 )
 
 // InitGenesis initializes the group module's genesis state.

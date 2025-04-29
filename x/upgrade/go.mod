@@ -210,5 +210,8 @@ require (
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 
-// Temporary replace until the next 0.53 tag
-replace github.com/cosmos/cosmos-sdk => ../..
+replace (
+	cosmossdk.io/store => ../../store
+	// Temporary replace until the next 0.53 tag
+	github.com/cosmos/cosmos-sdk => ../..
+)

@@ -1,4 +1,4 @@
-package internal
+package btree
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetSetDelete(t *testing.T) {
-	db := NewBTree()
+	db := NewBTree[[]byte]()
 
 	// A nonexistent key should return nil.
 	value := db.Get([]byte("a"))
@@ -40,7 +40,7 @@ func TestGetSetDelete(t *testing.T) {
 }
 
 func TestDBIterator(t *testing.T) {
-	db := NewBTree()
+	db := NewBTree[[]byte]()
 
 	for i := 0; i < 10; i++ {
 		if i != 6 { // but skip 6.
@@ -171,7 +171,7 @@ func TestDBIterator(t *testing.T) {
 		[]int64(nil), "reverse iterator from 2 (ex) to 4")
 
 	// Ensure that the iterators don't panic with an empty database.
-	db2 := NewBTree()
+	db2 := NewBTree[[]byte]()
 
 	itr, err = db2.Iterator(nil, nil)
 	require.NoError(t, err)

@@ -159,5 +159,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-// Temporary replace until the next 0.53 tag
-replace github.com/cosmos/cosmos-sdk => ../..
+replace (
+	cosmossdk.io/store => ../../store
+	// Temporary replace until the next 0.53 tag
+	github.com/cosmos/cosmos-sdk => ../..
+)

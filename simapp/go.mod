@@ -228,6 +228,7 @@ require (
 
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/store => ../store
 	cosmossdk.io/x/circuit => ../x/circuit
 )
 

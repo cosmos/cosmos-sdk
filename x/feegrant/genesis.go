@@ -3,8 +3,6 @@ package feegrant
 import (
 	"fmt"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 

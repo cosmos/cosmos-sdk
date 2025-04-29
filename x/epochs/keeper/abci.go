@@ -15,7 +15,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) error {
 
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()
-	
+
 	err := k.EpochInfo.Walk(
 		ctx,
 		nil,

@@ -35,6 +35,7 @@ func TestManager(t *testing.T) {
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
+			keeper.WithUnorderedTransactions(true),
 		)
 	}
 
@@ -312,6 +313,7 @@ func TestCannotAddDuplicate(t *testing.T) {
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
+		keeper.WithUnorderedTransactions(true),
 	)
 
 	addUser := []byte("foo")

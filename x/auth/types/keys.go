@@ -31,4 +31,7 @@ var (
 
 	// UnorderedNoncesKey prefix for the unordered sequence storage.
 	UnorderedNoncesKey = collections.NewPrefix(90)
+
+	// legacy param key for global account number
+	LegacyGlobalAccountNumberKey = []byte("globalAccountNumber")
 )

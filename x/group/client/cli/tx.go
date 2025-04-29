@@ -1,3 +1,4 @@
+// Deprecated: This package is deprecated and will be removed in the next major release. The `x/group` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
 package cli
 
 import (
@@ -14,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 

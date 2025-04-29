@@ -149,9 +149,10 @@ func TestInitGenesis(t *testing.T) {
 func TestDuplicateGrantsInGenesis(t *testing.T) {
 	f := initFixture(t)
 
-	granter, err := f.addrCdc.BytesToString(granterAddr.Bytes())
+	addrCdc := f.accountKeeper.AddressCodec()
+	granter, err := addrCdc.BytesToString(granterAddr.Bytes())
 	assert.NilError(t, err)
-	grantee, err := f.addrCdc.BytesToString(granteeAddr.Bytes())
+	grantee, err := addrCdc.BytesToString(granteeAddr.Bytes())
 	assert.NilError(t, err)
 
 	allowance := &feegrant.BasicAllowance{

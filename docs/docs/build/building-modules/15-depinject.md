@@ -55,6 +55,93 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/api/cosmos/group/modul
 Pulsar is optional. The official [`protoc-gen-go`](https://developers.google.com/protocol-buffers/docs/reference/go-generated) can be used as well.
 :::
 
+## Arbitrary Configuration Values
+
+Modules can now specify arbitrary configuration blobs by key and type in their module configuration and receive them via dependency injection. This provides a flexible way to customize module behavior without modifying source code.
+
+### Defining Configuration Types
+
+To use arbitrary configuration values in your module:
+
+1. Define the configuration types as Protobuf messages
+2. Include these configuration fields in your module configuration
+
+For example, a module might define configuration like this:
+
+```protobuf
+message CustomConfig {
+  string value = 1;
+  uint64 parameter = 2;
+}
+
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "example.com/mymodule"
+  };
+  
+  // Regular configuration fields
+  uint64 max_items = 1;
+  
+  // Arbitrary configuration by key and type
+  repeated ConfigEntry config_entries = 2;
+}
+
+message ConfigEntry {
+  string key = 1;
+  google.protobuf.Any value = 2;
+}
+```
+
+### Accessing Configuration Values
+
+In your module's provider functions, you can access these configuration values:
+
+```go
+type ModuleInputs struct {
+  depinject.In
+  
+  Config *types.Module
+}
+
+func ProvideModule(in ModuleInputs) (ModuleOutputs, error) {
+  // Access standard configuration
+  maxItems := in.Config.MaxItems
+  
+  // Access arbitrary configuration entries
+  for _, entry := range in.Config.ConfigEntries {
+    switch entry.Key {
+    case "custom_config":
+      var customConfig types.CustomConfig
+      err := anypb.UnmarshalTo(entry.Value, &customConfig, proto.UnmarshalOptions{})
+      if err != nil {
+        return ModuleOutputs{}, err
+      }
+      // Use customConfig.Value, customConfig.Parameter, etc.
+    }
+  }
+  
+  // Continue with module initialization...
+}
+```
+
+### Setting Configuration Values
+
+Chain developers can set these configuration values in their app.yaml or app_config.go:
+
+```yaml
+modules:
+  - name: mymodule
+    config:
+      "@type": "/example.com.mymodule.Module"
+      max_items: 100
+      config_entries:
+        - key: "custom_config"
+          value:
+            "@type": "/example.com.mymodule.CustomConfig"
+            value: "some_value"
+            parameter: 42
+```
+
 ## Dependency Definition
 
 Once the configuration proto is defined, the module's `module.go` must define what dependencies are required by the module.

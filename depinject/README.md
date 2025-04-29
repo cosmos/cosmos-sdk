@@ -75,7 +75,7 @@ Provider functions serve as the basis for the dependency tree. They are analysed
 
 `depinject` supports the use of interface types as inputs to provider functions, which helps decouple dependencies between modules. This approach is particularly useful for managing complex systems with multiple modules, such as the Cosmos SDK, where dependencies need to be flexible and maintainable.
 
-For example, `x/bank` expects an [AccountKeeper](https://pkg.go.dev/cosmossdk.io/x/bank/types#AccountKeeper) interface as [input to ProvideModule](https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/bank/module.go#L208-L260). `SimApp` uses the implementation in `x/auth`, but the modular design allows for easy changes to the implementation if needed.
+For example, `x/bank` expects an [AccountKeeper](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/x/bank/types#AccountKeeper) interface as [input to ProvideModule](https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/bank/module.go#L208-L260). `SimApp` uses the implementation in `x/auth`, but the modular design allows for easy changes to the implementation if needed.
 
 Consider the following example:
 
@@ -177,7 +177,7 @@ When using `depinject.Inject`, the injected types must be pointers.
 :::
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/simapp/app_di.go#L187-L206
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app_di.go#L165-L188
 ```
 
 ## Debugging

@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
-	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 
 var (
